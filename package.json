@@ -5,6 +5,7 @@
   "description": "RJS Forecast — socle (Object Management, noyau), middlewares Budget et Patrimoine, application BPM (API locale + site Angular)",
   "type": "module",
   "scripts": {
+    "start": "node scripts/start.mjs",
     "api": "J1_ENABLE_RECETTE_RESET=1 node api/src/server.mjs",
     "web": "npm --prefix web start",
     "seed": "node api/scripts/seed.mjs",

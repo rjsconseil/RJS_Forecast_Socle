@@ -8,6 +8,7 @@ Node sans dépendance et un site Angular. Le contrat détaillé entre modules es
 
 ```bash
 npm install --prefix web
+npm start          # API (http://localhost:3410) et site (http://localhost:4300) ensemble ; Ctrl+C arrête les deux
 npm run api        # API locale http://localhost:3410 (réinitialisation de recette activée)
 npm run seed       # jeux d'essai via les contrats HTTP réels (API lancée, voir plus bas)
 npm run web        # site Angular http://localhost:4300 (proxy /api → 3410)
