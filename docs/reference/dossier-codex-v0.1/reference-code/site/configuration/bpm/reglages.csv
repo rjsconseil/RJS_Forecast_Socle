@@ -1,0 +1,17 @@
+parametre,valeur
+bpm.creation.periodicite,monthly
+bpm.creation.profil,famille
+bpm.vision.horizonAns,30
+bpm.vision.inflationDefaut,2
+bpm.vision.rendementDefaut,3
+bpm.pilotage.effortMensuel,1000
+bpm.pilotage.rythmeMarge,10
+bpm.alertes.resteHebdoMin,50
+bpm.routine.valorisationJours,30
+bpm.routine.verificationJours,7
+bpm.factures.delaiJours,30
+bpm.factures.tvaDefaut,20
+bpm.historique.hauteurPct,100
+bpm.historique.periodes,6
+bpm.historique.format,combined
+bpm.historique.repartition,movements

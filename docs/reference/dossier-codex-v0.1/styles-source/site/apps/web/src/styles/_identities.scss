@@ -1,0 +1,208 @@
+@use 'sass:list';
+/* Résolution des jetons de couleur au niveau de la coque, après les deux thèmes. */
+.app-shell[data-module] {
+  --space-solid: var(--identity-core);
+  --space-bright: var(--identity-core-light);
+}
+@each $module in core, budget, formation, formation-site, users, configuration, tests, docs, admin {
+  .app-shell[data-module='#{$module}'] {
+    --space-solid: var(--identity-#{$module});
+    --space-bright: var(--identity-#{$module}-light);
+  }
+  .app-shell [data-tone='#{$module}'] {
+    --destination-color: var(--identity-#{$module});
+    --destination-bright: var(--identity-#{$module}-light);
+  }
+}
+
+/* Les espaces gardent la famille de leur module avec une nuance propre. */
+.app-shell[data-space='tasks'] {
+  --space-solid: var(--cyan-800);
+  --space-bright: var(--cyan-200);
+}
+.app-shell[data-space='calendar'] {
+  --space-solid: var(--blue-700);
+  --space-bright: var(--blue-300);
+}
+.app-shell[data-space='time'] {
+  --space-solid: var(--cyan-900);
+  --space-bright: var(--cyan-300);
+}
+.app-shell[data-space='budget-create'] {
+  --space-solid: var(--indigo-600);
+  --space-bright: var(--indigo-300);
+}
+.app-shell[data-space='budget-home'] {
+  --space-solid: var(--indigo-700);
+  --space-bright: var(--indigo-200);
+}
+.app-shell[data-space='budget-manage'] {
+  --space-solid: var(--indigo-800);
+  --space-bright: var(--indigo-200);
+}
+.app-shell[data-space='budget-monitor'] {
+  --space-solid: var(--indigo-900);
+  --space-bright: var(--indigo-300);
+}
+.app-shell[data-space='budget-calendar'] {
+  --space-solid: var(--indigo-950);
+  --space-bright: var(--indigo-300);
+}
+.app-shell[data-space='users-admin'] {
+  --space-solid: var(--violet-800);
+  --space-bright: var(--violet-200);
+}
+.app-shell[data-space='maintenance'] {
+  --space-solid: var(--cyan-800);
+  --space-bright: var(--cyan-200);
+}
+.app-shell[data-space='learning'] {
+  --space-solid: var(--teal-800);
+  --space-bright: var(--teal-300);
+}
+.app-shell[data-space='team'] {
+  --space-solid: var(--teal-900);
+  --space-bright: var(--teal-100);
+}
+.app-shell[data-space='training-admin'] {
+  --space-solid: var(--teal-950);
+  --space-bright: var(--teal-200);
+}
+.app-shell[data-space='configuration-logs'] {
+  --space-solid: var(--mint-800);
+  --space-bright: var(--mint-200);
+}
+.app-shell[data-space='configuration-design'] {
+  --space-solid: var(--mint-700);
+  --space-bright: var(--mint-100);
+}
+
+.app-shell[data-module] {
+  /*
+   * Refonte du 27 octobre 2026 : un seul accent de marque pour tout le site.
+   * La couleur de l'espace (`--space-solid`, `--space-bright`) n'est plus qu'un repère :
+   * filet du bandeau, marque de section, repère de page. Actions, liens, sélections
+   * et focus lisent l'accent de marque, identique d'une page à l'autre.
+   */
+  --heading-ink: var(--white);
+  --heading-surface: var(--header-surface);
+  --app-accent: var(--brand-solid);
+  --app-accent-hover: var(--brand-hover);
+  --app-accent-soft: var(--brand-soft);
+  --app-accent-line: var(--brand-line);
+  --app-on-accent: var(--white);
+  --app-focus-ring: var(--indigo-500);
+  --space-banner: var(--header-surface);
+  --space-banner-ink: var(--white);
+  --space-canvas: var(--app-canvas);
+  --main-surface: var(--app-canvas);
+  --page-surface: var(--app-canvas);
+  --focus-ring: var(--app-focus-ring);
+  --field-focus: var(--app-accent);
+  --control-line-hover: var(--slate-400);
+  --selected-surface: var(--app-accent);
+  --selected-ink: var(--app-on-accent);
+  --topbar-square: var(--space-solid);
+  --topbar-home-ink: var(--app-accent);
+  --display-accent: var(--app-accent);
+  --text-link-color: var(--app-accent);
+  --text-link-hover: var(--app-accent-hover);
+  --text-link-active: var(--app-accent-hover);
+  --progress-fill: var(--app-accent);
+  --gauge-fill: var(--app-accent);
+  --card-gauge-fill: var(--app-accent);
+  --card-focus: var(--app-focus-ring);
+  --panel-focus: var(--app-focus-ring);
+  /* Les titres de section : un intitulé net sur la surface du bloc, séparé par un filet. */
+  --section-heading-surface: transparent;
+  --section-heading-ink: var(--ink);
+  --section-heading-line: var(--card-divider);
+  --section-heading-accent-color: transparent;
+}
+.app-shell.editorial-style[data-module] {
+  --app-on-accent: var(--slate-950);
+  --app-focus-ring: var(--indigo-300);
+  --control-line-hover: var(--slate-500);
+}
+
+/* Même famille visuelle financière ; propriétaire de Configuration indépendant. */
+.app-shell[data-module='patrimoine'] {
+  --space-solid: var(--identity-budget);
+  --space-bright: var(--identity-budget-light);
+}
+
+/* Repères communs : valeurs héritées des primitives de Configuration, jamais des statuts.
+   Le même rôle est consommé par le menu, les accueils et la page de travail.
+   Les surcharges du pattern navigation sont héritées depuis la coque. */
+$navigation-colors: (
+  'navy': (
+    var(--blue-900),
+    var(--blue-300),
+  ),
+  'blue': (
+    var(--blue-800),
+    var(--blue-200),
+  ),
+  'teal': (
+    var(--teal-800),
+    var(--teal-200),
+  ),
+  'indigo': (
+    var(--indigo-700),
+    var(--indigo-200),
+  ),
+  'violet': (
+    var(--violet-800),
+    var(--violet-300),
+  ),
+  'cyan': (
+    var(--cyan-800),
+    var(--cyan-200),
+  ),
+  'rose': (
+    color-mix(in srgb, var(--violet-700) var(--part-65), var(--red-700)),
+    color-mix(in srgb, var(--violet-200) var(--part-65), var(--red-200)),
+  ),
+  'ocean': (
+    color-mix(in srgb, var(--blue-700) var(--part-50), var(--cyan-700)),
+    color-mix(in srgb, var(--blue-200) var(--part-50), var(--cyan-200)),
+  ),
+  'plum': (
+    color-mix(in srgb, var(--violet-900) var(--part-75), var(--red-800)),
+    color-mix(in srgb, var(--violet-200) var(--part-75), var(--red-200)),
+  ),
+  'cobalt': (
+    color-mix(in srgb, var(--indigo-600) var(--part-50), var(--blue-800)),
+    color-mix(in srgb, var(--indigo-200) var(--part-50), var(--blue-200)),
+  ),
+  'petrol': (
+    color-mix(in srgb, var(--teal-900) var(--part-50), var(--blue-700)),
+    color-mix(in srgb, var(--teal-200) var(--part-50), var(--blue-200)),
+  ),
+  'iris': (
+    color-mix(in srgb, var(--indigo-700) var(--part-50), var(--violet-600)),
+    color-mix(in srgb, var(--indigo-200) var(--part-50), var(--violet-200)),
+  ),
+  'lagoon': (
+    color-mix(in srgb, var(--cyan-700) var(--part-50), var(--teal-700)),
+    color-mix(in srgb, var(--cyan-200) var(--part-50), var(--teal-200)),
+  ),
+);
+@each $name, $colors in $navigation-colors {
+  .app-shell [data-tone='nav-#{$name}'] {
+    --destination-color: var(--nav-#{$name}-solid, #{list.nth($colors, 1)});
+    --destination-bright: var(--nav-#{$name}-bright, #{list.nth($colors, 2)});
+  }
+  .app-shell[data-section-tone='nav-#{$name}'] {
+    --space-solid: var(--nav-#{$name}-solid, #{list.nth($colors, 1)});
+    --space-bright: var(--nav-#{$name}-bright, #{list.nth($colors, 2)});
+  }
+  .app-shell[data-page-tone='nav-#{$name}'],
+  .app-shell [data-page-tone='nav-#{$name}'] {
+    --page-marker: var(--nav-#{$name}-solid, #{list.nth($colors, 1)});
+  }
+  .app-shell.editorial-style[data-page-tone='nav-#{$name}'],
+  .app-shell.editorial-style [data-page-tone='nav-#{$name}'] {
+    --page-marker: var(--nav-#{$name}-bright, #{list.nth($colors, 2)});
+  }
+}

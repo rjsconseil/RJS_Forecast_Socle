@@ -1,0 +1,462 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+:host {
+  display: block;
+  min-width: 0;
+  container-type: inline-size;
+}
+.dashboard-wealth {
+  display: grid;
+  gap: var(--ecart-20);
+  padding: var(--ecart-24);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+  color: var(--ink);
+}
+.wealth-heading,
+.wealth-target-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ecart-6) var(--ecart-12);
+}
+.wealth-heading h2 {
+  margin: 0;
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-lg));
+}
+.wealth-heading > span,
+.wealth-label,
+.wealth-facts dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.wealth-overview {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-24);
+  align-items: start;
+}
+.wealth-total,
+.wealth-contribution,
+.wealth-target {
+  display: grid;
+  min-width: 0;
+  gap: var(--ecart-8);
+  align-content: start;
+}
+.wealth-total > strong {
+  font-size: scaled(var(--fs-4xl));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.wealth-total > strong.is-unknown {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xl));
+}
+.wealth-contribution,
+.wealth-target {
+  padding-inline-start: var(--ecart-24);
+  border-inline-start: var(--trait-1) solid var(--card-border);
+}
+.wealth-contribution > strong,
+.wealth-target > strong {
+  font-size: scaled(var(--fs-xl));
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.wealth-contribution-value {
+  color: var(--status-success);
+}
+.wealth-phase {
+  border-radius: var(--rayon-999);
+  padding: var(--ecart-4) var(--ecart-8);
+  color: var(--app-accent);
+  background: var(--soft);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-relaxed);
+}
+a {
+  justify-self: start;
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  text-underline-offset: var(--ecart-4);
+}
+a:focus-visible,
+summary:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.wealth-composition {
+  border-top: var(--trait-1) solid var(--card-border);
+}
+.wealth-composition summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  min-height: var(--touch-target);
+  padding-block-start: var(--ecart-8);
+  color: var(--app-accent);
+  cursor: pointer;
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  list-style: none;
+}
+.wealth-composition summary::-webkit-details-marker {
+  display: none;
+}
+.wealth-chevron {
+  font-size: scaled(var(--fs-2xl));
+}
+.wealth-composition[open] .wealth-chevron {
+  transform: rotate(var(--angle-90));
+}
+.wealth-composition-body {
+  display: grid;
+  gap: var(--ecart-16);
+  padding-block-start: var(--ecart-16);
+}
+.wealth-facts {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-16) var(--ecart-24);
+  margin: 0;
+}
+.wealth-facts > div {
+  display: grid;
+  gap: var(--ecart-4);
+}
+.wealth-facts dd {
+  margin: 0;
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.is-negative {
+  color: var(--status-danger);
+}
+@container (max-width: #{$rupture-640}) {
+  .dashboard-wealth {
+    padding: var(--ecart-16);
+  }
+  .wealth-overview {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+    gap: var(--ecart-20) var(--ecart-16);
+  }
+  .wealth-total {
+    grid-column: 1 / -1;
+  }
+  .wealth-total > strong {
+    font-size: scaled(var(--fs-3xl));
+  }
+  .wealth-contribution {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+  .wealth-target {
+    padding-inline-start: var(--ecart-16);
+  }
+}
+@container (max-width: #{$rupture-420}) {
+  .wealth-overview,
+  .wealth-facts {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .wealth-target {
+    padding-inline-start: 0;
+    padding-block-start: var(--ecart-16);
+    border-inline-start: 0;
+    border-block-start: var(--trait-1) solid var(--card-border);
+  }
+}
+
+/* L’effet patrimonial forme le prolongement visuel du résultat budgétaire. */
+.dashboard-wealth {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent-line);
+}
+.wealth-heading h2 {
+  font-size: scaled(var(--fs-xl));
+  color: var(--ink);
+}
+.wealth-total > strong {
+  color: var(--app-accent);
+}
+.wealth-overview {
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1));
+}
+.wealth-total {
+  grid-row: span 2;
+  align-self: center;
+  padding-inline-end: var(--ecart-16);
+}
+.wealth-contribution,
+.wealth-target {
+  padding-inline-start: var(--ecart-24);
+}
+.wealth-contribution > strong,
+.wealth-target > strong {
+  font-size: scaled(var(--fs-2xl));
+}
+.wealth-target {
+  padding-top: var(--ecart-16);
+  border-top: var(--trait-1) solid var(--app-accent-line);
+}
+.wealth-contribution p {
+  display: none;
+}
+@container (max-width: #{$rupture-640}) {
+  .wealth-total {
+    grid-row: auto;
+    padding-inline-end: 0;
+  }
+  .wealth-contribution {
+    padding-inline-start: 0;
+  }
+  .wealth-target {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+@container (max-width: #{$rupture-420}) {
+  .wealth-overview {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .wealth-target {
+    padding-inline-start: 0;
+    padding-top: var(--ecart-16);
+    border-top: var(--trait-1) solid var(--app-accent-line);
+  }
+}
+
+.wealth-contribution-value {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-12);
+}
+
+/* Deux repères chiffrés remplacent la jauge : la position et l’écart au cap. */
+.wealth-estimate-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  font-weight: var(--fw-semibold);
+}
+.wealth-estimate-label > span {
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-2xs));
+}
+.wealth-cap-comparison {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  margin-block: var(--ecart-4);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--rayon-8);
+  background: var(--raised-surface);
+}
+.wealth-cap-position,
+.wealth-cap-gap {
+  min-width: 0;
+  padding: var(--ecart-12);
+  font-size: scaled(var(--fs-xs));
+}
+.wealth-cap-position {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.wealth-cap-mark {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: var(--dim-32);
+  height: var(--dim-32);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: 50%;
+  font-size: scaled(var(--fs-lg));
+}
+.wealth-cap-gap {
+  display: grid;
+  align-content: center;
+  gap: var(--ecart-4);
+  border-inline-start: var(--trait-1) solid var(--app-accent-line);
+  color: var(--muted);
+}
+.wealth-cap-gap > strong {
+  color: var(--ink);
+  font-size: scaled(var(--fs-md));
+  font-variant-numeric: tabular-nums;
+}
+.wealth-cap-gap.is-reached,
+.wealth-cap-gap.is-reached > strong {
+  color: var(--status-success);
+}
+@container (max-width: #{$rupture-640}) {
+  .wealth-cap-comparison {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wealth-cap-gap {
+    padding-block-start: var(--ecart-8);
+    border-inline-start: 0;
+    border-block-start: var(--trait-1) solid var(--app-accent-line);
+  }
+}
+
+/* La couleur précise le rôle : estimation violette, apport vert/rouge, cap doré. */
+.wealth-target {
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid
+    color-mix(in srgb, var(--amber-700) var(--part-35), var(--card-border));
+  border-inline-start: var(--trait-3) solid var(--amber-700);
+  border-radius: var(--rayon-8);
+  background: color-mix(in srgb, var(--amber-300) var(--part-10), var(--raised-surface));
+}
+.wealth-target > strong,
+.wealth-cap-mark {
+  color: var(--amber-700);
+}
+.wealth-cap-mark {
+  border-color: var(--amber-700);
+  border-radius: var(--rayon-6);
+}
+.wealth-cap-comparison {
+  border-color: color-mix(in srgb, var(--amber-700) var(--part-25), var(--card-border));
+}
+.wealth-cap-gap {
+  border-color: color-mix(in srgb, var(--amber-700) var(--part-25), var(--card-border));
+}
+.wealth-contribution {
+  padding: var(--ecart-12) var(--ecart-16);
+  border-inline-start: var(--trait-3) solid var(--status-success);
+  border-radius: var(--rayon-8);
+  background: color-mix(in srgb, var(--status-success) var(--part-5), var(--raised-surface));
+}
+.wealth-contribution:has(.is-negative) {
+  border-inline-start-color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) var(--part-5), var(--raised-surface));
+}
+
+/* Départ + résultat attendu = destination, puis le cap personnel. */
+.wealth-overview {
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-16);
+  align-items: stretch;
+}
+.wealth-base,
+.wealth-total,
+.wealth-contribution {
+  display: grid;
+  gap: var(--ecart-12);
+  align-content: start;
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-top: var(--trait-3) solid var(--app-accent);
+  border-radius: var(--rayon-8);
+}
+.wealth-base {
+  order: 1;
+  background: var(--raised-surface);
+}
+.wealth-contribution {
+  order: 2;
+  border-top-color: var(--status-success);
+}
+.wealth-contribution:has(.is-negative) {
+  border-top-color: var(--status-danger);
+}
+.wealth-total {
+  order: 3;
+  grid-row: auto;
+  grid-column: auto;
+  align-self: stretch;
+  background: var(--app-accent-soft);
+}
+.wealth-base > strong,
+.wealth-total > strong,
+.wealth-contribution > strong {
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.wealth-total > strong {
+  font-size: scaled(var(--fs-3xl));
+}
+.wealth-base .wealth-label,
+.wealth-contribution .wealth-label,
+.wealth-estimate-label {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+}
+.wealth-step {
+  display: grid;
+  place-items: center;
+  width: var(--dim-24);
+  height: var(--dim-24);
+  flex-shrink: 0;
+  border-radius: var(--rayon-6);
+  background: var(--app-accent);
+  color: var(--white);
+  font-size: var(--fs-xs);
+}
+.wealth-contribution .wealth-step {
+  background: var(--status-success);
+}
+.wealth-contribution:has(.is-negative) .wealth-step {
+  background: var(--status-danger);
+}
+.wealth-contribution p {
+  display: block;
+}
+.wealth-target {
+  order: 4;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1));
+  align-items: center;
+  gap: var(--ecart-12) var(--ecart-24);
+}
+.wealth-target-heading {
+  grid-column: 1;
+}
+.wealth-target > strong {
+  grid-column: 1;
+}
+.wealth-cap-comparison {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+.wealth-target > a {
+  grid-column: 1 / -1;
+}
+@container (max-width: #{$rupture-640}) {
+  .wealth-overview {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .wealth-target {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .wealth-cap-comparison {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}

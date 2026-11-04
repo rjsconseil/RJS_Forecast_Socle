@@ -1,0 +1,464 @@
+{
+  "schemaVersion": "rjs-styles/0.1",
+  "commit": "54246fad6553f6388d8257711ae7ef58241b3450",
+  "mode": "reference-scss-not-compiled",
+  "sassIncludePaths": [
+    "src/styles"
+  ],
+  "localSassDependencies": [
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-create.page.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-create.page.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-pilot-charts.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-pilot-charts.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-expenses.page.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-daily.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-objectives.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-month-type.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-month-type.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-flow-pilot.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-flow-editor.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-project-switch.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-context.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-context.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-context.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-popover.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/bpm/bpm-start-details.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_tokens.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_components.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_components.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_forms.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_forms.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_shell.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_shell.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_interactions.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_interactions.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_surface-language.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_surface-language.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_bpm-presentation.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_site-responsive.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/shared/app-hero.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/shared/app-hero.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/styles/_management.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/shared/metric-tiles.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/shared/metric-tiles.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/shared/period-navigation.component.scss",
+      "module": "functions",
+      "resolved": "styles-source/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "from": "styles-source/site/apps/web/src/app/shared/period-navigation.component.scss",
+      "module": "contrat-ruptures",
+      "resolved": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss"
+    }
+  ],
+  "commonComponents": [
+    "app-hero.component.scss",
+    "metric-tiles.component.scss",
+    "period-navigation.component.scss"
+  ],
+  "byScreen": {
+    "START": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-create.page.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-start-details.component.scss"
+    ],
+    "DASH": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss"
+    ],
+    "EXP": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-expenses.page.scss"
+    ],
+    "PILOT": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-pilot-charts.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-flow-pilot.component.scss"
+    ],
+    "ACT": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-flow-editor.component.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-month-type.component.scss"
+    ],
+    "FUTURE": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-objectives.component.scss"
+    ],
+    "DETAIL-IN": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss"
+    ],
+    "DETAIL-CC": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss"
+    ],
+    "DETAIL-NET": [
+      "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss"
+    ]
+  },
+  "files": [
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "sha256": "5238d7cc68888ae5972b978207c10827092ea33531cf2bf937d2407615c39582"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-create.page.scss",
+      "sha256": "ea8ba97fdeff7ad62b4b82f39747169887b9e081648486b2feae910cc2191ade"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "sha256": "d2eefb6f290e919add732f8d88beaa1374e3883b403ba2225d94e27cf7cf6293"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss",
+      "sha256": "8044cea035bace988176104c48cf62a6f0553fc239058345c7bdc729af24d23a"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "sha256": "be6a5904a00853299baac2fbe7a32b7c2539d2c85b83fef730f8d8f819521dcf"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-pilot-charts.scss",
+      "sha256": "085b2b8f8430073ceb3f5fbeb13fce4d44001caa7425c91ee60043a5ae63c081"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-expenses.page.scss",
+      "sha256": "f5154b8abb1af753708693010d5b24ed43636322a2bd30fa006dd4200cfa1c08"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss",
+      "sha256": "7b6281429f73ef48876986091898fc8869c15e97bcc7423a130dbe6cd45bcb03"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss",
+      "sha256": "7314c5734a3f1225ad29d30ec5799007d10c46e550bc81d94bdd98a344d161ba"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-daily.component.scss",
+      "sha256": "c69bef902c12811c026ae28cc591b658982f8c5462d8a16633ea9db7d5476f35"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-objectives.component.scss",
+      "sha256": "c05d3f5daa9dbbba14214a5f20d3fd95ae6245ff4d8725180fd035c9aa284d53"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-month-type.component.scss",
+      "sha256": "6fe75f758bc8cf3b4a5897f79dc02bc6014e4738fc3970acbc30c7134029ebe6"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-flow-pilot.component.scss",
+      "sha256": "bb9f3a71439c6ba0db04ac04450e087a55d03f22fac9cbb3a02c817a53220436"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-flow-editor.component.scss",
+      "sha256": "3b0ab4cfba2f92d43aff22ce0062bff42dbe2b532f03650383653983fcb17c5a"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-project-switch.component.scss",
+      "sha256": "2e8f3118cebddb6a8aaa3377109c47ac8860c98dfdfad84b71c9ea94625065bd"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-context.scss",
+      "sha256": "24a33ab307bdb82f21e0b0882abbaefc44415542528e62df098e5afe8c77e787"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-context.component.scss",
+      "sha256": "074711ce421b6a7edbc32f0c987742ff23054a9a478b7a6ed1d4f482595915f0"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-popover.component.scss",
+      "sha256": "ac4453af124d8733865471f3c59c4653e01e5596701a5ffee332e3bbad8c7712"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-start-details.component.scss",
+      "sha256": "fde5cb22090614650a505ec37d84127b9bc398aff600f9eb1e64a159e0e5b361"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_tokens.scss",
+      "sha256": "e64f8d0893a338075f3092ff31003c1f32f3f7595cfc36a7827d36a70aebf2fb"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_fonts.scss",
+      "sha256": "cc27dea81e81df833a222f8d1112f383189e434b903f07a6081ba48bd0b0b405"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_base.scss",
+      "sha256": "0f8c1dc07e4426327b6de8c778ce34c0d6712963dd14a76f634d7f5e6d5717b3"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_components.scss",
+      "sha256": "e9c5bd07d44988226d92d3bf89c8659edf9d35cf94dc4b54a6962d7ec53480c9"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_forms.scss",
+      "sha256": "3104dfe2392cec7ed20ba689f2940bf154c34d7c0e9645014ba7151f41693fc8"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_shell.scss",
+      "sha256": "03b4e08fedd258d2686c69a348b6ca7c9a6c454ebd0bc0543a7995e53d226cca"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_interactions.scss",
+      "sha256": "59c55ff832b5987604dcb7a3d10feb2dcdd1439da7dec8133fae05dd06caeb47"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_identities.scss",
+      "sha256": "7c1d93e4471bb050646f2a93a6f41617f393ee38ea49bcbe0a0d03b9111338a6"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_surface-language.scss",
+      "sha256": "f0ac6c2871c9d19a09a4ae61e9d094a1c42ea2ad28012c4f619174925b469c38"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_bpm-presentation.scss",
+      "sha256": "d959012b9a1b31fcddc3774d511195b07c06703e2324cc3574987980351474b4"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_site-responsive.scss",
+      "sha256": "4822623b418ffe9d1ef82e07ecf02692e7a418205cd2e62668a7ef47fc398372"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/shared/app-hero.component.scss",
+      "sha256": "178f08af590a8b866b0ab92d9f5a9089d4210fc0e6e11e3fd6c2b8ec682d2e6f"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_functions.scss",
+      "sha256": "4a1c97799257fef419effa813cb7e8c48359a15709a7a06da976c34ee508470d"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_contrat.scss",
+      "sha256": "983c1246da553946d4659620f16070dc4ea3e95dd895f7fd122e8e03200bd6c9"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss",
+      "sha256": "af3e7d6d3083d116c8d0401f96feab423fe155f746934f7f6765d581477c81a3"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_management.scss",
+      "sha256": "7da3baf7a640094be66793449683be68ef1cc41cc6c66eb36f97d158cabfd0a0"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_overview-theme.scss",
+      "sha256": "40173ad22360528f05437f0ce4a1c173645709ece96d27023d82f877e2c5cb82"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/shared/metric-tiles.component.scss",
+      "sha256": "02a9ae126842eeba2306bbed9324be1a77180fabf47348305939d48838c66aa9"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/shared/period-navigation.component.scss",
+      "sha256": "a44fd2b75228a2d19cc054bd1e18e2794af09fa942d7e1f61e3351530abbbdda"
+    }
+  ]
+}

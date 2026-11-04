@@ -1,0 +1,51 @@
+@use 'functions' as *;
+
+/*
+ * Compléments locaux de la page Utilisateurs. L'habillage vient du partiel global `_utilisateurs.scss`
+ * de la référence (portée `.us-page`) ; ici seulement ce que la création BPM ajoute.
+ */
+:host {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Message d'un champ à corriger, sous le champ (même place que l'aide). */
+.field-hint[data-state='error'] {
+  color: var(--status-danger);
+  font-weight: var(--fw-semibold);
+}
+.field-hint strong,
+.us-stats dd.is-unknown {
+  color: var(--unknown, var(--muted));
+}
+
+/* Champ signalé : même repère que les champs invalides de la référence (_interactions.scss),
+   plus spécifique que le cadre `.us-page input` du partiel. */
+.us-page :is(input:not([type='checkbox']):not([type='radio']), select)[aria-invalid='true'] {
+  border-color: var(--status-danger);
+  box-shadow: inset var(--ombre-4) 0 0 var(--status-danger);
+}
+
+/* Le retour du formulaire occupe la place de `rjs-form-status` dans la référence. */
+.us-form > .form-feedback {
+  margin-block: var(--ecart-10);
+}
+
+/* Le point de départ est du texte, pas un chiffre seul : taille de lecture. */
+.us-stats dd {
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-semibold);
+}
+.us-stats > div {
+  flex: 1 1 var(--dim-200);
+}
+
+/* La chaîne créée : la première étape (l'utilisateur) porte l'accent. */
+.us-chain li:first-child {
+  background: var(--app-accent-soft);
+}
+
+/* « Lecture des utilisateurs… » précède ici la section de la chaîne : même écart que les sections. */
+.us-page > .us-empty {
+  margin: 0 0 var(--ecart-24);
+}

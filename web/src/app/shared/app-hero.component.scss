@@ -1,0 +1,610 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/*
+ * Bandeau commun : l’identité de la section, les rôles du titre et
+ * un emplacement libre à droite. Les anciens noms d’ambiance restent compatibles.
+ */
+rjs-app-hero {
+  display: block;
+  container-type: inline-size;
+}
+.app-hero {
+  --hero-from: var(--space-solid);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) auto;
+  align-items: center;
+  gap: var(--ecart-24);
+  overflow: hidden;
+  padding: var(--heading-padding);
+  border-radius: var(--heading-radius);
+  color: var(--white);
+  background: var(--heading-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.app-hero-copy {
+  display: grid;
+  justify-items: start;
+  gap: var(--ecart-10);
+  min-width: 0;
+}
+.app-hero-heading .app-hero-title > :is(h1, h2) {
+  margin: 0;
+  color: var(--white);
+  font-size: scaled(var(--fs-2xl));
+  line-height: var(--lh-tight);
+  letter-spacing: calc(var(--lettrage-0-02em) * -1);
+  text-align: end;
+  justify-self: end;
+}
+.app-hero-title {
+  display: grid;
+  gap: var(--ecart-6);
+  justify-items: end;
+  align-self: start;
+  min-width: 0;
+  text-align: end;
+}
+.app-hero-title > p {
+  margin: 0;
+}
+.app-hero-heading {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  align-items: start;
+  gap: var(--ecart-24);
+  min-width: 0;
+}
+.app-hero-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--ecart-8);
+  min-width: 0;
+}
+.app-hero-tools:empty {
+  display: none;
+}
+.app-hero-tools .app-hero-action {
+  padding-inline: var(--ecart-16);
+  font-size: scaled(var(--fs-sm));
+}
+.app-hero-tools rjs-modal {
+  display: contents;
+}
+.app-hero-heading > .app-hero-title {
+  grid-column: 3;
+  grid-row: 1;
+}
+.app-hero-heading > .app-hero-lead {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  text-align: center;
+  align-self: start;
+}
+.app-hero-tools {
+  grid-column: 1;
+  grid-row: 1;
+}
+.app-hero-copy:has(> .app-hero-actions:only-child:empty),
+.app-hero-visual:empty {
+  display: none;
+}
+.app-hero-visual {
+  grid-column: 2;
+  justify-self: end;
+  min-width: 0;
+  max-width: var(--part-100);
+}
+.app-hero-bottom {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--ecart-6);
+  min-width: 0;
+}
+.app-hero-bottom:has(> .app-hero-meta:empty):has(> .app-hero-footer:empty):not(
+    :has(> .app-hero-chips)
+  ) {
+  display: none;
+}
+.app-hero-meta {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  align-items: center;
+  gap: var(--ecart-12);
+  padding: var(--ecart-10) var(--ecart-12) var(--ecart-6);
+  border-top: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-35), transparent);
+  min-width: 0;
+}
+.app-hero-meta:empty {
+  display: none;
+}
+.app-hero-meta > [heroMetaWide] {
+  grid-column: span 2;
+  min-width: 0;
+}
+.app-hero-meta:not(:has(> [heroMeta])) > [heroMetaWide] {
+  grid-column: 1 / -1;
+}
+.app-hero-bottom:has(> .app-hero-meta:not(:empty)) > .app-hero-footer {
+  padding-top: 0;
+  border-top: 0;
+}
+.app-hero-copy > p {
+  margin: 0;
+}
+.app-hero-kicker {
+  color: var(--white);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-08em);
+  text-transform: uppercase;
+}
+.app-hero-lead {
+  max-width: var(--dim-70ch);
+  color: color-mix(in srgb, var(--white) var(--part-94), transparent);
+  font-size: scaled(var(--fs-md));
+  line-height: var(--lh-normal);
+}
+.app-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  margin: 0;
+}
+.app-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--dim-32);
+  padding: var(--ecart-6) var(--ecart-12);
+  border: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-35), transparent);
+  border-radius: var(--btn-radius);
+  color: var(--white);
+  background: color-mix(in srgb, var(--slate-950) var(--part-20), transparent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.app-hero-chip small {
+  color: inherit;
+  margin-right: var(--ecart-6);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+.app-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-10);
+  margin-top: var(--ecart-6);
+}
+.app-hero-actions:empty {
+  display: none;
+}
+.app-hero-action {
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+  cursor: pointer;
+  min-height: var(--dim-48);
+  padding: 0 var(--ecart-20);
+  border: var(--trait-1) solid var(--white);
+  border-radius: var(--btn-radius);
+  color: var(--hero-from);
+  background: var(--white);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  box-shadow: 0 var(--ombre-8) var(--ombre-24)
+    color-mix(in srgb, var(--slate-950) var(--part-25), transparent);
+  transition: transform var(--duree-180) ease;
+}
+.app-hero-action.is-secondary {
+  border-color: color-mix(in srgb, var(--white) var(--part-50), transparent);
+  color: var(--white);
+  background: transparent;
+  box-shadow: none;
+}
+.app-hero-action:hover {
+  transform: translateY(calc(var(--decalage-2) * -1));
+}
+.app-hero-action:focus-visible {
+  outline: var(--trait-3) solid var(--white);
+  outline-offset: var(--decalage-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-hero-action {
+    transition: none;
+  }
+  .app-hero-action:hover {
+    transform: none;
+  }
+}
+@container (max-width: #{$rupture-640}) {
+  .app-hero {
+    grid-template-columns: minmax(0, var(--fr-1));
+    padding: var(--ecart-20);
+  }
+  .app-hero-heading {
+    grid-template-columns: minmax(0, var(--fr-1));
+    gap: var(--ecart-16);
+  }
+  .app-hero-heading > .app-hero-title {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .app-hero-heading > .app-hero-lead {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .app-hero-visual {
+    grid-column: 1;
+  }
+  .app-hero-meta {
+    padding-inline: var(--ecart-6);
+    gap: var(--ecart-6);
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .app-hero-meta > [heroMetaWide] {
+    grid-column: 1;
+  }
+}
+
+/* Une trame discrète sur le bord du bandeau. */
+.app-hero::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: var(--part-30);
+  pointer-events: none;
+  border-inline-end: var(--trait-1) solid
+    color-mix(in srgb, var(--white) var(--part-20), transparent);
+  background: linear-gradient(
+    var(--angle-135),
+    transparent,
+    color-mix(in srgb, var(--white) var(--part-8), transparent)
+  );
+}
+.app-hero-copy {
+  position: relative;
+  z-index: var(--plan-1);
+}
+.app-hero-actions {
+  align-items: center;
+}
+.app-hero-action {
+  box-shadow: inset 0 var(--trait-1) 0 color-mix(in srgb, var(--white) var(--part-40), transparent);
+}
+
+/* Pied de bandeau commun : contexte et navigation, toujours dans l'ordre du DOM. */
+.app-hero-footer {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--ecart-12);
+  min-width: 0;
+  padding-top: var(--ecart-16);
+  border-top: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-35), transparent);
+  position: relative;
+  z-index: var(--plan-1);
+}
+.app-hero-footer:empty {
+  display: none;
+}
+.app-hero-footer [heroFooter] {
+  min-width: 0;
+}
+/* Les commandes de période restent contrastées dans le bandeau. */
+.app-hero-footer rjs-period-navigation {
+  --app-focus-ring: var(--white);
+}
+.app-shell main .app-hero .app-hero-footer rjs-period-navigation .period-navigation {
+  background: color-mix(in srgb, var(--slate-950) var(--part-20), transparent);
+  border-color: color-mix(in srgb, var(--white) var(--part-50), transparent);
+}
+.app-hero-footer .period-reading-state {
+  margin: 0;
+  color: var(--white);
+  font-size: scaled(var(--fs-sm));
+}
+
+/* Poste de lecture permanent : contexte, période et indicateurs équilibrés.
+   Les commandes sont réunies dans un seul pied, sur toute la largeur. */
+.app-shell main .app-hero {
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  grid-template-areas: 'context lead title' 'context visual visual' 'chips chips chips' 'toolbar toolbar toolbar';
+  padding: var(--ecart-16);
+  gap: var(--ecart-12);
+}
+.app-shell main .app-hero:has(rjs-period-navigation) {
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  grid-template-areas: 'context lead title' 'context visual period' 'chips visual period' 'toolbar toolbar toolbar';
+}
+.app-hero-heading,
+.app-hero-bottom,
+.app-hero-meta {
+  display: contents;
+}
+.app-shell main .app-hero-heading > .app-hero-title {
+  grid-area: title;
+  align-self: start;
+}
+.app-shell main .app-hero-heading > .app-hero-lead {
+  grid-area: lead;
+  align-self: start;
+  justify-self: center;
+  text-align: center;
+}
+.app-shell main .app-hero-meta > [heroMeta] {
+  grid-area: context;
+  align-self: start;
+  min-width: 0;
+}
+.app-shell main .app-hero-meta > [heroMetaWide] {
+  grid-area: context;
+  align-self: end;
+  min-width: 0;
+}
+.app-hero-meta:has(> [heroMeta]) > [heroMetaWide] {
+  margin-top: var(--ecart-40);
+}
+.app-shell main .app-hero-visual {
+  grid-area: visual;
+  align-self: start;
+  justify-self: stretch;
+}
+.app-hero-visual > * {
+  max-width: var(--part-100);
+}
+.app-shell main .app-hero-footer {
+  grid-area: period;
+  width: min(var(--part-100), var(--dim-280));
+  padding: 0;
+  border: 0;
+  align-self: start;
+  justify-self: end;
+}
+.app-shell main .app-hero-chips {
+  grid-area: chips;
+  gap: var(--ecart-6);
+  align-self: end;
+}
+.app-hero-toolbar {
+  grid-area: toolbar;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8);
+  padding-top: var(--ecart-10);
+  border-top: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-35), transparent);
+  min-width: 0;
+  position: relative;
+  z-index: var(--plan-1);
+}
+.app-hero-toolbar:not(:has(a, button, input, select)) {
+  display: none;
+}
+.app-hero-toolbar .app-hero-tools,
+.app-hero-toolbar .app-hero-copy {
+  display: contents;
+}
+.app-hero-toolbar .app-hero-actions {
+  margin: 0;
+  gap: var(--ecart-8);
+}
+.app-hero-page-tools:empty {
+  display: none;
+}
+.app-hero-page-tools {
+  flex: var(--flex-1);
+  min-width: 0;
+}
+.app-hero-page-tools > [heroPageTools] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  align-items: center;
+  margin: 0;
+}
+.app-shell main .app-hero-toolbar :is(.btn, .app-hero-action, .plan-return, .bpm-link, nav a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--dim-36);
+  padding: var(--ecart-6) var(--ecart-12);
+  border: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-45), transparent);
+  border-radius: var(--rayon-8);
+  background: color-mix(in srgb, var(--slate-950) var(--part-35), transparent);
+  color: var(--white);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+  box-shadow: none;
+}
+.app-shell main .app-hero-toolbar :is(a, button):hover {
+  background: var(--indigo-800);
+}
+.app-hero-toolbar :is(a, button, input, select):focus-visible {
+  outline: var(--trait-3) solid var(--white);
+  outline-offset: var(--decalage-2);
+}
+.app-shell main .app-hero-toolbar .expense-filters {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-4), minmax(0, var(--fr-1)));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.app-hero-toolbar label {
+  color: var(--white);
+  font-size: scaled(var(--fs-xs));
+  min-width: 0;
+}
+.app-hero-toolbar :is(input, select) {
+  width: var(--part-100);
+  min-width: 0;
+  color: var(--slate-950);
+  background: var(--white);
+}
+@container (max-width: #{$rupture-640}) {
+  .app-shell main .app-hero,
+  .app-shell main .app-hero:has(rjs-period-navigation) {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+    grid-template-areas: 'title title' 'lead lead' 'context visual' 'chips chips' 'toolbar toolbar';
+    padding: var(--ecart-12);
+    gap: var(--ecart-8);
+  }
+  .app-shell main .app-hero:has(rjs-period-navigation) {
+    grid-template-areas: 'title title' 'lead lead' 'context context' 'chips chips' 'visual period' 'toolbar toolbar';
+  }
+  .app-shell main .app-hero-footer {
+    width: var(--part-100);
+    justify-self: end;
+  }
+  .app-shell main .app-hero-heading .app-hero-title > :is(h1, h2) {
+    font-size: scaled(var(--fs-xl));
+  }
+  .app-hero-title {
+    gap: var(--ecart-2);
+  }
+  .app-hero-kicker {
+    font-size: scaled(var(--fs-2xs));
+  }
+  .app-shell main .app-hero-toolbar .expense-filters {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  }
+}
+
+.app-shell main .app-hero-meta {
+  grid-area: context;
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1));
+  gap: var(--ecart-6);
+  padding: 0;
+  border: 0;
+  align-self: start;
+}
+.app-shell main .app-hero-meta > :is([heroMeta], [heroMetaWide]) {
+  grid-area: auto;
+  margin: 0;
+}
+
+@container (max-width: #{$rupture-640}) {
+  .app-shell main .app-hero-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: var(--ecart-4);
+  }
+  .app-shell main .app-hero-toolbar .app-hero-actions {
+    display: contents;
+  }
+  .app-hero-toolbar > *,
+  .app-hero-toolbar .app-hero-actions > * {
+    flex-shrink: var(--flex-0);
+  }
+  .app-hero-toolbar :is(a, button) {
+    white-space: nowrap;
+  }
+  .app-hero-page-tools {
+    min-width: max-content;
+  }
+  .app-hero-page-tools > [heroPageTools] {
+    flex-wrap: nowrap;
+  }
+  .app-shell main .app-hero-toolbar .expense-filters {
+    min-width: var(--dim-600);
+  }
+}
+.app-shell main .app-hero-toolbar .expense-filters > * {
+  grid-column: auto;
+}
+.app-shell main .app-hero-toolbar .expense-filters :is(input, select) {
+  min-height: var(--dim-36);
+  height: var(--dim-36);
+  padding-block: var(--ecart-4);
+  font-size: scaled(var(--fs-xs));
+}
+.app-hero-page-tools:has(.expense-filters) {
+  flex-basis: var(--part-100);
+}
+
+/* Le poste fixe distingue commandes et navigation locale, sur toutes les pages. */
+.app-hero-commandbar {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  flex-wrap: wrap;
+  min-width: 0;
+  flex-basis: var(--part-100);
+}
+.app-hero-commandbar:not(:has(a, button, input, select)) {
+  display: none;
+}
+.app-hero-commandbar .app-hero-actions {
+  display: contents;
+}
+.app-shell main .app-hero-toolbar .app-hero-action:not(.is-secondary) {
+  background: var(--white);
+  color: var(--slate-900);
+  border-color: var(--white);
+}
+.app-shell main .app-hero-toolbar .app-hero-action:not(.is-secondary):hover {
+  background: var(--slate-100);
+}
+.app-shell main .app-hero-page-tools {
+  flex-basis: var(--part-100);
+  min-width: 0;
+}
+.app-shell main .app-hero-page-tools > nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ecart-6);
+}
+.app-shell main .app-hero-page-tools > nav > a {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--white) var(--part-25), transparent);
+}
+.app-shell main .app-hero-page-tools > nav > a:hover {
+  background: color-mix(in srgb, var(--white) var(--part-10), transparent);
+  border-color: var(--white);
+}
+.app-shell main .app-hero-page-tools > nav > a[aria-current] {
+  background: color-mix(in srgb, var(--white) var(--part-15), transparent);
+  border-color: var(--white);
+}
+@container (max-width: #{$rupture-640}) {
+  .app-shell main .app-hero-toolbar {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+  .app-hero-commandbar {
+    flex-wrap: wrap;
+  }
+  .app-shell main .app-hero-page-tools > nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-block-end: var(--ecart-4);
+  }
+  .app-shell main .app-hero-page-tools > nav > a {
+    flex-shrink: 0;
+  }
+}
+
+.app-shell main .app-hero-page-tools > details[heroPageTools] {
+  display: block;
+}
+.app-shell main .app-hero-page-tools > details[heroPageTools] + nav {
+  margin-top: var(--ecart-8);
+}
+.app-shell main .app-hero-page-tools > details[heroPageTools] summary:focus-visible {
+  outline: var(--trait-2) solid var(--white);
+  outline-offset: var(--ecart-4);
+}

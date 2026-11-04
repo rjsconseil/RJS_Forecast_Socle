@@ -1,0 +1,34 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Compléments de la coquille : la référence donne le menu (`_zones.scss`) et la barre (`_shell.scss`). */
+
+/* Bandeau des zones de recette (middlewares, noyau), sous la barre du site. */
+.recette-banner {
+  padding: var(--ecart-8) var(--page-gutter);
+  border-bottom: var(--trait-1) solid var(--line);
+  color: var(--status-warning, var(--muted));
+  background: var(--status-warning-surface, var(--app-canvas));
+  font-size: scaled(var(--fs-xs));
+}
+
+/* Accueil du Noyau : cartes en carré (règle `plan-square` de `_calendar-full-width.scss`, non importée). */
+.app-shell .plan-square .plan-page-grid {
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  grid-auto-rows: var(--fr-1);
+}
+@media (max-width: $rupture-660) {
+  .app-shell .plan-square .plan-page-grid {
+    grid-template-columns: minmax(0, var(--fr-1));
+    grid-auto-rows: auto;
+  }
+}
+
+/* Écrans de formulaire encore sans gabarit `.page` : mêmes marges que `.page` de la référence. */
+.main-shell main > :not(router-outlet, :has(.page, [data-ui-pattern~='page'])) {
+  display: block;
+  width: var(--part-100);
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--page-padding-top) var(--page-gutter) var(--page-padding-bottom);
+}

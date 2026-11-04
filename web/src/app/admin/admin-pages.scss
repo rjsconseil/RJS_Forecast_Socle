@@ -1,0 +1,340 @@
+// Compléments communs aux pages d'administration (Paramètres, Calculs, Formule, Object Management).
+// Les gabarits viennent de la source (`configuration.page.scss`, `audit-admin.page.scss`) ;
+// ce fichier ne porte que ce que la source n'a pas : valeurs JSON, formules, palette, niveaux, tiroir.
+@use 'contrat-ruptures' as *;
+
+.adm-panel-stack {
+  display: grid;
+  gap: var(--layout-gap);
+  min-width: 0;
+}
+.adm-panel-stack > .cfg-hint,
+.cfg-panel > .cfg-hint {
+  margin: 0;
+}
+
+/* Sélecteur de vue : pastilles de modules de la source, en onglets. */
+.cfg-modules {
+  margin-bottom: 0;
+}
+.cfg-module-chip {
+  font: inherit;
+}
+.cfg-module-chip:focus-visible,
+.adm-chip:focus-visible,
+.adm-id:focus-visible,
+.cfg-panel :is(a, button, input, select, textarea, summary):focus-visible {
+  outline: var(--trait-3) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-2);
+}
+
+/* Le gabarit de la source donne une marge haute aux boutons de carte : pas dans un tableau. */
+.audit-table-wrap .btn,
+.cfg-setting .btn {
+  margin-top: 0;
+}
+.audit-table-wrap tbody tr:last-child td {
+  border-bottom: 0;
+}
+.nowrap {
+  white-space: nowrap;
+}
+.block {
+  display: block;
+}
+
+/* Valeurs et formules en chasse fixe */
+.adm-value,
+.adm-formula {
+  margin: 0;
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--soft);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.adm-value {
+  max-height: var(--dim-220);
+  overflow: auto;
+}
+code.adm-formula {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* Formulaire d'édition dans une carte de réglage */
+.adm-edit {
+  display: grid;
+  gap: var(--ecart-10);
+  padding-top: var(--ecart-10);
+  border-top: var(--trait-1) dashed var(--line);
+}
+.adm-edit label,
+.adm-field {
+  display: grid;
+  gap: var(--ecart-6);
+  min-width: 0;
+  font-weight: var(--fw-semibold);
+}
+.adm-edit label.cfg-setting-check {
+  display: flex;
+}
+.adm-edit :is(input:not([type='checkbox']), select, textarea),
+.adm-field :is(input, select, textarea) {
+  width: var(--part-100);
+  min-height: var(--control-height);
+  padding: var(--ecart-8) var(--ecart-10);
+  border: var(--trait-1) solid var(--field-line);
+  border-radius: var(--field-radius);
+  background: var(--field-surface);
+  color: var(--field-ink);
+  font: inherit;
+  font-weight: var(--fw-regular);
+}
+.adm-edit textarea,
+.adm-field textarea {
+  min-height: var(--dim-160);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.adm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ecart-12);
+}
+.adm-row > .adm-field {
+  flex: var(--flex-1) var(--flex-1) var(--dim-220);
+}
+
+/* Historique replié */
+.adm-history > summary {
+  cursor: pointer;
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.adm-history ol {
+  display: grid;
+  gap: var(--ecart-6);
+  margin: var(--ecart-8) 0 0;
+  padding-left: var(--ecart-20);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.adm-history code {
+  overflow-wrap: anywhere;
+}
+
+/* Listes de références */
+.adm-refs {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.adm-refs li {
+  padding-bottom: var(--ecart-8);
+  border-bottom: var(--trait-1) solid var(--line);
+  overflow-wrap: anywhere;
+}
+.adm-refs li:last-child {
+  border-bottom: 0;
+}
+.adm-refs small {
+  display: block;
+  color: var(--muted);
+}
+.cfg-panel h3 {
+  margin: var(--ecart-16) 0 var(--ecart-8);
+  font-size: var(--fs-lg);
+}
+
+/* Palette de l'éditeur de formule */
+.adm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-6);
+}
+.adm-chip {
+  max-width: var(--part-100);
+  padding: var(--ecart-4) var(--ecart-8);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--raised-surface);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.adm-chip:hover:not(:disabled) {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+.adm-chip:disabled {
+  opacity: var(--opacite-0-5);
+  cursor: not-allowed;
+}
+
+/* Mise en page principale + colonne de références */
+.adm-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1));
+  gap: var(--layout-gap);
+  align-items: start;
+}
+@media (min-width: $rupture-1100) {
+  .adm-layout {
+    grid-template-columns: minmax(0, 3fr) minmax(var(--dim-280), 2fr);
+  }
+  .adm-layout.is-editor {
+    grid-template-columns: minmax(0, 3fr) minmax(var(--dim-280), var(--fr-1));
+  }
+}
+
+/* Niveaux d'architecture */
+.adm-level {
+  display: inline-block;
+  padding: 0 var(--ecart-6);
+  border: var(--trait-1) solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+.adm-level-0 { color: var(--muted); }
+.adm-level-1 { color: var(--app-accent); }
+.adm-level-2 { color: var(--status-warning); }
+.adm-level-3 { color: var(--status-success); }
+/* Résultat « non vérifié » renvoyé par l'API : même teinte que « non exécuté ». */
+.result.r-not-checked { color: var(--muted); }
+.adm-derived {
+  margin-left: var(--ecart-4);
+  padding: 0 var(--ecart-4);
+  border: var(--trait-1) dashed var(--status-warning);
+  border-radius: var(--radius-sm);
+  color: var(--status-warning);
+  font-size: var(--fs-xs);
+}
+
+/* Identifiants inspectables */
+.adm-id {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--app-accent);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.adm-id code {
+  text-decoration: underline;
+  text-underline-offset: var(--decalage-2);
+}
+.audit-table-wrap tbody tr.is-clickable {
+  cursor: pointer;
+}
+.audit-table-wrap tbody tr.is-clickable:hover,
+.audit-table-wrap tbody tr.is-selected {
+  background: var(--hover-surface);
+}
+.adm-cell {
+  max-width: var(--dim-320);
+  overflow-wrap: anywhere;
+}
+
+/* Tiroir d'inspection (Object Management) */
+.adm-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: var(--plan-20);
+  display: flex;
+  flex-direction: column;
+  width: min(var(--dim-560), var(--part-100));
+  border-left: var(--trait-1) solid var(--line);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+  color: var(--ink);
+}
+.adm-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--ecart-12);
+  padding: var(--ecart-16) var(--ecart-20);
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.adm-drawer-head h2 {
+  margin: 0 0 var(--ecart-4);
+  font-size: var(--fs-lg);
+}
+.adm-drawer-head code {
+  overflow-wrap: anywhere;
+}
+.adm-drawer-body {
+  overflow: auto;
+  padding: var(--ecart-16) var(--ecart-20) var(--ecart-24);
+}
+.adm-drawer-body h3 {
+  margin: var(--ecart-16) 0 var(--ecart-6);
+  font-size: var(--fs-md);
+}
+.adm-drawer-body pre {
+  max-height: var(--dim-50dvh);
+}
+.adm-drawer .cfg-inheritance {
+  margin-bottom: var(--ecart-12);
+}
+.adm-drawer .adm-refs li {
+  font-size: var(--fs-sm);
+}
+@media (max-width: $rupture-720) {
+  .adm-drawer-head,
+  .adm-drawer-body {
+    padding-inline: var(--ecart-14);
+  }
+}
+
+/* Titre d'une carte de réglage (la source y place le libellé du contrôle). */
+/* La source cale à droite un en-tête sans <label> : ici le titre reste à gauche, l'état à droite. */
+.cfg-setting-head:has(> .adm-setting-title) {
+  justify-content: space-between;
+}
+.cfg-panel h3.adm-setting-title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-semibold);
+}
+
+/* Les paragraphes de carte de la source sont atténués : pas les formules ni les messages. */
+.cfg-panel p.adm-formula {
+  max-width: none;
+  color: var(--ink);
+}
+.cfg-success p,
+.cfg-error p {
+  margin: var(--ecart-4) 0;
+}
+
+/* Champ projeté dans la barre d'outils du bandeau (périmètre d'Object Management). */
+.adm-hero-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  font-weight: var(--fw-semibold);
+}
+.adm-hero-field select {
+  min-height: var(--dim-36);
+  width: auto;
+  max-width: var(--dim-320);
+  padding: var(--ecart-4) var(--ecart-8);
+  border-radius: var(--rayon-8);
+}

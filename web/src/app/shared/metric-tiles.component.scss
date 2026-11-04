@@ -1,0 +1,422 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Les chiffres clés : des tuiles aérées, une valeur lisible et sa couleur d'état. */
+:host {
+  display: block;
+  container-type: inline-size;
+}
+.metric-tiles {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-240)), var(--fr-1))
+  );
+  gap: var(--ecart-16);
+}
+/* Quatre repères se lisent en carré lorsque leur cadre n'offre pas la place
+   pour quatre colonnes confortables. Aucun compteur isolé sur une troisième ligne. */
+@container (min-width: #{$rupture-640}) and (max-width: #{$rupture-1200}) {
+  .metric-tiles:has(> :nth-child(4):last-child) {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  }
+}
+.metric-tile {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-8);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  color: var(--ink);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+  text-decoration: none;
+  transition:
+    box-shadow var(--duree-180) ease,
+    border-color var(--duree-180) ease;
+}
+a.metric-tile:hover {
+  border-color: var(--card-border-hover);
+  box-shadow: var(--card-glow);
+}
+a.metric-tile:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.metric-tile.is-emphasis {
+  border-color: var(--app-accent-line);
+  background: var(--raised-surface);
+  box-shadow:
+    inset var(--trait-3) 0 0 var(--app-accent),
+    var(--app-panel-shadow);
+}
+.metric-label {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-04em);
+  text-transform: uppercase;
+}
+.metric-value {
+  color: var(--ink);
+  font-size: scaled(var(--fs-3xl));
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+}
+.metric-value span {
+  color: var(--muted);
+  font-size: scaled(var(--fs-lg));
+}
+.metric-tile[data-tone='success'] .metric-value,
+[data-tone='success'] > .metric-symbol,
+.metric-details [data-tone='success'] {
+  color: var(--status-success);
+}
+.metric-tile[data-tone='danger'] .metric-value,
+[data-tone='danger'] > .metric-symbol,
+.metric-details [data-tone='danger'] {
+  color: var(--status-danger);
+}
+.metric-tile[data-tone='warning'] .metric-value,
+[data-tone='warning'] > .metric-symbol,
+.metric-details [data-tone='warning'] {
+  color: var(--status-warning);
+}
+.metric-tile[data-tone='accent'] .metric-value {
+  color: var(--app-accent);
+}
+.metric-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-12);
+  font-size: scaled(var(--fs-sm));
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-semibold);
+}
+.metric-steps {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, var(--fr-1));
+  gap: var(--ecart-4);
+}
+.metric-steps span {
+  height: var(--dim-8);
+  border-radius: var(--rayon-999);
+  background: var(--line);
+}
+.metric-steps [data-step='done'] {
+  background: var(--status-success);
+}
+.metric-steps [data-step='current'] {
+  background: var(--app-accent);
+}
+.metric-note {
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-snug);
+}
+
+/* Repères de flux facultatifs : le montant conserve toute sa place. */
+.metric-tile[data-symbol] {
+  position: relative;
+  padding-inline-end: var(--ecart-80);
+}
+.metric-symbol {
+  position: absolute;
+  inset-inline-end: var(--ecart-24);
+  inset-block-start: var(--part-50);
+  transform: translateY(calc(-1 * var(--part-50)));
+  color: var(--ink);
+  font-size: scaled(var(--texte-56));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+/* Le sens du flux dispose d'un repère stable, distinct du montant et du texte. */
+.metric-tile:is([data-symbol='income'], [data-symbol='expense']) > .metric-symbol {
+  display: grid;
+  place-items: center;
+  inline-size: var(--dim-48);
+  block-size: var(--dim-80);
+  padding: var(--ecart-8);
+  box-sizing: border-box;
+  border: var(--trait-3) solid currentColor;
+  border-radius: var(--rayon-8);
+  background: color-mix(in srgb, currentColor var(--part-6), transparent);
+  font-size: scaled(var(--fs-4xl));
+  line-height: 1;
+}
+.metric-tile:is([data-symbol='income'], [data-symbol='expense']):not(
+    [data-details-placement='between']
+  ) {
+  padding-inline-end: var(--ecart-96);
+}
+.metric-tile[data-symbol='income'] > .metric-symbol {
+  color: var(--status-success);
+}
+.metric-tile[data-symbol='expense'] > .metric-symbol {
+  color: var(--status-danger);
+}
+.metric-tile[data-symbol='balance'] {
+  padding-inline-start: var(--ecart-80);
+  padding-inline-end: var(--ecart-24);
+}
+.metric-tile[data-symbol='balance'] > .metric-symbol {
+  inset-inline-start: var(--ecart-24);
+  inset-inline-end: auto;
+}
+/* Montant, texte central et flèche : une lecture en trois zones pour les flux. */
+.metric-tile[data-details-placement='between'] {
+  grid-template-columns: minmax(0, var(--fr-1)) var(--dim-48);
+  align-items: center;
+  gap: var(--ecart-20);
+  padding-inline-end: var(--ecart-16);
+}
+.metric-tile[data-details-placement='between'] > .metric-symbol {
+  position: static;
+  grid-column: 2;
+  grid-row: 1;
+  transform: none;
+  align-self: center;
+}
+.metric-tile[data-details-placement='between'] > .metric-flow-layout {
+  grid-column: 1;
+  grid-row: 1;
+}
+.metric-flow-layout {
+  display: grid;
+  grid-template-columns: max-content minmax(0, var(--fr-1));
+  align-items: center;
+  gap: var(--ecart-16);
+  min-width: 0;
+}
+.metric-flow-layout .metric-value {
+  white-space: nowrap;
+}
+.metric-flow-description,
+.metric-flow-description > .metric-details {
+  display: grid;
+  gap: var(--ecart-10);
+  min-width: 0;
+}
+.metric-flow-description .metric-details {
+  line-height: var(--lh-snug);
+}
+.metric-tile[data-details-placement='aside'] {
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-2));
+  column-gap: var(--ecart-24);
+}
+.metric-principal {
+  display: grid;
+  gap: var(--ecart-8);
+  grid-column: 1;
+  align-self: center;
+  min-width: 0;
+}
+.metric-aside {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  align-items: start;
+  align-self: center;
+  gap: var(--ecart-24);
+  grid-column: 2;
+  padding-inline-start: var(--ecart-24);
+  border-inline-start: var(--trait-1) solid var(--card-border);
+  min-width: 0;
+}
+.metric-aside > .metric-details,
+.metric-controls {
+  display: grid;
+  gap: var(--ecart-16);
+}
+.metric-aside > .metric-controls {
+  position: relative;
+}
+.metric-aside > .metric-controls::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(-1 * var(--ecart-12));
+  inset-block: 0;
+  width: var(--trait-1);
+  background: var(--card-border);
+}
+.metric-check {
+  display: grid;
+  gap: var(--ecart-4);
+  font-size: scaled(var(--fs-sm));
+}
+.metric-check small {
+  font-size: scaled(var(--fs-xs));
+  color: var(--muted);
+}
+.metric-check[data-tone='success'] strong {
+  color: var(--status-success);
+}
+.metric-check[data-tone='danger'] strong {
+  color: var(--status-danger);
+}
+.metric-check[data-tone='warning'] strong {
+  color: var(--status-warning);
+}
+.metric-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-8) var(--ecart-24);
+}
+.metric-actions a {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  min-height: var(--dim-44);
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  text-underline-offset: var(--trait-3);
+}
+.metric-actions a:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--ecart-4);
+}
+@container (max-width: #{$rupture-640}) {
+  .metric-tile[data-details-placement='aside'] {
+    grid-template-columns: minmax(0, var(--fr-1));
+    padding-inline-start: var(--ecart-24);
+  }
+  .metric-tile[data-details-placement='aside'] .metric-principal {
+    padding-inline-start: var(--ecart-56);
+  }
+  .metric-flow-layout {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .metric-flow-description {
+    padding-block-start: var(--ecart-12);
+    border-block-start: var(--trait-1) solid var(--card-border);
+  }
+  .metric-flow-layout .metric-value {
+    font-size: scaled(var(--fs-2xl));
+  }
+  .metric-tile[data-symbol='balance'] > .metric-symbol {
+    inset-block-start: var(--ecart-32);
+    transform: none;
+  }
+  .metric-aside {
+    grid-column: 1;
+    grid-row: auto;
+    padding-inline-start: 0;
+    padding-block-start: var(--ecart-16);
+    border-inline-start: 0;
+    border-block-start: var(--trait-1) solid var(--card-border);
+  }
+}
+@container (max-width: #{$rupture-440}) {
+  .metric-aside,
+  .metric-actions {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .metric-aside > .metric-controls {
+    padding-block-start: var(--ecart-16);
+    border-block-start: var(--trait-1) solid var(--card-border);
+  }
+  .metric-aside > .metric-controls::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metric-tile {
+    transition: none;
+  }
+  a.metric-tile:hover {
+    transform: none;
+  }
+}
+
+/* Variante « instrument » : un cockpit sobre. Étiquettes techniques à chasse fixe, liseré lumineux,
+   valeurs à chiffres tabulaires ; l'état reste dit par le texte et la couleur de statut. */
+.metric-tiles[data-variant='instrument'] .metric-tile {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--card-border);
+  background: var(--raised-surface);
+}
+.metric-tiles[data-variant='instrument'] .metric-label {
+  font-family: var(--font-label);
+}
+.metric-tiles[data-variant='instrument'] .metric-value {
+  letter-spacing: calc(var(--lettrage-0-02em) * -1);
+}
+
+/* Un indicateur principal et deux repères complémentaires, dans l'ordre de lecture. */
+.metric-tiles:is([data-layout='first-wide'], [data-layout='last-wide']) {
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+}
+.metric-tiles[data-layout='first-wide'] > :first-child,
+.metric-tiles[data-layout='last-wide'] > :last-child {
+  grid-column: 1 / -1;
+}
+@container (max-width: #{$rupture-640}) {
+  .metric-tiles:is([data-layout='first-wide'], [data-layout='last-wide']) {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+
+.metric-tiles[data-layout='stacked'] {
+  grid-template-columns: minmax(0, var(--fr-1));
+}
+.metric-details [data-tone='neutral'] {
+  color: var(--ink);
+}
+.metric-segment {
+  white-space: pre;
+}
+
+.metric-details .metric-segment[data-tone='warning'] {
+  color: color-mix(in srgb, var(--amber-600) var(--part-85), var(--ink));
+}
+
+/* Deux cartes étroites : le texte passe sous le montant, jamais entre les chiffres et la flèche. */
+@container (min-width: #{$rupture-640}) and (max-width: #{$rupture-960}) {
+  .metric-tiles[data-layout='last-wide'] .metric-flow-layout {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .metric-tiles[data-layout='last-wide'] .metric-flow-description {
+    padding-block-start: var(--ecart-12);
+    border-block-start: var(--trait-1) solid var(--card-border);
+  }
+}
+
+/* Tracé géométrique centré : la police ne décale plus la flèche dans son cadre. */
+.metric-tile:is([data-symbol='income'], [data-symbol='expense']) > .metric-symbol {
+  font-size: 0;
+  line-height: 0;
+}
+.metric-tile[data-details-placement='between'] > .metric-symbol {
+  position: relative;
+  inset: auto;
+}
+.metric-tile:is([data-symbol='income'], [data-symbol='expense']) > .metric-symbol::before {
+  content: '';
+  position: absolute;
+  left: var(--part-50);
+  top: var(--part-50);
+  width: var(--dim-20);
+  height: var(--dim-32);
+  background: currentColor;
+  clip-path: polygon(
+    50% 0,
+    100% 36%,
+    81% 50%,
+    63% 34%,
+    63% 100%,
+    37% 100%,
+    37% 34%,
+    19% 50%,
+    0 36%
+  );
+  transform: translate(-50%, -50%);
+}
+.metric-tile[data-symbol='expense'] > .metric-symbol::before {
+  transform: translate(-50%, -50%) rotate(180deg);
+}

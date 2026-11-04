@@ -1,0 +1,58 @@
+// Formulaires Projet et Tâche du noyau : gabarit de la fenêtre d’édition de la référence
+// (`entity-editor.component.ts` : `.modal-head`, `.editor-form`, `.editor-fields`, `.field`,
+// `.form-actions`, habillés par `_components.scss` et `_forms.scss`). Ici la fenêtre est une page
+// routée : la surface reprend celle de `.modal`, sans hauteur bornée ni fond assombri.
+
+.entity-editor-panel {
+  width: min(var(--dim-640), var(--part-100));
+  margin-top: var(--ecart-24);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--modal-radius);
+  color: var(--raised-ink);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+  overflow: clip;
+}
+
+// Dans la fenêtre de la référence, l’en-tête reste en haut de la zone qui défile ; dans une page,
+// c’est l’en-tête de page qui reste figé sous la barre du site.
+.entity-editor-panel .modal-head {
+  position: static;
+}
+
+.entity-id {
+  margin: var(--ecart-6) 0 0;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+// La barre d’actions reste visible en bas de l’écran pendant la saisie.
+.entity-editor-panel .editor-form .form-actions {
+  bottom: 0;
+  margin-bottom: 0;
+}
+
+.editor-form .field-full.field-hint {
+  grid-column: 1 / -1;
+}
+
+// Conflit de version : la saisie est conservée, deux reprises sont proposées.
+.editor-conflict {
+  display: grid;
+  gap: var(--ecart-10);
+  padding: var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid var(--status-danger);
+  border-inline-start-width: var(--trait-3);
+  border-radius: var(--radius-sm);
+  background: var(--status-danger-surface);
+  color: var(--ink);
+}
+.editor-conflict p {
+  margin: 0;
+  line-height: var(--lh-normal);
+}
+.editor-conflict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+}

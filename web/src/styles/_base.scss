@@ -1,0 +1,86 @@
+/* Base : remise à zéro, focus et accessibilité. */
+* {
+  box-sizing: border-box;
+}
+html {
+  min-width: var(--dim-320);
+  scroll-behavior: smooth;
+}
+html:has(rjs-budget-training-page) {
+  scroll-behavior: auto;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a {
+  touch-action: manipulation;
+}
+button:disabled {
+  opacity: var(--opacite-0-55);
+  cursor: not-allowed;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent, var(--focus-ring));
+  outline-offset: var(--decalage-4);
+}
+.visually-hidden {
+  position: absolute;
+  width: var(--dim-2);
+  height: var(--dim-2);
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.skip-link {
+  position: fixed;
+  z-index: var(--plan-100);
+  top: var(--decalage-12);
+  left: var(--decalage-12);
+  padding: var(--ecart-10);
+  color: var(--skip-ink);
+  background: var(--skip-surface);
+  transform: translateY(calc(-1 * var(--part-180)));
+}
+.skip-link:focus {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: var(--duree-0-01) !important;
+    animation-duration: var(--duree-0-01) !important;
+    animation-iteration-count: var(--iterations-1) !important;
+  }
+}
+
+/* Paramètres stockés par Configuration : un rappel discret dans les pages des modules. */
+.config-managed-note {
+  margin: var(--ecart-6) 0 var(--ecart-10);
+  padding: var(--ecart-6) var(--ecart-10);
+  border-left: var(--trait-3) solid var(--app-accent);
+  background: var(--app-accent-soft);
+  font-size: var(--texte-14);
+}

@@ -1,0 +1,8 @@
+@use 'functions' as *;
+// Composition propre à l'éditeur partagé dans une fenêtre `rjs-modal` (la référence l'affiche en page).
+:host { display: contents; margin: 0; }
+.fe-form > p { margin: 0; }
+.fe-field-error { color: var(--status-danger); font-size: scaled(var(--fs-xs)); }
+.fe-fields label > small:not(.fe-field-error) { color: var(--muted); font-weight: var(--fw-regular); }
+.fe-schedule-note { margin: 0; color: var(--muted); font-size: scaled(var(--fs-sm)); }
+textarea { inline-size: var(--part-100); min-inline-size: 0; }

@@ -1,0 +1,592 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/*
+ * Une seule grammaire du bandeau de page jusqu'aux outils de détail.
+ * Fort : titre de page et fenêtre. Doux : titre de section. Fin : carte et saisie.
+ * Les nouveaux composants utilisent section-heading ; les classes ci-dessous
+ * sont les adaptateurs des écrans historiques, aussi déclarés dans cibles.csv.
+ */
+$section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .budget-panel-head, .budget-period-heading, .budget-section-head:not(:has(h1)), .bw-section-head, .bw-panel-head, .bw-manager-detail-head, .bd-section-heading, .bd-journey-head, .cfg-panel-head, .fm-head, .audit-card-head, .reset-data-heading, .test-archive-groups-head, .test-archive-results-head, .pilotage-heading, .calendar-agenda-heading, .calendar-grid-head, .budget-calendar-grid-head, .psy-panel > header, .management-journey > header, .bv-card-head, .bt-today-head, .bm-head, .bs-stage-head, .bpm-project-head, .cfg-panel > h2, .us-section > h2, .budget-panel > h3, .documentation-card > h2, .management-panel > h2, .bv-card > h2, .bpm-next > h2, .bpm-trend > h2, .bpm-quick > h2, .bpm-steps-strip > h2, .bt-due > h3, .bt-quick > h3, .us-section-head, .ft-section-head, .ft-file-head, .bt-lesson-head, .test-archive-head';
+
+.app-shell main .page-heading {
+  margin-block-end: var(--page-head-margin);
+}
+.app-shell main :is([data-ui-pattern~='heading'], .page-heading) > nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-10);
+}
+.app-shell main :is([data-ui-pattern~='heading'], .page-heading) > nav > .text-link {
+  min-height: var(--touch-target);
+  padding-inline: var(--ecart-16);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--btn-radius);
+  font-size: scaled(var(--fs-sm));
+  background: var(--raised-surface);
+}
+
+.app-shell main :is(#{$section-headings}) {
+  min-width: 0;
+  /* Refonte du 27 octobre 2026 : un intitulé net, séparé du contenu par un filet. */
+  padding: 0 0 var(--section-heading-padding);
+  border: 0;
+  border-block-end: var(--trait-1) solid var(--section-heading-line);
+  border-inline-start: var(--section-heading-accent) solid
+    var(--section-heading-accent-color, var(--app-accent));
+  border-radius: var(--section-heading-radius);
+  color: var(--section-heading-ink);
+  background: var(--section-heading-surface);
+  overflow-wrap: anywhere;
+}
+
+/* Le pattern conserve la structure de ses consommateurs : grille, flex ou titre simple. */
+.app-shell main [data-ui-pattern~='section-heading'] {
+  gap: var(--section-heading-gap);
+  margin: 0;
+}
+.app-shell main .management-journey > header {
+  display: grid;
+}
+.app-shell main .board-tools-title {
+  flex-basis: var(--part-100);
+  justify-content: space-between;
+}
+.app-shell main :is(#{$section-headings}) :is(h2, h3),
+.app-shell main :is(h2, h3):is(#{$section-headings}) {
+  margin: 0;
+  color: var(--section-heading-ink);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.app-shell main :is(#{$section-headings}) > :is(div, section) {
+  min-width: 0;
+}
+.app-shell main :is(#{$section-headings}) > p,
+.app-shell main :is(#{$section-headings}) > div > p {
+  margin-block: 0;
+}
+.app-shell
+  main
+  :is(.budget-panel-head, .section-heading, .bw-section-head, .bw-panel-head, .cfg-panel-head) {
+  flex-wrap: wrap;
+  gap: var(--ecart-12) var(--ecart-16);
+}
+
+/* La même finition sur les panneaux des modules ; les données et alertes restent intactes. */
+.app-shell
+  main
+  :is(
+    .budget-panel,
+    .bv-card,
+    .psy-panel,
+    .management-panel,
+    .management-journey,
+    .cfg-panel,
+    .us-section,
+    .audit-card,
+    .documentation-card,
+    .bpm-next,
+    .bpm-trend,
+    .bpm-quick,
+    .bpm-steps-strip,
+    .bt-today,
+    .fp-card,
+    .ft-directory,
+    .ft-file,
+    .ft-queue
+  ) {
+  min-width: 0;
+  box-shadow: var(--card-shadow, var(--app-panel-shadow));
+}
+
+/* Les chiffres restent sur une surface de lecture calme : libellé discret, valeur forte. */
+.app-shell main .metric-label {
+  color: var(--muted);
+}
+
+/* Légendes et intertitres de saisie : repères fins, sans réduire les cibles tactiles. */
+.app-shell main :is(.editor-section-title, .bv-form legend, .management-form legend) {
+  padding: 0 0 var(--ecart-8);
+  border: 0;
+  color: var(--section-heading-ink);
+  background: none;
+  font-family: var(--font-sans);
+  font-weight: var(--fw-semibold);
+}
+.app-shell
+  main
+  :is(
+    .budget-calendar-toolbar,
+    .calendar-toolbar,
+    .bw-manager-filters,
+    .us-filters,
+    .test-archive-filters
+  ) {
+  min-width: 0;
+  padding: var(--card-padding, var(--ecart-16));
+  border: var(--card-border-width) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--card-surface, var(--raised-surface));
+}
+.app-shell main thead th {
+  color: var(--table-head-ink, var(--muted));
+  background: var(--table-head-surface, var(--soft));
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-04em);
+  text-transform: uppercase;
+}
+
+/* Une fenêtre annonce la même section que la page qui l'a ouverte.
+   L'inversion reste dans son en-tête : les champs gardent le thème de saisie. */
+.app-shell .modal-head {
+  --ink: var(--heading-ink);
+  --muted: color-mix(in srgb, var(--heading-ink) var(--part-85), transparent);
+  --eyebrow-color: var(--heading-ink);
+  --app-focus-ring: var(--heading-ink);
+  flex-wrap: wrap;
+  gap: var(--ecart-16);
+  padding: var(--ecart-24);
+  border-bottom: var(--trait-1) solid var(--app-accent-line);
+  color: var(--heading-ink);
+  background: var(--heading-surface);
+}
+.app-shell .modal-head > div {
+  flex: var(--flex-1);
+  min-width: 0;
+}
+.app-shell .modal-head :is(h2, h3, .eyebrow) {
+  color: var(--heading-ink);
+}
+.app-shell .modal-head h2 {
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+  overflow-wrap: anywhere;
+}
+.app-shell .modal-head .modal-close {
+  width: max(var(--dim-44), var(--touch-target));
+  height: max(var(--dim-44), var(--touch-target));
+  border-color: color-mix(in srgb, var(--heading-ink) var(--part-55), transparent);
+  color: var(--heading-ink);
+  background: color-mix(in srgb, var(--slate-950) var(--part-20), transparent);
+}
+.app-shell .modal-head .modal-close:hover {
+  background: color-mix(in srgb, var(--slate-950) var(--part-45), transparent);
+}
+
+/* Bouton principal plein : son contour suit sa surface au repos, au survol et à la pression. */
+.app-shell .btn-primary:not(.btn-danger) {
+  border-color: var(--btn-primary-surface);
+}
+.app-shell .btn-primary:not(.btn-danger):hover:not(:disabled) {
+  border-color: var(--btn-primary-hover);
+}
+.app-shell .btn-primary:not(.btn-danger):active:not(:disabled) {
+  color: var(--btn-primary-ink);
+  background: var(--btn-primary-active);
+}
+
+@media (max-width: $rupture-640) {
+  .app-shell main :is(#{$section-headings}) {
+    padding: min(var(--section-heading-padding), var(--ecart-12));
+  }
+  .app-shell .modal-head {
+    padding: var(--ecart-16);
+    gap: var(--ecart-12);
+  }
+}
+
+/*
+ * Le cockpit de Ma vision patrimoniale : 01 · État des lieux (lire), puis 02 · Agir (faire).
+ * Un style d'instrument, sobre : grille fine, index cadrés à chasse fixe, liseré lumineux.
+ */
+[data-ui-pattern~='cockpit'] {
+  display: grid;
+  gap: var(--ecart-20);
+  padding: var(--card-padding, var(--ecart-20));
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius, var(--rayon-20));
+}
+[data-cockpit-phase='state'] {
+  background: var(--raised-surface);
+}
+[data-cockpit-phase='act'] {
+  background: var(--soft);
+}
+.cockpit-heading {
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-12);
+  margin: 0;
+}
+.cockpit-heading::after {
+  flex: var(--flex-1);
+  height: var(--trait-1);
+  background: var(--line);
+  content: '';
+}
+.cockpit-index {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--dim-40);
+  height: var(--dim-28);
+  padding: 0 var(--ecart-8);
+  border: var(--trait-1) solid var(--app-accent);
+  border-radius: var(--rayon-6);
+  color: var(--app-accent);
+  font-family: var(--font-label);
+  font-weight: var(--fw-semibold);
+}
+/* Agir : l'index se remplit, signe qu'on passe de la lecture au geste. */
+[data-cockpit-phase='act'] .cockpit-index {
+  color: var(--app-on-accent);
+  background: var(--app-accent);
+}
+.cockpit-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+.cockpit-lead {
+  max-width: var(--dim-70ch);
+  margin: 0;
+  color: var(--muted);
+  line-height: var(--lh-normal);
+}
+
+.cockpit-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+}
+.cockpit-navigation a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  min-height: var(--touch-target);
+  padding: var(--ecart-10) var(--ecart-16);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--btn-radius);
+  color: var(--ink);
+  background: var(--raised-surface);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+.cockpit-navigation a:hover {
+  background: var(--app-accent-soft);
+}
+.cockpit-navigation a:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.cockpit-navigation span {
+  color: var(--app-accent);
+  font-family: var(--font-label);
+}
+
+/* Une même grammaire de travail : contexte court, action, détail à la demande.
+   Les rôles et dimensions restent ceux du contrat, y compris en thème sombre. */
+.plan-shared-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ecart-8) var(--ecart-16);
+  margin: 0 0 var(--ecart-16);
+}
+.plan-shared-result > strong {
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-xs));
+}
+.plan-shared-result > span {
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+}
+.portal-jumps {
+  padding-block: var(--ecart-8);
+  border-block: var(--trait-1) solid var(--line);
+}
+.portal-band {
+  scroll-margin-block-start: var(--dim-96);
+}
+.plan-portal > .plan-heading {
+  padding-block: var(--ecart-24);
+  gap: var(--ecart-12);
+}
+.app-disclosure > summary {
+  cursor: pointer;
+  min-height: var(--touch-target);
+  list-style: none;
+}
+.app-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.app-disclosure > summary::after {
+  content: '+';
+  margin-inline-start: auto;
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-2xl));
+  color: var(--app-accent);
+}
+.app-disclosure[open] > summary::after {
+  content: '−';
+}
+.app-disclosure > summary:focus-visible {
+  outline: var(--focus-width, var(--trait-3)) solid var(--app-focus-ring);
+  outline-offset: var(--focus-offset, var(--decalage-2));
+}
+.app-disclosure:not([open]) > summary {
+  margin-bottom: 0;
+}
+/* Les filtres de tous les modules sont des barres d'outils, les formulaires
+   conservent un repère de focus commun sans modifier leurs dimensions. */
+.app-shell :is(.management-context, .bw-manager-toolbar, .ta-filters) {
+  border-color: var(--card-border);
+  background: var(--raised-surface);
+}
+.app-shell :is(.management-form, .bw-form, .cf-form, .us-form) :is(input, select, textarea):focus-visible {
+  outline: var(--focus-width, var(--trait-3)) solid var(--app-focus-ring);
+  outline-offset: var(--focus-offset, var(--decalage-2));
+}
+
+/* Refonte du 27 octobre 2026 : des plans calmes. Ni trame, ni halo coloré, ni reflet ;
+   un contour précis et une ombre de contact suffisent à séparer les blocs. */
+.app-shell .topbar {
+  border-bottom: var(--trait-1) solid var(--line);
+  box-shadow: none;
+}
+.app-shell main :is([data-ui-pattern~='heading'], .page-head, .plan-heading, .bw-app-header:not(.is-compact), .bpm-hero) {
+  box-shadow:
+    inset 0 var(--trait-3) 0 var(--space-bright),
+    var(--app-panel-shadow);
+}
+.app-shell main :is(.plan-page-card, .plan-zone-card, .management-panel, .cfg-panel, .us-section, .bv-card, .bpm-next, .bpm-trend, .bpm-quick) {
+  box-shadow: var(--card-shadow, var(--app-panel-shadow));
+}
+.app-shell main :is(.plan-page-head, .plan-zone-eyebrow, .cockpit-heading) {
+  font-variant-numeric: tabular-nums;
+}
+.app-shell main :is(.metric-value, .metric-tile > strong, .plan-metric, .summary-band-value, .us-stats strong) {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.app-shell main .cockpit-index {
+  color: var(--ink);
+  border-color: var(--line);
+  background: var(--soft);
+}
+.app-shell main [data-cockpit-phase='act'] .cockpit-index {
+  color: var(--btn-primary-ink);
+  border-color: var(--btn-primary-surface);
+  background: var(--btn-primary-surface);
+}
+.app-shell .btn-secondary {
+  border-width: var(--trait-1);
+}
+.app-shell main :is(.plan-entry, .plan-page-card, .plan-section-card):focus-visible {
+  outline: var(--trait-3) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-4);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .app-shell main :is(.btn, .plan-return, .cockpit-navigation a):not(:disabled) {
+    transition: background-color var(--ease-fast), border-color var(--ease-fast), color var(--ease-fast);
+  }
+}
+[data-ui-pattern~='cockpit'] {
+  min-width: 0;
+  scroll-margin-block-start: var(--dim-160);
+}
+@media (max-width: $rupture-640) {
+  [data-ui-pattern~='cockpit'] {
+    padding: var(--ecart-12);
+    gap: var(--ecart-16);
+  }
+}
+
+/* Commandes communes : même gabarit, contour précis, aucun déplacement à la pression. */
+.app-shell main :is(.btn, .plan-return, .cockpit-navigation a) {
+  gap: var(--ecart-8);
+}
+.app-shell .btn-secondary { border-color: var(--btn-secondary-line); }
+.app-shell main :is(.bpm-disclosure, .daily-customize, .app-disclosure) > summary {
+  min-height: var(--touch-target);
+  padding-block: var(--ecart-10);
+  color: var(--ink);
+}
+.app-shell main :is(.bpm-disclosure, .daily-customize, .app-disclosure)[open] > summary {
+  border-bottom: var(--trait-1) solid var(--line);
+  margin-bottom: var(--ecart-12);
+}
+.app-shell main :is(.bpm-disclosure, .daily-customize, .app-disclosure) > summary:hover {
+  color: var(--app-accent);
+}
+
+/* Choix comparables : le même relief dans les parcours et dans les réglages. */
+.app-shell main :is(.bpm-choice, .bp-toggle label, .cfg-module-chip) {
+  border-radius: var(--card-radius);
+  border-color: var(--line);
+  background: var(--raised-surface);
+  min-height: var(--control-height);
+}
+.app-shell main :is(.bpm-choice.is-selected, .bp-toggle label.is-selected, .cfg-module-chip.current) {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
+  box-shadow: inset 0 0 0 var(--trait-1) var(--app-accent);
+  color: var(--ink);
+}
+.app-shell main :is(.bpm-choice, .bp-toggle label, .cfg-module-chip):hover {
+  border-color: var(--app-accent);
+}
+.app-shell main :is(.bpm-choice, .bp-toggle label):focus-within {
+  outline: var(--trait-3) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-4);
+}
+.app-shell main .cfg-setting-check { min-height: var(--control-height); }
+
+/* Détails de lecture : même hiérarchie pour les fiches et les charges des modules. */
+.record-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-320)), var(--fr-1)));
+  gap: var(--ecart-16);
+  align-items: start;
+}
+.record-details > :is(section, details) {
+  min-width: 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+}
+.record-details > :is(section, details) > :is(h3, summary) {
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+  padding-bottom: var(--ecart-12);
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.record-facts,
+.detail-project-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-160)), var(--fr-1)));
+  gap: var(--ecart-12);
+}
+.record-facts > div {
+  min-width: 0;
+  padding: var(--ecart-12);
+  border-radius: var(--rayon-8);
+  background: var(--soft);
+  overflow-wrap: anywhere;
+}
+
+/* BPM : les raccourcis occupent une vraie rangée, sans colonne de boutons empilés. */
+.app-shell main .bpm-reading .app-hero-page-tools:has(> nav) {
+  flex: 1 0 var(--part-100);
+  min-width: 0;
+}
+.app-shell main .bpm-reading .app-hero-page-tools > nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+}
+.app-shell main .bpm-reading .app-hero-toolbar .expense-filters {
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1)) auto auto;
+  align-items: end;
+  min-width: 0;
+}
+.app-shell main .bpm-reading .expense-filters .expense-advanced-filters[open] {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.app-shell main .bpm-reading .expense-filters > .bpm-link {
+  grid-column: 4;
+  grid-row: 1;
+}
+@media (max-width: $rupture-960) {
+  .app-shell main .bpm-reading .app-hero-toolbar .expense-filters {
+    grid-template-columns: repeat(2, minmax(0, var(--fr-1)));
+  }
+  .app-shell main .bpm-reading .expense-filters > .bpm-link { grid-column: 2; grid-row: 2; }
+  .app-shell main .bpm-reading .expense-filters .expense-advanced-filters[open] { grid-row: 3; }
+}
+@container (max-width: #{$rupture-640}) {
+  .app-shell main .bpm-reading .app-hero-toolbar { flex-wrap: wrap; }
+  .app-shell main .bpm-reading .app-hero-page-tools > nav { flex-wrap: nowrap; overflow-x: auto; padding-bottom: var(--ecart-4); }
+}
+
+/* Flèches de flux : même repère directionnel dans chaque synthèse. */
+.flow-direction {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: var(--dim-48); min-height: var(--dim-80); padding: var(--ecart-8); box-sizing: border-box;
+  border: var(--trait-3) solid currentColor;
+  border-radius: var(--rayon-8);
+  background: color-mix(in srgb, currentColor var(--part-5), transparent);
+  font-size: var(--fs-3xl); font-weight: var(--fw-bold); line-height: var(--lh-tight);
+}
+.flow-direction[data-flow='income'] { color: var(--status-success); }
+.flow-direction[data-flow='expense'] { color: var(--status-danger); }
+.flow-direction.is-compact { width: var(--dim-40); min-height: var(--dim-64); font-size: var(--fs-2xl); }
+.app-shell main .expense-overview-label > .flow-direction { border-radius: var(--rayon-8); }
+
+/* Les mêmes outils restent accessibles sur les en-têtes natifs du portail et du noyau. */
+.app-shell main [data-sticky-hero] .site-page-tools,
+.app-shell main .plan-heading > .portal-jumps {
+  grid-column: 1 / -1; flex-basis: var(--part-100); display: flex; flex-wrap: wrap;
+  align-items: center; gap: var(--ecart-8); margin: 0; padding: var(--ecart-12) 0 0;
+  border-top: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-25), transparent);
+  border-bottom: 0;
+}
+.app-shell main [data-sticky-hero] .site-page-tools :is(a,button),
+.app-shell main .plan-heading > .portal-jumps > a {
+  min-height: var(--dim-36); padding: var(--ecart-6) var(--ecart-12); margin: 0;
+  border: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-35), transparent);
+  border-radius: var(--rayon-8); background: transparent; color: var(--white);
+  font-size: var(--fs-xs); font-weight: var(--fw-semibold); text-decoration: none;
+}
+.app-shell main [data-sticky-hero] .site-page-tools .project-detail-actions { display: flex; flex-wrap: wrap; gap: var(--ecart-8); }
+.app-shell main .plan-heading > .portal-jumps span { color: inherit; }
+.app-shell main [data-sticky-hero] .site-page-tools :is(a,button):hover,
+.app-shell main .plan-heading > .portal-jumps > a:hover { background: color-mix(in srgb,var(--white) var(--part-10),transparent); }
+
+.flow-direction[data-flow] { position: relative; font-size: 0; line-height: 0; }
+.flow-direction[data-flow]::before {
+  content: ''; position: absolute; left: var(--part-50); top: var(--part-50);
+  width: var(--dim-20); height: var(--dim-32); background: currentColor;
+  clip-path: polygon(50% 0, 100% 36%, 81% 50%, 63% 34%, 63% 100%, 37% 100%, 37% 34%, 19% 50%, 0 36%);
+  transform: translate(-50%, -50%);
+}
+.flow-direction[data-flow='expense']::before { transform: translate(-50%, -50%) rotate(180deg); }
+.flow-direction.is-compact[data-flow]::before { width: var(--dim-16); height: var(--dim-28); }
+
+.app-shell main .page-head.page-head-compact:has(> .site-page-tools) {
+  display: grid; grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-2));
+  gap: var(--ecart-12) var(--ecart-24); align-items: start;
+}
+.app-shell main .page-head.page-head-compact:has(> .site-page-tools) > div:first-child { display: contents; }
+.app-shell main .page-head.page-head-compact:has(> .site-page-tools) .page-hero-title { grid-column: 2; grid-row: 1; }
+.app-shell main .page-head.page-head-compact:has(> .site-page-tools) .page-hero-title > h1 { font-size: var(--fs-2xl); }
+.app-shell main .page-head.page-head-compact:has(> .site-page-tools) .lead { grid-column: 1; grid-row: 1; margin: 0; color: var(--white); font-size: var(--fs-sm); }
+.app-shell main [data-sticky-hero] .site-page-tools.detail-section-nav { background: transparent; box-shadow: none; border-inline: 0; border-bottom: 0; border-radius: 0; }
+.app-shell main [data-sticky-hero] .site-page-tools.detail-section-nav a[aria-current] { background: color-mix(in srgb, var(--white) var(--part-15), transparent); border-color: var(--white); }
+@media (max-width: $rupture-640) {
+  .app-shell main .page-head.page-head-compact:has(> .site-page-tools) { grid-template-columns: minmax(0, var(--fr-1)); }
+  .app-shell main .page-head.page-head-compact:has(> .site-page-tools) .page-hero-title { grid-column: 1; grid-row: 1; }
+  .app-shell main .page-head.page-head-compact:has(> .site-page-tools) .lead { grid-column: 1; grid-row: 2; }
+}
+
+/* Les raccourcis restent lisibles au survol et au clavier dans le bandeau fixe. */
+.app-shell main rjs-app-hero .app-hero-page-tools > nav > a:is(:hover, :focus-visible) {
+  color: var(--white);
+  background: color-mix(in srgb, var(--white) var(--part-15), var(--slate-950));
+  border-color: var(--white);
+}

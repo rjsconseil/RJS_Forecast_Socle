@@ -1,0 +1,664 @@
+@use 'contrat-ruptures' as *;
+:host {
+  display: block;
+}
+.cfg-page {
+  display: grid;
+  gap: var(--layout-gap);
+  margin: 0 auto;
+  padding: var(--page-padding-top) var(--page-gutter) var(--page-padding-bottom);
+  color: var(--ink);
+}
+.cfg-hero {
+  padding: clamp(var(--ecart-24), var(--ecart-3vw), var(--ecart-40));
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.cfg-eyebrow,
+.cfg-number {
+  display: block;
+  color: var(--app-accent);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-08em);
+  text-transform: uppercase;
+}
+.cfg-hero h1 {
+  margin: var(--ecart-8) 0 var(--ecart-10);
+  font-size: clamp(var(--texte-32), var(--texte-3vw), var(--texte-44));
+}
+.cfg-hero p {
+  max-width: var(--dim-75ch);
+  line-height: var(--lh-relaxed);
+}
+.cfg-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--layout-gap);
+}
+.cfg-panel {
+  min-width: 0;
+  padding: clamp(var(--ecart-20), var(--ecart-2vw), var(--ecart-28));
+  border: var(--card-border-width) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.cfg-panel h2 {
+  margin: var(--ecart-8) 0 var(--ecart-10);
+  font-size: var(--fs-2xl);
+}
+.cfg-panel p {
+  max-width: var(--dim-85ch);
+  color: var(--muted);
+  line-height: var(--lh-relaxed);
+}
+.cfg-panel .btn {
+  margin-top: var(--ecart-10);
+}
+.cfg-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--ecart-16);
+}
+.cfg-panel-head > a {
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.cfg-retention-grid,
+.cfg-design-selectors,
+.cfg-token-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--dim-240), var(--part-100)), var(--fr-1))
+  );
+  gap: var(--ecart-16);
+  margin: var(--ecart-24) 0;
+}
+.cfg-impact {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--layout-gap);
+  margin-top: var(--ecart-24);
+}
+.cfg-impact > div,
+.cfg-inheritance {
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--card-radius);
+  background: var(--soft);
+}
+.cfg-impact h3,
+.cfg-inheritance h3 {
+  margin: 0 0 var(--ecart-8);
+  font-size: var(--fs-lg);
+}
+.cfg-impact ul {
+  display: grid;
+  gap: var(--ecart-6);
+  padding-left: var(--ecart-20);
+}
+.cfg-impact details ul {
+  max-height: var(--dim-220);
+  overflow: auto;
+  padding-right: var(--ecart-8);
+}
+.cfg-impact details li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+}
+.cfg-impact summary {
+  cursor: pointer;
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.cfg-impact a {
+  color: var(--app-accent);
+  white-space: nowrap;
+}
+.cfg-inheritance dl {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--dim-200), var(--part-100)), var(--fr-1))
+  );
+  gap: var(--ecart-8);
+  margin: 0;
+}
+.cfg-inheritance dl > div {
+  padding: var(--ecart-8);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--raised-surface);
+}
+.cfg-inheritance dt {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.cfg-inheritance dd {
+  margin: var(--ecart-4) 0 0;
+  font-weight: var(--fw-semibold);
+}
+.cfg-inheritance small {
+  color: var(--muted);
+  font-weight: var(--fw-regular);
+}
+.cfg-retention-grid label,
+.cfg-design-selectors label,
+.cfg-token {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-6);
+  min-width: 0;
+  font-weight: var(--fw-semibold);
+}
+.cfg-color-controls {
+  display: grid;
+  grid-template-columns: var(--dim-48) minmax(0, var(--fr-1));
+  gap: var(--ecart-8);
+}
+.cfg-token-grid .cfg-color-picker {
+  padding: var(--ecart-4);
+  cursor: pointer;
+}
+.cfg-token .cfg-inherit-color {
+  justify-self: start;
+  margin-top: 0;
+}
+.cfg-retention-grid label span,
+.cfg-range,
+.cfg-token-grid code {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-regular);
+}
+.cfg-retention-grid input,
+.cfg-design-selectors select,
+.cfg-token-grid input {
+  width: var(--part-100);
+  min-height: var(--control-height);
+  padding: var(--ecart-8) var(--ecart-10);
+  border: var(--trait-1) solid var(--field-line);
+  border-radius: var(--field-radius);
+  background: var(--field-surface);
+  color: var(--field-ink);
+}
+.cfg-token-grid select,
+.cfg-search input {
+  width: var(--part-100);
+}
+.cfg-token-grid .cfg-slider {
+  width: var(--part-100);
+  min-height: var(--dim-32);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: var(--app-accent);
+  cursor: ew-resize;
+}
+.cfg-page-design {
+  width: var(--part-100);
+  --page-gutter: clamp(var(--ecart-16), var(--ecart-1-5vw), var(--ecart-28));
+}
+.cfg-workbench {
+  display: grid;
+  grid-template-columns: minmax(var(--dim-280), var(--dim-340)) minmax(0, var(--fr-1));
+  gap: var(--ecart-20);
+  align-items: start;
+}
+.cfg-selection,
+.cfg-parameters {
+  display: grid;
+  min-width: 0;
+  gap: var(--ecart-16);
+}
+.cfg-selection {
+  position: sticky;
+  top: var(--decalage-12);
+  max-height: calc(var(--dim-100dvh) - var(--dim-24));
+  overflow-y: auto;
+  padding-right: var(--ecart-6);
+}
+.cfg-selection .cfg-panel {
+  padding: var(--ecart-20);
+}
+.cfg-selection h2 {
+  font-size: var(--fs-lg);
+}
+.cfg-selection p {
+  font-size: var(--fs-sm);
+}
+.cfg-selection .cfg-design-selectors,
+.cfg-selection .cfg-impact {
+  grid-template-columns: var(--fr-1);
+}
+.cfg-category-select {
+  margin-block: var(--ecart-16);
+}
+.cfg-patterns button {
+  padding: var(--ecart-12);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--raised-surface);
+  color: var(--ink);
+  text-align: left;
+}
+.cfg-patterns button[aria-pressed='true'] {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
+  box-shadow: inset var(--ombre-4) 0 var(--app-accent);
+}
+.cfg-search {
+  display: grid;
+  gap: var(--ecart-6);
+  max-width: var(--dim-600);
+}
+.cfg-patterns {
+  display: grid;
+  grid-template-columns: var(--fr-1);
+  gap: var(--ecart-10);
+  margin-top: var(--ecart-16);
+  max-height: var(--dim-360);
+  overflow-y: auto;
+  padding: var(--ecart-4);
+}
+.cfg-patterns button {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-6);
+}
+.cfg-patterns span,
+.cfg-patterns small {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.cfg-edit-layout {
+  display: grid;
+  grid-template-columns: var(--fr-1);
+  gap: var(--ecart-12);
+  align-items: start;
+}
+.cfg-edit-layout .cfg-token-grid {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--dim-200), var(--part-100)), var(--fr-1))
+  );
+}
+.cfg-preview-area {
+  min-width: 0;
+}
+.cfg-preview-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  font-weight: var(--fw-semibold);
+}
+.cfg-inheritance summary,
+.cfg-impact-disclosure > summary {
+  cursor: pointer;
+  font-weight: var(--fw-semibold);
+  margin-bottom: var(--ecart-8);
+}
+@media (max-width: $rupture-960) {
+  .cfg-workbench {
+    grid-template-columns: var(--fr-1);
+  }
+  .cfg-selection {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+}
+.cfg-retention-grid input:focus-visible,
+.cfg-design-selectors select:focus-visible,
+.cfg-token-grid input:focus-visible,
+.cfg-page button:focus-visible,
+.cfg-page a:focus-visible {
+  outline: var(--trait-3) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-2);
+}
+.cfg-default {
+  border-left: var(--trait-4) solid var(--app-accent);
+  padding-left: var(--ecart-14);
+}
+.cfg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8);
+  margin-top: var(--ecart-16);
+}
+.cfg-hint {
+  font-size: var(--fs-sm);
+}
+.cfg-notice,
+.cfg-error,
+.cfg-success {
+  padding: var(--ecart-12) var(--ecart-16);
+  border-radius: var(--radius-md);
+}
+.cfg-notice {
+  background: var(--soft);
+}
+.cfg-error {
+  border: var(--trait-1) solid var(--danger);
+  color: var(--danger);
+}
+.cfg-success {
+  border: var(--trait-1) solid var(--green);
+  color: var(--green);
+}
+.cfg-rules {
+  display: grid;
+  gap: var(--ecart-8);
+  padding: 0;
+  list-style: none;
+}
+.cfg-rules li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ecart-12);
+  padding: var(--ecart-8) 0;
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.cfg-rules li div {
+  display: grid;
+  gap: var(--ecart-2);
+}
+.cfg-rules li span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.cfg-file-grid {
+  align-items: start;
+}
+.cfg-csv-example {
+  display: grid;
+  gap: var(--ecart-4);
+  max-width: var(--part-100);
+  overflow-x: auto;
+  margin: var(--ecart-20) 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--card-radius);
+  background: var(--soft);
+}
+.cfg-csv-example code,
+.cfg-csv-preview code {
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.cfg-csv-file {
+  display: grid;
+  gap: var(--ecart-8);
+  margin-top: var(--ecart-20);
+  font-weight: var(--fw-semibold);
+}
+.cfg-csv-file input {
+  width: var(--part-100);
+  min-width: 0;
+  padding: var(--ecart-10);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--field-radius);
+  background: var(--field-surface);
+  color: var(--field-ink);
+}
+.cfg-csv-preview {
+  margin-top: var(--ecart-20);
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--card-radius);
+  background: var(--soft);
+}
+.cfg-csv-preview h3 {
+  margin: 0 0 var(--ecart-6);
+}
+.cfg-csv-preview ul {
+  display: grid;
+  gap: var(--ecart-8);
+  max-height: var(--dim-360);
+  overflow: auto;
+  padding: 0;
+  list-style: none;
+}
+.cfg-csv-preview li {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: 0;
+  padding-block: var(--ecart-8);
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.cfg-csv-preview li span {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.cfg-navigation-groups {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-320)), var(--fr-1))
+  );
+  gap: var(--ecart-20);
+  margin-block: var(--ecart-24);
+}
+.cfg-navigation-group {
+  min-width: 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--card-radius);
+  background: var(--soft);
+}
+.cfg-navigation-group h3 {
+  margin: 0 0 var(--ecart-12);
+}
+.cfg-navigation-group ol {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cfg-navigation-group li {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  min-width: 0;
+  padding: var(--ecart-8) var(--ecart-10);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.cfg-navigation-position {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cfg-navigation-name {
+  flex: var(--flex-1);
+  min-width: 0;
+}
+.cfg-navigation-actions {
+  display: flex;
+  gap: var(--ecart-4);
+}
+.cfg-navigation-actions .btn {
+  min-width: var(--dim-36);
+  padding-inline: var(--ecart-8);
+}
+@media (max-width: $rupture-720) {
+  .cfg-grid,
+  .cfg-impact {
+    grid-template-columns: var(--fr-1);
+  }
+  .cfg-page {
+    gap: var(--ecart-14);
+  }
+  .cfg-hero,
+  .cfg-panel {
+    padding: var(--ecart-20);
+  }
+}
+
+.cfg-retention-pages {
+  margin-top: var(--ecart-16);
+
+  > summary {
+    cursor: pointer;
+    font-weight: var(--graisse-600);
+  }
+
+  > .cfg-retention-grid {
+    margin-top: var(--ecart-12);
+  }
+}
+
+.cfg-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--dim-320), var(--part-100)), var(--fr-1))
+  );
+  gap: var(--ecart-16);
+}
+.cfg-setting {
+  display: grid;
+  gap: var(--ecart-8);
+  align-content: start;
+  padding: var(--ecart-14);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--card-radius, var(--rayon-10));
+  background: var(--app-surface);
+
+  &.changed {
+    border-color: var(--app-accent);
+    box-shadow: inset var(--ombre-4) 0 0 var(--app-accent);
+  }
+}
+.cfg-setting-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ecart-8);
+  align-items: baseline;
+
+  > label {
+    font-weight: var(--fw-semibold);
+  }
+}
+.cfg-setting-head:not(:has(label)) { justify-content: flex-end; }
+.cfg-setting-state {
+  font-size: var(--texte-13);
+  color: var(--muted);
+}
+.cfg-setting-range {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) var(--dim-104) auto;
+  gap: var(--ecart-8);
+  align-items: center;
+
+  > input[type='range'] {
+    accent-color: var(--app-accent);
+  }
+}
+.cfg-setting-range:not(:has(input[type='range'])) {
+  grid-template-columns: var(--dim-128) auto;
+}
+.cfg-setting-check {
+  display: flex;
+  gap: var(--ecart-8);
+  align-items: center;
+}
+.cfg-setting-fixed {
+  font-weight: var(--fw-semibold);
+}
+.cfg-setting-help,
+.cfg-setting-meta {
+  margin: 0;
+  font-size: var(--texte-14);
+  color: var(--muted);
+}
+.cfg-setting-meta code {
+  overflow-wrap: anywhere;
+}
+
+.cfg-modules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  margin-bottom: var(--ecart-16);
+}
+.cfg-module-chip {
+  display: grid;
+  gap: var(--ecart-2);
+  padding: var(--ecart-8) var(--ecart-12);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-10);
+  background: var(--app-surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  small {
+    color: var(--muted);
+  }
+  &.current {
+    border-color: var(--app-accent);
+    box-shadow: inset 0 calc(-1 * var(--ombre-4)) 0 var(--app-accent);
+  }
+}
+.cfg-table {
+  display: grid;
+  gap: var(--ecart-10);
+  margin-top: var(--ecart-20);
+}
+.cfg-table-row {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--dim-220), var(--part-100)), var(--fr-1))
+  );
+  gap: var(--ecart-10);
+  padding: var(--ecart-12);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-10);
+
+  > legend {
+    padding: 0 var(--ecart-4);
+  }
+  > label {
+    display: grid;
+    gap: var(--ecart-4);
+  }
+  > .cfg-actions {
+    grid-column: 1 / -1;
+  }
+}
+.cfg-table-list {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-4) var(--ecart-14);
+  border: 0;
+  padding: 0;
+}
+.cfg-table-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  align-items: end;
+}
+.cfg-effects {
+  margin: 0;
+  padding-left: var(--ecart-20);
+
+  .warning {
+    color: var(--status-warning, inherit);
+  }
+}

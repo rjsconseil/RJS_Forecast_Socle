@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "rjs-ui-screens/0.1",
+  "commit": "54246fad6553f6388d8257711ae7ef58241b3450",
+  "baseRoute": "/budget-patrimoine-management",
+  "screens": [
+    {
+      "id": "START",
+      "sourceDestination": "/creer, chemin nouveau",
+      "sourceComponent": "bpm-create.page.ts",
+      "targetBehavior": "Accès direct au parcours de zéro ; sept étapes utiles après retrait du choix nouveau/existant."
+    },
+    {
+      "id": "DASH",
+      "sourceDestination": "/tableau-de-bord",
+      "sourceComponent": "bpm-money.page.ts",
+      "targetBehavior": "Synthèse, patrimoine, flux, projets et historique."
+    },
+    {
+      "id": "EXP",
+      "sourceDestination": "/depenses",
+      "sourceComponent": "bpm-expenses.page.ts et .html",
+      "targetBehavior": "Registre filtrable et détail d’une échéance."
+    },
+    {
+      "id": "PILOT",
+      "sourceDestination": "/piloter",
+      "sourceComponent": "bpm-pilot.page.ts, mode stats",
+      "targetBehavior": "Comparaisons, postes, provisions, progression et clôtures."
+    },
+    {
+      "id": "ACT",
+      "sourceDestination": "/piloter/agir",
+      "sourceComponent": "bpm-pilot.page.ts, mode actions",
+      "targetBehavior": "Saisie, échéances, budget type, épargne et simulation."
+    },
+    {
+      "id": "FUTURE",
+      "sourceDestination": "/vision",
+      "sourceComponent": "bpm-vision.page.ts",
+      "targetBehavior": "Objectifs, projection, hypothèses et répartition patrimoniale."
+    },
+    {
+      "id": "DETAIL-IN",
+      "sourceDestination": "/argent/entrees",
+      "sourceComponent": "bpm-money-detail.page.ts",
+      "targetBehavior": "Sources, opérations reçues et attendues."
+    },
+    {
+      "id": "DETAIL-CC",
+      "sourceDestination": "/argent/postes/:poste",
+      "sourceComponent": "bpm-money-detail.page.ts",
+      "targetBehavior": "Montants, part, plafond et opérations d’un centre."
+    },
+    {
+      "id": "DETAIL-NET",
+      "sourceDestination": "/argent/reste",
+      "sourceComponent": "bpm-money-detail.page.ts",
+      "targetBehavior": "Calcul du solde et rapprochement avec le compte."
+    },
+    {
+      "id": "DETAIL-EXP",
+      "sourceDestination": "/depenses?...&operation=...&occurrence=...",
+      "sourceComponent": "Détail interne au registre EXP",
+      "targetBehavior": "Panneau ou ligne dépliée ; aucune nouvelle page obligatoire."
+    },
+    {
+      "id": "EDIT-FLOW",
+      "sourceDestination": "Saisie et modification intégrées à ACT",
+      "sourceComponent": "bpm-flow-editor.component.ts",
+      "targetBehavior": "Un éditeur d’opération réutilisable par les pages de détail."
+    },
+    {
+      "id": "EDIT-GOAL",
+      "sourceDestination": "Formulaire et dialogue intégrés à FUTURE",
+      "sourceComponent": "bpm-vision.page.ts",
+      "targetBehavior": "Ajouter, modifier et retirer un objectif."
+    }
+  ]
+}

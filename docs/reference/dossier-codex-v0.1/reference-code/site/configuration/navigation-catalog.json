@@ -1,0 +1,1793 @@
+[
+  {
+    "id": "zones",
+    "label": "Zones principales",
+    "items": [
+      {
+        "id": "bpm",
+        "label": "Budget/Patrimoine Management",
+        "acronym": "BPM",
+        "eyebrow": "Module de niveau 1 · parcours guidé",
+        "mission": "Piloter les budgets de l’utilisateur et leur contribution à son patrimoine unique ; pour une personne qui détient une entreprise, réunir patrimoine personnel et professionnel et piloter l’entreprise.",
+        "scope": "Le parcours standard crée les éléments nécessaires. Assembler l’existant relie les éléments créés dans les modules sources. Chaque budget conserve son cycle et ajuste le stock permanent de son propriétaire direct.",
+        "size": "feature",
+        "band": "flagship",
+        "assembles": [
+          "budget",
+          "patrimoine"
+        ],
+        "tone": "budget",
+        "module": "bpm",
+        "overview": {
+          "outcomes": [
+            "1 · Démarrer : choisissez votre situation (famille, célibataire, association ou entreprise) et votre utilisateur ; le budget et le patrimoine se créent ensemble, ou s’assemblent depuis l’existant.",
+            "2 · Au quotidien : Ma vision budgétaire pour comprendre et agir sur la période ; Mes patrimoines pour lire le patrimoine global et faire passer l’argent entre la personne et son entreprise.",
+            "3 · Mon entreprise : facturer les clients, encaisser leurs paiements et suivre le reste dû. À chaque clôture, seul le solde réel rejoint le patrimoine ; les projections ne garantissent aucun rendement."
+          ],
+          "start": "Nouveau ici ? Commencez par Démarrer un projet. L’utilisateur connecté s’affiche en haut à droite ; « ? Aide de la page » relance la visite guidée et chaque « ? » explique un mot."
+        },
+        "sections": [
+          {
+            "id": "ensemble",
+            "label": "Vue d’ensemble",
+            "acronym": "VE",
+            "intention": "Comprendre et commencer",
+            "description": "Entrer dans le cycle budgétaire par un seul projet : son budget et son patrimoine sont créés ensemble, puis les fonctions se libèrent étape par étape.",
+            "space": "bpm-creer",
+            "tone": "nav-navy",
+            "homeTone": "nav-lagoon",
+            "module": "bpm",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "ensemble",
+                "label": "Vue d’ensemble",
+                "symbol": "◫",
+                "link": "/zones/bpm",
+                "space": "bpm-creer",
+                "description": "Entrer dans le cycle budgétaire par un seul projet : son budget et son patrimoine sont créés ensemble, puis les fonctions se libèrent étape par étape.",
+                "result": "Le parcours guidé et son point de départ.",
+                "tone": "nav-navy",
+                "overview": true,
+                "zoneOverview": true
+              }
+            ]
+          },
+          {
+            "id": "demarrer",
+            "label": "Démarrer un projet",
+            "acronym": "01",
+            "intention": "Le cœur : créer ou assembler",
+            "description": "Le point de départ de tout : un projet du noyau relié à un budget et à un patrimoine, créés ensemble ou assemblés depuis l’existant, avec le cycle qui les unit.",
+            "space": "bpm-creer",
+            "home": "direct",
+            "tone": "nav-teal",
+            "homeTone": "nav-lagoon",
+            "module": "bpm",
+            "pages": [
+              {
+                "id": "creer",
+                "label": "Créer un projet Budget/Patrimoine",
+                "symbol": "＋",
+                "link": "/budget-patrimoine-management/creer",
+                "space": "bpm-creer",
+                "description": "Un assistant en quatre étapes : le projet, le budget, le patrimoine, le cycle.",
+                "result": "Un projet relié, prêt à entrer dans le cycle.",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "assembler",
+                "label": "Atelier d’assemblage",
+                "symbol": "⇄",
+                "link": "/budget-patrimoine-management/creer/assembler",
+                "space": "bpm-creer",
+                "description": "Réunir librement les fiches créées dans le Noyau, Budget et Patrimoine : un ou plusieurs assemblages budget → patrimoine sur un même projet du noyau, avec les règles rappelées.",
+                "result": "Vos budgets et patrimoines existants reliés par le cycle.",
+                "tone": "nav-teal",
+                "hidden": true
+              }
+            ]
+          },
+          {
+            "id": "vision",
+            "label": "Ma vision budgétaire",
+            "acronym": "02",
+            "intention": "Comprendre · agir · préparer l’avenir",
+            "description": "Lire son budget, comprendre les flux et les dépenses, piloter la période et préparer ses objectifs.",
+            "space": "bpm-parcours",
+            "home": "direct",
+            "tone": "nav-iris",
+            "homeTone": "nav-lagoon",
+            "module": "bpm",
+            "pages": [
+              {
+                "id": "tableau",
+                "label": "Tableau de bord",
+                "symbol": "◎",
+                "link": "/budget-patrimoine-management/tableau-de-bord",
+                "space": "bpm-parcours",
+                "description": "Reçu, dépensé, reste et impact patrimonial : les entrées, charges et projets de votre période, avec le détail de chaque flux.",
+                "result": "Lire votre budget et son impact sur votre patrimoine, puis agir depuis chaque montant.",
+                "tone": "nav-blue",
+                "match": [
+                  "/budget-patrimoine-management/argent"
+                ]
+              },
+              {
+                "id": "depenses",
+                "label": "Dépenses de la période",
+                "symbol": "≡",
+                "link": "/budget-patrimoine-management/depenses",
+                "space": "bpm-parcours",
+                "description": "Toutes les dépenses effectuées ou attendues, par projet budgétaire, poste et tâche.",
+                "result": "Comprendre chaque dépense et retrouver sa fiche complète.",
+                "tone": "nav-ocean"
+              },
+              {
+                "id": "piloter",
+                "label": "Piloter · Graphiques & chiffres",
+                "symbol": "◎",
+                "link": "/budget-patrimoine-management/piloter",
+                "space": "bpm-parcours",
+                "description": "Le bilan de la période ouvert en permanence : chiffres, graphiques, réel face au prévu, postes et clôtures.",
+                "result": "Comprendre le bilan chiffré de la période.",
+                "tone": "nav-cobalt"
+              },
+              {
+                "id": "piloter-actions",
+                "label": "Piloter · Ce qu’il faut faire",
+                "symbol": "→",
+                "link": "/budget-patrimoine-management/piloter/agir",
+                "space": "bpm-parcours",
+                "description": "Les consignes et échéances de la période, les saisies, le budget type et les réglages, directement visibles.",
+                "result": "Agir sur le budget avec toutes les commandes ouvertes.",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "vision",
+                "label": "Objectifs & avenir",
+                "symbol": "✦",
+                "link": "/budget-patrimoine-management/vision",
+                "space": "bpm-parcours",
+                "description": "Objectifs de vie, rendement visé, indice d’inflation et projection du patrimoine sur votre horizon.",
+                "result": "Savoir si votre patrimoine financera vos projets de vie.",
+                "tone": "nav-iris"
+              }
+            ],
+            "contextQuery": [
+              "projet",
+              "vue"
+            ]
+          },
+          {
+            "id": "cycle",
+            "label": "Mes patrimoines",
+            "acronym": "03",
+            "intention": "Stock, actifs et apports des budgets",
+            "description": "Chaque utilisateur a un seul patrimoine. La personne qui détient une entreprise lit ensemble son patrimoine personnel et le patrimoine professionnel, et les fait échanger par des versements et des apports.",
+            "space": "bpm-parcours",
+            "home": "direct",
+            "tone": "nav-petrol",
+            "homeTone": "nav-lagoon",
+            "module": "bpm",
+            "pages": [
+              {
+                "id": "global",
+                "label": "Patrimoine global",
+                "symbol": "◉",
+                "link": "/budget-patrimoine-management/patrimoine-global",
+                "space": "bpm-parcours",
+                "description": "Votre patrimoine personnel et la part détenue du patrimoine de chaque entreprise rattachée, leur composition, les budgets qui les alimentent et les mouvements entre eux.",
+                "result": "Tout votre patrimoine en une lecture, sans double comptage.",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "entreprise",
+                "label": "Versements et apports",
+                "symbol": "⇄",
+                "link": "/budget-patrimoine-management/entreprise",
+                "space": "bpm-parcours",
+                "description": "Faire passer de l’argent entre une entreprise et la personne ou le foyer qui la détient : versements vers la personne, apports vers l’entreprise, tous tracés des deux côtés.",
+                "result": "Des mouvements explicites et tracés, sans double comptage.",
+                "tone": "nav-petrol"
+              },
+              {
+                "id": "cycle",
+                "label": "Cycle budgétaire",
+                "symbol": "↻",
+                "link": "/budget-patrimoine-management/cycle",
+                "space": "bpm-parcours",
+                "description": "La période ouverte, sa clôture et la remise à zéro, le patrimoine en valeur totale et les prévisions des prochaines périodes.",
+                "result": "Le solde de chaque période et son effet sur le patrimoine.",
+                "tone": "nav-blue"
+              }
+            ],
+            "contextQuery": [
+              "projet",
+              "liaison",
+              "vue"
+            ]
+          },
+          {
+            "id": "entreprise",
+            "label": "Mon entreprise",
+            "acronym": "04",
+            "intention": "Entreprises, associations, charges et factures",
+            "description": "Piloter les projets et charges des entreprises et associations ; retrouver les factures et paiements des entreprises.",
+            "space": "bpm-parcours",
+            "home": "direct",
+            "tone": "nav-cyan",
+            "homeTone": "nav-lagoon",
+            "module": "bpm",
+            "pages": [
+              {
+                "id": "projets-entreprise",
+                "label": "Projets des structures",
+                "symbol": "▤",
+                "link": "/budget-patrimoine-management/entreprise/projets",
+                "space": "bpm-parcours",
+                "description": "Les projets des entreprises et associations, leurs tâches, toutes leurs charges et les échéances de la période.",
+                "result": "Gérer les projets professionnels dans leur espace dédié.",
+                "tone": "nav-cyan"
+              },
+              {
+                "id": "pilotage",
+                "label": "Pilotage de l’entreprise",
+                "symbol": "€",
+                "link": "/budget-patrimoine-management/entreprise/pilotage",
+                "space": "bpm-parcours",
+                "description": "Les factures de l’entreprise, leurs échéances et leurs encaissements, ses clients et les indicateurs de l’année.",
+                "result": "Les factures émises et payées, et ce qui reste à encaisser.",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "depenses-professionnelles",
+                "label": "Dépenses des structures",
+                "symbol": "≡",
+                "link": "/budget-patrimoine-management/entreprise/depenses",
+                "space": "bpm-parcours",
+                "description": "Les dépenses et échéances des projets de l’entreprise, séparées du budget personnel.",
+                "result": "Relire les charges professionnelles et leurs dates prévues.",
+                "tone": "nav-ocean"
+              }
+            ],
+            "contextQuery": [
+              "entreprise"
+            ]
+          },
+          {
+            "id": "parcours",
+            "label": "Mon parcours",
+            "acronym": "PA",
+            "intention": "Les étapes qui libèrent les fonctions",
+            "description": "Chaque étape accomplie libère les fonctions suivantes de Budget et de Patrimoine, ouvertes sur votre projet.",
+            "space": "bpm-parcours",
+            "home": "direct",
+            "tone": "nav-violet",
+            "homeTone": "nav-lagoon",
+            "module": "bpm",
+            "pages": [
+              {
+                "id": "parcours",
+                "label": "Mes projets et étapes",
+                "symbol": "➝",
+                "link": "/budget-patrimoine-management/parcours",
+                "space": "bpm-parcours",
+                "description": "Vos projets, l’étape à faire maintenant et les fonctions déjà libérées.",
+                "result": "Le prochain geste utile et les fonctions ouvertes.",
+                "tone": "nav-blue"
+              }
+            ],
+            "contextQuery": [
+              "projet"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "budget",
+        "label": "Budget management",
+        "acronym": "BM",
+        "eyebrow": "Zone principale · niveau 1",
+        "mission": "Créer et gérer les éléments de vos projets budgétaires : centres de coûts, bénéficiaires, opérations et prestataires.",
+        "scope": "Budget étend le noyau : chaque enveloppe référence un projet du noyau et réserve des montants sur ses tâches, sans écrire les données du noyau.",
+        "size": "medium",
+        "band": "assembled",
+        "tone": "budget",
+        "sections": [
+          {
+            "id": "ensemble",
+            "label": "Vue d’ensemble",
+            "acronym": "VE",
+            "intention": "Synthèse et Budget 360",
+            "description": "La lecture globale du module : projets et enveloppes, flux du mois, trésorerie et points à suivre.",
+            "space": "budget-home",
+            "pages": [
+              {
+                "id": "synthese",
+                "label": "Synthèse globale",
+                "symbol": "◉",
+                "link": "/budget-management",
+                "exact": true,
+                "space": "budget-home",
+                "description": "Les repères de tout Budget : effectifs des six familles, flux, trésorerie et signaux.",
+                "result": "Une vue d’ensemble qui mène à chaque famille.",
+                "tone": "nav-blue",
+                "overview": true
+              },
+              {
+                "id": "budget-360",
+                "label": "Budget 360",
+                "symbol": "◎",
+                "link": "/budget-management/budget-360",
+                "space": "budget-home",
+                "description": "Le tableau de bord financier consolidé du module.",
+                "result": "Les montants clés réunis sur une page.",
+                "tone": "nav-teal",
+                "overview": true
+              }
+            ],
+            "home": "direct",
+            "tone": "nav-navy",
+            "homeTone": "nav-lagoon",
+            "module": "budget"
+          },
+          {
+            "id": "creer",
+            "label": "Créer les éléments d’un PBM",
+            "acronym": "01",
+            "intention": "Constituer un Projet Budget Management",
+            "description": "Créez votre projet budgétaire avec son centre de coûts, puis ses bénéficiaires. Ajoutez ensuite les opérations et prestataires connus. Les éléments existants restent consultables et modifiables dans chaque page.",
+            "space": "budget-create",
+            "pages": [
+              {
+                "id": "projets",
+                "label": "Projets budgétaires",
+                "symbol": "◉",
+                "link": "/budget-management/creer/projets",
+                "metric": "budget.projets",
+                "space": "budget-create",
+                "description": "Créer et retrouver : Les enveloppes et leurs parts réservées aux tâches du projet du noyau.",
+                "result": "Un élément enregistré et disponible pour votre PBM.",
+                "step": "1",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "centres",
+                "label": "Centres de coûts",
+                "symbol": "◆",
+                "link": "/budget-management/creer/centres",
+                "metric": "budget.centres",
+                "space": "budget-create",
+                "description": "Créer et retrouver : Les repères d’imputation des opérations, rattachés à une enveloppe.",
+                "result": "Un élément enregistré et disponible pour votre PBM.",
+                "step": "2",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "personnes",
+                "label": "Personnes",
+                "symbol": "◍",
+                "link": "/budget-management/creer/personnes",
+                "metric": "budget.personnes",
+                "space": "budget-create",
+                "description": "Créer et retrouver : Les bénéficiaires et intervenants des opérations.",
+                "result": "Un élément enregistré et disponible pour votre PBM.",
+                "step": "3",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "operations",
+                "label": "Opérations",
+                "symbol": "⇄",
+                "link": "/budget-management/creer/operations",
+                "metric": "budget.operations",
+                "space": "budget-create",
+                "description": "Créer et retrouver : Les entrées et sorties, leur tâche, leur priorité et la trésorerie globale.",
+                "result": "Un élément enregistré et disponible pour votre PBM.",
+                "step": "4",
+                "tone": "nav-violet"
+              },
+              {
+                "id": "prestataires",
+                "label": "Prestataires",
+                "symbol": "◇",
+                "link": "/budget-management/creer/prestataires",
+                "metric": "budget.prestataires",
+                "space": "budget-create",
+                "description": "Créer et retrouver : Les fournisseurs, leurs devis, règlements, interventions et appréciations.",
+                "result": "Un élément enregistré et disponible pour votre PBM.",
+                "step": "5",
+                "tone": "nav-cyan"
+              }
+            ],
+            "tone": "nav-teal",
+            "homeTone": "nav-lagoon",
+            "module": "budget"
+          },
+          {
+            "id": "manager",
+            "label": "Manager",
+            "acronym": "02",
+            "intention": "Modifier les éléments du PBM",
+            "description": "Modifier les éléments créés dans votre PBM avec les mêmes formulaires, préremplis avec leurs valeurs enregistrées. Les compléments restent accessibles depuis chaque élément.",
+            "space": "budget-manage",
+            "pages": [
+              {
+                "id": "projets",
+                "label": "Projets budgétaires",
+                "symbol": "◉",
+                "link": "/budget-management/manager/projets",
+                "metric": "budget.projets",
+                "space": "budget-manage",
+                "description": "Modifier les valeurs enregistrées : Les enveloppes et leurs parts réservées aux tâches du projet du noyau.",
+                "result": "Les changements sont appliqués à cet élément existant après enregistrement.",
+                "match": [
+                  "/budget-management/projets"
+                ],
+                "tone": "nav-blue"
+              },
+              {
+                "id": "centres",
+                "label": "Centres de coûts",
+                "symbol": "◆",
+                "link": "/budget-management/manager/centres",
+                "metric": "budget.centres",
+                "space": "budget-manage",
+                "description": "Modifier les valeurs enregistrées : Les repères d’imputation des opérations, rattachés à une enveloppe.",
+                "result": "Les changements sont appliqués à cet élément existant après enregistrement.",
+                "match": [
+                  "/budget-management/centres"
+                ],
+                "tone": "nav-teal"
+              },
+              {
+                "id": "personnes",
+                "label": "Personnes",
+                "symbol": "◍",
+                "link": "/budget-management/manager/personnes",
+                "metric": "budget.personnes",
+                "space": "budget-manage",
+                "description": "Modifier les valeurs enregistrées : Les bénéficiaires et intervenants des opérations.",
+                "result": "Les changements sont appliqués à cet élément existant après enregistrement.",
+                "match": [
+                  "/budget-management/personnes"
+                ],
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "operations",
+                "label": "Opérations",
+                "symbol": "⇄",
+                "link": "/budget-management/manager/operations",
+                "metric": "budget.operations",
+                "space": "budget-manage",
+                "description": "Modifier les valeurs enregistrées : Les entrées et sorties, leur tâche, leur priorité et la trésorerie globale.",
+                "result": "Les changements sont appliqués à cet élément existant après enregistrement.",
+                "match": [
+                  "/budget-management/operations",
+                  "/budget-management/manager/complements/operations"
+                ],
+                "tone": "nav-violet"
+              },
+              {
+                "id": "prestataires",
+                "label": "Prestataires",
+                "symbol": "◇",
+                "link": "/budget-management/manager/prestataires",
+                "metric": "budget.prestataires",
+                "space": "budget-manage",
+                "description": "Modifier les valeurs enregistrées : Les fournisseurs, leurs devis, règlements, interventions et appréciations.",
+                "result": "Les changements sont appliqués à cet élément existant après enregistrement.",
+                "match": [
+                  "/budget-management/prestataires"
+                ],
+                "tone": "nav-cyan"
+              },
+              {
+                "id": "patrimoine",
+                "label": "Actifs historiques de Budget",
+                "symbol": "▣",
+                "link": "/budget-management/manager/patrimoine",
+                "metric": "budget.patrimoine",
+                "space": "budget-manage",
+                "description": "Modifier les valeurs enregistrées : Les actifs patrimoniaux et leurs valeurs datées.",
+                "result": "Les changements sont appliqués à cet élément existant après enregistrement.",
+                "match": [
+                  "/budget-management/patrimoine",
+                  "/budget-management/manager/complements/patrimoine"
+                ],
+                "hidden": true,
+                "tone": "nav-rose"
+              }
+            ],
+            "tone": "nav-indigo",
+            "homeTone": "nav-lagoon",
+            "module": "budget"
+          },
+          {
+            "id": "suivre",
+            "label": "Suivre & décider",
+            "acronym": "03",
+            "intention": "Signaux, parcours et règles",
+            "description": "La tour de pilotage : signaux classés par gravité, parcours de revue et règles citables.",
+            "space": "budget-monitor",
+            "pages": [
+              {
+                "id": "tableau",
+                "label": "Tableau de bord",
+                "symbol": "◫",
+                "link": "/budget-management/suivre",
+                "space": "budget-monitor",
+                "description": "Le signal prioritaire et les décisions classées par gravité, filtrés par mois et projet.",
+                "result": "Les décisions à prendre et l’accès à chaque fiche.",
+                "step": "Suivre",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "parcours",
+                "label": "Les neuf parcours",
+                "symbol": "➝",
+                "link": "/budget-management/parcours",
+                "space": "budget-monitor",
+                "description": "Les parcours de revue du module, avec leurs cas et leurs liens.",
+                "result": "Le chemin de chaque usage, étape par étape.",
+                "step": "Comprendre",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "regles",
+                "label": "Les 45 règles",
+                "symbol": "§",
+                "link": "/budget-management/regles",
+                "space": "budget-monitor",
+                "description": "Les règles validées de la revue, recherchables et citables.",
+                "result": "La règle qui justifie chaque comportement.",
+                "step": "Justifier",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "notions",
+                "label": "Les notions clés",
+                "symbol": "✳",
+                "link": "/budget-management/notions",
+                "space": "budget-monitor",
+                "description": "Le vocabulaire du module : enveloppe, parts, flux, trésorerie, pièces de contexte.",
+                "result": "Les définitions partagées par toutes les pages.",
+                "step": "Définir",
+                "tone": "nav-violet"
+              }
+            ],
+            "tone": "nav-violet",
+            "homeTone": "nav-lagoon",
+            "module": "budget"
+          },
+          {
+            "id": "calendrier",
+            "label": "Calendrier 360",
+            "acronym": "C3",
+            "intention": "Le budget dans le temps",
+            "description": "Les échéances et flux financiers situés sur le calendrier du module.",
+            "space": "budget-calendar",
+            "pages": [
+              {
+                "id": "calendrier-360",
+                "label": "Calendrier 360",
+                "symbol": "▦",
+                "link": "/budget-management/calendrier-360",
+                "space": "budget-calendar",
+                "description": "Les opérations et échéances du budget en vues annuelle, mensuelle et hebdomadaire.",
+                "result": "La trésorerie lue jour par jour.",
+                "tone": "nav-blue"
+              }
+            ],
+            "tone": "nav-cyan",
+            "homeTone": "nav-lagoon",
+            "module": "budget"
+          },
+          {
+            "id": "formation",
+            "label": "Formation",
+            "acronym": "FO",
+            "intention": "Apprendre les gestes de Budget",
+            "description": "S’entraîner aux gestes métier des neuf parcours de Budget, suivre sa progression et faire valider ses paliers.",
+            "space": "employee",
+            "tone": "nav-rose",
+            "pages": [
+              {
+                "id": "espace",
+                "label": "Mon espace employé",
+                "symbol": "◈",
+                "link": "/budget-management/formation",
+                "query": {
+                  "vue": "espace"
+                },
+                "fallback": true,
+                "space": "employee",
+                "description": "Votre dossier : compétences, paliers, récompenses et avis du manager.",
+                "result": "Votre progression, en lecture seule.",
+                "step": "Consulter",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "apprendre",
+                "label": "M’entraîner",
+                "symbol": "✎",
+                "link": "/budget-management/formation",
+                "query": {
+                  "vue": "apprendre"
+                },
+                "space": "learning",
+                "description": "Choisir un geste, régler, agir et relire une vraie fiche d’entraînement.",
+                "result": "Des compétences acquises par des gestes réels.",
+                "hint": [
+                  "parcours"
+                ],
+                "step": "S’entraîner",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "pilotage",
+                "label": "Pilotage de l’équipe",
+                "symbol": "◎",
+                "link": "/budget-management/formation",
+                "query": {
+                  "vue": "pilotage"
+                },
+                "access": "holds:formation-pilotage",
+                "space": "team",
+                "description": "Suivre son équipe, rendre les avis de palier et accorder des distinctions.",
+                "result": "Les dossiers de l’équipe et la file des avis.",
+                "step": "Piloter",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "administration",
+                "label": "Administration",
+                "symbol": "⚙",
+                "link": "/budget-management/formation/administration",
+                "access": "holds:budget-administration",
+                "space": "training-admin",
+                "description": "Le barème, les paliers et l’annuaire des apprenants.",
+                "result": "Les réglages de la formation avec aperçu des effets.",
+                "step": "Administrer",
+                "tone": "nav-violet"
+              }
+            ],
+            "homeTone": "nav-lagoon",
+            "module": "formation"
+          }
+        ],
+        "resets": [
+          {
+            "label": "Remise à zéro de Budget",
+            "link": "/reinitialisation",
+            "fragment": "budget-management-reset",
+            "description": "Les six familles, les réglages budgétaires et les jeux fictifs."
+          },
+          {
+            "label": "Effacer mes essais de formation",
+            "link": "/budget-management/formation",
+            "query": {
+              "vue": "apprendre"
+            },
+            "fragment": "bt-cleanup-title",
+            "description": "Les fiches FOR - par geste, par parcours ou en totalité."
+          }
+        ],
+        "overview": {
+          "outcomes": [
+            "Constituer un PBM rattaché au projet du noyau avec son premier centre de coûts et ses bénéficiaires.",
+            "Modifier les éléments enregistrés avec Manager et suivre les opérations, la trésorerie et les échéances.",
+            "Décider à partir des tableaux de bord, du calendrier et des parcours de suivi."
+          ],
+          "start": "Pour un nouveau projet, ouvrir Créer les éléments d’un PBM. Pour un projet déjà constitué, ouvrir Manager ; la synthèse et Budget 360 donnent la lecture consolidée."
+        }
+      },
+      {
+        "id": "patrimoine",
+        "label": "Patrimoine Management",
+        "acronym": "PPM",
+        "eyebrow": "Module de niveau 1 · PPM",
+        "mission": "Constituer et suivre un Projet Patrimoine Management pour une personne ou une famille, du réel à sa projection.",
+        "scope": "Stockage indépendant du PBM ; les actifs Budget historiques ne sont pas déplacés.",
+        "size": "medium",
+        "band": "assembled",
+        "tone": "budget",
+        "sections": [
+          {
+            "id": "ensemble",
+            "label": "Vue d’ensemble",
+            "acronym": "VE",
+            "intention": "Synthèse et repères",
+            "description": "La lecture globale du module : patrimoine total, actifs, apports du budget, prévisionnel et familles de fiches.",
+            "space": "patrimoine-create",
+            "tone": "nav-navy",
+            "homeTone": "nav-lagoon",
+            "module": "patrimoine",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "synthese",
+                "label": "Synthèse globale",
+                "symbol": "◉",
+                "link": "/patrimoine-management",
+                "exact": true,
+                "space": "patrimoine-create",
+                "description": "Les repères de tout Patrimoine : patrimoine total, actifs, apports du budget et six familles.",
+                "result": "Une vue d’ensemble qui mène à chaque famille.",
+                "tone": "nav-blue",
+                "overview": true
+              }
+            ]
+          },
+          {
+            "id": "creer",
+            "label": "Créer les éléments d’un PPM",
+            "acronym": "01",
+            "intention": "Projet et allocation, bénéficiaires, actifs, puis mouvements et prestataires facultatifs.",
+            "description": "Projet et allocation, bénéficiaires, actifs, puis mouvements et prestataires facultatifs.",
+            "space": "patrimoine-creer",
+            "pages": [
+              {
+                "id": "projects",
+                "label": "Projets patrimoniaux",
+                "symbol": "◇",
+                "link": "/patrimoine-management/creer/projects",
+                "space": "patrimoine-creer",
+                "step": "1",
+                "description": "Un projet du noyau et sa première allocation.",
+                "result": "Un projet patrimonial et son allocation enregistrés ensemble.",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "allocations",
+                "label": "Allocations",
+                "symbol": "◇",
+                "link": "/patrimoine-management/creer/allocations",
+                "space": "patrimoine-creer",
+                "step": "2",
+                "description": "Répartir le patrimoine par destination.",
+                "result": "Des allocations pour rattacher les actifs.",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "people",
+                "label": "Personnes",
+                "symbol": "◇",
+                "link": "/patrimoine-management/creer/people",
+                "space": "patrimoine-creer",
+                "step": "3",
+                "description": "Identifier la personne ou la famille bénéficiaire.",
+                "result": "Au moins un bénéficiaire du projet.",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "operations",
+                "label": "Opérations",
+                "symbol": "◇",
+                "link": "/patrimoine-management/creer/operations",
+                "space": "patrimoine-creer",
+                "step": "4",
+                "description": "Enregistrer les mouvements ponctuels, réalisés ou prévus, à leur date.",
+                "result": "Des mouvements datés sans les confondre avec les valeurs réelles.",
+                "tone": "nav-violet"
+              },
+              {
+                "id": "providers",
+                "label": "Prestataires",
+                "symbol": "◇",
+                "link": "/patrimoine-management/creer/providers",
+                "space": "patrimoine-creer",
+                "step": "5",
+                "description": "Retrouver les professionnels qui vous accompagnent.",
+                "result": "Les contacts connus, facultatifs au départ.",
+                "tone": "nav-cyan"
+              },
+              {
+                "id": "assets",
+                "label": "Actifs",
+                "symbol": "◇",
+                "link": "/patrimoine-management/creer/assets",
+                "space": "patrimoine-creer",
+                "step": "6",
+                "description": "Décrire les actifs, leurs valeurs datées et les dettes associées.",
+                "result": "Un patrimoine réel distinct de sa projection.",
+                "tone": "nav-rose"
+              }
+            ],
+            "tone": "nav-teal",
+            "homeTone": "nav-lagoon",
+            "module": "patrimoine"
+          },
+          {
+            "id": "manager",
+            "label": "Manager",
+            "acronym": "02",
+            "intention": "Retrouver et modifier les éléments du PPM dans leur contexte.",
+            "description": "Retrouver et modifier les éléments du PPM dans leur contexte.",
+            "space": "patrimoine-manager",
+            "pages": [
+              {
+                "id": "projects",
+                "label": "Projets patrimoniaux",
+                "symbol": "◇",
+                "link": "/patrimoine-management/manager/projects",
+                "space": "patrimoine-manager",
+                "step": "1",
+                "description": "Un projet du noyau et sa première allocation.",
+                "result": "Un projet patrimonial et son allocation enregistrés ensemble.",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "allocations",
+                "label": "Allocations",
+                "symbol": "◇",
+                "link": "/patrimoine-management/manager/allocations",
+                "space": "patrimoine-manager",
+                "step": "2",
+                "description": "Répartir le patrimoine par destination.",
+                "result": "Des allocations pour rattacher les actifs.",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "people",
+                "label": "Personnes",
+                "symbol": "◇",
+                "link": "/patrimoine-management/manager/people",
+                "space": "patrimoine-manager",
+                "step": "3",
+                "description": "Identifier la personne ou la famille bénéficiaire.",
+                "result": "Au moins un bénéficiaire du projet.",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "operations",
+                "label": "Opérations",
+                "symbol": "◇",
+                "link": "/patrimoine-management/manager/operations",
+                "space": "patrimoine-manager",
+                "step": "4",
+                "description": "Enregistrer les mouvements ponctuels, réalisés ou prévus, à leur date.",
+                "result": "Des mouvements datés sans les confondre avec les valeurs réelles.",
+                "tone": "nav-violet"
+              },
+              {
+                "id": "providers",
+                "label": "Prestataires",
+                "symbol": "◇",
+                "link": "/patrimoine-management/manager/providers",
+                "space": "patrimoine-manager",
+                "step": "5",
+                "description": "Retrouver les professionnels qui vous accompagnent.",
+                "result": "Les contacts connus, facultatifs au départ.",
+                "tone": "nav-cyan"
+              },
+              {
+                "id": "assets",
+                "label": "Actifs",
+                "symbol": "◇",
+                "link": "/patrimoine-management/manager/assets",
+                "space": "patrimoine-manager",
+                "step": "6",
+                "description": "Décrire les actifs, leurs valeurs datées et les dettes associées.",
+                "result": "Un patrimoine réel distinct de sa projection.",
+                "tone": "nav-rose"
+              }
+            ],
+            "tone": "nav-indigo",
+            "homeTone": "nav-lagoon",
+            "module": "patrimoine"
+          },
+          {
+            "id": "suivre",
+            "label": "Suivre & décider",
+            "acronym": "03",
+            "intention": "Lire la valeur et les mouvements futurs.",
+            "description": "Le patrimoine net réel et les flux prévisionnels restent distincts. Aucun rendement ni revalorisation ne sont inventés.",
+            "space": "patrimoine-suivre",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "projection",
+                "label": "Réel & prévisionnel",
+                "symbol": "↗",
+                "link": "/patrimoine-management/projection",
+                "space": "patrimoine-suivre",
+                "description": "Valorisations, mouvements réalisés et versements prévus.",
+                "result": "Une projection calculée à partir des seules données saisies.",
+                "tone": "nav-blue"
+              }
+            ],
+            "tone": "nav-violet",
+            "homeTone": "nav-lagoon",
+            "module": "patrimoine"
+          },
+          {
+            "id": "calendrier",
+            "label": "Calendrier 360",
+            "acronym": "C3",
+            "intention": "Les opérations patrimoniales dans le temps",
+            "description": "Les mouvements réalisés et prévus du patrimoine, en année, mois ou semaine.",
+            "space": "patrimoine-calendrier",
+            "module": "patrimoine",
+            "tone": "nav-cyan",
+            "homeTone": "nav-lagoon",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "calendrier",
+                "label": "Calendrier 360",
+                "symbol": "▦",
+                "link": "/patrimoine-management/calendrier-360",
+                "space": "patrimoine-calendrier",
+                "description": "Les mouvements ponctuels et les clôtures budgétaires reçues dans le stock.",
+                "result": "Les événements datés et le stock patrimonial cumulé.",
+                "tone": "nav-blue"
+              }
+            ]
+          }
+        ],
+        "module": "patrimoine",
+        "overview": {
+          "outcomes": [
+            "Constituer un PPM : projet patrimonial et première allocation, puis ses personnes et intervenants.",
+            "Décrire les actifs détenus et leurs valorisations datées, puis enregistrer les mouvements connus.",
+            "Lire séparément le patrimoine réel et la projection des opérations prévues."
+          ],
+          "start": "Commencer par Créer : le projet du noyau doit exister et la première allocation est créée avec le PPM. Une valeur non renseignée reste inconnue."
+        }
+      },
+      {
+        "id": "noyau",
+        "label": "Noyau transverse",
+        "acronym": "N0",
+        "eyebrow": "Zone principale · niveau 0",
+        "mission": "Le socle commun : projets, tâches, calendrier et temps sur lesquels reposent tous les modules du site.",
+        "scope": "Le noyau ne connaît aucun module. Budget, Formation admin et les autres zones lisent ses projets et ses tâches par leurs ports, sans écrire ses données.",
+        "size": "full",
+        "band": "core",
+        "tone": "core",
+        "sections": [
+          {
+            "id": "ensemble",
+            "label": "Vue d’ensemble",
+            "acronym": "VE",
+            "intention": "Comprendre et commencer",
+            "description": "Le socle commun : projets, tâches, calendrier et temps sur lesquels reposent tous les modules du site.",
+            "space": "projects",
+            "tone": "nav-navy",
+            "homeTone": "nav-lagoon",
+            "module": "core",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "ensemble",
+                "label": "Vue d’ensemble",
+                "symbol": "◫",
+                "link": "/zones/noyau",
+                "space": "projects",
+                "description": "Le socle commun : projets, tâches, calendrier et temps sur lesquels reposent tous les modules du site.",
+                "result": "Le rôle du module, ses parcours et le point de départ.",
+                "tone": "nav-navy",
+                "overview": true,
+                "zoneOverview": true
+              }
+            ]
+          },
+          {
+            "id": "projets",
+            "label": "Projets",
+            "acronym": "01",
+            "intention": "Cadrer",
+            "description": "Chaque projet comme un ensemble cohérent : son cadre, son plan de tâches et ses enveloppes.",
+            "space": "projects",
+            "module": "core",
+            "tone": "nav-blue",
+            "homeTone": "nav-lagoon",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "projets",
+                "label": "Projets",
+                "symbol": "◫",
+                "link": "/projects",
+                "metric": "noyau.projets",
+                "space": "projects",
+                "description": "Chaque projet comme un ensemble cohérent : son cadre, son plan de tâches et ses enveloppes.",
+                "result": "Le tableau des projets, leur fiche et leur plan.",
+                "step": "Cadrer",
+                "tone": "nav-blue"
+              }
+            ]
+          },
+          {
+            "id": "taches",
+            "label": "Tâches",
+            "acronym": "02",
+            "intention": "Agir",
+            "description": "La vue transversale des tâches, rattachées ou non à un projet, avec filtres et recherche.",
+            "space": "tasks",
+            "module": "core",
+            "tone": "nav-indigo",
+            "homeTone": "nav-lagoon",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "taches",
+                "label": "Tâches",
+                "symbol": "◇",
+                "link": "/delivery",
+                "metric": "noyau.taches",
+                "space": "tasks",
+                "description": "La vue transversale des tâches, rattachées ou non à un projet, avec filtres et recherche.",
+                "result": "Le tableau des tâches et le détail de chacune.",
+                "step": "Agir",
+                "tone": "nav-indigo"
+              }
+            ]
+          },
+          {
+            "id": "calendrier",
+            "label": "Calendrier",
+            "acronym": "03",
+            "intention": "Situer dans le temps",
+            "description": "Les projets et les tâches dans le temps, en vues annuelle, mensuelle et hebdomadaire.",
+            "space": "calendar",
+            "module": "core",
+            "tone": "nav-cyan",
+            "homeTone": "nav-lagoon",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "calendrier",
+                "label": "Calendrier",
+                "symbol": "▦",
+                "link": "/calendar-360",
+                "space": "calendar",
+                "description": "Les projets et les tâches dans le temps, en vues annuelle, mensuelle et hebdomadaire.",
+                "result": "Une période propre, indépendante du créneau global.",
+                "step": "Situer dans le temps",
+                "tone": "nav-cyan"
+              }
+            ]
+          },
+          {
+            "id": "temps",
+            "label": "Temps & pilotage",
+            "acronym": "04",
+            "intention": "Estimer, consommer, piloter",
+            "description": "Le temps est une notion du noyau : estimations, temps consommé et bilan du créneau.",
+            "space": "time",
+            "pages": [
+              {
+                "id": "pilotage",
+                "label": "Pilotage",
+                "symbol": "▥",
+                "link": "/pilotage",
+                "space": "time",
+                "description": "Le bilan du temps estimé et consommé sur le créneau de prise en compte.",
+                "result": "Les écarts de temps par projet et par tâche.",
+                "tone": "nav-blue"
+              }
+            ],
+            "tone": "nav-teal",
+            "homeTone": "nav-lagoon",
+            "module": "core"
+          }
+        ],
+        "resets": [
+          {
+            "label": "Remise à zéro du noyau",
+            "link": "/reinitialisation",
+            "fragment": "reset-overview-title",
+            "description": "Projets, tâches, relations et réglages de planification."
+          }
+        ],
+        "overview": {
+          "outcomes": [
+            "Cadrer les projets et leurs tâches dans un socle commun.",
+            "Situer le travail dans le calendrier et suivre le temps prévu ou consommé.",
+            "Fournir aux modules un cadre stable sans mélanger leurs données métier."
+          ],
+          "start": "Commencer par créer ou ouvrir un projet du noyau ; les modules Budget et Patrimoine pourront ensuite s’y rattacher."
+        }
+      },
+      {
+        "id": "administration",
+        "label": "Administration du site",
+        "acronym": "AS",
+        "eyebrow": "Zone technique · niveau 1",
+        "mission": "Les modules techniques du site : profils et droits des utilisateurs, et formation à l’usage du site.",
+        "scope": "Utilisateurs est le module central des profils et des périmètres ; Formation admin étend directement le noyau pour apprendre le site. Ni l’un ni l’autre ne produit de données métier.",
+        "size": "medium",
+        "band": "technical",
+        "tone": "users",
+        "sections": [
+          {
+            "id": "ensemble",
+            "label": "Vue d’ensemble",
+            "acronym": "VE",
+            "intention": "Comprendre et commencer",
+            "description": "Les modules techniques du site : profils et droits des utilisateurs, et formation à l’usage du site.",
+            "space": "users",
+            "tone": "nav-navy",
+            "homeTone": "nav-lagoon",
+            "module": "users",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "ensemble",
+                "label": "Vue d’ensemble",
+                "symbol": "◫",
+                "link": "/zones/administration",
+                "space": "users",
+                "description": "Les modules techniques du site : profils et droits des utilisateurs, et formation à l’usage du site.",
+                "result": "Le rôle du module, ses parcours et le point de départ.",
+                "tone": "nav-navy",
+                "overview": true,
+                "zoneOverview": true
+              }
+            ]
+          },
+          {
+            "id": "profil",
+            "label": "Mon profil",
+            "acronym": "MP",
+            "intention": "Choisir qui travaille",
+            "description": "Le profil choisi change l’identité de tous les modules et recharge le site.",
+            "space": "profile",
+            "pages": [
+              {
+                "id": "choisir",
+                "label": "Choisir son profil",
+                "symbol": "◎",
+                "link": "/acces",
+                "exact": true,
+                "space": "profile",
+                "description": "La liste des profils actifs, à choisir d’un toucher.",
+                "result": "Une identité commune à tous les modules.",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "refus",
+                "label": "Accès refusé",
+                "symbol": "⊘",
+                "link": "/acces/refus",
+                "hidden": true,
+                "space": "profile",
+                "description": "Le motif d’un refus d’accès et le moyen d’en sortir.",
+                "result": "Un retour explicite au choix du profil.",
+                "tone": "nav-teal"
+              }
+            ],
+            "tone": "nav-blue",
+            "homeTone": "nav-lagoon",
+            "module": "users"
+          },
+          {
+            "id": "droits",
+            "label": "Profils & droits",
+            "acronym": "PD",
+            "intention": "Rôles par périmètre",
+            "description": "Créer les profils et attribuer, dans chaque périmètre, rôles, responsables et parcours.",
+            "space": "users-admin",
+            "pages": [
+              {
+                "id": "administration",
+                "label": "Profils, rôles et droits",
+                "symbol": "⚿",
+                "link": "/utilisateurs",
+                "access": "administration",
+                "space": "users-admin",
+                "description": "Les profils et, pour chaque périmètre, les droits accordés à chacun.",
+                "result": "Des accès explicites, périmètre par périmètre.",
+                "tone": "nav-blue"
+              }
+            ],
+            "tone": "nav-teal",
+            "homeTone": "nav-lagoon",
+            "module": "users"
+          },
+          {
+            "id": "formation",
+            "label": "Formation admin",
+            "acronym": "FA",
+            "intention": "Apprendre le site",
+            "description": "Seize parcours pour prendre en main le noyau, l’administration, l’architecture et Configuration.",
+            "space": "site-employee",
+            "tone": "nav-rose",
+            "pages": [
+              {
+                "id": "espace",
+                "label": "Mon espace",
+                "symbol": "✦",
+                "link": "/formation-site",
+                "query": {
+                  "vue": "espace"
+                },
+                "fallback": true,
+                "space": "site-employee",
+                "description": "Votre dossier sur les parcours du site : compétences, paliers et récompenses.",
+                "result": "Votre progression sur le site.",
+                "step": "Consulter",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "apprendre",
+                "label": "M’entraîner",
+                "symbol": "✎",
+                "link": "/formation-site",
+                "query": {
+                  "vue": "apprendre"
+                },
+                "space": "site-learning",
+                "description": "Les gestes réels sur le noyau et les cours validés par une réponse juste.",
+                "result": "Des compétences acquises sur le site.",
+                "hint": [
+                  "parcours"
+                ],
+                "step": "S’entraîner",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "pilotage",
+                "label": "Pilotage de l’équipe",
+                "symbol": "◎",
+                "link": "/formation-site",
+                "query": {
+                  "vue": "pilotage"
+                },
+                "access": "holds:formation-site-pilotage",
+                "space": "site-team",
+                "description": "Suivre l’équipe sur les parcours du site et rendre les avis.",
+                "result": "Les dossiers de l’équipe.",
+                "step": "Piloter",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "administration",
+                "label": "Administration",
+                "symbol": "⚙",
+                "link": "/formation-site/administration",
+                "access": "holds:formation-site-administration",
+                "space": "site-training-admin",
+                "description": "Le barème, les récompenses et la rétention des fiches de la Formation admin.",
+                "result": "Les réglages de la Formation admin.",
+                "step": "Administrer",
+                "tone": "nav-violet"
+              }
+            ],
+            "homeTone": "nav-lagoon",
+            "module": "formation-site"
+          }
+        ],
+        "resets": [
+          {
+            "label": "Effacer mes essais de Formation admin",
+            "link": "/formation-site",
+            "query": {
+              "vue": "apprendre"
+            },
+            "fragment": "bt-cleanup-title",
+            "description": "Les fiches FOR - créées sur le noyau."
+          }
+        ],
+        "overview": {
+          "outcomes": [
+            "Choisir le profil actif et retrouver les accès qui lui sont attribués.",
+            "Administrer les droits dans les seuls périmètres confiés à ce profil.",
+            "Accéder à la formation d’administration pour préparer les gestes utiles."
+          ],
+          "start": "Commencer par Mon profil et mes accès. Les droits et la formation restent séparés des données Budget et Patrimoine."
+        }
+      },
+      {
+        "id": "configuration",
+        "label": "Configuration",
+        "acronym": "CF",
+        "eyebrow": "Module central · niveau 1",
+        "mission": "Le point de passage unique des paramètres : déclarer, régler, propager et vérifier.",
+        "scope": "Configuration porte les paramètres de tous les niveaux et leur interface ; les calculs et validations métier restent aux modules.",
+        "size": "medium",
+        "band": "technical",
+        "tone": "configuration",
+        "sections": [
+          {
+            "id": "ensemble",
+            "label": "Vue d’ensemble",
+            "acronym": "VE",
+            "intention": "Comprendre et commencer",
+            "description": "Le point de passage unique des paramètres : déclarer, régler, propager et vérifier.",
+            "space": "configuration-home",
+            "tone": "nav-navy",
+            "homeTone": "nav-lagoon",
+            "module": "configuration",
+            "home": "direct",
+            "pages": [
+              {
+                "id": "ensemble",
+                "label": "Vue d’ensemble",
+                "symbol": "◫",
+                "link": "/zones/configuration",
+                "space": "configuration-home",
+                "description": "Le point de passage unique des paramètres : déclarer, régler, propager et vérifier.",
+                "result": "Le rôle du module, ses parcours et le point de départ.",
+                "tone": "nav-navy",
+                "overview": true,
+                "zoneOverview": true,
+                "match": [
+                  "/configuration"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "reglages",
+            "label": "Réglages",
+            "acronym": "RG",
+            "intention": "Valeurs et durées",
+            "description": "Les réglages scalaires du site et des modules, leur registre et la rétention des journaux.",
+            "space": "configuration-settings",
+            "pages": [
+              {
+                "id": "reglages",
+                "label": "Réglages",
+                "symbol": "⚙",
+                "link": "/configuration/reglages",
+                "space": "configuration-settings",
+                "description": "Chaque réglage avec son contrôle déclaré : curseur, case, liste ou libellé.",
+                "result": "Des valeurs bornées, validées et révisées.",
+                "step": "Régler",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "catalogue",
+                "label": "Registre des réglages",
+                "symbol": "☰",
+                "link": "/configuration/catalogue",
+                "space": "configuration-catalog",
+                "description": "L’inventaire des réglages raccordés, à raccorder et non paramétrables.",
+                "result": "Ce qui est piloté, et ce qui ne l’est pas encore.",
+                "step": "Vérifier",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "journaux",
+                "label": "Rétention des journaux",
+                "symbol": "▤",
+                "link": "/configuration/journaux",
+                "space": "configuration-logs",
+                "description": "Une durée commune et ses exceptions par module ou par page.",
+                "result": "Des journaux conservés le temps voulu.",
+                "step": "Conserver",
+                "tone": "nav-indigo"
+              }
+            ],
+            "tone": "nav-blue",
+            "homeTone": "nav-lagoon",
+            "module": "configuration"
+          },
+          {
+            "id": "apparence",
+            "label": "Apparence",
+            "acronym": "AP",
+            "intention": "Patterns et navigation",
+            "description": "Les patterns visuels du site, par portée site, module ou espace, et l’ordre de la navigation.",
+            "space": "configuration-design",
+            "pages": [
+              {
+                "id": "patterns",
+                "label": "Patterns visuels",
+                "symbol": "◐",
+                "link": "/configuration/apparence",
+                "space": "configuration-design",
+                "description": "L’atelier des patterns : couleurs, pages, blocs, formulaires, données et lisibilité.",
+                "result": "Un réglage visuel appliqué partout où il doit l’être.",
+                "step": "Styliser",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "navigation",
+                "label": "Navigation",
+                "symbol": "☷",
+                "link": "/configuration/navigation",
+                "space": "configuration-navigation",
+                "description": "L’ordre des zones principales, des outils communs et des outils du bas.",
+                "result": "Une barre latérale rangée selon vos priorités.",
+                "step": "Ranger",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "contenus",
+                "label": "Contenus & présentation",
+                "symbol": "✎",
+                "link": "/configuration/contenus",
+                "space": "configuration-content",
+                "description": "Éditer les pages et leur habillage dans C2M.",
+                "result": "Un contenu cohérent, avec les mêmes droits et révisions.",
+                "tone": "cyan"
+              }
+            ],
+            "tone": "nav-teal",
+            "homeTone": "nav-lagoon",
+            "module": "configuration"
+          },
+          {
+            "id": "contrat",
+            "label": "Contrat & fichier",
+            "acronym": "CT",
+            "intention": "Échanger le contrat complet",
+            "description": "Exporter ou importer le fichier CSV complet, avec ses contrôles de cohérence et sa révision.",
+            "space": "configuration-home",
+            "pages": [
+              {
+                "id": "fichier",
+                "label": "Fichier CSV",
+                "symbol": "⇩",
+                "link": "/configuration/fichier",
+                "space": "configuration-file",
+                "description": "Exporter ou importer le CSV complet, avec sa version et sa révision.",
+                "result": "Une configuration échangée sans perte.",
+                "tone": "nav-teal"
+              }
+            ],
+            "home": "direct",
+            "tone": "nav-indigo",
+            "homeTone": "nav-lagoon",
+            "module": "configuration"
+          }
+        ],
+        "overview": {
+          "outcomes": [
+            "Comprendre les réglages et les propriétaires de chaque paramètre.",
+            "Adapter la navigation et les patterns visuels via le même contrat.",
+            "Échanger le CSV complet et examiner le contrat sans contourner les validations."
+          ],
+          "start": "Commencer par Réglages. Pour les couleurs et la présentation, ouvrir Apparence ; pour les échanges, utiliser Contrat & fichier."
+        }
+      }
+    ],
+    "overviewTone": "nav-navy",
+    "bands": [
+      {
+        "id": "flagship",
+        "label": "Module phare",
+        "description": "Le parcours le plus abouti : un seul projet pour piloter ensemble votre budget et votre patrimoine, de la saisie à la clôture."
+      },
+      {
+        "id": "assembled",
+        "label": "Les deux modules qu’il réunit",
+        "description": "Budget et Patrimoine restent deux modules frères, construits en miroir. Budget/Patrimoine Management les ouvre sur un même projet."
+      },
+      {
+        "id": "core",
+        "label": "Le socle commun",
+        "description": "Projets, tâches, calendrier et temps : la base sur laquelle reposent tous les modules."
+      },
+      {
+        "id": "technical",
+        "label": "Modules techniques",
+        "description": "Profils, droits, formation et paramètres du site."
+      }
+    ]
+  },
+  {
+    "id": "tools",
+    "label": "Outils communs",
+    "items": [
+      {
+        "id": "tests",
+        "label": "Tests",
+        "acronym": "TS",
+        "eyebrow": "Outil commun · qualité",
+        "mission": "Les cas de non-régression, leurs bilans et les points à instruire.",
+        "tone": "tests",
+        "sections": [
+          {
+            "id": "qualite",
+            "label": "Tests",
+            "acronym": "TS",
+            "intention": "Cas, points et bilans",
+            "description": "L’archive de non-régression lue comme source unique.",
+            "space": "tests",
+            "pages": [
+              {
+                "id": "cas",
+                "label": "Cas de test",
+                "symbol": "▣",
+                "link": "/tests",
+                "match": [
+                  "/tests/cas"
+                ],
+                "space": "tests",
+                "description": "Les cas unitaires, intermédiaires et de parcours.",
+                "result": "Les statuts OK/KO par groupe puis par cas.",
+                "step": "Exécuter",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "points",
+                "label": "Points à instruire",
+                "symbol": "?",
+                "link": "/tests/points",
+                "space": "tests",
+                "description": "Les questions de tronc et de branche à arbitrer.",
+                "result": "Les décisions attendues.",
+                "step": "Instruire",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "bilans",
+                "label": "Bilans",
+                "symbol": "☰",
+                "link": "/tests/bilans",
+                "space": "tests",
+                "description": "Les bilans datés de chaque campagne.",
+                "result": "La comparaison entre versions.",
+                "step": "Comparer",
+                "tone": "nav-indigo"
+              }
+            ],
+            "tone": "nav-blue",
+            "homeTone": "nav-lagoon",
+            "module": "tests"
+          }
+        ]
+      },
+      {
+        "id": "reinitialisation",
+        "label": "Réinitialisation",
+        "acronym": "RI",
+        "eyebrow": "Outil commun · données",
+        "mission": "Recharger ou effacer les jeux de recette, avec annonce de l’impact et confirmation.",
+        "tone": "admin",
+        "sections": [
+          {
+            "id": "donnees",
+            "label": "Réinitialisation",
+            "acronym": "RI",
+            "intention": "Jeux de recette",
+            "description": "Les recharges et effacements explicites.",
+            "space": "maintenance",
+            "pages": [
+              {
+                "id": "reinitialisation",
+                "label": "Réinitialisation",
+                "symbol": "↺",
+                "link": "/reinitialisation",
+                "space": "maintenance",
+                "description": "Recharger, filtrer et effacer les cas fictifs.",
+                "result": "Un espace de recette maîtrisé.",
+                "tone": "nav-blue"
+              }
+            ],
+            "tone": "nav-blue",
+            "homeTone": "nav-lagoon",
+            "module": "admin"
+          }
+        ],
+        "journey": [
+          {
+            "id": "comparer",
+            "label": "Comparer la source et l’espace actif",
+            "description": "Repérez les données présentes et celles des fichiers de référence avant toute décision.",
+            "result": "Un périmètre clair et les éventuels problèmes de lecture visibles.",
+            "link": "/reinitialisation",
+            "fragment": "reset-overview-title",
+            "step": "Observer"
+          },
+          {
+            "id": "choisir",
+            "label": "Choisir les données à reprendre",
+            "description": "Ouvrez le noyau ou Budget, puis choisissez une famille ou une fiche. Les commandes restent dans leur section.",
+            "result": "Une action précise, à relire dans son aperçu avant confirmation.",
+            "link": "/reinitialisation",
+            "fragment": "reset-projects-title",
+            "step": "Préparer"
+          },
+          {
+            "id": "verifier",
+            "label": "Vérifier avec les cas de recette",
+            "description": "Consultez les scénarios et leurs bilans pour distinguer ce qui est vérifié de ce qui reste à valider.",
+            "result": "Les preuves conservées dans l’archive des tests.",
+            "link": "/tests",
+            "step": "Vérifier"
+          }
+        ]
+      },
+      {
+        "id": "documentation",
+        "label": "Documentation",
+        "acronym": "DC",
+        "eyebrow": "Outil commun · guides",
+        "mission": "Les guides du site : architecture, modèle, statuts, stockage, vues et décisions.",
+        "tone": "docs",
+        "sections": [
+          {
+            "id": "guides",
+            "label": "Documentation",
+            "acronym": "DC",
+            "intention": "Sommaire et dix chapitres",
+            "description": "Les références actives du site.",
+            "space": "docs",
+            "pages": [
+              {
+                "id": "sommaire",
+                "label": "Sommaire",
+                "symbol": "▤",
+                "link": "/documentation",
+                "exact": true,
+                "space": "docs",
+                "description": "Le sommaire des guides et les parcours de lecture conseillés.",
+                "result": "Le bon chapitre pour chaque question.",
+                "tone": "nav-blue"
+              },
+              {
+                "id": "architecture",
+                "label": "Architecture",
+                "symbol": "⌂",
+                "link": "/documentation/architecture",
+                "space": "docs",
+                "description": "Le chapitre « Architecture » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-teal"
+              },
+              {
+                "id": "modele",
+                "label": "Modèle de données",
+                "symbol": "◫",
+                "link": "/documentation/modele",
+                "space": "docs",
+                "description": "Le chapitre « Modèle de données » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-indigo"
+              },
+              {
+                "id": "statuts",
+                "label": "Statuts et calculs",
+                "symbol": "∑",
+                "link": "/documentation/statuts",
+                "space": "docs",
+                "description": "Le chapitre « Statuts et calculs » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-violet"
+              },
+              {
+                "id": "stockage",
+                "label": "Stockage et écritures",
+                "symbol": "▤",
+                "link": "/documentation/stockage",
+                "space": "docs",
+                "description": "Le chapitre « Stockage et écritures » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-cyan"
+              },
+              {
+                "id": "vues",
+                "label": "Vues de travail",
+                "symbol": "☰",
+                "link": "/documentation/vues",
+                "space": "docs",
+                "description": "Le chapitre « Vues de travail » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-rose"
+              },
+              {
+                "id": "calendrier",
+                "label": "Calendrier 360",
+                "symbol": "▦",
+                "link": "/documentation/calendrier",
+                "space": "docs",
+                "description": "Le chapitre « Calendrier 360 » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-ocean"
+              },
+              {
+                "id": "pilotage",
+                "label": "Créneau et Pilotage",
+                "symbol": "▥",
+                "link": "/documentation/pilotage",
+                "space": "docs",
+                "description": "Le chapitre « Créneau et Pilotage » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-plum"
+              },
+              {
+                "id": "echanges",
+                "label": "Échanges de données",
+                "symbol": "⇄",
+                "link": "/documentation/echanges",
+                "space": "docs",
+                "description": "Le chapitre « Échanges de données » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-cobalt"
+              },
+              {
+                "id": "interface",
+                "label": "Interface et styles",
+                "symbol": "◐",
+                "link": "/documentation/interface",
+                "space": "docs",
+                "description": "Le chapitre « Interface et styles » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-petrol"
+              },
+              {
+                "id": "decisions",
+                "label": "Décisions et sources",
+                "symbol": "§",
+                "link": "/documentation/decisions",
+                "space": "docs",
+                "description": "Le chapitre « Décisions et sources » de la documentation du site.",
+                "result": "La règle, son pourquoi et ses renvois.",
+                "tone": "nav-iris"
+              }
+            ],
+            "home": "direct",
+            "tone": "nav-blue",
+            "homeTone": "nav-lagoon",
+            "module": "docs"
+          }
+        ]
+      },
+      {
+        "id": "journal",
+        "label": "Journal d’activité",
+        "acronym": "JA",
+        "eyebrow": "Outil commun · administration",
+        "mission": "Les navigations, clics et écritures enregistrés localement, avec archive et purge.",
+        "tone": "admin",
+        "access": "holds:budget-administration",
+        "sections": [
+          {
+            "id": "journal",
+            "label": "Journal d’activité",
+            "acronym": "JA",
+            "intention": "Traces locales",
+            "description": "Le journal local par module.",
+            "space": "journal",
+            "pages": [
+              {
+                "id": "journal",
+                "label": "Journal d’activité",
+                "symbol": "▤",
+                "link": "/administration/journal",
+                "access": "holds:budget-administration",
+                "space": "journal",
+                "description": "Les lignes du journal, leurs archives et leur purge confirmée.",
+                "result": "Une trace concise de l’activité.",
+                "tone": "nav-blue"
+              }
+            ],
+            "tone": "nav-blue",
+            "homeTone": "nav-lagoon",
+            "module": "admin"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bottom",
+    "label": "Outils sous les liens",
+    "items": [
+      {
+        "id": "profile",
+        "label": "Profil actif"
+      },
+      {
+        "id": "data",
+        "label": "Outils de données"
+      },
+      {
+        "id": "appearance",
+        "label": "Style de l’interface"
+      },
+      {
+        "id": "local",
+        "label": "Indicateur Espace local"
+      }
+    ]
+  }
+]

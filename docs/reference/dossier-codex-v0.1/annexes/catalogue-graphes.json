@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "rjs-ui-charts/0.1",
+  "commit": "54246fad6553f6388d8257711ae7ef58241b3450",
+  "charts": [
+    {
+      "id": "G01",
+      "purpose": "Parcours de chaque euro / DASH",
+      "dataAndRendering": "Barre segmentée par centre, reste positif ; lecture sur 100 € reçus ou dépensés.",
+      "source": "moneySegments, perHundred, bpm-money.scss."
+    },
+    {
+      "id": "G02",
+      "purpose": "Historique / DASH",
+      "dataAndRendering": "Courbes et barres par période ; réel, attendu, patrimoine, contributions et séparation principal/branches.",
+      "source": "bpm-dashboard-history.component.ts, .model.ts, .scss."
+    },
+    {
+      "id": "G03",
+      "purpose": "Cap patrimonial / DASH et FUTURE",
+      "dataAndRendering": "Stock et estimation face à une cible, valeur restante/dépassement.",
+      "source": "bpm-dashboard-wealth.component.*, bpm-objectives.component.*."
+    },
+    {
+      "id": "G04",
+      "purpose": "Réalisé vers prévu / PILOT",
+      "dataAndRendering": "Entrées, charges et solde ; une liaison graphique entre les deux états. Ce n’est pas un axe temporel.",
+      "source": "bpm-flow-pilot.component.*, bloc fp-bridge."
+    },
+    {
+      "id": "G05",
+      "purpose": "Impact des projets / PILOT",
+      "dataAndRendering": "Entrées, charges et nets par Budget, réalisés et attendus, axe partagé.",
+      "source": "Même composant, bloc fp-projects."
+    },
+    {
+      "id": "G06",
+      "purpose": "Réel face au prévu / PILOT",
+      "dataAndRendering": "Barres signées par fenêtre ; courbe du réel, prolongement prévisionnel différencié.",
+      "source": "lensBars, historyCurve, bpm-pilot-charts.scss."
+    },
+    {
+      "id": "G07",
+      "purpose": "Plafonds et marges des centres / PILOT",
+      "dataAndRendering": "Payé, prévu restant, plafond et dépassement.",
+      "source": "centerAllowances, bpm-vision.page.scss."
+    },
+    {
+      "id": "G08",
+      "purpose": "Avancement de période / PILOT",
+      "dataAndRendering": "Épargne réalisée / cible ; progression et temps écoulé distincts.",
+      "source": "ratio, rhythm, classes bp-progress et bv-progress."
+    },
+    {
+      "id": "G09",
+      "purpose": "Projection patrimoniale / FUTURE",
+      "dataAndRendering": "Deux courbes annuelles nominal/réel, surface et repères d’objectifs.",
+      "source": "visionProjection, visionChart, classes bv-chart, bv-nominal, bv-real."
+    },
+    {
+      "id": "G10",
+      "purpose": "Couverture des objectifs / FUTURE",
+      "dataAndRendering": "Couvert / cible nominale à la date ; statuts finançable, partiel, non financé, hors horizon.",
+      "source": "GoalReading, classes bv-goal, bv-progress."
+    },
+    {
+      "id": "G11",
+      "purpose": "Répartition patrimoniale / FUTURE",
+      "dataAndRendering": "Parts des allocations quand les valeurs sont connues.",
+      "source": "Section bv-alloc-title et modèles d’allocations."
+    },
+    {
+      "id": "G12",
+      "purpose": "Objectifs budget et patrimoine / FUTURE",
+      "dataAndRendering": "Progression de l’excédent cumulé et cap de stock ; valeurs actuelles et cibles.",
+      "source": "BpmObjectivesComponent, budgetSurplusProgress."
+    }
+  ]
+}

@@ -1,0 +1,645 @@
+{
+  "summary": "Implement the BPM pages (wizard, dashboard and details, expenses/center/act, pilot/vision) on the shared foundation",
+  "agentCount": 4,
+  "logs": [],
+  "result": [
+    {
+      "key": "wizard",
+      "result": {
+        "files": [
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/create.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/create-model.ts"
+        ],
+        "summary": "I replaced the stub with a full seven-step \"Partir de zéro\" assistant (the BpmCreatePage class keeps its name). The page logic is in create.ts. The draft model, per-step validation, local averages, cycle calculation, payload building and error-to-step mapping are in the new file create-model.ts. The page reads BpmApi.setupProfile() and Api.closures(); any closed period freezes the cycle. Confirmation sends one BpmApi.setup() call with a requestKey created once per draft. A retry of the same draft sends identical content, so the server replays it instead of duplicating. Only new or changed items are sent. Existing budget lines are updated through their recurrenceId (label, amount and end date only). New personal centers use tempRef with costCenterRef 'new:<tempRef>'. Caps, Patrimoine, cycle, vision and goals are each sent only when they differ from the profile. The draft is kept in sessionStorage per user, so a reload or a lost response resumes it with the same key. When the profile reloads, lines and goals that appeared since are added, and nothing already typed is overwritten. Field errors from the API are mapped to the right step and field, and the entry is kept. A network or 5xx error, where the outcome is unknown, is retried with the same key. An IDEMPOTENCY_CONFLICT error is explained to the user, with a link to the dashboard. Cancel asks for confirmation, writes nothing, clears the draft and returns to /tableau-de-bord. ngc compiles with no errors. Nothing was checked in a browser, as the brief requires.",
+        "requirements": [
+          {
+            "requirement": "§6 Seven-step assistant with visible progress (accessible step list, aria-current), Précédent / Continuer / Annuler, short help on request",
+            "where": "create.ts (nav.steps, footer.nav, details.help '?' on each step)",
+            "status": "implemented",
+            "note": "You can go back to any step already reached. Focus moves to the step title on change and to the error summary when validation fails."
+          },
+          {
+            "requirement": "Step 1: active user and type, proposed starting profile, preview of income, charges and natural savings; proposals editable and not treated as realized operations",
+            "where": "create.ts @case(1)",
+            "status": "implemented",
+            "note": "Monthly averages come from budgetType (averageIncome/Charge/Net). The user type is shown as the raw userType code, because the profile contract has no label for it."
+          },
+          {
+            "requirement": "Step 2: explicit choice of principal or branch, never inferred from the name; a branch needs at least one task (title, description, optional planned hours)",
+            "where": "create.ts @case(2); create-model.ts validate(2)",
+            "status": "implemented",
+            "note": "Nothing is selected by default. Principal and branch names are stored separately, so the principal's name is never reused for a branch."
+          },
+          {
+            "requirement": "Step 3: income and charge lines (label, center, amount, cadence, first date, optional end); prefilled with existing lines (recurrenceId) then empty suggestions; optional caps (principal); personal center that can be added",
+            "where": "create.ts @case(3); create-model.ts draftFromProfile / mergeProfile / buildPayload",
+            "status": "implemented",
+            "note": "On an existing line, center, cadence and first date are read-only, because setupProject only updates label, amount and endDate. A suggestion left without an amount is ignored, and this is shown on screen. A branch does not include the principal's lines. Existing caps are prefilled from context.budgets[].capsCents."
+          },
+          {
+            "requirement": "Monthly average totals (labelled 'moyenne') and typical balance computed with PER_YEAR 52/12/1; one-off lines excluded and flagged",
+            "where": "create-model.ts totalsOf; create.ts .totals and hint",
+            "status": "implemented",
+            "note": "Recurring lines that have already ended are also excluded, to match budgetType."
+          },
+          {
+            "requirement": "Step 4: known initial stock or 'à renseigner' (null), date, stock objective; branch shows the single Patrimoine read-only",
+            "where": "create.ts @case(4)",
+            "status": "implemented",
+            "note": "A negative stock is accepted (signed). An unknown stock is never treated as zero."
+          },
+          {
+            "requirement": "Step 5: monthly cycle of the principal (anchor day 1–28, start date), current / next / past-catch-up periods computed client-side; weekly/annual and automatic catch-up shown as not available; branch told it follows the principal's cycle",
+            "where": "create.ts @case(5); create-model.ts cyclePreview / periodByIndex (same split as api periods.mjs)",
+            "status": "implemented",
+            "note": "When at least one period is closed (Api.closures()), the cycle is shown frozen and not sent."
+          },
+          {
+            "requirement": "Step 6: annual return (optional), inflation, optional target savings, dated goals (label, type from goalTypes, positive amount in today's euros, date), 'complete later'",
+            "where": "create.ts @case(6); create-model.ts validate(6)",
+            "status": "implemented",
+            "note": "Existing goals can be edited (goalId) but not removed here; removal stays in Objectifs et avenir. In branch mode the vision and goals still belong to the user, and this is stated on screen."
+          },
+          {
+            "requirement": "Step 7: summary, single confirmation, processing state, field errors sent back to the right step with entry kept, navigation to /tableau-de-bord with a message on success",
+            "where": "create.ts @case(7), confirm(), reportError(); create-model.ts locateField",
+            "status": "partial",
+            "note": "Navigation passes the message in router state (history.state.bpmNotice). The dashboard page belongs to another agent and does not read it yet, so the message is not visible there for now."
+          },
+          {
+            "requirement": "No duplicates on double click, lost response or resumed confirmation; Annuler writes nothing",
+            "where": "create.ts submitting guard, requestKey kept per draft and in sessionStorage, cancel()",
+            "status": "implemented",
+            "note": "The content is built deterministically, so a retry carries the same fingerprint. If the draft is edited after a confirmation already went through, the server returns IDEMPOTENCY_CONFLICT and the user gets an explicit message."
+          },
+          {
+            "requirement": "Per-step client validation (valid calendar dates, positive amounts) without losing the entry",
+            "where": "create-model.ts validate / isCalendarDate",
+            "status": "implemented"
+          },
+          {
+            "requirement": "Patrimoine asset details and advanced phases",
+            "where": "create.ts @case(4) help",
+            "status": "blocked-business-choice",
+            "note": "Shown as not available (business choice not validated)."
+          }
+        ],
+        "apiNeeds": [
+          "The dashboard (/tableau-de-bord) needs a shared way to show a message after navigation. create.ts sends router state { bpmNotice: string }, which the dashboard should read via history.state.bpmNotice (or a shared notice service in bpm/ui).",
+          "SetupProfile has no readable label for the user type (only the userType code) and no count of closed periods or cycle-frozen flag. The page currently uses the legacy Api.closures() to detect a frozen cycle.",
+          "Errors raised by budget.buildOperation/buildRecurrence inside setupProject use unprefixed fields ('amount', 'date', 'costCenterRef'…) instead of entries[i].*. The page can send the user to step 3 but cannot highlight the exact line; prefixing them with entries[i] would fix this.",
+          "setupProject cannot change the center, cadence or first date of an existing recurrence (recurrenceId), so these fields are read-only in the assistant."
+        ],
+        "limits": [
+          "Not checked in a browser (by rule). Only the ngc check (types and templates) was run, and it reports no errors.",
+          "The success message is passed to the dashboard but is visible only once the dashboard reads history.state.bpmNotice.",
+          "The draft is kept in sessionStorage for the browser session only. If storage is unavailable, the draft stays in memory.",
+          "Vision and goals entered in branch mode change the user's single vision; this is shown on screen.",
+          "Existing goals cannot be removed from the assistant (this belongs to Objectifs et avenir).",
+          "Weekly/annual cycles, automatic catch-up, and Patrimoine asset details are shown as not available (business choice not validated)."
+        ],
+        "compileClean": true
+      }
+    },
+    {
+      "key": "dashboard",
+      "result": {
+        "files": [
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/dashboard.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/balance.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/incomes.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/dashboard-parts.ts"
+        ],
+        "summary": "Mission B est faite. Les trois stubs sont remplacés par de vraies pages, et les noms de classe sont gardés : BpmDashboard, BpmBalancePage et BpmIncomesPage. J'ai aussi créé dashboard-parts.ts, avec quatre éléments partagés : setupProblem() et <bpm-setup-needed> pour les cas « sans user » et « ensemble principal pas prêt », shade() qui décline une même couleur de mesure par catégorie, et le graphe local <bpm-dashboard-cap> pour le Cap patrimonial (stock et estimation face à l'objectif, avec le manque ou le dépassement, et les valeurs négatives à gauche de zéro).\n\nToutes les pages s'appuient sur les contrats existants, avec bpmLoader, l'URL comme seul état (period, ligne, avant, historique, initial, current), un retour avec la période gardée, l'éditeur partagé et le panneau de détail partagé. Aucun chiffre n'est inventé : une valeur inconnue s'affiche « Inconnu », « À renseigner » ou « Non calculable » avec sa raison.\n\nTableau de bord :\n- Synthèse : quatre cartes avec leurs sous-valeurs (À recevoir, À payer, Budget initial comme référence séparée) et leurs liens. Une période close affiche le badge « Enregistré » et propose la comparaison avec les formules actuelles dans un bloc repliable.\n- Patrimoine : stock, effet signé de la période, estimation, objectif, progression, Cap patrimonial et explication repliable du calcul.\n- Clôture : reprise fidèle de l'ancienne page (C02). L'aperçu est figé au moment de la demande, puis closePeriod reçoit expectedResultCents. En cas de CLOSING_PREVIEW_STALE, le nouvel aperçu s'affiche et une relecture est demandée.\n- Budget du projet de vie : revenus et charges récurrents, ponctuels et projets de la vie.\n- Où va l'argent : barre 100 % ou anneau, avec le reste positif en --s-rest.\n- Historique : flux et Patrimoine en séries séparées, quatre formats, et répartition camembert ou anneau pour la période choisie.\n\nSolde : décomposition contrôlée, effet patrimonial et rapprochement repliable gardé dans l'URL. Le bouton « Saisir l'opération manquante » ouvre l'éditeur prérempli et ne crée rien.\n\nEntrées : trois chiffres, ventilation par source (graphe et tableau), lignes groupées (reçues, attendues, non réalisées) avec ouverture du détail et pointage, et l'action « Ajouter une entrée » (direction income).\n\nVérification : `ngc -p tsconfig.app.json --noEmit` ne signale ni erreur ni avertissement sur mes fichiers, et `tsc --noUnusedLocals` est propre aussi. Je n'ai rien vérifié dans un navigateur, comme demandé.",
+        "requirements": [
+          {
+            "requirement": "§7.1 Synthèse : Reçu, Dépensé, Reste réel, Solde prévu à la clôture ; À recevoir / À payer en sous-valeurs ; Budget initial comme référence distincte ; liens vers /argent/entrees, /depenses, /argent/reste avec la période",
+            "where": "dashboard.ts (cards, bpm-metric)",
+            "status": "implemented",
+            "note": "Les valeurs viennent de BpmApi.summary. Une valeur inconnue affiche « Inconnu » avec unavailableReason."
+          },
+          {
+            "requirement": "Période close : chiffres enregistrés (badge) et recalcul comparatif présenté à part (C01)",
+            "where": "dashboard.ts (chip recorded, details compare) ; balance.ts (badge Enregistré)",
+            "status": "implemented",
+            "note": "La comparaison utilise summary.comparison. Pour l'unité, je reprends celle de figures[key] (valeurs en euros ou en %)."
+          },
+          {
+            "requirement": "§7.2 Patrimoine : stock enregistré, effet signé, estimation après période, objectif, progression, explication repliable ; stock absent = À renseigner avec lien de saisie",
+            "where": "dashboard.ts (section Patrimoine), dashboard-parts.ts",
+            "status": "implemented",
+            "note": "L'objectif de stock vient de Api.dashboard().patrimoine.objective, en euros, converti en centimes. Le lien de saisie mène à /creer."
+          },
+          {
+            "requirement": "Graphe Cap patrimonial (stock connu et estimation face à la cible, manque ou dépassement)",
+            "where": "dashboard-parts.ts (BpmDashboardCap)",
+            "status": "implemented",
+            "note": "Les valeurs sont aussi données en texte et dans un aria-label. Sans objectif, le graphe n'est pas dessiné et un message l'explique."
+          },
+          {
+            "requirement": "Clôture : date, conditions, résultat signé réellement capitalisé, effet sur le Patrimoine ; même contrat que la commande ; nouvel aperçu en cas de CLOSING_PREVIEW_STALE (C02)",
+            "where": "dashboard.ts (askClose, confirmClose)",
+            "status": "implemented",
+            "note": "Utilise Api.dashboard(period).closing et Api.closePeriod({requestKey, periodKey, expectedResultCents}). La clé de commande est rejouable et régénérée après un succès ou un aperçu périmé. Cycle non configuré : lien vers /creer."
+          },
+          {
+            "requirement": "§7.3 Budget et flux : revenus et charges récurrents, ponctuels, projets de la vie ; « Budget du projet de vie » ; Voir tout ; ouverture de l'opération (détail puis Modifier dans l'éditeur)",
+            "where": "dashboard.ts (section flux, openRecurrence, openLine, startEdit)",
+            "status": "implemented",
+            "note": "Une récurrence s'ouvre sur son occurrence dans la période, sinon sur sa première occurrence (`id@firstDate`). Un projet de la vie s'ouvre sur son projet noyau (/projects/:id)."
+          },
+          {
+            "requirement": "Action principale : Ajouter une entrée ou une charge (éditeur partagé)",
+            "where": "dashboard.ts, balance.ts ; incomes.ts propose « Ajouter une entrée »",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§7.4 / §13 Parcours de chaque euro : barre 100 % des dépenses par centre et du reste positif, lecture sur 100 €, clic vers /argent/postes/<ref>",
+            "where": "dashboard.ts (shareItems, openCenter)",
+            "status": "implemented",
+            "note": "Utilise centers({direction:'charge'}) et basis.restCents. Un clic sur le reste mène à /argent/reste. Les centres sans paiement mais avec un restant prévu sont listés à part."
+          },
+          {
+            "requirement": "§7.5 / §13 Historique : six périodes, entrées et dépenses en barres et net en courbe, formats combiné, courbes, barres et aire ; variante Patrimoine séparée ; accès aux autres périodes",
+            "where": "dashboard.ts (fluxSeries, patSeries, older/newest)",
+            "status": "implemented",
+            "note": "La pagination nextBefore passe par le paramètre ?avant=. La variante passe par ?historique=patrimoine. Le solde prévu des périodes ouvertes est tracé en pointillé. Le Patrimoine est marqué estimé à partir de la première période non enregistrée."
+          },
+          {
+            "requirement": "Formats camembert et anneau seulement pour une période choisie et des séries compatibles ; aucun secteur négatif ; base = entrées si elles couvrent les dépenses, sinon dépenses",
+            "where": "dashboard.ts (splitItems, splitBase)",
+            "status": "implemented",
+            "note": "Un déficit est indiqué en texte, jamais sous forme de secteur."
+          },
+          {
+            "requirement": "Périodes futures en prévision, closes enregistrées",
+            "where": "dashboard.ts (statut des périodes, HISTORY_STATUS)",
+            "status": "partial",
+            "note": "Le contrat history() ne renvoie pas de période future : il s'arrête à la période courante. La prévision ne porte donc que sur la période ouverte (solde prévu, Patrimoine estimé)."
+          },
+          {
+            "requirement": "Sans opération : zéros connus et invitation à saisir ; sans user ou ensemble principal : état explicite",
+            "where": "dashboard.ts (noOperation), incomes.ts (invite), dashboard-parts.ts (setupProblem, BpmSetupNeeded)",
+            "status": "implemented",
+            "note": "Les cas sont repérés par CONTEXT_REQUIRED, et par FORBIDDEN_BY_RULE avec details.preparation."
+          },
+          {
+            "requirement": "§12 Solde : reçu, payé, net réalisé, à recevoir, à payer, net attendu, date de clôture, effet patrimonial, décomposition",
+            "where": "balance.ts",
+            "status": "implemented",
+            "note": "Source : BpmApi.balance. Un contrôle vérifie que net + à recevoir − à payer donne le solde prévu, et l'écart s'affiche s'il y en a un. Le budget initial reste une référence nommée à part. Les formules sont repliables."
+          },
+          {
+            "requirement": "§12 Rapprochement repliable : solde initial et actuel dans l'URL, variation, net, écart, suggestion ; saisie relue sans création automatique",
+            "where": "balance.ts (reconcile, fillGap)",
+            "status": "implemented",
+            "note": "Utilise ?initial=&current=. Le calcul est fait par l'API. L'éditeur s'ouvre prérempli (sens et montant tirés de l'écart) et rien n'est créé tant que l'utilisateur n'enregistre pas."
+          },
+          {
+            "requirement": "§12 Entrées : total reçu, encore attendu, ventilation par source, opérations reçues et échéances, ouverture, modification et pointage",
+            "where": "incomes.ts",
+            "status": "implemented",
+            "note": "Ventilation en bpm-share-chart (barre, anneau, camembert) plus un tableau des sources. Un clic sur une ligne ouvre bpm-line-detail (?ligne=) : pointage « Reçu » si permis, puis Modifier dans l'éditeur."
+          },
+          {
+            "requirement": "Retour vers le tableau de bord avec la période gardée",
+            "where": "balance.ts, incomes.ts ([back])",
+            "status": "implemented"
+          },
+          {
+            "requirement": "Accessibilité et responsive (clavier, focus visible, tableaux associés, grilles auto-fit)",
+            "where": "les trois pages et dashboard-parts.ts",
+            "status": "partial",
+            "note": "Contrôlé seulement par la compilation et la relecture du code. Le rendu à 1440, 1024, 768 et 390 px reste à vérifier dans un navigateur."
+          }
+        ],
+        "apiNeeds": [
+          "L'objectif de stock du Patrimoine n'apparaît dans aucune lecture BPM en centimes (ni summary, ni balance). Je le lis via l'ancien Api.dashboard().patrimoine.objective, en euros. Il serait utile de l'ajouter en `objectiveCents` dans BpmBalance.patrimoine ou en figure de summary.",
+          "BpmApi.history() ne renvoie que les périodes passées et la courante, jamais de période future. Afficher des périodes futures en prévision demanderait d'étendre le contrat (par exemple `after`/`future`).",
+          "BpmSummary.comparison ne précise pas son unité (valeurs en euros ou en %, pas en centimes). Je déduis l'unité de figures[key].unit. Un champ `unit` ou des valeurs `…Cents` rendraient le contrat explicite.",
+          "BpmApi.closePeriod renvoie `unknown`. Le tableau de bord utilise donc l'ancien Api.closePeriod, typé { closure }, comme le demande la mission."
+        ],
+        "limits": [
+          "Je n'ai fait aucune vérification dans un navigateur, comme demandé. Seule la compilation a été contrôlée avec ngc et tsc --noUnusedLocals.",
+          "Le lien « Ouvrir dans le registre » de la page Entrées passe `direction=income` à /depenses. Il ne servira que si la page Dépenses lit ce paramètre sous ce nom, ce qui dépend d'un autre agent.",
+          "Un projet de la vie s'ouvre sur la page du projet noyau (/projects/:id), comme dans l'ancienne page. Il n'existe pas de page BPM dédiée.",
+          "Les catégories d'une répartition (centres, sources) se distinguent par des nuances de la couleur de leur mesure (--s-charge ou --s-income). La liste associée porte les libellés, mais deux catégories éloignées dans la liste peuvent recevoir la même nuance au-delà de six.",
+          "Le lien « Traçabilité de la clôture » mène à /object-management?inspect=<id>, comme dans l'ancienne page, à l'intérieur d'un bloc repliable."
+        ],
+        "compileClean": true
+      }
+    },
+    {
+      "key": "expenses",
+      "result": {
+        "files": [
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/expenses.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/center.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/act.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/act-due.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/act-budget-type.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/act-guidance.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/act-simulation.ts"
+        ],
+        "summary": "I wrote the three pages of mission C against the existing contracts, keeping the exported class names. BpmExpensesPage (/depenses) reads BpmApi.register. Every filter is in the URL: period, q, direction (charges by default, or entrées or tout), status, center (including __none__), taskId, budgetId, scope, groupBy and from/to. The header shows Payé, À payer and Non réalisé, says the totals follow the filters, and shows the line count. Search is always visible, waits 300 ms and replaces the URL entry instead of adding one. Lines are grouped by center, project or date. The Affiner panel only merges query params, so the search is kept, and it lists active filters as removable chips. A short help explains planned date versus real date. Each line is a deep link (?operation=&occurrence=) that opens bpm-line-detail. If the linked line is not in the list, the page reads it with BpmApi.line, gives the actual reasons (outside the window, direction, status, center, task, budget, search) and offers 'Effacer filtres et recherche' or 'Lire la date prévue'. The detail panel stays open. The main action is 'Ajouter une charge' ('Ajouter une entrée' when viewing entrées), and the detail's Modifier opens the shared editor. BpmCenterPage (/argent/postes/:poste) reads BpmApi.center. It shows paid, remaining, the optional cap, margin or overrun (signed), the share and its basis, and bpm-cap-chart. It lists operations and due items; a click opens the detail in place. Adding a charge uses the editor with the center's costCenterRef and direction as defaults. Changing the center or note goes through detail, then Modifier, then the editor, which announces the scope for a recurrence. Links lead to the register filtered on this center or on 'Centre à préciser'. The back link follows ?from=tableau-de-bord|piloter|depenses and defaults to the dashboard. BpmActPage (/piloter/agir) has the main action 'Ajouter une entrée ou une charge' and keyboard-accessible ARIA tabs (arrows, Home, End) with the state in ?panneau=. The panels are: Échéances, Saisie et aperçu (panels 1 and 2: it opens the shared editor and says the preview comes from the editor), Budget type, Directives, Objectif d'excédent and Simulation. ngc -p tsconfig.app.json --noEmit reports no errors. A one-off run with strict and strictTemplates also reported nothing in my files; its errors were all in other agents' files. Nothing was checked in a browser.",
+        "requirements": [
+          {
+            "requirement": "§8 Payé / À payer / Non réalisé en tête, totaux qui suivent les filtres",
+            "where": "expenses.ts (register.totals, bpm-metric)",
+            "status": "implemented",
+            "note": "Labels change to Reçu / À recevoir for entrées. With direction=tout the API adds both directions without sign, so a warning chip is shown."
+          },
+          {
+            "requirement": "§8 Recherche visible, debounce, conservée à l'ouverture d'une ligne",
+            "where": "expenses.ts onSearch (linkedSignal + setQuery replaceUrl)",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§8 Liste groupée par centre, avec regroupement projet/date",
+            "where": "expenses.ts (register.groups, groupBy in the URL)",
+            "status": "implemented",
+            "note": "The center group header links to /argent/postes/:poste?from=depenses."
+          },
+          {
+            "requirement": "§8 Panneau Affiner (projet/Budget, état, tâche, dates, regroupement) sans perte de recherche",
+            "where": "expenses.ts refine panel",
+            "status": "implemented",
+            "note": "Budget offers principal, all Budgets (scope=consolidated) or one branch. Task options are the tasks of budgeted projects (Api.tasks). A free date window uses from/to and does not change the cycle."
+          },
+          {
+            "requirement": "§8 Aide date prévue / date réelle",
+            "where": "expenses.ts details 'Date prévue ou date réelle ?' + register.selection",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§8 Détail de ligne par lien profond ?operation=&occurrence=",
+            "where": "expenses.ts lineQuery/selectedId + bpm-line-detail",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§8 Lien profond hors filtres/période : expliquer et proposer de changer filtres ou période",
+            "where": "expenses.ts missing/missingReasons/missingLine",
+            "status": "implemented",
+            "note": "Offers to clear the filters or to read the line's planned date (free window). Changing period uses the period navigation."
+          },
+          {
+            "requirement": "§8 Non réalisé ne compte pas dans Payé",
+            "where": "API register.totals (shown as is)",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§8 Action principale Ajouter une charge, Modifier depuis le détail (éditeur partagé)",
+            "where": "expenses.ts openCreate/openEdit",
+            "status": "implemented",
+            "note": "The editor's defaults come from the active filters (center, budget, direction)."
+          },
+          {
+            "requirement": "§12 Centre : payé, restant prévu, plafond facultatif, marge/dépassement, part des entrées ou dépenses",
+            "where": "center.ts (BpmApi.center, bpm-metric, bpm-cap-chart)",
+            "status": "implemented",
+            "note": "With no cap, it shows 'Sans plafond' and margin 'Non calculable', never zero. Base zero shows 'Non calculable'."
+          },
+          {
+            "requirement": "§12 Centre : liste des opérations et échéances, clic vers le détail",
+            "where": "center.ts table + bpm-line-detail (same URL convention)",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§12 Centre : ajout d'une charge (defaults costCenterRef/direction)",
+            "where": "center.ts defaults()",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§12 Centre : précision du centre ou de la note, portée annoncée pour une récurrence",
+            "where": "center.ts → detail → Modifier → bpm-operation-editor",
+            "status": "implemented",
+            "note": "The scope is announced by the shared editor after saving (updateRecurrence scope)."
+          },
+          {
+            "requirement": "§12 Retour vers la page d'origine (?from=)",
+            "where": "center.ts back()",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§10 Action principale Ajouter une entrée ou une charge, panneaux identifiables avec état dans l'URL",
+            "where": "act.ts (ARIA tabs, ?panneau=)",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§10.1 Éditeur d'opération partagé",
+            "where": "act.ts 'Saisie et aperçu' panel + main action",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§10.2 Aperçu avant enregistrement",
+            "where": "provided by bpm-operation-editor (stated in the panel)",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§10.3 Échéances à traiter : Payé/Reçu avec valeurs réelles en ligne, détail, annulation, pas de second règlement",
+            "where": "act-due.ts (settleOccurrence / realizeOperation, cancelRealization)",
+            "status": "implemented",
+            "note": "Each row has its own stable requestKey and a busy and done lock. The API also refuses ALREADY_SETTLED. Cancelling the last settlement is offered, and the API checks closed periods. Unrealized items from closed periods are grouped separately."
+          },
+          {
+            "requirement": "§10.4 Budget type : plusieurs lignes éditables (montant, rythme, libellé) mises à jour sans recréation, ajout, totaux moyens et solde",
+            "where": "act-budget-type.ts (updateRecurrence with expectedRevision, createEntry with requestKey per draft)",
+            "status": "implemented",
+            "note": "Only changed fields are sent. Failed rows keep their draft and can be reset to the saved version. Totals are the saved ones from the API (no recomputation in the client)."
+          },
+          {
+            "requirement": "Plafonds par centre (setCaps) dans Budget type",
+            "where": "act-budget-type.ts saveCaps",
+            "status": "implemented",
+            "note": "Sends all charge centers (empty means no cap), expectedRevision of the life Budget."
+          },
+          {
+            "requirement": "§10.5 Directives avec hypothèses et Non calculable : raison",
+            "where": "act-guidance.ts BpmActDirectives",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§10.6 Objectif d'excédent : cible, périodes, départ ; progression ; ne modifie pas le stock",
+            "where": "act-guidance.ts BpmActSurplus (updateVision {expectedRevision: composition revision from setupProfile().principal.revision, surplus})",
+            "status": "implemented",
+            "note": "Removing the objective (surplus:null) asks for confirmation. On a conflict the input is kept and the saved version can be reread."
+          },
+          {
+            "requirement": "§10.7 Simulation : effort par période, Patrimoine futur, écart à la base, graphe, aucune écriture, Adopter → éditeur prérempli",
+            "where": "act-simulation.ts (projection({extra}), bpm-series-chart, ?effort=)",
+            "status": "implemented",
+            "note": "Before clicking, the page states exactly what Adopter will prefill: a monthly charge 'Épargne supplémentaire', the amount, first date next month, no end, center to choose, and a note. Nothing is written until the editor is confirmed. A missing hypothesis or unknown stock shows 'Non calculable' with the reason."
+          }
+        ],
+        "apiNeeds": [
+          "Composition revision for updateVision: there is no light read for it. The page reads it from BpmApi.setupProfile().principal.revision, which is heavy. It would be cleaner if directives() or the context exposed the vision and its revision.",
+          "Standard savings center: no 'épargne' center exists in the catalogue. The Adopter flow leaves the center for the user to choose, or to create as a personal center, in the editor.",
+          "Period of a date: no contract gives the cycle period key for a date. For a deep link outside the period, the expenses page offers a free date window centred on the planned date instead of jumping to the right cycle period.",
+          "register with direction=all: the totals add incomes and charges without sign. A per-direction split or a signed net in the totals would make the 'Tout' view readable."
+        ],
+        "limits": [
+          "Not checked in a browser (as the brief says); only ngc type and template checks were run.",
+          "Budget type covers only the recurring lines of the Budget du projet de vie (the scope of BpmApi.budgetType). End date, note and center of a line are edited through the shared editor from the register, not in the budget type grid.",
+          "Changing the rhythm of a line that already has settlements is refused by the API (rhythm and first date are frozen). The message is shown on the row and the draft is kept.",
+          "The due list is read without a period (current date). Directives and the surplus objective use the current period, so the act page has no period navigation.",
+          "The center page reads only the principal Budget (contract centerDetail).",
+          "Settling an unrealized item from a closed period is possible from the row; it counts at its real date as the API decides (policy [P])."
+        ],
+        "compileClean": true
+      }
+    },
+    {
+      "key": "pilot",
+      "result": {
+        "files": [
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/pilot.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/pilot-charts.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/vision.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/vision-charts.ts",
+          "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/vision-goal-editor.ts"
+        ],
+        "summary": "J'ai remplacé les deux stubs (les classes BpmPilotPage et BpmVisionPage sont conservées). J'ai ajouté trois fichiers de sous-composants. pilot-charts.ts contient bpm-flow-link, le graphe SVG « Réalisé vers prévu » : deux colonnes Réalisé et Attendu reliées par mesure, sans axe temporel, avec clavier, lecteur de valeurs et tableau associé. Il contient aussi bpm-impact-chart : barres par Budget, réalisé plein et attendu en contour, sur une échelle commune. vision-charts.ts contient bpm-goal-coverage (couvert sur cible, %, statut écrit). vision-goal-editor.ts contient le panneau de l'éditeur d'objectif : création avec une requestKey par brouillon, modification avec expectedRevision, saisie conservée en cas d'erreur.\n\nPage /piloter : les neuf blocs sont alimentés par summary, impact, centers, incomes, history, directives, events, budgetType, Api.closures() et un history de 36 périodes pour le Patrimoine après clôture. La navigation de période passe par ?period, la fenêtre de l'historique par ?fenetre=6|12|24 et la pagination par ?avant. Les liens gardent la période (carry). Le clic sur un centre ouvre /argent/postes/<ref>?from=piloter. L'action principale mène à /piloter/agir.\n\nPage /vision : hypothèses compactes avec badge « Estimation ». Un formulaire replié « Modifier les hypothèses » appelle updateVision avec les champs horizonYears, annualReturnPct, inflationPct, inflationSource, contribution, contributionCadence et savingsTarget. Il envoie expectedRevision égal à la révision de la composition, lue dans setupProfile().principal.revision. La page comprend aussi : états « hypothèse manquante » et « stock à renseigner » ; chiffres clés ; projection nominal/réel avec repères d'objectifs et tableau détaillé ; objectifs de vie (ajouter, modifier, retirer avec confirmation) et graphe de couverture. Viennent ensuite l'objectif budgétaire, le cap patrimonial, le graphe « Objectifs budget et Patrimoine » (deux bpm-progress distincts) et la comparaison des apports. La répartition patrimoniale est déclarée non disponible. Le formulaire replié de l'objectif d'excédent écrit lui aussi via updateVision (surplus).\n\nVérification : `cd web && npx ngc -p tsconfig.app.json --noEmit` se termine avec le code 0, sans erreur sur l'ensemble du projet. Le tsconfig n'active pas strictTemplates : le contrôle des templates est donc moins strict qu'il ne pourrait l'être. Aucun contrôle n'a été fait dans un navigateur, comme le demande le brief.",
+        "requirements": [
+          {
+            "requirement": "§9 Synthèse des flux : réalisé et attendu, liaison réalisé vers prévu sans faux axe temporel, tableau associé",
+            "where": "pilot.ts bloc 1 + pilot-charts.ts BpmFlowLink",
+            "status": "implemented",
+            "note": "Les deux états viennent du contrat summary. Entrées et charges attendues = reçu/payé + resteARecevoir/resteAPayer ; le net attendu est bpm.soldeAttendu. Le budget initial est affiché à part, comme référence."
+          },
+          {
+            "requirement": "§9/§13 Impact des projets par Budget (réalisé/attendu, échelle commune), consolidé annoncé",
+            "where": "pilot-charts.ts BpmImpactChart, pilot.ts bloc 1",
+            "status": "implemented",
+            "note": "La page affiche consolidated.status 'not-defined' et sa raison. Aucun total consolidé n'est calculé."
+          },
+          {
+            "requirement": "§9 Zoom sur le projet de vie : net, net attendu, épargne nécessaire, plafond, marge, avec source et unité temporelle",
+            "where": "pilot.ts bloc 2",
+            "status": "implemented",
+            "note": "Les directives portent sur la période courante ; la page le signale si la période lue est différente. La marge est la somme des marginCents des centres plafonnés ; sans plafond, la page affiche « Non calculable » avec la raison."
+          },
+          {
+            "requirement": "§9/§13 Réel face au prévu : fenêtre de périodes, barres signées, courbe réelle, prévision différenciée",
+            "where": "pilot.ts bloc 3 (bpm-series-chart)",
+            "status": "implemented",
+            "note": "Barres : net de chaque période. Courbe : net cumulé réel sur la fenêtre, prolongé en pointillé par le solde attendu de la période courante (forecastFrom). Fenêtre 6/12/24 et pagination avant/après dans l'URL. history ne renvoie aucune période future : le prolongement se limite à la période courante."
+          },
+          {
+            "requirement": "§9/§13 Centres de coûts : payé, restant prévu, plafond, marge/dépassement, graphe + tableau, détail par clic",
+            "where": "pilot.ts bloc 4 (bpm-cap-chart + tableau)",
+            "status": "implemented",
+            "note": "Le clic ouvre /argent/postes/<ref>?from=piloter et garde la période. Aucune conversion en moyennes."
+          },
+          {
+            "requirement": "§9 Revenus : reçu et encore attendu par source, accès au détail",
+            "where": "pilot.ts bloc 5",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§9 Événements à préparer : date, coût futur, périodes, provision indicative ou Non calculable",
+            "where": "pilot.ts bloc 6",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§9 Budget type résumé + action Modifier vers Ce qu'il faut faire",
+            "where": "pilot.ts bloc 7",
+            "status": "implemented",
+            "note": "Le lien pointe vers /piloter/agir?panneau=budget-type. La page /piloter/agir doit lire ce paramètre."
+          },
+          {
+            "requirement": "§9/§13 Avancement : temps écoulé et progression financière séparés",
+            "where": "pilot.ts bloc 8",
+            "status": "implemented",
+            "note": "Le temps est calculé depuis context.period et calculationDate. L'argent compare le net réalisé à l'épargne nécessaire (directives), plus l'excédent cumulé face à sa cible si un objectif d'excédent existe."
+          },
+          {
+            "requirement": "§9 Clôtures : résultat signé, Patrimoine après clôture si connu, accès à la période",
+            "where": "pilot.ts bloc 9",
+            "status": "partial",
+            "note": "La liste complète vient de Api.closures(). Le Patrimoine après clôture n'est lu que sur les 36 dernières périodes (history) ; au-delà, la page affiche « Non lu ici » et propose d'ouvrir la période."
+          },
+          {
+            "requirement": "§11 Hypothèses compactes avec statut Estimation ; formulaire replié ; rendement absent → hypothèse manquante ; stock inconnu → À renseigner",
+            "where": "vision.ts bloc Hypothèses",
+            "status": "implemented",
+            "note": "Le formulaire utilise updateVision avec expectedRevision. Le brouillon est conservé en cas d'erreur ou de conflit, et un bouton permet de relire la version enregistrée. Aucune projection n'est inventée. Le lien de saisie du stock pointe vers /creer."
+          },
+          {
+            "requirement": "§11 Chiffres clés : nominal à l'horizon, euros d'aujourd'hui, rendement réel, érosion sans rendement",
+            "where": "vision.ts kpis",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§11/§13 Projection annuelle nominal/réel avec repères d'objectifs et tableau",
+            "where": "vision.ts (bpm-series-chart --s-nominal / --s-real dashed, markers, tableau détaillé)",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§11 Objectifs de vie : ajouter/modifier/retirer, type, date, cibles, couvert, %, statut",
+            "where": "vision.ts + vision-goal-editor.ts",
+            "status": "implemented",
+            "note": "La création utilise une requestKey, la modification et le retrait une expectedRevision. Le retrait demande une confirmation sur la ligne. Si la projection est indisponible, le statut affiché est « Non calculable »."
+          },
+          {
+            "requirement": "§13 Couverture des objectifs (couvert/cible, %, statut)",
+            "where": "vision-charts.ts BpmGoalCoverage",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§11 Objectif budgétaire : épargne/apport par période, cible cumulée, effort nécessaire, progression",
+            "where": "vision.ts bloc Objectif budgétaire",
+            "status": "implemented",
+            "note": "Les valeurs viennent de directives.surplus, de la vision et des hypothèses. Un formulaire replié écrit le surplus via updateVision, ou le retire (surplus: null)."
+          },
+          {
+            "requirement": "§13 Objectifs budget et Patrimoine : deux progressions distinctes",
+            "where": "vision.ts (deux bpm-progress)",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§11/§13 Cap patrimonial : objectif, valeur connue, estimation, manque ou dépassement",
+            "where": "vision.ts bloc Cap patrimonial",
+            "status": "partial",
+            "note": "Lecture complète. L'objectif de stock n'est pas modifiable sur cette page : il dépend de la commande setup (patrimoine.objective) et la page renvoie vers /creer."
+          },
+          {
+            "requirement": "§11 Comparaison des apports (≥ 2 clôtures, mêmes autres hypothèses)",
+            "where": "vision.ts bloc Comparaison",
+            "status": "implemented",
+            "note": "Tableau et courbes ; à défaut, la page affiche la raison fournie par l'API."
+          },
+          {
+            "requirement": "§11/§13 Répartition patrimoniale (allocations, graphe)",
+            "where": "vision.ts bloc Répartition",
+            "status": "missing-contract",
+            "note": "La page affiche clairement « Non disponible : le Patrimoine n'expose pas d'allocations (choix métier ouvert) », avec la puce « Contrat manquant ». Aucun panneau vide n'est présenté comme terminé."
+          },
+          {
+            "requirement": "§11 Rappel : les objectifs de projection ne créent ni Budget, ni tâche, ni paiement",
+            "where": "vision.ts + vision-goal-editor.ts",
+            "status": "implemented"
+          },
+          {
+            "requirement": "§5 Cadre commun : bpm-page, contexte, une action principale, états chargement/erreur/vide, inconnu différent de zéro",
+            "where": "pilot.ts, vision.ts",
+            "status": "implemented"
+          }
+        ],
+        "apiNeeds": [
+          "Modèle d'allocations du Patrimoine (parts, valeurs connues, versements entre actifs, phases) : absent du middleware. La Répartition patrimoniale reste « Non disponible » tant que ce choix métier n'est pas fait.",
+          "Les lignes de BpmApi.history n'exposent pas leur index de période. La pagination « plus récentes » le reconstruit depuis context.period.index et `avant`. Un champ index par ligne, ou un nextAfter, rendrait la pagination plus sûre.",
+          "Aucune commande BPM dédiée pour modifier l'objectif de stock du Patrimoine hors de setup (patrimoine.objective). Il faudrait une commande ciblée, par exemple PUT /api/bpm/patrimoine/objective avec expectedRevision, pour l'éditer depuis Objectifs et avenir.",
+          "Les lectures directives et events n'acceptent pas de paramètre period : elles portent toujours sur la période courante. La page le signale quand une autre période est lue.",
+          "Le Patrimoine après clôture n'est disponible que via history (patrimoineFinPeriode) : ajouter patrimoineAfterCents à la vue de clôture (GET /api/bpm/closures) éviterait de limiter la lecture aux 36 dernières périodes."
+        ],
+        "limits": [
+          "Aucune vérification dans un navigateur (consigne du brief) : rendu 1440/1024/768/390, clavier et contrastes restent à contrôler par l'utilisateur.",
+          "Le tsconfig du projet n'active pas strictTemplates : ngc (code 0, aucune erreur) contrôle les templates de façon moins stricte qu'il ne pourrait.",
+          "Le lien Budget type pointe vers /piloter/agir?panneau=budget-type, et celui des directives vers ?panneau=directives. Leur effet dépend de la page Ce qu'il faut faire, réalisée par un autre agent.",
+          "Le prolongement prévisionnel de « Réel face au prévu » s'arrête à la période courante : l'historique ne renvoie pas de périodes futures.",
+          "Les entrées et charges attendues du graphe « Réalisé vers prévu » sont la somme réalisé + restant, deux chiffres du même contrat summary (formule C04). Seul le net attendu est un chiffre direct (bpm.soldeAttendu).",
+          "Le Patrimoine après clôture n'est lu que sur les 36 dernières périodes.",
+          "L'objectif de stock est affiché mais pas modifiable sur /vision : la page renvoie vers /creer, étape Patrimoine."
+        ],
+        "compileClean": true
+      }
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Pages"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "page:wizard",
+      "phaseIndex": 1,
+      "phaseTitle": "Pages",
+      "agentId": "ab6ec5e55a89d0d6d",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1793716269864,
+      "queuedAt": 1793716269801,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "I replaced the stub with a full seven-step \"Partir de zéro\"…",
+      "promptPreview": "Lis d'abord le brief commun /private/tmp/claude-501/-Users-rjsconseil-Documents-Claude-GitHub-RJS-Forcast-Socle/568d314f-f549-49fc-a43d-47b9d5e58107/scratchpad/brief.md (règles impératives), puis la spécification qu'il cite, puis les fichiers partagés qu'il décrit (bpm-models.ts, bpm-api.service.ts, bpm/ui/*.ts, reads.mjs). Remplace entièrement le contenu des fichiers-stubs de ta mission (garde le…",
+      "promptFramed": true,
+      "lastProgressAt": 1793716835360,
+      "tokens": 203137,
+      "toolCalls": 34,
+      "durationMs": 565493,
+      "resultPreview": "{\"files\":[\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/create.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/create-model.ts\"],\"summary\":\"I replaced the stub with a full seven-step \\\"Partir de zéro\\\" assistant (the BpmCreatePage class keeps its name). The page logic is in create.ts. The draft model, per-step validation, …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "page:dashboard",
+      "phaseIndex": 1,
+      "phaseTitle": "Pages",
+      "agentId": "a7fd29a25428c2d89",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1793716269864,
+      "queuedAt": 1793716269802,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Mission B est faite. Les trois stubs sont remplacés par de …",
+      "promptPreview": "Lis d'abord le brief commun /private/tmp/claude-501/-Users-rjsconseil-Documents-Claude-GitHub-RJS-Forcast-Socle/568d314f-f549-49fc-a43d-47b9d5e58107/scratchpad/brief.md (règles impératives), puis la spécification qu'il cite, puis les fichiers partagés qu'il décrit (bpm-models.ts, bpm-api.service.ts, bpm/ui/*.ts, reads.mjs). Remplace entièrement le contenu des fichiers-stubs de ta mission (garde le…",
+      "promptFramed": true,
+      "lastProgressAt": 1793716776625,
+      "tokens": 243020,
+      "toolCalls": 36,
+      "durationMs": 505502,
+      "resultPreview": "{\"files\":[\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/dashboard.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/balance.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/incomes.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/dashboard-parts.ts\"]…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "page:expenses",
+      "phaseIndex": 1,
+      "phaseTitle": "Pages",
+      "agentId": "a475bbc3db122506d",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1793716269865,
+      "queuedAt": 1793716269802,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "I wrote the three pages of mission C against the existing c…",
+      "promptPreview": "Lis d'abord le brief commun /private/tmp/claude-501/-Users-rjsconseil-Documents-Claude-GitHub-RJS-Forcast-Socle/568d314f-f549-49fc-a43d-47b9d5e58107/scratchpad/brief.md (règles impératives), puis la spécification qu'il cite, puis les fichiers partagés qu'il décrit (bpm-models.ts, bpm-api.service.ts, bpm/ui/*.ts, reads.mjs). Remplace entièrement le contenu des fichiers-stubs de ta mission (garde le…",
+      "promptFramed": true,
+      "lastProgressAt": 1793716927947,
+      "tokens": 239098,
+      "toolCalls": 43,
+      "durationMs": 656823,
+      "resultPreview": "{\"files\":[\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/expenses.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/center.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/act.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/act-due.ts\",\"/Users/rjscon…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "page:pilot",
+      "phaseIndex": 1,
+      "phaseTitle": "Pages",
+      "agentId": "aae0596156c298b21",
+      "model": "claude-opus-5-5",
+      "state": "done",
+      "startedAt": 1793716269866,
+      "queuedAt": 1793716269802,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "J'ai remplacé les deux stubs (les classes BpmPilotPage et B…",
+      "promptPreview": "Lis d'abord le brief commun /private/tmp/claude-501/-Users-rjsconseil-Documents-Claude-GitHub-RJS-Forcast-Socle/568d314f-f549-49fc-a43d-47b9d5e58107/scratchpad/brief.md (règles impératives), puis la spécification qu'il cite, puis les fichiers partagés qu'il décrit (bpm-models.ts, bpm-api.service.ts, bpm/ui/*.ts, reads.mjs). Remplace entièrement le contenu des fichiers-stubs de ta mission (garde le…",
+      "promptFramed": true,
+      "lastProgressAt": 1793716844923,
+      "tokens": 236552,
+      "toolCalls": 30,
+      "durationMs": 573797,
+      "resultPreview": "{\"files\":[\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/pilot.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/pilot-charts.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/vision.ts\",\"/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forcast_Socle/web/src/app/bpm/pages/vision-charts.ts\",\"/…"
+    }
+  ],
+  "totalTokens": 921807,
+  "totalToolCalls": 143
+}

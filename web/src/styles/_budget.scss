@@ -1,0 +1,1380 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Budget management : application locale séparée, avec les jetons communs du site. */
+.budget-page {
+  min-width: 0;
+}
+.budget-save-state {
+  margin: 0 0 var(--ecart-16);
+  padding: var(--ecart-10) var(--ecart-14);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--state-surface);
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-message {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  margin-bottom: var(--ecart-20);
+  padding: var(--ecart-12) var(--ecart-16);
+  border-left: var(--trait-3) solid var(--urgent-mark);
+  background: var(--urgent-surface);
+  color: var(--urgent-ink);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-message button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: scaled(var(--fs-lg));
+  cursor: pointer;
+}
+.budget-section {
+  min-width: 0;
+}
+.budget-section-head {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(var(--dim-240), var(--fr-0-8));
+  align-items: end;
+  gap: var(--ecart-28);
+  margin: 0 0 var(--ecart-24);
+}
+.budget-section-head .eyebrow {
+  margin-bottom: var(--ecart-8);
+}
+.budget-section-head h1,
+.budget-section-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-4xl));
+  font-weight: var(--fw-medium);
+}
+.budget-section-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-relaxed);
+}
+.budget-period-controls,
+.budget-form-inline,
+.budget-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ecart-12);
+}
+.budget-period-controls {
+  margin-bottom: var(--ecart-20);
+}
+.budget-page label {
+  display: grid;
+  gap: var(--ecart-6);
+  min-width: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+}
+.budget-page input,
+.budget-page select,
+.budget-page textarea {
+  min-width: 0;
+  min-height: var(--dim-40);
+  padding: var(--ecart-8) var(--ecart-10);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--raised-surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: scaled(var(--fs-sm));
+}
+.budget-page textarea {
+  resize: vertical;
+}
+.budget-page input:hover,
+.budget-page select:hover,
+.budget-page textarea:hover {
+  border-color: var(--control-line-hover);
+}
+.budget-page input:focus-visible,
+.budget-page select:focus-visible,
+.budget-page textarea:focus-visible {
+  border-color: var(--app-accent);
+  outline: var(--trait-2) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.budget-page button {
+  cursor: pointer;
+}
+.budget-page button:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacite-0-6);
+}
+.budget-kpis {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-5), minmax(0, var(--fr-1)));
+  gap: var(--ecart-12);
+  margin-bottom: var(--ecart-20);
+}
+.budget-kpis--compact {
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+}
+.budget-kpis article {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-8);
+  min-width: 0;
+  min-height: var(--dim-140);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+}
+.budget-kpis article > span,
+.budget-kpis small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-normal);
+}
+.budget-kpis strong {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+}
+.budget-kpis .budget-kpi-primary {
+  border-color: var(--app-accent);
+  background: var(--state-surface);
+}
+.budget-page .is-negative {
+  color: var(--urgent-mark);
+}
+.budget-insight-row {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-12);
+  margin-bottom: var(--ecart-28);
+}
+.budget-insight-row p,
+.budget-guidance {
+  margin: 0;
+  padding: var(--ecart-14) var(--ecart-16);
+  border-left: var(--trait-3) solid var(--app-accent);
+  background: var(--soft);
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-relaxed);
+}
+.budget-two-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  align-items: start;
+  gap: var(--ecart-20);
+  margin-bottom: var(--ecart-24);
+}
+.budget-two-columns--form {
+  grid-template-columns: minmax(var(--dim-300), var(--fr-0-8)) minmax(0, var(--fr-1-2));
+}
+.budget-project-bridge h2 {
+  margin: 0 0 var(--ecart-12);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-medium);
+}
+.budget-project-bridge .budget-form {
+  margin-top: var(--ecart-16);
+}
+.budget-project-bridge + .budget-inline-error,
+.budget-project-bridge + .budget-guidance {
+  margin-bottom: var(--ecart-20);
+}
+.budget-panel {
+  min-width: 0;
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+}
+.budget-panel h3 {
+  margin: 0 0 var(--ecart-16);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-medium);
+}
+.budget-panel h4 {
+  margin: var(--ecart-8) 0 var(--ecart-6);
+  color: var(--ink);
+  font-size: scaled(var(--fs-md));
+}
+.budget-panel p {
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-relaxed);
+}
+.budget-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  margin-bottom: var(--ecart-14);
+}
+.budget-panel-head h3 {
+  margin: 0;
+}
+.budget-panel-head > a,
+.budget-panel-head > button {
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  white-space: nowrap;
+}
+.budget-center-row,
+.budget-event-row,
+.budget-guest-row,
+.budget-quote-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  min-width: 0;
+  padding: var(--ecart-14) 0;
+  border-top: var(--trait-1) solid var(--line);
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-center-row {
+  text-decoration: none;
+}
+.budget-center-row:hover {
+  color: var(--app-accent);
+}
+.budget-center-row > span:first-child,
+.budget-event-row > span:nth-child(2),
+.budget-guest-row > span:first-child,
+.budget-quote-row > span:first-child {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: 0;
+}
+.budget-center-row small,
+.budget-event-row small,
+.budget-guest-row small,
+.budget-quote-row small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-event-row time {
+  min-width: var(--dim-112);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-event-row > strong {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.budget-empty-copy {
+  margin: var(--ecart-16) 0;
+}
+.budget-form {
+  display: grid;
+  gap: var(--ecart-14);
+}
+.budget-task-allocation {
+  margin-top: var(--ecart-24);
+}
+.budget-task-allocation h3 {
+  margin: var(--ecart-4) 0 var(--ecart-10);
+}
+.budget-task-allocation > p {
+  max-width: var(--dim-80ch);
+  line-height: var(--lh-normal);
+}
+.budget-allocation-balance {
+  padding: var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  font-weight: var(--fw-semibold);
+}
+.budget-allocation-balance.is-over {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.budget-allocation-balance.is-balanced {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+.budget-allocation-form {
+  grid-template-columns:
+    minmax(var(--dim-180), var(--fr-2)) minmax(var(--dim-128), var(--fr-1))
+    minmax(var(--dim-160), auto);
+  align-items: end;
+  margin: var(--ecart-16) 0;
+}
+.budget-context-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12) var(--ecart-20);
+  margin-bottom: var(--ecart-20);
+}
+.budget-context-navigation .detail-back {
+  margin-bottom: 0;
+}
+.budget-envelope-context {
+  border-inline-start: var(--trait-4) solid var(--app-accent);
+}
+.budget-envelope-filter {
+  display: grid;
+  gap: var(--ecart-6);
+  max-width: var(--dim-560);
+  font-weight: var(--fw-semibold);
+}
+.budget-envelope-filter select {
+  width: var(--part-100);
+  min-height: var(--dim-44);
+  padding: var(--ecart-8) var(--ecart-12);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  background: var(--raised-surface);
+  font: inherit;
+}
+.budget-project-portfolio-only {
+  grid-template-columns: minmax(0, var(--fr-1));
+}
+.budget-allocation-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8);
+}
+.budget-allocation-mode {
+  font-weight: var(--fw-semibold);
+}
+.budget-allocation-preview {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.budget-allocation-preview.is-over {
+  color: var(--danger);
+}
+.budget-allocation-notice {
+  padding: var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid var(--status-success);
+  border-inline-start-width: var(--trait-4);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  color: var(--status-success);
+  font-weight: var(--fw-semibold);
+}
+.budget-allocation-list {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: var(--ecart-16) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.budget-allocation-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8) var(--ecart-16);
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+}
+.budget-allocation-list li > a {
+  flex: var(--flex-1) var(--flex-1) var(--dim-220);
+}
+@media (max-width: $rupture-700) {
+  .budget-allocation-form {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+.budget-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-relaxed);
+}
+.budget-project-task-list {
+  display: grid;
+  gap: var(--ecart-6);
+  margin-block: var(--ecart-12);
+}
+.budget-project-time {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-4), minmax(0, var(--fr-1)));
+  gap: var(--ecart-8);
+  margin-block: var(--ecart-12);
+}
+.budget-project-time > div {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-6);
+  min-width: 0;
+  padding: var(--ecart-10);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+}
+.budget-project-time span {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-project-time strong {
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: scaled(var(--fs-md));
+}
+.budget-project-task-row {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1-2)) auto;
+  align-items: center;
+  gap: var(--ecart-10);
+  padding: var(--ecart-8) 0;
+  border-top: var(--trait-1) solid var(--line);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-project-task-row span {
+  color: var(--muted);
+}
+@media (max-width: $rupture-700) {
+  .budget-project-time {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  }
+  .budget-project-task-row {
+    grid-template-columns: minmax(0, var(--fr-1));
+    gap: var(--ecart-4);
+  }
+}
+.budget-form label {
+  width: var(--part-100);
+}
+.budget-form-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-12);
+}
+.budget-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-10);
+}
+.budget-form-inline {
+  margin-top: var(--ecart-14);
+}
+.budget-form-inline label {
+  flex: var(--flex-1) var(--flex-1) var(--dim-140);
+}
+.budget-settings {
+  margin-top: var(--ecart-28);
+}
+.budget-file-control {
+  display: inline-flex !important;
+  align-items: center;
+  min-height: var(--dim-40);
+  padding: var(--ecart-8) var(--ecart-12);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--radius-md);
+  background: var(--raised-surface);
+  color: var(--ink) !important;
+  cursor: pointer;
+  font-size: scaled(var(--fs-sm)) !important;
+}
+.budget-file-control:hover {
+  border-color: var(--control-line-hover);
+  background: var(--hover-surface);
+}
+.budget-file-control:focus-within {
+  outline: var(--trait-2) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.budget-file-control input {
+  position: absolute;
+  width: var(--dim-2);
+  height: var(--dim-2);
+  min-height: 0;
+  opacity: var(--opacite-0);
+  pointer-events: none;
+}
+.budget-inline-error {
+  margin: var(--ecart-10) 0;
+  color: var(--urgent-mark);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-starters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8);
+  margin-top: var(--ecart-20);
+  padding-top: var(--ecart-14);
+  border-top: var(--trait-1) solid var(--line);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-starters button {
+  padding: var(--ecart-6) var(--ecart-10);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--rayon-999);
+  background: var(--soft);
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-starters button:hover {
+  border-color: var(--control-line-hover);
+  background: var(--hover-surface);
+}
+.budget-list-card {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ecart-20);
+  padding: var(--ecart-16) 0;
+  border-top: var(--trait-1) solid var(--line);
+}
+.budget-list-card.is-selected {
+  padding-left: var(--ecart-12);
+  border-left: var(--trait-3) solid var(--app-accent);
+  background: var(--soft);
+}
+.budget-list-card > div:first-child {
+  min-width: 0;
+}
+.budget-list-card p {
+  margin: 0 0 var(--ecart-6);
+}
+.budget-list-card small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-list-card h4 a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: var(--decalage-4);
+}
+.budget-list-card-side {
+  display: grid;
+  justify-items: end;
+  align-content: start;
+  gap: var(--ecart-6);
+  min-width: var(--dim-112);
+  font-size: scaled(var(--fs-sm));
+  text-align: right;
+}
+.budget-list-card-side span {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-page .text-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--app-accent);
+  text-decoration: underline;
+  text-underline-offset: var(--decalage-4);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-page .budget-danger-link {
+  color: var(--urgent-mark);
+}
+.budget-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: var(--ecart-4) var(--ecart-8);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--rayon-999);
+  color: var(--muted);
+  background: var(--soft);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-tag[data-kind='income'] {
+  border-color: var(--app-accent);
+}
+.budget-tag[data-kind='investment'] {
+  border-color: var(--blue-600);
+}
+.budget-filters {
+  margin: 0 0 var(--ecart-20);
+}
+.budget-filters label {
+  flex: var(--flex-1) var(--flex-1) var(--dim-140);
+}
+.budget-operation-details {
+  margin-top: var(--ecart-24);
+}
+#budget-operation-settlement {
+  scroll-margin-top: calc(var(--topbar-height) + var(--ecart-20));
+}
+.budget-quote-row.is-selected {
+  background: var(--state-surface);
+}
+.budget-quote-row > strong {
+  white-space: nowrap;
+}
+.budget-guest-form {
+  margin: var(--ecart-20) 0;
+}
+.budget-guest-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+}
+.budget-guest-summary span {
+  padding: var(--ecart-6) var(--ecart-10);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-allocation-row {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) auto;
+  gap: var(--ecart-6);
+  margin: var(--ecart-14) 0;
+  font-size: scaled(var(--fs-sm));
+}
+.budget-allocation-row .progress-track {
+  grid-column: 1 / -1;
+}
+.budget-guidance {
+  margin-top: var(--ecart-20);
+}
+
+/* Accueil indépendant et lecture Budget 360 : mêmes données, présentations distinctes. */
+.summary-band.calendar-360-stats.budget-page-summary {
+  margin: 0 0 var(--ecart-24);
+}
+.summary-band.calendar-360-stats.budget-calendar-core-stats {
+  margin: 0 0 var(--ecart-14);
+}
+.budget-center-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  margin: 0 0 var(--ecart-20);
+}
+.budget-center-meta span {
+  padding: var(--ecart-6) var(--ecart-10);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-center-meta strong {
+  color: var(--ink);
+}
+.budget-center-assets {
+  margin-top: var(--ecart-20);
+}
+.budget-center-assets .budget-event-row > span:first-child {
+  display: grid;
+  gap: var(--ecart-4);
+}
+.budget-center-assets .budget-event-row small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-center-assets .budget-event-row a,
+.budget-panel .budget-event-row a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: var(--decalage-4);
+}
+.budget-overview-inventory {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8);
+  margin-bottom: var(--ecart-28);
+}
+.budget-overview-inventory > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  padding: var(--ecart-8) var(--ecart-10);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-overview-inventory strong {
+  color: var(--ink);
+  font-weight: var(--fw-bold);
+}
+.budget-overview-inventory .budget-overview-local {
+  margin-left: auto;
+}
+.budget-period-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--ecart-20);
+  margin: var(--ecart-20) 0 var(--ecart-16);
+}
+.budget-period-heading h2,
+.budget-pay-cycle h2 {
+  margin: var(--ecart-4) 0 0;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-medium);
+}
+.budget-period-heading p,
+.budget-pay-cycle p {
+  max-width: var(--dim-600);
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-relaxed);
+}
+.budget-kpis--overview {
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+}
+.budget-pay-cycle {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-0-8)) minmax(0, var(--fr-1-2));
+  align-items: center;
+  gap: var(--ecart-20);
+  margin: var(--ecart-6) 0 var(--ecart-40);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+}
+.budget-pay-cycle-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-8);
+}
+.budget-pay-cycle-stats span,
+.budget-life-stats span {
+  display: grid;
+  gap: var(--ecart-8);
+  padding: var(--ecart-10);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-pay-cycle-stats strong,
+.budget-life-stats strong {
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-overview-analysis {
+  margin-top: var(--ecart-12);
+}
+.budget-allocation-row--center {
+  padding-top: var(--ecart-10);
+  border-top: var(--trait-1) solid var(--line);
+}
+.budget-allocation-row--center a,
+.budget-ledger-row a,
+.budget-overview-analysis .budget-event-row a {
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+  text-decoration: underline;
+  text-underline-offset: var(--decalage-4);
+}
+.budget-allocation-row--center small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-ledger-list {
+  max-height: var(--dim-440);
+  overflow-y: auto;
+}
+.budget-ledger-row {
+  display: grid;
+  grid-template-columns: var(--dim-112) minmax(0, var(--fr-1)) auto auto;
+  align-items: center;
+  gap: var(--ecart-12);
+  padding: var(--ecart-10) 0;
+  border-top: var(--trait-1) solid var(--line);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-ledger-row time,
+.budget-ledger-row > span {
+  color: var(--muted);
+}
+.budget-ledger-row > strong {
+  text-align: right;
+}
+.budget-life-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-8);
+}
+.budget-overview-analysis .budget-settings {
+  margin-top: 0;
+}
+
+/* Le calendrier financier reprend la grammaire de Calendrier 360 sans ses dépendances métier. */
+.budget-period-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-14);
+  margin-bottom: var(--ecart-16);
+  padding: var(--ecart-16) var(--ecart-20);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+}
+.budget-period-summary > div {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: var(--dim-104);
+  padding-right: var(--ecart-14);
+  border-right: var(--trait-1) solid var(--line);
+}
+.budget-period-summary > div:first-child {
+  flex: var(--flex-1) var(--flex-1) var(--dim-260);
+}
+.budget-period-summary > div:last-child {
+  border-right: 0;
+}
+.budget-period-summary span {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-period-summary strong {
+  font-size: scaled(var(--fs-md));
+}
+.budget-timeline {
+  margin-bottom: var(--ecart-16);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+}
+.budget-timeline summary {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  padding: var(--ecart-14) var(--ecart-16);
+  cursor: pointer;
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.budget-timeline summary span {
+  color: var(--muted);
+}
+.budget-timeline > div {
+  max-height: var(--dim-320);
+  overflow-y: auto;
+  padding: 0 var(--ecart-16) var(--ecart-16);
+}
+.budget-timeline h3 {
+  margin: var(--ecart-16) 0 var(--ecart-6);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-timeline .budget-event-row a {
+  color: var(--app-accent);
+}
+.budget-calendar-controls {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--ecart-14);
+  margin-bottom: var(--ecart-16);
+}
+.budget-calendar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ecart-10);
+}
+.budget-calendar-filters label {
+  min-width: var(--dim-120);
+}
+.budget-calendar-filters .budget-check {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  min-width: auto;
+  min-height: var(--dim-40);
+}
+.budget-calendar-filters .budget-check input {
+  min-height: auto;
+}
+.budget-calendar-toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--ecart-6);
+  flex: none;
+}
+.budget-calendar-toolbar .btn {
+  min-height: var(--dim-36);
+  padding: var(--ecart-6) var(--ecart-8);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-view-switch {
+  display: flex;
+  gap: var(--ecart-2);
+  margin-right: var(--ecart-6);
+}
+.budget-view-switch button {
+  min-width: var(--dim-28);
+  min-height: var(--dim-36);
+  padding: var(--ecart-6);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--raised-surface);
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+}
+.budget-view-switch button[aria-pressed='true'] {
+  border-color: var(--app-accent);
+  background: var(--state-surface);
+}
+.budget-month-picker {
+  position: relative;
+}
+.budget-month-picker input {
+  position: absolute;
+  width: var(--dim-2);
+  height: var(--dim-2);
+  min-height: 0;
+  opacity: var(--opacite-0);
+  pointer-events: none;
+}
+.budget-calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-4)) minmax(var(--dim-220), var(--fr-1));
+  gap: var(--ecart-16);
+  align-items: start;
+}
+.budget-calendar-main,
+.budget-calendar-agenda {
+  min-width: 0;
+  padding: var(--ecart-14);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+}
+.budget-grid-shortcut {
+  display: block;
+  margin-bottom: var(--ecart-8);
+  border: 0;
+  background: transparent;
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-xs));
+  text-decoration: underline;
+}
+.budget-calendar-grid-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--ecart-12);
+  margin-bottom: var(--ecart-12);
+}
+.budget-calendar-grid-head h3 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-medium);
+}
+.budget-calendar-grid-head span {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-weekdays,
+.budget-days {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-7), minmax(0, var(--fr-1)));
+}
+.budget-weekdays span {
+  padding: var(--ecart-6);
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+  text-align: center;
+}
+rjs-budget-day {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: var(--dim-120);
+  border: var(--trait-1) solid var(--line);
+  background: var(--raised-surface);
+}
+rjs-budget-day.is-outside {
+  background: var(--soft);
+}
+rjs-budget-day.is-occupied {
+  background: var(--app-accent-soft);
+}
+rjs-budget-day.is-selected {
+  outline: var(--trait-2) solid var(--app-accent);
+  outline-offset: calc(-1 * var(--decalage-2));
+  z-index: var(--plan-1);
+}
+rjs-budget-day:has(.budget-day-peek) {
+  z-index: var(--plan-20);
+}
+.budget-day-inner {
+  min-height: inherit;
+  padding: var(--ecart-8);
+}
+.budget-day-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--dim-28);
+  min-height: var(--dim-28);
+  padding: var(--ecart-2);
+  border: 0;
+  border-radius: var(--rayon-999);
+  background: transparent;
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+}
+.budget-day-number:hover,
+.budget-day-number:focus-visible {
+  background: var(--hover-surface);
+  outline: var(--trait-1) solid var(--app-accent);
+}
+.budget-day-markers {
+  display: grid;
+  gap: var(--ecart-4);
+  margin-top: var(--ecart-6);
+}
+.budget-day-marker,
+.budget-day-more {
+  display: block;
+  width: var(--part-100);
+  min-width: 0;
+  padding: var(--ecart-4) var(--ecart-6);
+  overflow: hidden;
+  border: 0;
+  border-left: var(--trait-3) solid var(--app-accent);
+  border-radius: var(--rayon-2);
+  background: var(--soft);
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.budget-day-marker[data-kind='expense'] {
+  border-left-color: var(--slate-600);
+}
+.budget-day-marker[data-kind='investment'] {
+  border-left-color: var(--blue-600);
+}
+.budget-day-more {
+  border-left-color: var(--outline);
+  color: var(--app-accent);
+}
+.budget-day-peek {
+  position: absolute;
+  top: calc(var(--part-100) - var(--decalage-4));
+  left: 0;
+  z-index: var(--plan-30);
+  width: min(var(--dim-360), calc(var(--dim-100vw) - var(--dim-32)));
+  max-height: min(var(--dim-480), var(--dim-75dvh));
+  overflow-y: auto;
+  padding: var(--ecart-14);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+  box-shadow: var(--card-shadow);
+}
+rjs-budget-day:nth-child(7n + 5) .budget-day-peek,
+rjs-budget-day:nth-child(7n + 6) .budget-day-peek,
+rjs-budget-day:nth-child(7n + 7) .budget-day-peek {
+  left: auto;
+  right: 0;
+}
+.budget-day-peek-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ecart-10);
+  padding-bottom: var(--ecart-8);
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.budget-day-peek-head strong {
+  font-size: scaled(var(--fs-sm));
+}
+.budget-day-peek-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-6);
+  padding: var(--ecart-10) 0;
+}
+.budget-day-peek-stats span {
+  display: grid;
+  gap: var(--ecart-4);
+  padding: var(--ecart-8);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-day-peek-stats strong {
+  color: var(--ink);
+}
+.budget-day-peek-entry {
+  display: grid;
+  gap: var(--ecart-4);
+  margin: var(--ecart-6) 0;
+  padding: var(--ecart-8) var(--ecart-10);
+  border-left: var(--trait-3) solid var(--app-accent);
+  background: var(--soft);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-day-peek-entry[data-kind='expense'] {
+  border-left-color: var(--slate-600);
+}
+.budget-day-peek-entry[data-kind='investment'] {
+  border-left-color: var(--blue-600);
+}
+.budget-day-peek-entry a {
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+}
+.budget-day-peek-entry small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-14);
+  margin-top: var(--ecart-12);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-calendar-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+}
+.budget-calendar-legend i {
+  display: inline-block;
+  width: var(--dim-10);
+  height: var(--dim-10);
+  border-radius: var(--part-50);
+  background: var(--green);
+}
+.budget-calendar-legend i[data-kind='expense'] {
+  background: var(--slate-600);
+}
+.budget-calendar-legend i[data-kind='investment'] {
+  background: var(--blue-600);
+}
+.budget-calendar-agenda-list {
+  max-height: var(--dim-760);
+  overflow-y: auto;
+}
+.budget-calendar-agenda-list section {
+  padding: var(--ecart-12) 0;
+  border-top: var(--trait-1) solid var(--line);
+}
+.budget-calendar-agenda-list section.is-selected {
+  background: var(--state-surface);
+}
+.budget-agenda-date {
+  display: block;
+  width: var(--part-100);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-bold);
+  text-align: left;
+}
+.budget-agenda-entry {
+  display: grid;
+  gap: var(--ecart-4);
+  margin-top: var(--ecart-8);
+  padding: var(--ecart-8);
+  border-left: var(--trait-3) solid var(--app-accent);
+  background: var(--soft);
+  font-size: scaled(var(--fs-xs));
+}
+.budget-agenda-entry[data-kind='expense'] {
+  border-left-color: var(--slate-600);
+}
+.budget-agenda-entry[data-kind='investment'] {
+  border-left-color: var(--blue-600);
+}
+.budget-agenda-entry a {
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.budget-agenda-entry span {
+  color: var(--muted);
+}
+.budget-agenda-entry strong {
+  text-align: right;
+}
+.budget-year-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-4), minmax(0, var(--fr-1)));
+  gap: var(--ecart-12);
+}
+.budget-year-month {
+  min-width: 0;
+  padding: var(--ecart-10);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-md);
+}
+.budget-year-month h4 {
+  margin: 0 0 var(--ecart-6);
+  font-size: scaled(var(--fs-sm));
+  text-transform: capitalize;
+}
+.budget-days--year rjs-budget-day {
+  min-height: var(--dim-36);
+}
+.budget-days--year .budget-day-inner {
+  display: grid;
+  place-items: center;
+  padding: var(--ecart-1);
+}
+.budget-days--year .budget-day-number {
+  min-width: var(--dim-24);
+  min-height: var(--dim-24);
+}
+.budget-day-dot {
+  position: absolute;
+  right: var(--decalage-2);
+  bottom: var(--decalage-2);
+  width: var(--dim-4);
+  height: var(--dim-4);
+  border-radius: var(--part-50);
+  background: var(--green);
+}
+
+@media (max-width: $rupture-1700) {
+  .budget-calendar-layout {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .budget-calendar-agenda-list {
+    max-height: var(--dim-320);
+  }
+  .budget-calendar-controls {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: $rupture-1100) {
+  .budget-kpis {
+    grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  }
+  .budget-pay-cycle {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .budget-year-grid {
+    grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  }
+}
+@media (max-width: $rupture-900) {
+  .budget-section-head {
+    display: grid;
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .budget-period-heading {
+    display: grid;
+  }
+  .budget-two-columns,
+  .budget-two-columns--form,
+  .budget-insight-row {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .budget-year-grid {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  }
+}
+@media (max-width: $rupture-600) {
+  .budget-kpis,
+  .budget-kpis--compact {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .budget-pay-cycle-stats,
+  .budget-life-stats {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .budget-overview-inventory .budget-overview-local {
+    margin-left: 0;
+  }
+  .budget-ledger-row {
+    grid-template-columns: minmax(0, var(--fr-1)) auto;
+  }
+  .budget-ledger-row time {
+    grid-column: 1 / -1;
+  }
+  .budget-form-grid {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .budget-panel {
+    padding: var(--ecart-16);
+  }
+  .budget-list-card,
+  .budget-event-row,
+  .budget-quote-row {
+    flex-wrap: wrap;
+  }
+  .budget-list-card-side {
+    justify-items: start;
+    text-align: left;
+  }
+  .budget-calendar-toolbar {
+    width: var(--part-100);
+    justify-content: space-between;
+  }
+  .budget-calendar-toolbar .btn {
+    padding: var(--ecart-4) var(--ecart-6);
+  }
+  .budget-calendar-main,
+  .budget-calendar-agenda {
+    padding: var(--ecart-10);
+  }
+  .budget-year-grid {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  rjs-budget-day {
+    min-height: var(--dim-80);
+  }
+  .budget-day-inner {
+    padding: var(--ecart-4);
+  }
+  .budget-day-number {
+    min-width: var(--dim-24);
+    min-height: var(--dim-24);
+  }
+  .budget-day-marker {
+    font-size: scaled(var(--fs-2xs));
+  }
+  .budget-day-peek {
+    width: min(var(--dim-320), calc(var(--dim-100vw) - var(--dim-24)));
+  }
+  .budget-calendar-grid-head {
+    display: block;
+  }
+}

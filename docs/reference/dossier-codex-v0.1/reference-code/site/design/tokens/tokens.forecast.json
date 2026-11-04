@@ -1,0 +1,196 @@
+{
+  "$description": "Tokens propres à RJS Forecast — AJOUTS SEULEMENT au fichier du vitrine (tokens.json, copié à l'identique). build.mjs refuse toute redéfinition d'un chemin existant, et aucune couleur ne s'ajoute ici sans décision de Roosevelt : la palette du vitrine n'est pas négociable. Une valeur utile aux deux sites s'ajoute d'abord dans le vitrine, puis se synchronise (npm run tokens:sync).",
+  "border": {
+    "$description": "Épaisseurs de trait. Le système n'emploie que des filets : les nommer évite les 1px/2px épars relevés dans le vitrine (02 §1.13 D5).",
+    "hairline": {
+      "$value": "1px",
+      "$type": "dimension",
+      "$description": "filets, bordures de champ et de pastille"
+    },
+    "focus": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "contour de focus, soulignement d'onglet"
+    }
+  },
+  "duration": {
+    "grace": {
+      "$value": "180ms",
+      "$type": "duration",
+      "$description": "délai de fermeture du menu — le temps de traverser un interstice sans clignotement"
+    }
+  },
+  "breakpoint": {
+    "compact": {
+      "$value": "640px",
+      "$type": "dimension",
+      "$description": "sous ce seuil, les dialogues d'édition passent en plein écran et les paires de champs en une colonne"
+    }
+  },
+  "z": {
+    "sticky": {
+      "$value": "5",
+      "$type": "number",
+      "$description": "en-têtes et première colonne collants des tableaux — sous l'en-tête du site"
+    }
+  },
+  "layout": {
+    "cta": {
+      "$value": "40px",
+      "$type": "dimension",
+      "$description": "hauteur du bouton d'action de la barre de menu"
+    },
+    "form": {
+      "$value": "420px",
+      "$type": "dimension",
+      "$description": "largeur du formulaire de connexion"
+    },
+    "pair": {
+      "$value": "320px",
+      "$type": "dimension",
+      "$description": "largeur minimale d'une colonne appariée : prédécesseurs et successeurs d'un challenge, valeur figée et valeur vivante d'une carte du Guide. En deçà, les deux colonnes se replient l'une sous l'autre"
+    },
+    "check": {
+      "$value": "32px",
+      "$type": "dimension",
+      "$description": "hauteur d'une case à cocher dans un panneau d'édition"
+    },
+    "chevron": {
+      "size": {
+        "$value": "6px",
+        "$type": "dimension",
+        "$description": "côté du chevron du menu"
+      },
+      "shift": {
+        "$value": "2px",
+        "$type": "dimension",
+        "$description": "correction optique du chevron, fermé puis ouvert"
+      }
+    },
+    "panel": {
+      "default": {
+        "$value": "720px",
+        "$type": "dimension",
+        "$description": "dialogue d'édition"
+      },
+      "wide": {
+        "$value": "880px",
+        "$type": "dimension",
+        "$description": "dialogue d'édition à plusieurs champs (ajout de ligne, baseline + Change Log)"
+      }
+    },
+    "menu": {
+      "detail": {
+        "$value": "120px",
+        "$type": "dimension",
+        "$description": "réserve sous la rangée du menu pour le détail hors flux : deux rangées de sous-liens (2 × 44 + 8 + 24), Plan et Guide en ont cinq"
+      },
+      "detail-width": {
+        "$value": "420px",
+        "$type": "dimension",
+        "$description": "largeur maximale du détail hors flux du menu : trois sous-liens par rangée, et le détail du dernier groupe reste dans la page"
+      }
+    },
+    "planning": {
+      "cell": {
+        "$value": "176px",
+        "$type": "dimension",
+        "$description": "largeur minimale d'une carte de période dans le planning (mois, semaine, jour)"
+      },
+      "column": {
+        "$value": "256px",
+        "$type": "dimension",
+        "$description": "largeur minimale d'une colonne de l'état d'avancement du planning"
+      },
+      "field": {
+        "$value": "192px",
+        "$type": "dimension",
+        "$description": "largeur minimale d'un champ du formulaire d'ajout de tâche"
+      }
+    },
+    "sidenav": {
+      "$value": "264px",
+      "$type": "dimension",
+      "$description": "largeur de la barre latérale de navigation (09 §3) : les noms de feuille les plus longs tiennent sur une ligne"
+    },
+    "topbar": {
+      "$value": "56px",
+      "$type": "dimension",
+      "$description": "hauteur de la barre d'outils collante de la coquille"
+    },
+    "control-compact": {
+      "$value": "36px",
+      "$type": "dimension",
+      "$description": "hauteur d'un bouton ou d'un champ dans l'application — au-dessus du plancher WCAG 2.5.8 (24px), la densité d'un outil de données"
+    },
+    "row-compact": {
+      "$value": "36px",
+      "$type": "dimension",
+      "$description": "hauteur d'une ligne de tableau dense"
+    },
+    "content": {
+      "$value": "1480px",
+      "$type": "dimension",
+      "$description": "largeur utile maximale d'une page dans la coquille, barre latérale non comprise"
+    },
+    "tile": {
+      "$value": "176px",
+      "$type": "dimension",
+      "$description": "largeur minimale d'une tuile d'indicateur"
+    },
+    "scrub": {
+      "$value": "8px",
+      "$type": "dimension",
+      "$description": "course de la souris pour un pas, quand on règle un nombre en glissant avec le bouton du milieu (18/09/2026) : un pas tous les 8px, 60 pas sur un demi-écran"
+    }
+  },
+  "table": {
+    "$description": "Tableaux de données : la lecture d'un registre de 64 lignes et 23 colonnes, pas une maquette de prose.",
+    "cell": {
+      "block": {
+        "$value": "8px",
+        "$type": "dimension",
+        "$description": "marge verticale d'une cellule"
+      },
+      "inline": {
+        "$value": "12px",
+        "$type": "dimension",
+        "$description": "marge horizontale d'une cellule"
+      }
+    },
+    "column": {
+      "narrow": {
+        "$value": "88px",
+        "$type": "dimension",
+        "$description": "identifiants, rangs, nombres"
+      },
+      "default": {
+        "$value": "176px",
+        "$type": "dimension",
+        "$description": "textes courts, énumérations, dates"
+      },
+      "wide": {
+        "$value": "320px",
+        "$type": "dimension",
+        "$description": "textes à plusieurs lignes"
+      }
+    },
+    "height": {
+      "$value": "72vh",
+      "$type": "dimension",
+      "$description": "hauteur d'un registre avant défilement propre — l'en-tête reste visible"
+    },
+    "chip": {
+      "$value": "2px",
+      "$type": "dimension",
+      "$description": "marge verticale d'une pastille d'état"
+    }
+  },
+  "radius": {
+    "round": {
+      "$value": "50%",
+      "$type": "dimension",
+      "$description": "Le seul arrondi complet du système : le curseur des glissières numériques, à la manière de l'iPhone (demande de Roosevelt, 18/09/2026). Partout ailleurs, radius.default."
+    }
+  }
+}

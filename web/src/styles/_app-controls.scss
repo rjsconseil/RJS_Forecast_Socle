@@ -1,0 +1,55 @@
+// Couche 3 — contrôles et formulaires.
+// Boutons : le gabarit est celui de la source (`_components.scss` : `.btn`, `.btn-primary`, `.btn-secondary`).
+// Les modificateurs courts des briques partagées (`primary`, `ghost`, `danger`, `small`) en sont des alias.
+// Règles de passerelle à spécificité nulle (`:where`) : la moindre règle de la source l'emporte.
+:where(.btn) { text-decoration: none; cursor: pointer; }
+// Exception : un `.btn` sans variante garde l'aspect du bouton secondaire (alias des briques partagées),
+// au même poids que `.btn` de la source, qu'il suit dans la cascade.
+.btn:where(:not(.btn-primary, .btn-secondary, .btn-danger, .primary, .ghost, .danger)) {
+  color: var(--btn-secondary-ink);
+  background: var(--btn-secondary-surface);
+  border-color: var(--btn-secondary-line);
+  box-shadow: var(--btn-secondary-shadow);
+}
+.btn:where(:not(.btn-primary, .btn-secondary, .btn-danger, .primary, .ghost, .danger)):hover:not(:disabled) { border-color: var(--btn-secondary-hover-line); background: var(--btn-secondary-hover-surface); }
+.btn:where(:not(.btn-primary, .btn-secondary, .btn-danger, .primary, .ghost, .danger)):active:not(:disabled) { border-color: var(--btn-secondary-active-line); background: var(--btn-secondary-active-surface); }
+.btn:where(.primary) {
+  color: var(--btn-primary-ink);
+  background: var(--btn-primary-surface);
+  border-color: var(--btn-primary-surface);
+  box-shadow: var(--btn-primary-shadow);
+}
+.btn:where(.primary):hover:not(:disabled) { background: var(--btn-primary-hover); border-color: var(--btn-primary-hover); }
+.btn:where(.primary):active:not(:disabled) { background: var(--btn-primary-active); border-color: var(--btn-primary-active); }
+.btn:where(.ghost) { border-color: transparent; background: transparent; color: var(--text-link-color); box-shadow: none; }
+.btn:where(.ghost):hover:not(:disabled) { background: var(--nav-hover-surface); }
+.btn:where(.danger) { color: var(--status-danger); background: var(--btn-secondary-surface); border-color: color-mix(in srgb, var(--status-danger) 40%, transparent); }
+.btn:where(.small) { min-height: var(--dim-32, 2rem); padding: 0 var(--ecart-10); font-size: var(--fs-xs); }
+:where(.btn):disabled { opacity: 0.55; cursor: not-allowed; }
+// Champs hors coquille (la coquille et les fenêtres suivent `_interactions.scss` de la source) ;
+// le focus suit `:focus-visible` de `_base.scss`, sans contour propre.
+:where(input, select, textarea) {
+  font: inherit; color: var(--c-text); background: var(--c-surface);
+  border: 1px solid var(--c-rule-strong); border-radius: var(--r-sm); padding: 7px 10px; min-height: 38px; max-width: 100%;
+}
+:where(input, select, textarea)[aria-invalid='true'] { border-color: var(--status-danger); }
+:where(textarea) { resize: vertical; }
+// `.field` vient de la source (`_components.scss`) ; la passerelle n'ajoute que la largeur en rangée et les messages.
+:where(.field) { flex: 1 1 200px; min-width: 0; }
+:where(.field) .err { color: var(--c-neg); font-size: 0.82rem; }
+:where(.field) .help { color: var(--c-text-2); font-size: 0.82rem; }
+:where(.field-row) { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+@media (max-width: 480px) { :where(.field-row) > * { flex-basis: 100%; } }
+.segmented { display: inline-flex; border: 1px solid var(--c-rule-strong); border-radius: var(--r-sm); overflow: hidden; background: var(--c-surface);
+  button { font: 500 0.86rem var(--f-ui); border: 0; background: transparent; padding: 6px 12px; cursor: pointer; color: var(--c-text-2); min-height: 34px; }
+  button + button { border-left: 1px solid var(--c-rule); }
+  button[aria-pressed='true'] { background: var(--c-accent-soft); color: var(--c-accent-strong); font-weight: 600; }
+}
+.alert { padding: 10px 14px; border-radius: var(--r-sm); background: var(--c-accent-soft); margin-bottom: 14px; border: 1px solid color-mix(in srgb, var(--c-accent) 20%, transparent);
+  &.error { background: var(--c-neg-soft); color: var(--c-neg); border-color: color-mix(in srgb, var(--c-neg) 25%, transparent); }
+  &.warn { background: var(--c-warn-soft); color: var(--c-warn); border-color: color-mix(in srgb, var(--c-warn) 25%, transparent); }
+  &.ok { background: var(--c-pos-soft); color: var(--c-pos); border-color: color-mix(in srgb, var(--c-pos) 25%, transparent); }
+  p { margin: 6px 0; }
+  .btn { margin-right: 6px; }
+}
+details > summary { cursor: pointer; }

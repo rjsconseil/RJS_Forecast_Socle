@@ -1,0 +1,102 @@
+@use 'functions' as *;
+
+/*
+ * Interface de test Budget sur la gestion Budget management de la référence (`budget-home.page`, mode
+ * Manager ; listes d'opérations et de centres de `budget-operations.page` / `budget-centers.page`) :
+ * les classes bw-* et budget-* viennent des couches globales `_budget-home` et `_budget`. La liste des
+ * Budgets sélectionne par bouton (la référence navigue par lien) : les règles `.bw-manager-list a` sont
+ * reprises à l'identique pour ce bouton.
+ */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.bw-manager-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  box-sizing: border-box;
+  width: var(--part-100);
+  min-width: 0;
+  padding: var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-sm);
+  background: var(--space-canvas);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+.bw-manager-list button:hover {
+  border-color: var(--app-accent);
+  background: var(--hover-surface);
+}
+.bw-manager-list button.is-selected {
+  border-color: var(--app-accent);
+  background: var(--soft);
+  box-shadow: inset var(--ombre-4) 0 0 var(--app-accent);
+}
+.bw-manager-list button > span:first-child {
+  min-width: 0;
+}
+.bw-manager-list button > span:last-child {
+  flex: none;
+  color: var(--app-accent);
+}
+
+/* Les sections pleine largeur suivent les colonnes, comme les panneaux de la référence. */
+.budget-workspace > .bw-section + .bw-section,
+.budget-workspace > .bw-manager-columns + .bw-section {
+  margin-bottom: var(--ecart-28);
+}
+.bw-section-head h2 span {
+  color: var(--muted);
+  font-weight: var(--fw-regular);
+}
+.bw-manager-fields a {
+  color: var(--app-accent);
+}
+
+/* Erreurs du middleware : code, message et détails bruts. */
+.bw-feedback pre {
+  margin: var(--ecart-6) 0 0;
+  font-size: scaled(var(--fs-xs));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.bw-feedback .btn {
+  margin-top: var(--ecart-8);
+}
+.budget-test-created {
+  margin: 0;
+  padding: var(--ecart-10) var(--ecart-12);
+  border-radius: var(--radius-sm);
+  background: var(--status-success-surface);
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.budget-test-json {
+  margin-top: var(--ecart-16);
+}
+.budget-test-json pre {
+  font-size: scaled(var(--fs-xs));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Lignes d'opérations et de centres (`budget-list-card` de la référence) : identifiants bruts lisibles. */
+.budget-list-card code {
+  overflow-wrap: anywhere;
+}
+.budget-list-card h4 {
+  margin: var(--ecart-6) 0;
+}
+.budget-list-card-side .bw-badge {
+  margin: 0;
+}
+.budget-test-realize {
+  margin-top: var(--ecart-10);
+}

@@ -1,0 +1,108 @@
+// Passerelle : noms courts des composants partagés de ce projet, résolus sur les jetons de la source
+// (`_tokens.scss`, `_contrat.scss`). Aucune valeur propre ici hors des séries de graphes.
+:root,
+.app-shell {
+  // Neutres (ardoise claire)
+  --c-bg: var(--app-canvas);
+  --c-surface: var(--raised-surface);
+  --c-surface-2: var(--hover-surface);
+  --c-surface-3: var(--press-surface);
+  --c-text: var(--ink);
+  --c-text-2: var(--muted);
+  --c-text-3: var(--slate-500);
+  --c-rule: var(--line);
+  --c-rule-strong: var(--control-line);
+
+  // Accent du module (navigation, actions) — distinct des couleurs financières
+  --c-accent: var(--app-accent);
+  --c-accent-strong: var(--app-accent-hover);
+  --c-accent-soft: var(--app-accent-soft);
+  --c-accent-text: var(--white);
+  --c-focus: var(--focus-ring);
+
+  // États financiers (le signe et le libellé restent compréhensibles sans couleur)
+  --c-pos: var(--status-success);
+  --c-pos-soft: var(--status-success-surface);
+  --c-warn: var(--status-warning);
+  --c-warn-soft: var(--status-warning-surface);
+  --c-neg: var(--status-danger);
+  --c-neg-soft: var(--status-danger-surface);
+  --c-unknown: #92400e;
+  --c-unknown-soft: #fffbeb;
+
+  // Séries de graphes : une mesure garde sa couleur d'un graphe et d'un format à l'autre
+  --s-income: var(--status-success);
+  --s-charge: var(--status-danger);
+  --s-net: var(--violet-600);
+  --s-expected: var(--indigo-500);
+  --s-patrimoine: var(--blue-600);
+  --s-real: var(--cyan-700);
+  --s-nominal: var(--blue-600);
+  --s-cap: #b91c1c;
+  --s-remaining: var(--amber-700);
+  --s-rest: #94a3b8;
+
+  // Typographies (chargées localement)
+  --f-ui: var(--font-sans);
+  --f-num: var(--font-mono);
+  --f-edit: 'Newsreader', Georgia, serif;
+
+  // Rythme et formes
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--card-radius);
+  --shadow-1: var(--card-shadow);
+  --shadow-2: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.06);
+  --shadow-3: 0 12px 32px rgba(15, 23, 42, 0.16);
+  --pad-frame: 16px;
+
+  // Compatibilité : anciens noms utilisés par les pages du socle
+  --bg: var(--c-bg);
+  --surface: var(--c-surface);
+  --surface-2: var(--c-surface-3);
+  --text: var(--c-text);
+  --muted: var(--c-text-2);
+  --border: var(--c-rule);
+  --accent: var(--c-accent);
+  --accent-text: var(--c-accent-text);
+  --danger: var(--c-neg);
+  --danger-bg: var(--c-neg-soft);
+  --ok: var(--c-pos);
+  --warn: var(--c-warn);
+  --info-bg: var(--c-accent-soft);
+  --s-todo: #64748b;
+  --s-blocked: #b45309;
+  --s-doing: #2563eb;
+  --s-done: #15803d;
+  --s-hold: #7c3aed;
+  --app-bg: var(--c-bg);
+  --app-ink: var(--c-text);
+  --app-hero: var(--c-accent-strong);
+  --app-hero-text: #ffffff;
+  --pos: var(--c-pos);
+  --neg: var(--c-neg);
+  --unknown: var(--c-unknown);
+  --unknown-bg: var(--c-unknown-soft);
+  --shadow: var(--shadow-2);
+}
+
+@media (min-width: 1024px) {
+  :root { --pad-frame: 20px; }
+}
+@media (min-width: 1440px) {
+  :root { --pad-frame: 24px; }
+}
+
+// En-tête de page (bandeau `rjs-app-hero`, bannière d'espace) : mauve foncé, comme le site de référence.
+// Les feuilles livrées donnent `--slate-900` ; la valeur retenue vient du réglage de design du site (non livré).
+.app-shell,
+.app-shell.editorial-style {
+  --header-surface: var(--violet-950);
+}

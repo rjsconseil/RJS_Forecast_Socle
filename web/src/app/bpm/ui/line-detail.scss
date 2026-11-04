@@ -1,0 +1,11 @@
+@use 'functions' as *;
+// Composition de la fiche d'échéance dans la fenêtre `rjs-modal` (vocabulaire `.bpm-guide` de la référence).
+.bpm-guide header { display: grid; gap: var(--ecart-8); }
+.bpm-guide header small { color: var(--muted); }
+.bld-tags { display: flex; flex-wrap: wrap; gap: var(--ecart-8); margin: 0; }
+.bld-saved { margin: 0; padding: var(--ecart-12) var(--ecart-16); border-radius: var(--rayon-8); color: var(--status-success); background: var(--status-success-surface); }
+.bld-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-180)), var(--fr-1))); gap: var(--ecart-12); }
+.bpm-guide section { display: grid; gap: var(--ecart-12); }
+.bpm-guide p { margin: 0; }
+.bld-ids dl div { flex-wrap: nowrap; }
+.bld-ids dd { font-weight: var(--fw-regular); font-family: var(--font-mono); font-size: scaled(var(--fs-xs)); overflow-wrap: anywhere; }

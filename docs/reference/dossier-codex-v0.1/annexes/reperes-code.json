@@ -1,0 +1,101 @@
+{
+  "commit": "54246fad6553f6388d8257711ae7ef58241b3450",
+  "anchors": [
+    {
+      "symbol": "summary",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-money.page.ts",
+      "line": 747,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.page.ts#L747"
+    },
+    {
+      "symbol": "expectedRest",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-money.page.ts",
+      "line": 746,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.page.ts#L746"
+    },
+    {
+      "symbol": "expectedRest",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-money.model.ts",
+      "line": 104,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.model.ts#L104"
+    },
+    {
+      "symbol": "moneySegments",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-money.model.ts",
+      "line": 218,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.model.ts#L218"
+    },
+    {
+      "symbol": "shareBasis",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-money.model.ts",
+      "line": 100,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.model.ts#L100"
+    },
+    {
+      "symbol": "unexplainedGap",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-money.model.ts",
+      "line": 277,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.model.ts#L277"
+    },
+    {
+      "symbol": "expenseRegister",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-money-context.ts",
+      "line": 79,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money-context.ts#L79"
+    },
+    {
+      "symbol": "contributionOf",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "line": 80,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.model.ts#L80"
+    },
+    {
+      "symbol": "visionProjection",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "line": 142,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.model.ts#L142"
+    },
+    {
+      "symbol": "visionChart",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "line": 218,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.model.ts#L218"
+    },
+    {
+      "symbol": "requiredContribution",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "line": 253,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.model.ts#L253"
+    },
+    {
+      "symbol": "budgetDirectives",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "line": 286,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.model.ts#L286"
+    },
+    {
+      "symbol": "expenseRegister",
+      "file": "reference-code/site/apps/local-api/bpm-expenses.mjs",
+      "line": 3,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-expenses.mjs#L3"
+    },
+    {
+      "symbol": "periodWealthSummary",
+      "file": "reference-code/site/apps/local-api/bpm-flow-pilot.mjs",
+      "line": 54,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-flow-pilot.mjs#L54"
+    },
+    {
+      "symbol": "buildDesignCss",
+      "file": "reference-code/site/apps/web/src/app/configuration/design-runtime.service.ts",
+      "line": 30,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/configuration/design-runtime.service.ts#L30"
+    },
+    {
+      "symbol": "STEPS",
+      "file": "reference-code/site/apps/web/src/app/bpm/bpm-create.page.ts",
+      "line": 338,
+      "url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-create.page.ts#L338"
+    }
+  ]
+}

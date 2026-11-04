@@ -1,0 +1,679 @@
+@use 'contrat-ruptures' as *;
+:host {
+  display: block;
+}
+.fp-overview {
+  display: grid;
+  gap: var(--ecart-20);
+  margin-block: var(--ecart-24);
+}
+.fp-heading,
+.fp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-16);
+  flex-wrap: wrap;
+}
+h2,
+h3,
+p {
+  margin: 0;
+}
+p {
+  color: var(--muted);
+  line-height: var(--lh-relaxed);
+}
+.fp-charts {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-360)), var(--fr-1))
+  );
+  gap: var(--ecart-20);
+}
+.fp-card {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-16);
+  padding: var(--ecart-24);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.fp-bars,
+.fp-projects {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--ecart-24);
+}
+.fp-bars li,
+.fp-projects li {
+  display: grid;
+  gap: var(--ecart-8);
+}
+.fp-caption {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.fp-warning {
+  color: var(--status-warning);
+  font-weight: var(--fw-semibold);
+}
+.fp-facts {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-180)), var(--fr-1))
+  );
+  gap: var(--ecart-16);
+  margin: 0;
+}
+.fp-facts div {
+  padding: var(--ecart-16);
+  background: var(--soft);
+  border-radius: var(--rayon-12);
+}
+.fp-facts dt {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.fp-facts dd {
+  margin: var(--ecart-8) 0 0;
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.fp-card {
+  border-radius: var(--card-radius);
+  border-top: var(--trait-3) solid var(--app-accent-line);
+}
+.fp-card h3 {
+  font-size: var(--fs-xl);
+}
+.fp-card > p {
+  font-size: var(--fs-sm);
+}
+.fp-bars li,
+.fp-projects li {
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-12);
+  background: var(--soft);
+}
+.fp-bars {
+  gap: var(--ecart-12);
+}
+.fp-values {
+  display: flex;
+  gap: var(--ecart-16);
+  margin-inline-start: auto;
+}
+.fp-value {
+  display: grid;
+  gap: var(--ecart-4);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.fp-value small {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.fp-value b {
+  font-size: var(--fs-lg);
+  color: var(--status-success);
+}
+.fp-negative .fp-value b,
+.fp-deficit .fp-value:not(.is-forecast) b {
+  color: var(--status-danger);
+}
+.fp-result .fp-value b {
+  color: var(--app-accent);
+}
+.fp-value.is-forecast b {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.fp-axis-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--muted);
+}
+.fp-axis-labels span:first-child {
+  color: var(--status-danger);
+}
+.fp-axis-labels span:last-child {
+  color: var(--status-success);
+}
+.fp-rank {
+  display: grid;
+  place-items: center;
+  width: var(--dim-28);
+  height: var(--dim-28);
+  border-radius: var(--rayon-999);
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-xs);
+}
+.fp-projects .fp-row > a {
+  flex: var(--flex-1);
+  min-width: var(--dim-120);
+  font-weight: var(--fw-semibold);
+}
+.fp-projects .fp-row > strong {
+  color: var(--status-danger);
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+}
+.fp-goal {
+  background: linear-gradient(to right, var(--app-accent-soft), var(--raised-surface));
+}
+.fp-progress-labels {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.fp-progress-labels strong {
+  color: var(--blue-600);
+  margin-inline-start: var(--ecart-8);
+}
+
+/* Le résultat patrimonial se lit avant les éléments qui le composent. */
+.fp-facts .fp-fact-result {
+  border: var(--trait-1) solid var(--app-accent-line);
+  background: var(--raised-surface);
+}
+.fp-fact-result dt {
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+}
+.fp-fact-result dd {
+  color: var(--app-accent);
+}
+.fp-facts dd[data-sign='negative'] {
+  color: var(--status-danger);
+}
+.fp-facts dd[data-sign='positive'] {
+  color: var(--status-success);
+}
+
+/* Deux résultats dominants, puis leur effet sur le patrimoine. */
+.fp-results {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-20);
+}
+.fp-result-card {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-12);
+  padding: var(--ecart-24);
+  border: var(--trait-1) solid var(--card-border);
+  border-top: var(--trait-3) solid var(--status-success);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.fp-result-card.is-forecast {
+  border-top-color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+.fp-result-badge {
+  justify-self: start;
+  padding: var(--ecart-4) var(--ecart-8);
+  border-radius: var(--rayon-6);
+  background: var(--soft);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+}
+.fp-result-card h3 {
+  font-size: var(--fs-lg);
+}
+.fp-result-amount {
+  display: block;
+  font-size: clamp(var(--fs-2xl), var(--texte-3vw), var(--fs-4xl));
+  line-height: var(--lh-tight);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+  font-variant-numeric: tabular-nums;
+}
+[data-sign='negative'] {
+  color: var(--status-danger);
+}
+[data-sign='positive'] {
+  color: var(--status-success);
+}
+.fp-result-detail {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-16);
+  padding-top: var(--ecart-16);
+  margin: var(--ecart-8) 0 0;
+  border-top: var(--trait-1) solid var(--card-border);
+}
+.fp-result-detail dt {
+  font-size: var(--fs-xs);
+}
+.fp-result-detail dd {
+  margin: var(--ecart-4) 0 0;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+}
+.fp-result-detail > div:first-child {
+  color: var(--status-success);
+}
+.fp-result-detail > div:last-child {
+  color: var(--status-danger);
+}
+.fp-goal .fp-facts {
+  grid-template-columns: minmax(0, var(--fr-1-4)) repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  align-items: stretch;
+}
+.fp-facts .fp-fact-result {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+}
+.fp-facts .fp-fact-result dt,
+.fp-facts .fp-fact-result dd {
+  color: var(--on-accent, var(--white));
+}
+.fp-fact-result dd {
+  font-size: var(--fs-3xl);
+}
+.fp-gap {
+  display: block;
+  margin-top: var(--ecart-8);
+  color: var(--muted);
+}
+.fp-overview.is-compact {
+  gap: var(--ecart-12);
+  padding: var(--ecart-16) var(--ecart-20);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.fp-compact-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+}
+.fp-compact-heading h2 {
+  font-size: var(--fs-sm);
+}
+.fp-compact-heading a {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+}
+.fp-compact-facts {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-20);
+  margin: 0;
+}
+.fp-compact-facts > div + div {
+  border-inline-start: var(--trait-1) solid var(--card-border);
+  padding-inline-start: var(--ecart-20);
+}
+.fp-compact-facts dt {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.fp-compact-facts dd {
+  margin: var(--ecart-4) 0 0;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: $rupture-900) {
+  .fp-goal .fp-facts {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  }
+}
+@media (max-width: $rupture-600) {
+  .fp-results {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .fp-compact-facts {
+    gap: var(--ecart-12);
+  }
+  .fp-compact-facts > div + div {
+    padding-inline-start: var(--ecart-12);
+  }
+  .fp-compact-facts dd {
+    font-size: var(--fs-md);
+  }
+  .fp-goal .fp-facts {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+
+.fp-result-detail > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, var(--fr-1));
+  column-gap: var(--ecart-8);
+  align-items: center;
+}
+.fp-result-detail dt {
+  display: contents;
+}
+.fp-result-detail dt > .flow-direction {
+  grid-row: span 2;
+}
+.fp-result-detail dd {
+  grid-column: 2;
+  margin: 0;
+}
+
+/* La trajectoire patrimoniale se lit comme une équation, sans jauge. */
+.fp-stock-equation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.2fr);
+  align-items: center;
+  gap: var(--ecart-12);
+}
+.fp-stock-step {
+  display: grid;
+  align-content: center;
+  gap: var(--ecart-8);
+  min-height: 132px;
+  margin: 0;
+  padding: var(--ecart-20);
+  border: 2px solid var(--app-accent-line);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+}
+.fp-stock-step dt {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+.fp-stock-step dd {
+  margin: 0;
+  font-size: clamp(var(--fs-xl), 2.3vw, var(--fs-3xl));
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.fp-stock-step small {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.fp-stock-step.is-current {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+.fp-stock-step.is-contribution[data-sign='positive'] {
+  border-color: var(--status-success);
+  background: color-mix(in srgb, var(--status-success) 9%, var(--raised-surface));
+}
+.fp-stock-step.is-contribution[data-sign='negative'] {
+  border-color: var(--status-danger);
+  background: color-mix(in srgb, var(--status-danger) 9%, var(--raised-surface));
+}
+.fp-stock-step.is-after {
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+  color: var(--on-accent, var(--white));
+}
+.fp-stock-step.is-after dt,
+.fp-stock-step.is-after small {
+  color: inherit;
+}
+.fp-equation-sign {
+  font-size: var(--fs-3xl);
+  font-weight: var(--fw-bold);
+  color: var(--app-accent);
+}
+.fp-stock-objective {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ecart-16);
+  margin: 0;
+  padding: var(--ecart-16) var(--ecart-20);
+  border: 2px solid var(--status-warning);
+  border-radius: var(--rayon-12);
+  background: color-mix(in srgb, var(--status-warning) 10%, var(--raised-surface));
+}
+.fp-stock-objective > div {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ecart-12);
+  flex-wrap: wrap;
+}
+.fp-stock-objective dt {
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+.fp-stock-objective dd {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+/* Les colonnes comparent des montants, les couleurs indiquent leur nature. */
+.fp-comparison-plot,
+.fp-project-plot {
+  display: block;
+  width: 100%;
+  max-height: 164px;
+  overflow: visible;
+}
+.fp-grid-line {
+  stroke: var(--card-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+  vector-effect: non-scaling-stroke;
+}
+.fp-comparison-axis {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.fp-tick-label {
+  fill: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.fp-category-label {
+  fill: var(--ink);
+  font-size: 16px;
+  font-weight: var(--fw-semibold);
+}
+.fp-bars li {
+  --column-color: var(--status-success);
+}
+.fp-bars li.fp-negative {
+  --column-color: var(--status-danger);
+}
+.fp-bars li.fp-result {
+  --column-color: var(--app-accent);
+}
+.fp-bars li.fp-deficit {
+  --column-color: var(--status-danger);
+}
+.fp-column {
+  fill: var(--column-color);
+  stroke: var(--column-color);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fp-column.is-forecast {
+  fill: color-mix(in srgb, var(--column-color) 28%, var(--raised-surface));
+  stroke-width: 2;
+}
+.fp-project-column.is-income {
+  --column-color: var(--status-success);
+}
+.fp-project-column.is-expense {
+  --column-color: var(--status-danger);
+}
+.fp-project-column {
+  fill: var(--column-color);
+  stroke: var(--column-color);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fp-project-column.is-forecast {
+  fill: color-mix(in srgb, var(--column-color) 28%, var(--raised-surface));
+  stroke-width: 2;
+}
+.fp-chart-legend,
+.fp-project-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8) var(--ecart-20);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.fp-chart-legend > span,
+.fp-project-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-8);
+}
+.fp-chart-legend > span::before,
+.fp-project-legend > span::before {
+  content: '';
+  width: 10px;
+  height: 14px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  background: currentColor;
+}
+.fp-chart-legend > .is-real,
+.fp-chart-legend > .is-forecast {
+  color: var(--app-accent);
+}
+.fp-chart-legend > .is-forecast::before {
+  opacity: 0.4;
+}
+.fp-project-numbers {
+  display: grid;
+  gap: var(--ecart-4);
+}
+.fp-project-legend .is-income,
+.fp-project-numbers .is-income {
+  color: var(--status-success);
+}
+.fp-category-label.is-income {
+  fill: var(--status-success);
+}
+.fp-project-legend .is-expense,
+.fp-project-numbers .is-expense {
+  color: var(--status-danger);
+}
+.fp-category-label.is-expense {
+  fill: var(--status-danger);
+}
+@media (max-width: $rupture-900) {
+  .fp-stock-equation {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ecart-8);
+  }
+  .fp-stock-step {
+    min-height: 0;
+  }
+  .fp-equation-sign {
+    justify-self: center;
+    line-height: 1;
+  }
+}
+@media (max-width: $rupture-600) {
+  .fp-values {
+    margin-inline-start: 0;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .fp-value {
+    text-align: start;
+  }
+  .fp-stock-objective > div {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+/* Courbes pleines : le lien entre réalisé et prévu reste visible sur les colonnes. */
+.fp-overlay-curve,
+.fp-curve-halo {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: none;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.fp-curve-halo {
+  stroke: var(--raised-surface);
+  stroke-width: 7;
+}
+.fp-overlay-curve {
+  stroke: var(--column-color, var(--app-accent));
+  stroke-width: 3.5;
+}
+.fp-overlay-curve.is-balance {
+  stroke: var(--app-accent);
+  stroke-width: 4;
+}
+.fp-curve-value {
+  fill: var(--app-accent);
+  stroke: var(--raised-surface);
+  stroke-width: 4;
+  paint-order: stroke fill;
+  font-size: 17px;
+  font-weight: var(--fw-bold);
+}
+.fp-curve-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  color: var(--column-color, var(--app-accent));
+  font-size: var(--fs-xs);
+}
+.fp-curve-caption > span::before {
+  content: '';
+  display: inline-block;
+  width: var(--dim-24);
+  margin-inline-end: var(--ecart-8);
+  vertical-align: middle;
+  border-top: var(--trait-3) solid currentColor;
+}
+.fp-curve-caption.is-balance {
+  color: var(--app-accent);
+  font-weight: var(--fw-bold);
+}
+.fp-project-balance {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  padding: var(--ecart-12);
+  border-radius: var(--rayon-8);
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+  font-size: var(--fs-sm);
+}
+.fp-project-balance > span {
+  display: grid;
+  gap: var(--ecart-4);
+}
+.fp-project-plot {
+  max-height: var(--dim-240);
+}
+.fp-curve-explanation {
+  font-size: var(--fs-xs);
+}

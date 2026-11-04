@@ -1,0 +1,151 @@
+@use 'contrat-ruptures' as *;
+
+/*
+ * Corps des pages « Ma vision budgétaire » (tableau de bord, dépenses, entrées, centre, solde).
+ * Le gabarit source est `.page.bpm-reading.bpm-app.bpm-money` ; ici le cadre `bpm-page` porte déjà
+ * `.page` (marges de page), le corps reprend donc seulement la grille de la source sans doubler
+ * les marges : grands blocs espacés comme `.page.bpm-money` (bpm-money.scss).
+ */
+.bpm-money-body {
+  display: grid;
+  gap: var(--ecart-40);
+  min-width: 0;
+}
+@media (max-width: $rupture-640) {
+  .bpm-money-body {
+    gap: var(--ecart-32);
+  }
+}
+
+/* Les lignes qui ouvrent un détail sont des boutons : elles gardent la mise en forme des liens source. */
+button.bm-line {
+  width: var(--part-100);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+button.expense-charge-summary {
+  width: var(--part-100);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+a.expense-charge-summary {
+  color: inherit;
+  text-decoration: none;
+}
+
+/*
+ * Une échéance se lit comme la ligne repliable de la source (`.expense-row > summary`) : objet, date,
+ * montant, état. Ici la ligne ouvre le panneau de détail partagé ; le sélecteur de la référence
+ * (bpm-expenses.page.scss, `summary:has(.expense-date)`) est repris pour ce lien ou ce bouton.
+ */
+.expense-row > .expense-charge-summary {
+  position: relative;
+  padding-inline-end: var(--ecart-40);
+  border-radius: inherit;
+}
+.expense-row > .expense-charge-summary::after {
+  content: '›';
+  position: absolute;
+  inset-inline-end: var(--ecart-16);
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  color: var(--app-accent);
+  font-weight: var(--fw-bold);
+}
+.expense-row > .expense-charge-summary:hover,
+.expense-row[data-selected] > .expense-charge-summary {
+  background: var(--app-accent-soft);
+}
+.expense-row > .expense-charge-summary:focus-visible {
+  outline: var(--trait-2) solid var(--app-accent);
+  outline-offset: calc(-1 * var(--trait-2));
+}
+.expense-row > .expense-charge-summary:has(.expense-date) {
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(var(--dim-140), auto) auto auto;
+  gap: var(--ecart-16);
+  min-height: var(--dim-80);
+}
+.expense-row > .expense-charge-summary:has(.expense-date) > .expense-main {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+.expense-row > .expense-charge-summary:has(.expense-date) > .expense-date {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1;
+  padding-inline-start: var(--ecart-16);
+  border-inline-start: var(--trait-1) solid var(--card-border);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--ink);
+}
+.expense-row > .expense-charge-summary:has(.expense-date) > .expense-date small {
+  color: var(--muted);
+  font-weight: var(--fw-regular);
+}
+.expense-row > .expense-charge-summary:has(.expense-date) > .expense-amount {
+  grid-column: 3;
+  grid-row: 1;
+}
+.expense-row > .expense-charge-summary:has(.expense-date) > .expense-state {
+  grid-column: 4;
+  grid-row: 1;
+}
+.expense-row > .expense-charge-summary:has(.expense-date) .expense-amount > strong {
+  font-size: var(--fs-lg);
+}
+@media (max-width: $rupture-820) {
+  .expense-row > .expense-charge-summary:has(.expense-date) {
+    grid-template-columns: minmax(0, var(--fr-1)) auto;
+    gap: var(--ecart-8) var(--ecart-16);
+  }
+  .expense-row > .expense-charge-summary:has(.expense-date) > .expense-date {
+    grid-column: 1;
+    grid-row: 2;
+    padding: 0;
+    border: 0;
+  }
+  .expense-row > .expense-charge-summary:has(.expense-date) > .expense-amount {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .expense-row > .expense-charge-summary:has(.expense-date) > .expense-state {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+}
+@media (max-width: $rupture-640) {
+  .expense-row > .expense-charge-summary {
+    padding: var(--ecart-12);
+    padding-inline-end: var(--ecart-32);
+  }
+}
+
+/* Une ligne du détail qui ouvre le panneau partagé garde l'allure d'un bouton de la source. */
+a.bmd-precise-open {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.bmd-entry-title {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: 0;
+}
+.bmd-entry-title small,
+.bmd-rest-lines small,
+.bmd-count {
+  color: var(--muted);
+  font-weight: var(--fw-regular);
+}
+.bmd-rest-lines li.is-selected {
+  outline: var(--trait-2) solid var(--app-accent);
+  outline-offset: var(--trait-2);
+  border-radius: var(--rayon-8);
+}

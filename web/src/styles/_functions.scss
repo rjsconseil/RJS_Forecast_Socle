@@ -1,0 +1,7 @@
+/* Fonctions Sass partagées. Ce module ne produit aucun CSS. */
+
+/// Valeur qui suit l’échelle du texte (--text-scale) : une taille de caractères, ou une
+/// dimension fixe calée sur un texte (hauteur d’une carte, largeur d’une colonne de dates).
+@function scaled($value) {
+  @return calc(#{$value} * var(--text-scale));
+}

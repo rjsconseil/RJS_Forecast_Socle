@@ -1,0 +1,413 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Accueil : présentation, créneau, espaces, projets prioritaires. */
+.landing-page {
+  padding-bottom: var(--landing-padding-bottom);
+}
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1-275)) minmax(var(--dim-320), var(--fr-0-825));
+  align-items: stretch;
+  gap: var(--column-gap);
+}
+.landing-hero-copy {
+  align-self: start;
+  padding: 0 0 var(--ecart-48);
+}
+.landing-hero .display {
+  max-width: var(--dim-960);
+  font-size: scaled(var(--fs-hero));
+  line-height: var(--lh-tight);
+}
+/* Le texte de présentation s’étend dans l’écart de colonnes, jusqu’à --intro-panel-gap du cadre voisin. */
+.landing-hero .page-intro,
+.section-home-hero .page-intro {
+  width: calc(var(--part-100) + max(0, var(--column-gap) - var(--intro-panel-gap)));
+}
+.landing-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ecart-24);
+  margin-top: var(--ecart-40);
+}
+.landing-actions .text-link {
+  font-size: scaled(var(--fs-sm));
+}
+.landing-manifesto {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--dim-440);
+  padding: clamp(var(--ecart-32), var(--ecart-3vw), var(--ecart-48));
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--card-radius);
+  background: var(--manifesto-surface);
+}
+.landing-manifesto p {
+  max-width: none;
+  margin: 0 0 var(--ecart-20);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--fs-statement));
+  line-height: var(--lh-tight);
+}
+.landing-manifesto small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-normal);
+}
+.landing-planning-range {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-24);
+  margin-top: var(--ecart-40);
+  padding: var(--ecart-24) var(--ecart-28);
+  border: var(--trait-1) solid var(--band-line);
+  border-left: var(--trait-4) solid var(--green);
+  border-radius: var(--card-radius);
+  background: var(--state-surface);
+}
+.landing-planning-range .eyebrow {
+  margin-bottom: var(--ecart-6);
+}
+.landing-planning-range p:last-child {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-lg));
+}
+.landing-paths {
+  margin-top: var(--ecart-64);
+}
+.landing-section-heading {
+  margin-bottom: var(--ecart-24);
+}
+.landing-card-grid {
+  display: grid;
+  gap: var(--ecart-20);
+}
+.landing-card-grid-two {
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+}
+
+/* Cartes de l’accueil : le motif .card, avec ses réglages par défaut. */
+.landing-card {
+  display: flex;
+  flex-direction: column;
+  min-height: scaled(var(--dim-260));
+  padding: clamp(var(--ecart-24), var(--ecart-2vw), var(--ecart-32));
+}
+.landing-card h3 {
+  margin: var(--ecart-12) 0 var(--ecart-4);
+  color: var(--board-card-ink);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+.landing-card p {
+  max-width: var(--dim-480);
+  margin: 0 0 var(--ecart-24);
+  color: var(--board-card-ink);
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-relaxed);
+}
+.landing-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  margin-top: auto;
+  color: var(--board-card-ink);
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-regular);
+}
+.landing-card-link span {
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-regular);
+}
+
+/* Projets prioritaires : le projet à gauche, ses tâches à droite. */
+.landing-priority-section {
+  margin-top: var(--ecart-20);
+}
+.landing-priority-section .landing-section-heading {
+  margin-bottom: var(--ecart-16);
+}
+.landing-priority-list {
+  display: grid;
+  gap: var(--ecart-20);
+}
+.landing-priority-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1));
+  /* Hauteur minimale et non fixe : l’état, l’échéance et la progression ne sont jamais coupés. */
+  min-height: scaled(var(--dim-260));
+  min-width: 0;
+  overflow: hidden;
+}
+.landing-priority-project,
+.landing-priority-tasks {
+  min-width: 0;
+  padding: var(--ecart-24) clamp(var(--ecart-20), var(--ecart-2vw), var(--ecart-32));
+}
+.landing-priority-project {
+  display: flex;
+  flex-direction: column;
+  border-right: var(--trait-1) solid var(--board-card-line);
+}
+.landing-priority-tasks {
+  display: flex;
+  flex-direction: column;
+}
+.landing-priority-project h3,
+.landing-priority-tasks-heading,
+.landing-priority-task-title {
+  color: var(--board-card-ink);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-bold);
+}
+.landing-priority-project h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 var(--ecart-8);
+  font-family: var(--font-sans);
+  line-height: var(--lh-snug);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lignes-2);
+}
+.landing-priority-summary,
+.landing-priority-success,
+.landing-priority-next,
+.landing-priority-task small,
+.landing-priority-more,
+.landing-priority-progress,
+.landing-priority-progress strong,
+.landing-priority-no-tasks {
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-regular);
+}
+.landing-priority-summary,
+.landing-priority-success,
+.landing-priority-next,
+.landing-priority-meta small,
+.landing-priority-tasks-heading strong,
+.landing-priority-task small,
+.landing-priority-progress,
+.landing-priority-more,
+.landing-priority-no-tasks {
+  color: var(--board-card-muted);
+}
+.landing-priority-summary,
+.landing-priority-success,
+.landing-priority-next {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  line-height: var(--lh-normal);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lignes-2);
+}
+.landing-priority-success,
+.landing-priority-next {
+  margin-top: var(--ecart-6);
+}
+.landing-priority-next {
+  -webkit-line-clamp: var(--lignes-1);
+}
+.landing-priority-success span,
+.landing-priority-next span {
+  margin-right: var(--ecart-6);
+  color: var(--board-card-ink);
+  font-weight: var(--fw-bold);
+}
+.landing-priority-meta {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-10);
+  margin-top: auto;
+  padding-top: var(--ecart-12);
+  border-top: var(--trait-1) solid var(--board-card-line);
+}
+.landing-priority-meta span {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: 0;
+  color: var(--board-card-ink);
+}
+/* Paire libellé / valeur, comme dans les fiches : le libellé s’efface, la valeur ressort. */
+.landing-priority-meta small {
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-regular);
+}
+.landing-priority-meta strong {
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-bold);
+}
+.landing-priority-meta small,
+.landing-priority-meta strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landing-priority-meta strong,
+.landing-priority-progress strong {
+  color: var(--board-card-ink);
+}
+.landing-priority-tasks-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  padding-right: var(--ecart-64);
+  font-family: var(--font-sans);
+  line-height: var(--lh-snug);
+}
+.landing-priority-tasks-heading span {
+  color: var(--board-card-ink);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-bold);
+}
+.landing-priority-tasks-heading strong {
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-snug);
+}
+.landing-priority-task-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  grid-auto-columns: minmax(0, var(--fr-1));
+  flex: var(--flex-1);
+  gap: var(--ecart-8) var(--ecart-14);
+  min-height: 0;
+  margin-top: var(--ecart-4);
+  overflow: hidden;
+}
+.landing-priority-task {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) auto;
+  align-items: start;
+  gap: var(--ecart-4) var(--ecart-10);
+  min-width: 0;
+  padding-top: var(--ecart-10);
+  border-top: var(--trait-1) solid var(--board-card-line);
+}
+.landing-priority-task-title {
+  display: block;
+  overflow: hidden;
+  min-width: 0;
+  line-height: var(--lh-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landing-priority-task .status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: scaled(var(--dim-96));
+  min-height: scaled(var(--dim-28));
+  padding: var(--ecart-4) var(--ecart-6);
+  color: var(--board-card-ink);
+  background: var(--card-pill-surface);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-tight);
+}
+.landing-priority-task small {
+  grid-column: 1 / -1;
+}
+.landing-priority-more {
+  margin: var(--ecart-6) 0 0;
+}
+.landing-priority-progress {
+  display: grid;
+  grid-template-columns: var(--fr-1) auto;
+  align-items: center;
+  gap: var(--ecart-8) var(--ecart-12);
+  margin-top: auto;
+  padding-top: var(--ecart-12);
+}
+.landing-priority-progress .progress-track {
+  --progress-height: var(--dim-6);
+  --progress-track: var(--card-track);
+  grid-column: 1 / -1;
+}
+.landing-priority-no-tasks,
+.landing-priority-empty {
+  margin: auto 0;
+  line-height: var(--lh-normal);
+}
+.landing-priority-empty {
+  padding: var(--ecart-24) var(--ecart-28);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-xl);
+  color: var(--muted);
+  background: var(--soft);
+  font-size: scaled(var(--fs-md));
+}
+.landing-priority-open {
+  position: absolute;
+  top: var(--decalage-24);
+  right: var(--decalage-24);
+  z-index: var(--plan-1);
+  color: var(--board-card-ink);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-semibold);
+}
+
+@media (max-width: $rupture-1100) {
+  .landing-hero {
+    grid-template-columns: minmax(0, var(--fr-1-2)) minmax(var(--dim-280), var(--fr-0-8125));
+  }
+}
+@media (max-width: $rupture-760) {
+  .landing-hero .page-intro,
+  .section-home-hero .page-intro {
+    width: var(--part-100);
+  }
+  .landing-hero,
+  .landing-card-grid-two {
+    grid-template-columns: var(--fr-1);
+  }
+  .landing-hero-copy {
+    padding: var(--ecart-16) 0 0;
+  }
+  .landing-manifesto {
+    min-height: var(--dim-300);
+  }
+  .landing-paths {
+    margin-top: var(--ecart-40);
+  }
+  .landing-priority-card {
+    grid-template-columns: var(--fr-1);
+    height: auto;
+    min-height: var(--dim-260);
+  }
+  .landing-priority-project,
+  .landing-priority-tasks {
+    min-height: var(--dim-200);
+    padding: var(--ecart-24) var(--ecart-24);
+  }
+  .landing-priority-project {
+    border-right: 0;
+    border-bottom: var(--trait-1) solid var(--board-card-line);
+  }
+  .landing-priority-meta,
+  .landing-priority-progress {
+    margin-top: var(--ecart-12);
+  }
+}
+@media (max-width: $rupture-560) {
+  .landing-hero .display {
+    font-size: scaled(var(--fs-hero-compact));
+  }
+  .landing-manifesto {
+    min-height: var(--dim-280);
+  }
+  .landing-card {
+    min-height: var(--dim-240);
+  }
+}

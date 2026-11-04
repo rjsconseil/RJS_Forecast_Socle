@@ -1,0 +1,195 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Synthèse Patrimoine : le bandeau et les tuiles viennent du socle commun. */
+.psy {
+  display: grid;
+  gap: var(--ecart-20);
+}
+.psy-panel {
+  display: grid;
+  gap: var(--ecart-16);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.psy-panel header {
+  display: grid;
+  gap: var(--ecart-4);
+}
+.psy-panel h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-xl));
+  line-height: var(--lh-snug);
+}
+.psy-panel header p:not(.psy-kicker) {
+  margin: 0;
+  color: var(--muted);
+}
+.psy-kicker {
+  margin: 0;
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-08em);
+  text-transform: uppercase;
+}
+.psy-state {
+  display: grid;
+  justify-items: start;
+  gap: var(--ecart-10);
+  margin: 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) dashed var(--line);
+  border-radius: var(--rayon-12);
+  color: var(--muted);
+}
+.psy-projects {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.psy-projects li {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) auto auto;
+  align-items: center;
+  gap: var(--ecart-16);
+  padding: var(--ecart-12) var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-12);
+  background: var(--soft);
+}
+.psy-projects li div {
+  display: grid;
+  gap: var(--ecart-2);
+  min-width: 0;
+}
+.psy-projects strong {
+  color: var(--ink);
+}
+.psy-projects small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.psy-projects span {
+  font-size: scaled(var(--fs-lg));
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-bold);
+}
+.psy-projects [data-tone='success'] {
+  color: var(--status-success);
+}
+.psy-projects [data-tone='danger'] {
+  color: var(--status-danger);
+}
+.psy-projects a {
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+
+@media (max-width: $rupture-640) {
+  .psy-projects li {
+    grid-template-columns: minmax(0, var(--fr-1)) auto;
+  }
+  .psy-projects a {
+    grid-column: 1 / -1;
+  }
+}
+
+/*
+ * Interface de test Patrimoine : bandeau, tuiles et panneau des capitalisations sur la synthèse Patrimoine
+ * de la référence (feuille ci-dessus, `patrimoine-synthesis.page.scss`), colonnes de lecture et de
+ * modification sur la gestion Patrimoine (`patrimoine.page`, couche globale `_management`). Ajouts propres
+ * aux données brutes du middleware.
+ */
+:host {
+  display: block;
+  min-width: 0;
+}
+/* La grille `.psy` espace déjà les blocs : les panneaux de gestion n'ajoutent pas leur marge basse. */
+.psy > .management-columns > .management-panel {
+  margin-bottom: 0;
+}
+.management-panel > h2 {
+  margin: 0 0 var(--ecart-6);
+}
+.management-panel > p {
+  margin: 0 0 var(--ecart-16);
+  color: var(--muted);
+}
+.management-panel .management-records {
+  margin: var(--ecart-16) 0 0;
+}
+.management-records li > div > small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.management-records code {
+  word-break: break-all;
+}
+.management-totals {
+  align-items: stretch;
+}
+.management-totals > div {
+  min-width: min(var(--dim-180), var(--part-100));
+  padding: var(--ecart-12) var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-12);
+  background: var(--soft);
+}
+.management-totals dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+}
+.management-totals dd small {
+  display: block;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-regular);
+}
+.psy-projects small code {
+  overflow-wrap: anywhere;
+}
+.psy-projects small a {
+  font-size: inherit;
+}
+.psy-unknown {
+  color: var(--status-warning);
+}
+.psy-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.psy-error {
+  display: grid;
+  justify-items: start;
+  gap: var(--ecart-8);
+  margin: 0;
+  padding: var(--ecart-12) var(--ecart-16);
+  border-radius: var(--radius-sm);
+  color: var(--status-danger);
+  background: var(--status-danger-surface);
+}
+.psy-error pre {
+  margin: 0;
+  font-size: scaled(var(--fs-xs));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.psy-error p {
+  margin: 0;
+  color: var(--ink);
+}
+.psy-json pre {
+  font-size: scaled(var(--fs-xs));
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,392 @@
+@use 'contrat-ruptures' as *;
+:host,
+.objectives,
+.objectives form {
+  display: grid;
+  gap: var(--ecart-16);
+}
+.objectives {
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.objectives h2,
+.objectives h3,
+.objectives p {
+  margin: 0;
+}
+.objectives-fields,
+.objectives-metrics {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-240)), var(--fr-1))
+  );
+  gap: var(--ecart-16);
+}
+.objectives label {
+  display: grid;
+  gap: var(--ecart-8);
+}
+.objectives button {
+  justify-self: start;
+}
+.objectives-metrics {
+  margin: 0;
+}
+.objectives-metrics > div {
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+.objectives-metrics dt {
+  color: var(--muted);
+}
+.objectives-metrics dd {
+  margin: var(--ecart-8) 0 0;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.objectives-phases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-12);
+  padding: 0;
+  list-style: none;
+}
+.objectives-phases li,
+.objectives-callout {
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+}
+.objectives-phases [aria-current],
+.objectives-callout {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent-line);
+}
+.objectives-phases [aria-current] {
+  font-weight: var(--fw-bold);
+}
+
+.objectives-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-16) var(--ecart-32);
+  margin: 0;
+  padding: var(--ecart-16);
+  border-inline-start: var(--trait-3) solid var(--app-accent);
+  background: var(--app-accent-soft);
+}
+.objectives-summary dt {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.objectives-summary dd {
+  margin: var(--ecart-4) 0 0;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+.objectives-settings:not(.is-fixed) {
+  border-top: var(--trait-1) solid var(--line);
+  padding-top: var(--ecart-12);
+}
+.objectives-settings summary {
+  cursor: pointer;
+  color: var(--app-accent);
+  font-weight: var(--fw-bold);
+}
+.objectives-settings summary[hidden] {
+  display: none;
+}
+.objectives-settings summary:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.objectives-settings:not(.is-fixed)[open] > form {
+  margin-top: var(--ecart-16);
+}
+.objectives-callout[data-state='success'] {
+  color: var(--status-success);
+  background: var(--status-success-surface);
+  border-color: var(--status-success);
+}
+
+/* Deux repères distincts : l'effort régulier et le stock à construire. */
+:host.is-compact {
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  align-items: start;
+  gap: var(--ecart-24);
+}
+.objectives {
+  --objective-color: var(--status-success);
+  --objective-surface: var(--status-success-surface);
+  overflow: hidden;
+  min-width: 0;
+  padding: var(--ecart-24);
+  gap: var(--ecart-20);
+  border-top: var(--trait-3) solid var(--objective-color);
+  box-shadow: var(--app-panel-shadow);
+}
+.objectives-wealth {
+  --objective-color: var(--app-accent);
+  --objective-surface: var(--app-accent-soft);
+}
+.objectives > header {
+  display: grid;
+  gap: var(--ecart-8);
+}
+.objectives-eyebrow {
+  color: var(--objective-color);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-04em);
+  text-transform: uppercase;
+}
+.objectives h2 {
+  font-size: var(--fs-xl);
+  line-height: var(--lh-snug);
+}
+.objectives > header p {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.objectives-summary {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-160)), var(--fr-1))
+  );
+  border: 0;
+  border-radius: var(--rayon-12);
+  padding: var(--ecart-20);
+  background: var(--objective-surface);
+}
+.objectives-summary dd {
+  color: var(--objective-color);
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-tight);
+  overflow-wrap: anywhere;
+}
+.objectives-summary small {
+  display: block;
+  margin-top: var(--ecart-6);
+  color: var(--muted);
+}
+.objectives-metrics {
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: 0;
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-12);
+  overflow: hidden;
+}
+.objectives-metrics > div {
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  padding: var(--ecart-16);
+  background: var(--soft);
+}
+.objectives-metrics > div:nth-child(even) {
+  border-inline-start: var(--trait-1) solid var(--line);
+}
+.objectives-metrics > div:nth-child(n + 3) {
+  border-top: var(--trait-1) solid var(--line);
+}
+.objectives-metrics > div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.objectives-metrics dt {
+  font-size: var(--fs-sm);
+}
+.objectives-metrics dd {
+  overflow-wrap: anywhere;
+}
+.objectives-wealth-route {
+  display: grid;
+  gap: var(--ecart-16);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--rayon-12);
+  background: var(--objective-surface);
+}
+.objectives-route-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  align-items: baseline;
+}
+.objectives-route-heading strong {
+  font-size: var(--fs-2xl);
+  color: var(--objective-color);
+  font-variant-numeric: tabular-nums;
+}
+.objectives-route-heading > span {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.objectives-wealth-landmarks {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-12);
+  margin: 0;
+}
+.objectives-landmark {
+  min-width: 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+}
+.objectives-landmark dt {
+  display: grid;
+  gap: var(--ecart-12);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.objectives-landmark dd,
+.objectives-landmark-gap dd {
+  margin: var(--ecart-8) 0 0;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.objectives-landmark-target {
+  border-color: var(--app-accent-line);
+}
+.objectives-landmark-target dd {
+  color: var(--objective-color);
+}
+.objectives-landmark-icon {
+  display: grid;
+  place-items: center;
+  width: var(--dim-40);
+  height: var(--dim-40);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-8);
+  background: var(--soft);
+  color: var(--ink);
+}
+.objectives-landmark-target .objectives-landmark-icon {
+  border-color: var(--app-accent-line);
+  color: var(--objective-color);
+  background: var(--objective-surface);
+}
+.objectives-landmark-icon svg {
+  width: var(--dim-24);
+  height: var(--dim-24);
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.objectives-landmark-gap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--ecart-8) var(--ecart-16);
+  grid-column: 1 / -1;
+  padding-top: var(--ecart-16);
+  border-top: var(--trait-1) dashed var(--app-accent-line);
+}
+.objectives-landmark-gap dt {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.objectives-landmark-gap dd {
+  margin: 0;
+  color: var(--objective-color);
+}
+.objectives-phases {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  margin: 0;
+  gap: var(--ecart-8);
+}
+.objectives-phases li {
+  padding: var(--ecart-10) var(--ecart-12);
+  border-radius: var(--rayon-8);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.objectives-phases [aria-current] {
+  color: var(--objective-color);
+  background: var(--objective-surface);
+}
+.objectives-settings:not(.is-fixed) {
+  border: 0;
+  padding: 0;
+}
+.objectives-settings:not(.is-fixed) > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  padding: var(--ecart-12) var(--ecart-16);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+  list-style: none;
+}
+.objectives-settings:not(.is-fixed) > summary::after {
+  content: '+';
+  font-size: var(--fs-xl);
+}
+.objectives-settings:not(.is-fixed)[open] > summary::after {
+  content: '−';
+}
+.objectives-settings:not(.is-fixed) > summary:hover {
+  background: var(--app-accent-soft);
+}
+:host.is-compact > :not(.objectives) {
+  grid-column: 1 / -1;
+}
+@media (max-width: $rupture-960) {
+  :host.is-compact {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+@media (max-width: $rupture-480) {
+  .objectives {
+    padding: var(--ecart-16);
+  }
+  .objectives-metrics dd {
+    font-size: var(--fs-lg);
+  }
+  .objectives-wealth-route {
+    padding: var(--ecart-16);
+  }
+  .objectives-landmark {
+    padding: var(--ecart-12);
+  }
+  .objectives-landmark dd {
+    font-size: var(--fs-lg);
+  }
+}
+
+/* Stock violet, objectif doré : des cartes nommées plutôt qu’une jauge. */
+.objectives-landmark-current {
+  border-inline-start: var(--trait-3) solid var(--app-accent);
+  background: var(--app-accent-soft);
+}
+.objectives-landmark-current dd,
+.objectives-landmark-current .objectives-landmark-icon {
+  color: var(--app-accent);
+}
+.objectives-landmark-target {
+  border-inline-start: var(--trait-3) solid var(--amber-700);
+  background: color-mix(in srgb, var(--amber-300) var(--part-10), var(--raised-surface));
+}
+.objectives-landmark-target dd,
+.objectives-landmark-target .objectives-landmark-icon {
+  color: var(--amber-700);
+}
+.objectives-landmark-target .objectives-landmark-icon {
+  border-color: var(--amber-700);
+  background: var(--raised-surface);
+}

@@ -1,0 +1,1457 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/*
+ * Le plan du site en surfaces : barre latérale à deux niveaux (sections de la
+ * zone, puis pages de la seule section active), outils communs en bas, portail
+ * des zones et accueils de zone et de section. Une seule forme par rôle, du
+ * portail aux pages ; cibles tactiles d'au moins 44 px, 48 px au doigt.
+ */
+
+/* La teinte d'une destination : sa zone ou sa section, jamais son statut.
+   Refonte du 27 octobre 2026 : la teinte est un repère (pastille, filet), jamais un aplat. */
+.app-shell [data-tone] {
+  --tone: var(--destination-color);
+  --tone-on: var(--white);
+  --tone-soft: color-mix(in srgb, var(--destination-bright) var(--part-35), var(--raised-surface));
+  --tone-hover: color-mix(in srgb, var(--destination-bright) var(--part-50), var(--raised-surface));
+  --tone-tint: color-mix(in srgb, var(--destination-bright) var(--part-60), var(--raised-surface));
+  --tone-line: color-mix(in srgb, var(--tone) var(--part-30), var(--raised-surface));
+  --tone-shadow: color-mix(in srgb, var(--slate-950) var(--part-8), transparent);
+  --tone-rest-shadow: none;
+  --tone-glow: var(--card-glow);
+}
+.app-shell.editorial-style [data-tone] {
+  --tone: var(--destination-bright);
+  --tone-on: var(--slate-950);
+  --tone-soft: color-mix(in srgb, var(--destination-bright) var(--part-14), var(--raised-surface));
+  --tone-hover: color-mix(in srgb, var(--destination-bright) var(--part-20), var(--raised-surface));
+  --tone-tint: color-mix(in srgb, var(--destination-bright) var(--part-26), var(--raised-surface));
+}
+/* Mouvements communs des boutons de navigation ; supprimés si le système le demande. */
+.app-shell {
+  --press-scale: scale(var(--facteur-0-98));
+}
+.app-shell {
+  --touch-target: var(--dim-44);
+  --zone-entry-height: var(--dim-64);
+}
+@media (pointer: coarse) {
+  .app-shell {
+    --touch-target: var(--dim-48);
+    --zone-entry-height: var(--dim-72);
+  }
+}
+
+/* Barre latérale : surface neutre des deux thèmes (jetons `--sidebar-*`), sans teinte de zone. */
+.sidebar .nav-label {
+  margin: var(--ecart-20) 0 var(--ecart-8);
+}
+
+/* Identité de la zone courante */
+.zone-identity {
+  display: grid;
+  gap: var(--ecart-8);
+  padding: var(--ecart-14) var(--ecart-4);
+  border-block: var(--trait-1) solid var(--sidebar-line);
+}
+.zone-identity-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-12);
+  min-height: var(--touch-target);
+  color: var(--sidebar-ink);
+  text-decoration: none;
+}
+.zone-identity-head small {
+  display: block;
+  color: var(--sidebar-faint);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+.zone-identity-head > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.zone-identity-head strong {
+  display: block;
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  overflow-wrap: break-word;
+}
+.zone-identity p {
+  margin: 0;
+  color: var(--sidebar-muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-normal);
+}
+.zone-identity-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  justify-self: start;
+  min-height: var(--touch-target);
+  padding: 0 var(--ecart-14);
+  border: var(--trait-1) solid var(--sidebar-line);
+  border-radius: var(--rayon-999);
+  color: var(--sidebar-ink);
+  background: var(--raised-surface);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  transition:
+    background-color var(--ease-fast),
+    border-color var(--ease-fast);
+}
+.zone-identity-switch:hover {
+  border-color: var(--sidebar-accent);
+  background: var(--nav-hover-surface);
+}
+.zone-identity-switch span {
+  transition: transform var(--ease-fast);
+}
+.zone-identity-switch:hover span {
+  transform: translate(var(--decalage-2), calc(-1 * var(--decalage-2)));
+}
+
+/* Les sigles : zone, section, outil. Même pastille partout, teintée par sa destination. */
+:is(.zone-mark, .section-mark, .plan-mark, .plan-entry-mark, .plan-outline-mark) {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: var(--dim-40);
+  height: var(--dim-40);
+  padding: 0 var(--ecart-6);
+  border: 0;
+  border-radius: var(--rayon-10);
+  color: color-mix(in srgb, var(--tone) var(--part-85), var(--slate-950));
+  background: var(--tone-soft);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-02em);
+}
+.app-shell.editorial-style :is(.zone-mark, .section-mark, .plan-mark, .plan-entry-mark, .plan-outline-mark) {
+  color: var(--tone);
+}
+.section-mark,
+.plan-entry-mark,
+.plan-outline-mark {
+  min-width: var(--dim-32);
+  height: var(--dim-32);
+  border-radius: var(--rayon-8);
+  font-size: scaled(var(--fs-2xs));
+  transition:
+    background-color var(--ease-fast),
+    color var(--ease-fast);
+}
+
+/* Grandes entrées : les sections de la zone (ou les zones, à l'accueil). */
+.section-switch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ecart-2);
+}
+/* Navigation primaire : une ligne par section ; la sélection prend l'accent de marque
+   et un filet de la couleur de section. */
+.section-switch-entry {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  min-height: var(--touch-target);
+  padding: var(--ecart-6) var(--ecart-8);
+  border: 0;
+  border-radius: var(--nav-item-radius);
+  color: var(--sidebar-ink);
+  background: transparent;
+  text-decoration: none;
+  transition:
+    background-color var(--ease-fast),
+    color var(--ease-fast);
+}
+.section-switch-entry::before {
+  position: absolute;
+  inset-block: var(--ecart-8);
+  inset-inline-start: calc(-1 * var(--ecart-8));
+  width: var(--trait-3);
+  border-radius: var(--rayon-999);
+  background: var(--tone);
+  opacity: var(--opacite-0);
+  content: '';
+}
+.section-switch-entry:focus-visible,
+.plan-entry:focus-visible,
+.plan-tool:focus-visible,
+.plan-destination:focus-visible {
+  outline: var(--trait-2) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-2);
+}
+.section-switch-text {
+  display: grid;
+  gap: var(--ecart-1);
+  min-width: 0;
+}
+.section-switch-text strong {
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.section-switch-text small {
+  color: var(--sidebar-faint);
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-snug);
+}
+.section-switch-entry:hover {
+  color: var(--nav-hover-ink);
+  background: var(--nav-hover-surface);
+}
+.section-switch-entry:active {
+  background: var(--nav-press-surface);
+}
+.section-switch-entry.active {
+  color: var(--nav-active-ink);
+  background: var(--app-accent-soft);
+}
+.section-switch-entry.active::before {
+  opacity: var(--opacite-1);
+}
+.section-switch-entry.active strong {
+  font-weight: var(--fw-semibold);
+}
+
+/* Pages secondaires : uniquement celles de la section active, en retrait sous elle. */
+.section-pages,
+.tool-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ecart-1);
+}
+.section-pages a,
+.tool-nav a,
+.zone-resets a {
+  --item-marker: var(--page-marker, var(--tone, var(--app-accent)));
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  min-height: max(var(--touch-target), var(--nav-item-height));
+  padding: var(--ecart-4) var(--ecart-10) var(--ecart-4) var(--ecart-8);
+  border: 0;
+  border-radius: var(--nav-item-radius);
+  color: var(--sidebar-muted);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-snug);
+  text-decoration: none;
+  transition:
+    background-color var(--ease-fast),
+    color var(--ease-fast);
+}
+.section-pages a:hover,
+.tool-nav a:hover {
+  background: var(--nav-hover-surface);
+  color: var(--nav-hover-ink);
+}
+.section-pages a:active,
+.tool-nav a:active {
+  background: var(--nav-press-surface);
+}
+.section-pages a.active,
+.tool-nav a.active {
+  color: var(--nav-active-ink);
+  background: var(--app-accent-soft);
+  font-weight: var(--fw-semibold);
+}
+.section-pages a.active::before,
+.tool-nav a.active::before {
+  position: absolute;
+  inset-block: var(--ecart-8);
+  inset-inline-start: calc(-1 * var(--ecart-8));
+  width: var(--trait-3);
+  border-radius: var(--rayon-999);
+  background: var(--item-marker);
+  content: '';
+}
+.section-pages a:focus-visible,
+.tool-nav a:focus-visible,
+.zone-resets a:focus-visible,
+.zone-identity-switch:focus-visible {
+  outline: var(--trait-2) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-2);
+}
+.section-pages .nav-icon,
+.tool-nav .nav-icon,
+.zone-resets .nav-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--dim-28);
+  height: var(--dim-28);
+  border-radius: var(--rayon-8);
+  color: var(--sidebar-faint);
+  background: transparent;
+  font-size: scaled(var(--fs-md));
+  transition:
+    background-color var(--ease-fast),
+    color var(--ease-fast);
+}
+.section-pages a:hover .nav-icon,
+.tool-nav a:hover .nav-icon {
+  color: var(--sidebar-ink);
+}
+.section-pages a.active .nav-icon,
+.tool-nav a.active .nav-icon {
+  color: var(--item-marker);
+}
+.section-pages .nav-count {
+  min-width: var(--dim-24);
+  margin-inline-start: auto;
+  padding: var(--ecart-1) var(--ecart-8);
+  border-radius: var(--radius-pill);
+  background: var(--state-surface);
+  color: var(--sidebar-muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Outils communs : un bloc distinct au bas du flux, jamais superposé. */
+.sidebar-tools {
+  display: grid;
+  gap: var(--ecart-4);
+  margin-top: auto;
+  padding-top: var(--ecart-16);
+}
+.sidebar-tools > .nav-label {
+  margin-top: var(--ecart-12);
+  padding-top: var(--ecart-14);
+  border-top: var(--trait-1) solid var(--sidebar-line);
+}
+.sidebar-tools .tool-nav a {
+  font-size: scaled(var(--fs-sm));
+}
+.sidebar-tools .tool-nav .nav-icon {
+  width: var(--dim-28);
+  height: var(--dim-28);
+  font-size: scaled(var(--fs-sm));
+}
+
+/* Tête mobile : la zone courante reste nommée quand le menu est replié. */
+.mobile-zone {
+  display: none;
+  align-items: center;
+  gap: var(--ecart-8);
+  min-width: 0;
+  color: var(--sidebar-ink);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-bold);
+}
+.mobile-zone .zone-mark {
+  min-width: var(--dim-36);
+  height: var(--dim-36);
+  font-size: scaled(var(--fs-2xs));
+}
+
+@media (max-width: $rupture-1250) {
+  .app-shell[data-module] {
+    --sidebar-width: var(--dim-260);
+  }
+}
+@media (max-width: $rupture-820) {
+  .mobile-zone {
+    display: inline-flex;
+    flex: var(--flex-1);
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: var(--lh-snug);
+  }
+  .section-switch {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(var(--part-100), var(--dim-220)), var(--fr-1))
+    );
+  }
+  .section-pages,
+  .tool-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--ecart-6);
+  }
+  .section-pages a,
+  .tool-nav a {
+    flex: var(--flex-1) var(--flex-1) var(--dim-200);
+    border-color: var(--sidebar-line);
+    border-radius: var(--rayon-12);
+    background: var(--raised-surface);
+  }
+  .sidebar-tools {
+    margin-top: var(--ecart-12);
+  }
+}
+
+/* ---------- Portail, accueils de zone et de section ---------- */
+.plan-page {
+  display: grid;
+  gap: var(--ecart-28);
+}
+.plan-kicker {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+.plan-heading {
+  display: grid;
+  gap: var(--ecart-10);
+}
+.plan-heading h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--fs-hero);
+  line-height: var(--lh-tight);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.plan-heading > p:not(.plan-kicker) {
+  max-width: var(--dim-75ch);
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-md));
+  line-height: var(--lh-normal);
+}
+.plan-title-with-mark {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ecart-14);
+}
+.plan-title-with-mark .plan-mark {
+  min-width: var(--dim-48);
+  height: var(--dim-48);
+  font-size: scaled(var(--fs-md));
+}
+/* Portail : un grand bloc par zone, sa taille dit son importance. */
+.plan-portal-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--fs-hero);
+  line-height: var(--lh-tight);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.portal-zone-labels {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--ecart-12);
+  display: grid;
+  gap: var(--ecart-16);
+}
+.portal-zone-labels li {
+  padding-block: var(--ecart-6);
+}
+.plan-zone-title-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--dim-44);
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: var(--trait-1);
+  text-underline-offset: var(--decalage-4);
+}
+.plan-zone-title-link:hover {
+  color: var(--tone);
+}
+.plan-portal-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-6), minmax(0, var(--fr-1)));
+  gap: var(--ecart-24);
+}
+.plan-zone-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ecart-20);
+  grid-column: span 3;
+  min-width: 0;
+  padding: var(--ecart-24);
+  --card-radius: var(--rayon-12);
+}
+.plan-zone-card[data-size='full'] {
+  grid-column: 1 / -1;
+}
+/* Portail en bandes : module phare, modules qu'il réunit, socle, modules techniques.
+   Chaque bande reprend l'en-tête d'instrument du cockpit (index cadré, titre à chasse fixe). */
+.portal-band {
+  position: relative;
+  display: grid;
+  gap: var(--ecart-16);
+  min-width: 0;
+}
+.portal-band-head {
+  display: grid;
+  gap: var(--ecart-6);
+  min-width: 0;
+}
+.portal-band-head .cockpit-heading {
+  --app-accent: var(--overview-accent);
+}
+.plan-zone-eyebrow {
+  margin: 0 0 var(--ecart-4);
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+/* Module phare : pleine largeur, trame fine d'instrument et liseré lumineux. */
+.plan-zone-card[data-size='feature'] {
+  position: relative;
+  grid-column: 1 / -1;
+  gap: var(--ecart-24);
+  overflow: hidden;
+  padding: var(--ecart-32);
+}
+.plan-zone-card[data-size='feature'] .plan-zone-head .plan-mark {
+  min-width: var(--dim-56);
+  height: var(--dim-56);
+  border-radius: var(--rayon-12);
+  font-size: scaled(var(--fs-lg));
+}
+.plan-zone-card[data-size='feature'] .plan-zone-head :is(h2, h3) {
+  font-size: scaled(var(--fs-3xl));
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.plan-zone-card[data-size='feature'] .plan-mission {
+  max-width: var(--dim-75ch);
+}
+.plan-zone-card:is([data-size='feature'], [data-size='full'], [data-size='medium']) .plan-entries {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-160)), var(--fr-1))
+  );
+}
+/* Les sections du portail sont des tuiles d'application : sigle au-dessus, libellé dessous,
+   une ligne pour les zones pleine largeur, deux colonnes ou plus pour les zones côte à côte. */
+.plan-zone-card:is([data-size='feature'], [data-size='full'], [data-size='medium']) .plan-entry {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  min-height: var(--dim-104);
+  padding: var(--ecart-14) var(--ecart-14) var(--ecart-12);
+}
+.plan-zone-card:is([data-size='feature'], [data-size='full'], [data-size='medium']) .plan-entry-text strong {
+  font-size: scaled(var(--fs-md));
+  hyphens: manual;
+}
+/* Deux zones côte à côte : titre plus court, sections sur deux colonnes dès que la place le permet. */
+.plan-zone-card[data-size='medium'] .plan-zone-head :is(h2, h3) {
+  font-size: scaled(var(--fs-2xl));
+}
+
+/* « Réunit … et … » : les deux modules nommés, sans lien de contournement. */
+.portal-assembles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8);
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+}
+.portal-assembles-label {
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+.portal-assembles-part {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  min-height: var(--dim-40);
+  padding: var(--ecart-4) var(--ecart-14) var(--ecart-4) var(--ecart-4);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-999);
+  color: var(--ink);
+  background: var(--raised-surface);
+  font-weight: var(--fw-medium);
+}
+.portal-assembles-part .plan-entry-mark {
+  min-width: var(--dim-32);
+  height: var(--dim-32);
+  border-radius: var(--rayon-999);
+}
+/* Modules techniques : des cartes plus compactes, mêmes entrées et mêmes repères. */
+.plan-zone-card[data-band='technical'] {
+  gap: var(--ecart-16);
+  padding: var(--ecart-24);
+}
+.plan-zone-card[data-band='technical'] .plan-zone-head :is(h2, h3) {
+  font-size: scaled(var(--fs-xl));
+}
+.plan-zone-card[data-band='technical'] .plan-zone-head .plan-mark {
+  min-width: var(--dim-40);
+  height: var(--dim-40);
+  font-size: scaled(var(--fs-sm));
+}
+.plan-zone-card[data-band='technical'] .plan-mission {
+  font-size: scaled(var(--fs-sm));
+}
+.plan-zone-card[data-band='technical'] .plan-entry {
+  min-height: var(--dim-88);
+}
+.plan-zone-card[data-band='technical'] .plan-entry-text strong {
+  font-size: scaled(var(--fs-md));
+}
+.plan-zone-card[data-size='large'] {
+  grid-column: span 4;
+}
+.plan-zone-card[data-size='small'] {
+  grid-column: span 2;
+  padding: var(--ecart-24);
+}
+.app-shell .plan-zone-card.is-locked {
+  border-style: dashed;
+  background: var(--soft);
+}
+.plan-zone-head,
+.plan-section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-16);
+  min-width: 0;
+}
+.plan-zone-head > div,
+.plan-section-head > div {
+  flex: var(--flex-1);
+  min-width: 0;
+}
+.plan-zone-head .plan-mark {
+  min-width: var(--dim-48);
+  height: var(--dim-48);
+  border-radius: var(--rayon-10);
+  font-size: scaled(var(--fs-md));
+}
+.plan-zone-head :is(h2, h3) {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+  font-size: scaled(var(--fs-2xl));
+  line-height: var(--lh-tight);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.plan-zone-head :is(h2, h3) a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.plan-zone-head :is(h2, h3) a:hover {
+  color: var(--tone);
+}
+.plan-zone-card[data-size='small'] .plan-zone-head :is(h2, h3) {
+  font-size: scaled(var(--fs-xl));
+}
+.plan-zone-card[data-size='small'] .plan-mark {
+  min-width: var(--dim-40);
+  height: var(--dim-40);
+  font-size: scaled(var(--fs-sm));
+}
+.plan-mission {
+  margin: var(--ecart-6) 0 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-md));
+  line-height: var(--lh-normal);
+}
+.plan-zone-card[data-size='small'] .plan-mission {
+  font-size: scaled(var(--fs-md));
+}
+.plan-locked-reason {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-md));
+}
+
+/* Entrées de section : une grosse cible par section, jamais tout le bloc cliquable. */
+.plan-entries {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-240)), var(--fr-1))
+  );
+  gap: var(--ecart-12);
+  margin-top: auto;
+}
+.plan-zone-card[data-size='small'] .plan-entries {
+  grid-template-columns: minmax(0, var(--fr-1));
+}
+/* Gros boutons des accueils : la même carte arrondie que la navigation primaire,
+   une flèche qui avance au survol, une pression qui s'enfonce légèrement. */
+.plan-entry,
+.plan-tool {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-12);
+  min-width: 0;
+  min-height: var(--dim-72);
+  padding: var(--ecart-12) var(--ecart-40) var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-10);
+  color: var(--ink);
+  background: var(--raised-surface);
+  box-shadow: none;
+  text-decoration: none;
+  transition:
+    background-color var(--ease-fast),
+    border-color var(--ease-fast),
+    box-shadow var(--ease-fast),
+    transform var(--ease-fast);
+}
+.plan-entry::after,
+.plan-tool::after {
+  position: absolute;
+  inset-inline-end: var(--ecart-14);
+  inset-block-start: var(--ecart-12);
+  color: var(--muted);
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-medium);
+  content: '→' / '';
+  transition: transform var(--ease-fast);
+}
+.plan-entry .plan-entry-mark,
+.plan-tool .plan-entry-mark {
+  min-width: var(--dim-36);
+  height: var(--dim-36);
+  font-size: scaled(var(--fs-xs));
+}
+.plan-entry-text {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: 0;
+}
+.plan-entry-text strong {
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.plan-entry-text small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-snug);
+}
+.plan-entry:hover,
+.plan-tool:hover {
+  border-color: var(--card-border-hover);
+  background: var(--raised-surface);
+  box-shadow: var(--card-glow);
+}
+.plan-entry:hover::after,
+.plan-tool:hover::after {
+  color: var(--app-accent);
+  transform: translateX(var(--decalage-2));
+}
+.plan-entry:active,
+.plan-tool:active {
+  background: var(--card-hover-surface);
+  box-shadow: none;
+}
+.plan-zone-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  align-self: flex-start;
+  min-height: var(--touch-target);
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+.plan-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-260)), var(--fr-1))
+  );
+  gap: var(--ecart-12);
+}
+.plan-tool {
+  background: var(--raised-surface);
+}
+
+/* Accueil de zone : une carte par section */
+.plan-section-grid,
+.plan-page-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-320)), var(--fr-1))
+  );
+  gap: var(--journey-gap);
+}
+.plan-section-card,
+.plan-page-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ecart-14);
+  min-width: 0;
+  padding: var(--journey-padding);
+  --card-radius: var(--rayon-12);
+}
+.plan-section-card h2,
+.plan-page-card h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--journey-title-size);
+  line-height: var(--lh-snug);
+}
+.plan-section-card > p,
+.plan-page-card > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--journey-text-size);
+  line-height: var(--lh-normal);
+}
+/* Accueil de section : une carte par page, numérotée */
+.plan-page-head {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-10);
+}
+.plan-step {
+  display: grid;
+  place-items: center;
+  min-width: var(--dim-40);
+  height: var(--dim-40);
+  border: 0;
+  border-radius: var(--rayon-8);
+  color: color-mix(in srgb, var(--tone, var(--app-accent)) var(--part-85), var(--slate-950));
+  background: var(--tone-soft, var(--app-accent-soft));
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.plan-step-label {
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+.plan-metric {
+  margin-left: auto;
+  color: var(--ink);
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-bold);
+}
+.plan-metric small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-medium);
+}
+.plan-result {
+  display: grid;
+  gap: var(--ecart-4);
+  padding: var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-12);
+  background: var(--soft);
+  font-size: var(--journey-text-size);
+}
+.plan-result strong {
+  color: var(--ink);
+}
+.plan-result span {
+  color: var(--muted);
+  line-height: var(--lh-normal);
+}
+
+/* La commande de navigation principale : pleine, contrastée, au doigt. */
+.plan-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ecart-8);
+  align-self: flex-start;
+  margin-top: auto;
+  min-height: var(--touch-target);
+  padding: var(--ecart-10) var(--ecart-16);
+  border: var(--trait-1) solid var(--app-accent);
+  border-radius: var(--btn-radius);
+  color: var(--btn-primary-ink);
+  background: var(--btn-primary-surface);
+  box-shadow: 0 var(--ombre-6) var(--ombre-16) calc(-1 * var(--ombre-8))
+    color-mix(in srgb, var(--app-accent) var(--part-50), transparent);
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+  transition:
+    background-color var(--ease-fast),
+    box-shadow var(--ease-fast);
+}
+.plan-action > span {
+  transition: transform var(--ease-fast);
+}
+.plan-action:hover {
+  background: var(--btn-primary-hover);
+}
+.plan-empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--ecart-12);
+  padding: var(--ecart-28);
+  border: var(--trait-1) dashed var(--outline);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+}
+.plan-empty :is(h1, h2) {
+  margin: 0;
+  color: var(--ink);
+}
+.plan-empty p {
+  margin: 0;
+  color: var(--muted);
+}
+
+@media (max-width: $rupture-1200) {
+  .plan-zone-card[data-size='large'],
+  .plan-zone-card[data-size='medium'],
+  .plan-zone-card[data-size='small'] {
+    grid-column: span 3;
+  }
+}
+@media (max-width: $rupture-1000) {
+  .plan-heading {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .plan-portal-grid {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .plan-zone-card[data-size] {
+    grid-column: auto;
+  }
+}
+@media (max-width: $rupture-640) {
+  .plan-zone-card[data-size='feature'] {
+    padding: var(--ecart-20);
+  }
+  .plan-zone-card[data-size='feature'] .plan-zone-head .plan-mark {
+    min-width: var(--dim-56);
+    height: var(--dim-56);
+    font-size: scaled(var(--fs-lg));
+  }
+}
+@media (max-width: $rupture-480) {
+  .plan-heading,
+  .plan-zone-card,
+  .plan-section-card,
+  .plan-page-card {
+    padding: var(--ecart-16);
+  }
+  .plan-entries,
+  .section-switch {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .plan-action {
+    align-self: stretch;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plan-entry:hover,
+  .plan-tool:hover,
+  .plan-entry:active,
+  .plan-tool:active,
+  .section-switch-entry:hover,
+  .section-switch-entry:active,
+  .zone-identity-switch:hover span {
+    transform: none;
+  }
+  :is(.plan-entry, .plan-tool):hover::after,
+  .plan-destination:hover .plan-action > span {
+    transform: none;
+  }
+}
+
+/* Outils du bas : mêmes cibles tactiles que la navigation. */
+.app-shell :is(.sidebar-data button, .sidebar-data-link) {
+  min-height: var(--touch-target);
+}
+.app-shell .profile-switcher a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target);
+}
+.app-shell .appearance-picker select {
+  min-height: var(--touch-target);
+}
+
+/* Remises à zéro : un lien vers la page dédiée, distinct de la navigation métier. */
+.zone-resets {
+  display: grid;
+  gap: var(--ecart-4);
+  margin-top: var(--ecart-10);
+  padding-top: var(--ecart-10);
+  border-top: var(--trait-1) dashed var(--sidebar-line);
+}
+.zone-resets a {
+  --item-marker: var(--danger);
+  min-height: var(--touch-target);
+  border: var(--trait-1) dashed color-mix(in srgb, var(--danger) var(--part-30), var(--sidebar-line));
+  color: var(--sidebar-muted);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.zone-resets a:hover {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--danger) var(--part-50), var(--sidebar-line));
+  background: color-mix(in srgb, var(--danger) var(--part-6), var(--raised-surface));
+  color: var(--sidebar-ink);
+}
+.zone-resets .nav-icon {
+  width: var(--dim-28);
+  height: var(--dim-28);
+  font-size: scaled(var(--fs-sm));
+}
+.plan-resets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-10);
+  padding-top: var(--ecart-20);
+  border-top: var(--trait-1) dashed var(--outline);
+}
+.plan-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  min-height: var(--touch-target);
+  padding: 0 var(--ecart-14);
+  border: var(--trait-1) dashed color-mix(in srgb, var(--danger) var(--part-38), var(--outline));
+  border-radius: var(--rayon-8);
+  color: var(--ink);
+  background: var(--raised-surface);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+.plan-reset span {
+  color: var(--danger);
+}
+
+/*
+ * Un seul format d'en-tête de page pour tous les modules : le bandeau d'accueil
+ * en dégradé de l'espace (fond `--heading-surface`, texte `--heading-ink`),
+ * étiquette technique, grand titre, phrase de but. Les rôles de couleur sont
+ * inversés dans le bandeau : les en-têtes historiques des modules s'y lisent
+ * sans copie de feuille, et Configuration peut toujours régler le pattern.
+ */
+$page-headings: '[data-ui-pattern~="heading"], .page-head, .pilotage-intro, .fm-hero, .cfg-hero, .page-heading, .test-archive > header, .reset-hero, .documentation-hero, .audit-header, .plan-heading, .budget-section-head:has(> div > h1), .budget-section-head:has(> div > .page-hero-title > h1)';
+.app-shell main :is(#{$page-headings}) {
+  --ink: var(--heading-ink);
+  --muted: color-mix(in srgb, var(--heading-ink) var(--part-94), transparent);
+  --lead-ink: color-mix(in srgb, var(--heading-ink) var(--part-94), transparent);
+  --line: color-mix(in srgb, var(--heading-ink) var(--part-25), transparent);
+  --outline: color-mix(in srgb, var(--heading-ink) var(--part-35), transparent);
+  --soft: color-mix(in srgb, var(--slate-950) var(--part-12), transparent);
+  --raised-surface: color-mix(in srgb, var(--slate-950) var(--part-20), transparent);
+  --app-accent: var(--heading-ink);
+  --eyebrow-color: var(--heading-ink);
+  --text-link-color: var(--heading-ink);
+  --text-link-hover: var(--heading-ink);
+  --display-accent: var(--space-bright);
+  --band-accent: var(--heading-ink);
+  --btn-secondary-ink: var(--heading-ink);
+  --btn-secondary-surface: color-mix(in srgb, var(--slate-950) var(--part-20), transparent);
+  --btn-secondary-hover-surface: color-mix(in srgb, var(--slate-950) var(--part-35), transparent);
+  --btn-secondary-hover-line: var(--heading-ink);
+  --control-line: color-mix(in srgb, var(--heading-ink) var(--part-55), transparent);
+  position: relative;
+  overflow: hidden;
+  padding: var(--heading-padding) var(--heading-padding) var(--heading-padding) var(--heading-inset);
+  border: 0;
+  border-inline-start: var(--heading-accent) solid var(--space-bright);
+  border-radius: var(--heading-radius);
+  color: var(--heading-ink);
+  background: var(--heading-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.app-shell main :is(#{$page-headings}) h1 {
+  margin: var(--ecart-6) 0 var(--ecart-10);
+  color: var(--heading-ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.app-shell main :is(#{$page-headings}) :is(.eyebrow, .fm-kicker, .cfg-eyebrow, .audit-kicker, .plan-kicker) {
+  color: color-mix(in srgb, var(--heading-ink) var(--part-75), transparent);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-06em);
+  text-transform: uppercase;
+}
+/* Même position que le bandeau partagé : titre puis section, en haut à droite. */
+.app-shell main :is(#{$page-headings}) .page-hero-title {
+  display: grid;
+  justify-items: end;
+  gap: var(--ecart-6);
+  min-width: 0;
+  text-align: end;
+}
+.app-shell main :is(#{$page-headings}) .page-hero-title > :is(h1, p) {
+  margin: 0;
+}
+.app-shell main :is(#{$page-headings}) .page-hero-title > .plan-title-with-mark {
+  justify-content: flex-end;
+}
+.app-shell main :is(#{$page-headings}) .plan-return {
+  border-color: var(--outline);
+  color: var(--heading-ink);
+  background: var(--raised-surface);
+}
+.app-shell main :is(#{$page-headings}) .plan-mark {
+  border-color: var(--outline);
+  color: var(--heading-ink);
+  background: var(--raised-surface);
+}
+.app-shell main .eyebrow-line {
+  display: none;
+}
+/* Budget : l'en-tête allégé ne garde que ses commandes quand la page a son titre. */
+.app-shell main .bw-app-header.is-compact {
+  justify-content: flex-end;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.app-shell main .bw-brand .plan-mark {
+  min-width: var(--dim-56);
+  height: var(--dim-56);
+  font-size: scaled(var(--fs-lg));
+}
+
+/* Budget : les commandes et le contexte du projet suivent l'en-tête, sans second cadre. */
+.app-shell main .budget-workspace.budget-navigation {
+  display: grid;
+  gap: var(--ecart-14);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* Accueils : une grande boîte par destination, un gros bouton qui l'ouvre. */
+.app-shell :is(.plan-section-card, .plan-page-card) .plan-action {
+  align-self: stretch;
+  min-height: max(var(--touch-target), var(--journey-action-height));
+  font-size: var(--journey-action-size);
+}
+.plan-section-head h2 {
+  margin: 0;
+}
+
+/* La continuité de lecture : les mêmes cartes du portail aux outils. */
+rjs-plan-cards {
+  display: block;
+  min-width: 0;
+}
+
+.plan-destination:hover .plan-action > span,
+.plan-destination:focus-visible .plan-action > span {
+  transform: translateX(var(--decalage-4));
+}
+.plan-destination {
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    transform var(--ease-fast),
+    box-shadow var(--ease-fast);
+}
+.app-shell .plan-destination:hover {
+  border-color: var(--card-border-hover);
+  box-shadow: var(--card-hover-shadow);
+}
+.plan-destination:hover .plan-action {
+  background: var(--btn-primary-hover);
+}
+.plan-destination:active {
+  background: var(--card-hover-surface);
+}
+.plan-return {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--ecart-8);
+  min-height: var(--touch-target);
+  padding: var(--ecart-8) var(--ecart-16);
+  border: var(--trait-1) solid var(--btn-secondary-line);
+  border-radius: var(--btn-radius);
+  color: var(--btn-secondary-ink);
+  background: var(--btn-secondary-surface);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+}
+.plan-return:hover {
+  border-color: var(--btn-secondary-hover-line);
+  background: var(--btn-secondary-hover-surface);
+}
+.plan-page-head {
+  flex-wrap: wrap;
+}
+.plan-step-label {
+  flex: var(--flex-1);
+  min-width: 0;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.plan-result {
+  margin-top: auto;
+}
+.plan-scope {
+  padding: var(--ecart-12) var(--ecart-16);
+}
+.plan-scope summary {
+  min-height: var(--touch-target);
+  align-content: center;
+  font-weight: var(--fw-semibold);
+}
+.plan-scope p {
+  margin: var(--ecart-8) 0;
+  color: var(--muted);
+  line-height: var(--lh-normal);
+}
+.section-selected {
+  margin-inline-start: auto;
+  color: var(--tone);
+  font-weight: var(--fw-bold);
+}
+.sidebar-disclosure {
+  margin-top: var(--ecart-12);
+  border-block: var(--trait-1) solid var(--sidebar-line);
+}
+.sidebar-disclosure > summary {
+  min-height: var(--touch-target);
+  padding: var(--ecart-12);
+  color: var(--sidebar-ink);
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.sidebar-disclosure[open] > summary {
+  border-bottom: var(--trait-1) solid var(--sidebar-line);
+}
+.sidebar-disclosure .sidebar-data {
+  padding-top: var(--ecart-12);
+}
+.app-shell .appearance-picker select {
+  min-height: var(--touch-target);
+  font-size: scaled(var(--fs-sm));
+}
+.app-shell .btn {
+  min-width: 0;
+  max-width: var(--part-100);
+  min-height: max(var(--touch-target), var(--btn-height));
+  white-space: normal;
+  text-align: center;
+}
+.app-shell :is(.plan-entry, .plan-tool, .plan-action) {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+@media (max-width: $rupture-1000) {
+  .plan-section-grid,
+  .plan-page-grid {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+@media (pointer: coarse) {
+  .app-shell
+    :is(.btn, .mobile-nav-toggle, .section-pages a, .tool-nav a, main summary, main select) {
+    min-height: var(--touch-target);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell .plan-destination:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: $rupture-480) {
+  .mobile-zone { display: none; }
+  .sidebar { padding-inline: var(--ecart-12); }
+}
+
+@media (max-width: $rupture-600) {
+  .bw-section-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .bw-core-actions .btn {
+    flex: var(--flex-1) var(--flex-1) var(--dim-200);
+  }
+}
+
+/* Une section = une teinte de repère ; une page = un filet à la sélection.
+   Refonte du 27 octobre 2026 : la teinte reste dans la pastille et le filet, jamais en aplat ;
+   la sélection garde sa coche et son aria-current, le focus reste une information distincte. */
+
+/* Vues d’ensemble : trois résultats utiles, puis un point de départ. */
+.plan-overview {
+  display: grid;
+  gap: var(--ecart-16);
+}
+.plan-overview > h2,
+.plan-overview-start h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-xl));
+}
+.plan-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-260)), var(--fr-1))
+  );
+  gap: var(--ecart-14);
+}
+.plan-overview-grid .plan-result {
+  border-inline-start: var(--trait-4) solid var(--app-accent);
+  padding: var(--ecart-20);
+  background: var(--raised-surface);
+}
+.plan-overview-grid p,
+.plan-overview-start p {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-lg));
+  line-height: var(--lh-normal);
+}
+.plan-overview-start {
+  display: grid;
+  justify-items: start;
+  gap: var(--ecart-14);
+  padding: var(--ecart-24);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+}
+
+/* Les destinations gardent leur teinte de repère ; le texte suit le thème. */
+.app-shell :is(.section-switch-entry, .plan-entry, .plan-tool)[data-tone] {
+  --tone: var(--destination-color);
+  --tone-on: var(--white);
+}
+.app-shell.editorial-style :is(.section-switch-entry, .plan-entry, .plan-tool)[data-tone] {
+  --tone: var(--destination-bright);
+  --tone-on: var(--slate-950);
+}
+/* À la sélection, le sigle de section se remplit de sa teinte ; la coche reste discrète. */
+.app-shell .section-switch-entry[data-tone].active .section-mark {
+  color: var(--tone-on);
+  background: var(--tone);
+}
+.app-shell .section-switch-entry[data-tone] .section-selected {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+}
+
+/* Le haut du badge suit les capitales, pas le centre du bloc titre + description.
+   Le navigateur retire uniquement l’espace typographique au-dessus du texte. */
+:is(
+  .plan-zone-head,
+  .plan-section-head,
+  .plan-title-with-mark,
+  .plan-entry,
+  .plan-tool,
+  .section-switch-entry
+) {
+  align-items: flex-start;
+}
+:is(
+  .plan-zone-head :is(h2, h3),
+  .plan-section-head h2,
+  .plan-title-text,
+  .plan-entry-text strong,
+  .section-switch-text strong
+) {
+  text-box-trim: trim-start;
+  text-box-edge: cap alphabetic;
+}
+.plan-zone-title-link {
+  display: block;
+  text-box-trim: trim-start;
+  text-box-edge: cap alphabetic;
+}
+
+.plan-title-with-mark {
+  flex-wrap: nowrap;
+}
+.plan-title-text {
+  min-width: 0;
+  flex: var(--flex-1);
+}
+
+/* Le creuset commun : la composition en haut, ses deux modules, puis leur socle.
+   Refonte du 27 octobre 2026 : des bandes posées sur la page, sans cadre ni tracé décoratif. */
+.portal-ecosystem, .portal-technical {
+  display: grid;
+  gap: var(--ecart-40);
+  min-width: 0;
+}
+/* La lecture progressive est limitée à l'application BPM. */
+.bpm-reading .app-hero { padding: var(--ecart-24); gap: var(--ecart-16); }
+.bpm-reading .app-hero h1 { font-size: scaled(var(--fs-3xl)); }
+.bpm-reading .app-hero-copy { gap: var(--ecart-8); }
+.bpm-disclosure { display: block !important; }
+.bpm-disclosure > summary { cursor: pointer; color: var(--ink); }
+.bpm-disclosure > summary :is(h2,h3) { display: inline; font-size: scaled(var(--fs-lg)); }
+.bpm-disclosure > summary:focus-visible { outline: var(--trait-3) solid var(--app-accent); outline-offset: var(--decalage-2); }
+.bpm-disclosure-body { display: grid; gap: var(--ecart-16); margin-top: var(--ecart-16); }
+
+.plan-zone-home.bpm-reading .plan-overview-start { order: -1; }
+@media (max-width: $rupture-1000) {
+}
+
+.bpm-project.bpm-disclosure:not([open]) { padding: var(--ecart-16); }
+.bpm-project.bpm-disclosure > summary::after { content: '▾'; color: var(--app-accent); }
+.bpm-project.bpm-disclosure[open] > summary::after { content: '▴'; }
+
+@media (max-width: $rupture-600) {
+  .app-shell:has(.bpm-reading) .topbar:has(.period-lens) .topbar-actions { flex-basis: var(--part-100); flex-wrap: wrap; gap: var(--ecart-8); min-width: 0; }
+  .app-shell:has(.bpm-reading) .period-lens { flex-wrap: wrap; gap: var(--ecart-2); }
+  .app-shell:has(.bpm-reading) .period-lens-option { padding-inline: var(--ecart-8); font-size: scaled(var(--fs-sm)); }
+  .bpm-reading .app-hero { padding: var(--ecart-16); }
+  .bpm-reading .app-hero h1 { font-size: scaled(var(--fs-2xl)); }
+  .bpm-reading .app-hero-actions { gap: var(--ecart-8); }
+  .app-shell .bpm-reading .bpm-ring { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .app-shell .bpm-reading .bpm-ring svg { display: none; }
+  .app-shell .bpm-reading .bpm-ring-label { position: static; display: flex; align-items: baseline; gap: var(--ecart-6); width: auto; height: auto; }
+  .app-shell .bpm-reading .bpm-ring-label strong { font-size: scaled(var(--fs-xl)); }
+  .app-shell .bpm-reading .bpm-ring-label span { max-width: none; }
+}
+
+.bpm-daily-home .app-hero { padding: var(--ecart-16) var(--ecart-24); }
+.bpm-daily-home .app-hero h1 { font-size: scaled(var(--fs-2xl)); }
+.daily-analysis { padding: var(--ecart-20); border: var(--trait-1) solid var(--card-border); border-radius: var(--card-radius); background: var(--raised-surface); }

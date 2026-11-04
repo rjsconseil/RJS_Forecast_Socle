@@ -1,0 +1,367 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Langage commun de la coque jusqu'aux commandes et aux champs. */
+.app-shell .main-shell {
+  background: var(--space-canvas);
+}
+.app-shell .topbar {
+  border-top: var(--trait-3) solid var(--app-accent);
+}
+.app-shell .topbar-square {
+  display: block;
+  border-radius: var(--part-50);
+  background: var(--app-accent);
+}
+.back-to-top {
+  position: fixed;
+  right: var(--decalage-24);
+  bottom: var(--decalage-20);
+  z-index: var(--plan-20);
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  min-height: var(--dim-44);
+  padding: var(--ecart-10) var(--ecart-14);
+  border: var(--trait-1) solid var(--app-accent);
+  border-radius: var(--radius-pill);
+  background: var(--btn-primary-surface);
+  color: var(--btn-primary-ink);
+  box-shadow: var(--app-panel-shadow);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+/* Une forme commune, une couleur d'action et des états sémantiques constants. */
+.app-shell
+  :is(
+    [data-ui-pattern~='action'],
+    .btn,
+    .audit-actions button,
+    .audit-card-head button,
+    .audit-archives button
+  ) {
+  --btn-height: var(--control-height);
+  min-height: var(--btn-height);
+  border-radius: var(--btn-radius);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-normal);
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+}
+.app-shell :is(button, a, summary, input, select, textarea) {
+  -webkit-tap-highlight-color: transparent;
+}
+.app-shell :where(button, summary, select, input[type='checkbox'], input[type='radio']) {
+  cursor: pointer;
+}
+.app-shell :is(button, a, summary, input, select, textarea):focus-visible {
+  outline: var(--trait-3) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-4);
+}
+.app-shell :is(button, input, select, textarea):disabled {
+  opacity: var(--opacite-0-55);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.app-shell :is(a, button)[aria-busy='true'] {
+  cursor: progress;
+}
+.app-shell :is(.btn-primary, .back-to-top):hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+}
+.app-shell .btn-secondary {
+  background: var(--btn-secondary-surface);
+  color: var(--ink);
+  border-color: var(--control-line);
+  box-shadow: none;
+}
+.app-shell .btn-secondary:hover:not(:disabled) {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent);
+}
+.app-shell :is(.btn-danger, .btn.us-danger, .audit-danger) {
+  border-color: var(--status-danger);
+  background: var(--status-danger);
+  color: var(--app-on-accent);
+}
+.app-shell :is(.btn-danger, .btn.us-danger, .audit-danger):hover:not(:disabled) {
+  background: var(--status-danger-hover);
+  border-color: var(--status-danger-hover);
+}
+.app-shell main :is(.text-link, .fp-inline-link) {
+  text-underline-offset: var(--decalage-0-2em);
+}
+.app-shell main :is(.text-link, .fp-inline-link):hover {
+  text-decoration: underline;
+}
+.app-shell :is(.bt-views, .fp-tabs, .ft-tabs) :is(a, button) {
+  min-height: var(--control-height);
+  border-radius: var(--btn-radius);
+}
+.app-shell :is(.bt-views, .fp-tabs, .ft-tabs) :is([aria-current='page'], [aria-pressed='true']) {
+  background: var(--btn-primary-surface);
+  color: var(--btn-primary-ink);
+  border-color: var(--app-accent);
+}
+.app-shell
+  :is([data-ui-pattern~='heading'], .page-head, .bt-hero, .fp-hero, .audit-header, .cfg-hero) {
+  border-inline-start: var(--heading-accent) solid var(--app-accent);
+  padding-inline-start: var(--heading-inset);
+  gap: var(--page-head-gap);
+}
+.app-shell :is(.bt-hero-stat) {
+  background: var(--app-accent);
+  color: var(--app-on-accent);
+}
+.app-shell :is(.bt-hero-stat a, .bt-hero-stat strong, .bt-hero-stat small) {
+  color: inherit;
+}
+/* Pattern « Cartes et panneaux » : un même jeton agit sur les principaux
+   conteneurs des modules, sans que Configuration importe leurs composants. */
+.app-shell
+  :is(
+    [data-ui-pattern~='panel'],
+    .card,
+    .fp-card,
+    .us-section,
+    .audit-card,
+    .bt-hero,
+    .bt-lesson,
+    .bt-evidence,
+    .bw-section,
+    .bov-panel,
+    .cfg-panel
+  ) {
+  border-radius: var(--card-radius);
+  border-width: var(--card-border-width);
+}
+.app-shell [data-ui-pattern~='panel'] {
+  border: var(--card-border-width) solid var(--card-border);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.app-shell :is(.fp-table-wrap, .audit-table-wrap, .ft-table-wrap) {
+  scrollbar-color: var(--app-accent-line) transparent;
+}
+.app-shell :is(.fp-table-wrap, .audit-table-wrap, .ft-table-wrap) thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--plan-1);
+  background: var(--raised-surface);
+}
+.app-shell :is(.fp-table-wrap, .audit-table-wrap, .ft-table-wrap) tbody tr:hover {
+  background: var(--app-accent-soft);
+}
+
+/* Tous les formulaires, y compris les dossiers RH et la maintenance du journal. */
+.app-shell
+  :is(main, .modal)
+  :is([data-ui-pattern~='field'], input, select, textarea):not([type='checkbox']):not(
+    [type='radio']
+  ):not([type='range']):not([type='color']):not([type='hidden']):not([type='file']) {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--field-line);
+  border-radius: var(--field-radius);
+  background: var(--field-surface);
+  color: var(--field-ink);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-normal);
+  color-scheme: var(--control-color-scheme);
+  transition:
+    border-color var(--ease-fast),
+    box-shadow var(--ease-fast);
+}
+.app-shell :is(main, .modal) textarea {
+  resize: vertical;
+  min-height: var(--dim-88);
+}
+.app-shell :is(main, .modal) :is(input, select, textarea):focus-visible {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 var(--ombre-4) var(--app-accent-soft);
+}
+.app-shell :is(main, .modal) :is(input, textarea)::placeholder {
+  color: var(--field-placeholder);
+  opacity: var(--opacite-1);
+}
+.app-shell :is(main, .modal) :is(input, textarea)[readonly] {
+  background: var(--soft);
+  border-style: dashed;
+  color: var(--muted);
+}
+.app-shell :is(main, .modal) :is(input, select, textarea).ng-invalid.ng-touched {
+  border-color: var(--status-danger);
+  box-shadow: inset var(--ombre-4) 0 0 var(--status-danger);
+}
+.app-shell :is(main, .modal) :is(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--app-accent);
+  width: var(--dim-18);
+  height: var(--dim-18);
+  flex-shrink: var(--flex-0);
+}
+.app-shell :is(main, .modal) input[type='file']::file-selector-button {
+  min-height: var(--control-height);
+  margin-right: var(--ecart-10);
+  padding: var(--ecart-8) var(--ecart-12);
+  border: var(--trait-1) solid var(--app-accent);
+  border-radius: var(--interaction-radius);
+  background: var(--app-accent-soft);
+  color: var(--ink);
+  cursor: pointer;
+}
+.app-shell :is(form, .fp-filters, .ft-filters) label:focus-within {
+  color: var(--app-accent);
+}
+.app-shell :is(.us-form, .ft-form, .fs-form) {
+  border-inline-start: var(--trait-3) solid var(--app-accent-line);
+}
+.app-shell :is(.us-form, .ft-form) :is(.us-actions, .ft-actions) {
+  padding-top: var(--ecart-12);
+  border-top: var(--trait-1) solid var(--outline);
+}
+.app-shell :is(.us-form, .ft-form) rjs-form-status {
+  margin-block: var(--ecart-10);
+}
+.budget-host-tools:not(.is-compact) > summary {
+  display: none;
+}
+.budget-host-tools.is-compact {
+  margin-bottom: var(--ecart-20);
+  padding: 0 var(--ecart-16);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+}
+.budget-host-tools.is-compact > summary {
+  min-height: var(--dim-44);
+  padding: var(--ecart-12) 0;
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.budget-host-tools.is-compact[open] > summary {
+  margin-bottom: var(--ecart-16);
+  border-bottom: var(--trait-1) solid var(--outline);
+}
+.filter-reset {
+  align-self: end;
+}
+.filter-summary {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+
+@media (max-width: $rupture-640) {
+  .app-shell :is(.btn, .us-row-actions button, .ft-actions button, .audit-actions button) {
+    min-height: var(--dim-44);
+  }
+  .back-to-top {
+    right: var(--decalage-12);
+    bottom: var(--decalage-12);
+  }
+  .back-to-top span {
+    display: none;
+  }
+  .app-shell :is(.page-head, .bt-hero, .fp-hero, .audit-header) {
+    padding-inline-start: var(--heading-inset-narrow);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .app-shell *::before,
+  .app-shell *::after {
+    scroll-behavior: auto;
+    transition-duration: var(--duree-0-01);
+    animation-duration: var(--duree-0-01);
+    animation-iteration-count: var(--iterations-1);
+  }
+}
+
+/* Visite guidée : l'élément expliqué est entouré, sans changer sa mise en page. */
+[data-tour-active] {
+  outline: var(--trait-4) solid var(--app-accent);
+  outline-offset: var(--decalage-6);
+  border-radius: var(--card-radius);
+  scroll-margin: var(--ecart-96);
+}
+
+/* Curseurs natifs : même piste, même prise et même focus dans tous les modules. */
+.app-shell :is(main, .modal) input[type='range'] {
+  appearance: none;
+  display: block;
+  width: var(--part-100);
+  min-height: var(--control-height);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--field-radius);
+  background: transparent;
+  box-shadow: none;
+  accent-color: var(--app-accent);
+  cursor: pointer;
+}
+.app-shell input[type='range']::-webkit-slider-runnable-track {
+  height: var(--dim-8);
+  border-radius: var(--rayon-999);
+  background: linear-gradient(to right, var(--app-accent) var(--range-position, var(--part-100)), var(--line) var(--range-position, var(--part-100)));
+  box-shadow: inset 0 var(--trait-1) var(--ombre-2) color-mix(in srgb, var(--ink) var(--part-12), transparent);
+}
+.app-shell input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--dim-24);
+  height: var(--dim-24);
+  margin-top: calc(-1 * var(--ecart-8));
+  border: var(--trait-3) solid var(--app-accent);
+  border-radius: var(--rayon-999);
+  background: var(--raised-surface);
+  box-shadow: 0 var(--ombre-2) var(--ombre-6) color-mix(in srgb, var(--ink) var(--part-20), transparent);
+}
+.app-shell input[type='range']::-moz-range-track {
+  height: var(--dim-8);
+  border-radius: var(--rayon-999);
+  background: var(--line);
+}
+.app-shell input[type='range']::-moz-range-progress {
+  height: var(--dim-8);
+  border-radius: var(--rayon-999);
+  background: var(--app-accent);
+}
+.app-shell input[type='range']::-moz-range-thumb {
+  width: var(--dim-20);
+  height: var(--dim-20);
+  border: var(--trait-3) solid var(--app-accent);
+  border-radius: var(--rayon-999);
+  background: var(--raised-surface);
+}
+@media (forced-colors: active) {
+  .app-shell :is(main, .modal) input[type='range'] { appearance: auto; }
+}
+
+/* Écrans de lecture intégrale : mêmes surfaces et contenus, sans commande de repli. */
+[data-expanded-content] > summary {
+  cursor: default !important;
+  list-style: none;
+}
+[data-expanded-content] > summary::marker,
+[data-expanded-content] > summary::-webkit-details-marker {
+  display: none;
+  content: '';
+}
+[data-expanded-content] > summary::after,
+[data-expanded-content] > summary .journey-disclosure,
+[data-expanded-content] > summary .expense-project-cue,
+[data-expanded-content] > summary [aria-hidden='true'] {
+  display: none !important;
+}
+[data-expanded-content] > summary .bpm-picker-action::after {
+  display: none;
+}

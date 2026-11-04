@@ -1,0 +1,108 @@
+// Copie de la source (rjsconseil/rjs-forecast @ 54246fa, apps/web/src/app/audit-admin.page.scss) :
+// tableaux de journal et d'inspection, cartes de chiffres, filtres et pied de tableau.
+// Adaptations : la règle de bouton nue de la source (qui habillerait aussi les boutons `.btn` des pages
+// d'administration) et l'en-tête `.audit-header` (remplacé ici par `rjs-app-hero`) ne sont pas repris ;
+// les règles de tableau sont portées par `.audit-table-wrap` pour ne viser que les tableaux de journal.
+@use 'contrat-ruptures' as *;
+:host {
+  display: block;
+}
+.audit-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--ecart-16);
+}
+.audit-caveat {
+  color: var(--muted);
+}
+.audit-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-4), minmax(0, var(--fr-1)));
+  gap: var(--ecart-12);
+  margin: var(--ecart-16) 0;
+}
+.audit-stats div {
+  display: grid;
+  gap: var(--ecart-4);
+  padding: var(--ecart-12);
+  border-radius: var(--rayon-10);
+  background: var(--hover-surface);
+}
+.audit-stats strong {
+  font-size: var(--texte-20);
+}
+.audit-stats span,
+.audit-table-wrap small,
+.audit-footnote {
+  color: var(--muted);
+  font-size: var(--texte-14);
+}
+.audit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-10);
+  margin-top: var(--ecart-16);
+}
+.audit-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ecart-12);
+  margin-top: var(--ecart-16);
+}
+.audit-filters label {
+  display: grid;
+  gap: var(--ecart-6);
+  flex: var(--flex-1) var(--flex-1) var(--dim-220);
+  font-weight: var(--graisse-600);
+}
+.audit-alert,
+.audit-success {
+  padding: var(--ecart-12) var(--ecart-16);
+  border-radius: var(--rayon-8);
+  background: var(--hover-surface);
+}
+.audit-alert {
+  border-left: var(--trait-4) solid var(--status-danger);
+}
+.audit-success {
+  border-left: var(--trait-4) solid var(--status-success);
+}
+.audit-table-wrap {
+  max-height: var(--dim-560);
+  overflow: auto;
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-8);
+}
+.audit-table-wrap table {
+  width: var(--part-100);
+  border-collapse: collapse;
+  min-width: var(--dim-720);
+}
+.audit-table-wrap th,
+.audit-table-wrap td {
+  padding: var(--ecart-10);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.audit-table-wrap th {
+  position: sticky;
+  top: 0;
+  background: var(--raised-surface);
+}
+.audit-table-wrap td small {
+  display: block;
+}
+.audit-table-wrap td code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: $rupture-750) {
+  .audit-card-head {
+    display: block;
+  }
+  .audit-stats {
+    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  }
+}

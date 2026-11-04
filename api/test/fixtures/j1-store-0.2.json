@@ -1,0 +1,1518 @@
+{
+  "schemaVersion": "j1-store/0.2",
+  "revision": 41,
+  "updatedAt": "2026-11-03T09:08:50.857Z",
+  "users": {
+    "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9": {
+      "id": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "kind": "user",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.192Z",
+      "updatedAt": "2026-11-03T09:04:13.192Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u1-648b970f-0dc0-40da-8420-7409339e28f5",
+        "at": "2026-11-03T09:04:13.192Z"
+      },
+      "label": "Utilisateur fictif 1",
+      "fictitious": true
+    },
+    "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05": {
+      "id": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "kind": "user",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.216Z",
+      "updatedAt": "2026-11-03T09:04:13.216Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u2-8bb322c0-88d8-41f5-b31e-aede8a10935d",
+        "at": "2026-11-03T09:04:13.216Z"
+      },
+      "label": "Utilisateur fictif 2",
+      "fictitious": true
+    }
+  },
+  "coreProjects": {
+    "prj_2af2afa9-f184-4147-8efa-2569543594a6": {
+      "id": "prj_2af2afa9-f184-4147-8efa-2569543594a6",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.192Z",
+      "updatedAt": "2026-11-03T09:04:13.192Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u1-648b970f-0dc0-40da-8420-7409339e28f5",
+        "at": "2026-11-03T09:04:13.192Z"
+      },
+      "title": "Projet de vie",
+      "description": "Racine noyau commune au Budget principal et au Patrimoine.",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_4790d193-2f14-4e6d-81bc-b05ebc22d51f": {
+      "id": "prj_4790d193-2f14-4e6d-81bc-b05ebc22d51f",
+      "kind": "coreProject",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.216Z",
+      "updatedAt": "2026-11-03T09:04:13.216Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u2-8bb322c0-88d8-41f5-b31e-aede8a10935d",
+        "at": "2026-11-03T09:04:13.216Z"
+      },
+      "title": "Projet de vie",
+      "description": "Racine noyau commune au Budget principal et au Patrimoine.",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_b87e0339-8a2d-4789-9045-655b98f29269": {
+      "id": "prj_b87e0339-8a2d-4789-9045-655b98f29269",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.241Z",
+      "updatedAt": "2026-11-03T09:04:13.241Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b1-e1042f48-6857-4842-bca3-d4b80fe51104",
+        "at": "2026-11-03T09:04:13.241Z"
+      },
+      "title": "Installation à Lyon",
+      "description": "Trouver et aménager un logement avant la rentrée.",
+      "priority": "high",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_907e3ff5-0d0e-49c2-9e0a-c976d7269aa3": {
+      "id": "prj_907e3ff5-0d0e-49c2-9e0a-c976d7269aa3",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.263Z",
+      "updatedAt": "2026-11-03T09:04:13.263Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b2-bca9267d-a58b-4d15-93c7-fd50ed6329ac",
+        "at": "2026-11-03T09:04:13.263Z"
+      },
+      "title": "Certification cloud",
+      "description": "Préparer et passer la certification.",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_efd73e2c-d005-42cc-93b4-1e39d2f87b7f": {
+      "id": "prj_efd73e2c-d005-42cc-93b4-1e39d2f87b7f",
+      "kind": "coreProject",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.288Z",
+      "updatedAt": "2026-11-03T09:04:13.288Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b3-3238e5d7-8fc9-40a9-9ffb-fc529f179929",
+        "at": "2026-11-03T09:04:13.288Z"
+      },
+      "title": "Rénovation cuisine",
+      "description": "",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_c932efab-8dc4-4e98-a4ae-67923c07c144": {
+      "id": "prj_c932efab-8dc4-4e98-a4ae-67923c07c144",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.313Z",
+      "updatedAt": "2026-11-03T09:04:13.313Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-f2018431-32e2-4551-aff6-2043507ddde4",
+        "at": "2026-11-03T09:04:13.313Z"
+      },
+      "title": "Exemple temps et complétude",
+      "description": "Exemple du contrat §9 : 15 h prévues, 9 h consommées, 50 % de tâches terminées, état À finir.",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_5741e1e6-d143-4095-a55b-2c944ae3feab": {
+      "id": "prj_5741e1e6-d143-4095-a55b-2c944ae3feab",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.400Z",
+      "updatedAt": "2026-11-03T09:04:13.400Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-d8d7484d-692b-425e-8fbb-6340974ef341",
+        "at": "2026-11-03T09:04:13.400Z"
+      },
+      "title": "Préparer mon installation",
+      "description": "Premier projet homonyme (identité distincte).",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_fd07c6a2-9f5b-438c-a711-a6d71bc943b6": {
+      "id": "prj_fd07c6a2-9f5b-438c-a711-a6d71bc943b6",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.442Z",
+      "updatedAt": "2026-11-03T09:04:13.442Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-57a40b35-6b77-49b0-ac16-d20f7eff0c7f",
+        "at": "2026-11-03T09:04:13.442Z"
+      },
+      "title": "Préparer mon installation",
+      "description": "Second projet homonyme (identité distincte).",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_7d01fa4b-64d8-479b-844a-c38d3f500928": {
+      "id": "prj_7d01fa4b-64d8-479b-844a-c38d3f500928",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.528Z",
+      "updatedAt": "2026-11-03T09:04:13.528Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-29ad8961-5364-4b5c-8d7a-9e7b60a67989",
+        "at": "2026-11-03T09:04:13.528Z"
+      },
+      "title": "État — À faire (vide)",
+      "description": "",
+      "priority": "low",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_021a11e2-1d4e-4164-8966-cd8f7079c06b": {
+      "id": "prj_021a11e2-1d4e-4164-8966-cd8f7079c06b",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.552Z",
+      "updatedAt": "2026-11-03T09:04:13.552Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-c9242484-314a-4173-bb73-b521639988d9",
+        "at": "2026-11-03T09:04:13.552Z"
+      },
+      "title": "État — En cours",
+      "description": "",
+      "priority": "low",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_0e9ca309-92ed-483e-aa48-f36496a6a5bd": {
+      "id": "prj_0e9ca309-92ed-483e-aa48-f36496a6a5bd",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.625Z",
+      "updatedAt": "2026-11-03T09:04:13.625Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-8735e68e-c582-4444-b926-e5a7854a13af",
+        "at": "2026-11-03T09:04:13.625Z"
+      },
+      "title": "État — Terminée",
+      "description": "",
+      "priority": "low",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_c24c2249-3799-4dad-8175-83e842180555": {
+      "id": "prj_c24c2249-3799-4dad-8175-83e842180555",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.693Z",
+      "updatedAt": "2026-11-03T09:04:13.693Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-cfaa1442-15e4-4af0-a59c-64a1b3981057",
+        "at": "2026-11-03T09:04:13.693Z"
+      },
+      "title": "État — À prioriser",
+      "description": "",
+      "priority": "low",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_60f321b3-bc40-4eea-a102-82fe58c6787c": {
+      "id": "prj_60f321b3-bc40-4eea-a102-82fe58c6787c",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.763Z",
+      "updatedAt": "2026-11-03T09:04:13.763Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-a40ee9e7-a959-41b7-96e1-483c3a53e4d0",
+        "at": "2026-11-03T09:04:13.763Z"
+      },
+      "title": "État — En pause",
+      "description": "",
+      "priority": "low",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_f347037a-7161-4830-866f-90c27aa5a3dd": {
+      "id": "prj_f347037a-7161-4830-866f-90c27aa5a3dd",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.834Z",
+      "updatedAt": "2026-11-03T09:04:13.834Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-7d5fda76-bd1e-493d-9b98-e1812d31d956",
+        "at": "2026-11-03T09:04:13.834Z"
+      },
+      "title": "État — À reprendre",
+      "description": "",
+      "priority": "low",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_f05f9bf9-494a-46ab-9274-13f7cb33df14": {
+      "id": "prj_f05f9bf9-494a-46ab-9274-13f7cb33df14",
+      "kind": "coreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.904Z",
+      "updatedAt": "2026-11-03T09:04:13.904Z",
+      "provenance": {
+        "command": "createCoreProject",
+        "requestKey": "seed-p-ead06b55-f609-449f-980d-74f6ccc21311",
+        "at": "2026-11-03T09:04:13.904Z"
+      },
+      "title": "État — À finir",
+      "description": "",
+      "priority": "low",
+      "startDate": null,
+      "dueDate": null
+    }
+  },
+  "tasks": {
+    "tsk_d5460e38-0421-4db7-b14a-ac5de5a88035": {
+      "id": "tsk_d5460e38-0421-4db7-b14a-ac5de5a88035",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 3,
+      "createdAt": "2026-11-03T09:04:13.241Z",
+      "updatedAt": "2026-11-03T09:08:23.841Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b1-e1042f48-6857-4842-bca3-d4b80fe51104",
+        "at": "2026-11-03T09:04:13.241Z"
+      },
+      "title": "Visiter les appartements",
+      "description": "",
+      "projectId": "prj_b87e0339-8a2d-4789-9045-655b98f29269",
+      "status": "doing",
+      "plannedHours": 8,
+      "spentHours": 3,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_703ee5f2-87e8-4f5d-a56c-c67b77929e01": {
+      "id": "tsk_703ee5f2-87e8-4f5d-a56c-c67b77929e01",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 2,
+      "createdAt": "2026-11-03T09:04:13.241Z",
+      "updatedAt": "2026-11-03T09:05:01.755Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b1-e1042f48-6857-4842-bca3-d4b80fe51104",
+        "at": "2026-11-03T09:04:13.241Z"
+      },
+      "title": "Signer le bail",
+      "description": "",
+      "projectId": "prj_b87e0339-8a2d-4789-9045-655b98f29269",
+      "status": "blocked",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_afee4691-5e9d-452c-b48b-9b8bba0fb62e": {
+      "id": "tsk_afee4691-5e9d-452c-b48b-9b8bba0fb62e",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 3,
+      "createdAt": "2026-11-03T09:04:13.263Z",
+      "updatedAt": "2026-11-03T09:08:05.553Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b2-bca9267d-a58b-4d15-93c7-fd50ed6329ac",
+        "at": "2026-11-03T09:04:13.263Z"
+      },
+      "title": "Suivre le parcours de cours",
+      "description": "",
+      "projectId": "prj_907e3ff5-0d0e-49c2-9e0a-c976d7269aa3",
+      "status": "blocked",
+      "plannedHours": 20,
+      "spentHours": 20,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_6e8be9db-1392-4d48-99c8-5f65bd71156f": {
+      "id": "tsk_6e8be9db-1392-4d48-99c8-5f65bd71156f",
+      "kind": "task",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.288Z",
+      "updatedAt": "2026-11-03T09:04:13.288Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b3-3238e5d7-8fc9-40a9-9ffb-fc529f179929",
+        "at": "2026-11-03T09:04:13.288Z"
+      },
+      "title": "Demander des devis",
+      "description": "",
+      "projectId": "prj_efd73e2c-d005-42cc-93b4-1e39d2f87b7f",
+      "status": "todo",
+      "plannedHours": 3,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_a99bffd4-0ff7-4ffe-9ad8-be55d4e53310": {
+      "id": "tsk_a99bffd4-0ff7-4ffe-9ad8-be55d4e53310",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 2,
+      "createdAt": "2026-11-03T09:04:13.336Z",
+      "updatedAt": "2026-11-03T09:08:07.093Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-4760b440-fdb9-4e91-a3a0-10dcd35039be",
+        "at": "2026-11-03T09:04:13.336Z"
+      },
+      "title": "T1 — rédiger le plan",
+      "description": "",
+      "projectId": "prj_c932efab-8dc4-4e98-a4ae-67923c07c144",
+      "status": "blocked",
+      "plannedHours": 10,
+      "spentHours": 4,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_8487ae4b-a9e0-46f5-934f-2194af41d29f": {
+      "id": "tsk_8487ae4b-a9e0-46f5-934f-2194af41d29f",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.377Z",
+      "updatedAt": "2026-11-03T09:04:13.377Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-e012ccf0-d6b7-4ae6-a988-3fbb0731e9e2",
+        "at": "2026-11-03T09:04:13.377Z"
+      },
+      "title": "T2 — relire",
+      "description": "",
+      "projectId": "prj_c932efab-8dc4-4e98-a4ae-67923c07c144",
+      "status": "done",
+      "plannedHours": 5,
+      "spentHours": 5,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_64d20c60-2e28-4735-b3fb-4018a7359e0a": {
+      "id": "tsk_64d20c60-2e28-4735-b3fb-4018a7359e0a",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.466Z",
+      "updatedAt": "2026-11-03T09:04:13.466Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-a9ee8d85-6f6f-4259-8698-7e8ff17645df",
+        "at": "2026-11-03T09:04:13.466Z"
+      },
+      "title": "Tâche autonome à rattacher",
+      "description": "",
+      "projectId": null,
+      "status": "todo",
+      "plannedHours": 1.5,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_81601962-2ba3-4998-a2ce-ed8a470adde2": {
+      "id": "tsk_81601962-2ba3-4998-a2ce-ed8a470adde2",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.506Z",
+      "updatedAt": "2026-11-03T09:04:13.506Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-8dd6ca6c-3f7a-44ea-9168-b28fa94b6bd4",
+        "at": "2026-11-03T09:04:13.506Z"
+      },
+      "title": "Tâche autonome sans estimation",
+      "description": "",
+      "projectId": null,
+      "status": "blocked",
+      "plannedHours": null,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_29fc7054-e040-4c95-a787-047f6dde7487": {
+      "id": "tsk_29fc7054-e040-4c95-a787-047f6dde7487",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 2,
+      "createdAt": "2026-11-03T09:04:13.576Z",
+      "updatedAt": "2026-11-03T09:08:08.830Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-7b96f832-1a96-4731-845c-16627d75afbf",
+        "at": "2026-11-03T09:04:13.576Z"
+      },
+      "title": "En cours / tâche 1",
+      "description": "",
+      "projectId": "prj_021a11e2-1d4e-4164-8966-cd8f7079c06b",
+      "status": "todo",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_2436a301-247a-4de6-85bd-5e79ac1e43ad": {
+      "id": "tsk_2436a301-247a-4de6-85bd-5e79ac1e43ad",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.601Z",
+      "updatedAt": "2026-11-03T09:04:13.601Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-f3ecf110-62a2-409d-8fec-39b9c5be9861",
+        "at": "2026-11-03T09:04:13.601Z"
+      },
+      "title": "En cours / tâche 2",
+      "description": "",
+      "projectId": "prj_021a11e2-1d4e-4164-8966-cd8f7079c06b",
+      "status": "todo",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_1f4af03b-3604-4ecf-854d-b610cd29cd54": {
+      "id": "tsk_1f4af03b-3604-4ecf-854d-b610cd29cd54",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.648Z",
+      "updatedAt": "2026-11-03T09:04:13.648Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-1144b079-4a57-4198-a6ed-f494ca1910e6",
+        "at": "2026-11-03T09:04:13.648Z"
+      },
+      "title": "Terminée / tâche 1",
+      "description": "",
+      "projectId": "prj_0e9ca309-92ed-483e-aa48-f36496a6a5bd",
+      "status": "done",
+      "plannedHours": 2,
+      "spentHours": 2,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_1b53b90c-7e1c-41c9-88d5-d4c4eaeecb83": {
+      "id": "tsk_1b53b90c-7e1c-41c9-88d5-d4c4eaeecb83",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.671Z",
+      "updatedAt": "2026-11-03T09:04:13.671Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-e93995f9-65b9-471a-8948-c9e48d2774b4",
+        "at": "2026-11-03T09:04:13.671Z"
+      },
+      "title": "Terminée / tâche 2",
+      "description": "",
+      "projectId": "prj_0e9ca309-92ed-483e-aa48-f36496a6a5bd",
+      "status": "done",
+      "plannedHours": 2,
+      "spentHours": 2,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_174dc704-b15f-4ea0-a406-d148e3b814aa": {
+      "id": "tsk_174dc704-b15f-4ea0-a406-d148e3b814aa",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.716Z",
+      "updatedAt": "2026-11-03T09:04:13.716Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-2ca0bd41-da23-4c80-a6b9-55af13b1795a",
+        "at": "2026-11-03T09:04:13.716Z"
+      },
+      "title": "À prioriser / tâche 1",
+      "description": "",
+      "projectId": "prj_c24c2249-3799-4dad-8175-83e842180555",
+      "status": "blocked",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_c44030ab-52e3-4291-a185-7126ac62eaa5": {
+      "id": "tsk_c44030ab-52e3-4291-a185-7126ac62eaa5",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.740Z",
+      "updatedAt": "2026-11-03T09:04:13.740Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-45305506-98a5-4dab-b735-dc71e9758b0e",
+        "at": "2026-11-03T09:04:13.740Z"
+      },
+      "title": "À prioriser / tâche 2",
+      "description": "",
+      "projectId": "prj_c24c2249-3799-4dad-8175-83e842180555",
+      "status": "todo",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_526bbbc1-aad3-4bab-9a8c-5a9256504da6": {
+      "id": "tsk_526bbbc1-aad3-4bab-9a8c-5a9256504da6",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.786Z",
+      "updatedAt": "2026-11-03T09:04:13.786Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-ee2e599b-3fe7-4e2f-b280-09b2de9efdb0",
+        "at": "2026-11-03T09:04:13.786Z"
+      },
+      "title": "En pause / tâche 1",
+      "description": "",
+      "projectId": "prj_60f321b3-bc40-4eea-a102-82fe58c6787c",
+      "status": "done",
+      "plannedHours": 2,
+      "spentHours": 2,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_3a0d4429-4597-44f6-b70b-e4fd7dee55c8": {
+      "id": "tsk_3a0d4429-4597-44f6-b70b-e4fd7dee55c8",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.810Z",
+      "updatedAt": "2026-11-03T09:04:13.810Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-5ed6dd1d-8cf9-4f27-b333-644eb68f650d",
+        "at": "2026-11-03T09:04:13.810Z"
+      },
+      "title": "En pause / tâche 2",
+      "description": "",
+      "projectId": "prj_60f321b3-bc40-4eea-a102-82fe58c6787c",
+      "status": "todo",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_5336cd9b-a909-4f65-b45e-49f6c5ef4193": {
+      "id": "tsk_5336cd9b-a909-4f65-b45e-49f6c5ef4193",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.856Z",
+      "updatedAt": "2026-11-03T09:04:13.856Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-030a9683-3468-4e8e-83df-da8e7849fc94",
+        "at": "2026-11-03T09:04:13.856Z"
+      },
+      "title": "À reprendre / tâche 1",
+      "description": "",
+      "projectId": "prj_f347037a-7161-4830-866f-90c27aa5a3dd",
+      "status": "done",
+      "plannedHours": 2,
+      "spentHours": 2,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_45a74ad3-85bc-4a6d-a6d6-5d7c37a09eeb": {
+      "id": "tsk_45a74ad3-85bc-4a6d-a6d6-5d7c37a09eeb",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 2,
+      "createdAt": "2026-11-03T09:04:13.880Z",
+      "updatedAt": "2026-11-03T09:08:50.857Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-63d59326-bbcd-4242-9e39-909532f577b1",
+        "at": "2026-11-03T09:04:13.880Z"
+      },
+      "title": "À reprendre / tâche 2",
+      "description": "",
+      "projectId": "prj_f347037a-7161-4830-866f-90c27aa5a3dd",
+      "status": "doing",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_25695bf0-cdef-44d0-a74b-72614f4ce93e": {
+      "id": "tsk_25695bf0-cdef-44d0-a74b-72614f4ce93e",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.927Z",
+      "updatedAt": "2026-11-03T09:04:13.927Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-456b40c2-6377-4b43-95f3-29ad4f2c32fe",
+        "at": "2026-11-03T09:04:13.927Z"
+      },
+      "title": "À finir / tâche 1",
+      "description": "",
+      "projectId": "prj_f05f9bf9-494a-46ab-9274-13f7cb33df14",
+      "status": "done",
+      "plannedHours": 2,
+      "spentHours": 2,
+      "startDate": null,
+      "dueDate": null
+    },
+    "tsk_ee3f125d-27e6-456d-bec0-cf7ad37da145": {
+      "id": "tsk_ee3f125d-27e6-456d-bec0-cf7ad37da145",
+      "kind": "task",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 2,
+      "createdAt": "2026-11-03T09:04:13.954Z",
+      "updatedAt": "2026-11-03T09:08:11.805Z",
+      "provenance": {
+        "command": "createTask",
+        "requestKey": "seed-t-cf29dee4-9bdc-4991-b659-472d1835cc69",
+        "at": "2026-11-03T09:04:13.954Z"
+      },
+      "title": "À finir / tâche 2",
+      "description": "",
+      "projectId": "prj_f05f9bf9-494a-46ab-9274-13f7cb33df14",
+      "status": "blocked",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null
+    }
+  },
+  "budgets": {
+    "bud_cef6867b-22fe-43de-886e-128c37de7a4c": {
+      "id": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+      "kind": "budget",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.192Z",
+      "updatedAt": "2026-11-03T09:04:13.192Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u1-648b970f-0dc0-40da-8420-7409339e28f5",
+        "at": "2026-11-03T09:04:13.192Z"
+      },
+      "role": "life",
+      "name": "Projet de vie",
+      "coreProjectId": "prj_2af2afa9-f184-4147-8efa-2569543594a6",
+      "parentBudgetId": null,
+      "financial": {
+        "status": "not-implemented"
+      }
+    },
+    "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a": {
+      "id": "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a",
+      "kind": "budget",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.216Z",
+      "updatedAt": "2026-11-03T09:04:13.216Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u2-8bb322c0-88d8-41f5-b31e-aede8a10935d",
+        "at": "2026-11-03T09:04:13.216Z"
+      },
+      "role": "life",
+      "name": "Projet de vie",
+      "coreProjectId": "prj_4790d193-2f14-4e6d-81bc-b05ebc22d51f",
+      "parentBudgetId": null,
+      "financial": {
+        "status": "not-implemented"
+      }
+    },
+    "bud_0bb17892-63f6-408b-ad13-491f1cb9d736": {
+      "id": "bud_0bb17892-63f6-408b-ad13-491f1cb9d736",
+      "kind": "budget",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.241Z",
+      "updatedAt": "2026-11-03T09:04:13.241Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b1-e1042f48-6857-4842-bca3-d4b80fe51104",
+        "at": "2026-11-03T09:04:13.241Z"
+      },
+      "role": "standard",
+      "name": "Installation à Lyon",
+      "coreProjectId": "prj_b87e0339-8a2d-4789-9045-655b98f29269",
+      "parentBudgetId": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+      "financial": {
+        "status": "not-implemented"
+      }
+    },
+    "bud_3d740a8e-5cc5-46ee-8ed1-23c27218115d": {
+      "id": "bud_3d740a8e-5cc5-46ee-8ed1-23c27218115d",
+      "kind": "budget",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.263Z",
+      "updatedAt": "2026-11-03T09:04:13.263Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b2-bca9267d-a58b-4d15-93c7-fd50ed6329ac",
+        "at": "2026-11-03T09:04:13.263Z"
+      },
+      "role": "standard",
+      "name": "Certification cloud",
+      "coreProjectId": "prj_907e3ff5-0d0e-49c2-9e0a-c976d7269aa3",
+      "parentBudgetId": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+      "financial": {
+        "status": "not-implemented"
+      }
+    },
+    "bud_590f5757-1852-490f-909c-0cd6c392ee16": {
+      "id": "bud_590f5757-1852-490f-909c-0cd6c392ee16",
+      "kind": "budget",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.288Z",
+      "updatedAt": "2026-11-03T09:04:13.288Z",
+      "provenance": {
+        "command": "createLifeSubprojectBundle",
+        "requestKey": "seed-b3-3238e5d7-8fc9-40a9-9ffb-fc529f179929",
+        "at": "2026-11-03T09:04:13.288Z"
+      },
+      "role": "standard",
+      "name": "Rénovation cuisine",
+      "coreProjectId": "prj_efd73e2c-d005-42cc-93b4-1e39d2f87b7f",
+      "parentBudgetId": "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a",
+      "financial": {
+        "status": "not-implemented"
+      }
+    }
+  },
+  "patrimoines": {
+    "pat_8e7bf68d-545b-4f8c-9571-fe94d18cb794": {
+      "id": "pat_8e7bf68d-545b-4f8c-9571-fe94d18cb794",
+      "kind": "patrimoine",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.192Z",
+      "updatedAt": "2026-11-03T09:04:13.192Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u1-648b970f-0dc0-40da-8420-7409339e28f5",
+        "at": "2026-11-03T09:04:13.192Z"
+      },
+      "principalBudgetId": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+      "coreProjectId": "prj_2af2afa9-f184-4147-8efa-2569543594a6",
+      "financial": {
+        "status": "not-implemented",
+        "value": null
+      }
+    },
+    "pat_f76249d9-b6da-4a23-9a86-740ce92ec3cb": {
+      "id": "pat_f76249d9-b6da-4a23-9a86-740ce92ec3cb",
+      "kind": "patrimoine",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.216Z",
+      "updatedAt": "2026-11-03T09:04:13.216Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u2-8bb322c0-88d8-41f5-b31e-aede8a10935d",
+        "at": "2026-11-03T09:04:13.216Z"
+      },
+      "principalBudgetId": "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a",
+      "coreProjectId": "prj_4790d193-2f14-4e6d-81bc-b05ebc22d51f",
+      "financial": {
+        "status": "not-implemented",
+        "value": null
+      }
+    }
+  },
+  "bpmCompositions": {
+    "bpm_7c21a4c7-02c1-4f60-a9dd-77d780b0cc10": {
+      "id": "bpm_7c21a4c7-02c1-4f60-a9dd-77d780b0cc10",
+      "kind": "bpmComposition",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.192Z",
+      "updatedAt": "2026-11-03T09:04:13.192Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u1-648b970f-0dc0-40da-8420-7409339e28f5",
+        "at": "2026-11-03T09:04:13.192Z"
+      },
+      "budgetId": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+      "patrimoineId": "pat_8e7bf68d-545b-4f8c-9571-fe94d18cb794"
+    },
+    "bpm_bc5e1997-4242-4f6a-9cb2-5f8426c2afaf": {
+      "id": "bpm_bc5e1997-4242-4f6a-9cb2-5f8426c2afaf",
+      "kind": "bpmComposition",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "revision": 1,
+      "createdAt": "2026-11-03T09:04:13.216Z",
+      "updatedAt": "2026-11-03T09:04:13.216Z",
+      "provenance": {
+        "command": "createInitialUserBundle",
+        "requestKey": "seed-u2-8bb322c0-88d8-41f5-b31e-aede8a10935d",
+        "at": "2026-11-03T09:04:13.216Z"
+      },
+      "budgetId": "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a",
+      "patrimoineId": "pat_f76249d9-b6da-4a23-9a86-740ce92ec3cb"
+    }
+  },
+  "creationRequests": {
+    "seed-u1-648b970f-0dc0-40da-8420-7409339e28f5": {
+      "requestKey": "seed-u1-648b970f-0dc0-40da-8420-7409339e28f5",
+      "command": "createInitialUserBundle",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "3d7e7986de2c02cbf80075213dd7a2625b3a11287cb1d3f237c37c67f3761815",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "user",
+          "id": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9"
+        },
+        {
+          "kind": "coreProject",
+          "id": "prj_2af2afa9-f184-4147-8efa-2569543594a6"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_cef6867b-22fe-43de-886e-128c37de7a4c"
+        },
+        {
+          "kind": "patrimoine",
+          "id": "pat_8e7bf68d-545b-4f8c-9571-fe94d18cb794"
+        },
+        {
+          "kind": "bpmComposition",
+          "id": "bpm_7c21a4c7-02c1-4f60-a9dd-77d780b0cc10"
+        }
+      ],
+      "result": {
+        "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+        "coreProjectId": "prj_2af2afa9-f184-4147-8efa-2569543594a6",
+        "budgetId": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+        "patrimoineId": "pat_8e7bf68d-545b-4f8c-9571-fe94d18cb794",
+        "bpmCompositionId": "bpm_7c21a4c7-02c1-4f60-a9dd-77d780b0cc10"
+      },
+      "completedAt": "2026-11-03T09:04:13.192Z"
+    },
+    "seed-u2-8bb322c0-88d8-41f5-b31e-aede8a10935d": {
+      "requestKey": "seed-u2-8bb322c0-88d8-41f5-b31e-aede8a10935d",
+      "command": "createInitialUserBundle",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "fingerprint": "8b8469c4afcf75b143f493adffc10544c2a6f8536a6928211a8d248f760e9e19",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "user",
+          "id": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05"
+        },
+        {
+          "kind": "coreProject",
+          "id": "prj_4790d193-2f14-4e6d-81bc-b05ebc22d51f"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a"
+        },
+        {
+          "kind": "patrimoine",
+          "id": "pat_f76249d9-b6da-4a23-9a86-740ce92ec3cb"
+        },
+        {
+          "kind": "bpmComposition",
+          "id": "bpm_bc5e1997-4242-4f6a-9cb2-5f8426c2afaf"
+        }
+      ],
+      "result": {
+        "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+        "coreProjectId": "prj_4790d193-2f14-4e6d-81bc-b05ebc22d51f",
+        "budgetId": "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a",
+        "patrimoineId": "pat_f76249d9-b6da-4a23-9a86-740ce92ec3cb",
+        "bpmCompositionId": "bpm_bc5e1997-4242-4f6a-9cb2-5f8426c2afaf"
+      },
+      "completedAt": "2026-11-03T09:04:13.216Z"
+    },
+    "seed-b1-e1042f48-6857-4842-bca3-d4b80fe51104": {
+      "requestKey": "seed-b1-e1042f48-6857-4842-bca3-d4b80fe51104",
+      "command": "createLifeSubprojectBundle",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "130f1e4467a362cd0319ec65aa6af11d36b1331bd50220d295426d33b58efa70",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_b87e0339-8a2d-4789-9045-655b98f29269"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_0bb17892-63f6-408b-ad13-491f1cb9d736"
+        },
+        {
+          "kind": "task",
+          "id": "tsk_d5460e38-0421-4db7-b14a-ac5de5a88035"
+        },
+        {
+          "kind": "task",
+          "id": "tsk_703ee5f2-87e8-4f5d-a56c-c67b77929e01"
+        }
+      ],
+      "result": {
+        "budgetId": "bud_0bb17892-63f6-408b-ad13-491f1cb9d736",
+        "coreProjectId": "prj_b87e0339-8a2d-4789-9045-655b98f29269",
+        "parentBudgetId": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+        "taskIds": [
+          "tsk_d5460e38-0421-4db7-b14a-ac5de5a88035",
+          "tsk_703ee5f2-87e8-4f5d-a56c-c67b77929e01"
+        ]
+      },
+      "completedAt": "2026-11-03T09:04:13.241Z"
+    },
+    "seed-b2-bca9267d-a58b-4d15-93c7-fd50ed6329ac": {
+      "requestKey": "seed-b2-bca9267d-a58b-4d15-93c7-fd50ed6329ac",
+      "command": "createLifeSubprojectBundle",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "e1d2e342a4c2969994d8d081c763d05ab0c720f2beeeb0fdacd69382b17d45f3",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_907e3ff5-0d0e-49c2-9e0a-c976d7269aa3"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_3d740a8e-5cc5-46ee-8ed1-23c27218115d"
+        },
+        {
+          "kind": "task",
+          "id": "tsk_afee4691-5e9d-452c-b48b-9b8bba0fb62e"
+        }
+      ],
+      "result": {
+        "budgetId": "bud_3d740a8e-5cc5-46ee-8ed1-23c27218115d",
+        "coreProjectId": "prj_907e3ff5-0d0e-49c2-9e0a-c976d7269aa3",
+        "parentBudgetId": "bud_cef6867b-22fe-43de-886e-128c37de7a4c",
+        "taskIds": [
+          "tsk_afee4691-5e9d-452c-b48b-9b8bba0fb62e"
+        ]
+      },
+      "completedAt": "2026-11-03T09:04:13.263Z"
+    },
+    "seed-b3-3238e5d7-8fc9-40a9-9ffb-fc529f179929": {
+      "requestKey": "seed-b3-3238e5d7-8fc9-40a9-9ffb-fc529f179929",
+      "command": "createLifeSubprojectBundle",
+      "userId": "usr_c37e0868-d7d7-4c09-b4dc-6e67facd2a05",
+      "fingerprint": "b15df8dacd0ea632dbec3249aa9a76bb42615c68bee19426a857e3e66c9edc4b",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_efd73e2c-d005-42cc-93b4-1e39d2f87b7f"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_590f5757-1852-490f-909c-0cd6c392ee16"
+        },
+        {
+          "kind": "task",
+          "id": "tsk_6e8be9db-1392-4d48-99c8-5f65bd71156f"
+        }
+      ],
+      "result": {
+        "budgetId": "bud_590f5757-1852-490f-909c-0cd6c392ee16",
+        "coreProjectId": "prj_efd73e2c-d005-42cc-93b4-1e39d2f87b7f",
+        "parentBudgetId": "bud_389fe8ba-1645-41c5-b523-efb7498a1c1a",
+        "taskIds": [
+          "tsk_6e8be9db-1392-4d48-99c8-5f65bd71156f"
+        ]
+      },
+      "completedAt": "2026-11-03T09:04:13.288Z"
+    },
+    "seed-p-f2018431-32e2-4551-aff6-2043507ddde4": {
+      "requestKey": "seed-p-f2018431-32e2-4551-aff6-2043507ddde4",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "394569ffc4da7d9de4b821d55be1708800ccb25ced1af3b3701b74c54f94af0b",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_c932efab-8dc4-4e98-a4ae-67923c07c144"
+        }
+      ],
+      "result": {
+        "projectId": "prj_c932efab-8dc4-4e98-a4ae-67923c07c144"
+      },
+      "completedAt": "2026-11-03T09:04:13.313Z"
+    },
+    "seed-t-4760b440-fdb9-4e91-a3a0-10dcd35039be": {
+      "requestKey": "seed-t-4760b440-fdb9-4e91-a3a0-10dcd35039be",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "43622fe4f70ecd33f6d83de35e8b3bed97bda6ddae579a201bc0f5502b633c7d",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_a99bffd4-0ff7-4ffe-9ad8-be55d4e53310"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_a99bffd4-0ff7-4ffe-9ad8-be55d4e53310"
+      },
+      "completedAt": "2026-11-03T09:04:13.337Z"
+    },
+    "seed-t-e012ccf0-d6b7-4ae6-a988-3fbb0731e9e2": {
+      "requestKey": "seed-t-e012ccf0-d6b7-4ae6-a988-3fbb0731e9e2",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "cbca52767446c031ff7618f50a9da5a378d669aa043270a95ea8cf01f5f35d42",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_8487ae4b-a9e0-46f5-934f-2194af41d29f"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_8487ae4b-a9e0-46f5-934f-2194af41d29f"
+      },
+      "completedAt": "2026-11-03T09:04:13.377Z"
+    },
+    "seed-p-d8d7484d-692b-425e-8fbb-6340974ef341": {
+      "requestKey": "seed-p-d8d7484d-692b-425e-8fbb-6340974ef341",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "de17019698524a50a3a6b2c585c4fe5b592da61d5a9f2660b17705d60edf2c72",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_5741e1e6-d143-4095-a55b-2c944ae3feab"
+        }
+      ],
+      "result": {
+        "projectId": "prj_5741e1e6-d143-4095-a55b-2c944ae3feab"
+      },
+      "completedAt": "2026-11-03T09:04:13.400Z"
+    },
+    "seed-p-57a40b35-6b77-49b0-ac16-d20f7eff0c7f": {
+      "requestKey": "seed-p-57a40b35-6b77-49b0-ac16-d20f7eff0c7f",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "2a928ac3a57c315a682126d55e2c486056e61a3eb9b17d08d338790c81aa856b",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_fd07c6a2-9f5b-438c-a711-a6d71bc943b6"
+        }
+      ],
+      "result": {
+        "projectId": "prj_fd07c6a2-9f5b-438c-a711-a6d71bc943b6"
+      },
+      "completedAt": "2026-11-03T09:04:13.442Z"
+    },
+    "seed-t-a9ee8d85-6f6f-4259-8698-7e8ff17645df": {
+      "requestKey": "seed-t-a9ee8d85-6f6f-4259-8698-7e8ff17645df",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "b26f7520fb67a85b16087eb93c489fbf62f76a6f4a17574e299a9de0fae61d55",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_64d20c60-2e28-4735-b3fb-4018a7359e0a"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_64d20c60-2e28-4735-b3fb-4018a7359e0a"
+      },
+      "completedAt": "2026-11-03T09:04:13.466Z"
+    },
+    "seed-t-8dd6ca6c-3f7a-44ea-9168-b28fa94b6bd4": {
+      "requestKey": "seed-t-8dd6ca6c-3f7a-44ea-9168-b28fa94b6bd4",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "f4278d23dad947c509a98145492e6da2dfb8b227d06b78ef3166af7f5c3370b5",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_81601962-2ba3-4998-a2ce-ed8a470adde2"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_81601962-2ba3-4998-a2ce-ed8a470adde2"
+      },
+      "completedAt": "2026-11-03T09:04:13.506Z"
+    },
+    "seed-p-29ad8961-5364-4b5c-8d7a-9e7b60a67989": {
+      "requestKey": "seed-p-29ad8961-5364-4b5c-8d7a-9e7b60a67989",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "7fa589508db6b4324b6e5082e2ad604b0016b88245f772f3bf6f4df6b360c254",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_7d01fa4b-64d8-479b-844a-c38d3f500928"
+        }
+      ],
+      "result": {
+        "projectId": "prj_7d01fa4b-64d8-479b-844a-c38d3f500928"
+      },
+      "completedAt": "2026-11-03T09:04:13.528Z"
+    },
+    "seed-p-c9242484-314a-4173-bb73-b521639988d9": {
+      "requestKey": "seed-p-c9242484-314a-4173-bb73-b521639988d9",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "dd722081078508b3e2f0f7365d8e8d45518a716b2ec7006cf8b8f15e326e1cb7",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_021a11e2-1d4e-4164-8966-cd8f7079c06b"
+        }
+      ],
+      "result": {
+        "projectId": "prj_021a11e2-1d4e-4164-8966-cd8f7079c06b"
+      },
+      "completedAt": "2026-11-03T09:04:13.552Z"
+    },
+    "seed-t-7b96f832-1a96-4731-845c-16627d75afbf": {
+      "requestKey": "seed-t-7b96f832-1a96-4731-845c-16627d75afbf",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "9e1d98379ae6d9a3639a26969dec1dd4b32d684a097eb6558052f1697cf8c2b8",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_29fc7054-e040-4c95-a787-047f6dde7487"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_29fc7054-e040-4c95-a787-047f6dde7487"
+      },
+      "completedAt": "2026-11-03T09:04:13.576Z"
+    },
+    "seed-t-f3ecf110-62a2-409d-8fec-39b9c5be9861": {
+      "requestKey": "seed-t-f3ecf110-62a2-409d-8fec-39b9c5be9861",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "6cb9b7674562c4cd2e2d67b8e2ea916a924f95328bba02c75002492b4b4644c4",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_2436a301-247a-4de6-85bd-5e79ac1e43ad"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_2436a301-247a-4de6-85bd-5e79ac1e43ad"
+      },
+      "completedAt": "2026-11-03T09:04:13.601Z"
+    },
+    "seed-p-8735e68e-c582-4444-b926-e5a7854a13af": {
+      "requestKey": "seed-p-8735e68e-c582-4444-b926-e5a7854a13af",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "f4116075b098e822d34ff49e1ffe4a8b31a00817f059b670cc9da2dc707adf37",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_0e9ca309-92ed-483e-aa48-f36496a6a5bd"
+        }
+      ],
+      "result": {
+        "projectId": "prj_0e9ca309-92ed-483e-aa48-f36496a6a5bd"
+      },
+      "completedAt": "2026-11-03T09:04:13.625Z"
+    },
+    "seed-t-1144b079-4a57-4198-a6ed-f494ca1910e6": {
+      "requestKey": "seed-t-1144b079-4a57-4198-a6ed-f494ca1910e6",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "9991f51ebdc82bc3a7ecad1810c6dab31dbb3f8926af301a36e69d6a19fb4afa",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_1f4af03b-3604-4ecf-854d-b610cd29cd54"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_1f4af03b-3604-4ecf-854d-b610cd29cd54"
+      },
+      "completedAt": "2026-11-03T09:04:13.648Z"
+    },
+    "seed-t-e93995f9-65b9-471a-8948-c9e48d2774b4": {
+      "requestKey": "seed-t-e93995f9-65b9-471a-8948-c9e48d2774b4",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "b7416f884f34f4bb1bc21ee5287bcbfb9584343ef1cbdf02da7baf2a6e6901de",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_1b53b90c-7e1c-41c9-88d5-d4c4eaeecb83"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_1b53b90c-7e1c-41c9-88d5-d4c4eaeecb83"
+      },
+      "completedAt": "2026-11-03T09:04:13.671Z"
+    },
+    "seed-p-cfaa1442-15e4-4af0-a59c-64a1b3981057": {
+      "requestKey": "seed-p-cfaa1442-15e4-4af0-a59c-64a1b3981057",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "6de8ca32c3b9cfd3495db5a47f9f1a013de992ff9234d6e0f3414b4ab10c6e1c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_c24c2249-3799-4dad-8175-83e842180555"
+        }
+      ],
+      "result": {
+        "projectId": "prj_c24c2249-3799-4dad-8175-83e842180555"
+      },
+      "completedAt": "2026-11-03T09:04:13.693Z"
+    },
+    "seed-t-2ca0bd41-da23-4c80-a6b9-55af13b1795a": {
+      "requestKey": "seed-t-2ca0bd41-da23-4c80-a6b9-55af13b1795a",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "7c5c6419f6c04e6452e69e6d99a58d9f2bd2fedbf8ac6113458b4b866971d77c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_174dc704-b15f-4ea0-a406-d148e3b814aa"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_174dc704-b15f-4ea0-a406-d148e3b814aa"
+      },
+      "completedAt": "2026-11-03T09:04:13.717Z"
+    },
+    "seed-t-45305506-98a5-4dab-b735-dc71e9758b0e": {
+      "requestKey": "seed-t-45305506-98a5-4dab-b735-dc71e9758b0e",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "cdb0597532ebcf9c9907f9916cd2a5920fd29351cde00b6c9edcdb698dec1e81",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_c44030ab-52e3-4291-a185-7126ac62eaa5"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_c44030ab-52e3-4291-a185-7126ac62eaa5"
+      },
+      "completedAt": "2026-11-03T09:04:13.741Z"
+    },
+    "seed-p-a40ee9e7-a959-41b7-96e1-483c3a53e4d0": {
+      "requestKey": "seed-p-a40ee9e7-a959-41b7-96e1-483c3a53e4d0",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "34fb65e25cc963c024a6c4f26bbc129171eac64f64f2c960c28ae31d937416fd",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_60f321b3-bc40-4eea-a102-82fe58c6787c"
+        }
+      ],
+      "result": {
+        "projectId": "prj_60f321b3-bc40-4eea-a102-82fe58c6787c"
+      },
+      "completedAt": "2026-11-03T09:04:13.763Z"
+    },
+    "seed-t-ee2e599b-3fe7-4e2f-b280-09b2de9efdb0": {
+      "requestKey": "seed-t-ee2e599b-3fe7-4e2f-b280-09b2de9efdb0",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "a297b764b780fc700797e96d5451afef8a68b29092216f1b4391768f266c704c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_526bbbc1-aad3-4bab-9a8c-5a9256504da6"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_526bbbc1-aad3-4bab-9a8c-5a9256504da6"
+      },
+      "completedAt": "2026-11-03T09:04:13.786Z"
+    },
+    "seed-t-5ed6dd1d-8cf9-4f27-b333-644eb68f650d": {
+      "requestKey": "seed-t-5ed6dd1d-8cf9-4f27-b333-644eb68f650d",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "2da0e60d9194a54b72fc101186d5af2ad76fb782809a5bbbcd9f1719813648e3",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_3a0d4429-4597-44f6-b70b-e4fd7dee55c8"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_3a0d4429-4597-44f6-b70b-e4fd7dee55c8"
+      },
+      "completedAt": "2026-11-03T09:04:13.810Z"
+    },
+    "seed-p-7d5fda76-bd1e-493d-9b98-e1812d31d956": {
+      "requestKey": "seed-p-7d5fda76-bd1e-493d-9b98-e1812d31d956",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "94879f6e34646c8b3e5384b3c188ae1b5f63beec49581cd4c9b959d90d0040db",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_f347037a-7161-4830-866f-90c27aa5a3dd"
+        }
+      ],
+      "result": {
+        "projectId": "prj_f347037a-7161-4830-866f-90c27aa5a3dd"
+      },
+      "completedAt": "2026-11-03T09:04:13.834Z"
+    },
+    "seed-t-030a9683-3468-4e8e-83df-da8e7849fc94": {
+      "requestKey": "seed-t-030a9683-3468-4e8e-83df-da8e7849fc94",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "6db5cbe662da61513aedfd85ef7a61f85eeff5ff65029c6d4e9e1c343ddecaa8",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_5336cd9b-a909-4f65-b45e-49f6c5ef4193"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_5336cd9b-a909-4f65-b45e-49f6c5ef4193"
+      },
+      "completedAt": "2026-11-03T09:04:13.856Z"
+    },
+    "seed-t-63d59326-bbcd-4242-9e39-909532f577b1": {
+      "requestKey": "seed-t-63d59326-bbcd-4242-9e39-909532f577b1",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "ad1a9454537d15c4982fa7e3e62f7511ee92bd2861a9e751b335b57259ec025f",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_45a74ad3-85bc-4a6d-a6d6-5d7c37a09eeb"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_45a74ad3-85bc-4a6d-a6d6-5d7c37a09eeb"
+      },
+      "completedAt": "2026-11-03T09:04:13.880Z"
+    },
+    "seed-p-ead06b55-f609-449f-980d-74f6ccc21311": {
+      "requestKey": "seed-p-ead06b55-f609-449f-980d-74f6ccc21311",
+      "command": "createCoreProject",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "21a3c3bfb54ac35b77aeddb125b9937d7ef54817151344695867c7ac0b812ddc",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_f05f9bf9-494a-46ab-9274-13f7cb33df14"
+        }
+      ],
+      "result": {
+        "projectId": "prj_f05f9bf9-494a-46ab-9274-13f7cb33df14"
+      },
+      "completedAt": "2026-11-03T09:04:13.904Z"
+    },
+    "seed-t-456b40c2-6377-4b43-95f3-29ad4f2c32fe": {
+      "requestKey": "seed-t-456b40c2-6377-4b43-95f3-29ad4f2c32fe",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "9614c5495075a1365b6318a4970841656a119ed5a6932aef4994d4d11a4062fe",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_25695bf0-cdef-44d0-a74b-72614f4ce93e"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_25695bf0-cdef-44d0-a74b-72614f4ce93e"
+      },
+      "completedAt": "2026-11-03T09:04:13.927Z"
+    },
+    "seed-t-cf29dee4-9bdc-4991-b659-472d1835cc69": {
+      "requestKey": "seed-t-cf29dee4-9bdc-4991-b659-472d1835cc69",
+      "command": "createTask",
+      "userId": "usr_a4111086-bdc9-4d1d-93ed-901f729db5d9",
+      "fingerprint": "1e1bc84ffda1666a46801e73f6b01446c25b65d8eac4c0a389115b7c2e14f37f",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_ee3f125d-27e6-456d-bec0-cf7ad37da145"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_ee3f125d-27e6-456d-bec0-cf7ad37da145"
+      },
+      "completedAt": "2026-11-03T09:04:13.954Z"
+    }
+  }
+}

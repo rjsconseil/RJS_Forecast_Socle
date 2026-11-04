@@ -1,0 +1,42 @@
+@use 'functions' as *;
+:host {
+  display: grid;
+  gap: var(--ecart-16);
+  min-width: 0;
+}
+section {
+  display: grid;
+  gap: var(--ecart-8);
+}
+section h3 {
+  margin: 0;
+  font-size: scaled(var(--fs-lg));
+}
+details {
+  padding: var(--ecart-12);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+}
+summary {
+  cursor: pointer;
+  font-weight: var(--fw-semibold);
+}
+.start-fields {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-200)), var(--fr-1))
+  );
+  gap: var(--ecart-12);
+  padding-block: var(--ecart-12);
+}
+label {
+  display: grid;
+  gap: var(--ecart-6);
+}
+input:not([type='checkbox']),
+select {
+  width: var(--part-100);
+  min-width: 0;
+}

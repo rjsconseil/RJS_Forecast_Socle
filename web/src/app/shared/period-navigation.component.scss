@@ -1,0 +1,129 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+:host {
+  display: block;
+  min-width: 0;
+  container-type: inline-size;
+}
+.period-navigation {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-2)) minmax(0, var(--fr-1));
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  padding: var(--ecart-4);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--soft);
+}
+.period-navigation > a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--ecart-2);
+  min-width: 0;
+  min-height: var(--dim-80);
+  padding: var(--ecart-6);
+  border: var(--trait-1) solid var(--slate-400);
+  border-radius: 0;
+  color: var(--slate-800);
+  background: var(--slate-200);
+  text-align: center;
+  text-decoration: none;
+  box-shadow: none;
+  transition:
+    background-color var(--duree-180) ease,
+    transform var(--duree-180) ease;
+}
+.period-navigation > a:hover {
+  color: var(--slate-800);
+  background: var(--slate-100);
+  border-color: var(--slate-400);
+}
+.period-navigation > .period-nav-previous {
+  border-radius: var(--rayon-12) 0 0 var(--rayon-12);
+}
+.period-navigation > .period-nav-next {
+  border-radius: 0 var(--rayon-12) var(--rayon-12) 0;
+}
+.period-navigation > .period-nav-current {
+  border-inline-width: 0;
+  box-shadow: none;
+}
+.period-navigation > a:focus-visible {
+  outline: var(--trait-3) solid var(--app-focus-ring, var(--app-accent));
+  outline-offset: calc(-1 * var(--decalage-4));
+  z-index: var(--plan-1);
+}
+.period-navigation svg {
+  width: var(--dim-40);
+  height: var(--dim-40);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: var(--trait-3);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.period-nav-previous > svg {
+  transform: rotate(var(--angle-180));
+}
+.period-nav-arrow > svg {
+  color: var(--slate-800);
+  filter: none;
+}
+.period-nav-title {
+  display: grid;
+  gap: var(--ecart-2);
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+}
+.period-nav-primary {
+  font-size: scaled(var(--fs-xl));
+}
+.period-nav-title.is-long-month .period-nav-primary {
+  font-size: scaled(var(--fs-xl));
+}
+.period-nav-title.is-range .period-nav-primary {
+  font-size: scaled(var(--fs-xs));
+}
+.period-nav-title.is-range .period-nav-year {
+  font-size: scaled(var(--fs-xl));
+}
+.period-nav-return {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--ecart-6);
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-snug);
+}
+.period-nav-return svg {
+  width: var(--dim-16);
+  height: var(--dim-16);
+  flex-shrink: var(--flex-0);
+}
+.period-nav-compact {
+  display: none;
+}
+@container (max-width:#{$rupture-640}) {
+  .period-nav-return {
+    font-size: scaled(var(--fs-2xs));
+  }
+}
+@container (max-width:#{$rupture-420}) {
+  .period-nav-title.is-range .period-nav-full {
+    display: none;
+  }
+  .period-nav-title.is-range .period-nav-compact {
+    display: block;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .period-navigation > a {
+    transition: none;
+  }
+}

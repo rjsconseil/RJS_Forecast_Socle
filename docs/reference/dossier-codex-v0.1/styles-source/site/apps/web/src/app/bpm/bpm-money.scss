@@ -1,0 +1,657 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/*
+ * Le parcours de l'argent et ses pages dédiées : une première couche à plat
+ * (barre du parcours, relevé ligne par ligne) et des pages qui creusent une
+ * ligne. Les postes prennent une teinte de la palette par rang ; le reste garde
+ * l'état positif, le « à préciser » l'état d'attention.
+ */
+.bpm-money {
+  --bm-0: var(--blue-500);
+  --bm-1: var(--indigo-500);
+  --bm-2: var(--teal-600);
+  --bm-3: var(--violet-600);
+  --bm-4: var(--cyan-700);
+  --bm-5: var(--sage-500);
+  --bm-6: var(--blue-300);
+  --bm-7: var(--indigo-300);
+}
+
+.bm-badge {
+  padding: var(--ecart-2) var(--ecart-8);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-999);
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-08em);
+  text-transform: uppercase;
+}
+.bm-empty {
+  margin: 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) dashed var(--card-border);
+  border-radius: var(--card-radius);
+  color: var(--muted);
+}
+
+/* La barre du parcours : tout l'argent qui a circulé, poste par poste, puis le reste. */
+.bm-flow,
+.bm-statement {
+  display: grid;
+  gap: var(--ecart-12);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.bm-flow h3,
+.bm-statement h3 {
+  margin: 0;
+  font-size: scaled(var(--fs-lg));
+}
+.bm-flow-bar {
+  display: flex;
+  overflow: hidden;
+  height: var(--dim-28);
+  border-radius: var(--rayon-999);
+  background: var(--soft);
+}
+.bm-flow-bar > span {
+  min-width: var(--trait-2);
+  height: var(--part-100);
+  background: var(--bm-0);
+}
+.bm-flow-bar > span[data-index='1'] {
+  background: var(--bm-1);
+}
+.bm-flow-bar > span[data-index='2'] {
+  background: var(--bm-2);
+}
+.bm-flow-bar > span[data-index='3'] {
+  background: var(--bm-3);
+}
+.bm-flow-bar > span[data-index='4'] {
+  background: var(--bm-4);
+}
+.bm-flow-bar > span[data-index='5'] {
+  background: var(--bm-5);
+}
+.bm-flow-bar > span[data-index='6'] {
+  background: var(--bm-6);
+}
+.bm-flow-bar > span[data-index='7'] {
+  background: var(--bm-7);
+}
+.bm-flow-bar > span[data-nature='a-preciser'] {
+  background: repeating-linear-gradient(
+    var(--angle-45),
+    var(--status-warning) 0 var(--dim-6),
+    color-mix(in srgb, var(--status-warning) var(--part-50), var(--raised-surface)) var(--dim-6)
+      var(--dim-12)
+  );
+}
+.bm-flow-bar > span[data-nature='reste'] {
+  background: var(--status-success);
+}
+.bm-hundred {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-6) var(--ecart-12);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.bm-hundred span {
+  padding: var(--ecart-2) var(--ecart-10);
+  border-radius: var(--rayon-999);
+  background: var(--soft);
+}
+.bm-hundred span[data-nature='reste'] {
+  background: var(--status-success-surface);
+}
+
+/* Le relevé ligne par ligne : une addition lisible, chaque ligne ouvre sa page. */
+.bm-statement-head {
+  display: grid;
+  gap: var(--ecart-4);
+}
+.bm-statement-head p {
+  margin: 0;
+}
+.bm-lines {
+  display: grid;
+  gap: var(--ecart-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bm-line {
+  --bm-tone: var(--bm-0);
+  display: grid;
+  grid-template-columns: var(--dim-28) minmax(0, var(--fr-1)) auto auto;
+  align-items: center;
+  gap: var(--ecart-12);
+  min-height: var(--dim-64);
+  padding: var(--ecart-10) var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-inline-start: var(--trait-4) solid var(--bm-tone);
+  border-radius: var(--card-radius);
+  color: var(--ink);
+  background: var(--raised-surface);
+  text-decoration: none;
+  transition:
+    background-color var(--ease-fast),
+    transform var(--ease-fast);
+}
+.bm-line:hover {
+  background: var(--app-accent-soft);
+  transform: translateX(var(--decalage-2));
+}
+.bm-line:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.bm-line[data-index='1'] {
+  --bm-tone: var(--bm-1);
+}
+.bm-line[data-index='2'] {
+  --bm-tone: var(--bm-2);
+}
+.bm-line[data-index='3'] {
+  --bm-tone: var(--bm-3);
+}
+.bm-line[data-index='4'] {
+  --bm-tone: var(--bm-4);
+}
+.bm-line[data-index='5'] {
+  --bm-tone: var(--bm-5);
+}
+.bm-line[data-index='6'] {
+  --bm-tone: var(--bm-6);
+}
+.bm-line[data-index='7'] {
+  --bm-tone: var(--bm-7);
+}
+.bm-line[data-nature='entrees'] {
+  --bm-tone: var(--status-success);
+}
+.bm-line[data-nature='a-preciser'] {
+  --bm-tone: var(--status-warning);
+  background: var(--status-warning-surface);
+}
+.bm-line[data-nature='reste'] {
+  --bm-tone: var(--status-success);
+}
+.bm-line[data-nature='reste'][data-sign='negative'] {
+  --bm-tone: var(--status-danger);
+}
+.bm-line-total {
+  border-block-start-width: var(--trait-2);
+}
+.bm-line-sign {
+  display: inline-grid;
+  place-items: center;
+  width: var(--dim-28);
+  height: var(--dim-28);
+  border-radius: var(--rayon-999);
+  color: var(--bm-tone);
+  background: var(--soft);
+  font-family: var(--font-label);
+  font-weight: var(--fw-bold);
+}
+.bm-line-main {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: 0;
+}
+.bm-line-main small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-snug);
+}
+.bm-line-share {
+  display: block;
+  height: var(--dim-4);
+  overflow: hidden;
+  border-radius: var(--rayon-999);
+  background: var(--soft);
+}
+.bm-line-share > span {
+  display: block;
+  height: var(--part-100);
+  background: var(--bm-tone);
+}
+.bm-line-amount {
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bm-line-open {
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.bm-statement-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Préciser : des cartes d'action courtes, chacune mène à sa page dédiée. */
+.bm-actions {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-260)), var(--fr-1))
+  );
+  gap: var(--ecart-12);
+}
+.bm-action {
+  display: grid;
+  align-content: space-between;
+  gap: var(--ecart-12);
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.bm-action[data-state='todo'] {
+  border-color: color-mix(in srgb, var(--status-warning) var(--part-50), var(--raised-surface));
+  background: var(--status-warning-surface);
+}
+.bm-action[data-state='done'] {
+  border-color: color-mix(in srgb, var(--status-success) var(--part-50), var(--raised-surface));
+}
+.bm-action p {
+  margin: 0;
+}
+.bm-action-link {
+  justify-self: start;
+  color: var(--app-accent);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+}
+.bm-action-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: $rupture-640) {
+  .bm-line {
+    grid-template-columns: var(--dim-28) minmax(0, var(--fr-1)) auto;
+  }
+  .bm-line-open {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bm-line {
+    transition: none;
+  }
+  .bm-line:hover {
+    transform: none;
+  }
+}
+
+/* Trois grands blocs, puis trois sections distinctes dans le cadre budgétaire. */
+.page.bpm-money {
+  display: grid;
+  gap: var(--ecart-40);
+}
+.bm-key-figures {
+  padding: var(--ecart-24);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--card-radius);
+  background: var(--soft);
+}
+.bm-budget-frame {
+  min-width: 0;
+  border: var(--trait-2) solid var(--app-accent-line);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  background: var(--soft);
+}
+.bm-budget-frame > .bm-budget-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ecart-24);
+  flex-wrap: wrap;
+  padding: var(--ecart-28);
+  background: linear-gradient(var(--angle-135), var(--app-accent-soft), var(--raised-surface));
+  border: 0;
+  border-block-end: var(--trait-2) solid var(--app-accent-line);
+  border-radius: 0;
+}
+.bm-budget-heading h2 {
+  margin: var(--ecart-8) 0;
+  font-size: scaled(var(--fs-3xl));
+  line-height: var(--lh-tight);
+}
+.bm-budget-heading p {
+  margin: 0;
+  max-width: var(--dim-680);
+}
+.bm-section-kicker {
+  font-family: var(--font-label);
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-bold);
+}
+.bm-budget-total,
+.bm-section-total {
+  display: grid;
+  gap: var(--ecart-8);
+  font-variant-numeric: tabular-nums;
+}
+.bm-budget-total strong {
+  font-size: scaled(var(--fs-3xl));
+  color: var(--status-success);
+}
+.bm-budget-content {
+  display: grid;
+  gap: var(--ecart-32);
+  padding: var(--ecart-28);
+}
+.bm-funding-split {
+  display: flex;
+  gap: var(--ecart-24);
+  flex-wrap: wrap;
+  margin: 0;
+}
+.bm-funding-split div {
+  display: grid;
+  gap: var(--ecart-4);
+}
+.bm-funding-split dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+}
+.bm-funding-split dd {
+  margin: 0;
+  font-weight: var(--fw-bold);
+  color: var(--status-success);
+}
+.bm-period-section,
+.bm-projects-block {
+  min-width: 0;
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+  overflow: hidden;
+}
+.bm-period-section {
+  display: grid;
+  gap: var(--ecart-20);
+}
+.bm-period-section > .bm-period-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-20);
+  padding: var(--ecart-24);
+  border: 0;
+  border-inline-start: var(--trait-3) solid var(--section-heading-ink);
+  border-block-end: var(--trait-1) solid var(--section-heading-line);
+  border-radius: 0;
+  background: var(--raised-surface);
+}
+.is-income > .bm-period-heading {
+  --section-heading-ink: var(--status-success);
+  --section-heading-surface: var(--raised-surface);
+  --section-heading-line: var(--card-divider);
+  --bm-mark-surface: var(--status-success-surface);
+}
+.is-expense > .bm-period-heading {
+  --section-heading-ink: var(--status-danger);
+  --section-heading-surface: var(--raised-surface);
+  --section-heading-line: var(--card-divider);
+  --bm-mark-surface: var(--status-danger-surface);
+}
+.bm-period-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-xl));
+  line-height: var(--lh-tight);
+}
+.bm-period-heading p {
+  margin: var(--ecart-8) 0 0;
+}
+.bm-period-heading .bm-section-total {
+  margin-inline-start: auto;
+  justify-items: end;
+  text-align: right;
+}
+.bm-section-total small {
+  font-size: scaled(var(--fs-xs));
+}
+.bm-section-total strong {
+  color: var(--section-heading-ink);
+  font-size: scaled(var(--fs-xl));
+}
+.bm-section-mark {
+  display: grid;
+  place-items: center;
+  width: var(--dim-40);
+  height: var(--dim-40);
+  border-radius: var(--rayon-10);
+  background: var(--bm-mark-surface, var(--soft));
+  color: var(--section-heading-ink);
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-bold);
+}
+.bm-period-section > :is(rjs-bpm-income-list, rjs-bpm-period-expenses) {
+  padding: 0 var(--ecart-24) var(--ecart-24);
+}
+.bm-reading-analysis {
+  margin: 0 var(--ecart-24) var(--ecart-24);
+}
+.bm-projects-block {
+  padding: var(--ecart-24);
+}
+.bm-line[data-nature='poste'] {
+  --bm-tone: var(--status-danger);
+}
+.bm-line-amount {
+  color: var(--bm-tone);
+}
+.bm-flow-bar > span[data-nature='poste'] {
+  background: var(--status-danger);
+  border-inline-end: var(--trait-2) solid var(--raised-surface);
+}
+@media (max-width: $rupture-640) {
+  .page.bpm-money {
+    gap: var(--ecart-32);
+  }
+  .bm-key-figures {
+    padding: var(--ecart-12);
+  }
+  .bm-budget-content {
+    padding: var(--ecart-12);
+    gap: var(--ecart-28);
+  }
+  .bm-budget-frame > .bm-budget-heading,
+  .bm-period-section > .bm-period-heading {
+    padding: var(--ecart-16);
+  }
+  .bm-budget-heading h2 {
+    font-size: scaled(var(--fs-2xl));
+  }
+  .bm-period-heading .bm-section-total {
+    margin-inline-start: 0;
+    flex-basis: var(--part-100);
+  }
+  .bm-period-section > :is(rjs-bpm-income-list, rjs-bpm-period-expenses) {
+    padding-inline: var(--ecart-12);
+  }
+  .bm-projects-block {
+    padding: var(--ecart-12);
+  }
+  .bm-reading-analysis {
+    margin-inline: var(--ecart-12);
+  }
+}
+
+/* Les trois tiroirs du tableau de bord gardent leur signe et leur total fermés. */
+.bpm-money details.bm-period-section {
+  display: block;
+}
+.bpm-money .bm-period-section > .bm-period-heading {
+  display: grid;
+  grid-template-columns: var(--dim-48) minmax(0, var(--fr-1)) auto var(--dim-24);
+  cursor: pointer;
+  list-style: none;
+  gap: var(--ecart-16);
+  border-block-end: 0;
+}
+.bm-period-heading::-webkit-details-marker {
+  display: none;
+}
+.bm-period-heading:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: calc(var(--decalage-4) * -1);
+}
+.bpm-money .bm-period-section[open] > .bm-period-heading {
+  border-block-end: var(--trait-1) solid var(--section-heading-line);
+  margin-bottom: var(--ecart-20);
+}
+.bm-section-cue {
+  justify-self: end;
+  color: var(--section-heading-ink);
+  font-size: scaled(var(--fs-2xl));
+  transition: transform var(--duree-180) ease;
+}
+.bm-period-section[open] > summary .bm-section-cue {
+  transform: rotate(var(--angle-180));
+}
+.is-projects > .bm-period-heading {
+  --section-heading-ink: var(--app-accent);
+  --section-heading-surface: var(--app-accent-soft);
+  --section-heading-line: var(--app-accent-line);
+}
+.bm-projects-help {
+  margin: var(--ecart-16) var(--ecart-20);
+  color: var(--muted);
+}
+.bm-period-section > rjs-bpm-project-costs {
+  display: block;
+  padding: 0 var(--ecart-16) var(--ecart-16);
+}
+.bm-calculation {
+  margin-top: var(--ecart-16);
+  padding-top: var(--ecart-12);
+  border-top: var(--trait-1) solid var(--card-border);
+}
+.bm-calculation > summary {
+  cursor: pointer;
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.bm-calculation .record-details {
+  margin-top: var(--ecart-16);
+}
+@media (max-width: $rupture-640) {
+  .bpm-money .bm-period-section > .bm-period-heading {
+    grid-template-columns: var(--dim-36) minmax(0, var(--fr-1)) var(--dim-20);
+    gap: var(--ecart-12);
+  }
+  .bm-period-heading > div:first-of-type {
+    grid-column: 2;
+  }
+  .bm-period-heading .bm-section-total {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0;
+    gap: var(--ecart-4);
+  }
+  .bm-period-heading .bm-section-mark {
+    width: var(--dim-36);
+    height: var(--dim-36);
+  }
+  .bm-section-cue {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .bm-period-heading h3 {
+    font-size: scaled(var(--fs-xl));
+  }
+  .bm-section-total strong {
+    font-size: scaled(var(--fs-xl));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bm-section-cue {
+    transition: none;
+  }
+}
+
+/* Les détails du budget standard complètent les totaux sans ralentir la lecture. */
+.bm-standard-details {
+  padding: var(--ecart-12) var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-12);
+  background: var(--soft);
+}
+.bm-standard-details > summary {
+  cursor: pointer;
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.bm-standard-details[open] > summary {
+  margin-bottom: var(--ecart-12);
+}
+.bm-standard-details > summary:focus-visible {
+  outline: var(--trait-2) solid var(--app-accent);
+  outline-offset: var(--ecart-4);
+}
+
+/* Une synthèse complète avant le détail des mouvements. */
+.bm-key-figures {
+  display: grid;
+  gap: var(--ecart-20);
+  background: var(--raised-surface);
+  border-top: var(--trait-4) solid var(--app-accent);
+}
+.bm-overview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-20);
+  flex-wrap: wrap;
+  padding-bottom: var(--ecart-20);
+  border-bottom: var(--trait-1) solid var(--card-border);
+}
+.bm-overview-heading h2 {
+  margin: var(--ecart-4) 0;
+  font-size: scaled(var(--fs-2xl));
+  line-height: var(--lh-tight);
+}
+.bm-overview-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+}
+.bm-overview-heading > a {
+  font-size: scaled(var(--fs-sm));
+}
+.bm-key-figures > rjs-bpm-dashboard-wealth {
+  padding-top: var(--ecart-4);
+}
+.bm-key-figures .bm-calculation {
+  margin: 0;
+}
+.bm-budget-content {
+  gap: var(--ecart-24);
+}
+.bm-standard-details {
+  order: 1;
+}
+@media (max-width: $rupture-640) {
+  .bm-overview-heading > a {
+    width: var(--part-100);
+    justify-content: center;
+  }
+}

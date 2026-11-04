@@ -1,0 +1,588 @@
+<div class="page bpm-reading bpm-app bpm-money expense-register-page" data-tone="budget">
+  <rjs-bpm-gate
+    [suite]="
+      ctx.professionalMode
+        ? '/budget-patrimoine-management/entreprise/depenses'
+        : '/budget-patrimoine-management/depenses'
+    "
+  />
+  @if (ctx.project(); as p) {
+    <rjs-app-hero
+      toolsLabel="Actions"
+      tone="lagoon"
+      headingId="expenses-title"
+      [kicker]="t(ctx.professionalMode ? 'professionalKicker' : 'kicker')"
+      [title]="t(ctx.professionalMode ? 'professionalTitle' : 'title')"
+      [lead]="t('lead')"
+      ><rjs-bpm-project-switch
+        heroMeta
+        [embedded]="true"
+        [projects]="ctx.projects()"
+        [current]="p.id" /><rjs-bpm-context
+        heroMetaWide
+        [scopeOnly]="true"
+        [compact]="true"
+        [embedded]="true" />
+      <a
+        heroActions
+        class="bpm-link"
+        [routerLink]="
+          ctx.professionalMode
+            ? '/budget-patrimoine-management/entreprise/projets'
+            : '/budget-patrimoine-management/tableau-de-bord'
+        "
+        [queryParams]="ctx.query()"
+        >← {{ t(ctx.professionalMode ? 'professionalBack' : 'back') }}</a
+      >
+      @if (!ctx.professionalMode && ctx.manages()) {
+        <a
+          heroActions
+          class="app-hero-action"
+          routerLink="/budget-patrimoine-management/piloter/agir"
+          [queryParams]="{ projet: p.id }"
+          fragment="saisie-des-flux"
+          >＋ Saisir un flux</a
+        >
+      }
+      @if (data(); as d) {
+        <section heroPageTools class="expense-filters" data-ui-pattern="panel">
+          <label class="expense-search"
+            >{{ t('grouping')
+            }}<select
+              name="expense-grouping"
+              [ngModel]="grouping()"
+              (ngModelChange)="filter('par', $event)"
+            >
+              <option value="poste">{{ t('centersView') }}</option>
+              <option value="projet">{{ t('projectsView') }}</option>
+              <option value="jour">{{ t('daysView') }}</option>
+            </select></label
+          >
+          <label class="expense-search"
+            >{{ t('search')
+            }}<input
+              type="search"
+              name="expense-search"
+              [ngModel]="query()"
+              (ngModelChange)="filter('q', $event)"
+              [placeholder]="t('searchHelp')"
+          /></label>
+          <details class="expense-advanced-filters">
+            <summary>
+              {{ t('filters') }}
+              @if (activeFilters()) {
+                <span>{{ activeFilters() }} {{ t('filtersActive') }}</span>
+              }
+            </summary>
+            <div class="expense-filter-fields">
+              <label
+                >{{ t('budget')
+                }}<select
+                  name="expense-budget"
+                  [ngModel]="budget()"
+                  (ngModelChange)="filter('budget', $event)"
+                >
+                  <option value="">{{ t('allBudgets') }}</option>
+                  @for (item of d.budgets; track item.id) {
+                    <option [value]="item.id">{{ item.title }}</option>
+                  }
+                </select></label
+              >
+              <label
+                >{{ t('status')
+                }}<select
+                  name="expense-status"
+                  [ngModel]="status()"
+                  (ngModelChange)="filter('etat', $event)"
+                >
+                  <option value="">{{ t('all') }}</option>
+                  <option value="recorded">{{ t('recorded') }}</option>
+                  <option value="pending">{{ t('pending') }}</option>
+                  <option value="unrealized">{{ t('unrealized') }}</option>
+                </select></label
+              >
+              <label
+                >{{ t('center')
+                }}<select
+                  name="expense-center"
+                  [ngModel]="center()"
+                  (ngModelChange)="filter('poste', $event)"
+                >
+                  <option value="">{{ t('all') }}</option>
+                  @for (item of centers(); track item.id) {
+                    <option [value]="item.id">{{ item.name || t('noCenter') }}</option>
+                  }
+                </select></label
+              >
+              <label
+                >{{ t('task')
+                }}<select
+                  name="expense-task"
+                  [ngModel]="task()"
+                  (ngModelChange)="filter('tache', $event)"
+                >
+                  <option value="">{{ t('all') }}</option>
+                  <option value="__none">{{ t('noTask') }}</option>
+                  @for (item of tasks(); track item.id) {
+                    <option [value]="item.id">{{ item.title }}</option>
+                  }
+                </select></label
+              >
+            </div>
+            <button type="button" class="btn btn-secondary" (click)="reset()">
+              {{ t('clear') }}
+            </button>
+          </details>
+        </section>
+      }
+      @if (ctx.professionalMode && ctx.businesses().length > 1) {
+        <label heroPageTools
+          >{{ t('chooseBusiness')
+          }}<select
+            [ngModel]="ctx.query()['entreprise']"
+            (ngModelChange)="ctx.chooseBusiness($event)"
+          >
+            @for (b of ctx.businesses(); track b.id) {
+              <option [value]="b.id">{{ b.label }}</option>
+            }
+          </select></label
+        >
+      }
+
+      <div heroFooter>
+        @if (ctx.window(); as w) {
+          <rjs-period-navigation
+            [start]="w.start"
+            [end]="w.end"
+            [label]="t('period')"
+            [previousLabel]="t('previous')"
+            [nextLabel]="t('next')"
+            [currentLabel]="t('current')"
+            [compactCurrentLabel]="t('currentCompact')"
+            [previousQuery]="shifted(-1)"
+            [nextQuery]="shifted(1)"
+            [currentQuery]="currentPeriod()"
+          />
+        }</div
+    ></rjs-app-hero>
+    @if (data()) {
+      <section
+        class="expense-overview"
+        data-bpm-frame="metrics"
+        aria-labelledby="expense-overview-title"
+      >
+        <header>
+          <div>
+            <span class="expense-overview-kicker">{{ t('overviewKicker') }}</span>
+            <h2 id="expense-overview-title">{{ t('overviewTitle') }}</h2>
+          </div>
+          <span class="expense-overview-count">{{ rows().length }} {{ t('displayed') }}</span>
+        </header>
+        <div class="expense-overview-grid">
+          @for (tile of tiles(); track tile.id) {
+            <article class="expense-overview-card" [attr.data-status]="tile.id">
+              <div class="expense-overview-label">
+                <h3>{{ tile.label }}</h3>
+                <span
+                  class="flow-direction is-compact"
+                  [attr.data-flow]="tile.id === 'recorded' ? 'expense' : null"
+                  aria-hidden="true"
+                  >{{ tile.id === 'recorded' ? '↓' : tile.id === 'pending' ? '◷' : '—' }}</span
+                >
+              </div>
+              <strong class="expense-overview-value">{{ tile.value }}</strong>
+              <p>{{ tile.note }}</p>
+            </article>
+          }
+        </div>
+        <p class="expense-overview-note">{{ t('overviewHelp') }}</p>
+      </section>
+    }
+
+    @if (ctx.loading()) {
+      <p role="status">{{ t('loading') }}</p>
+    } @else if (ctx.store.error()) {
+      <p class="bpm-error" role="alert">{{ ctx.store.error() }}</p>
+      <button class="btn btn-secondary" (click)="retry()">{{ t('retry') }}</button>
+    }
+    @if (data(); as d) {
+      @if (requestedMissing()) {
+        <p class="expense-note" role="status">{{ t('missing') }}</p>
+      }
+      <header class="expense-list-heading" id="expense-list">
+        <div>
+          <h2>
+            {{
+              t(
+                grouping() === 'projet'
+                  ? 'projectsView'
+                  : grouping() === 'jour'
+                    ? 'daysView'
+                    : 'groups'
+              )
+            }}
+          </h2>
+          <p>{{ t(grouping() === 'jour' ? 'sortDate' : 'sortAmount') }}</p>
+        </div>
+        <strong>{{ rows().length }} {{ t('displayed') }}</strong>
+        <p class="expense-list-help">{{ t('listHelp') }}</p>
+      </header>
+      @for (group of groups(); track group.id) {
+        <section
+          class="expense-group"
+          data-flow="expense"
+          [attr.aria-labelledby]="'expenses-' + group.id"
+        >
+          <header class="expense-center-heading" data-ui-pattern="section-heading">
+            <div>
+              <h2 [id]="'expenses-' + group.id">{{ group.name }}</h2>
+              <p>
+                @if (group.budget) {
+                  {{ group.budget }} ·
+                }
+                {{ group.rows.length }} {{ t('rows') }}
+              </p>
+            </div>
+            <div class="expense-center-total">
+              <small>{{ t('groupSum') }}</small
+              ><strong>{{ money(group.total) }}</strong>
+            </div>
+            <p class="expense-center-breakdown">
+              <span
+                >{{ t('recorded') }} <strong>{{ money(group.recorded) }}</strong></span
+              >
+              <span class="expense-pending-total"
+                >{{ t('pending') }} <strong>{{ money(group.pending) }}</strong></span
+              >
+              @if (group.unrealized) {
+                <span
+                  >{{ t('unrealized') }} <strong>{{ money(group.unrealized) }}</strong></span
+                >
+              }
+            </p>
+          </header>
+          @for (row of group.rows; track key(row)) {
+            @let op = operations().get(row.operationId);
+            <details
+              class="expense-row"
+              [id]="key(row)"
+              [open]="selected(row)"
+              [attr.data-selected]="selected(row) || null"
+              [attr.data-status]="row.status"
+              data-ui-pattern="panel"
+            >
+              <summary>
+                <span class="expense-date"
+                  ><small>{{ t('occurrence') }}</small
+                  >{{ date(row.occurrenceDate) }}
+                  @if (row.actualDate && row.actualDate !== row.occurrenceDate) {
+                    <small>{{ t('actual') }} · {{ date(row.actualDate) }}</small>
+                  }</span
+                ><span class="expense-main"
+                  ><strong>{{ row.title }}</strong
+                  ><small
+                    >{{ op?.budgetTitle }} · {{ op?.center?.name || t('noCenter') }}
+                    @if (op?.task?.title) {
+                      · {{ op.task.title }}
+                    }
+                  </small></span
+                ><span class="expense-amount"
+                  ><strong>{{ money(row.amountCents) }}</strong>
+                  @if (row.plannedCents !== null && row.plannedCents !== row.amountCents) {
+                    <small>{{ t('planned') }} · {{ money(row.plannedCents) }}</small>
+                  }</span
+                ><span class="expense-state">{{ t(row.status) }}</span>
+              </summary>
+              <div class="expense-body record-details">
+                <header class="expense-detail-heading">
+                  <h3>{{ t('paymentDetail') }}</h3>
+                  @if (op) {
+                    <a
+                      class="btn btn-secondary"
+                      [routerLink]="['/budget-management/manager/operations', op.id]"
+                      [queryParams]="{ budget: op.budgetProjectId, core: op.coreProject?.id }"
+                      >{{ t('native') }} ↗</a
+                    >
+                  }
+                </header>
+                @if (row.actualDate && !inPeriod(row.actualDate)) {
+                  <p class="expense-note">
+                    {{ t('actual') }} · {{ date(row.actualDate) }} · {{ t('outside') }}
+                  </p>
+                }
+                @if (row.closed) {
+                  <p class="expense-note">{{ t('closed') }}</p>
+                } @else if (row.status === 'pending' && row.date <= d.today) {
+                  <p class="expense-note">{{ t('late') }}</p>
+                }
+                <dl class="expense-facts record-facts">
+                  <div>
+                    <dt>{{ t('amount') }}</dt>
+                    <dd>{{ money(row.amountCents) }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ t('planned') }}</dt>
+                    <dd>{{ row.plannedCents === null ? '—' : money(row.plannedCents) }}</dd>
+                  </div>
+                  @if (row.status === 'recorded' && row.plannedCents !== null) {
+                    <div>
+                      <dt>{{ t('gap') }}</dt>
+                      <dd>{{ money(row.amountCents - row.plannedCents) }}</dd>
+                    </div>
+                  }
+                  <div>
+                    <dt>{{ t('occurrence') }}</dt>
+                    <dd>{{ date(row.occurrenceDate) }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ t('actual') }}</dt>
+                    <dd>{{ row.actualDate ? date(row.actualDate) : '—' }}</dd>
+                  </div>
+                </dl>
+                @if (row.note) {
+                  <div>
+                    <h3>{{ t('notes') }}</h3>
+                    <p class="expense-prose">{{ row.note }}</p>
+                  </div>
+                }
+                @if (op) {
+                  <details class="expense-secondary">
+                    <summary>{{ t('owner') }}</summary>
+                    <p>{{ op.budgetTitle }} · {{ op.coreProject?.title || '—' }}</p>
+                    <dl class="expense-facts record-facts">
+                      <div>
+                        <dt>{{ t('center') }}</dt>
+                        <dd>{{ op.center?.name || t('noCenter') }}</dd>
+                      </div>
+                      <div>
+                        <dt>{{ t('task') }}</dt>
+                        <dd>
+                          {{ op.task?.title || (op.coreTaskId ? op.coreTaskId : t('noTask')) }}
+                        </dd>
+                      </div>
+                      @if (op.center?.description) {
+                        <div>
+                          <dt>{{ t('centerDescription') }}</dt>
+                          <dd class="expense-prose">{{ op.center!.description }}</dd>
+                        </div>
+                      }
+                      @if (op.center?.limitCents !== null && op.center?.limitCents !== undefined) {
+                        <div>
+                          <dt>{{ t('centerLimit') }}</dt>
+                          <dd>{{ money(op.center!.limitCents!) }}</dd>
+                        </div>
+                      }
+                      <div>
+                        <dt>{{ t('beneficiary') }}</dt>
+                        <dd>
+                          {{ op.beneficiary?.name || t('absent') }}
+                          @if (op.beneficiary?.note) {
+                            <p class="expense-prose">{{ op.beneficiary!.note }}</p>
+                          }
+                        </dd>
+                      </div>
+                    </dl>
+                  </details>
+                  <details class="expense-secondary">
+                    <summary>{{ t('source') }}</summary>
+                    <dl class="expense-facts record-facts">
+                      <div>
+                        <dt>{{ t('cadence') }}</dt>
+                        <dd>{{ t(op.cadence) }}</dd>
+                      </div>
+                      <div>
+                        <dt>{{ t('first') }}</dt>
+                        <dd>{{ date(op.firstDate) }}</dd>
+                      </div>
+                      @if (op.cadence !== 'once') {
+                        <div>
+                          <dt>{{ t('end') }}</dt>
+                          <dd>{{ op.endDate ? date(op.endDate) : t('noEnd') }}</dd>
+                        </div>
+                      }
+                      <div>
+                        <dt>{{ t('kind') }}</dt>
+                        <dd>{{ t(op.kind) }}</dd>
+                      </div>
+                      <div>
+                        <dt>{{ t('decision') }}</dt>
+                        <dd>{{ t(op.decision) }}</dd>
+                      </div>
+                      <div>
+                        <dt>{{ t('priority') }}</dt>
+                        <dd>{{ t(op.priority) }}</dd>
+                      </div>
+                      <div>
+                        <dt>{{ t('resource') }}</dt>
+                        <dd>{{ t(op.resource) }}</dd>
+                      </div>
+                    </dl>
+                  </details>
+                  <details class="expense-secondary">
+                    <summary>{{ t('providerDetails') }}</summary>
+                    <dl class="expense-facts record-facts">
+                      <div>
+                        <dt>{{ t('provider') }}</dt>
+                        <dd>{{ op.provider?.name || t('absent') }}</dd>
+                      </div>
+                      <div>
+                        <dt>{{ t('supplier') }}</dt>
+                        <dd>{{ op.supplier || t('absent') }}</dd>
+                      </div>
+                      @if (op.provider; as provider) {
+                        <div>
+                          <dt>{{ t('providerType') }}</dt>
+                          <dd>{{ provider.type }}</dd>
+                        </div>
+                        @if (provider.contact) {
+                          <div>
+                            <dt>{{ t('contact') }}</dt>
+                            <dd class="expense-prose">{{ provider.contact }}</dd>
+                          </div>
+                        }
+                        @if (provider.note) {
+                          <div>
+                            <dt>{{ t('notes') }}</dt>
+                            <dd class="expense-prose">{{ provider.note }}</dd>
+                          </div>
+                        }
+                        @if (provider.strengths) {
+                          <div>
+                            <dt>{{ t('strengths') }}</dt>
+                            <dd class="expense-prose">{{ provider.strengths }}</dd>
+                          </div>
+                        }
+                        @if (provider.weaknesses) {
+                          <div>
+                            <dt>{{ t('weaknesses') }}</dt>
+                            <dd class="expense-prose">{{ provider.weaknesses }}</dd>
+                          </div>
+                        }
+                        @if (provider.appreciation) {
+                          <div>
+                            <dt>{{ t('appreciation') }}</dt>
+                            <dd class="expense-prose">{{ provider.appreciation }}</dd>
+                          </div>
+                        }
+                      }
+                    </dl>
+                    @if (op.provider?.interventions?.length) {
+                      <details>
+                        <summary>
+                          {{ t('interventions') }} · {{ op.provider!.interventions.length }}
+                        </summary>
+                        <ul>
+                          @for (item of op.provider!.interventions; track item.id) {
+                            <li>
+                              {{ date(item.date) }} · {{ item.title }}
+                              <p class="expense-prose">{{ item.context }}</p>
+                              <p class="expense-prose">{{ item.note }}</p>
+                              <p class="expense-prose">{{ item.appreciation }}</p>
+                            </li>
+                          }
+                        </ul>
+                      </details>
+                    }
+                  </details>
+                  <details class="expense-secondary">
+                    <summary>{{ t('quotes') }} · {{ op.quotes.length }}</summary>
+                    <ul>
+                      @for (quote of op.quotes; track quote.id) {
+                        <li>
+                          <strong>{{ quote.supplier }} · {{ money(quote.amountCents) }}</strong>
+                          @if (quote.id === op.selectedQuoteId) {
+                            <span class="expense-state">{{ t('selected') }}</span>
+                          }
+                          <p class="expense-prose">{{ quote.note }}</p>
+                        </li>
+                      } @empty {
+                        <li>{{ t('noQuotes') }}</li>
+                      }
+                    </ul>
+                  </details>
+                  <details class="expense-secondary">
+                    <summary>{{ t('history') }} · {{ op.settlements.length }}</summary>
+                    <p>{{ t('historyHelp') }}</p>
+                    <ul class="expense-history">
+                      @for (item of op.settlements; track item.occurrenceDate) {
+                        <li>
+                          <span
+                            >{{ date(item.actualDate) }} · {{ t('occurrence') }}
+                            {{ date(item.occurrenceDate) }}</span
+                          ><strong>{{ money(item.amountCents) }}</strong>
+                          @if (!inPeriod(item.actualDate)) {
+                            <small>{{ t('outside') }}</small>
+                          }
+                        </li>
+                      } @empty {
+                        <li>{{ t('noHistory') }}</li>
+                      }
+                    </ul>
+                  </details>
+                  <footer>
+                    <details class="expense-secondary">
+                      <summary>{{ t('reference') }}</summary>
+                      <dl class="expense-facts record-facts">
+                        <div>
+                          <dt>{{ t('id') }}</dt>
+                          <dd>{{ op.id }}</dd>
+                        </div>
+                        <div>
+                          <dt>{{ t('created') }}</dt>
+                          <dd>{{ date(op.createdAt) }}</dd>
+                        </div>
+                        <div>
+                          <dt>{{ t('updated') }}</dt>
+                          <dd>{{ date(op.updatedAt) }}</dd>
+                        </div>
+                      </dl>
+                    </details>
+                  </footer>
+                }
+              </div>
+            </details>
+          }
+        </section>
+      } @empty {
+        <div class="expense-note">
+          <p>{{ t('empty') }}</p>
+          @if (activeFilters()) {
+            <button type="button" class="btn btn-secondary" (click)="reset()">
+              {{ t('clear') }}
+            </button>
+          }
+        </div>
+      }
+    }
+  } @else {
+    <rjs-app-hero
+      tone="lagoon"
+      headingId="expenses-empty-title"
+      toolsLabel="Actions"
+      [kicker]="t(ctx.professionalMode ? 'professionalKicker' : 'kicker')"
+      [title]="t(ctx.professionalMode ? 'professionalTitle' : 'title')"
+      [lead]="t('lead')"
+    >
+      <a
+        heroActions
+        class="app-hero-action"
+        [routerLink]="
+          ctx.professionalMode
+            ? '/budget-patrimoine-management/entreprise/projets'
+            : '/budget-patrimoine-management/parcours'
+        "
+      >
+        {{ t(ctx.professionalMode ? 'professionalBack' : 'chooseProject') }} →</a
+      >
+    </rjs-app-hero>
+    <section class="bpm-empty" data-ui-pattern="panel" role="status">
+      <p>
+        {{
+          ctx.loading() || ctx.professionalLoading()
+            ? t('loading')
+            : ctx.store.error() || t(ctx.professionalMode ? 'noProfessional' : 'noProject')
+        }}
+      </p>
+    </section>
+  }
+</div>

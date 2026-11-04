@@ -1,0 +1,125 @@
+@use 'functions' as *;
+
+/* Le sélecteur de projet : des onglets en pastille qui disent l'état de chaque projet. */
+:host {
+  display: block;
+  min-width: 0;
+}
+.bpm-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-6);
+  justify-self: start;
+  padding: var(--ecart-4);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+}
+.bpm-switch a {
+  position: relative;
+  display: inline-grid;
+  align-content: center;
+  gap: var(--ecart-2);
+  min-height: var(--dim-48);
+  padding: var(--ecart-6) var(--ecart-16);
+  border-radius: var(--card-radius);
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-snug);
+  text-decoration: none;
+  transition: background-color var(--ease-fast);
+}
+.bpm-switch a:hover {
+  background: var(--app-accent-soft);
+}
+.bpm-switch a:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.bpm-switch a.is-active {
+  color: var(--app-on-accent);
+  background: var(--app-accent);
+}
+.bpm-switch-meta {
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-04em);
+  text-transform: uppercase;
+}
+.bpm-switch a.is-active .bpm-switch-meta {
+  color: inherit;
+  opacity: var(--opacite-0-8);
+}
+/* Des échéances arrivées : un point d'attention, en plus du texte qui les compte. */
+.bpm-switch a[data-due]::after {
+  position: absolute;
+  inset-block-start: var(--ecart-6);
+  inset-inline-end: var(--ecart-6);
+  width: var(--dim-8);
+  height: var(--dim-8);
+  border-radius: var(--rayon-999);
+  background: var(--status-warning);
+  content: '';
+}
+@media (prefers-reduced-motion: reduce) {
+  .bpm-switch a {
+    transition: none;
+  }
+}
+
+.bpm-project-picker > summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ecart-8);
+  min-height: var(--dim-48);
+  padding: var(--ecart-8) var(--ecart-16);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+  cursor: pointer;
+}
+.bpm-picker-action {
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.bpm-picker-action::after {
+  content: ' ▾';
+}
+.bpm-project-picker[open] .bpm-picker-action::after {
+  content: ' ▴';
+}
+.bpm-project-picker > summary:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.bpm-project-picker[open] .bpm-switch {
+  margin-top: var(--ecart-8);
+}
+
+.bpm-project-embedded {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ecart-8);
+  margin: 0;
+  color: var(--white);
+  font-size: var(--fs-xs);
+}
+.bpm-project-embedded strong {
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+
+:host([heroMeta]) .bpm-project-embedded {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
+}
+:host([heroMeta]) .bpm-project-embedded strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

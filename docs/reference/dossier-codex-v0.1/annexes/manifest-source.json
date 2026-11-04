@@ -1,0 +1,850 @@
+{
+  "schemaVersion": "rjs-source-annex/0.1",
+  "repository": "rjsconseil/rjs-forecast",
+  "verifiedBranch": "main",
+  "commit": "54246fad6553f6388d8257711ae7ef58241b3450",
+  "verificationDate": "2026-11-03",
+  "files": [
+    {
+      "repository_path": "site/apps/web/src/app/app.routes.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/app.routes.ts",
+      "git_blob_sha": "04060b03ae6106018c454b568e5498fbb144706c",
+      "sha256": "a7a9f9409f534ef15b53174fd9cd5cf1975fe90890f5d9c8d76e867b2fb6af31",
+      "bytes": 32230,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/app.routes.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-money.page.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-money.page.ts",
+      "git_blob_sha": "28fecac14b6a1194274235fad8a5816e019692db",
+      "sha256": "61406139ae41d59148fb6cd5475a684d2333d97053ecd4930a2ac568a271dc02",
+      "bytes": 44800,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.page.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-money-detail.page.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-money-detail.page.ts",
+      "git_blob_sha": "75ae8f68e7be06d8a36788bcaf0f8a177d60d97f",
+      "sha256": "d46ae27a19df322b44c4f737e092e87464220be77c3f51512a055db9ec1a9ebf",
+      "bytes": 42366,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money-detail.page.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-pilot.page.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-pilot.page.ts",
+      "git_blob_sha": "c50840971965e2dd4a37bda76de19865dbcea6b0",
+      "sha256": "b1e3e8ff84dce7d9e172f851361c77b3a49213d5deccf28eb4d185da79e3c8c2",
+      "bytes": 84236,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-pilot.page.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-vision.page.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-vision.page.ts",
+      "git_blob_sha": "a553f1fa3787b69acacfe94adef2a612324e05eb",
+      "sha256": "8dcbdff5bde589976be21eaa364bf4c4bf4a0ee8b2146fed9594bbef4172aa29",
+      "bytes": 57357,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.page.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-expenses.page.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-expenses.page.ts",
+      "git_blob_sha": "46f990ff427445a87721959bf3ae4f73c31115df",
+      "sha256": "f6a9850eb9d4f5cfef32e772b4148703a7e471c73863c2c7d05b3d89b0af21f2",
+      "bytes": 13552,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-expenses.page.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-expenses.page.html",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-expenses.page.html",
+      "git_blob_sha": "8c73bdaaf1f57cff7cb2679ff5c6fe1a7d3934d3",
+      "sha256": "176edc70ab1e1729b16731e21b70fda8a4b750419bd204d8baa05a51c3856724",
+      "bytes": 23752,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-expenses.page.html"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-start-details.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-start-details.component.ts",
+      "git_blob_sha": "aec6c4c5c9abb6e568fa8a291c6b593b093f8181",
+      "sha256": "ec30cd54cde620b1f41e3358833bea5761ce483577bbb0e14c494fe48ddb8459",
+      "bytes": 10617,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-start-details.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-start.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-start.model.ts",
+      "git_blob_sha": "73f6a28e070a18ed8f81241ce59a1c113737db31",
+      "sha256": "42ea46c7e2472003d38ffdddb8b65fd46252acd10cf68af661991585f48caf8a",
+      "bytes": 3418,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-start.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm.store.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm.store.ts",
+      "git_blob_sha": "94784e4560da11a6923672ed1f21cc3080ef8e39",
+      "sha256": "d93761217da486483f1754bd856d1071358a7dcbe343dd9fcb6e065e23640fdc",
+      "bytes": 11608,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm.store.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm.model.ts",
+      "git_blob_sha": "6d43212ffbf0de41a8df838d7d983e58e3588079",
+      "sha256": "7226338689c126172ce9bea88ff49aab1ce56cd42d585f483e9da0d060eb26fd",
+      "bytes": 22624,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-money.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-money.model.ts",
+      "git_blob_sha": "0caa9d1498d7d8fd95e0580ad263524323b8a677",
+      "sha256": "c7c1ec5915e60005ca078034aa1c2df120be668bef401a1f0557123221b8417c",
+      "bytes": 11440,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-money-context.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-money-context.ts",
+      "git_blob_sha": "712e07ac1a7772f64a084ce17d5642bbf980dd04",
+      "sha256": "a96a8b78bf58b347f05830b37f32724f4028a2483eedd51ab57130c1f3000d94",
+      "bytes": 9491,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money-context.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-dashboard-history.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-dashboard-history.component.ts",
+      "git_blob_sha": "b7ddae45b15d96877746503f6f120ebd39a070b0",
+      "sha256": "faa48a929511b5e66ca3eb14a4f1cd85f3f686394869fd29b589dfd3af44512a",
+      "bytes": 63458,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-dashboard-history.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-dashboard-history.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-dashboard-history.model.ts",
+      "git_blob_sha": "0114b4a912457e10e571960cf2151f6cead57761",
+      "sha256": "5965d10c0c28d9a8af3cbac0e7fa9521647bfc5fe2703e96c89248e600530fc8",
+      "bytes": 5214,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-dashboard-history.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.ts",
+      "git_blob_sha": "e8a2436ddb77a6e8b5be1534e6fa4c951a725901",
+      "sha256": "d5916e465f93988a95bbc1cc8fc1f0c689aace118e50a7fa7035a6043dbd0dc7",
+      "bytes": 8815,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-daily.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-daily.component.ts",
+      "git_blob_sha": "5cae9f366d8655fd9d7251915fe7b22b8149cd55",
+      "sha256": "afd1bcc2366553889001f9b36b3d660f68ed113e6a107a59a6ae34d07932ced6",
+      "bytes": 17180,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-daily.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-daily.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-daily.model.ts",
+      "git_blob_sha": "590c1782a305efba435dc364f50a0db471c58fdb",
+      "sha256": "512348ca1011f19865312956c86a3f83db2984e937065a7d36355096cc34a1db",
+      "bytes": 2057,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-daily.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-objectives.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-objectives.component.ts",
+      "git_blob_sha": "5a5c0e5a8683b07788ede58e8cd8c7155c35b1ce",
+      "sha256": "cfe67f0131de789bcf860c0606f1e74a1f12c2d2b5bba861455d98f33ca3a149",
+      "bytes": 22609,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-objectives.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-month-type.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-month-type.component.ts",
+      "git_blob_sha": "d69ca7d660149827c22f093745bc86b63de72032",
+      "sha256": "6a1764cf85dc58938ecec5abd2f064b18f599047dc3d29783968a9f403838490",
+      "bytes": 18537,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-month-type.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-flow-pilot.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-flow-pilot.component.ts",
+      "git_blob_sha": "4c85e72abb7dfbd8ec2796440889611d5da38574",
+      "sha256": "8b1ca7a2d42b6ebf7766c21bcfd6c663cbfff9aa3c3068692a2339bda2e6f2e1",
+      "bytes": 29308,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-flow-pilot.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-flow-editor.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-flow-editor.component.ts",
+      "git_blob_sha": "6bf4ad5e9d6cbe56b8f64595e8a7c00a5b6b58af",
+      "sha256": "86cc9b1cecb0ce270282bb5a8a214f0971f0f04aeedab229f4f9c1f224a5d3a5",
+      "bytes": 19222,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-flow-editor.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "git_blob_sha": "94882e209f55674d53ed38aa076a4d548a8ac6cc",
+      "sha256": "c98c5fc5ba60ca9d301e3ed91b1bba07e74697695623bf693c4c2933d8cfadd1",
+      "bytes": 19597,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-period-expenses.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-period-expenses.component.ts",
+      "git_blob_sha": "15250f318a0b6a77ecff1f15cfa4be88d0d96501",
+      "sha256": "8fc44f38557af549733e5e303fcae5562b521af5dae8c2e6d5eb3d3e0722317d",
+      "bytes": 8329,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-period-expenses.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-income-list.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-income-list.component.ts",
+      "git_blob_sha": "3fc658a34bb097f478398adb95e8d025e570a5e5",
+      "sha256": "7ec2441ce0b8657d024d0f5171419ca54071d3164cd5977da417320d5889a8fe",
+      "bytes": 9421,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-income-list.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-workspace-nav.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-workspace-nav.component.ts",
+      "git_blob_sha": "95e7fa5c6d1bfe5ba5737937cdb7ca6103582418",
+      "sha256": "806753ad19545ac6da4331f8bfcc5651f9ed46281dbdb66853a010aef4e0ab8a",
+      "bytes": 6846,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-workspace-nav.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-project-costs.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-project-costs.component.ts",
+      "git_blob_sha": "2ea1f796bfa93fc3efa9d01d5d7b2ab90fa450d7",
+      "sha256": "86eb78f00a553503f805e34556399f8919c274eba0fc4f7d872e6e7839b55b29",
+      "bytes": 24326,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-project-costs.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-settings.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-settings.ts",
+      "git_blob_sha": "7aadc98c89ad716f3f029c1a3b15c5a8daa7d65c",
+      "sha256": "2f2985b48feadedd5c846c484e0fb346ea4ed691fa5b9a58774d7a9563caa1c7",
+      "bytes": 479,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-settings.ts"
+    },
+    {
+      "repository_path": "site/apps/local-api/bpm-routes.mjs",
+      "archive_path": "reference-code/site/apps/local-api/bpm-routes.mjs",
+      "git_blob_sha": "5313007ea99ec933fa0e4e4b55ad1320c3775283",
+      "sha256": "f09d889847871548a83eb96dc147b8084e7e239bec1926d89f7d61a4b0c7596b",
+      "bytes": 58694,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-routes.mjs"
+    },
+    {
+      "repository_path": "site/apps/local-api/bpm-vision.mjs",
+      "archive_path": "reference-code/site/apps/local-api/bpm-vision.mjs",
+      "git_blob_sha": "f7f6047a9ddc16d3045a7360c6dcb5683e53e3f5",
+      "sha256": "5552d4fbf9e50b94a0cffc53b5d751d2d1ca709cede96f5231179686f9d6cfaa",
+      "bytes": 6626,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-vision.mjs"
+    },
+    {
+      "repository_path": "site/apps/local-api/bpm-creation-details.mjs",
+      "archive_path": "reference-code/site/apps/local-api/bpm-creation-details.mjs",
+      "git_blob_sha": "270d74bfb00d39561d157f0d0001a14c93a9f2e2",
+      "sha256": "6dca40ac2fe1fcccf4217f5801e3afcb8b078955db55b564854dea8f9a0f0047",
+      "bytes": 5971,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-creation-details.mjs"
+    },
+    {
+      "repository_path": "site/apps/local-api/bpm-flows.mjs",
+      "archive_path": "reference-code/site/apps/local-api/bpm-flows.mjs",
+      "git_blob_sha": "7adf90db59c4976eb1a9613ebc52b7eb9c7df03d",
+      "sha256": "4c105fa9fa3b0b9a16dff7658b23a4446a9d028042fb0e68eef16a9b2210c1cf",
+      "bytes": 19347,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-flows.mjs"
+    },
+    {
+      "repository_path": "site/apps/local-api/bpm-expenses.mjs",
+      "archive_path": "reference-code/site/apps/local-api/bpm-expenses.mjs",
+      "git_blob_sha": "30fa063145b917555565bba82e84b1fcf2d3eccf",
+      "sha256": "f2cbfa7eb0e58aa0a391641498762a5edc56035ec757e5d50b1aa8445a90810a",
+      "bytes": 4878,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-expenses.mjs"
+    },
+    {
+      "repository_path": "site/configuration/bpm/reglages.csv",
+      "archive_path": "reference-code/site/configuration/bpm/reglages.csv",
+      "git_blob_sha": "c4364f3f62528ede588273e70fe4e599408011c5",
+      "sha256": "3920ce2b602056da6ce9d7a872750b75d07894f953b9638308aeff9e2592111d",
+      "bytes": 492,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/configuration/bpm/reglages.csv"
+    },
+    {
+      "repository_path": "site/configuration/bpm/inflation-reference.csv",
+      "archive_path": "reference-code/site/configuration/bpm/inflation-reference.csv",
+      "git_blob_sha": "072f67b278c08f8bcd8ee9b9f1da504b54dc4927",
+      "sha256": "b36394737470ed0cf56f4bf300bab734357b97aa92c99d629922a0a419a959fb",
+      "bytes": 252,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/configuration/bpm/inflation-reference.csv"
+    },
+    {
+      "repository_path": "site/configuration/bpm/demarrages.csv",
+      "archive_path": "reference-code/site/configuration/bpm/demarrages.csv",
+      "git_blob_sha": "f9250dfa579e9c7a9d0ab00a59d226c554329469",
+      "sha256": "67e3f083e8d4a9b43621a713be02aba5ad9f5be5310d50ed13655aaff669db11",
+      "bytes": 1753,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/configuration/bpm/demarrages.csv"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-pages.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "git_blob_sha": "17e2ff9ea6afb69df004df9c8300fea95d83a139",
+      "sha256": "5238d7cc68888ae5972b978207c10827092ea33531cf2bf937d2407615c39582",
+      "bytes": 18560,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-pages.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-create.page.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-create.page.scss",
+      "git_blob_sha": "772c0033e21dc0c10aa8a899c5597d3ddff19d77",
+      "sha256": "ea8ba97fdeff7ad62b4b82f39747169887b9e081648486b2feae910cc2191ade",
+      "bytes": 9069,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-create.page.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-money.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "git_blob_sha": "b846be0eda82b2d4056b0551ab32b25ab5ea750c",
+      "sha256": "d2eefb6f290e919add732f8d88beaa1374e3883b403ba2225d94e27cf7cf6293",
+      "bytes": 16326,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-money-detail.page.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss",
+      "git_blob_sha": "1f1a07d75523c1c10318eebfc98705418750ead6",
+      "sha256": "8044cea035bace988176104c48cf62a6f0553fc239058345c7bdc729af24d23a",
+      "bytes": 5844,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-money-detail.page.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "git_blob_sha": "5ff175628669058856d95cfee847ee3f4c4705ba",
+      "sha256": "be6a5904a00853299baac2fbe7a32b7c2539d2c85b83fef730f8d8f819521dcf",
+      "bytes": 25059,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-vision.page.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-pilot-charts.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-pilot-charts.scss",
+      "git_blob_sha": "5c29bdb36c5c84d58f256ede6229bf6963aa4f3c",
+      "sha256": "085b2b8f8430073ceb3f5fbeb13fce4d44001caa7425c91ee60043a5ae63c081",
+      "bytes": 7964,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-pilot-charts.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-expenses.page.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-expenses.page.scss",
+      "git_blob_sha": "4976e63fc0457170764743bb78104634cad4cc0c",
+      "sha256": "f5154b8abb1af753708693010d5b24ed43636322a2bd30fa006dd4200cfa1c08",
+      "bytes": 22595,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-expenses.page.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss",
+      "git_blob_sha": "0e521bdb07b6998b70a4a495fc8eb84feca6c069",
+      "sha256": "7b6281429f73ef48876986091898fc8869c15e97bcc7423a130dbe6cd45bcb03",
+      "bytes": 19865,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss",
+      "git_blob_sha": "8e4eab68e5c697b472fe9d942bc596d970500e86",
+      "sha256": "7314c5734a3f1225ad29d30ec5799007d10c46e550bc81d94bdd98a344d161ba",
+      "bytes": 11283,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-daily.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-daily.component.scss",
+      "git_blob_sha": "6fb9061a3c992905b8ea8700aaf7d43e31f986da",
+      "sha256": "c69bef902c12811c026ae28cc591b658982f8c5462d8a16633ea9db7d5476f35",
+      "bytes": 5304,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-daily.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-objectives.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-objectives.component.scss",
+      "git_blob_sha": "24bad4982333433b1541289032c3b0cb027f2c73",
+      "sha256": "c05d3f5daa9dbbba14214a5f20d3fd95ae6245ff4d8725180fd035c9aa284d53",
+      "bytes": 9729,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-objectives.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-month-type.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-month-type.component.scss",
+      "git_blob_sha": "3e9038645d946cd7f646bf9f8364b1ebe4add14e",
+      "sha256": "6fe75f758bc8cf3b4a5897f79dc02bc6014e4738fc3970acbc30c7134029ebe6",
+      "bytes": 4039,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-month-type.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-flow-pilot.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-flow-pilot.component.scss",
+      "git_blob_sha": "786bc16b0d5aea571a858b4c3610274bfc2b42bc",
+      "sha256": "bb9f3a71439c6ba0db04ac04450e087a55d03f22fac9cbb3a02c817a53220436",
+      "bytes": 15502,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-flow-pilot.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-flow-editor.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-flow-editor.component.scss",
+      "git_blob_sha": "1aff8be65101af9fad5b68b72403028cbe0f4ba8",
+      "sha256": "3b0ab4cfba2f92d43aff22ce0062bff42dbe2b532f03650383653983fcb17c5a",
+      "bytes": 7215,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-flow-editor.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-project-switch.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-project-switch.component.scss",
+      "git_blob_sha": "c398154df4c905ec2a596a895f4d8aea318f09f9",
+      "sha256": "2e8f3118cebddb6a8aaa3377109c47ac8860c98dfdfad84b71c9ea94625065bd",
+      "bytes": 3062,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-project-switch.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-context.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-context.scss",
+      "git_blob_sha": "9951cd8bde50db5f892207c1f8a1b51c76f50ddc",
+      "sha256": "24a33ab307bdb82f21e0b0882abbaefc44415542528e62df098e5afe8c77e787",
+      "bytes": 798,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-context.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-context.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-context.component.scss",
+      "git_blob_sha": "1858b196ab27ab062228b3e41885653de5027cf5",
+      "sha256": "074711ce421b6a7edbc32f0c987742ff23054a9a478b7a6ed1d4f482595915f0",
+      "bytes": 4430,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-context.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-popover.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-popover.component.scss",
+      "git_blob_sha": "3b2548a5f11ed5c1c5037a104e682d7246c44767",
+      "sha256": "ac4453af124d8733865471f3c59c4653e01e5596701a5ffee332e3bbad8c7712",
+      "bytes": 3301,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-popover.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-start-details.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/bpm/bpm-start-details.component.scss",
+      "git_blob_sha": "ec381d674c64017eeb0a1e4c483bd18ae8e2001c",
+      "sha256": "fde5cb22090614650a505ec37d84127b9bc398aff600f9eb1e64a159e0e5b361",
+      "bytes": 773,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-start-details.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_tokens.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_tokens.scss",
+      "git_blob_sha": "995ae50e15c93956ea075c4a215dc27aff2b3497",
+      "sha256": "e64f8d0893a338075f3092ff31003c1f32f3f7595cfc36a7827d36a70aebf2fb",
+      "bytes": 39693,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_tokens.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_fonts.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_fonts.scss",
+      "git_blob_sha": "01bc53683165d9d3d17bc99481fa26da11355b10",
+      "sha256": "cc27dea81e81df833a222f8d1112f383189e434b903f07a6081ba48bd0b0b405",
+      "bytes": 2339,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_fonts.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_base.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_base.scss",
+      "git_blob_sha": "4465a6c011a94317e0e3fd87c4c613231d8ccb85",
+      "sha256": "0f8c1dc07e4426327b6de8c778ce34c0d6712963dd14a76f634d7f5e6d5717b3",
+      "bytes": 1771,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_base.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_components.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_components.scss",
+      "git_blob_sha": "42507beb4f84aa7085cd2c13f93156de756a07e5",
+      "sha256": "e9c5bd07d44988226d92d3bf89c8659edf9d35cf94dc4b54a6962d7ec53480c9",
+      "bytes": 16405,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_components.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_forms.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_forms.scss",
+      "git_blob_sha": "5da52d854dab27d29fc3a4ee40f0e64c4aea799c",
+      "sha256": "3104dfe2392cec7ed20ba689f2940bf154c34d7c0e9645014ba7151f41693fc8",
+      "bytes": 8584,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_forms.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_shell.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_shell.scss",
+      "git_blob_sha": "19a9891e814b70f5eaa9de262103bc1db3ecf808",
+      "sha256": "03b4e08fedd258d2686c69a348b6ca7c9a6c454ebd0bc0543a7995e53d226cca",
+      "bytes": 18112,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_shell.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_interactions.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_interactions.scss",
+      "git_blob_sha": "3c3a2c3acae29fdfe4caa7b51c6b51fd83cda50c",
+      "sha256": "59c55ff832b5987604dcb7a3d10feb2dcdd1439da7dec8133fae05dd06caeb47",
+      "bytes": 11553,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_interactions.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_identities.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_identities.scss",
+      "git_blob_sha": "ee947b92a69b565bdb8846855e9ed0098638f22d",
+      "sha256": "7c1d93e4471bb050646f2a93a6f41617f393ee38ea49bcbe0a0d03b9111338a6",
+      "bytes": 7154,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_identities.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_surface-language.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_surface-language.scss",
+      "git_blob_sha": "742bd5074c87e33cec411c34cf65df15b49fa2d8",
+      "sha256": "f0ac6c2871c9d19a09a4ae61e9d094a1c42ea2ad28012c4f619174925b469c38",
+      "bytes": 22220,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_surface-language.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_bpm-presentation.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_bpm-presentation.scss",
+      "git_blob_sha": "74ea15ae83f292da6c61392de9ada56e9925a1d1",
+      "sha256": "d959012b9a1b31fcddc3774d511195b07c06703e2324cc3574987980351474b4",
+      "bytes": 11593,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_bpm-presentation.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_site-responsive.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_site-responsive.scss",
+      "git_blob_sha": "f3505d0955b0799c064fcf349d42067688b84b12",
+      "sha256": "4822623b418ffe9d1ef82e07ecf02692e7a418205cd2e62668a7ef47fc398372",
+      "bytes": 4859,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_site-responsive.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/styles.scss",
+      "archive_path": "annexes/reference-entree-globale.styles.scss.txt",
+      "git_blob_sha": "634020f70ccbe6e9d21ed9f72822d6b04520839c",
+      "sha256": "a7d636178d5c660742daf0d16c6e31447bc612467e057a316d47958476c0fcc8",
+      "bytes": 880,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/styles.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/app-hero.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/app-hero.component.ts",
+      "git_blob_sha": "6470caea35f6b5dce23932bfd05468bffd2a905b",
+      "sha256": "f73b536522311f81039a5979e6667cf09f57c0913ccb20a66e4ca32e2329b6aa",
+      "bytes": 3837,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/app-hero.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/app-hero.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/shared/app-hero.component.scss",
+      "git_blob_sha": "a50540cb095a721186dffe24e55aa5254c66a9aa",
+      "sha256": "178f08af590a8b866b0ab92d9f5a9089d4210fc0e6e11e3fd6c2b8ec682d2e6f",
+      "bytes": 15994,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/app-hero.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/angular.json",
+      "archive_path": "reference-code/site/apps/web/angular.json",
+      "git_blob_sha": "fdb04d79070008fdb318c86f742b20b17ae8ee6c",
+      "sha256": "8ae0cf9df066b156e285d9cf64fde537d57a66683b619b804d8d0a807f1e193c",
+      "bytes": 2809,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/angular.json"
+    },
+    {
+      "repository_path": "site/apps/web/package.json",
+      "archive_path": "reference-code/site/apps/web/package.json",
+      "git_blob_sha": "4c138b0c9b49b3fa1b431ca31794fe3043af7cde",
+      "sha256": "38ae82716aaacb69d4e5fe58205c9aaa0230e38134329c09621c0a9aebef036f",
+      "bytes": 2103,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/package.json"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_functions.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_functions.scss",
+      "git_blob_sha": "86e75fb913a29b67ab2da093fd918deea370bbda",
+      "sha256": "4a1c97799257fef419effa813cb7e8c48359a15709a7a06da976c34ee508470d",
+      "bytes": 333,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_functions.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_contrat.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_contrat.scss",
+      "git_blob_sha": "2863d12a236640b05ac0eb4974cd6b011781e8c3",
+      "sha256": "983c1246da553946d4659620f16070dc4ea3e95dd895f7fd122e8e03200bd6c9",
+      "bytes": 11202,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_contrat.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_contrat-ruptures.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss",
+      "git_blob_sha": "431268e1a4996ffda2c8f292d3ba893f12c12573",
+      "sha256": "af3e7d6d3083d116c8d0401f96feab423fe155f746934f7f6765d581477c81a3",
+      "bytes": 956,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_contrat-ruptures.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_management.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_management.scss",
+      "git_blob_sha": "924a57a130e2916de6afd30394cc7e837fec972f",
+      "sha256": "7da3baf7a640094be66793449683be68ef1cc41cc6c66eb36f97d158cabfd0a0",
+      "bytes": 3411,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_management.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/styles/_overview-theme.scss",
+      "archive_path": "styles-source/site/apps/web/src/styles/_overview-theme.scss",
+      "git_blob_sha": "f2487bb58697e0a18f856669a8bdb4e440709cd7",
+      "sha256": "40173ad22360528f05437f0ce4a1c173645709ece96d27023d82f877e2c5cb82",
+      "bytes": 2024,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/styles/_overview-theme.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/metric-tiles.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/shared/metric-tiles.component.scss",
+      "git_blob_sha": "8f566e32ca6aefce3c371b6e25732e87018e0314",
+      "sha256": "02a9ae126842eeba2306bbed9324be1a77180fabf47348305939d48838c66aa9",
+      "bytes": 11953,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/metric-tiles.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/metric-tiles.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/metric-tiles.component.ts",
+      "git_blob_sha": "4eb1bd93d5cf69b899ccb28bb6e4aa67b948e6cc",
+      "sha256": "dc938cf1acfe3e65caf1505f6c9f02137582cd1709c5d4d17793e2350b68ac82",
+      "bytes": 7079,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/metric-tiles.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/period-navigation.component.scss",
+      "archive_path": "styles-source/site/apps/web/src/app/shared/period-navigation.component.scss",
+      "git_blob_sha": "b40af75bc4995c2ebe4bc17d80a037d62ef1619a",
+      "sha256": "a44fd2b75228a2d19cc054bd1e18e2794af09fa942d7e1f61e3351530abbbdda",
+      "bytes": 3121,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/period-navigation.component.scss"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/period-navigation.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/period-navigation.component.ts",
+      "git_blob_sha": "a20c4fc1e0aedf9a25defab86d1661c386727575",
+      "sha256": "9b31c45ad4fe47f5e7436ef947db9acf304cd08945e2ab69e0e59a547c5ce3a0",
+      "bytes": 6010,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/period-navigation.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/period-lens.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/period-lens.ts",
+      "git_blob_sha": "1868ad961863604b5fed7a1c8aef690d0eb272a5",
+      "sha256": "994fabaf70146ff3d8be97bd390539925b81d4dee85452ea8140efc9cae66faf",
+      "bytes": 5449,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/period-lens.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/amount.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/amount.ts",
+      "git_blob_sha": "783f280e55af0f1a134335c2c12a1d0b3c489c5e",
+      "sha256": "2beee10d58f5832055189d5bf1d79cb3664344a970658ddd70dd57a2f5bcf40f",
+      "bytes": 1197,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/amount.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/range-field.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/range-field.component.ts",
+      "git_blob_sha": "dc295e61cb7ba3d5ac8deec93bc8f1b4749894a4",
+      "sha256": "2819129ec32997c661ca82f31126411003f98590372a3a0570d71c8b4aaaab29",
+      "bytes": 5984,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/range-field.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/parameter-choice.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/parameter-choice.component.ts",
+      "git_blob_sha": "96fca1a821beff78611adae31c0999e21d339dfd",
+      "sha256": "414e0508b02c6eba5d974503deab0ccf68040b0d40739021a098c14953cf33d1",
+      "bytes": 2657,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/parameter-choice.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/shared/modal.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/shared/modal.component.ts",
+      "git_blob_sha": "278d5f7d78394a00f2862358e9240a07cbe8b754",
+      "sha256": "7d3a9ae1816b241a05292c87a76aec3711eee2ba6055a97835113e68da244f78",
+      "bytes": 1434,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/shared/modal.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-lens.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-lens.model.ts",
+      "git_blob_sha": "8c8e8feed4eba935816afb2167e70c7ef66d213c",
+      "sha256": "142f36ca25f2c2c36a33750bee1cdc584da0fc819be8f44a382895507f184410",
+      "bytes": 11803,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-lens.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-expenses.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-expenses.model.ts",
+      "git_blob_sha": "e188dbe11d767709b0769505cd5e402bc53c8f15",
+      "sha256": "84d5855512558f5e11406acc13c194e1892eeff3d8ebcce425875881a1188448",
+      "bytes": 1995,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-expenses.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-flow-pilot.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-flow-pilot.model.ts",
+      "git_blob_sha": "90544a380b132eaff01d5ba784bc2ccff7bf45b4",
+      "sha256": "61f7c8faa3adac4bc89dc573f843d7ee0a0abc88108a4719a7420adb0e649ff2",
+      "bytes": 1175,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-flow-pilot.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-period-reading.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-period-reading.ts",
+      "git_blob_sha": "6cafdb36386598edd6403fd68b58d58409a86aa3",
+      "sha256": "7118f4810061b2f5c6dce8e63b35ce0fa8d0f1332d22c345a3e5637ae24eff08",
+      "bytes": 2048,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-period-reading.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-routine.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-routine.model.ts",
+      "git_blob_sha": "e39326162fdc998da7c8298c0c001206d08c0eee",
+      "sha256": "3eea1d200bae86179fbcb2e45530f5e8519edc754c07d7f2b1d8f3d14787bd4a",
+      "bytes": 5720,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-routine.model.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-period-nav.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-period-nav.component.ts",
+      "git_blob_sha": "10d78d33749bede8a76bbdcd42bff1f08977dd1c",
+      "sha256": "a0f40526df2e774ca81e149a3106f073d26a47ca27f1a646ea2327854a41e0ee",
+      "bytes": 3099,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-period-nav.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-expense-links.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-expense-links.ts",
+      "git_blob_sha": "d327895a74e3a337bbdb5ee0c53112eb5475dcfd",
+      "sha256": "d0df82c88f7731f8ad698640188ff90f7cfc98b100ecc61f8315d72988b5531b",
+      "bytes": 999,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-expense-links.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-context.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-context.component.ts",
+      "git_blob_sha": "32b842b60c1493dfd7e2153fe0abb7c544f121e0",
+      "sha256": "49e9503f8d5f74f46947fe6e142ea449068c5abd860b5031ddffab41b1fb4906",
+      "bytes": 9086,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-context.component.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-project-switch.component.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-project-switch.component.ts",
+      "git_blob_sha": "5e6be998d113f04837ac5111b94bd5f5a4244fc0",
+      "sha256": "30328eb4baff84ace9376a1edc0dda0e45167dd29508512688a01737285400c0",
+      "bytes": 3003,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-project-switch.component.ts"
+    },
+    {
+      "repository_path": "site/apps/local-api/bpm-flow-pilot.mjs",
+      "archive_path": "reference-code/site/apps/local-api/bpm-flow-pilot.mjs",
+      "git_blob_sha": "4657f4b8da7e129fb4d340369cf8b291b535dc3c",
+      "sha256": "b9a8f7ae00f1a430d5fc935d8bb2a5223d8e3c2641aacce354d6bb9e076ba2cd",
+      "bytes": 5611,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-flow-pilot.mjs"
+    },
+    {
+      "repository_path": "site/apps/local-api/bpm-lens.mjs",
+      "archive_path": "reference-code/site/apps/local-api/bpm-lens.mjs",
+      "git_blob_sha": "d2d165c81da92cbbf6ede5f42360d689c4657d49",
+      "sha256": "2e2ed681aa782c90a45ba74361ef4aa566b3f40dcd7e7ad834fd97b77a2e63c3",
+      "bytes": 9655,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/bpm-lens.mjs"
+    },
+    {
+      "repository_path": "site/design/tokens/tokens.forecast.json",
+      "archive_path": "reference-code/site/design/tokens/tokens.forecast.json",
+      "git_blob_sha": "b2eca1d6d8b2d7941a8c9b507ff44dab6a9a6ef2",
+      "sha256": "6b4152023be36ba97187da7a670497dd392d6d8989a1d360e311aa6b7f7bc270",
+      "bytes": 6769,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/design/tokens/tokens.forecast.json"
+    },
+    {
+      "repository_path": "site/design/tokens/tokens.json",
+      "archive_path": "reference-code/site/design/tokens/tokens.json",
+      "git_blob_sha": "da9759e2e418b39c69d7e8b3fd0c2e52476dc5fe",
+      "sha256": "63f72a8297919fa273ed30dc7de8d376c6a8b3c296f544ed1df0be0d98653366",
+      "bytes": 12775,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/design/tokens/tokens.json"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/configuration/design-runtime.service.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/configuration/design-runtime.service.ts",
+      "git_blob_sha": "f556b5a1af285359337c97d7083f13bffcd08fe3",
+      "sha256": "4928b0d70dd3b6fec6a1f0a42723bae0ab1ba83283665b0c37d44f96ff7ac419",
+      "bytes": 5042,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/configuration/design-runtime.service.ts"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-profile.model.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-profile.model.ts",
+      "git_blob_sha": "a117cd8bcedc8aedf74813d93119e5f4996ec031",
+      "sha256": "4d5ec94872fd765ecdd0aceac23160898943efdba77fb811c1b081bae69bc234",
+      "bytes": 1766,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-profile.model.ts"
+    },
+    {
+      "repository_path": "site/apps/local-api/budget-automatic.mjs",
+      "archive_path": "reference-code/site/apps/local-api/budget-automatic.mjs",
+      "git_blob_sha": "d528d7f00182688f1acb5a638ad860cb6bc5c35a",
+      "sha256": "68ac24f06c37208245cf774a79e0bef8b12cfc5a39fef2f497c908a366749f54",
+      "bytes": 2073,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/budget-automatic.mjs"
+    },
+    {
+      "repository_path": "site/apps/local-api/budget-patrimoine.mjs",
+      "archive_path": "reference-code/site/apps/local-api/budget-patrimoine.mjs",
+      "git_blob_sha": "f671157db24dc22c15943e80c03d168f80770158",
+      "sha256": "0cef6bdb47489c26dc3e8b3c2666f0bde32b3374f9be18ee0f58dcb260bea117",
+      "bytes": 10577,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/local-api/budget-patrimoine.mjs"
+    },
+    {
+      "repository_path": "site/apps/web/src/app/bpm/bpm-create.page.ts",
+      "archive_path": "reference-code/site/apps/web/src/app/bpm/bpm-create.page.ts",
+      "git_blob_sha": "9a0c009cdb951f66cd3369741cb17d34497c4ef9",
+      "sha256": "be184dc54d3a8ca10a53faca33e3eab5d53ebf4abde206b132a0303426cc43f0",
+      "bytes": 83449,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/apps/web/src/app/bpm/bpm-create.page.ts"
+    },
+    {
+      "repository_path": "site/configuration/navigation-catalog.json",
+      "archive_path": "reference-code/site/configuration/navigation-catalog.json",
+      "git_blob_sha": "1e72ae4f9d76ed0e2d6043342e44243b6e35c77f",
+      "sha256": "2840b10a7b45de9c2716d6c75198f166275904ed4a9ddae17eb85c3478e73764",
+      "bytes": 76894,
+      "source_url": "https://github.com/rjsconseil/rjs-forecast/blob/54246fad6553f6388d8257711ae7ef58241b3450/site/configuration/navigation-catalog.json"
+    }
+  ],
+  "checks": {
+    "allGitBlobHashesMatch": true,
+    "allIncludedSassModuleImportsResolved": true
+  },
+  "limitations": [
+    "Polices binaires non incluses ; dépendances Fontsource documentées.",
+    "SCSS non compilés et application non exécutée dans cette livraison documentaire.",
+    "Sources historiques : les dépendances métier exclues ne doivent pas être recopiées."
+  ]
+}

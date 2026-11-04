@@ -1,0 +1,41 @@
+/*
+ * Ordre des couches : polices, jetons, socle, coquille, composants partagés,
+ * puis les pages. Une couche ne lit que les jetons et les couches précédentes.
+ */
+@use 'fonts';
+@use 'contrat';
+@use 'tokens';
+@use 'identities';
+@use 'base';
+@use 'shell';
+@use 'components';
+@use 'workspace';
+@use 'satellites';
+@use 'home';
+@use 'pilotage';
+@use 'calendar';
+@use 'budget';
+@use 'budget-home';
+@use 'budget-calendar';
+@use 'budget-calendar-details';
+@use 'calendar-budget-parity';
+@use 'reinitialisation';
+@use 'test-archive';
+@use 'documentation';
+@use 'site-responsive';
+@use 'budget-journeys';
+@use 'budget-unified';
+@use 'budget-cycle';
+@use 'calendar-controls';
+@use 'forms';
+@use 'utilisateurs';
+@use 'formation';
+@use 'interactions';
+@use 'zones';
+
+@use 'management';
+
+@use 'overview-theme';
+@use 'calendar-full-width';
+@use 'surface-language';
+@use 'bpm-presentation';

@@ -1,0 +1,30 @@
+// Entrée globale : couches de la source de référence (rjsconseil/rjs-forecast @ 54246fa) dans leur ordre —
+// polices, contrat, jetons, identités, base, coquille, composants, adaptations, formulaires, interactions,
+// zones (menu et portail), surfaces, présentation BPM — sans les domaines hors périmètre (Formation, calendriers, budget historique).
+// Viennent ensuite la passerelle des composants propres à ce projet et les pages du socle.
+@use 'fonts';
+@use 'contrat';
+@use 'tokens';
+@use 'identities';
+@use 'base';
+@use 'shell';
+@use 'components';
+@use 'workspace';
+@use 'home';
+@use 'site-responsive';
+@use 'forms';
+@use 'utilisateurs';
+@use 'interactions';
+@use 'zones';
+@use 'management';
+@use 'overview-theme';
+@use 'surface-language';
+@use 'bpm-presentation';
+
+@use 'app-tokens';
+@use 'app-base';
+@use 'app-controls';
+@use 'app-layout';
+@use 'app-components';
+@use 'app-shell';
+@use 'socle';

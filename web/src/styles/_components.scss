@@ -1,0 +1,599 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Composants partagés par toutes les pages. */
+
+/* Page et en-tête de page */
+:is(.page, [data-ui-pattern~='page']) {
+  width: var(--part-100);
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: var(--page-padding-top) var(--page-gutter) var(--page-padding-bottom);
+}
+.page-wide {
+  max-width: var(--page-wide-max-width);
+}
+.page-head {
+  display: flex;
+  flex-direction: var(--page-head-direction);
+  align-items: var(--page-head-align);
+  justify-content: space-between;
+  gap: var(--page-head-gap);
+  margin-bottom: var(--page-head-margin);
+}
+.page-head > div {
+  min-width: 0;
+}
+
+/* Typographie */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  margin: 0 0 var(--eyebrow-margin);
+  color: var(--eyebrow-color);
+  font-size: scaled(var(--eyebrow-size));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--eyebrow-spacing);
+  text-transform: uppercase;
+}
+.eyebrow-line {
+  width: var(--dim-18);
+  height: var(--dim-2);
+  background: currentColor;
+}
+.display {
+  max-width: var(--display-max-width);
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--display-size));
+  font-weight: var(--fw-regular);
+  line-height: var(--display-line-height);
+  letter-spacing: var(--display-spacing);
+}
+.display em {
+  color: var(--display-accent);
+  font-weight: var(--fw-regular);
+}
+.lead {
+  max-width: var(--lead-max-width);
+  margin: var(--lead-margin) 0 0;
+  color: var(--lead-ink);
+  font-size: scaled(var(--lead-size));
+  line-height: var(--lead-line-height);
+}
+.muted {
+  color: var(--muted);
+  line-height: var(--lh-relaxed);
+}
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ecart-20);
+  padding-bottom: var(--ecart-24);
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.section-heading .eyebrow {
+  margin-bottom: var(--ecart-8);
+}
+.section-heading h2,
+.section-heading h3 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--section-heading-size));
+  font-weight: var(--fw-medium);
+  letter-spacing: calc(-1 * var(--lettrage-0-04em));
+}
+.section-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--fs-heading));
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-tight);
+}
+.status-heading {
+  font-family: var(--font-serif);
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--lettrage-0-02em);
+}
+
+/* Boutons et liens */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ecart-10);
+  min-height: max(var(--dim-40), var(--btn-height));
+  padding: 0 var(--btn-padding-x);
+  border: var(--trait-1) solid transparent;
+  border-radius: var(--btn-radius);
+  font-size: scaled(var(--btn-font-size));
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-normal);
+  transition:
+    transform var(--ease-fast),
+    background var(--ease-fast),
+    border var(--ease-fast),
+    box-shadow var(--ease-fast);
+}
+/* Trois états nets : au survol le bouton se soulève et fonce, à l’appui il s’enfonce. */
+.btn:active:not(:disabled) {
+  box-shadow: var(--press-shadow);
+}
+.btn-primary {
+  flex: none;
+  color: var(--btn-primary-ink);
+  background: var(--btn-primary-surface);
+  border-color: var(--btn-primary-surface);
+  box-shadow: var(--btn-primary-shadow);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+.btn-primary:active:not(:disabled) {
+  background: var(--btn-primary-active);
+  border-color: var(--btn-primary-active);
+}
+.btn-secondary {
+  color: var(--btn-secondary-ink);
+  background: var(--btn-secondary-surface);
+  border-color: var(--btn-secondary-line);
+  box-shadow: var(--btn-secondary-shadow);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--btn-secondary-hover-line);
+  background: var(--btn-secondary-hover-surface);
+}
+.btn-secondary:active:not(:disabled) {
+  border-color: var(--btn-secondary-active-line);
+  background: var(--btn-secondary-active-surface);
+}
+.btn-plus {
+  font-size: scaled(var(--fs-xl));
+  line-height: var(--lh-none);
+  font-weight: var(--fw-regular);
+}
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-link-color);
+  text-align: left;
+  font-size: scaled(var(--text-link-size));
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+  border-radius: var(--radius-xs);
+  transition:
+    color var(--ease-fast),
+    background-color var(--ease-fast);
+}
+.text-link:hover {
+  color: var(--text-link-hover);
+  text-decoration: underline;
+  text-underline-offset: var(--decalage-0-2em);
+}
+.text-link:active {
+  color: var(--text-link-active);
+}
+.text-link span {
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-regular);
+}
+.danger-link {
+  min-height: var(--dim-36);
+  padding: var(--ecart-8) var(--ecart-12);
+  border: var(--trait-1) solid var(--urgent-surface);
+  border-radius: var(--radius-sm);
+  background: var(--urgent-surface);
+  color: var(--urgent-ink);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+}
+.danger-link:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: var(--decalage-0-2em);
+  box-shadow: 0 var(--ombre-2) 0
+    color-mix(in srgb, var(--urgent-surface) var(--part-70), var(--ink));
+}
+.danger-link:active:not(:disabled) {
+  box-shadow: inset 0 var(--ombre-2) var(--ombre-4)
+    color-mix(in srgb, var(--ink) var(--part-18), transparent);
+}
+
+/* Urgences : une échéance signalée devient une pastille, pleine si elle est dépassée, teintée si
+   elle tombe dans les sept prochains jours (`dueUrgency`). Une carte urgente reçoit en plus un
+   filet coloré sur son bord gauche ; chaque carte compense ce filet dans sa marge intérieure. */
+/* La pastille garde la hauteur de ligne du texte : sa bordure est compensée par une marge
+   négative, pour que signaler une urgence ne décale jamais la carte ou la ligne. */
+.due-date[data-urgency] {
+  display: inline-block;
+  justify-self: start;
+  align-self: start;
+  width: fit-content;
+  max-width: var(--part-100);
+  margin-block: calc(-1 * var(--ecart-1));
+  padding: 0 var(--ecart-8);
+  border: var(--trait-1) solid transparent;
+  border-radius: var(--radius-pill);
+  font-weight: var(--fw-bold);
+}
+.due-date[data-urgency='overdue'] {
+  border-color: var(--urgent-surface);
+  color: var(--urgent-ink);
+  background: var(--urgent-surface);
+}
+.due-date[data-urgency='soon'] {
+  border-color: var(--soon-line);
+  color: var(--soon-ink);
+  background: var(--soon-surface);
+}
+.card[data-urgency] {
+  --card-urgency-mark: var(--soon-mark);
+  border-left-width: var(--urgency-mark-width);
+}
+.card[data-urgency='overdue'] {
+  --card-urgency-mark: var(--urgent-mark);
+}
+.card[data-urgency],
+.card[data-urgency]:is(a, button):not(:disabled):hover {
+  border-left-color: var(--card-urgency-mark);
+}
+
+/* États : points, pastilles, compteurs */
+.status-dot {
+  display: inline-block;
+  width: var(--dim-8);
+  height: var(--dim-8);
+  border-radius: var(--part-50);
+  background: var(--status-neutral);
+}
+.status-dot[data-status='active'],
+.status-dot[data-status='doing'] {
+  background: var(--status-doing);
+}
+.status-dot[data-status='planned'],
+.status-dot[data-status='todo'] {
+  background: var(--status-todo);
+}
+.status-dot[data-status='paused'],
+.status-dot[data-status='blocked'] {
+  background: var(--status-blocked);
+}
+.status-dot[data-status='done'] {
+  background: var(--status-done);
+}
+/* Projet entamé : la moitié du point garde la couleur de l’étape, l’autre celle du travail terminé. */
+.status-dot[data-status='onHold'] {
+  background: linear-gradient(
+    var(--angle-90),
+    var(--status-done) var(--part-50),
+    var(--status-todo) var(--part-50)
+  );
+}
+.status-dot[data-status='toResume'] {
+  background: linear-gradient(
+    var(--angle-90),
+    var(--status-done) var(--part-50),
+    var(--status-blocked) var(--part-50)
+  );
+}
+.status-dot[data-status='toFinish'] {
+  background: linear-gradient(
+    var(--angle-90),
+    var(--status-done) var(--part-50),
+    var(--status-doing) var(--part-50)
+  );
+}
+.status-pill,
+.priority-pill {
+  padding: var(--pill-padding);
+  border-radius: var(--pill-radius);
+  color: var(--pill-ink);
+  background: var(--pill-surface);
+  font-size: scaled(var(--pill-size));
+  font-weight: var(--pill-weight);
+  white-space: nowrap;
+}
+.status-pill[data-status='paused'],
+.status-pill[data-status='blocked'],
+.status-pill[data-status='toResume'] {
+  color: var(--pill-blocked-ink);
+  background: var(--pill-blocked-surface);
+}
+.status-pill[data-status='done'] {
+  color: var(--pill-done-ink);
+  background: var(--pill-done-surface);
+}
+.status-pill[data-status='planned'],
+.status-pill[data-status='onHold'] {
+  color: var(--pill-planned-ink);
+  background: var(--pill-planned-surface);
+}
+/* Projet entamé : la pastille garde la famille de couleur de son étape, avec un liseré « terminé ». */
+.status-pill:is([data-status='onHold'], [data-status='toResume'], [data-status='toFinish']) {
+  box-shadow: inset var(--ombre-4) 0 0 var(--status-done);
+}
+.count-badge {
+  display: grid;
+  place-items: center;
+  min-width: var(--dim-24);
+  height: var(--dim-24);
+  border-radius: var(--radius-xs);
+  color: var(--count-badge-ink);
+  background: var(--count-badge-surface);
+  font-size: scaled(var(--fs-2xs));
+}
+.project-code {
+  color: var(--project-code-ink);
+  font-family: var(--font-mono);
+  font-size: scaled(var(--project-code-size));
+  letter-spacing: var(--lettrage-0-08em);
+}
+
+/* Jauge : un rail et son remplissage. Un contexte règle sa hauteur et ses couleurs
+   en redéfinissant --progress-height, --progress-track, --progress-fill et --progress-overrun. */
+.progress-track {
+  height: var(--progress-height);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--progress-track);
+}
+.progress-track > span {
+  display: block;
+  height: var(--part-100);
+  border-radius: inherit;
+  background: var(--progress-fill);
+  transition: width var(--duree-200) ease;
+}
+.progress-track.is-overrun > span {
+  background: var(--progress-overrun);
+}
+
+/* Carte : surface claire posée sur la page, avec la même bordure, le même survol et le même
+   focus partout. Un usage règle son épaisseur, son rayon et son relief par les variables --card-*. */
+.card {
+  min-width: 0;
+  border: var(--card-border-width) solid var(--card-border);
+  border-radius: var(--card-radius);
+  color: var(--board-card-ink);
+  background: var(--board-card-surface);
+  box-shadow: var(--card-shadow);
+  transition:
+    border-color var(--ease-fast),
+    background-color var(--ease-fast),
+    box-shadow var(--ease-fast),
+    transform var(--ease-fast);
+}
+.card:is(a, button):not(:disabled):hover {
+  border-color: var(--card-border-hover);
+  background: var(--card-hover-surface);
+  box-shadow: var(--card-hover-shadow);
+  transform: translateY(var(--card-lift));
+}
+.card:is(a, button):not(:disabled):active {
+  border-color: var(--card-border-active);
+  background: var(--card-surface-active);
+  box-shadow: var(--card-press-shadow);
+  transform: translateY(0);
+}
+.card:focus-visible {
+  outline: var(--trait-3) solid var(--card-focus);
+  outline-offset: var(--decalage-4);
+  box-shadow: var(--card-focus-halo);
+}
+
+/* Texte de présentation d’une page, sous son titre ou dans une colonne voisine. */
+.page-intro {
+  max-width: none;
+  margin: var(--ecart-28) 0 0;
+  color: var(--muted);
+  font-size: scaled(var(--intro-size));
+  line-height: var(--lh-relaxed);
+}
+
+/* État vide d’une page */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--dim-400);
+  margin-top: var(--ecart-20);
+  padding: var(--ecart-32);
+  border: var(--trait-1) dashed var(--empty-line);
+  border-radius: var(--rayon-10);
+  background: var(--empty-surface);
+  text-align: center;
+}
+.empty-mark {
+  display: grid;
+  place-items: center;
+  width: var(--dim-64);
+  height: var(--dim-64);
+  margin-bottom: var(--ecart-16);
+  border-radius: var(--card-radius);
+  color: var(--empty-mark-ink);
+  background: var(--empty-mark-surface);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--fs-4xl));
+}
+.empty-state h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--fs-3xl));
+  font-weight: var(--fw-medium);
+}
+.empty-state p,
+.empty-state small {
+  max-width: var(--dim-400);
+  color: var(--empty-text);
+  line-height: var(--lh-normal);
+  font-size: scaled(var(--fs-sm));
+}
+.empty-state .btn {
+  margin-top: var(--ecart-10);
+}
+
+/* Fenêtres et formulaires */
+.modal {
+  width: min(var(--dim-640), calc(var(--part-100) - var(--dim-40)));
+  max-height: calc(var(--dim-100vh) - var(--dim-40));
+  overflow: auto;
+  margin: auto;
+  padding: 0;
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--modal-radius);
+  color: var(--raised-ink);
+  background: var(--raised-surface);
+  box-shadow: var(--modal-shadow);
+}
+.modal::backdrop {
+  background: var(--modal-backdrop);
+}
+.modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--ecart-28) var(--ecart-32) var(--ecart-20);
+  border-bottom: var(--trait-1) solid var(--line);
+  background: var(--app-accent-soft);
+}
+.modal-head .eyebrow {
+  margin-bottom: var(--modal-eyebrow-margin);
+}
+.modal-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: scaled(var(--fs-4xl));
+  font-weight: var(--fw-medium);
+  letter-spacing: calc(-1 * var(--lettrage-0-06em));
+}
+.modal-close {
+  flex: none;
+  width: var(--dim-36);
+  height: var(--dim-36);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-md);
+  background: var(--raised-surface);
+  color: var(--modal-close-ink);
+  font-size: scaled(var(--fs-3xl));
+  transition: background-color var(--ease-fast);
+}
+.modal-close:hover {
+  color: var(--ink);
+  background: var(--hover-surface);
+}
+.modal-close:active {
+  background: var(--press-surface);
+}
+.editor-form {
+  display: grid;
+  gap: var(--ecart-16);
+  padding: var(--ecart-28) var(--ecart-32) var(--ecart-32);
+}
+.editor-fields {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-20);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.editor-fields .field-full {
+  grid-column: 1 / -1;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ecart-8);
+  color: var(--field-label);
+  font-size: scaled(var(--field-label-size));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-02em);
+}
+.field input,
+.field select,
+.field textarea {
+  width: var(--part-100);
+  min-height: var(--dim-40);
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--field-radius);
+  outline: 0;
+  color: var(--field-ink);
+  background: var(--field-surface);
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  transition:
+    border-color var(--ease-fast),
+    box-shadow var(--ease-fast);
+}
+.field textarea {
+  resize: vertical;
+}
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: var(--control-line-hover);
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 var(--ombre-4) var(--app-accent-soft);
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--field-placeholder);
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  margin-top: var(--ecart-8);
+  padding-top: var(--ecart-20);
+  border-top: var(--trait-1) solid var(--line);
+}
+.form-spacer {
+  flex: var(--flex-1);
+}
+rjs-data-tools {
+  display: block;
+}
+
+@media (max-width: $rupture-600) {
+  .modal-head,
+  .editor-form {
+    padding: var(--ecart-24);
+  }
+  .form-actions {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: $rupture-560) {
+  .editor-fields {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .editor-fields .field-full {
+    grid-column: auto;
+  }
+}
+
+/* Sélecteurs de date : leur palette suit le thème. */
+input[type='date'],
+input[type='month'] {
+  color-scheme: var(--control-color-scheme);
+}

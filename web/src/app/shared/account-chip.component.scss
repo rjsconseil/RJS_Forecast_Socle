@@ -1,0 +1,62 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+.account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-8);
+  max-width: var(--part-100);
+  padding: var(--ecart-4) var(--ecart-12) var(--ecart-4) var(--ecart-4);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-999);
+  color: var(--ink);
+  background: var(--raised-surface);
+  text-decoration: none;
+}
+.account-chip:hover {
+  border-color: var(--app-accent);
+}
+.account-chip:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.account-chip-mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--dim-32);
+  height: var(--dim-32);
+  border-radius: var(--rayon-999);
+  color: var(--app-on-accent);
+  background: var(--app-accent);
+  font-weight: var(--fw-bold);
+}
+.account-chip-text {
+  display: grid;
+  min-width: 0;
+  line-height: var(--lh-snug);
+}
+.account-chip-text strong,
+.account-chip-text small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-chip-text small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+}
+.account-chip[data-variant='sidebar'] {
+  display: flex;
+  width: var(--part-100);
+  border-radius: var(--rayon-12);
+}
+@media (max-width: $rupture-640) {
+  .account-chip[data-variant='topbar'] .account-chip-text small {
+    display: none;
+  }
+}

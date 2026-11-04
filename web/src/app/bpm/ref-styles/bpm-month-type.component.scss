@@ -1,0 +1,168 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* L'assistant du mois type : un tableau simple à remplir, une prévision immédiate. */
+:host {
+  display: block;
+}
+.bm-month {
+  display: grid;
+  gap: var(--ecart-16);
+  padding: var(--ecart-24);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--card-radius);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.bm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-16);
+}
+.bm-head > div {
+  flex: var(--flex-1);
+  min-width: 0;
+  display: grid;
+  gap: var(--ecart-6);
+  max-width: var(--dim-70ch);
+}
+.bm-month h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-xl));
+}
+.bm-month p {
+  margin: 0;
+  color: var(--muted);
+  line-height: var(--lh-normal);
+}
+.bm-form {
+  display: grid;
+  gap: var(--ecart-20);
+}
+.bm-form fieldset {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--card-radius);
+}
+.bm-form legend {
+  padding: 0 var(--ecart-6);
+  color: var(--ink);
+  font-weight: var(--fw-bold);
+}
+.bm-table {
+  display: grid;
+  gap: var(--ecart-6);
+}
+.bm-row {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1-5)) var(--dim-160) minmax(0, var(--fr-0-8)) repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-8);
+  align-items: center;
+}
+.bm-row-head {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+}
+.bm-row input,
+.bm-row select {
+  width: var(--part-100);
+  min-width: 0;
+  min-height: var(--dim-44);
+}
+.bm-row.is-known input:first-child {
+  color: var(--muted);
+}
+.bm-add {
+  justify-self: start;
+  min-height: var(--dim-40);
+  padding: 0 var(--ecart-12);
+  border: var(--trait-1) dashed var(--line);
+  border-radius: var(--rayon-999);
+  color: var(--app-accent);
+  background: transparent;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.bm-start {
+  display: grid;
+  gap: var(--ecart-6);
+  max-width: var(--dim-240);
+  color: var(--ink);
+  font-weight: var(--fw-semibold);
+}
+.bm-preview {
+  padding: var(--ecart-12) var(--ecart-16);
+  border-radius: var(--rayon-12);
+  background: var(--status-success-surface);
+}
+.bm-preview[data-sign='negative'] {
+  background: var(--status-danger-surface);
+}
+.bm-preview strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.bm-month p.bm-saved {
+  color: var(--status-success);
+  font-weight: var(--fw-semibold);
+}
+
+.bm-row > * { min-width: 0; }
+.bm-row.bm-oneshot {
+  grid-template-columns: minmax(0, var(--fr-2)) var(--dim-160) repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+}
+.bm-format {
+  align-self: center;
+  display: grid;
+  justify-items: center;
+  gap: var(--ecart-8);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+.bm-format .is-active { color: var(--ink); font-weight: var(--fw-bold); }
+.bm-switch {
+  display: inline-flex;
+  align-items: center;
+  width: var(--dim-48);
+  min-height: var(--dim-28);
+  padding: var(--ecart-4);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-999);
+  background: var(--soft);
+  cursor: pointer;
+}
+.bm-switch::before {
+  content: '';
+  width: var(--dim-20);
+  height: var(--dim-20);
+  border-radius: var(--rayon-999);
+  background: var(--muted);
+}
+.bm-switch[aria-checked='true'] { background: var(--app-accent); }
+.bm-switch[aria-checked='true']::before {
+  margin-inline-start: auto;
+  background: var(--app-on-accent);
+}
+.bm-switch:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+@media (max-width: $rupture-760) {
+  .bm-row,
+  .bm-row.bm-income,
+  .bm-row.bm-oneshot {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .bm-row-head { display: none; }
+  .bm-row { padding-block: var(--ecart-8); }
+  .bm-month { padding: var(--ecart-12); gap: var(--ecart-8); }
+  .bm-form fieldset { padding: var(--ecart-8); min-width: 0; }
+}

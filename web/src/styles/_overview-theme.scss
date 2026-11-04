@@ -1,0 +1,50 @@
+/* Un seul thème pour le type Vue d’ensemble, tous modules et deux présentations.
+   Les quatre rôles se règlent dans le pattern overview de Configuration.
+   Refonte du 27 octobre 2026 : la vue d’ensemble se distingue par son repère bleu
+   (pastille, filet de page), comme toute section ; ses surfaces et ses commandes
+   restent celles du site. Les valeurs livrées référencent la seule palette du contrat. */
+.app-shell {
+  --portal-mark-surface: var(--slate-100);
+  --portal-mark-ink: var(--slate-700);
+  --overview-primary: var(--blue-200);
+  --overview-on-primary: var(--navy-900);
+  --overview-accent: var(--blue-700);
+  --overview-soft: color-mix(in srgb, var(--overview-primary) var(--part-35), var(--white));
+  --overview-selected: var(--overview-primary);
+}
+.app-shell.editorial-style {
+  --portal-mark-surface: var(--slate-800);
+  --portal-mark-ink: var(--slate-200);
+}
+.app-shell [data-tone='nav-navy'] {
+  --destination-color: var(--overview-accent);
+  --destination-bright: var(--overview-primary);
+}
+.app-shell[data-section-tone='nav-navy'] {
+  --space-solid: var(--overview-accent);
+  --space-bright: var(--overview-primary);
+}
+.app-shell[data-page-tone='nav-navy'],
+.app-shell [data-page-tone='nav-navy'] {
+  --page-marker: var(--overview-accent);
+}
+.app-shell.editorial-style[data-page-tone='nav-navy'],
+.app-shell.editorial-style [data-page-tone='nav-navy'] {
+  --page-marker: var(--overview-primary);
+}
+.app-shell[data-overview='true'] .plan-overview-grid .plan-result {
+  border-inline-start-color: var(--overview-accent);
+}
+.app-shell.editorial-style[data-overview='true'] .plan-overview-grid .plan-result {
+  border-inline-start-color: var(--overview-primary);
+}
+
+/* Les zones sont neutres ; les sections gardent la couleur de leur destination dans leur pastille. */
+.app-shell .plan-portal [data-tone] .plan-mark,
+.app-shell .plan-zone-home .plan-mark,
+.app-shell .zone-mark {
+  color: var(--portal-mark-ink);
+  background: var(--portal-mark-surface);
+  border: 0;
+  box-shadow: none;
+}

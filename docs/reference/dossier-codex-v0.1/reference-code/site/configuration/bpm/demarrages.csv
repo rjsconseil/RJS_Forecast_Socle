@@ -1,0 +1,11 @@
+profil,nom,objectif,beneficiaire,actif,allocation,valeur,dettes
+famille,Famille Martin,Financer la vie du foyer et préparer les projets des enfants,Famille Martin,Livret de précaution,precaution,12000,0
+famille,Famille Martin,Financer la vie du foyer et préparer les projets des enfants,Famille Martin,Épargne pour les études,etudes,18000,0
+famille,Famille Martin,Financer la vie du foyer et préparer les projets des enfants,Famille Martin,Épargne des projets familiaux,projets,20000,0
+celibataire,Julien Martin — père seul,Équilibrer un revenu et préparer les projets de Julien et de ses enfants,Julien Martin,Livret de précaution,precaution,6000,0
+celibataire,Julien Martin — père seul,Équilibrer un revenu et préparer les projets de Julien et de ses enfants,Julien Martin,Épargne logement,logement,12000,0
+celibataire,Julien Martin — père seul,Équilibrer un revenu et préparer les projets de Julien et de ses enfants,Julien Martin,Épargne pour les vacances avec les enfants,voyages,1500,0
+association,Les devoirs du quartier — Claire Martin,Aider les enfants du quartier et financer le matériel pédagogique,Association Les devoirs du quartier,Fonds de réserve associatif,reserve,3000,0
+association,Les devoirs du quartier — Claire Martin,Aider les enfants du quartier et financer le matériel pédagogique,Association Les devoirs du quartier,Épargne pour le matériel pédagogique,projets,1500,0
+entreprise,Sophie Martin — graphiste à son compte,Piloter l’activité et constituer sa trésorerie,Sophie Martin,Compte professionnel,tresorerie,4500,0
+entreprise,Sophie Martin — graphiste à son compte,Piloter l’activité et constituer sa trésorerie,Sophie Martin,Ordinateur et matériel,investissement,2200,0

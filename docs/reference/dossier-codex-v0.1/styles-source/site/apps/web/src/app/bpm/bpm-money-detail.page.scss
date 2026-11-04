@@ -1,0 +1,242 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* La page dédiée : un retour visible, puis le détail d'une seule ligne du parcours. */
+.bmd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  justify-self: start;
+  min-height: var(--dim-44);
+  padding: 0 var(--ecart-16);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--rayon-999);
+  color: var(--ink);
+  background: var(--raised-surface);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+.bmd-back:hover {
+  background: var(--app-accent-soft);
+}
+.bmd-back:focus-visible,
+.bmd-precise-open:focus-visible,
+.bmd-primary:focus-visible {
+  outline: var(--trait-3) solid var(--app-accent);
+  outline-offset: var(--decalage-2);
+}
+.bmd-note-banner {
+  margin: 0;
+  padding: var(--ecart-12) var(--ecart-16);
+  border-inline-start: var(--trait-4) solid var(--app-accent);
+  border-radius: var(--rayon-12);
+  background: var(--soft);
+}
+.bmd-message {
+  margin: 0;
+  padding: var(--ecart-10) var(--ecart-14);
+  border-radius: var(--rayon-12);
+  background: var(--status-success-surface);
+}
+.bmd-message[data-state='danger'] {
+  background: var(--status-danger-surface);
+}
+.bmd-message[data-state='warning'] {
+  background: var(--status-warning-surface);
+}
+.bm-statement h2 {
+  margin: 0;
+  font-size: scaled(var(--fs-lg));
+}
+.bm-statement h3 {
+  margin: var(--ecart-8) 0 0;
+  font-size: scaled(var(--fs-md));
+}
+.bmd-rest,
+.bmd-sums {
+  width: var(--part-100);
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.bmd-rest :is(th, td),
+.bmd-sums :is(th, td) {
+  padding: var(--ecart-8) var(--ecart-4);
+  border-block-end: var(--trait-1) solid var(--card-border);
+  text-align: start;
+  font-weight: var(--fw-regular);
+}
+.bmd-rest td,
+.bmd-sums td {
+  font-family: var(--font-label);
+  text-align: end;
+  white-space: nowrap;
+}
+.bmd-sums thead th {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+}
+.bmd-rest tr.is-total :is(th, td) {
+  border-block-start: var(--trait-2) solid var(--ink);
+  font-weight: var(--fw-bold);
+}
+.bmd-rest-lines {
+  display: grid;
+  gap: var(--ecart-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bmd-rest-lines li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--ecart-8);
+  padding: var(--ecart-8) var(--ecart-4);
+  border-block-end: var(--trait-1) solid var(--card-border);
+  font-variant-numeric: tabular-nums;
+}
+.bmd-rest-lines a {
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+.bmd-entries {
+  display: grid;
+  gap: var(--ecart-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bmd-entry {
+  display: grid;
+  gap: var(--ecart-6);
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--rayon-12);
+  background: var(--raised-surface);
+}
+.bmd-entry.is-editing {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 var(--ombre-12) color-mix(in srgb, var(--app-accent) var(--part-18), transparent);
+}
+.bmd-entry-main {
+  display: grid;
+  grid-template-columns: var(--dim-64) minmax(0, var(--fr-1)) auto auto;
+  align-items: center;
+  gap: var(--ecart-10);
+}
+.bmd-entry-main time {
+  color: var(--muted);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-xs));
+}
+.bmd-entry-amount {
+  font-family: var(--font-label);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bmd-entry-note {
+  margin: 0;
+  padding-inline-start: calc(var(--dim-64) + var(--ecart-10));
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+}
+.bmd-entry-note span {
+  font-weight: var(--fw-bold);
+}
+.bmd-precise-open,
+.bmd-actions button,
+.bmd-primary {
+  min-height: var(--dim-36);
+  padding: 0 var(--ecart-14);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--btn-radius, var(--rayon-999));
+  color: var(--ink);
+  background: var(--raised-surface);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.bmd-primary {
+  border-color: var(--app-accent);
+  color: var(--app-on-accent);
+  background: var(--app-accent);
+}
+.bmd-primary:disabled {
+  opacity: var(--opacite-0-6);
+  cursor: progress;
+}
+.bmd-precise,
+.bmd-add {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-200)), var(--fr-1)));
+  align-items: end;
+  gap: var(--ecart-10) var(--ecart-12);
+}
+.bmd-precise {
+  padding: var(--ecart-12);
+  border-radius: var(--rayon-12);
+  background: var(--soft);
+}
+.bmd-precise > :is(.bmd-precise-title, .bpm-help, .bmd-actions) {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.bmd-precise-title {
+  font-weight: var(--fw-bold);
+}
+.bmd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+}
+.bmd-field {
+  display: grid;
+  gap: var(--ecart-4);
+  min-width: 0;
+}
+.bmd-field span {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+}
+.bmd-field :is(input, select) {
+  min-height: var(--dim-40);
+  min-width: 0;
+}
+@media (max-width: $rupture-640) {
+  .bmd-entry-main {
+    grid-template-columns: minmax(0, var(--fr-1)) auto;
+  }
+  .bmd-entry-main time {
+    grid-column: 1 / -1;
+  }
+  .bmd-entry-note {
+    padding-inline-start: 0;
+  }
+}
+
+/* Une échéance arrivée : signalée et pointable sur place. */
+.bmd-rest-lines li[data-due] {
+  background: var(--status-warning-surface);
+  border-radius: var(--rayon-8);
+}
+.bmd-late {
+  margin-inline-start: var(--ecart-6);
+  color: var(--status-warning);
+  font-style: normal;
+  font-weight: var(--fw-bold);
+}
+.bmd-pending-end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-8);
+}
+
+.bmd-check-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-200)), var(--fr-1)));
+  gap: var(--ecart-12);
+}

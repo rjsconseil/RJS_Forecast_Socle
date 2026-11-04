@@ -1,0 +1,971 @@
+@use 'contrat-ruptures' as *;
+/*
+ * Jetons de conception : la seule source des valeurs visuelles.
+ *
+ * Les composants lisent ces variables ; un thème ne fait que les redéfinir.
+ * Les noms décrivent un rôle (surface, texte, bordure, écart…), jamais une page.
+ * Le thème classique donne les valeurs par défaut ; `.app-shell.editorial-style`
+ * porte le thème sombre éditorial, proposé dans « Style de l’interface ». Le thème classique
+ * est celui affiché par défaut.
+ * Aucune valeur de couleur, de taille ou d’écart propre à un thème ne doit
+ * apparaître ailleurs que dans ce fichier.
+ */
+:root,
+.app-shell {
+  /* Identités communes aux deux thèmes ; les états rouge/ambre/vert restent sémantiques. */
+  --identity-core: var(--blue-800);
+  --identity-core-light: var(--blue-200);
+  --identity-budget: var(--indigo-700);
+  --identity-budget-light: var(--indigo-200);
+  --identity-formation: var(--teal-700);
+  --identity-formation-light: var(--teal-200);
+  /* Formation admin, module de niveau 1 : une famille propre, distincte de la Formation de Budget. */
+  --identity-formation-site: var(--cyan-700);
+  --identity-formation-site-light: var(--cyan-200);
+  --identity-users: var(--violet-700);
+  --identity-users-light: var(--violet-200);
+  --identity-tests: var(--teal-700);
+  --identity-tests-light: var(--teal-200);
+  --identity-docs: var(--blue-700);
+  --identity-docs-light: var(--blue-200);
+  --identity-admin: var(--violet-800);
+  --identity-admin-light: var(--violet-200);
+  --identity-configuration: var(--mint-800);
+  --identity-configuration-light: var(--mint-200);
+  --control-height: var(--dim-44);
+  --control-compact-height: var(--dim-36);
+  --interaction-radius: var(--rayon-8);
+  /* Charte application : l'accent suit l'espace ; vert, ambre, rouge gardent leur sens. */
+  --app-accent: var(--brand-solid);
+  --app-accent-hover: var(--brand-hover);
+  --app-on-accent: var(--white);
+  --app-accent-soft: var(--brand-soft);
+  --app-accent-line: var(--brand-line);
+  --app-canvas: var(--slate-100);
+  --app-focus-ring: var(--indigo-500);
+  /* Relief étagé et doux : un contact net, puis une ombre large et diffuse. */
+  --app-panel-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-5), transparent);
+  /* États et étapes communs : aucun vocabulaire de couleur propre à un module. */
+  --neutral-action-hover: var(--slate-800);
+  --step-surface: var(--slate-900);
+  --step-ink: var(--slate-100);
+  --step-hover: var(--slate-800);
+  --status-success: var(--green-800);
+  --status-success-hover: var(--green-900);
+  --status-success-surface: var(--green-50);
+  --status-warning: var(--amber-850);
+  --status-warning-hover: var(--amber-900);
+  --status-warning-surface: var(--amber-50);
+  --status-danger: var(--red-800);
+  --status-danger-hover: var(--red-900);
+  --status-danger-surface: var(--red-50);
+  /* Polices */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: var(--font-sans);
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-brand: var(--font-sans);
+
+  /* Échelle typographique standard : dix tailles, quatre graisses, cinq interlignages.
+     Toute taille de caractères passe par scaled(var(--fs-…)) ; aucune valeur libre. */
+  --fs-2xs: var(--texte-11);
+  --fs-xs: var(--texte-12);
+  --fs-sm: var(--texte-14);
+  --fs-md: var(--texte-16);
+  --fs-lg: var(--texte-18);
+  --fs-xl: var(--texte-20);
+  --fs-2xl: var(--texte-24);
+  --fs-3xl: var(--texte-32);
+  --fs-4xl: var(--texte-36);
+  --fs-5xl: var(--texte-44);
+  /* Titres fluides : ils suivent la largeur de l’écran entre deux paliers de l’échelle. */
+  --fs-heading: clamp(var(--texte-24), var(--texte-2vw), var(--texte-32));
+  --fs-hero: clamp(var(--texte-28), var(--texte-2-5vw), var(--texte-36));
+  --fs-hero-compact: clamp(var(--texte-32), var(--texte-7vw), var(--texte-36));
+  --fs-statement: clamp(var(--texte-28), var(--texte-2-5vw), var(--texte-36));
+  --fw-regular: var(--graisse-400);
+  --fw-medium: var(--graisse-500);
+  --fw-semibold: var(--graisse-600);
+  --fw-bold: var(--graisse-700);
+  --lh-none: var(--interligne-1);
+  --lh-tight: var(--interligne-1-1);
+  --lh-snug: var(--interligne-1-3);
+  --lh-normal: var(--interligne-1-5);
+  --lh-relaxed: var(--interligne-1-6);
+  --font-symbol: Arial, sans-serif;
+
+  /* Échelle du texte : toutes les tailles de caractères, et les dimensions calées sur un texte,
+     sont multipliées par ce facteur (fonction scaled() de _functions.scss). */
+  --text-scale: var(--facteur-1-1);
+
+  /* Mise en page : marge latérale de la page et écarts standard entre blocs */
+
+  --intro-panel-gap: clamp(var(--ecart-24), var(--ecart-4vw), var(--ecart-64));
+  --layout-gap: clamp(var(--ecart-24), var(--ecart-2vw), var(--ecart-40));
+  --column-gap: clamp(var(--ecart-28), var(--ecart-4vw), var(--ecart-80));
+  --page-padding-top: var(--ecart-24);
+  --page-padding-bottom: var(--ecart-80);
+  --landing-padding-bottom: var(--ecart-96);
+  /* --page-max-width : valeur livrée par le contrat (pattern page), cadre de lecture centré. */
+  --page-wide-max-width: none;
+  --page-head-direction: row;
+  --page-head-align: flex-end;
+  --page-head-gap: var(--ecart-28);
+  --page-head-margin: var(--ecart-24);
+  --intro-size: clamp(var(--dim-16), var(--dim-10vw), var(--dim-20));
+
+  /* Rayons et mouvements */
+  --radius-xs: var(--rayon-4);
+  --radius-sm: var(--rayon-6);
+  --radius-md: var(--rayon-8);
+  --radius-lg: var(--rayon-12);
+  --radius-xl: var(--rayon-16);
+  --radius-pill: var(--rayon-999);
+  --ease-fast: var(--duree-160) ease;
+
+  /* Couleurs de base */
+  --ink: var(--slate-900);
+  --muted: var(--slate-600);
+  --line: var(--slate-200);
+  --green: var(--green-700);
+  --on-accent: var(--app-on-accent);
+  --soft: var(--slate-50);
+  --page-surface: var(--app-canvas);
+  --raised-surface: var(--white);
+  --raised-ink: var(--ink);
+  --field-surface: var(--white);
+  --state-surface: var(--slate-200);
+  --rationale-line: var(--blue-700);
+  --focus-ring: var(--app-focus-ring);
+  --danger: var(--red-800);
+  --danger-on: var(--neutral-50);
+  --issue-line: var(--red-800);
+
+  /* Urgences, en deux niveaux de relief. Une échéance dépassée devient une pastille pleine rouge,
+     une échéance sous sept jours une pastille ambre teintée et cernée ; la carte concernée reçoit
+     un filet de la même famille sur son bord gauche. Ces pastilles portent leur propre fond :
+     elles gardent leur contraste (≥ 4,5:1) sur toutes les surfaces des deux thèmes. */
+  --urgent-surface: var(--red-700);
+  --urgent-ink: var(--neutral-50);
+  --urgent-mark: var(--red-700);
+  --soon-surface: var(--amber-100);
+  --soon-ink: var(--amber-800);
+  --soon-line: var(--amber-700);
+  --soon-mark: var(--amber-600);
+  --urgency-mark-width: var(--dim-4);
+  --control-color-scheme: normal;
+
+  /* Contours et états d’interaction. Trois niveaux de trait : séparateur (--line, environ 1,5:1
+     sur la page), contour d’un bloc principal (--outline, environ 2:1) et limite d’une commande
+     (--control-line, au moins 3:1). Les états se distinguent nettement : repos, survol
+     (--hover-surface), appui (--press-surface, --press-shadow) et sélection (--selected-*). */
+  --outline: var(--slate-200);
+  --control-line: var(--slate-300);
+  --control-line-hover: var(--app-accent);
+  --hover-surface: var(--slate-50);
+  --press-surface: var(--slate-100);
+  --press-shadow: none;
+  --state-surface-hover: var(--slate-200);
+  --state-surface-press: var(--slate-300);
+  --selected-surface: var(--app-accent);
+  --selected-ink: var(--app-on-accent);
+  --nav-hover-surface: var(--slate-100);
+  --nav-press-surface: var(--slate-200);
+  --nav-hover-ink: var(--slate-900);
+
+  /* Cartes : surfaces distinctes du canvas, bordures sobres, accent et relief au survol. */
+  --board-column-surface: var(--slate-150);
+  --board-card-surface: var(--white);
+  --board-card-ink: var(--slate-950);
+  --board-card-muted: var(--slate-600);
+  --board-card-line: var(--slate-300);
+  --card-border: var(--slate-200);
+  --card-border-hover: var(--slate-300);
+  --card-border-active: var(--brand-solid);
+  --card-surface-active: var(--brand-soft);
+  --card-focus: var(--app-focus-ring);
+  --card-hover-surface: var(--slate-50);
+  --card-glow: 0 0 0 var(--trait-1) var(--slate-300), 0 var(--ombre-4) var(--ombre-12) calc(-1 * var(--ombre-2)) color-mix(in srgb, var(--slate-950) var(--part-8), transparent);
+  --card-glow-strong: 0 0 0 var(--trait-1) var(--brand-line), 0 var(--ombre-8) var(--ombre-16) calc(-1 * var(--ombre-4)) color-mix(in srgb, var(--slate-950) var(--part-10), transparent);
+  --card-border-width: var(--trait-1);
+  --card-radius: var(--radius-lg);
+  --card-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-5), transparent);
+  --card-hover-shadow: var(--card-glow);
+  --card-lift: 0;
+  --card-press-shadow: inset 0 0 0 var(--trait-1) var(--slate-300);
+  --card-control-line: var(--slate-500);
+  --card-focus-halo: 0 0 0 var(--ombre-6)
+    color-mix(in srgb, var(--app-accent) var(--part-22), transparent);
+  --card-pill-surface: var(--slate-100);
+  --card-track: var(--slate-200);
+  --card-divider: var(--slate-150);
+  --card-detail-surface: var(--slate-50);
+  --card-gauge-track: var(--slate-200);
+  --card-gauge-fill: var(--app-accent);
+  --card-gauge-overrun: var(--red-800);
+
+  /* Panneaux dépliables (Pilotage) et jauges de temps */
+  --panel-line: var(--slate-700);
+  --panel-focus: var(--app-focus-ring);
+  --panel-glow:
+    0 0 0 var(--ombre-2) color-mix(in srgb, var(--blue-700) var(--part-55), transparent),
+    0 0 var(--ombre-24) color-mix(in srgb, var(--blue-500) var(--part-36), transparent);
+  --panel-action-hover: color-mix(in srgb, var(--blue-400) var(--part-26), transparent);
+  --panel-action-press: color-mix(in srgb, var(--blue-400) var(--part-42), transparent);
+  --gauge-track: color-mix(in srgb, var(--slate-950) var(--part-22), transparent);
+  --gauge-fill: var(--app-accent);
+  --gauge-overrun: var(--red-800);
+
+  /* États */
+  --status-todo: var(--slate-500);
+  --status-doing: var(--indigo-600);
+  --status-blocked: var(--amber-400);
+  --status-done: var(--green-700);
+  --status-neutral: var(--slate-400);
+  --pill-padding: var(--ecart-6) var(--ecart-10);
+  --pill-radius: var(--rayon-999);
+  --pill-ink: var(--indigo-800);
+  --pill-surface: var(--indigo-50);
+  --pill-size: var(--fs-xs);
+  --pill-weight: var(--fw-semibold);
+  --pill-blocked-ink: var(--amber-700);
+  --pill-blocked-surface: var(--amber-50);
+  --pill-done-ink: var(--green-800);
+  --pill-done-surface: var(--green-50);
+  --pill-planned-ink: var(--slate-600);
+  --pill-planned-surface: var(--slate-100);
+  --count-badge-ink: var(--slate-700);
+  --count-badge-surface: var(--slate-100);
+  --project-code-ink: var(--slate-600);
+  --project-code-size: var(--fs-2xs);
+  --progress-height: var(--dim-6);
+  --progress-track: var(--slate-200);
+  --progress-fill: var(--app-accent);
+  --progress-overrun: var(--gauge-overrun);
+
+  /* Coquille : barre latérale, barre du haut, pied de page */
+  --app-min-height: var(--dim-100vh);
+  --app-overflow: visible;
+  --app-surface: var(--app-canvas);
+  --main-min-height: auto;
+  --main-surface: var(--app-canvas);
+  --sidebar-width: var(--dim-280);
+  --sidebar-height: var(--dim-100vh);
+  --sidebar-padding: var(--ecart-24) var(--ecart-16) var(--ecart-20);
+  --sidebar-border: var(--trait-1) solid var(--slate-200);
+  --sidebar-compact-padding: var(--ecart-14) var(--ecart-20);
+  --sidebar-compact-border: none;
+  --sidebar-surface: var(--white);
+  --sidebar-ink: var(--slate-800);
+  --sidebar-muted: var(--slate-600);
+  --sidebar-faint: var(--slate-500);
+  --sidebar-line: var(--slate-200);
+  --sidebar-accent: var(--brand-solid);
+  --brand-gap: var(--ecart-14);
+  --brand-padding: 0 var(--ecart-10) var(--ecart-28);
+  --brand-compact-display: none;
+  --brand-mark-size: var(--dim-44);
+  --brand-mark-border: 0;
+  --brand-mark-radius: var(--rayon-10);
+  --brand-mark-font-size: var(--fs-2xl);
+  --brand-mark-ink: var(--white);
+  --brand-mark-surface: var(--brand-solid);
+  --brand-accent: var(--indigo-200);
+  --brand-name-ink: currentColor;
+  --brand-name-size: var(--fs-lg);
+  --brand-name-spacing: calc(-1 * var(--lettrage-0-04em));
+  --brand-strong-ink: var(--slate-900);
+  --brand-strong-weight: var(--fw-semibold);
+  --brand-small-margin: var(--ecart-6);
+  --brand-small-ink: var(--slate-500);
+  --brand-small-size: var(--fs-2xs);
+  --brand-small-spacing: var(--lettrage-0-06em);
+  --nav-gap: var(--ecart-4);
+  --nav-label-margin: var(--ecart-12);
+  --nav-label-ink: var(--slate-500);
+  --nav-label-size: var(--fs-2xs);
+  --nav-label-spacing: var(--lettrage-0-06em);
+  --nav-item-height: var(--dim-40);
+  --nav-item-padding-x: var(--ecart-14);
+  --nav-item-radius: var(--rayon-8);
+  --nav-font-size: var(--fs-sm);
+  --nav-active-ink: var(--brand-solid);
+  --nav-marker-display: block;
+  --nav-icon-width: var(--dim-20);
+  --nav-icon-size: var(--fs-xl);
+  --nav-icon-ink: currentColor;
+  --nav-count-ink: currentColor;
+  --nav-compact-gap: var(--ecart-6);
+  --nav-compact-height: var(--dim-36);
+  --nav-compact-padding-x: var(--ecart-12);
+  --nav-compact-font-size: var(--fs-xs);
+  --nav-compact-icon-width: var(--dim-14);
+  --nav-compact-icon-size: var(--fs-sm);
+  --nav-tiny-display: none;
+  --nav-tiny-overflow: visible;
+  --nav-tiny-padding-x: var(--ecart-8);
+  --nav-tiny-font-size: var(--fs-2xs);
+  --sidebar-data-padding-bottom: var(--ecart-20);
+  --sidebar-data-label-margin: var(--ecart-12);
+  --sidebar-data-height: var(--dim-40);
+  --sidebar-data-ink: var(--slate-700);
+  --sidebar-data-hover: var(--slate-900);
+  --sidebar-data-compact-padding: var(--ecart-6) 0 0;
+  --sidebar-data-compact-padding-x: var(--ecart-10);
+  --picker-gap: var(--ecart-8);
+  --picker-ink: var(--slate-700);
+  --picker-size: var(--fs-2xs);
+  --picker-line: var(--slate-300);
+  --picker-surface: var(--white);
+  --picker-select-ink: var(--slate-900);
+  --picker-compact-gap: var(--ecart-8);
+  --picker-compact-margin: var(--ecart-6) 0 0;
+  --sidebar-bottom-padding-x: var(--ecart-14);
+  --sidebar-bottom-strong-size: var(--fs-xs);
+  --sidebar-bottom-small-size: var(--fs-2xs);
+  --local-indicator: var(--green-600);
+  --local-indicator-ring: var(--green-100);
+  --canvas-editorial: var(--slate-950);
+  --topbar-height: var(--dim-64);
+  --topbar-surface: color-mix(in srgb, var(--white) var(--part-94), transparent);
+  --topbar-blur: blur(var(--ombre-12));
+  --topbar-context-gap: var(--ecart-12);
+  --topbar-context-ink: var(--slate-500);
+  --topbar-context-size: var(--fs-2xs);
+  --topbar-context-spacing: var(--lettrage-0-04em);
+  --topbar-square-display: block;
+  --topbar-square: var(--app-accent);
+  --topbar-separator: var(--slate-300);
+  --topbar-actions-gap: var(--ecart-24);
+  --topbar-home-ink: var(--app-accent);
+  --topbar-home-size: var(--fs-sm);
+  --topbar-home-spacing: normal;
+  --topbar-home-transform: none;
+  --save-status-ink: var(--slate-500);
+  --save-status-size: var(--fs-xs);
+  --error-ink: var(--red-850);
+  --error-surface: var(--red-50);
+  --footer-ink: var(--slate-600);
+  --skip-ink: currentColor;
+  --skip-surface: var(--white);
+  --mobile-brand-ink: var(--slate-900);
+  --mobile-brand-font: var(--font-brand);
+  --mobile-brand-small-ink: currentColor;
+
+  /* Typographie de page */
+  --eyebrow-color: var(--slate-500);
+  --eyebrow-size: var(--fs-2xs);
+  --eyebrow-spacing: var(--lettrage-0-06em);
+  --eyebrow-margin: var(--ecart-8);
+  --display-size: clamp(var(--texte-28), var(--texte-2-5vw), var(--texte-36));
+  --display-line-height: var(--lh-tight);
+  --display-spacing: calc(-1 * var(--lettrage-0-02em));
+  --display-max-width: var(--dim-900);
+  --display-accent: var(--app-accent);
+  --lead-max-width: var(--dim-640);
+  --lead-margin: var(--ecart-10);
+  --lead-ink: var(--slate-600);
+  --lead-size: var(--fs-md);
+  --lead-line-height: var(--lh-normal);
+  --section-heading-size: var(--fs-xl);
+  --text-link-color: var(--app-accent);
+  --text-link-hover: var(--app-accent-hover);
+  --text-link-active: var(--indigo-900);
+  --text-link-size: var(--fs-sm);
+
+  /* Boutons */
+  --btn-height: var(--dim-40);
+  --btn-padding-x: var(--ecart-16);
+  --btn-radius: var(--rayon-8);
+  --btn-font-size: var(--fs-sm);
+  --btn-primary-ink: var(--white);
+  --btn-primary-surface: var(--brand-solid);
+  --btn-primary-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-12), transparent);
+  --btn-primary-hover: var(--brand-hover);
+  --btn-primary-active: var(--indigo-900);
+  --btn-secondary-ink: var(--slate-800);
+  --btn-secondary-surface: var(--white);
+  --btn-secondary-line: var(--slate-300);
+  --btn-secondary-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-5), transparent);
+  --btn-secondary-hover-line: var(--slate-400);
+  --btn-secondary-hover-surface: var(--slate-50);
+  --btn-secondary-active-line: var(--slate-400);
+  --btn-secondary-active-surface: var(--slate-100);
+
+  /* États vides, fenêtres, formulaires */
+  --empty-line: var(--slate-300);
+  --empty-surface: var(--white);
+  --empty-text: var(--slate-600);
+  --empty-mark-ink: var(--app-accent);
+  --empty-mark-surface: var(--brand-soft);
+  --modal-radius: var(--rayon-12);
+  --modal-shadow: 0 var(--ombre-24) var(--ombre-80)
+    color-mix(in srgb, var(--neutral-950) var(--part-20), transparent);
+  --modal-backdrop: color-mix(in srgb, var(--slate-950) var(--part-45), transparent);
+  --tooltip-shadow: 0 var(--ombre-8) var(--ombre-24)
+    color-mix(in srgb, var(--neutral-950) var(--part-14), transparent);
+  --halo-shadow: 0 var(--ombre-12) var(--ombre-24)
+    color-mix(in srgb, var(--slate-950) var(--part-22), transparent);
+  --modal-close-ink: var(--slate-700);
+  --modal-eyebrow-margin: var(--ecart-6);
+  --field-label: var(--slate-700);
+  --field-label-size: var(--fs-sm);
+  --field-line: var(--slate-300);
+  --field-radius: var(--rayon-8);
+  --field-ink: var(--ink);
+  --field-focus: var(--app-accent);
+  --field-focus-ring: color-mix(in srgb, var(--indigo-500) var(--part-22), transparent);
+  --field-placeholder: var(--slate-400);
+  --select-label: var(--slate-700);
+  --select-line: var(--slate-300);
+  --select-radius: var(--rayon-8);
+  --select-ink: var(--ink);
+  --select-surface: var(--white);
+
+  /* Bandeau de chiffres */
+  --band-line: var(--slate-200);
+  --band-radius: var(--rayon-12);
+  --band-ink: var(--ink);
+  --band-divider: var(--slate-150);
+  --band-eyebrow-size: var(--fs-2xs);
+  --band-muted: var(--slate-500);
+  --band-accent: var(--app-accent);
+  --band-track: var(--slate-200);
+
+  /* Tableau et cartes de tâche */
+  --column-line: var(--slate-200);
+  --column-radius: var(--rayon-8);
+  --column-head-surface: var(--slate-50);
+  --column-head-line: var(--slate-200);
+  --column-head-ink: currentColor;
+  --board-empty-ink: var(--slate-600);
+  --task-card-line: var(--slate-200);
+  --task-card-radius: var(--rayon-8);
+  --task-card-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-5), transparent);
+  --task-card-code: var(--slate-600);
+  --task-link-hover: var(--app-accent);
+  --follow-up-line: var(--slate-150);
+  --follow-up-ink: var(--slate-600);
+  --follow-up-size: var(--fs-md);
+  --follow-up-strong: var(--slate-950);
+  --task-fact-ink: currentColor;
+  --task-fact-size: var(--dim-1em);
+  --task-planned-ink: var(--slate-600);
+  --task-planned-size: var(--fs-2xs);
+  --status-change-line: var(--slate-150);
+  --status-change-ink: var(--slate-600);
+  --status-change-select-ink: var(--slate-700);
+  --status-change-select-surface: var(--white);
+
+  /* Fiche projet */
+  --detail-shell-min-height: 0;
+  --detail-shell-radius: var(--radius-lg);
+  --detail-padding: clamp(var(--ecart-20), var(--ecart-2vw), var(--ecart-32));
+  --detail-head-justify: space-between;
+  --detail-head-gap: var(--ecart-12);
+  --detail-title-max-width: var(--dim-720);
+  --detail-title-margin: var(--ecart-10);
+  --detail-title-size: clamp(var(--texte-28), var(--texte-2-5vw), var(--texte-36));
+  --detail-title-spacing: calc(-1 * var(--lettrage-0-06em));
+  --detail-summary-max-width: var(--dim-680);
+  --detail-summary-ink: var(--slate-600);
+  --detail-summary-size: var(--fs-md);
+  --detail-summary-line-height: var(--lh-relaxed);
+  --detail-summary-white-space: normal;
+  --detail-meta-columns: repeat(var(--colonnes-4), var(--fr-1));
+  --detail-meta-gap: var(--ecart-14);
+  --detail-meta-margin: var(--ecart-24);
+  --detail-meta-padding: var(--ecart-20);
+  --detail-label-ink: var(--slate-600);
+  --detail-value-ink: currentColor;
+  --detail-fact-size: var(--fs-sm);
+  --detail-progress-label-margin: var(--ecart-12);
+  --detail-progress-ink: currentColor;
+  --detail-progress-size: var(--fs-sm);
+  --detail-progress-muted: var(--slate-600);
+  --detail-progress-height: var(--dim-8);
+  --detail-section-margin: var(--ecart-28);
+  --detail-task-wrap: nowrap;
+  --detail-task-gap: var(--ecart-12);
+  --detail-task-min-height: var(--dim-64);
+  --detail-task-padding: 0;
+  --detail-task-line: var(--slate-150);
+  --detail-task-ink: currentColor;
+  --detail-task-body-flex: 0 1 auto;
+  --detail-task-body-gap: var(--ecart-6);
+  --detail-task-body-min-width: 0;
+  --detail-task-title-size: var(--fs-sm);
+  --detail-task-muted: var(--slate-600);
+  --detail-task-note-display: inline;
+  --detail-task-note-size: var(--fs-sm);
+  --detail-task-note-line-height: normal;
+  --task-check-line: var(--slate-300);
+  --task-check-fill: var(--green-700);
+  --task-check-ink: var(--white);
+  --task-state-padding: 0;
+  --task-state-radius: 0;
+  --task-state-ink: var(--slate-600);
+  --task-state-surface: transparent;
+  --task-state-size: var(--fs-2xs);
+  --task-state-blocked-ink: var(--amber-700);
+  --task-state-done-ink: var(--green-800);
+  --detail-empty-ink: var(--slate-600);
+  --detail-empty-size: var(--fs-sm);
+
+  /* Accueil et calendrier */
+  --manifesto-surface: var(--slate-50);
+  --calendar-due: var(--app-accent);
+  --calendar-day-surface: var(--white);
+  --calendar-outside-surface: var(--slate-50);
+  --calendar-grid-line: var(--slate-200);
+  --calendar-weekday-ink: var(--slate-700);
+  --event-surface: var(--slate-50);
+  --event-line: var(--slate-200);
+  --event-hover-surface: var(--indigo-50);
+  --event-press-surface: var(--indigo-100);
+  --calendar-meta-alert-ink: var(--danger);
+  --calendar-progress-ink: var(--green-700);
+  --calendar-load-ink: var(--amber-700);
+
+  font-family: var(--font-sans);
+  font-size: calc(var(--fs-md) * var(--text-scale));
+  color: var(--ink);
+  background: var(--page-surface);
+  font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+  /* Refonte 2026-10-27 */
+  --brand-solid: var(--indigo-700);
+  --brand-hover: var(--indigo-800);
+  --brand-soft: var(--indigo-50);
+  --brand-line: var(--indigo-200);
+  --brand-bright: var(--indigo-300);
+  --header-surface: var(--slate-900);
+  --header-line: var(--slate-800);
+  --font-label: var(--font-sans);
+}
+
+/* Thème sombre éditorial */
+.app-shell.editorial-style {
+  --app-accent: var(--brand-solid);
+  --app-accent-hover: var(--brand-hover);
+  --app-on-accent: var(--slate-950);
+  --app-accent-soft: var(--brand-soft);
+  --app-accent-line: var(--brand-line);
+  --app-canvas: var(--slate-950);
+  --app-focus-ring: var(--indigo-300);
+  --app-panel-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--black) var(--part-35), transparent);
+  --neutral-action-hover: var(--slate-200);
+  --status-success: var(--green-200);
+  --status-success-hover: var(--green-100);
+  --status-success-surface: var(--green-950);
+  --status-warning: var(--amber-200);
+  --status-warning-hover: var(--amber-100);
+  --status-warning-surface: var(--amber-950);
+  --status-danger: var(--red-200);
+  --status-danger-hover: var(--red-100);
+  --status-danger-surface: var(--red-950);
+
+  --intro-panel-gap: clamp(var(--ecart-28), var(--ecart-3vw), var(--ecart-56));
+  --page-padding-top: var(--ecart-24);
+  --page-padding-bottom: var(--ecart-64);
+  --landing-padding-bottom: var(--page-padding-bottom);
+  --page-head-gap: var(--ecart-28);
+  --page-head-margin: var(--ecart-24);
+
+  --ink: var(--slate-100);
+  --muted: var(--slate-400);
+  --line: var(--slate-800);
+  --green: var(--green-200);
+  --soft: var(--slate-900);
+  --on-accent: var(--app-on-accent);
+  --page-surface: var(--app-canvas);
+  --raised-surface: var(--slate-900);
+  --raised-ink: var(--slate-100);
+  --field-surface: var(--slate-950);
+  --state-surface: var(--slate-800);
+  --rationale-line: var(--blue-400);
+  --focus-ring: var(--app-focus-ring);
+  --control-color-scheme: dark;
+  --board-column-surface: var(--slate-950);
+  --board-card-surface: var(--slate-900);
+  --board-card-ink: var(--slate-100);
+  --board-card-muted: var(--slate-300);
+  --board-card-line: var(--slate-600);
+  --card-border: var(--slate-800);
+  --card-border-active: var(--brand-solid);
+  --card-surface-active: var(--brand-soft);
+  --card-hover-surface: var(--slate-850);
+  --card-control-line: var(--slate-400);
+  --card-pill-surface: var(--slate-800);
+  --card-track: var(--slate-700);
+  --card-divider: var(--slate-800);
+  --card-detail-surface: var(--slate-850);
+  --card-gauge-track: var(--slate-700);
+  --card-gauge-overrun: var(--red-300);
+  --gauge-overrun: var(--red-300);
+  --status-done: var(--green-300);
+  --status-neutral: var(--slate-500);
+
+  --outline: var(--slate-800);
+  --control-line: var(--slate-700);
+  --control-line-hover: var(--app-accent);
+  --hover-surface: var(--slate-800);
+  --press-surface: var(--slate-700);
+  --press-shadow: none;
+  --state-surface-hover: var(--blue-800);
+  --state-surface-press: var(--blue-700);
+  --selected-surface: var(--app-accent);
+  --selected-ink: var(--app-on-accent);
+  --nav-hover-surface: var(--slate-800);
+  --nav-press-surface: var(--slate-700);
+  --nav-hover-ink: var(--neutral-100);
+
+  --status-todo: var(--slate-400);
+  --status-doing: var(--indigo-300);
+  --pill-padding: var(--ecart-6) var(--ecart-10);
+  --pill-radius: var(--rayon-999);
+  --pill-ink: var(--indigo-200);
+  --pill-surface: color-mix(in srgb, var(--indigo-400) var(--part-16), var(--slate-900));
+  --pill-size: var(--fs-xs);
+  --pill-weight: var(--fw-semibold);
+  --pill-blocked-ink: var(--amber-200);
+  --pill-blocked-surface: var(--amber-950);
+  --pill-done-ink: var(--green-200);
+  --pill-done-surface: var(--green-950);
+  --pill-planned-ink: var(--slate-200);
+  --pill-planned-surface: var(--slate-800);
+  --count-badge-ink: var(--slate-200);
+  --count-badge-surface: var(--slate-800);
+  --project-code-ink: var(--slate-300);
+  --project-code-size: var(--fs-2xs);
+  --progress-height: var(--dim-6);
+  --progress-track: var(--slate-700);
+  --progress-fill: var(--app-accent);
+
+  --app-min-height: var(--dim-100dvh);
+  --app-overflow: hidden;
+  --app-surface: var(--app-canvas);
+  --main-min-height: calc(var(--dim-100vh) - var(--dim-16));
+  --main-surface: var(--app-canvas);
+  --sidebar-width: var(--dim-280);
+  --sidebar-height: var(--dim-100dvh);
+  --sidebar-padding: var(--ecart-24) var(--ecart-16) var(--ecart-20);
+  --sidebar-border: var(--trait-1) solid var(--slate-800);
+  --sidebar-compact-padding: var(--ecart-14) var(--ecart-16) var(--ecart-12);
+  --sidebar-compact-border: var(--trait-1) solid var(--slate-800);
+  --sidebar-surface: var(--slate-900);
+  --sidebar-ink: var(--slate-200);
+  --sidebar-muted: var(--slate-400);
+  --sidebar-faint: var(--slate-500);
+  --sidebar-line: var(--slate-800);
+  --sidebar-accent: var(--brand-solid);
+  --brand-gap: var(--ecart-14);
+  --brand-padding: 0 var(--ecart-10) var(--ecart-28);
+  --brand-compact-display: flex;
+  --brand-mark-size: var(--dim-44);
+  --brand-mark-border: 0;
+  --brand-mark-radius: var(--rayon-10);
+  --brand-mark-font-size: var(--fs-2xl);
+  --brand-mark-ink: var(--white);
+  --brand-mark-surface: var(--indigo-600);
+  --brand-accent: var(--indigo-200);
+  --brand-name-ink: var(--neutral-50);
+  --brand-name-size: var(--fs-lg);
+  --brand-name-spacing: calc(-1 * var(--lettrage-0-04em));
+  --brand-strong-ink: var(--neutral-50);
+  --brand-strong-weight: var(--fw-semibold);
+  --brand-small-margin: var(--ecart-6);
+  --brand-small-ink: var(--slate-400);
+  --brand-small-size: var(--fs-2xs);
+  --brand-small-spacing: var(--lettrage-0-06em);
+  --nav-gap: var(--ecart-4);
+  --nav-label-margin: var(--ecart-10);
+  --nav-label-ink: var(--slate-500);
+  --nav-label-size: var(--fs-2xs);
+  --nav-label-spacing: var(--lettrage-0-06em);
+  --nav-item-height: var(--dim-40);
+  --nav-item-padding-x: var(--ecart-14);
+  --nav-item-radius: var(--rayon-8);
+  --nav-font-size: var(--fs-sm);
+  --nav-active-ink: var(--brand-solid);
+  --nav-marker-display: block;
+  --nav-icon-width: var(--dim-24);
+  --nav-icon-size: var(--fs-xl);
+  --nav-icon-ink: currentColor;
+  --nav-count-ink: currentColor;
+  --nav-compact-gap: var(--ecart-6);
+  --nav-compact-height: var(--dim-40);
+  --nav-compact-padding-x: var(--ecart-12);
+  --nav-compact-font-size: var(--fs-sm);
+  --nav-compact-icon-width: var(--dim-18);
+  --nav-compact-icon-size: var(--fs-lg);
+  --nav-tiny-display: inline-grid;
+  --nav-tiny-overflow: auto visible;
+  --nav-tiny-padding-x: var(--ecart-12);
+  --nav-tiny-font-size: var(--fs-sm);
+  --sidebar-data-padding-bottom: var(--ecart-12);
+  --sidebar-data-label-margin: var(--ecart-6);
+  --sidebar-data-height: var(--dim-36);
+  --sidebar-data-ink: var(--slate-400);
+  --sidebar-data-hover: var(--neutral-50);
+  --sidebar-data-compact-padding: var(--ecart-6) 0 0;
+  --sidebar-data-compact-padding-x: var(--ecart-8);
+  --picker-gap: var(--ecart-6);
+  --picker-ink: var(--slate-300);
+  --picker-size: var(--fs-xs);
+  --picker-line: var(--slate-700);
+  --picker-surface: var(--slate-900);
+  --picker-select-ink: var(--neutral-100);
+  --picker-compact-gap: var(--ecart-8);
+  --picker-compact-margin: var(--ecart-6) 0 0;
+  --sidebar-bottom-padding-x: var(--ecart-20);
+  --sidebar-bottom-strong-size: var(--fs-sm);
+  --sidebar-bottom-small-size: var(--fs-sm);
+  --local-indicator: var(--green-300);
+  --local-indicator-ring: var(--green-950);
+  --topbar-height: var(--dim-64);
+  --topbar-surface: color-mix(in srgb, var(--slate-950) var(--part-94), transparent);
+  --topbar-blur: none;
+  --topbar-context-gap: var(--ecart-14);
+  --topbar-context-ink: var(--slate-300);
+  --topbar-context-size: var(--fs-xs);
+  --topbar-context-spacing: var(--lettrage-0-04em);
+  --topbar-square-display: none;
+  --topbar-separator: var(--slate-400);
+  --topbar-actions-gap: var(--ecart-14);
+  --topbar-home-ink: var(--app-accent);
+  --topbar-home-size: var(--fs-sm);
+  --topbar-home-spacing: normal;
+  --topbar-home-transform: none;
+  --save-status-ink: var(--slate-300);
+  --save-status-size: var(--fs-xs);
+  --error-ink: var(--red-200);
+  --error-surface: var(--red-950);
+  --footer-ink: var(--slate-400);
+  --skip-ink: var(--app-on-accent);
+  --skip-surface: var(--app-accent);
+  --mobile-brand-ink: var(--neutral-100);
+  --mobile-brand-font: var(--font-sans);
+  --mobile-brand-small-ink: var(--slate-400);
+
+  --eyebrow-color: var(--slate-400);
+  --eyebrow-size: var(--fs-2xs);
+  --eyebrow-spacing: var(--lettrage-0-06em);
+  --eyebrow-margin: var(--ecart-8);
+  --display-size: clamp(var(--texte-28), var(--texte-2-5vw), var(--texte-36));
+  --display-line-height: var(--lh-tight);
+  --display-spacing: calc(-1 * var(--lettrage-0-02em));
+  --display-max-width: var(--dim-1000);
+  --display-accent: var(--app-accent);
+  --lead-max-width: var(--dim-960);
+  --lead-margin: var(--ecart-10);
+  --lead-ink: var(--slate-400);
+  --lead-size: var(--fs-md);
+  --lead-line-height: var(--lh-normal);
+  --section-heading-size: var(--fs-xl);
+  --text-link-color: var(--app-accent);
+  --text-link-hover: var(--app-accent-hover);
+  --text-link-active: var(--indigo-100);
+  --text-link-size: var(--fs-sm);
+
+  --btn-height: var(--dim-40);
+  --btn-padding-x: var(--ecart-16);
+  --btn-radius: var(--rayon-8);
+  --btn-font-size: var(--fs-sm);
+  --btn-primary-ink: var(--slate-950);
+  --btn-primary-surface: var(--brand-solid);
+  --btn-primary-shadow: 0 var(--ombre-1) var(--ombre-2)
+    color-mix(in srgb, var(--neutral-950) var(--part-35), transparent);
+  --btn-primary-hover: var(--brand-hover);
+  --btn-primary-active: var(--indigo-100);
+  --btn-secondary-ink: var(--slate-100);
+  --btn-secondary-surface: var(--slate-900);
+  --btn-secondary-line: var(--slate-700);
+  --btn-secondary-shadow: none;
+  --btn-secondary-hover-line: var(--slate-600);
+  --btn-secondary-hover-surface: var(--slate-800);
+  --btn-secondary-active-line: var(--slate-500);
+  --btn-secondary-active-surface: var(--slate-700);
+
+  --empty-line: var(--slate-700);
+  --empty-surface: var(--slate-900);
+  --empty-text: var(--slate-300);
+  --empty-mark-ink: var(--app-accent);
+  --empty-mark-surface: var(--brand-soft);
+  --modal-radius: var(--rayon-12);
+  --halo-shadow: 0 var(--ombre-12) var(--ombre-24)
+    color-mix(in srgb, var(--neutral-950) var(--part-55), transparent);
+  --modal-eyebrow-margin: var(--ecart-6);
+  --field-label: var(--slate-300);
+  --field-label-size: var(--fs-sm);
+  --field-line: var(--slate-700);
+  --field-radius: var(--rayon-8);
+  --field-ink: var(--neutral-100);
+  --field-focus: var(--app-accent);
+  --field-focus-ring: color-mix(in srgb, var(--indigo-400) var(--part-30), transparent);
+  --field-placeholder: var(--slate-400);
+  --select-line: var(--slate-700);
+  --select-radius: var(--rayon-8);
+  --select-ink: var(--neutral-100);
+  --select-surface: var(--slate-950);
+
+  --band-line: var(--slate-800);
+  --band-radius: var(--rayon-12);
+  --band-ink: var(--neutral-100);
+  --band-divider: var(--slate-800);
+  --band-eyebrow-size: var(--fs-2xs);
+  --band-muted: var(--slate-400);
+  --band-accent: var(--app-accent);
+  --band-track: var(--slate-700);
+
+  --column-line: var(--slate-800);
+  --column-radius: var(--rayon-8);
+  --column-head-surface: var(--slate-900);
+  --column-head-line: var(--slate-800);
+  --column-head-ink: var(--neutral-100);
+  --board-empty-ink: var(--slate-300);
+  --task-card-line: var(--slate-800);
+  --task-card-radius: var(--rayon-8);
+  --task-card-shadow: none;
+  --task-card-code: var(--slate-300);
+  --task-link-hover: var(--app-accent);
+  --follow-up-line: var(--slate-800);
+  --follow-up-ink: var(--slate-300);
+  --follow-up-size: var(--fs-md);
+  --follow-up-strong: var(--slate-100);
+  --task-fact-ink: var(--slate-300);
+  --task-fact-size: calc(var(--fs-sm) * var(--text-scale));
+  --task-planned-ink: var(--slate-300);
+  --task-planned-size: var(--fs-2xs);
+  --status-change-line: var(--slate-800);
+  --status-change-ink: var(--slate-300);
+  --status-change-select-ink: var(--slate-100);
+  --status-change-select-surface: var(--slate-900);
+
+  --detail-shell-min-height: 0;
+  --detail-shell-radius: var(--radius-lg);
+  --detail-padding: clamp(var(--ecart-20), var(--ecart-2vw), var(--ecart-32));
+  --detail-head-justify: flex-start;
+  --detail-head-gap: var(--ecart-16);
+  --detail-title-max-width: var(--dim-1000);
+  --detail-title-margin: var(--ecart-14);
+  --detail-title-size: clamp(var(--texte-28), var(--texte-2-5vw), var(--texte-36));
+  --detail-title-spacing: calc(-1 * var(--lettrage-0-04em));
+  --detail-summary-max-width: var(--dim-1000);
+  --detail-summary-ink: var(--slate-300);
+  --detail-summary-size: var(--fs-md);
+  --detail-summary-line-height: var(--lh-relaxed);
+  --detail-summary-white-space: pre-line;
+  --detail-meta-columns: repeat(var(--colonnes-4), minmax(0, var(--fr-1)));
+  --detail-meta-gap: var(--ecart-14);
+  --detail-meta-margin: var(--ecart-24);
+  --detail-meta-padding: var(--ecart-20);
+  --detail-label-ink: var(--slate-300);
+  --detail-value-ink: var(--neutral-100);
+  --detail-fact-size: var(--fs-sm);
+  --detail-progress-label-margin: var(--ecart-14);
+  --detail-progress-ink: var(--neutral-150);
+  --detail-progress-size: var(--fs-sm);
+  --detail-progress-muted: var(--slate-300);
+  --detail-progress-height: var(--dim-8);
+  --detail-section-margin: var(--ecart-28);
+  --detail-task-wrap: wrap;
+  --detail-task-gap: var(--ecart-12);
+  --detail-task-min-height: var(--dim-64);
+  --detail-task-padding: var(--ecart-12);
+  --detail-task-line: var(--slate-800);
+  --detail-task-ink: var(--neutral-100);
+  --detail-task-body-flex: var(--flex-1);
+  --detail-task-body-gap: var(--ecart-6);
+  --detail-task-body-min-width: var(--dim-180);
+  --detail-task-title-size: var(--fs-sm);
+  --detail-task-muted: var(--slate-300);
+  --detail-task-note-display: -webkit-box;
+  --detail-task-note-size: var(--fs-sm);
+  --detail-task-note-line-height: var(--lh-normal);
+  --task-check-line: var(--slate-500);
+  --task-check-fill: var(--green-300);
+  --task-check-ink: var(--green-950);
+  --task-state-padding: var(--ecart-8) var(--ecart-12);
+  --task-state-radius: var(--rayon-20);
+  --task-state-ink: var(--slate-300);
+  --task-state-surface: var(--slate-900);
+  --task-state-size: var(--fs-sm);
+  --task-state-blocked-ink: var(--amber-100);
+  --task-state-done-ink: var(--green-200);
+  --detail-empty-ink: var(--slate-300);
+  --detail-empty-size: var(--fs-sm);
+
+  --manifesto-surface: var(--slate-900);
+  --calendar-due: var(--app-accent);
+  --calendar-day-surface: var(--slate-900);
+  --calendar-outside-surface: var(--slate-950);
+  --calendar-grid-line: var(--slate-800);
+  --calendar-weekday-ink: var(--slate-300);
+  --event-surface: var(--slate-800);
+  --event-line: var(--slate-700);
+  --event-hover-surface: var(--slate-700);
+  --event-press-surface: var(--slate-600);
+  --calendar-meta-alert-ink: var(--red-300);
+  --calendar-progress-ink: var(--green-300);
+  --calendar-load-ink: var(--amber-400);
+  --danger: var(--red-500);
+  --urgent-mark: var(--red-500);
+  --soon-mark: var(--amber-400);
+  --select-label: var(--slate-300);
+  --modal-close-ink: var(--slate-300);
+  /* Refonte 2026-10-27 */
+  --brand-solid: var(--indigo-300);
+  --brand-hover: var(--indigo-200);
+  --brand-soft: color-mix(in srgb, var(--indigo-400) var(--part-14), var(--slate-900));
+  --brand-line: color-mix(in srgb, var(--indigo-400) var(--part-45), var(--slate-900));
+  --header-surface: var(--slate-900);
+  --header-line: var(--slate-800);
+}
+
+/* Refonte du 27 octobre 2026 : un seul contraste pour tous les modules, défini par les deux thèmes. */
+
+/* Petits écrans : chaque thème ajuste ses propres valeurs, à son propre seuil. */
+@media (max-width: $rupture-1100) {
+  .app-shell.editorial-style {
+    --detail-meta-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+    --detail-task-body-flex: 1 1 calc(var(--part-100) - var(--dim-44));
+  }
+}
+@media (max-width: $rupture-820) {
+  .app-shell.editorial-style {
+    --intro-panel-gap: var(--ecart-24);
+    --page-padding-top: var(--ecart-16);
+    --page-padding-bottom: var(--ecart-48);
+    --page-head-direction: column;
+    --page-head-align: flex-start;
+    --page-head-gap: var(--ecart-20);
+    --page-head-margin: var(--ecart-28);
+    --display-size: clamp(var(--texte-28), var(--texte-7vw), var(--texte-36));
+    --lead-size: var(--fs-md);
+    --detail-padding: var(--ecart-20) var(--ecart-16);
+    --detail-title-size: clamp(var(--texte-24), var(--texte-6vw), var(--texte-32));
+    --detail-meta-gap: var(--ecart-14);
+    --detail-meta-margin: var(--ecart-24);
+    --detail-meta-padding: var(--ecart-20);
+  }
+}
+@media (max-width: $rupture-600) {
+  :root,
+  .app-shell {
+    --text-scale: var(--facteur-1);
+    --page-padding-top: var(--ecart-16);
+    --page-padding-bottom: var(--ecart-56);
+    --page-head-direction: column;
+    --page-head-align: flex-start;
+    --page-head-gap: var(--ecart-16);
+    --display-size: var(--fs-3xl);
+    --detail-meta-columns: repeat(var(--colonnes-2), var(--fr-1));
+  }
+}
+@media (max-width: $rupture-560) {
+  .app-shell.editorial-style {
+    --detail-meta-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+    --detail-task-gap: var(--ecart-12);
+    --task-state-size: var(--fs-xs);
+  }
+}

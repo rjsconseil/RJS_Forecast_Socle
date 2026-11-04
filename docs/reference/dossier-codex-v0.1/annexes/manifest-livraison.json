@@ -1,0 +1,575 @@
+{
+  "version": "0.1",
+  "date": "2026-11-03",
+  "primaryDocument": "RJS_Forecast_Guide_Codex_Demarrage_Vision_v0.1.md",
+  "pdfPages": 23,
+  "referenceFiles": 104,
+  "scssFiles": 38,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 918,
+      "sha256": "b6cffbc2fbe57bcfd277e0cf55472500da39b6697d06aaca9793df8a1b0e162c"
+    },
+    {
+      "path": "RJS_Forecast_Guide_Codex_Demarrage_Vision_v0.1.md",
+      "bytes": 53049,
+      "sha256": "6573edf3c03ed4d2b40ea35f3ecd02365e359279f35a91c7a362454ebdd68813"
+    },
+    {
+      "path": "RJS_Forecast_Guide_Codex_Demarrage_Vision_v0.1.pdf",
+      "bytes": 140324,
+      "sha256": "d99f8edbee36fb16357c302e66e90cf2a8c26023c7c533f69f96aee4f4eab8a2"
+    },
+    {
+      "path": "annexes/README-STYLES.md",
+      "bytes": 1461,
+      "sha256": "15c3753340c8add6c685cdb462f99e79a10226a54a7f289b84f0846dfbd41887"
+    },
+    {
+      "path": "annexes/catalogue-ecrans.json",
+      "bytes": 2872,
+      "sha256": "be2e209532cd6f241b14f6b86499c440a7b959940dfed8e61f65a71c32674dc9"
+    },
+    {
+      "path": "annexes/catalogue-graphes.json",
+      "bytes": 3237,
+      "sha256": "2a91776500c9899305892ab0923130ada10da67ef4e8dcf81389531bad906a4b"
+    },
+    {
+      "path": "annexes/correspondance-styles.json",
+      "bytes": 19424,
+      "sha256": "749ab38eb97871039a153079f0436a01a9073727e3957d19866a2184ed8cf1fc"
+    },
+    {
+      "path": "annexes/manifest-source.json",
+      "bytes": 53089,
+      "sha256": "ff847a5f7390e1b1e89f57844e67094733997108dc5c0645aeacd79cf8f2f23d"
+    },
+    {
+      "path": "annexes/reference-entree-globale.styles.scss.txt",
+      "bytes": 880,
+      "sha256": "a7d636178d5c660742daf0d16c6e31447bc612467e057a316d47958476c0fcc8"
+    },
+    {
+      "path": "annexes/reperes-code.json",
+      "bytes": 4823,
+      "sha256": "1e147e5fd97f20310654df536f7a1f7bc589facc4020aea5fb1f411a68101b89"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/bpm-creation-details.mjs",
+      "bytes": 5971,
+      "sha256": "6dca40ac2fe1fcccf4217f5801e3afcb8b078955db55b564854dea8f9a0f0047"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/bpm-expenses.mjs",
+      "bytes": 4878,
+      "sha256": "f2cbfa7eb0e58aa0a391641498762a5edc56035ec757e5d50b1aa8445a90810a"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/bpm-flow-pilot.mjs",
+      "bytes": 5611,
+      "sha256": "b9a8f7ae00f1a430d5fc935d8bb2a5223d8e3c2641aacce354d6bb9e076ba2cd"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/bpm-flows.mjs",
+      "bytes": 19347,
+      "sha256": "4c105fa9fa3b0b9a16dff7658b23a4446a9d028042fb0e68eef16a9b2210c1cf"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/bpm-lens.mjs",
+      "bytes": 9655,
+      "sha256": "2e2ed681aa782c90a45ba74361ef4aa566b3f40dcd7e7ad834fd97b77a2e63c3"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/bpm-routes.mjs",
+      "bytes": 58694,
+      "sha256": "f09d889847871548a83eb96dc147b8084e7e239bec1926d89f7d61a4b0c7596b"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/bpm-vision.mjs",
+      "bytes": 6626,
+      "sha256": "5552d4fbf9e50b94a0cffc53b5d751d2d1ca709cede96f5231179686f9d6cfaa"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/budget-automatic.mjs",
+      "bytes": 2073,
+      "sha256": "68ac24f06c37208245cf774a79e0bef8b12cfc5a39fef2f497c908a366749f54"
+    },
+    {
+      "path": "reference-code/site/apps/local-api/budget-patrimoine.mjs",
+      "bytes": 10577,
+      "sha256": "0cef6bdb47489c26dc3e8b3c2666f0bde32b3374f9be18ee0f58dcb260bea117"
+    },
+    {
+      "path": "reference-code/site/apps/web/angular.json",
+      "bytes": 2809,
+      "sha256": "8ae0cf9df066b156e285d9cf64fde537d57a66683b619b804d8d0a807f1e193c"
+    },
+    {
+      "path": "reference-code/site/apps/web/package.json",
+      "bytes": 2103,
+      "sha256": "38ae82716aaacb69d4e5fe58205c9aaa0230e38134329c09621c0a9aebef036f"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/app.routes.ts",
+      "bytes": 32230,
+      "sha256": "a7a9f9409f534ef15b53174fd9cd5cf1975fe90890f5d9c8d76e867b2fb6af31"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-context.component.ts",
+      "bytes": 9086,
+      "sha256": "49e9503f8d5f74f46947fe6e142ea449068c5abd860b5031ddffab41b1fb4906"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-create.page.ts",
+      "bytes": 83449,
+      "sha256": "be184dc54d3a8ca10a53faca33e3eab5d53ebf4abde206b132a0303426cc43f0"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-daily.component.ts",
+      "bytes": 17180,
+      "sha256": "afd1bcc2366553889001f9b36b3d660f68ed113e6a107a59a6ae34d07932ced6"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-daily.model.ts",
+      "bytes": 2057,
+      "sha256": "512348ca1011f19865312956c86a3f83db2984e937065a7d36355096cc34a1db"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-dashboard-history.component.ts",
+      "bytes": 63458,
+      "sha256": "faa48a929511b5e66ca3eb14a4f1cd85f3f686394869fd29b589dfd3af44512a"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-dashboard-history.model.ts",
+      "bytes": 5214,
+      "sha256": "5965d10c0c28d9a8af3cbac0e7fa9521647bfc5fe2703e96c89248e600530fc8"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.ts",
+      "bytes": 8815,
+      "sha256": "d5916e465f93988a95bbc1cc8fc1f0c689aace118e50a7fa7035a6043dbd0dc7"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-expense-links.ts",
+      "bytes": 999,
+      "sha256": "d0df82c88f7731f8ad698640188ff90f7cfc98b100ecc61f8315d72988b5531b"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-expenses.model.ts",
+      "bytes": 1995,
+      "sha256": "84d5855512558f5e11406acc13c194e1892eeff3d8ebcce425875881a1188448"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-expenses.page.html",
+      "bytes": 23752,
+      "sha256": "176edc70ab1e1729b16731e21b70fda8a4b750419bd204d8baa05a51c3856724"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-expenses.page.ts",
+      "bytes": 13552,
+      "sha256": "f6a9850eb9d4f5cfef32e772b4148703a7e471c73863c2c7d05b3d89b0af21f2"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-flow-editor.component.ts",
+      "bytes": 19222,
+      "sha256": "86cc9b1cecb0ce270282bb5a8a214f0971f0f04aeedab229f4f9c1f224a5d3a5"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-flow-pilot.component.ts",
+      "bytes": 29308,
+      "sha256": "8b1ca7a2d42b6ebf7766c21bcfd6c663cbfff9aa3c3068692a2339bda2e6f2e1"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-flow-pilot.model.ts",
+      "bytes": 1175,
+      "sha256": "61f7c8faa3adac4bc89dc573f843d7ee0a0abc88108a4719a7420adb0e649ff2"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-income-list.component.ts",
+      "bytes": 9421,
+      "sha256": "7ec2441ce0b8657d024d0f5171419ca54071d3164cd5977da417320d5889a8fe"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-lens.model.ts",
+      "bytes": 11803,
+      "sha256": "142f36ca25f2c2c36a33750bee1cdc584da0fc819be8f44a382895507f184410"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-money-context.ts",
+      "bytes": 9491,
+      "sha256": "a96a8b78bf58b347f05830b37f32724f4028a2483eedd51ab57130c1f3000d94"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-money-detail.page.ts",
+      "bytes": 42366,
+      "sha256": "d46ae27a19df322b44c4f737e092e87464220be77c3f51512a055db9ec1a9ebf"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-money.model.ts",
+      "bytes": 11440,
+      "sha256": "c7c1ec5915e60005ca078034aa1c2df120be668bef401a1f0557123221b8417c"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-money.page.ts",
+      "bytes": 44800,
+      "sha256": "61406139ae41d59148fb6cd5475a684d2333d97053ecd4930a2ac568a271dc02"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-month-type.component.ts",
+      "bytes": 18537,
+      "sha256": "6a1764cf85dc58938ecec5abd2f064b18f599047dc3d29783968a9f403838490"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-objectives.component.ts",
+      "bytes": 22609,
+      "sha256": "cfe67f0131de789bcf860c0606f1e74a1f12c2d2b5bba861455d98f33ca3a149"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-period-expenses.component.ts",
+      "bytes": 8329,
+      "sha256": "8fc44f38557af549733e5e303fcae5562b521af5dae8c2e6d5eb3d3e0722317d"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-period-nav.component.ts",
+      "bytes": 3099,
+      "sha256": "a0f40526df2e774ca81e149a3106f073d26a47ca27f1a646ea2327854a41e0ee"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-period-reading.ts",
+      "bytes": 2048,
+      "sha256": "7118f4810061b2f5c6dce8e63b35ce0fa8d0f1332d22c345a3e5637ae24eff08"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-pilot.page.ts",
+      "bytes": 84236,
+      "sha256": "b1e3e8ff84dce7d9e172f851361c77b3a49213d5deccf28eb4d185da79e3c8c2"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-profile.model.ts",
+      "bytes": 1766,
+      "sha256": "4d5ec94872fd765ecdd0aceac23160898943efdba77fb811c1b081bae69bc234"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-project-costs.component.ts",
+      "bytes": 24326,
+      "sha256": "86eb78f00a553503f805e34556399f8919c274eba0fc4f7d872e6e7839b55b29"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-project-switch.component.ts",
+      "bytes": 3003,
+      "sha256": "30328eb4baff84ace9376a1edc0dda0e45167dd29508512688a01737285400c0"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-routine.model.ts",
+      "bytes": 5720,
+      "sha256": "3eea1d200bae86179fbcb2e45530f5e8519edc754c07d7f2b1d8f3d14787bd4a"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-settings.ts",
+      "bytes": 479,
+      "sha256": "2f2985b48feadedd5c846c484e0fb346ea4ed691fa5b9a58774d7a9563caa1c7"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-start-details.component.ts",
+      "bytes": 10617,
+      "sha256": "ec30cd54cde620b1f41e3358833bea5761ce483577bbb0e14c494fe48ddb8459"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-start.model.ts",
+      "bytes": 3418,
+      "sha256": "42ea46c7e2472003d38ffdddb8b65fd46252acd10cf68af661991585f48caf8a"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-vision.model.ts",
+      "bytes": 19597,
+      "sha256": "c98c5fc5ba60ca9d301e3ed91b1bba07e74697695623bf693c4c2933d8cfadd1"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-vision.page.ts",
+      "bytes": 57357,
+      "sha256": "8dcbdff5bde589976be21eaa364bf4c4bf4a0ee8b2146fed9594bbef4172aa29"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm-workspace-nav.component.ts",
+      "bytes": 6846,
+      "sha256": "806753ad19545ac6da4331f8bfcc5651f9ed46281dbdb66853a010aef4e0ab8a"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm.model.ts",
+      "bytes": 22624,
+      "sha256": "7226338689c126172ce9bea88ff49aab1ce56cd42d585f483e9da0d060eb26fd"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/bpm/bpm.store.ts",
+      "bytes": 11608,
+      "sha256": "d93761217da486483f1754bd856d1071358a7dcbe343dd9fcb6e065e23640fdc"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/configuration/design-runtime.service.ts",
+      "bytes": 5042,
+      "sha256": "4928b0d70dd3b6fec6a1f0a42723bae0ab1ba83283665b0c37d44f96ff7ac419"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/amount.ts",
+      "bytes": 1197,
+      "sha256": "2beee10d58f5832055189d5bf1d79cb3664344a970658ddd70dd57a2f5bcf40f"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/app-hero.component.ts",
+      "bytes": 3837,
+      "sha256": "f73b536522311f81039a5979e6667cf09f57c0913ccb20a66e4ca32e2329b6aa"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/metric-tiles.component.ts",
+      "bytes": 7079,
+      "sha256": "dc938cf1acfe3e65caf1505f6c9f02137582cd1709c5d4d17793e2350b68ac82"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/modal.component.ts",
+      "bytes": 1434,
+      "sha256": "7d3a9ae1816b241a05292c87a76aec3711eee2ba6055a97835113e68da244f78"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/parameter-choice.component.ts",
+      "bytes": 2657,
+      "sha256": "414e0508b02c6eba5d974503deab0ccf68040b0d40739021a098c14953cf33d1"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/period-lens.ts",
+      "bytes": 5449,
+      "sha256": "994fabaf70146ff3d8be97bd390539925b81d4dee85452ea8140efc9cae66faf"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/period-navigation.component.ts",
+      "bytes": 6010,
+      "sha256": "9b31c45ad4fe47f5e7436ef947db9acf304cd08945e2ab69e0e59a547c5ce3a0"
+    },
+    {
+      "path": "reference-code/site/apps/web/src/app/shared/range-field.component.ts",
+      "bytes": 5984,
+      "sha256": "2819129ec32997c661ca82f31126411003f98590372a3a0570d71c8b4aaaab29"
+    },
+    {
+      "path": "reference-code/site/configuration/bpm/demarrages.csv",
+      "bytes": 1753,
+      "sha256": "67e3f083e8d4a9b43621a713be02aba5ad9f5be5310d50ed13655aaff669db11"
+    },
+    {
+      "path": "reference-code/site/configuration/bpm/inflation-reference.csv",
+      "bytes": 252,
+      "sha256": "b36394737470ed0cf56f4bf300bab734357b97aa92c99d629922a0a419a959fb"
+    },
+    {
+      "path": "reference-code/site/configuration/bpm/reglages.csv",
+      "bytes": 492,
+      "sha256": "3920ce2b602056da6ce9d7a872750b75d07894f953b9638308aeff9e2592111d"
+    },
+    {
+      "path": "reference-code/site/configuration/navigation-catalog.json",
+      "bytes": 76894,
+      "sha256": "2840b10a7b45de9c2716d6c75198f166275904ed4a9ddae17eb85c3478e73764"
+    },
+    {
+      "path": "reference-code/site/design/tokens/tokens.forecast.json",
+      "bytes": 6769,
+      "sha256": "6b4152023be36ba97187da7a670497dd392d6d8989a1d360e311aa6b7f7bc270"
+    },
+    {
+      "path": "reference-code/site/design/tokens/tokens.json",
+      "bytes": 12775,
+      "sha256": "63f72a8297919fa273ed30dc7de8d376c6a8b3c296f544ed1df0be0d98653366"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-context.component.scss",
+      "bytes": 4430,
+      "sha256": "074711ce421b6a7edbc32f0c987742ff23054a9a478b7a6ed1d4f482595915f0"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-context.scss",
+      "bytes": 798,
+      "sha256": "24a33ab307bdb82f21e0b0882abbaefc44415542528e62df098e5afe8c77e787"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-create.page.scss",
+      "bytes": 9069,
+      "sha256": "ea8ba97fdeff7ad62b4b82f39747169887b9e081648486b2feae910cc2191ade"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-daily.component.scss",
+      "bytes": 5304,
+      "sha256": "c69bef902c12811c026ae28cc591b658982f8c5462d8a16633ea9db7d5476f35"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-history.component.scss",
+      "bytes": 19865,
+      "sha256": "7b6281429f73ef48876986091898fc8869c15e97bcc7423a130dbe6cd45bcb03"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-dashboard-wealth.component.scss",
+      "bytes": 11283,
+      "sha256": "7314c5734a3f1225ad29d30ec5799007d10c46e550bc81d94bdd98a344d161ba"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-expenses.page.scss",
+      "bytes": 22595,
+      "sha256": "f5154b8abb1af753708693010d5b24ed43636322a2bd30fa006dd4200cfa1c08"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-flow-editor.component.scss",
+      "bytes": 7215,
+      "sha256": "3b0ab4cfba2f92d43aff22ce0062bff42dbe2b532f03650383653983fcb17c5a"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-flow-pilot.component.scss",
+      "bytes": 15502,
+      "sha256": "bb9f3a71439c6ba0db04ac04450e087a55d03f22fac9cbb3a02c817a53220436"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-money-detail.page.scss",
+      "bytes": 5844,
+      "sha256": "8044cea035bace988176104c48cf62a6f0553fc239058345c7bdc729af24d23a"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-money.scss",
+      "bytes": 16326,
+      "sha256": "d2eefb6f290e919add732f8d88beaa1374e3883b403ba2225d94e27cf7cf6293"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-month-type.component.scss",
+      "bytes": 4039,
+      "sha256": "6fe75f758bc8cf3b4a5897f79dc02bc6014e4738fc3970acbc30c7134029ebe6"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-objectives.component.scss",
+      "bytes": 9729,
+      "sha256": "c05d3f5daa9dbbba14214a5f20d3fd95ae6245ff4d8725180fd035c9aa284d53"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-pages.scss",
+      "bytes": 18560,
+      "sha256": "5238d7cc68888ae5972b978207c10827092ea33531cf2bf937d2407615c39582"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-pilot-charts.scss",
+      "bytes": 7964,
+      "sha256": "085b2b8f8430073ceb3f5fbeb13fce4d44001caa7425c91ee60043a5ae63c081"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-popover.component.scss",
+      "bytes": 3301,
+      "sha256": "ac4453af124d8733865471f3c59c4653e01e5596701a5ffee332e3bbad8c7712"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-project-switch.component.scss",
+      "bytes": 3062,
+      "sha256": "2e8f3118cebddb6a8aaa3377109c47ac8860c98dfdfad84b71c9ea94625065bd"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-start-details.component.scss",
+      "bytes": 773,
+      "sha256": "fde5cb22090614650a505ec37d84127b9bc398aff600f9eb1e64a159e0e5b361"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/bpm/bpm-vision.page.scss",
+      "bytes": 25059,
+      "sha256": "be6a5904a00853299baac2fbe7a32b7c2539d2c85b83fef730f8d8f819521dcf"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/shared/app-hero.component.scss",
+      "bytes": 15994,
+      "sha256": "178f08af590a8b866b0ab92d9f5a9089d4210fc0e6e11e3fd6c2b8ec682d2e6f"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/shared/metric-tiles.component.scss",
+      "bytes": 11953,
+      "sha256": "02a9ae126842eeba2306bbed9324be1a77180fabf47348305939d48838c66aa9"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/app/shared/period-navigation.component.scss",
+      "bytes": 3121,
+      "sha256": "a44fd2b75228a2d19cc054bd1e18e2794af09fa942d7e1f61e3351530abbbdda"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_base.scss",
+      "bytes": 1771,
+      "sha256": "0f8c1dc07e4426327b6de8c778ce34c0d6712963dd14a76f634d7f5e6d5717b3"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_bpm-presentation.scss",
+      "bytes": 11593,
+      "sha256": "d959012b9a1b31fcddc3774d511195b07c06703e2324cc3574987980351474b4"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_components.scss",
+      "bytes": 16405,
+      "sha256": "e9c5bd07d44988226d92d3bf89c8659edf9d35cf94dc4b54a6962d7ec53480c9"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_contrat-ruptures.scss",
+      "bytes": 956,
+      "sha256": "af3e7d6d3083d116c8d0401f96feab423fe155f746934f7f6765d581477c81a3"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_contrat.scss",
+      "bytes": 11202,
+      "sha256": "983c1246da553946d4659620f16070dc4ea3e95dd895f7fd122e8e03200bd6c9"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_fonts.scss",
+      "bytes": 2339,
+      "sha256": "cc27dea81e81df833a222f8d1112f383189e434b903f07a6081ba48bd0b0b405"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_forms.scss",
+      "bytes": 8584,
+      "sha256": "3104dfe2392cec7ed20ba689f2940bf154c34d7c0e9645014ba7151f41693fc8"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_functions.scss",
+      "bytes": 333,
+      "sha256": "4a1c97799257fef419effa813cb7e8c48359a15709a7a06da976c34ee508470d"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_identities.scss",
+      "bytes": 7154,
+      "sha256": "7c1d93e4471bb050646f2a93a6f41617f393ee38ea49bcbe0a0d03b9111338a6"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_interactions.scss",
+      "bytes": 11553,
+      "sha256": "59c55ff832b5987604dcb7a3d10feb2dcdd1439da7dec8133fae05dd06caeb47"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_management.scss",
+      "bytes": 3411,
+      "sha256": "7da3baf7a640094be66793449683be68ef1cc41cc6c66eb36f97d158cabfd0a0"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_overview-theme.scss",
+      "bytes": 2024,
+      "sha256": "40173ad22360528f05437f0ce4a1c173645709ece96d27023d82f877e2c5cb82"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_shell.scss",
+      "bytes": 18112,
+      "sha256": "03b4e08fedd258d2686c69a348b6ca7c9a6c454ebd0bc0543a7995e53d226cca"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_site-responsive.scss",
+      "bytes": 4859,
+      "sha256": "4822623b418ffe9d1ef82e07ecf02692e7a418205cd2e62668a7ef47fc398372"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_surface-language.scss",
+      "bytes": 22220,
+      "sha256": "f0ac6c2871c9d19a09a4ae61e9d094a1c42ea2ad28012c4f619174925b469c38"
+    },
+    {
+      "path": "styles-source/site/apps/web/src/styles/_tokens.scss",
+      "bytes": 39693,
+      "sha256": "e64f8d0893a338075f3092ff31003c1f32f3f7595cfc36a7827d36a70aebf2fb"
+    }
+  ]
+}

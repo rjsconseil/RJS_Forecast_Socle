@@ -1,0 +1,290 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Saisie commune : mêmes repères dans le noyau et dans les modules. */
+:is(.editor-form, .budget-page, .management-page)
+  :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='file']):not(
+    [type='hidden']
+  ) {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: var(--dim-44);
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--field-line);
+  border-radius: var(--field-radius);
+  background: var(--field-surface);
+  color: var(--field-ink);
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-normal);
+  transition:
+    border-color var(--ease-fast),
+    box-shadow var(--ease-fast),
+    background-color var(--ease-fast);
+}
+:is(.editor-form, .budget-page, .management-page) :is(input, select, textarea):focus-visible {
+  border-color: var(--app-accent);
+  outline: var(--trait-2) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-2);
+  box-shadow: 0 0 0 var(--ombre-4) var(--app-accent-soft);
+}
+:is(.editor-form, .budget-page, .management-page) :is(input, textarea)::placeholder {
+  color: var(--field-placeholder);
+  opacity: var(--opacite-1);
+}
+:is(.editor-form, .budget-page, .management-page) :is(input, textarea)[readonly] {
+  border-style: dashed;
+  background: var(--soft);
+  color: var(--muted);
+}
+:is(.editor-form, .budget-page, .management-page) :is(input, select, textarea):disabled {
+  background: var(--soft);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+:is(.editor-form, .budget-page, .management-page)
+  :is(input, select, textarea).ng-invalid.ng-touched {
+  border-color: var(--danger);
+  box-shadow: inset var(--ombre-4) 0 0 var(--danger);
+}
+:is(.editor-form, .budget-page, .management-page) label:has(> .ng-invalid.ng-touched)::after {
+  content: 'À vérifier';
+  color: var(--danger);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+}
+:is(.editor-form, .budget-page, .management-page) :is(input[type='checkbox'], input[type='radio']),
+.calendar input[type='checkbox'] {
+  width: var(--dim-18);
+  height: var(--dim-18);
+  min-height: var(--dim-18);
+  padding: 0;
+  accent-color: var(--app-accent);
+  cursor: pointer;
+}
+.editor-form label:focus-within,
+.budget-page form label:focus-within {
+  color: var(--app-accent);
+}
+.field-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+}
+.field-requirement {
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+}
+.editor-section-title {
+  grid-column: 1 / -1;
+  margin: var(--ecart-10) 0 0;
+  padding: var(--ecart-10) var(--ecart-12);
+  border-inline-start: var(--trait-3) solid var(--app-accent);
+  border-radius: var(--radius-xs);
+  background: var(--app-accent-soft);
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-bold);
+}
+.modal-head h2 {
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-2xl));
+  font-weight: var(--fw-bold);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.modal-head {
+  position: sticky;
+  top: 0;
+  z-index: var(--plan-3);
+  padding: var(--ecart-20) var(--ecart-24);
+}
+.editor-form {
+  padding: var(--ecart-20) var(--ecart-24) var(--ecart-24);
+}
+.editor-form .form-actions,
+.budget-page
+  :is(.budget-form-actions, .bw-manager-config-actions, .budget-allocation-form-actions) {
+  position: sticky;
+  bottom: calc(-1 * var(--decalage-2));
+  z-index: var(--plan-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8);
+  padding: var(--ecart-12) 0;
+  border-top: var(--trait-1) solid var(--outline);
+  background: var(--raised-surface);
+}
+.editor-form .form-actions {
+  bottom: calc(-1 * var(--decalage-24));
+  margin-bottom: calc(-1 * var(--ecart-24));
+}
+rjs-form-status {
+  display: block;
+  flex: var(--flex-1) var(--flex-0) var(--part-100);
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.form-feedback,
+.budget-page .form-feedback,
+.budget-workspace .form-feedback {
+  margin: 0;
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--outline);
+  border-inline-start-width: var(--trait-3);
+  border-radius: var(--radius-sm);
+  background: var(--soft);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-normal);
+}
+.form-feedback:is([data-state='draft'], [data-state='busy']) {
+  border-color: var(--app-accent-line);
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+}
+.form-feedback[data-state='error'] {
+  border-color: var(--status-danger);
+  background: var(--status-danger-surface);
+  color: var(--status-danger);
+}
+.form-feedback[data-state='success'] {
+  border-color: var(--status-success);
+  background: var(--status-success-surface);
+  color: var(--status-success);
+}
+.budget-page :is(.bw-locked-project, .budget-guidance, .bw-form-help) {
+  border-radius: var(--radius-md);
+  background: var(--app-accent-soft);
+}
+.budget-page :is(.bw-locked-project, .budget-guidance) {
+  border-inline-start: var(--trait-3) solid var(--app-accent);
+}
+.budget-page :is(.bw-panel, .bw-overview-panel, .bw-manager-list-panel, .bw-manager-detail-panel) {
+  box-shadow: var(--app-panel-shadow);
+}
+.budget-page .bw-manager-config-actions .btn,
+.budget-page .budget-form-actions .btn {
+  white-space: normal;
+}
+
+@media (max-width: $rupture-600) {
+  .editor-form .form-actions > button,
+  .budget-page :is(.budget-form-actions, .bw-manager-config-actions) > .btn {
+    flex: var(--flex-1) var(--flex-1) auto;
+    min-height: var(--dim-44);
+  }
+  .modal-head {
+    padding: var(--ecart-16);
+  }
+  .editor-form {
+    padding: var(--ecart-14) var(--ecart-16) var(--ecart-20);
+  }
+  .editor-form .form-actions {
+    bottom: calc(-1 * var(--decalage-20));
+    margin-bottom: calc(-1 * var(--ecart-20));
+  }
+}
+
+.bw-creation-guide {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: var(--ecart-14) 0 var(--ecart-20);
+  padding: var(--ecart-14);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--radius-md);
+  background: var(--app-accent-soft);
+  box-shadow: var(--app-panel-shadow);
+
+  > strong {
+    color: var(--ink);
+    font-size: scaled(var(--fs-sm));
+  }
+  > p {
+    margin: 0 0 var(--ecart-4);
+    color: var(--muted);
+    font-size: scaled(var(--fs-xs));
+  }
+  button {
+    display: grid;
+    grid-template-columns: var(--dim-24) minmax(0, var(--fr-1)) var(--dim-16);
+    gap: var(--ecart-10);
+    align-items: start;
+    width: var(--part-100);
+    padding: var(--ecart-12);
+    border: var(--trait-1) solid var(--outline);
+    border-radius: var(--radius-sm);
+    background: var(--raised-surface);
+    color: var(--ink);
+    text-align: start;
+    cursor: pointer;
+    box-shadow: 0 var(--ombre-2) 0 var(--outline);
+    > b {
+      display: grid;
+      place-items: center;
+      width: var(--dim-24);
+      height: var(--dim-24);
+      border-radius: var(--part-50);
+      background: var(--app-accent);
+      color: var(--app-on-accent);
+    }
+    strong,
+    small {
+      display: block;
+    }
+    strong {
+      font-size: scaled(var(--fs-sm));
+    }
+    small {
+      margin-top: var(--ecart-4);
+      color: var(--muted);
+      font-size: scaled(var(--fs-xs));
+      line-height: var(--lh-normal);
+    }
+    &:is(:hover, :focus-visible, .is-current) {
+      border-color: var(--app-accent);
+      box-shadow:
+        inset var(--ombre-4) 0 0 var(--app-accent),
+        0 var(--ombre-2) 0 var(--app-accent-line);
+    }
+    &:focus-visible {
+      outline: var(--trait-2) solid var(--app-focus-ring);
+      outline-offset: var(--decalage-2);
+    }
+    &.is-current {
+      background: var(--app-accent-soft);
+    }
+  }
+}
+.budget-linked-context,
+.budget-initial-value,
+.editor-planning-hint {
+  margin: 0;
+  padding: var(--ecart-12);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--radius-sm);
+  background: var(--app-accent-soft);
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+}
+.budget-initial-value legend {
+  padding: 0 var(--ecart-6);
+  font-weight: var(--fw-semibold);
+}
+.budget-page label:has(> input[inputmode='decimal'].ng-invalid.ng-touched)::after {
+  content: 'Montant à vérifier · deux décimales maximum';
+}
+.budget-page label:has(> input[type='date'].ng-invalid.ng-touched)::after {
+  content: 'Date à vérifier · respecter le début de la période';
+}
+@media (max-width: $rupture-700) {
+  .bw-creation-guide {
+    padding: var(--ecart-10);
+  }
+  .bw-creation-guide button {
+    min-height: var(--dim-44);
+  }
+}

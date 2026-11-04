@@ -1,0 +1,12 @@
+@use 'functions' as *;
+/* Ces composants n'occupent pas de case : leur bouton rejoint le bandeau, leur fenêtre la couche supérieure. */
+:host { display: contents; }
+.bpm-guide { display: grid; gap: var(--ecart-16); padding: var(--ecart-24); color: var(--ink); }
+.bpm-guide h2, .bpm-guide h3 { margin: 0; }
+.bpm-guide section { border: var(--trait-1) solid var(--card-border); border-radius: var(--rayon-12); padding: var(--ecart-16); }
+.bpm-guide dl { display: grid; gap: var(--ecart-12); }
+.bpm-guide dl div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ecart-8); }
+.bpm-guide dd { margin: 0; font-weight: var(--fw-bold); }
+
+.bpm-guide label { display: grid; gap: var(--ecart-8); }
+.bpm-guide .bpm-actions { display: flex; flex-wrap: wrap; gap: var(--ecart-12); }

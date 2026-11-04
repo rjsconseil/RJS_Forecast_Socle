@@ -1,0 +1,54 @@
+@use 'contrat-ruptures' as *;
+
+// Pages du socle (noyau, middlewares de test, Object Management, Administration).
+// Tableaux par statut : gabarit source (`_workspace.scss` : `.board`, `.board-column`, `.task-card`) ;
+// formulaires et fiches : gabarits source (`_components.scss`, `_forms.scss`, `_workspace.scss`).
+// Ce fichier ne garde que ce que la source ne couvre pas, sans redéfinir ses classes.
+
+// Demande du propriétaire : la ventilation reste horizontale — là où la source replie le tableau
+// (2 colonnes sous 1200 px, 1 sous 600 px), les quatre colonnes restent sur une ligne et le tableau
+// défile horizontalement (la page, elle, ne défile pas).
+@media (max-width: $rupture-1200) {
+  .section-home-board .board {
+    grid-template-columns: repeat(4, minmax(16rem, 1fr));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-bottom: var(--ecart-8);
+  }
+  .section-home-board .board-column { scroll-snap-align: start; }
+}
+
+// Glisser-déposer (CDK) sur les cartes de tâche : poignée ⠿, aperçu et emplacement.
+.task-card .grip { cursor: grab; touch-action: none; user-select: none; padding: 0 var(--ecart-4) 0 0; color: var(--muted); }
+.cdk-drag-preview { box-shadow: var(--app-panel-shadow); border-radius: var(--radius-md); }
+.cdk-drag-placeholder { opacity: 0.35; }
+.cdk-drag-animating, .cdk-drop-list-dragging .task-card:not(.cdk-drag-placeholder) { transition: transform 200ms ease; }
+
+// Pastille d'état des projets de la vie (tableau de bord BPM).
+.status-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+  border: 1px solid currentColor;
+  &.s-planned, &.t-todo { color: var(--s-todo); }
+  &.s-onHold { color: var(--s-hold); }
+  &.s-paused, &.s-toResume, &.t-blocked { color: var(--s-blocked); }
+  &.s-active, &.s-toFinish, &.t-doing { color: var(--s-doing); }
+  &.s-done, &.t-done { color: var(--s-done); }
+}
+
+// Tableaux de lecture des middlewares de test et des traces de calcul (enveloppe `.table-wrap`).
+// Les règles restent dans cette enveloppe pour ne pas habiller les tableaux de la source.
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 0.8rem; }
+}
+
+// Résultat d'un contrôle (Object Management, Administration).
+.result { font-weight: 600; font-size: 0.8rem;
+  &.r-passed { color: var(--ok); }
+  &.r-failed { color: var(--danger); }
+  &.r-warning { color: var(--warn); }
+  &.r-not-run { color: var(--muted); }
+}

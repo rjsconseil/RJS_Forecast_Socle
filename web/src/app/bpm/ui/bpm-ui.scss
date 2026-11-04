@@ -1,0 +1,73 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+// États de lecture partagés (`bpm-state`) : extraits verbatim des feuilles de la référence
+// (bpm-pages.scss : aide, erreur, actions ; bpm-money.scss : état vide).
+
+/* bpm-pages.scss — aide, erreur, manque, blocage */
+.bpm-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-md));
+  line-height: var(--lh-normal);
+}
+.bpm-error,
+.bpm-missing,
+.bpm-blocked {
+  margin: 0;
+  padding: var(--ecart-12) var(--ecart-16);
+  border-radius: var(--rayon-8);
+  font-size: scaled(var(--fs-sm));
+}
+.bpm-error {
+  border: var(--trait-1) solid var(--status-danger);
+  color: var(--status-danger);
+  background: var(--status-danger-surface);
+}
+.bpm-missing {
+  border: var(--trait-1) dashed var(--status-warning);
+  color: var(--ink);
+  background: var(--status-warning-surface);
+}
+.bpm-blocked {
+  display: grid;
+  justify-items: start;
+  gap: var(--ecart-12);
+  border: var(--trait-1) solid var(--app-accent-line);
+  background: var(--app-accent-soft);
+}
+
+/* bpm-pages.scss — rangée d'actions */
+.bpm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-12);
+}
+
+/* bpm-money.scss — état vide */
+.bm-empty {
+  margin: 0;
+  padding: var(--ecart-16);
+  border: var(--trait-1) dashed var(--card-border);
+  border-radius: var(--card-radius);
+  color: var(--muted);
+}
+
+/* Composition de bpm-state : blocs en grille, lignes de lecture discrètes. */
+:host { display: block; min-width: 0; }
+.bpm-state-error,
+.bpm-state-empty,
+.bpm-state-loading {
+  display: grid;
+  gap: var(--ecart-8);
+}
+.bpm-state-error p,
+.bpm-state-empty p {
+  margin: 0;
+}
+.bpm-state-line {
+  display: block;
+  block-size: var(--ecart-12);
+  border-radius: var(--rayon-999);
+  background: var(--soft);
+}

@@ -1,0 +1,370 @@
+@use 'contrat-ruptures' as *;
+
+/* Présentation commune du module : bilan, analyse, puis action.
+   Newsreader est déjà servie localement ; aucun appel de police externe. */
+.app-hero-guide:empty {
+  display: none;
+}
+
+.app-shell main .bpm-reading {
+  --bpm-frame-line: color-mix(in srgb, var(--app-accent) 24%, var(--line));
+  --bpm-frame-radius: var(--rayon-12);
+
+  rjs-app-hero .app-hero {
+    gap: var(--ecart-10) var(--ecart-16);
+    grid-template-areas: 'guide lead title' 'context visual visual' 'chips chips chips' 'toolbar toolbar toolbar';
+  }
+  rjs-app-hero .app-hero:has(rjs-period-navigation) {
+    grid-template-areas: 'guide lead title' 'context visual period' 'chips chips period' 'toolbar toolbar toolbar';
+  }
+  rjs-app-hero .app-hero:not(:has([heroGuide])) {
+    grid-template-areas: 'context lead title' 'visual visual visual' 'chips chips chips' 'toolbar toolbar toolbar';
+  }
+  rjs-app-hero .app-hero:not(:has([heroGuide])):has(rjs-period-navigation) {
+    grid-template-areas: 'context lead title' 'chips visual period' 'toolbar toolbar toolbar';
+  }
+  .app-hero-guide {
+    grid-area: guide;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ecart-6);
+    min-width: 0;
+  }
+  .app-hero-guide:empty {
+    display: none;
+  }
+  .app-hero-guide :is(.app-hero-action, .btn, .bt-trigger) {
+    min-height: var(--dim-32);
+    padding: var(--ecart-6) var(--ecart-8);
+    font-size: var(--fs-2xs);
+    border: 1px solid color-mix(in srgb, var(--white) 40%, transparent);
+    border-radius: var(--rayon-6);
+    color: var(--white);
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+  .app-hero-guide .app-hero-action:focus-visible {
+    outline: 2px solid var(--white);
+  }
+  .app-hero-meta {
+    align-self: start;
+  }
+  .app-hero-heading > .app-hero-lead {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+    font-weight: 500;
+    font-style: italic;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    color: var(--white);
+    padding-block: var(--ecart-4);
+  }
+  .app-hero-toolbar {
+    gap: var(--ecart-8);
+    padding-block-start: var(--ecart-10);
+  }
+  .app-hero-commandbar {
+    gap: var(--ecart-8);
+  }
+  .app-hero-toolbar-label {
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--white) 75%, transparent);
+    padding-inline-end: var(--ecart-4);
+  }
+  .app-hero-page-tools > nav {
+    gap: var(--ecart-4);
+    padding-block-start: var(--ecart-8);
+    border-block-start: 1px solid color-mix(in srgb, var(--white) 18%, transparent);
+  }
+  .app-hero-page-tools > nav > a {
+    border-color: transparent;
+    border-radius: var(--rayon-6);
+    min-height: var(--dim-32);
+    padding: var(--ecart-4) var(--ecart-10);
+    color: var(--white);
+    background: color-mix(in srgb, var(--white) 6%, transparent);
+  }
+  .app-hero-page-tools > nav > a:focus-visible {
+    outline: var(--trait-3) solid var(--white);
+    outline-offset: var(--trait-2);
+  }
+  .app-hero-page-tools > nav > a[aria-current='location'] {
+    background: var(--white);
+    color: var(--slate-950);
+    border-color: var(--white);
+  }
+  .app-hero-page-tools > .bgl-graph-tools > summary {
+    padding: var(--ecart-8) var(--ecart-10);
+    border: 1px solid color-mix(in srgb, var(--white) 25%, transparent);
+    border-radius: var(--rayon-6);
+    background: color-mix(in srgb, var(--white) 6%, transparent);
+  }
+
+  /* Un même cadre de synthèse et des tuiles dont le bord porte le sens. */
+  [data-bpm-frame='metrics'],
+  [data-bpm-frame='chart'],
+  [data-bpm-frame='form'] {
+    min-width: 0;
+    padding: clamp(16px, 2vw, 24px);
+    border: 1px solid var(--bpm-frame-line);
+    border-radius: var(--bpm-frame-radius);
+    background: var(--raised-surface);
+    box-shadow: var(--app-panel-shadow);
+  }
+  [data-bpm-frame='metrics'] {
+    border-block-start: 3px solid var(--app-accent);
+  }
+  [data-bpm-frame='chart'] {
+    border-block-start: 3px solid var(--bpm-frame-line);
+  }
+  [data-bpm-frame='form'] {
+    border-block-start: 3px solid var(--app-accent);
+  }
+  [data-bpm-frame] > header:first-child {
+    margin-block-end: var(--ecart-16);
+    padding-block-end: var(--ecart-12);
+    border-block-end: 1px solid var(--line);
+  }
+  [data-bpm-frame] > header:first-child :is(h2, h3, p) {
+    margin-block: 0;
+  }
+  [data-bpm-frame] > header:first-child p {
+    margin-block-start: var(--ecart-6);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+  rjs-metric-tiles .metric-tiles[data-variant] .metric-tile {
+    --metric-accent: var(--app-accent);
+    border-color: var(--line);
+    border-block-start: 3px solid var(--metric-accent);
+    box-shadow: none;
+  }
+  rjs-metric-tiles .metric-tiles .metric-tile[data-tone='success'] {
+    --metric-accent: var(--status-success);
+  }
+  rjs-metric-tiles .metric-tiles .metric-tile[data-tone='danger'] {
+    --metric-accent: var(--status-danger);
+  }
+  rjs-metric-tiles .metric-tiles .metric-tile[data-tone='warning'] {
+    --metric-accent: var(--status-warning);
+  }
+  rjs-metric-tiles .metric-tiles .metric-tile.is-emphasis {
+    background: color-mix(in srgb, var(--app-accent) 4%, var(--raised-surface));
+    box-shadow: none;
+  }
+  .metric-label {
+    font-weight: var(--fw-bold);
+  }
+  .metric-value {
+    letter-spacing: -0.035em;
+  }
+
+  :is(.bent-kpis, .bc-tiles, .fp-compact-facts) > :is(li, div) {
+    min-width: 0;
+    padding: var(--ecart-16);
+    border: 1px solid var(--bpm-frame-line);
+    border-block-start: 3px solid var(--app-accent);
+    border-radius: var(--rayon-8);
+    background: var(--raised-surface);
+  }
+  .bent-kpis > li[data-alert='true'] {
+    border-block-start-color: var(--status-danger);
+  }
+  .bc-tiles > [data-tone='success'] {
+    border-block-start-color: var(--status-success);
+  }
+  .bc-tiles > [data-tone='danger'] {
+    border-block-start-color: var(--status-danger);
+  }
+  :is(.fp-comparison, .fp-project-chart, .bgl-closure-scroll, .bv-chart-frame, .bc-chart-frame) {
+    border: 1px solid var(--bpm-frame-line);
+    border-radius: var(--rayon-8);
+    padding: var(--ecart-12);
+    background: var(--raised-surface);
+  }
+  .fp-bars > li,
+  .fp-projects > li {
+    border: 1px solid var(--bpm-frame-line);
+    border-radius: var(--rayon-8);
+    padding: var(--ecart-16);
+    background: var(--raised-surface);
+  }
+  .fp-bars > li {
+    border-inline-start: 3px solid var(--status-success);
+  }
+  .fp-bars > li.fp-negative {
+    border-inline-start-color: var(--status-danger);
+  }
+  .fp-bars > li.fp-result {
+    border-inline-start-color: var(--app-accent);
+  }
+  .fp-bars,
+  .fp-projects {
+    gap: var(--ecart-16);
+  }
+  .fp-summary {
+    display: grid;
+    gap: var(--ecart-20);
+  }
+  .fp-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fp-bars,
+  .fp-projects {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    align-items: start;
+  }
+  .fp-bars > li {
+    height: 100%;
+    box-sizing: border-box;
+    align-content: start;
+  }
+  .bpm-keynumbers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    gap: var(--ecart-16);
+    margin: 0;
+  }
+  .bpm-keynumbers > div {
+    display: grid;
+    gap: var(--ecart-8);
+    padding: var(--ecart-20);
+    border: 1px solid var(--bpm-frame-line);
+    border-radius: var(--rayon-8);
+    background: var(--soft);
+  }
+  .bpm-keynumbers dt {
+    color: var(--muted);
+    font-size: var(--fs-sm);
+  }
+  .bpm-keynumbers dd {
+    margin: 0;
+    color: var(--app-accent);
+    font-size: var(--fs-3xl);
+    font-weight: var(--fw-bold);
+  }
+  .expense-filters:not(:has(> .bpm-link)) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  }
+  :is(.bgl-keyfigure, .expense-overview-card, .bb-wealth) {
+    border-radius: var(--rayon-8);
+    border-color: var(--bpm-frame-line);
+  }
+  .bgl-keyfigure {
+    border-block-start: 3px solid var(--app-accent);
+  }
+  .bc-hero {
+    container-type: inline-size;
+  }
+  .bc-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bc-tile strong {
+    overflow-wrap: normal;
+    word-break: normal;
+    font-variant-numeric: tabular-nums;
+  }
+  .bgl-closure-summary > div,
+  .objectives-summary > div {
+    border: 1px solid var(--bpm-frame-line);
+    border-radius: var(--rayon-8);
+    padding: var(--ecart-12);
+    background: var(--soft);
+  }
+  .bs-rail {
+    order: 0;
+  }
+  .expense-overview-card[data-status='recorded'] {
+    border-block-start: 3px solid var(--status-danger);
+  }
+  .expense-overview-card[data-status='pending'] {
+    border-block-start: 3px solid var(--status-warning);
+  }
+  :is(.bs-stage, .ba-frame, .ba-reserve, .bpm-project, .bent-section, .bv-card) {
+    border-color: var(--bpm-frame-line);
+    border-radius: var(--bpm-frame-radius);
+  }
+  :is(.bs-stage-head, .ba-reserve > header, .bent-section > header) {
+    padding-block-end: var(--ecart-16);
+    border-block-end: 1px solid var(--line);
+  }
+  .bpm-section-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--ecart-12);
+    margin: 0 0 var(--ecart-16);
+    font-size: var(--fs-xl);
+  }
+  .bpm-section-heading::before {
+    content: '';
+    width: var(--dim-8);
+    align-self: stretch;
+    border-radius: var(--rayon-4);
+    background: var(--app-accent);
+  }
+  .bpm-section-note {
+    margin: 0 0 var(--ecart-16);
+    color: var(--muted);
+  }
+}
+
+/* Un sélecteur compact conserve son mois entier, même dans un demi-bandeau mobile. */
+@container (max-width: 230px) {
+  .app-shell main .bpm-reading .period-navigation > a {
+    min-height: 64px;
+    padding-inline: 2px;
+  }
+  .app-shell main .bpm-reading .period-nav-primary,
+  .app-shell main .bpm-reading .period-nav-title.is-long-month .period-nav-primary {
+    font-size: clamp(12px, 7cqi, 17px);
+  }
+  .app-shell main .bpm-reading .period-nav-year { font-size: clamp(16px, 10cqi, 24px); }
+  .app-shell main .bpm-reading .period-nav-arrow > svg { width: 24px; height: 24px; }
+  .app-shell main .bpm-reading .period-nav-return { gap: 2px; font-size: 10px; }
+}
+
+@container (min-width: 1040px) {
+  .app-shell main .bpm-reading .bc-tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@container (max-width: 440px) {
+  .app-shell main .bpm-reading .bc-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (max-width: #{$rupture-640}) {
+  .app-shell main .bpm-reading rjs-app-hero .app-hero {
+    grid-template-areas: 'title title' 'lead lead' 'guide guide' 'context visual' 'chips chips' 'toolbar toolbar';
+  }
+  .app-shell main .bpm-reading rjs-app-hero .app-hero:has(rjs-period-navigation) {
+    grid-template-areas: 'title title' 'lead lead' 'guide guide' 'context period' 'visual visual' 'chips chips' 'toolbar toolbar';
+  }
+  .app-shell main .bpm-reading rjs-app-hero .app-hero:not(:has([heroGuide])) {
+    grid-template-areas: 'title title' 'lead lead' 'context visual' 'chips chips' 'toolbar toolbar';
+  }
+  .app-shell
+    main
+    .bpm-reading
+    rjs-app-hero
+    .app-hero:not(:has([heroGuide])):has(rjs-period-navigation) {
+    grid-template-areas: 'title title' 'lead lead' 'context period' 'visual visual' 'chips chips' 'toolbar toolbar';
+  }
+  .app-shell main .bpm-reading .expense-filters:not(:has(> .bpm-link)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app-shell main .bpm-reading .app-hero-heading > .app-hero-lead {
+    font-size: 1.2rem;
+  }
+  .app-shell main .bpm-reading .app-hero-page-tools > nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+}

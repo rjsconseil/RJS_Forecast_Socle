@@ -1,0 +1,141 @@
+@use 'contrat-ruptures' as *;
+
+.management-journey,
+.management-panel,
+.management-context {
+  min-width: 0;
+  padding: var(--card-padding, var(--ecart-20));
+  margin-bottom: var(--ecart-20);
+  border: var(--card-border-width, var(--trait-2)) solid var(--card-border, var(--outline));
+  border-radius: var(--card-radius, var(--radius-sm));
+  background: var(--card-surface, var(--raised-surface));
+  color: var(--card-ink, var(--ink));
+}
+.management-context,
+.management-fields,
+.management-totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-16);
+}
+.management-columns {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1));
+  gap: var(--ecart-20);
+}
+.management-form,
+.management-form label,
+.management-context label {
+  display: grid;
+  gap: var(--ecart-8);
+}
+.management-form {
+  gap: var(--ecart-16);
+}
+.management-form input,
+.management-form select,
+.management-form textarea,
+.management-context select {
+  max-width: var(--part-100);
+  min-width: 0;
+}
+.management-steps,
+.management-records {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--ecart-12);
+}
+.management-steps {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--dim-240), var(--part-100)), var(--fr-1))
+  );
+}
+.management-steps a {
+  display: grid;
+  gap: var(--ecart-8);
+  height: var(--part-100);
+  padding: var(--ecart-12);
+  border: var(--trait-2) solid var(--outline);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  background: var(--raised-surface);
+}
+.management-records li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  padding: var(--ecart-12);
+  border-bottom: var(--trait-1) solid var(--outline);
+}
+/* Une prévision d'actif négative : l'état d'attention reste porté par le texte, pas par la couleur seule. */
+.management-warning {
+  display: block;
+  margin-top: var(--ecart-4);
+  color: var(--status-warning);
+  font-weight: var(--fw-semibold);
+}
+.management-records li > div {
+  display: grid;
+  gap: var(--ecart-8);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.management-totals > div {
+  flex: var(--flex-1);
+  min-width: 0;
+}
+.management-totals dd {
+  margin: 0;
+  font-size: var(--texte-24);
+  font-weight: var(--graisse-700);
+}
+.management-message {
+  padding: var(--ecart-16);
+  border: var(--trait-2) solid var(--outline);
+}
+@media (max-width: $rupture-820) {
+  .management-columns {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+
+/* Le premier centre reste dans le formulaire de son projet, sans colonne perdue. */
+.budget-form-grid > fieldset {
+  grid-column: 1 / -1;
+  min-width: 0;
+  display: grid;
+  gap: var(--ecart-12);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--dim-240), var(--part-100)), var(--fr-1))
+  );
+  border: var(--trait-2) solid var(--outline);
+  padding: var(--ecart-16);
+}
+.budget-form-grid > fieldset > :is(legend, p) {
+  grid-column: 1 / -1;
+}
+
+// Le contexte de patrimoine reste disponible pendant la lecture des fiches.
+.patrimoine-context-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ecart-12);
+  width: 100%;
+  label {
+    display: grid;
+    gap: var(--ecart-4);
+    min-width: min(100%, 16rem);
+    max-width: 32rem;
+    flex: 1;
+    font-size: var(--texte-14);
+    font-weight: 650;
+  }
+  select { min-width: 0; width: 100%; }
+}

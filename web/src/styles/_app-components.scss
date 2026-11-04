@@ -1,0 +1,52 @@
+// Couche 5 — composants partagés (cadres, cartes de chiffres, tableaux, panneaux, états).
+.frame { background: var(--c-surface); border: 1px solid var(--c-rule); border-radius: var(--r-lg); box-shadow: var(--shadow-1); padding: var(--pad-frame); min-width: 0; }
+.frame > header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; margin-bottom: var(--sp-3); }
+.frame > header h2 { margin: 0; font-size: 1rem; }
+.frame > header .meta { color: var(--c-text-2); font-size: 0.82rem; }
+.frame.flat { box-shadow: none; }
+
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; border: 1px solid var(--c-rule-strong); color: var(--c-text-2); background: var(--c-surface);
+  &.pos, &.settled { color: var(--c-pos); border-color: color-mix(in srgb, var(--c-pos) 35%, transparent); background: var(--c-pos-soft); }
+  &.warn, &.late, &.due { color: var(--c-warn); border-color: color-mix(in srgb, var(--c-warn) 35%, transparent); background: var(--c-warn-soft); }
+  &.neg, &.unrealized { color: var(--c-neg); border-color: color-mix(in srgb, var(--c-neg) 35%, transparent); background: var(--c-neg-soft); }
+  &.accent, &.pending { color: var(--c-accent-strong); border-color: color-mix(in srgb, var(--c-accent) 30%, transparent); background: var(--c-accent-soft); }
+  &.estimate { color: var(--c-warn); border-style: dashed; }
+  &.recorded { color: var(--c-text-2); background: var(--c-surface-3); }
+}
+
+.kpis { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.88rem;
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--c-rule); vertical-align: top; }
+  th { color: var(--c-text-2); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: .03em; background: var(--c-surface-2); white-space: nowrap; }
+  td.num, th.num { text-align: right; font-family: var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr.clickable { cursor: pointer; }
+  tbody tr.clickable:hover, tbody tr.selected { background: var(--c-surface-2); }
+}
+.table-scroll { overflow-x: auto; border: 1px solid var(--c-rule); border-radius: var(--r-md); background: var(--c-surface); }
+
+.panel-drawer { position: fixed; inset: 0 0 0 auto; width: min(560px, 100%); background: var(--c-surface); box-shadow: var(--shadow-3); z-index: 40; display: flex; flex-direction: column; border-left: 1px solid var(--c-rule);
+  > header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--c-rule); }
+  > header h2 { margin: 0; font-size: 1.05rem; }
+  > .body { padding: 16px 18px; overflow: auto; flex: 1; }
+  > footer { padding: 12px 18px; border-top: 1px solid var(--c-rule); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+}
+.drawer-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.32); z-index: 39; }
+
+.state { padding: 20px; text-align: center; color: var(--c-text-2); border: 1px dashed var(--c-rule-strong); border-radius: var(--r-md); background: var(--c-surface-2);
+  &.error { color: var(--c-neg); border-color: color-mix(in srgb, var(--c-neg) 35%, transparent); background: var(--c-neg-soft); }
+  p { margin: 0 0 8px; }
+}
+.skeleton { background: linear-gradient(90deg, var(--c-surface-3), var(--c-surface-2), var(--c-surface-3)); background-size: 200% 100%; animation: sk 1.4s ease infinite; border-radius: var(--r-sm); min-height: 16px; }
+@keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+.dl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px 16px; margin: 0;
+  dt { font-size: 0.76rem; color: var(--c-text-2); }
+  dd { margin: 2px 0 0; font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+}
+.ids { font: 12px var(--f-num); color: var(--c-text-2); word-break: break-all; }
+
+// Cadre BPM (`bpm-page`) : les actions projetées rejoignent la rangée `.app-hero-actions` du bandeau de la référence.
+.bpm-hero-actions,
+.bpm-hero-actions > [actions] { display: contents; }
