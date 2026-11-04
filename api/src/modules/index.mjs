@@ -3,9 +3,10 @@
 import usersModule from './users/index.mjs';
 import administrationModule from './administration/index.mjs';
 import objectManagementModule from './object-management/index.mjs';
+import calendarModule from './calendar/index.mjs';
 import coreModule from './core/index.mjs';
 import budgetModule from './budget/index.mjs';
 import patrimoineModule from './patrimoine/index.mjs';
 import bpmModule from './bpm/index.mjs';
 
-export const SOCLE_MODULES = [usersModule, administrationModule, objectManagementModule, coreModule, budgetModule, patrimoineModule, bpmModule];
+export const SOCLE_MODULES = [usersModule, administrationModule, objectManagementModule, calendarModule, coreModule, budgetModule, patrimoineModule, bpmModule];

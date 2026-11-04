@@ -70,6 +70,9 @@ export class Parameters {
       case 'list':
         if (!Array.isArray(value)) fail('VALIDATION', 'Une liste est attendue.', { key });
         break;
+      case 'object':
+        if (value === null || typeof value !== 'object' || Array.isArray(value)) fail('VALIDATION', 'Un objet { … } est attendu.', { key });
+        break;
       case 'boolean':
         if (typeof value !== 'boolean') fail('VALIDATION', 'Vrai ou faux est attendu.', { key });
         break;
