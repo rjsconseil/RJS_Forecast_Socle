@@ -11,6 +11,7 @@ npm install --prefix web
 npm start          # API (http://localhost:3410) et site (http://localhost:4300) ensemble ; Ctrl+C arrête les deux
 npm run api        # API locale http://localhost:3410 (réinitialisation de recette activée)
 npm run seed       # jeux d'essai via les contrats HTTP réels (API lancée, voir plus bas)
+npm run seed:projets   # foyer d'essai : 7 projets de la vie rejoués sur 4 périodes (API arrêtée)
 npm run import:rjs-forecast -- --remplacer   # données du site de référence voisin, ../RJS_Forecast (API arrêtée, voir plus bas)
 npm run web        # site Angular http://localhost:4300 (proxy /api → 3410)
 npm test           # tests node:test (api/test/*.test.mjs) sur persistance réelle
@@ -190,6 +191,26 @@ Après réinitialisation, le seed crée par HTTP, avec des dates relatives au jo
 - **Famille Durand** (famille, stock inconnu, objectif 80 000 €, cycle à configurer) : un centre de coût
   personnalisé et des opérations prévues ce mois-ci, pour montrer les valeurs inconnues.
 
+## Cas d'essai des projets de la vie (`npm run seed:projets`)
+
+API arrêtée, `npm run seed:projets` ajoute au stockage le foyer « TEST PROJETS · Famille Laurent » (autre nom :
+`-- --nom "…"`), dont les projets sont rejoués par les commandes réelles sur les trois mois précédents et le 1er du
+mois en cours (`api/scripts/project-scenarios.mjs`) ; trois périodes sont closes. Sauvegarde préalable du stockage.
+
+| Projet | Budget attribué | Ce que le cas montre |
+|---|---|---|
+| Cuisine équipée | 5 000 € | dans son budget, terminé ; retour ponctuel (revente de l'ancienne cuisine) |
+| Voyage en Islande | 3 000 € → 3 450 € | règlement en dépassement de 450 € autorisé, facturé en fin de cycle, parts revalidées |
+| Salle de bain | 4 000 € → 4 500 € | part en dépassement refusée puis autorisée (500 €), facturée en fin de cycle |
+| Vélo électrique | 1 200 € | dépassement de 200 € autorisé dans la période en cours : en rouge jusqu'à sa fin |
+| Location du garage | 400 € | retour récurrent de 90 €/mois au budget de vie dès la mise en location |
+| Permis moto | 1 500 € | charges récurrentes ; demande de dépassement refusée, rien n'est écrit |
+| Cabane au jardin | aucun | dépenses hors budget de vie tant qu'aucun montant n'est attribué |
+
+Le script affiche le journal daté et 18 contrôles recalculés à part (résultat de chaque clôture = reçu − dépenses du
+budget de vie − charges de projet validées, états des projets, facturations, retours, contrôles PRJ et intégrité) ;
+le même scénario est un test automatique (`api/test/projects-cycles.test.mjs`).
+
 ## Données du site de référence (`npm run import:rjs-forecast`)
 
 Importe les users du site de référence ([`rjsconseil/rjs-forecast`](https://github.com/rjsconseil/rjs-forecast))
@@ -228,6 +249,7 @@ npm run import:rjs-forecast -- --remplacer
 - `projects.test.mjs` — projets de la vie dans BPM : isolement, budget attribué (charge spéciale), ventilation,
   dépassements (demande, refus, accord), règlement compté à sa validation, facturation de fin de cycle, retours,
   rattachement et garde ;
+- `projects-cycles.test.mjs` — les sept cas d'essai des projets sur quatre périodes (18 contrôles) ;
 - `calendar.test.mjs` — module Calendrier : calendriers livrés, noyau, isolement et lecture sans écriture,
   paramétrage du survol, des couleurs et de la vue, configurations refusées, Budget/Patrimoine, configuration
   fournie à l'appel, fenêtre de lecture, répétitions.

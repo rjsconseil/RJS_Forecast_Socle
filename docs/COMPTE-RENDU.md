@@ -175,3 +175,13 @@ réimplémente pour les seuls projets du budget de vie, puis les enrichit de leu
   Dépensé, retour à la complétion, détachement refusé, glisser-déposer d'une tâche, charge spéciale dans Dépenses,
   aucune erreur console) ; 167 pages (7 profils, nouvelles pages et fiches projets comprises) : aucune alerte ni
   erreur console, seuls les refus prévus « Cycle à configurer » du profil sans cycle.
+
+### Cas d'essai des projets sur plusieurs cycles
+
+`npm run seed:projets` (et le test `projects-cycles.test.mjs`) rejoue sept projets d'un foyer d'essai sur quatre
+périodes mensuelles, par les commandes réelles et dans l'ordre des dates : attributions, ventilations, règlements
+validés, dépassements autorisés (Islande 450 €, Salle de bain 500 €, Vélo 200 €) ou refusés (Salle de bain avant
+accord, Permis moto), facturation de fin de cycle et revalidation des parts, retours ponctuel et récurrent, projet
+non financé, trois clôtures. 18 contrôles, tous réussis : sur la base d'août à novembre 2026, résultats clos
+1 420 €, −5 760 € et −1 560 € (charges de projet validées 880 €, 8 300 €, 3 950 €), 1 400 € de charges de projet
+validées dans la période en cours, Vélo électrique en dépassement jusqu'au 30 novembre.
