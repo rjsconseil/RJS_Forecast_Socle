@@ -1,0 +1,170 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Commandes communes aux deux calendriers, indépendantes de leurs données. */
+.calendar.is-360 .calendar-control-row,
+.budget-calendar-page .budget-calendar-controls {
+  display: grid;
+  gap: var(--ecart-12);
+  padding: var(--ecart-14);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+
+.calendar.is-360 .calendar-options,
+.budget-calendar-page .budget-calendar-filters {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  grid-template-rows: auto;
+  gap: var(--ecart-8);
+  align-items: center;
+  width: var(--part-100);
+}
+
+.calendar.is-360 .calendar-options :is(select, .calendar-date-filter),
+.budget-calendar-page .budget-calendar-filters select {
+  width: var(--part-100);
+  min-width: 0;
+  min-height: var(--dim-40);
+  height: auto;
+  padding: var(--ecart-8);
+  border-color: var(--field-line);
+  border-radius: var(--radius-sm);
+  background: var(--field-surface);
+  color: var(--field-ink);
+  font-size: scaled(var(--fs-xs));
+}
+
+.calendar.is-360 .calendar-toolbar {
+  width: var(--part-100);
+  margin: 0;
+}
+.calendar.is-360 .calendar-period-control {
+  display: grid;
+  grid-template-columns: auto minmax(0, var(--fr-1));
+  gap: var(--ecart-8);
+  width: var(--part-100);
+}
+.budget-calendar-page .budget-calendar-toolbar {
+  display: grid;
+  grid-template-columns: var(--dim-40) var(--dim-40) minmax(0, var(--fr-1));
+  gap: var(--ecart-8);
+  width: var(--part-100);
+}
+.calendar.is-360 .calendar-view-switch,
+.budget-calendar-page .budget-view-switch {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-4);
+  width: var(--part-100);
+  margin: 0;
+  padding: var(--ecart-4);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-md);
+  background: var(--soft);
+}
+.calendar.is-360 .calendar-view-switch button,
+.budget-calendar-page .budget-view-switch button {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  min-height: var(--dim-36);
+  padding: var(--ecart-6) var(--ecart-8);
+  border: var(--trait-1) solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--raised-surface);
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  box-shadow: none;
+}
+.calendar.is-360 .calendar-view-switch button:hover,
+.budget-calendar-page .budget-view-switch button:hover {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+}
+.calendar.is-360 .calendar-view-switch button[aria-pressed='true'],
+.budget-calendar-page .budget-view-switch button[aria-pressed='true'] {
+  border-color: var(--app-accent);
+  background: var(--app-accent);
+  color: var(--app-on-accent);
+  box-shadow: var(--btn-primary-shadow);
+}
+.calendar.is-360 :is(.calendar-paging, .calendar-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-6);
+}
+.calendar.is-360 .calendar-actions {
+  justify-content: flex-end;
+}
+.calendar.is-360 :is(.calendar-paging, .calendar-actions) .btn,
+.budget-calendar-page .budget-calendar-toolbar .btn {
+  width: auto;
+  height: auto;
+  min-height: var(--dim-40);
+  padding: var(--ecart-8) var(--ecart-10);
+  font-size: scaled(var(--fs-xs));
+}
+.calendar.is-360 .calendar-paging .btn {
+  min-width: var(--dim-40);
+}
+.budget-calendar-page .budget-month-picker {
+  grid-column: 1 / -1;
+}
+.budget-calendar-page .budget-month-picker .btn {
+  width: var(--part-100);
+}
+.calendar.is-360 .calendar-completed-control,
+.budget-calendar-page .budget-calendar-filters .budget-check {
+  min-height: var(--dim-36);
+  white-space: normal;
+}
+
+:is(.calendar-360-page, .budget-calendar-page) :is(h1, h2, h3),
+.calendar.is-360 :is(.calendar-grid-head h3, .calendar-agenda h3) {
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.calendar.is-360 :is(.calendar-month-wrap, .calendar-agenda),
+.calendar-360-heading,
+.calendar-360-project,
+.calendar-360-timeline {
+  border-color: var(--outline);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.calendar-360-project:hover {
+  transform: none;
+}
+.calendar-360-project:focus-within {
+  border-color: var(--app-accent);
+}
+.calendar.is-360 .calendar-grid-head,
+.budget-calendar-page .budget-calendar-grid-head {
+  padding: var(--ecart-10) var(--ecart-10);
+  border-radius: var(--radius-sm);
+  background: var(--app-accent-soft);
+  color: var(--ink);
+}
+.calendar.is-360 .calendar-grid-head h3,
+.budget-calendar-page .budget-calendar-grid-head h3 {
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-lg));
+}
+
+@media (max-width: $rupture-600) {
+  .calendar.is-360 .calendar-control-row,
+  .budget-calendar-page .budget-calendar-controls {
+    padding: var(--ecart-10);
+  }
+  .calendar.is-360 .calendar-view-switch button,
+  .budget-calendar-page .budget-view-switch button {
+    min-height: var(--dim-44);
+  }
+}

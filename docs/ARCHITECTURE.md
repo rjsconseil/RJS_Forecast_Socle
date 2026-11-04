@@ -12,6 +12,7 @@ réversible.
 | `users` — Gestion des utilisateurs | 0 transverse | — | `user` (usr) |
 | `administration` — Administration | 0 transverse | — | (paramètres, journal : collections système) |
 | `object-management` — Object Management (routes de debug) | 0 transverse | — | — |
+| `calendar` — Calendrier (service paramétrable) | 0 transverse | users | — (lit les natures déclarées au registre) |
 | `core` — Noyau transverse | 1 | users | `coreProject` (prj), `task` (tsk) |
 | `budget` — Budget Management (middleware) | 2 | core | `budget` (bud), `costCenter` (cc), `operation` (op) |
 | `patrimoine` — Patrimoine Management (middleware) | 2 | core, budget | `patrimoine` (pat), `capitalization` (cap) |
@@ -101,6 +102,19 @@ transaction : user → projet noyau principal → Budget « Projet de vie » →
 - Lectures communes (`reads.mjs`, `s.reads`) : `summary`, `register`, `lineDetail`, `centers`, `centerDetail`, `incomes`, `balance` (avec rapprochement), `history` (paginé), `impact`, `budgetType`, `due`, `events`, `directives`, `projection` (+ simulation `extra`, comparaison des apports), `previewEntry` (aucune mutation). Chaque lecture porte le contexte commun (user, périmètre, budgets, période début inclus/fin exclue, date de calcul, révision).
 - Partir de zéro : `setupProfile(ctx)` et `setupProject(ctx, input)` — une commande rejouable ; mode `principal` (configure l'ensemble existant, met à jour les lignes du budget type sans les recréer) ou `branch` (Budget standard + projet noyau + ≥ 1 tâche, sans second Patrimoine).
 - Vision et objectifs : `updateVision`, `goals`, `createGoal`, `updateGoal`, `removeGoal` (archivage `removed`) ; projection pure dans `projection.mjs` (convention annuelle de la spec, objectifs consommant/réservant le capital).
+
+### calendar (`socle.modules.calendar`) — transverse
+- Moteur unique (`engine.mjs`) piloté par une configuration ; aucune extension à déclarer par les autres modules.
+  `read(ctx, id, {from, to})` lit le calendrier nommé (paramètre `calendrier.<id>`), `preview(ctx, {configuration,
+  from, to})` une configuration fournie à l'appel (contrôlée par `validateConfiguration`), `list()`, `catalog()`.
+- Lecture seule des objets **du user du contexte**, par nature du registre (collection déclarée) ; fenêtre bornée
+  (400 jours). Références (`reference`), paramètres (`parametre`), objets reliés (`relies`) et répétitions
+  (`repetition`) sont résolus par le moteur, sans code propre à un module.
+- Replanifier n'est jamais une écriture du calendrier : la configuration nomme la commande de l'API du module
+  propriétaire (`replanifier: { methode, route, champ, si }`) ; le site l'appelle avec la révision lue, et les
+  règles, refus et conflits restent ceux de ce module.
+- Repère produit : `{ key, element, nature, objectId, revision, date, title, done, status, statusLabel, urgent,
+  groupId, groupLabel, amountCents, direction, link, details[], reschedule }`.
 
 ## 6. Ce qui reste ouvert (non tranché par le code)
 

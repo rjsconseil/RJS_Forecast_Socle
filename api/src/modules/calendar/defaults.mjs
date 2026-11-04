@@ -188,7 +188,7 @@ export const CALENDAR_BUDGET_PATRIMOINE = {
       date: 'startDate',
       // Dernier jour de chaque période du cycle ; une période close est lue par son versement au patrimoine.
       repetition: { debut: 'startDate', cadence: 'frequency', ancrage: 'anchorDay', position: 'veilleSuivante', remplacePar: { nature: 'closure', champ: 'cycleLinkId', date: 'periodEnd' } },
-      titre: 'Fin de période',
+      titre: 'Période à clôturer',
       repere: 'echeance',
       couleur: 'indigo',
       affiche: true,

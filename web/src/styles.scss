@@ -1,7 +1,8 @@
 // Entrée globale : couches de la source de référence (rjsconseil/rjs-forecast @ 54246fa) dans leur ordre —
-// polices, contrat, jetons, identités, base, coquille, composants, calendrier (sélecteur de vue et grille annuelle du
-// calendrier miniature des projets), adaptations, formulaires, interactions, zones (menu et portail), surfaces,
-// présentation BPM — sans les domaines hors périmètre (Formation, Calendrier 360, budget historique).
+// polices, contrat, jetons, identités, base, coquille, composants, calendrier (Calendrier 360 : grille, contrôles,
+// parité et pleine largeur), adaptations, formulaires, interactions, zones (menu et portail), surfaces,
+// présentation BPM — sans les domaines hors périmètre (Formation, budget historique). Le module Calendrier ajoute
+// ses couleurs paramétrables, montants et entrées de survol (`_calendar-module.scss`).
 // Viennent ensuite la passerelle des composants propres à ce projet et les pages du socle.
 @use 'fonts';
 @use 'contrat';
@@ -13,13 +14,16 @@
 @use 'workspace';
 @use 'home';
 @use 'calendar';
+@use 'calendar-budget-parity';
 @use 'site-responsive';
+@use 'calendar-controls';
 @use 'forms';
 @use 'utilisateurs';
 @use 'interactions';
 @use 'zones';
 @use 'management';
 @use 'overview-theme';
+@use 'calendar-full-width';
 @use 'surface-language';
 @use 'bpm-presentation';
 
@@ -30,3 +34,4 @@
 @use 'app-components';
 @use 'app-shell';
 @use 'socle';
+@use 'calendar-module';

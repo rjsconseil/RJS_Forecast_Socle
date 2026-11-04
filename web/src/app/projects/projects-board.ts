@@ -4,8 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api, toApiError } from '../core/api.service';
 import { COLUMNS, PRIORITY_LABEL, ProjectSummary, TaskStatus } from '../core/models';
 import { HoursPipe, PlannedTotalPipe } from '../core/format';
-import { CalendarRange, inRange, rangeFrom } from '../shared/calendar';
-import { MiniCalendarComponent } from './mini-calendar';
+import { CalendarRange, inRange, rangeFrom } from '../calendar/calendar-dates';
+import { MiniCalendarComponent } from '../calendar/mini-calendar';
 import {
   displayDate,
   dueTitle,

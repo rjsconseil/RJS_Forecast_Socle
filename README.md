@@ -35,6 +35,7 @@ Exemple d'API privée pour des essais : `SOCLE_TODAY=2026-11-03 J1_API_PORT=3501
 | 0 transverse | `users` | Gestion des utilisateurs ; le type (individuel, famille…) est un paramètre | `user` (usr) |
 | 0 transverse | `administration` | Paramètres effectifs, formules des chiffres, journal, erreurs récentes | — |
 | 0 transverse | `object-management` | Inventaire, inspection, relations, contrôles, export debug et CSV | — |
+| 0 transverse | `calendar` | Calendrier : un seul moteur, piloté par sa configuration (paramètre `calendrier.<id>`), lit les données du user et produit des repères datés (semaine, mois, année) | — |
 | 1 noyau | `core` | Projets et tâches, 7 états dérivés, complétude, temps | `coreProject` (prj), `task` (tsk) |
 | 2 middleware | `budget` | Budgets (« Projet de vie », Budgets standards), centres de coût, opérations prévues / réalisées, définitions récurrentes et leurs occurrences, plafonds | `budget` (bud), `costCenter` (cc), `operation` (op), `recurrence` (rec) |
 | 2 middleware | `patrimoine` | Patrimoine unique par user, stock d'ouverture, objectif, capitalisations | `patrimoine` (pat), `capitalization` (cap) |
@@ -58,6 +59,29 @@ Règles structurantes :
   écriture est refusée si le fichier a été modifié par un autre écrivain (`PERSISTENCE_CONFLICT`) ; les
   mutations d'une instance sont sérialisées. Les anciens schémas (`j1-store/0.2`, `socle-store/0.3`, `0.4`)
   sont migrés au démarrage par des migrations de module déclarées, enregistrées dans `state.migrations`.
+
+## Calendrier : un service paramétrable pour tous les modules
+
+Le module transverse `calendar` (API `api/src/modules/calendar/`, site `web/src/app/calendar/`) sert le même
+calendrier à tous les modules. **Un seul code** : le moteur lit, en lecture seule, les objets du user du contexte
+(par nature d'objet déclarée au registre) selon les **paramètres qu'on lui donne** ; aucun module n'est modifié
+pour être affiché. Chaque calendrier est un paramètre administrable `calendrier.<id>` (type objet, révision et
+historique comme tout paramètre) :
+
+| Calendrier | Page | Éléments livrés |
+|---|---|---|
+| `calendrier.noyau` | `/calendrier` (Noyau transverse) | débuts et échéances des projets, dates prévues et échéances des tâches |
+| `calendrier.budgetPatrimoine` | `/calendrier-budget` (Budget/Patrimoine) | revenus et dépenses (réglés à leur date réelle, attendus à leur date prévue), revenus et dépenses récurrents attendus, fins de période du cycle, versements au patrimoine |
+| `calendrier.patrimoine` | `/patrimoine/calendrier` (Patrimoine) | ouverture du patrimoine, versements des résultats de période, objectifs de vie datés |
+
+Une configuration règle : la vue d'ouverture (`semaine`, `mois`, `annee` — les trois restent proposées), le
+nombre de repères par case et au survol, les **indicateurs du survol** (`elements`, `dates`, `suivi`, `flux`,
+`solde`), et pour chaque élément : nature d'objet, champ date (ou liste : le premier renseigné), modèle de titre,
+couleur, repère (début, échéance, ponctuel), affichage à l'ouverture, filtre, condition « terminé », montant et
+sens, regroupement, lien, **entrées montrées au survol** (champ, format, référence vers un autre objet, valeur
+d'un paramètre, objets reliés), répétition (cadence, ancrage, veille de l'occurrence suivante, remplacement par
+un objet réel) et commande de l'API qui replanifie un repère (glisser-déposer ou « Replanifier »). Les trois vues
+partagent un même cadre (nombre d'or au-dessus de 1 280 px, 4:3 jusqu'à 900 px).
 
 ## Chiffres configurables et explicables
 
@@ -100,6 +124,7 @@ Montants : centimes entiers dans le stockage et les contrats de lecture (champs 
 | BPM — commandes | `POST /api/bpm/setup` (Partir de zéro, principal ou branche), `POST /api/bpm/operations` (ponctuelle ou récurrente), `PUT /api/bpm/operations/:id`, `POST /api/bpm/operations/:id/{realize,cancel-realization}`, `PUT /api/bpm/recurrences/:id`, `POST /api/bpm/recurrences/:id/settle`, `PUT /api/bpm/caps`, `PUT /api/bpm/vision`, `POST /api/bpm/goals`, `PUT /api/bpm/goals/:id`, `POST /api/bpm/goals/:id/remove`, `PUT /api/bpm/cycle`, `GET/POST /api/bpm/closures`, `GET /api/bpm/closures/preview`, `GET/POST /api/bpm/cost-centers` |
 | BPM — historique | `GET /api/bpm/dashboard[?period=AAAA-MM]`, `GET /api/bpm/figures/:key`, `GET/POST /api/bpm/life-projects`, `PUT /api/bpm/patrimoine`, `GET /api/bpm/preparation`, `POST /api/bpm/prepare` |
 | Administration | `GET /api/admin/modules`, `GET /api/admin/parameters[/:key]`, `PUT /api/admin/parameters/:key`, `POST /api/admin/parameters/:key/reset`, `GET /api/admin/metrics[/:key]`, `POST /api/admin/metrics/:key/preview`, `GET /api/admin/journal`, `GET /api/admin/errors` |
+| Calendrier | `GET /api/calendar` (calendriers paramétrés), `GET /api/calendar/catalog` (vocabulaire des configurations), `GET /api/calendar/:id?from=AAAA-MM-JJ&to=AAAA-MM-JJ` (repères d'un calendrier nommé), `POST /api/calendar/preview` (configuration fournie à l'appel ; aucune écriture) |
 | Object Management | `GET /api/om/objects[/:id]`, `GET /api/om/kinds`, `GET /api/om/checks`, `GET /api/om/debug`, `GET /api/om/csv[/:file]`, `GET /api/om/export.zip` (archive de preuve JSON + CSV d’un instantané figé), `POST /api/_recette/reset` |
 
 Le user de contexte est passé par l'en-tête `x-user-id` (pas d'authentification à ce stade, C04).
@@ -117,7 +142,8 @@ La période, les filtres et la sélection sont dans l'URL. Anciens liens : `/app
 `/app/operations` → `/depenses`, `/app/bienvenue` → `/utilisateurs` ; `/app/projets` et `/app/reglages`
 restent accessibles hors menu. Espaces distincts : `/utilisateurs` (gestion des utilisateurs) et le socle :
 `/projects`, `/tasks`, `/socle/budget`, `/socle/patrimoine`, `/object-management` (`?inspect=<id>` ouvre un
-objet), `/admin`, `/admin/calculs`, `/admin/calculs/:key`.
+objet), `/admin`, `/admin/calculs`, `/admin/calculs/:key`. Calendriers (même page, configuration par route) : `/calendrier`,
+`/calendrier-budget`, `/patrimoine/calendrier` (`?vue=semaine|mois|annee&jour=AAAA-MM-JJ`).
 
 Présentation : styles en couches (`web/src/styles/` : tokens, base, contrôles, structure, composants, pages du
 socle), polices locales Inter, IBM Plex Mono et Newsreader (`@fontsource`). Composants partagés des pages BPM

@@ -415,7 +415,7 @@ export interface EffectiveParameter {
   description: string | null;
   module: string;
   group: string;
-  type: 'formula' | 'number' | 'integer' | 'text' | 'list' | 'boolean';
+  type: 'formula' | 'number' | 'integer' | 'text' | 'list' | 'object' | 'boolean';
   scope: string;
   unit: string | null;
   value: unknown;

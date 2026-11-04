@@ -47,6 +47,50 @@ export const routes: Routes = [
   { path: 'tasks/new', title: 'Nouvelle tâche — Noyau', loadComponent: () => import('./tasks/task-form').then((m) => m.TaskForm) },
   { path: 'tasks/:id/edit', title: 'Modifier la tâche — Noyau', loadComponent: () => import('./tasks/task-form').then((m) => m.TaskForm) },
 
+  // ---------- Module transverse Calendrier : un même code, une configuration par page (paramètre `calendrier.<id>`) ----------
+  {
+    path: 'calendrier',
+    title: 'Calendrier — Noyau',
+    data: {
+      calendar: 'noyau',
+      eyebrow: 'Noyau transverse · Calendrier',
+      title: 'Voir le travail',
+      emphasis: 'dans son temps.',
+      intro: 'Parcourez les projets, leurs tâches et leurs échéances dans une même période. Choisissez la semaine, le mois ou l’année ; survolez un jour pour lire ses repères.',
+      groupsTitle: 'Projets de la période',
+      groupKicker: 'Projet',
+    },
+    loadComponent: () => import('./calendar/calendar.page').then((m) => m.CalendarPage),
+  },
+  {
+    path: 'calendrier-budget',
+    title: 'Calendrier — Budget/Patrimoine',
+    data: {
+      calendar: 'budgetPatrimoine',
+      eyebrow: 'Budget/Patrimoine · Calendrier',
+      title: 'Le budget',
+      emphasis: 'dans le temps.',
+      intro: 'Revenus et dépenses, attendus ou réglés, fins de période et versements au patrimoine. Survolez un jour pour lire ses montants et ses repères.',
+      groupsTitle: 'Budgets de la période',
+      groupKicker: 'Budget',
+    },
+    loadComponent: () => import('./calendar/calendar.page').then((m) => m.CalendarPage),
+  },
+  {
+    path: 'patrimoine/calendrier',
+    title: 'Calendrier — Patrimoine',
+    data: {
+      calendar: 'patrimoine',
+      eyebrow: 'Patrimoine · Calendrier',
+      title: 'Le patrimoine',
+      emphasis: 'dans la durée.',
+      intro: 'L’ouverture du patrimoine, les résultats de période qui l’alimentent et vos objectifs de vie datés.',
+      groupsTitle: 'Patrimoine de la période',
+      groupKicker: 'Patrimoine',
+    },
+    loadComponent: () => import('./calendar/calendar.page').then((m) => m.CalendarPage),
+  },
+
   // ---------- Socle : niveau 2 (middlewares, interfaces de test) ----------
   { path: 'socle/budget', title: 'Budget (test) — Middleware', loadComponent: () => import('./middleware/budget-test').then((m) => m.BudgetTest) },
   { path: 'socle/patrimoine', title: 'Patrimoine (test) — Middleware', loadComponent: () => import('./middleware/patrimoine-test').then((m) => m.PatrimoineTest) },

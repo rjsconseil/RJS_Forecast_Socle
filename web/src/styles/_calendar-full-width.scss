@@ -1,0 +1,85 @@
+@use 'contrat-ruptures' as *;
+
+/* Une seule colonne utile : commandes, grille, agenda et détails, à toute largeur. */
+.app-shell .calendar-360-page :is(.calendar-360-overview, .calendar-360-overview-body),
+.app-shell .calendar.is-360 .calendar-layout,
+.app-shell .budget-calendar-page .budget-calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1));
+  width: var(--part-100);
+  max-width: none;
+  justify-content: stretch;
+  gap: var(--ecart-14);
+}
+.app-shell .calendar.is-360 .calendar-right-rail,
+.app-shell .budget-calendar-page .budget-calendar-rail {
+  display: contents;
+}
+.app-shell .calendar.is-360 .calendar-right-rail .calendar-control-row,
+.app-shell .budget-calendar-page .budget-calendar-controls {
+  position: static;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  width: var(--part-100);
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-14);
+  padding: var(--ecart-14);
+  background: var(--raised-surface);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-lg);
+}
+.app-shell .calendar.is-360 .calendar-options,
+.app-shell .budget-calendar-page .budget-calendar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  flex: var(--flex-1);
+  gap: var(--ecart-12);
+}
+.app-shell .calendar.is-360 .calendar-options select,
+.app-shell .calendar.is-360 .calendar-toolbar button {
+  min-height: var(--dim-44);
+  height: auto;
+}
+.app-shell .calendar.is-360 .calendar-month-wrap,
+.app-shell .budget-calendar-page .budget-calendar-main {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+}
+.app-shell .calendar.is-360 .calendar-legend {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+.app-shell .calendar.is-360 .calendar-agenda,
+.app-shell .budget-calendar-page .budget-calendar-agenda {
+  position: static;
+  grid-column: 1 / -1;
+  grid-row: 4;
+  width: auto;
+  max-width: none;
+  height: auto;
+  min-height: 0;
+  margin-top: 0;
+}
+.app-shell .calendar.is-360 .calendar-360-content {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  width: auto;
+  max-width: none;
+}
+.app-shell .calendar-360-overview-body > * {
+  grid-column: 1 / -1;
+}
+.app-shell .plan-square .plan-page-grid {
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  grid-auto-rows: var(--fr-1);
+}
+@media (max-width: $rupture-660) {
+  .app-shell .plan-square .plan-page-grid {
+    grid-template-columns: minmax(0, var(--fr-1));
+    grid-auto-rows: auto;
+  }
+}

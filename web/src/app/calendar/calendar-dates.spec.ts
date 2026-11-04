@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inRange, monthDays, periodLabel, rangeFrom, shiftPeriod, validDate, weekDays, yearMonths } from './calendar';
+import { inRange, monthDays, periodLabel, rangeFrom, shiftPeriod, validDate, weekDays, yearMonths } from './calendar-dates';
 
 describe('calendrier miniature', () => {
   it('couvre un mois par six semaines commençant un lundi', () => {

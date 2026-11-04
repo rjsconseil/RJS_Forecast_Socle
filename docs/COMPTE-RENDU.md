@@ -77,3 +77,21 @@ Rendu à 1440 / 1024 / 768 / 390 px, clavier et focus, thème sombre, menu mobil
 - Feuille source `_calendar.scss` ajoutée aux couches globales (sélecteur de vue et grille annuelle du calendrier).
 - Écarts conservés volontairement : en-tête mauve foncé (demande du propriétaire, la référence livrée est bleu nuit),
   colonnes à défilement horizontal, poignée ⠿ pour le glisser-déposer.
+
+## Module Calendrier — 4 novembre 2026
+
+- **Service transverse paramétrable** (`api/src/modules/calendar/`) : un seul moteur lit les données du user selon
+  la configuration qu'on lui donne ; aucun module (Noyau, Budget, Patrimoine, BPM) n'est modifié. Trois
+  calendriers livrés comme paramètres administrables : `calendrier.noyau`, `calendrier.budgetPatrimoine`,
+  `calendrier.patrimoine` ; une configuration peut aussi être fournie à l'appel (`POST /api/calendar/preview`).
+- **Paramétrage** : éléments affichés (nature, date, titre, couleur, repère, affichage à l'ouverture, filtre,
+  terminé, montant, regroupement, lien), **entrées montrées au survol** (champ, format, référence, paramètre,
+  objets reliés), **indicateurs du survol** (éléments, dates, suivi, flux, solde), répétitions et commande de
+  replanification, vue d'ouverture, repères par case et au survol, délai de fermeture de l'aperçu.
+- **Site** (`web/src/app/calendar/`) : calendrier repris du Calendrier 360 de la référence (vues Semaine, Mois,
+  Année ; aperçu d'une journée au survol ; agenda et mise en évidence ; glisser-déposer et « Replanifier » ;
+  clavier), conteneur `rjs-calendar-space` réutilisable dans toute page, page unique paramétrée par sa route.
+  Les trois vues occupent **le même cadre** (même largeur, même hauteur), aux proportions du nombre d'or.
+- **Pages** : Noyau transverse › Calendrier (`/calendrier`), Budget/Patrimoine › Calendrier (`/calendrier-budget`),
+  Patrimoine › Calendrier (`/patrimoine/calendrier`). Le calendrier miniature des Projets rejoint le module.
+- Tests : API 124/124 (dont 9 du calendrier), site 31/31 ; build OK.

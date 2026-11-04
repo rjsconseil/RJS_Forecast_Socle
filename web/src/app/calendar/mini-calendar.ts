@@ -12,8 +12,8 @@ import {
   validDate,
   weekDays,
   yearMonths,
-} from '../shared/calendar';
-import { BoardKind, displayDate } from './workspace-parts';
+} from './calendar-dates';
+import { BoardKind, displayDate } from '../projects/workspace-parts';
 
 const SECTION: Record<BoardKind, { name: string; plural: string }> = {
   project: { name: 'Projets', plural: 'projets' },

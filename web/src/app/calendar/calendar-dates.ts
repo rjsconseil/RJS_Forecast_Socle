@@ -106,3 +106,68 @@ export function rangeFrom(start: string | null, end: string | null): CalendarRan
 export function inRange(date: string | null | undefined, range: CalendarRange | null): boolean {
   return !range || Boolean(date && date >= range.start && date <= range.end);
 }
+
+/** Premier et dernier jour de la période affichée (semaine, mois civil, année civile). */
+export function periodBounds(day: string, view: CalendarView): CalendarRange {
+  if (view === 'year') return { start: `${day.slice(0, 4)}-01-01`, end: `${day.slice(0, 4)}-12-31` };
+  if (view === 'week') {
+    const days = weekDays(day);
+    return { start: days[0], end: days[6] };
+  }
+  const month = day.slice(0, 7);
+  const last = new Date(`${month}-01T12:00:00Z`);
+  last.setUTCMonth(last.getUTCMonth() + 1, 0);
+  return { start: `${month}-01`, end: dateKey(last) };
+}
+
+/** Jours dessinés par la vue : la semaine, les six semaines de la grille du mois, ou l'année. */
+export function gridWindow(day: string, view: CalendarView): CalendarRange {
+  if (view === 'month') {
+    const days = monthDays(day.slice(0, 7));
+    return { start: days[0], end: days[days.length - 1] };
+  }
+  return periodBounds(day, view);
+}
+
+export function inPeriod(date: string, day: string, view: CalendarView): boolean {
+  const { start, end } = periodBounds(day, view);
+  return date >= start && date <= end;
+}
+
+/** « Novembre 2026 ». */
+export function monthLabel(month: string): string {
+  const label = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+export interface DayPeekGeometry {
+  day: { left: number; top: number; bottom: number; width: number };
+  calendarTop: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  textScale: number;
+  side: -1 | 1;
+  topGap: number;
+  lateralShiftRatio: number;
+}
+
+export interface DayPeekPosition {
+  x: number | null;
+  top: number | null;
+  maxHeight: number | null;
+  bridgeHeight: number | null;
+}
+
+/** Place l'aperçu d'une journée sans déplacer sa case (référence `positionDayPeek`). */
+export function positionDayPeek({ day, calendarTop, viewportWidth, viewportHeight, textScale, side, topGap, lateralShiftRatio }: DayPeekGeometry): DayPeekPosition {
+  const margin = 12;
+  const overlap = 10;
+  const halfWidth = Math.min((420 * textScale) / 2, (viewportWidth - 2 * margin) / 2);
+  const x = Math.min(viewportWidth - margin - halfWidth, Math.max(margin + halfWidth, day.left + day.width / 2 + side * Math.min(28, day.width * lateralShiftRatio)));
+  const standardHeight = Math.min(360 * textScale, viewportHeight - 2 * margin);
+  const preferredTop = day.top - topGap - standardHeight;
+  const top = preferredTop >= Math.max(margin, calendarTop) ? preferredTop : day.bottom - overlap;
+  const maxHeight = Math.max(80, viewportHeight - top - margin);
+  const bridgeHeight = Math.min(maxHeight, standardHeight + (topGap > 0 && top === preferredTop ? topGap + overlap : 0));
+  return { x, top, maxHeight, bridgeHeight };
+}
