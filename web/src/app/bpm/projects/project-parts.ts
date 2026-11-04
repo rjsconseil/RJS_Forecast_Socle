@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { BUDGET_STATE_LABEL, ProjectBudget, ProjectBudgetState, ProjectOverrun } from '../../core/bpm-projects.models';
+import { BUDGET_STATE_LABEL, ProjectBudget, ProjectBudgetState, ProjectOverrun, TaskBudgetRequest } from '../../core/bpm-projects.models';
 import { CentsPipe, ShortDatePipe } from '../../core/format';
 
 /** Part d'un montant dans le budget du projet, bornée à 100 % pour la jauge. */
@@ -106,4 +106,43 @@ export class BpmOverrunRequestComponent {
   readonly overrun = input.required<ProjectOverrun>();
   readonly busy = input(false);
   readonly decide = output<'approve' | 'refuse'>();
+}
+
+/** Demandes persistantes : le montant demandé est la nouvelle part totale de la tâche, pas un supplément. */
+@Component({
+  selector: 'bpm-task-requests',
+  imports: [CentsPipe, ShortDatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <div class="bpm-request-list">
+      @for (r of requests(); track r.id) {
+        <article class="bpm-request" [attr.data-status]="r.status" [attr.aria-label]="'Demande de ' + r.taskTitle">
+          <div>
+            <h3>{{ r.taskTitle }}</h3>
+            <p class="bpm-note">{{ r.budgetName }} · demandé le {{ r.requestedAt | shortDate }}</p>
+            @if (r.note) { <p>{{ r.note }}</p> }
+          </div>
+          <dl><div><dt>Montant total demandé</dt><dd>{{ r.amountCents | cents }}</dd></div><div><dt>Part actuelle</dt><dd>{{ r.grantedCents | cents }}</dd></div></dl>
+          <div>
+            <p class="bpm-note" role="status">{{ r.statusLabel }}</p>
+            @if (r.status === 'pending') {
+              <div class="bpm-actions">
+                <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'approve' })">Valider la demande</button>
+                <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'refuse' })">Refuser la demande</button>
+                <button class="text-link" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'cancel' })">Annuler la demande</button>
+              </div>
+            } @else if (r.status === 'awaiting-life') {
+              <p class="bpm-note">Le montant manquant doit être autorisé par le budget du projet de vie. La part sera accordée après son autorisation.</p>
+              <button class="text-link" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'cancel' })">Annuler la demande</button>
+            }
+          </div>
+        </article>
+      } @empty { <p class="bpm-note">Aucune demande de montant.</p> }
+    </div>
+  `,
+})
+export class BpmTaskRequestsComponent {
+  readonly requests = input.required<TaskBudgetRequest[]>();
+  readonly busy = input(false);
+  readonly decide = output<{ request: TaskBudgetRequest; decision: 'approve' | 'refuse' | 'cancel' }>();
 }

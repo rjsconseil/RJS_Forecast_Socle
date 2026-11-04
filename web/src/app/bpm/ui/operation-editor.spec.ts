@@ -63,4 +63,15 @@ describe('éditeur d’opération partagé', () => {
     http.expectNone((r) => r.method === 'POST' && r.url === '/api/bpm/operations');
     expect((f.nativeElement as HTMLElement).textContent).toContain('Montant positif attendu');
   });
+
+  it('exige une tâche pour les dépenses d’un projet utilisant les demandes de montant', async () => {
+    const f = await open();
+    f.componentRef.setInput('taskFundingRequired', true);
+    f.detectChanges();
+    await f.componentInstance.save();
+    f.detectChanges();
+    http.expectNone((r) => r.method === 'POST' && r.url === '/api/bpm/operations');
+    expect((f.nativeElement as HTMLElement).textContent).toContain('Choisissez la tâche qui porte cette dépense');
+    expect((f.nativeElement as HTMLElement).textContent).toContain('Choisir une tâche');
+  });
 });

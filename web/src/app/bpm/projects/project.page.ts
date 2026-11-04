@@ -1,14 +1,16 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { afterNextRender, Component, computed, inject, Injector, signal } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmBudgetRef } from '../../core/bpm-models';
-import { BpmProjectDetail, BpmTaskCard, OverrunRefusal, ProjectChargeLine, ProjectOverrun, ReturnCadence } from '../../core/bpm-projects.models';
+import { BpmProjectDetail, BpmTaskCard, OverrunRefusal, ProjectChargeLine, ProjectOverrun, ReturnCadence, TaskBudgetRequest } from '../../core/bpm-projects.models';
 import { COLUMNS, TASK_STATUS_LABEL, TaskStatus } from '../../core/models';
 import { CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
 import { BpmOperationEditor } from '../ui/operation-editor';
-import { BpmBudgetMeterComponent, BpmBudgetStateComponent, BpmOverrunRequestComponent } from './project-parts';
+import { BpmBudgetMeterComponent, BpmBudgetStateComponent, BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-parts';
+import { BpmProjectEditor, BpmTaskEditor } from './project-editors';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
@@ -36,10 +38,10 @@ interface OverrunFlow {
  */
 @Component({
   selector: 'app-bpm-project',
-  imports: [RouterLink, CentsPipe, ShortDatePipe, BpmBudgetMeterComponent, BpmBudgetStateComponent, BpmOverrunRequestComponent, BpmOperationEditor],
+  imports: [RouterLink, CentsPipe, ShortDatePipe, BpmBudgetMeterComponent, BpmBudgetStateComponent, BpmOverrunRequestComponent, BpmOperationEditor, BpmTaskRequestsComponent, BpmProjectEditor, BpmTaskEditor],
   template: `
     <div class="page page-wide bpm-projects bpm-project-page">
-      <a class="text-link" routerLink="/app/projets">← Projets de la vie</a>
+      <a class="text-link" routerLink="/app/gestion-projet">← Gestion de projet</a>
 
       @if (error() && !data()) {
         <div class="empty-state" role="alert">
@@ -64,9 +66,9 @@ interface OverrunFlow {
             @if (d.budget) {
               <bpm-budget-state [state]="d.budget.state" />
             }
-            <a class="text-link" [routerLink]="['/projects', d.project.project.id]">Ouvrir dans le noyau ↗</a>
             @if (d.role === 'standard') {
-              <a class="text-link" routerLink="/tasks/new" [queryParams]="{ projectId: d.project.project.id }">Créer une tâche dans le noyau ↗</a>
+              <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="projectEditor.set(true)">Modifier le projet</button>
+              <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="taskEditor.set(true)">Créer une tâche</button>
             }
             <a class="text-link" routerLink="/app/taches" [queryParams]="{ project: d.project.project.id }">Tableau des tâches ↗</a>
           </div>
@@ -121,6 +123,8 @@ interface OverrunFlow {
                   <div><dt>Engagé</dt><dd>{{ b.engagedCents | cents }}</dd><small>charges planifiées et réglées</small></div>
                   <div><dt>Réglé validé</dt><dd>{{ b.paidCents | cents }}</dd><small>compté dans le budget de vie</small></div>
                   <div [class.is-danger]="(b.remainingCents ?? 0) < 0"><dt>Reste</dt><dd>{{ b.remainingCents | cents }}</dd></div>
+                  <div><dt>Encore à régler</dt><dd>{{ b.toPayCents | cents }}</dd><small>charges engagées non réglées</small></div>
+                  <div><dt>Remonté dans le cycle actuel</dt><dd>{{ b.periodPaidCents | cents }}</dd><small>{{ d.context.period?.label ?? 'Cycle à configurer' }}</small></div>
                 </dl>
                 <bpm-budget-meter [budget]="b" [figures]="false" />
               }
@@ -143,13 +147,20 @@ interface OverrunFlow {
           </section>
 
           <!-- ---------- ventilation sur les tâches ---------- -->
+          <section class="bpm-section" aria-labelledby="requests-title">
+            <header><h2 id="requests-title">Demandes de montant des tâches</h2></header>
+            <p class="bpm-note">Chaque tâche demande sa part totale. La validation réserve le montant dans le budget du projet. Si les fonds manquent, seul le manque est soumis au budget du projet de vie ; son autorisation accorde ensuite la part.</p>
+            <bpm-task-requests [requests]="openRequests()" [busy]="busy()" (decide)="decideRequest($event)" />
+            @if (requestHistory().length) { <details><summary>Historique des demandes ({{ requestHistory().length }})</summary><bpm-task-requests [requests]="requestHistory()" [busy]="busy()" /></details> }
+          </section>
+
           <section class="bpm-section" aria-labelledby="shares-title">
             <header>
               <h2 id="shares-title">Ventilation sur les tâches</h2>
-              <p>Chaque part réduit le budget à ventiler ; au-delà, le budget de vie doit autoriser le dépassement.</p>
+              <p>Créez ou rattachez des tâches, puis demandez un montant pour chacune. Le consommé correspond aux règlements validés.</p>
             </header>
             @if (!d.tasks.length) {
-              <p class="bpm-note">Aucune tâche : créez-en une dans le noyau, ou rattachez une tâche existante ci-dessous.</p>
+              <div class="bpm-actions"><p class="bpm-note">Préparez la première tâche de ce projet.</p><button class="btn btn-primary" type="button" (click)="taskEditor.set(true)">Créer une tâche</button></div>
             } @else {
               <div class="bpm-table-wrap">
                 <table class="bpm-table">
@@ -169,7 +180,7 @@ interface OverrunFlow {
                     @for (t of d.tasks; track t.task.id) {
                       @let tb = t.budget;
                       <tr [attr.data-over]="tb?.over || null">
-                        <th scope="row">{{ t.task.title }}</th>
+                        <th scope="row"><button class="text-link" type="button" (click)="editingTask.set(t); taskEditor.set(true)">{{ t.task.title }}</button><small class="bpm-note">{{ t.task.plannedHours ?? 'Non estimé' }} h prévues · {{ t.task.spentHours }} h consommées</small></th>
                         <td>
                           <select [attr.aria-label]="'État de ' + t.task.title" [disabled]="busy()" (change)="changeStatus(t, $any($event.target).value, $any($event.target))">
                             @for (c of columns; track c.id) {
@@ -178,13 +189,21 @@ interface OverrunFlow {
                           </select>
                         </td>
                         <td class="num">
+                          <strong>{{ tb?.shareCents ?? null | cents }}</strong>
+                          @if (!tb?.request) {
+                            <form class="bpm-cell-form bpm-task-request-form" (submit)="$event.preventDefault(); requestBudget(b.budgetId, t, $any($event.target).elements)">
+                              <label><span class="visually-hidden">Montant total demandé pour {{ t.task.title }} en euros</span><input name="amount" inputmode="decimal" required placeholder="Total demandé (€)" /></label>
+                              <label><span class="visually-hidden">Motif de la demande pour {{ t.task.title }}</span><input name="note" maxlength="1000" placeholder="Motif (facultatif)" /></label>
+                              <button class="btn btn-secondary" type="submit" [disabled]="busy()">Demander un montant</button>
+                            </form>
+                          } @else { <small class="bpm-note">{{ tb!.request!.statusLabel }} · {{ tb!.request!.amountCents | cents }}</small> }
                           @if (b.regime) {
+                            <details><summary>Ajuster la part accordée</summary>
                             <form class="bpm-cell-form" (submit)="$event.preventDefault(); saveShare(b.budgetId, t, $any($event.target).elements.share.value, b.revision)">
                               <input name="share" inputmode="decimal" autocomplete="off" [attr.aria-label]="'Part de ' + t.task.title + ' en euros'" [value]="tb?.shareCents === null || tb?.shareCents === undefined ? '' : (tb!.shareCents / 100).toString().replace('.', ',')" />
                               <button type="submit" class="btn btn-secondary" [disabled]="busy()">OK</button>
                             </form>
-                          } @else {
-                            —
+                            </details>
                           }
                         </td>
                         <td class="num">{{ tb?.engagedCents ?? 0 | cents }}@if (tb?.unbounded) {<small title="Récurrence sans fin : 12 mois comptés"> *</small>}</td>
@@ -235,13 +254,13 @@ interface OverrunFlow {
                 </table>
               </div>
             }
-            @if (d.attachable.length) {
+            @if (availableTasks().length) {
               <form class="bpm-inline-form" (submit)="$event.preventDefault(); attach($any($event.target).elements.task.value)">
                 <label>
-                  Rattacher une tâche du noyau
+                  Rattacher une tâche sans projet
                   <select name="task">
-                    @for (t of d.attachable; track t.task.id) {
-                      <option [value]="t.task.id">{{ t.task.title }} · {{ t.projectTitle ?? 'sans projet' }}</option>
+                    @for (t of availableTasks(); track t.task.id) {
+                      <option [value]="t.task.id">{{ t.task.title }}</option>
                     }
                   </select>
                 </label>
@@ -426,18 +445,25 @@ interface OverrunFlow {
     </div>
 
     @if (editorOpen() && budgetRef(); as ref) {
-      <bpm-operation-editor [budgets]="[ref]" [defaults]="{ budgetId: ref.id, direction: 'charge' }" (closed)="editorOpen.set(false)" (saved)="onSaved($event)" />
+      <bpm-operation-editor [budgets]="[ref]" [defaults]="{ budgetId: ref.id, direction: 'charge' }" [taskFundingRequired]="data()?.budget?.taskFundingRequired ?? false" (closed)="editorOpen.set(false)" (saved)="onSaved($event)" />
     }
+    @if (projectEditor() && data(); as d) { <bpm-project-editor [project]="d.project.project" (closed)="projectEditor.set(false)" (saved)="projectSaved()" /> }
+    @if (taskEditor()) { <bpm-task-editor [task]="editingTask()" [projects]="taskProjectOptions()" [defaultProjectId]="data()?.project?.project?.id ?? ''" (closed)="closeTask()" (saved)="taskSaved($event)" /> }
   `,
 })
 export class BpmProjectPage {
   private api = inject(Api);
   private bpm = inject(BpmApi);
   private route = inject(ActivatedRoute);
+  private injector = inject(Injector);
+  private document = inject(DOCUMENT);
+  private pendingSection: string | null = null;
+  private loadSequence = 0;
   protected columns = COLUMNS;
   protected cadences = RETURN_CADENCES;
   protected readonly today = today();
   protected data = signal<BpmProjectDetail | null>(null);
+  protected availableTasks = computed(() => (this.data()?.attachable ?? []).filter((t) => !t.task.projectId && t.pathways.canChangeProject));
   protected error = signal<string | null>(null);
   protected busy = signal(false);
   protected notice = signal<{ text: string; error: boolean } | null>(null);
@@ -446,6 +472,13 @@ export class BpmProjectPage {
   protected returnEditor = signal<string | null>(null);
   protected settling = signal<string | null>(null);
   protected editorOpen = signal(false);
+  protected projectEditor = signal(false);
+  protected taskEditor = signal(false);
+  protected editingTask = signal<BpmTaskCard | null>(null);
+  protected taskProjectOptions = computed(() => { const d = this.data(); return d?.role === 'standard' ? [{ projectId: d.project.project.id, title: d.project.project.title }] : []; });
+  protected openRequests = computed(() => (this.data()?.requests ?? []).filter((x) => x.status === 'pending' || x.status === 'awaiting-life'));
+  protected requestHistory = computed(() => (this.data()?.requests ?? []).filter((x) => x.status !== 'pending' && x.status !== 'awaiting-life'));
+  private requestKeys = new Map<string, string>();
   private projectId = '';
 
   protected budgetRef = computed<BpmBudgetRef | null>(() => {
@@ -462,16 +495,38 @@ export class BpmProjectPage {
       this.notice.set(null);
       this.load();
     });
+    this.route.fragment.pipe(takeUntilDestroyed()).subscribe((fragment) => {
+      this.pendingSection = fragment;
+      if (this.data()) this.scrollToSection();
+    });
   }
 
   async load() {
+    const sequence = ++this.loadSequence;
     try {
       const d = await this.bpm.projectDetail(this.projectId);
+      if (sequence !== this.loadSequence) return;
       this.data.set(d);
+      for (const request of d.requests ?? []) {
+        if (request.status !== 'pending' && request.status !== 'awaiting-life') continue;
+        for (const signature of this.requestKeys.keys()) {
+          const [budgetId, taskId] = JSON.parse(signature);
+          if (budgetId === request.budgetId && taskId === request.taskId) this.requestKeys.delete(signature);
+        }
+      }
       this.allocation.set(d.budget?.allocationCents === null || d.budget?.allocationCents === undefined ? '' : (d.budget.allocationCents / 100).toString().replace('.', ','));
       this.error.set(null);
+      this.scrollToSection();
     } catch (err) {
-      this.error.set(toApiError(err).message);
+      if (sequence === this.loadSequence) this.error.set(toApiError(err).message);
+    }
+  }
+
+  private scrollToSection() {
+    const section = this.pendingSection;
+    this.pendingSection = null;
+    if (section && ['requests-title', 'budget-title', 'shares-title', 'charges-title', 'cycle-title'].includes(section)) {
+      afterNextRender(() => this.document.getElementById(section)?.scrollIntoView({ block: 'start' }), { injector: this.injector });
     }
   }
 
@@ -584,6 +639,29 @@ export class BpmProjectPage {
     );
   }
 
+  protected async requestBudget(budgetId: string, t: BpmTaskCard, controls: HTMLFormControlsCollection) {
+    const get = (name: string) => (controls.namedItem(name) as HTMLInputElement).value;
+    const amount = parseAmount(get('amount'));
+    if (amount === null || amount === 'invalid' || amount <= 0) { this.notice.set({ text: 'Indiquez le montant total souhaité en euros, avec deux décimales au plus.', error: true }); return; }
+    const note = get('note');
+    const signature = JSON.stringify([budgetId, t.task.id, amount, note]);
+    const requestKey = this.requestKeys.get(signature) ?? newRequestKey();
+    this.requestKeys.set(signature, requestKey);
+    return this.run(async () => {
+      await this.bpm.requestTaskBudget(budgetId, t.task.id, { requestKey, amount, note });
+      this.requestKeys.delete(signature);
+    }, `Demande de « ${t.task.title} » enregistrée. Validez-la dans les demandes de montant.`);
+  }
+
+  protected decideRequest(e: { request: TaskBudgetRequest; decision: 'approve' | 'refuse' | 'cancel' }) {
+    const revision = this.data()?.budget?.revision;
+    return this.run(async () => { await this.bpm.decideTaskBudget(e.request.id, e.decision, e.request.revision, revision); }, e.decision === 'approve' ? 'Demande validée : part accordée si le budget suffit, sinon autorisation de dépassement transmise au budget du projet de vie.' : 'Demande traitée.');
+  }
+
+  protected closeTask() { this.taskEditor.set(false); this.editingTask.set(null); }
+  protected async taskSaved(text: string) { this.closeTask(); await this.load(); this.notice.set({ text, error: false }); }
+  protected async projectSaved() { this.projectEditor.set(false); await this.load(); this.notice.set({ text: 'Projet enregistré.', error: false }); }
+
   protected async saveReturn(budgetId: string, t: BpmTaskCard, f: HTMLFormControlsCollection, revision: number) {
     const get = (n: string) => (f.namedItem(n) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
     const amount = parseAmount(get('amount'));
@@ -624,7 +702,7 @@ export class BpmProjectPage {
   }
 
   protected attach(taskId: string) {
-    const t = this.data()?.attachable.find((x) => x.task.id === taskId);
+    const t = this.availableTasks().find((x) => x.task.id === taskId);
     if (!t) return;
     return this.run(() => this.api.attachTask(t.task.id, this.projectId, t.task.revision), `« ${t.task.title} » rattachée au projet (commande du noyau).`);
   }

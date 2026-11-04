@@ -8,7 +8,7 @@ describe('routes BPM', () => {
   const find = (path: string) => routes.find((r) => r.path === path);
 
   it('déclare chaque destination de la section Ma vision budgétaire et Démarrer un projet', () => {
-    for (const path of ['creer', 'tableau-de-bord', 'depenses', 'piloter', 'piloter/agir', 'vision', 'argent/entrees', 'argent/postes/:poste', 'argent/reste', 'utilisateurs']) {
+    for (const path of ['creer', 'tableau-de-bord', 'depenses', 'piloter', 'piloter/agir', 'vision', 'argent/entrees', 'argent/postes/:poste', 'argent/reste', 'utilisateurs', 'app/gestion-projet', 'app/gestion-projet/:id']) {
       const r = find(path);
       expect(r, path).toBeTruthy();
       expect(r!.loadComponent, path).toBeTypeOf('function');

@@ -169,6 +169,7 @@ export const PLAN_ZONES: PlanZone[] = [
         space: 'bpm-parcours',
         pages: [
           { id: 'projets', label: 'Projets de la vie', link: '/app/projets', symbol: '▤', tone: 'nav-teal', description: 'Le projet de vie et ses projets standards par statut, avec le budget que le budget de vie attribue à chacun.', result: 'Financer chaque projet, ventiler son budget sur ses tâches et suivre ses dépassements.' },
+          { id: 'gestion-projet', label: 'Gestion de projet', link: '/app/gestion-projet', symbol: '◫', tone: 'nav-teal', description: 'Créer un projet de la vie et ses tâches, attribuer son budget et piloter les demandes de montant.', result: 'Des projets financés, des tâches dotées de leur montant et un consommé suivi jusqu’au budget du projet de vie.' },
           { id: 'taches', label: 'Tâches des projets', link: '/app/taches', symbol: '☑', tone: 'nav-petrol', description: 'Les tâches des projets de la vie par statut, avec leur part de budget ; glisser une tâche change son état et celui de son projet.', result: 'Faire avancer les tâches et les rattacher aux projets, comme dans le noyau.' },
           { id: 'reglages', label: 'Cycle et réglages', link: '/app/reglages', symbol: '↻', tone: 'nav-blue', description: 'Le cycle budgétaire, le patrimoine, les périodes closes, les centres de coût et les calculs.', result: 'Un cycle et des réglages explicites.' },
         ],
