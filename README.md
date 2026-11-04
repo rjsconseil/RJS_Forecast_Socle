@@ -11,6 +11,7 @@ npm install --prefix web
 npm start          # API (http://localhost:3410) et site (http://localhost:4300) ensemble ; Ctrl+C arrête les deux
 npm run api        # API locale http://localhost:3410 (réinitialisation de recette activée)
 npm run seed       # jeux d'essai via les contrats HTTP réels (API lancée, voir plus bas)
+npm run import:rjs-forecast -- --remplacer   # données du site de référence voisin, ../RJS_Forecast (API arrêtée, voir plus bas)
 npm run web        # site Angular http://localhost:4300 (proxy /api → 3410)
 npm test           # tests node:test (api/test/*.test.mjs) sur persistance réelle
 npm --prefix web test -- --watch=false   # tests unitaires du site (Vitest)
@@ -164,6 +165,28 @@ Après réinitialisation, le seed crée par HTTP, avec des dates relatives au jo
 - **Famille Durand** (famille, stock inconnu, objectif 80 000 €, cycle à configurer) : un centre de coût
   personnalisé et des opérations prévues ce mois-ci, pour montrer les valeurs inconnues.
 
+## Données du site de référence (`npm run import:rjs-forecast`)
+
+Importe les users du site de référence ([`rjsconseil/rjs-forecast`](https://github.com/rjsconseil/rjs-forecast))
+avec leurs projets et tâches, Budgets, Patrimoines, opérations, récurrences, règlements, objectifs et périodes
+closes, par les règles du socle : chaque objet reçoit un identifiant du socle et garde son ID d'origine dans
+`importRef` ; les clôtures sont rejouées par `closePeriod` et comparées au résultat enregistré par la référence.
+L'API doit être arrêtée (un seul écrivain) :
+
+```bash
+npm run import:rjs-forecast -- --remplacer
+```
+
+- source : le dossier `site/data` de la référence. Sans `--source <dossier>` (chemin relatif au dossier du
+  socle), l'import lit les fichiers copiés dans `api/sources/rjs-forecast/`, sinon ceux du site de référence
+  voisin, `../RJS_Forecast/site/data`. Ces données ne sont pas versionnées ici : ce dépôt est public, celui de la
+  référence privé ;
+- `--remplacer` : repart des seules données de la référence ; l'ancien stockage est d'abord sauvegardé
+  (`api/data/store.before-rjs-forecast-<date>.json`). Sans cette option, les données sont ajoutées au stockage
+  existant et un second import est refusé ;
+- rapport et données sans équivalent dans le socle (idées non décidées, actifs et allocations du patrimoine,
+  versements entre entités, factures…) : `api/data/imports/rjs-forecast/` (`rapport.json`, `hors-contrat.json`).
+
 ## Tests
 
 `npm test` lance `api/test/*.test.mjs` :
@@ -176,10 +199,13 @@ Après réinitialisation, le seed crée par HTTP, avec des dates relatives au jo
   tableau de bord administrable, centres de coût ;
 - `corrections.test.mjs` — corrections C01 à C11, exemples financiers, migration d'un stockage `j1-store/0.2` ;
 - `contracts.test.mjs` — récurrences et occurrences, registre, centres, solde et rapprochement, projection et
-  couverture des objectifs, aperçu et simulation sans écriture, directives, Partir de zéro (principal et branche).
+  couverture des objectifs, aperçu et simulation sans écriture, directives, Partir de zéro (principal et branche) ;
+- `calendar.test.mjs` — module Calendrier : calendriers livrés, noyau, isolement et lecture sans écriture,
+  paramétrage du survol, des couleurs et de la vue, configurations refusées, Budget/Patrimoine, configuration
+  fournie à l'appel, fenêtre de lecture, répétitions.
 
 `npm --prefix web test -- --watch=false` lance les tests unitaires du site (routes et redirections, lectures
-protégées contre les réponses périmées, graphes, éditeur d'opération rejouable).
+protégées contre les réponses périmées, graphes, éditeur d'opération rejouable, dates et modèle du calendrier).
 
 La matrice de recette « exigence → page/service → preuve → statut » est dans [`docs/RECETTE.md`](docs/RECETTE.md).
 

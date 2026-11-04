@@ -252,7 +252,7 @@ export function createReads(socle, h) {
 
   function centers(ctx, q = {}) {
     const b = base(ctx, { periodKey: q.period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.');
+    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
     const direction = oneOf('direction', q.direction, ['charge', 'income'], 'charge');
     const r = centersRead(b, direction, [b.comp.budgetId]);
     const rows = r.rows.filter((x) => x.paidCents || x.remainingCents || x.capCents !== null || q.all === 'true');
@@ -370,7 +370,7 @@ export function createReads(socle, h) {
 
   function impact(ctx, { period } = {}) {
     const b = base(ctx, { periodKey: period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.');
+    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
     const { start, end } = b.period;
     const rows = b.budgets.map((x) => {
       const real = budget().budgetLines(b.state, [x.id], { from: start, to: end, by: 'realized' });

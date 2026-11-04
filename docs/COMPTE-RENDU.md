@@ -25,10 +25,15 @@ Matrice détaillée : [`RECETTE.md`](RECETTE.md).
 
 ## Données du site de référence importées
 
-Script `npm run import:rjs-forecast` (`api/scripts/import-rjs-forecast.mjs`), API arrêtée ; source
-`../RJS_Forecast/site/data`. Sauvegarde préalable `api/data/store.before-rjs-forecast-*.json`, rapport et données
-sans contrat dans `api/data/imports/rjs-forecast/` (`rapport.json`, `hors-contrat.json`). Les 2 users fictifs
-existants sont conservés ; un second passage est refusé (restaurer la sauvegarde pour recommencer).
+Script `npm run import:rjs-forecast` (`api/scripts/import-rjs-forecast.mjs`), API arrêtée ; source : le dossier
+`site/data` de la référence, donné par `--source`, sinon ses fichiers copiés dans `api/sources/rjs-forecast/`
+(non versionnés : ce dépôt est public, celui de la référence privé), sinon le site voisin `../RJS_Forecast`. Sauvegarde
+préalable `api/data/store.before-rjs-forecast-*.json`, rapport et données sans contrat dans
+`api/data/imports/rjs-forecast/` (`rapport.json`, `hors-contrat.json`). Sans option, les users existants sont
+conservés et un second passage est refusé ; `--remplacer` repart des seules données de la référence. Refus
+lisibles, sans rien écrire : API lancée sur le stockage, import déjà fait, source introuvable.
+
+Import des données du site de référence du poste :
 
 - 26 users (types Célibataire, Entreprise personnelle, Association, Personne physique ajoutés au paramètre) ;
   88 projets et 68 tâches du noyau (projets « RJS » sans entité rattachés à Roosevelt).
@@ -41,6 +46,10 @@ existants sont conservés ; un second passage est refusé (restaurer la sauvegar
 - Hors contrat, conservés dans `hors-contrat.json` : 14 idées non décidées, actifs, allocations, personnes,
   fournisseurs, opérations de patrimoine, 47 clôtures des liens secondaires, versements entre entités, clients et
   factures, périmètres et droits, configuration. 31 liens opération → tâche retirés (tâche hors du projet du Budget).
+
+Instantané GitHub de la référence (31 octobre, `54246fa`), importé le 4 novembre avec `--remplacer` : 26 users,
+89 projets et 68 tâches, 56 Budgets, 26 compositions, 160 centres, 173 opérations ponctuelles, 260 récurrences,
+477 règlements, 7 objectifs ; 14 clôtures rejouées, 0 écart ; contrôles d'intégrité : tous passent.
 
 ## À vérifier (recette navigateur, non faite par l'agent)
 
@@ -95,3 +104,29 @@ Rendu à 1440 / 1024 / 768 / 390 px, clavier et focus, thème sombre, menu mobil
 - **Pages** : Noyau transverse › Calendrier (`/calendrier`), Budget/Patrimoine › Calendrier (`/calendrier-budget`),
   Patrimoine › Calendrier (`/patrimoine/calendrier`). Le calendrier miniature des Projets rejoint le module.
 - Tests : API 124/124 (dont 9 du calendrier), site 31/31 ; build OK.
+
+## Tests avec les données de la référence — 4 novembre 2026
+
+Données : instantané `54246fa` importé ci-dessus ; parcours navigateur (Playwright, scripts hors dépôt) sur l'API et
+le site lancés par `npm start`.
+
+- **Toutes les pages, sept profils** (familles, célibataires, entreprise personnelle, association, famille sans
+  cycle configuré) × 21 pages, soit 147 pages : aucune erreur de console, aucune alerte affichée. Seules réponses
+  d'API en erreur : les refus prévus « Cycle à configurer » (422) du profil sans cycle, sur 4 pages BPM.
+- **Correction — cycle à configurer** : ces refus s'affichaient en alerte d'erreur, avec un bouton « Réessayer »
+  sans effet. L'API désigne maintenant le champ en cause (`period`) et les pages BPM montrent un état
+  d'information « Cycle à configurer » avec un lien vers les Réglages (`bpm/ui/state.ts`).
+- **Calendrier, trois modules : 29 vérifications sur 29** — repères par élément identiques au stockage
+  (occurrences des récurrences et fins de période comprises) ; entrées et sorties d'octobre et de novembre
+  recalculées à part depuis le stockage ; même cadre dans les trois vues ; aperçu au survol (indicateurs et
+  entrées paramétrés) ; légende et « Terminés inclus » ; replanification par l'agenda (le registre BPM voit la
+  nouvelle date ; une version périmée est refusée en conflit) et glisser-déposer d'une tâche ; créneau du
+  calendrier miniature des Projets ; Patrimoine (versements, objectif, vue annuelle d'ouverture) ; paramètre
+  modifié puis rétabli ; clavier ; aucune erreur de console.
+- **Correction — agenda du calendrier** : en pleine largeur, la liste s'écrasait à une hauteur nulle (défaut repris
+  des feuilles de la référence) ; elle reprend sa hauteur naturelle, plafonnée, avec un défilement interne.
+- **Pages BPM relues avec des données** (tableau de bord, dépenses, piloter, agir, vision, projets de la vie,
+  réglages) : rendu conforme.
+- **Import** : six cas vérifiés sur une copie du poste (site de référence voisin trouvé sans option, second import
+  refusé, `--remplacer` avec sauvegarde, aucune source, source incomplète, API lancée) ; les refus n'écrivent rien.
+- Tests : API 124/124, site 31/31 ; build OK.

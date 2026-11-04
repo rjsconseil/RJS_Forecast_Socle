@@ -1,6 +1,10 @@
 // Import des données du site de référence RJS_Forecast (`site/data/*.json`) dans le store du socle.
 // Usage : API arrêtée (un seul écrivain), puis
-//   node api/scripts/import-rjs-forecast.mjs [--source <dossier site/data>] [--data <store.json>]
+//   npm run import:rjs-forecast -- [--remplacer] [--source <dossier site/data>] [--data <store.json>]
+// Source : `--source <dossier site/data>` ; à défaut, les fichiers `site/data/*.json` copiés dans
+// `api/sources/rjs-forecast/` (non versionnés : le dépôt du socle est public, celui de la référence privé),
+// sinon le site de référence voisin du socle, `../RJS_Forecast/site/data`.
+// `--remplacer` repart d'un stockage vide (l'ancien est sauvegardé) ; sinon les données sont ajoutées.
 // Le store est sauvegardé avant toute écriture. Les objets existants ne sont pas touchés ; chaque
 // objet importé reçoit un ID de la politique du socle et garde son ID d'origine dans `importRef`.
 // Phase 1 (une seule écriture) : users, projets et tâches du noyau, Budgets, Patrimoines, compositions,
@@ -8,7 +12,7 @@
 // lien principal sont re-clôturées par la commande réelle `closePeriod`, dans l'ordre, et le résultat
 // recalculé est comparé au résultat enregistré par la référence.
 // Ce qui n'a pas de contrat dans le socle est conservé tel quel dans `data/imports/rjs-forecast/`.
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { access, copyFile, mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { createSocle } from '../src/socle/index.mjs';
 import { SOCLE_MODULES } from '../src/modules/index.mjs';
@@ -23,14 +27,32 @@ const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
-const SOURCE_DIR = resolve(arg('source', resolve(API_DIR, '../../RJS_Forecast/site/data')));
+const REPLACE = process.argv.includes('--remplacer');
 const DATA_FILE = resolve(arg('data', process.env.J1_DATA_FILE ?? join(API_DIR, 'data/store.json')));
 const OUT_DIR = join(DATA_FILE, '..', 'imports', SOURCE);
 
+const SOURCE_FILES = ['utilisateurs.json', 'workspace.json', 'budget-management.json', 'budget-patrimoine-management.json', 'patrimoine-management.json', 'patrimoine-budget-ledger.json', 'entreprise-pilotage.json', 'configuration.json'];
+/** Sans `--source` : la copie déposée dans le socle, sinon le site de référence voisin (ancien défaut). */
+const DEFAULT_SOURCES = [resolve(API_DIR, 'sources/rjs-forecast'), resolve(API_DIR, '../../RJS_Forecast/site/data')];
+const missingIn = async (dir) =>
+  (await Promise.all(SOURCE_FILES.map(async (name) => ((await access(join(dir, name)).then(() => true, () => false)) ? null : name)))).filter(Boolean);
+const SOURCE_DIR = await pickSource();
+
+/** Premier dossier complet parmi la source demandée ou les sources par défaut ; sinon refus, rien n'est écrit. */
+async function pickSource() {
+  const given = arg('source');
+  const candidates = given ? [resolve(given)] : DEFAULT_SOURCES;
+  for (const dir of candidates) if (!(await missingIn(dir)).length) return dir;
+  const where = given ? `dans ${candidates[0]} (fichiers absents : ${(await missingIn(candidates[0])).join(', ')})` : `dans ${candidates.join(' ni dans ')}`;
+  refuse(
+    `Données de la référence introuvables ${where}.\n` +
+      '  Indiquez le dossier site/data du site de référence sur ce poste, par exemple :\n\n' +
+      '    npm run import:rjs-forecast -- --remplacer --source ../RJS_Forecast/site/data\n\n' +
+      '  ou copiez ses fichiers site/data/*.json dans api/sources/rjs-forecast/ (voir son README.md).',
+  );
+}
 const read = async (name) => JSON.parse(await readFile(join(SOURCE_DIR, name), 'utf8'));
-const [U, W, BM, BPM, PM, L, ENT, CONF] = await Promise.all(
-  ['utilisateurs.json', 'workspace.json', 'budget-management.json', 'budget-patrimoine-management.json', 'patrimoine-management.json', 'patrimoine-budget-ledger.json', 'entreprise-pilotage.json', 'configuration.json'].map(read),
-);
+const [U, W, BM, BPM, PM, L, ENT, CONF] = await Promise.all(SOURCE_FILES.map(read));
 
 /** Types de la référence → clés du paramètre `users.types` (lettres, sans tiret). */
 const USER_TYPES = {
@@ -91,15 +113,44 @@ const count = (k, n = 1) => (report.counts[k] = (report.counts[k] ?? 0) + n);
 
 // ---------- sauvegarde puis ouverture du socle (refusée si l'API tient le verrou) ----------
 
-const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-const backup = join(DATA_FILE, '..', `store.before-${SOURCE}-${stamp}.json`);
-await copyFile(DATA_FILE, backup);
-report.backup = backup;
+/** Refus lisible, sans trace technique : rien n'a été écrit. */
+function refuse(message) {
+  console.error(`\n✖ ${message}\n`);
+  process.exit(1);
+}
+/** Ouvre le socle ; si une API tient déjà le stockage (verrou), l'import est refusé proprement. */
+async function open() {
+  try {
+    return await createSocle({ dataFile: DATA_FILE, modules: SOCLE_MODULES });
+  } catch (err) {
+    if (err.code === 'STORE_LOCKED') refuse('L’API est lancée sur ce stockage : arrêtez-la (Ctrl+C dans le terminal de npm start), puis relancez l’import.');
+    throw err;
+  }
+}
 
-const socle = await createSocle({ dataFile: DATA_FILE, modules: SOCLE_MODULES });
+const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+const exists = await access(DATA_FILE).then(() => true, () => false);
+if (exists && !REPLACE) {
+  const state = JSON.parse(await readFile(DATA_FILE, 'utf8'));
+  const already = Object.values(state.users ?? {}).find((u) => u.importRef?.source === SOURCE);
+  if (already) refuse(`Les données de la référence sont déjà importées (user ${already.label}). Pour repartir des seules données de la référence, relancez avec --remplacer (l’ancien stockage sera sauvegardé).`);
+}
+// Le stockage ne doit être ouvert par aucune API (verrou du socle) : vérifié avant toute sauvegarde.
+if (exists) await (await open()).close();
+// Installation neuve : aucun stockage à sauvegarder, le socle le crée à la première écriture.
+const backup = exists ? join(DATA_FILE, '..', `store.before-${SOURCE}-${stamp}.json`) : null;
+if (backup) await copyFile(DATA_FILE, backup);
+else await mkdir(join(DATA_FILE, '..'), { recursive: true });
+report.backup = backup;
+if (backup && REPLACE) {
+  await unlink(DATA_FILE);
+  note(`Stockage précédent remplacé ; sauvegarde : ${backup}.`);
+}
+
+const socle = await open();
 try {
   const already = Object.values(socle.state.users).find((u) => u.importRef?.source === SOURCE);
-  if (already) throw new Error(`Import déjà fait (user ${already.id} ← ${already.importRef.id}). Restaurer une sauvegarde avant de recommencer.`);
+  if (already) throw new Error(`Import déjà fait (user ${already.id} ← ${already.importRef.id}). Relancer avec --remplacer pour repartir des seules données de la référence (l'ancien stockage est sauvegardé).`);
 
   const { users, core, budget, patrimoine } = socle.modules;
   const om = socle.om;

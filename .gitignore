@@ -1,3 +1,6 @@
 api/data/
 node_modules/
 web/dist/
+
+# Données du site de référence (dépôt privé) : copiées sur le poste, jamais versionnées ici (dépôt public).
+api/sources/rjs-forecast/*.json

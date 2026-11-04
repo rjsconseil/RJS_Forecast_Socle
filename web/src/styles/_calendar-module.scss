@@ -597,7 +597,19 @@
     white-space: nowrap;
   }
 
-  /* ---------- agenda de la période ---------- */
+  /* ---------- agenda de la période ----------
+     En pleine largeur, les règles de la référence laissent la liste s'écraser à une hauteur nulle (seul le titre
+     restait visible) : elle reprend sa hauteur naturelle, plafonnée, avec un défilement interne. */
+  .calendar-agenda-list {
+    flex: 0 1 auto;
+    height: auto;
+    min-height: 0;
+    max-height: min(30rem, 62vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
   .calendar-agenda-item {
     border-left: var(--trait-4, 4px) solid var(--event-tone);
   }
