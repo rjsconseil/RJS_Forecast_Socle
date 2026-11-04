@@ -55,11 +55,25 @@ Rendu à 1440 / 1024 / 768 / 390 px, clavier et focus, thème sombre, menu mobil
 
 ## Restant
 
-- Accueils de zone `/zones/:zone` : chaque zone mène à sa première page.
 - Blocs de référence sans contrat : vue quotidienne, découpage récurrent/ponctuel du budget standard, verdict du
-  budget type, entrées à venir dans les événements, guide « Que faire maintenant ? », visite guidée, calendrier
-  miniature des projets.
+  budget type, entrées à venir dans les événements, guide « Que faire maintenant ? », visite guidée.
 - Teinte exacte de l'en-tête : le réglage de design du site n'est pas livré ; `--violet-950` retenu
   (`web/src/styles/_app-tokens.scss`), à ajuster si besoin.
 - Passerelle `_app-*.scss` : encore utilisée par les briques `bpm/ui` et les pages du socle ; à réduire une fois ces
   pages passées au gabarit source.
+
+## Reprise du 4 novembre 2026 — accueil, projets et tâches
+
+- **Accueil** (`/`) vérifié contre la référence : portail en bandes avec Budget/Patrimoine Management (module phare),
+  Budget management, Patrimoine Management et Noyau transverse ; les 15 liens du portail ouvrent leur page.
+- **Projets** : calendrier miniature de la référence à droite du bandeau (vues année / mois / semaine, flèches,
+  « Aujourd’hui », créneau de lecture choisi depuis un jour). Le créneau est gardé dans l'URL (`du`, `au`) et suit la
+  règle de la référence : seuls les projets dont la date de début est dans le créneau sont comptés et affichés ; un
+  projet sans date de début est masqué tant qu'un créneau est actif. Aucune date source n'est réécrite.
+- **Cartes projet** au format de la référence : titre, résumé, début prévu, temps prévu / consommé, puis priorité ·
+  échéance · « N tâches à suivre » · pastille de racine, et statut calculé. L'explication du statut et l'avancement
+  restent au survol et dans la fiche du projet, qui porte aussi « Modifier le projet » et « Ajouter une tâche ».
+- **Tâches** : inchangées, déjà au gabarit de la référence (colonnes par statut, « Déplacer vers », poignée ⠿).
+- Feuille source `_calendar.scss` ajoutée aux couches globales (sélecteur de vue et grille annuelle du calendrier).
+- Écarts conservés volontairement : en-tête mauve foncé (demande du propriétaire, la référence livrée est bleu nuit),
+  colonnes à défilement horizontal, poignée ⠿ pour le glisser-déposer.
