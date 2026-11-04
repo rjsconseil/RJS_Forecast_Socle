@@ -130,3 +130,48 @@ le site lancés par `npm start`.
 - **Import** : six cas vérifiés sur une copie du poste (site de référence voisin trouvé sans option, second import
   refusé, `--remplacer` avec sauvegarde, aucune source, source incomplète, API lancée) ; les refus n'écrivent rien.
 - Tests : API 124/124, site 31/31 ; build OK.
+
+## Projets de la vie dans Budget/Patrimoine — 4 novembre 2026
+
+Les pages Projets et Tâches du noyau restent telles quelles, pour validation visuelle. Budget/Patrimoine les
+réimplémente pour les seuls projets du budget de vie, puis les enrichit de leur budget.
+
+- **Pages BPM** : `/app/projets` (tableau des projets par statut : projet de vie et projets standards du user,
+  panneau du budget de vie), `/app/projets/:id` (fiche : budget attribué, ventilation sur les tâches, dépenses et
+  validation des règlements, dépassements, retours, contrôles de fin de cycle ; fiche du projet de vie : projets
+  financés et décisions), `/app/taches` (tableau des tâches par statut avec leur part de budget). L'ancienne page
+  « Projets de la vie » (création d'un projet depuis BPM) est remplacée : **la création reste dans le noyau**, un
+  projet du noyau devient projet standard par « Financer un projet du noyau ».
+- **Noyau, seule source** : le rattachement d'une tâche et son changement d'état (glisser-déposer, « Déplacer vers »)
+  appellent les commandes du noyau depuis BPM comme depuis le noyau ; l'état du projet suit. Deux points
+  d'extension du noyau, dans la même écriture : `taskMoveGuard` (une tâche qui porte une part, une dépense ou un
+  retour ne change pas de projet) et `onTaskStatusChange` (retour au budget de vie à la complétion). Budget gagne
+  `settlementGuard` (validation d'un règlement).
+- **Règles retenues [P]**, à valider :
+  1. Le budget attribué figure dans le budget de vie comme une charge non récurrente **spéciale** : présentée dans
+     Dépenses (groupe « Charges des projets de la vie »), jamais totalisée. Les charges d'un projet n'entrent ni dans
+     le prévu ni dans le reste à payer du budget de vie ; elles entrent dans son **Dépensé** quand l'utilisateur
+     valide leur règlement (date réelle), depuis la date d'attribution (`projets.chargesReglees`).
+  2. Une part de tâche ou un règlement qui ferait dépasser le budget du projet (attribué + dépassements autorisés)
+     est refusé tant que le budget de vie n'a pas autorisé le dépassement (une demande en attente par projet).
+     Autorisé, le projet passe en dépassement (rouge) ; la charge de dépassement est datée de la fin de la période
+     en cours du cycle et facturée au budget de vie à cette date (« Facturer au budget de vie ») : le budget
+     attribué l'intègre, le déficit est soldé, et les contrôles de fin de cycle sont rendus (budget = somme des
+     parts ; charges des tâches planifiées, montants et récurrences à jour). La charge de dépassement est présentée
+     sans être ajoutée une seconde fois au Dépensé : les règlements qu'elle couvre y sont déjà, à leur validation.
+  3. Retour : revenu ponctuel ou récurrent (centre « Autres revenus ») créé dans le budget de vie quand la tâche est
+     terminée, une seule fois ; rouvrir la tâche ne le retire pas.
+  4. Engagé d'une tâche : réglé validé + dépenses prévues + occurrences attendues (récurrence sans fin : 12 mois).
+- **Import** : la cible (`plannedBudgetCents`) et la répartition (`taskAllocations`) des enveloppes de la
+  référence deviennent budget attribué et parts des tâches, à compter de la date de l'import (aucun chiffre clos ne
+  change : 14 clôtures rejouées, 0 écart) — 17 projets financés, 24 parts ; une enveloppe dont les parts dépassaient
+  la cible reçoit la somme des parts (note du rapport).
+- **Restant** : facturation des dépassements à la clôture elle-même (aujourd'hui action distincte, possible dès la
+  fin de période), plusieurs demandes simultanées par projet, retrait d'un retour à la réouverture d'une tâche,
+  charges spéciales dans le Calendrier.
+- **Vérifications** : API 130/130 (dont 6 dans `projects.test.mjs`), site 31/31, build sans avertissement ;
+  parcours navigateur (Playwright, hors dépôt) sur les données importées : scénario complet 14/14 (budgéter un
+  projet du noyau, attribuer, ventiler avec dépassement demandé puis autorisé, valider un règlement compté dans le
+  Dépensé, retour à la complétion, détachement refusé, glisser-déposer d'une tâche, charge spéciale dans Dépenses,
+  aucune erreur console) ; 167 pages (7 profils, nouvelles pages et fiches projets comprises) : aucune alerte ni
+  erreur console, seuls les refus prévus « Cycle à configurer » du profil sans cycle.

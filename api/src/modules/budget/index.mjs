@@ -274,6 +274,14 @@ export default {
       for (const ext of socle.registry.extensions('operationGuard')) ext(state, { userId: op.userId, budgetId: op.budgetId, dates }, socle);
     }
 
+    /**
+     * Garde des niveaux supérieurs sur la validation d'un règlement (opération réglée, réalisation,
+     * règlement d'une occurrence) : par exemple le dépassement du budget attribué à un projet.
+     */
+    function settlementGuard(state, input) {
+      for (const ext of socle.registry.extensions('settlementGuard')) ext(state, input, socle);
+    }
+
     const operationView = (state, o) => ({
       ...structuredClone(o),
       amount: toEuros(o.amountCents),
@@ -405,6 +413,7 @@ export default {
           ...costCenterFields(tx.draft, tx.userId, input.costCenterRef, direction),
         };
         guard(tx.draft, { userId: tx.userId, budgetId }, [opDate, realizedDate].filter(Boolean));
+        if (status === 'realized') settlementGuard(tx.draft, { userId: tx.userId, budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId: fields.taskId, operationId: null });
         return om.create(tx, 'operation', fields);
       },
 
@@ -450,6 +459,7 @@ export default {
             realizedDate: realizedDateOf(input.realizedDate ?? o.date),
           };
           guard(tx.draft, o, [patch.realizedDate, o.realizedDate].filter(Boolean));
+          settlementGuard(tx.draft, { userId: o.userId, budgetId: o.budgetId, direction: o.direction, amountCents: patch.realizedAmountCents, realizedDate: patch.realizedDate, taskId: o.taskId ?? null, operationId: o.id });
           om.update(tx, o, patch);
           return { operationId: id };
         });
@@ -557,6 +567,7 @@ export default {
             const realizedDate = realizedDateOf(input.realizedDate ?? occurrenceDate);
             const realizedAmountCents = money('realizedAmount', input.realizedAmount ?? toEuros(rec.amountCents), { positive: true });
             guard(tx.draft, rec, [realizedDate]);
+            settlementGuard(tx.draft, { userId: rec.userId, budgetId: rec.budgetId, direction: rec.direction, amountCents: realizedAmountCents, realizedDate, taskId: rec.taskId ?? null, operationId: existing?.id ?? null, recurrenceId: rec.id, occurrenceDate });
             if (existing) {
               om.update(tx, existing, { status: 'realized', realizedAmountCents, realizedDate });
               return { operationId: existing.id };

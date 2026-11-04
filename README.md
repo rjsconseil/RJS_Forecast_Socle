@@ -85,6 +85,31 @@ d'un paramètre, objets reliés), répétition (cadence, ancrage, veille de l'oc
 un objet réel) et commande de l'API qui replanifie un repère (glisser-déposer ou « Replanifier »). Les trois vues
 partagent un même cadre (nombre d'or au-dessus de 1 280 px, 4:3 jusqu'à 900 px).
 
+## Projets de la vie dans Budget/Patrimoine : un projet, un budget attribué
+
+Les projets et les tâches viennent du **noyau**, seule source : ils s'y créent et s'y modifient. Budget/Patrimoine
+réimplémente leurs tableaux par statut (`/app/projets`, `/app/taches`, fiche `/app/projets/:id`), limités au
+**projet de vie** du user et à ses **projets standards** (Budgets standards enfants du budget de vie). Le
+rattachement d'une tâche (`attachTask`, `detachTask`) et son changement d'état (glisser-déposer ou « Déplacer
+vers », `changeTaskStatus`) passent par les commandes du noyau, depuis le noyau comme depuis BPM ; l'état d'un
+projet suit toujours ses tâches. Un projet du noyau devient projet standard par « Financer un projet du noyau ».
+
+BPM porte le budget de chaque projet standard (`api/src/modules/bpm/projects.mjs`) :
+
+- **Budget attribué** par le budget de vie : il figure dans le budget de vie comme une **charge non récurrente
+  spéciale** (registre de Dépenses, groupe « Charges des projets de la vie »), jamais comptée à sa date. Seules
+  les dépenses du projet **validées comme réglées** (depuis la date d'attribution) entrent dans le Dépensé du
+  budget de vie, à leur date réelle (variable `projets.chargesReglees`, métrique `bpm.chargesProjets`) ;
+- **ventilation sur les tâches** : chaque part réduit le budget à ventiler ;
+- **dépassement** : une part ou un règlement qui dépasse le budget du projet est refusé
+  (`OVERRUN_AUTHORIZATION_REQUIRED`) tant que le budget de vie ne l'a pas autorisé. Autorisé, le projet passe en
+  dépassement (rouge) et la charge de dépassement est **facturée au budget de vie à la fin de la période en cours
+  du cycle** : « Facturer au budget de vie » intègre alors le dépassement au budget attribué et rend les contrôles
+  de fin de cycle (budget = somme des parts, charges des tâches planifiées avec montants et récurrences à jour) ;
+- **retour** : une tâche peut retourner au budget de vie un revenu ponctuel ou récurrent, enregistré quand elle est
+  terminée (une seule fois) ;
+- **garde** : une tâche qui porte une part, une dépense ou un retour ne change pas de projet tant qu'ils existent.
+
 ## Chiffres configurables et explicables
 
 Chaque chiffre affiché par l'application BPM est une **métrique** :
@@ -200,6 +225,9 @@ npm run import:rjs-forecast -- --remplacer
 - `corrections.test.mjs` — corrections C01 à C11, exemples financiers, migration d'un stockage `j1-store/0.2` ;
 - `contracts.test.mjs` — récurrences et occurrences, registre, centres, solde et rapprochement, projection et
   couverture des objectifs, aperçu et simulation sans écriture, directives, Partir de zéro (principal et branche) ;
+- `projects.test.mjs` — projets de la vie dans BPM : isolement, budget attribué (charge spéciale), ventilation,
+  dépassements (demande, refus, accord), règlement compté à sa validation, facturation de fin de cycle, retours,
+  rattachement et garde ;
 - `calendar.test.mjs` — module Calendrier : calendriers livrés, noyau, isolement et lecture sans écriture,
   paramétrage du survol, des couleurs et de la vue, configurations refusées, Budget/Patrimoine, configuration
   fournie à l'appel, fenêtre de lecture, répétitions.

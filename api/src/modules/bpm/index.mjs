@@ -8,6 +8,7 @@ import { date, expectedRevisionOf, integer, money, oneOf, text } from '../../soc
 import { CADENCES } from '../budget/recurrence.mjs';
 import { createReads, DEFAULT_VISION, percent } from './reads.mjs';
 import { GOAL_TYPES } from './projection.mjs';
+import { createProjects, cycleChecks, inRegime, projectBudget, projectExtensions, projectVariables } from './projects.mjs';
 import { cycleBounds, dayBefore, indexOfKey, periodByIndex, periodByKey, periodsPage, today } from './periods.mjs';
 
 const RESULT_METRIC = 'bpm.resultatPeriode';
@@ -15,7 +16,8 @@ const RESULT_METRIC = 'bpm.resultatPeriode';
 const METRICS = [
   // Synthèse de la période : réalisé (date réelle de règlement) et restant (date prévue, non réglé)
   { key: 'bpm.revenus', label: 'Reçu', unit: 'EUR', group: 'Période', formula: 'budget.revenusRealises', description: 'Revenus effectivement reçus, datés dans la période (date réelle).' },
-  { key: 'bpm.charges', label: 'Dépensé', unit: 'EUR', group: 'Période', formula: 'budget.chargesRealisees', description: 'Dépenses effectivement payées, datées dans la période (date réelle).' },
+  { key: 'bpm.charges', label: 'Dépensé', unit: 'EUR', group: 'Période', formula: 'budget.chargesRealisees + projets.chargesReglees', description: 'Dépenses effectivement payées, datées dans la période (date réelle) : celles du budget de vie et les charges des projets de la vie validées comme réglées (charges spéciales, jamais comptées avant validation).' },
+  { key: 'bpm.chargesProjets', label: 'Projets de la vie · réglé validé', unit: 'EUR', group: 'Période', formula: 'projets.chargesReglees', description: 'Charges des projets de la vie validées comme réglées pour leurs besoins, datées dans la période (date réelle). Elles font partie du Dépensé.' },
   { key: RESULT_METRIC, label: 'Reste réel', unit: 'EUR', group: 'Période', formula: 'bpm.revenus - bpm.charges', description: 'Net réalisé = reçu − payé. Résultat signé capitalisé dans le Patrimoine à la clôture.' },
   { key: 'bpm.resteARecevoir', label: 'À recevoir', unit: 'EUR', group: 'Période', formula: 'budget.resteARecevoir', description: 'Revenus prévus dans la période et pas encore reçus.' },
   { key: 'bpm.resteAPayer', label: 'À payer', unit: 'EUR', group: 'Période', formula: 'budget.resteAPayer', description: 'Dépenses prévues dans la période et pas encore payées.' },
@@ -26,7 +28,7 @@ const METRICS = [
   { key: 'bpm.chargesPrevues', label: 'Charges prévues (initial)', unit: 'EUR', group: 'Budget initial', formula: 'budget.chargesPrevues', description: 'Montants prévus des charges datées dans la période, réglées ou non.' },
   { key: 'bpm.resultatPrevu', label: 'Budget initial', unit: 'EUR', group: 'Budget initial', formula: 'bpm.revenusPrevus - bpm.chargesPrevues', description: 'Solde du budget prévisionnel initial (montants prévus). Référence, distincte du solde attendu.' },
   { key: 'bpm.ecartResultat', label: 'Écart au budget initial', unit: 'EUR', group: 'Budget initial', formula: 'bpm.soldeAttendu - bpm.resultatPrevu', description: 'Solde attendu moins budget initial.' },
-  { key: 'bpm.consommationCharges', label: 'Charges consommées', unit: '%', decimals: 0, group: 'Budget initial', formula: 'pourcentage(bpm.charges, bpm.chargesPrevues)', description: 'Dépenses payées rapportées aux charges prévues.' },
+  { key: 'bpm.consommationCharges', label: 'Charges consommées', unit: '%', decimals: 0, group: 'Budget initial', formula: 'pourcentage(budget.chargesRealisees, bpm.chargesPrevues)', description: 'Dépenses payées du budget de vie rapportées à ses charges prévues (les charges des projets, comptées à leur validation, n’ont pas de prévu dans le budget de vie).' },
   // Patrimoine
   { key: 'bpm.patrimoineConstitue', label: 'Stock enregistré', unit: 'EUR', group: 'Patrimoine', formula: 'patrimoine.stockOuverture + patrimoine.resultatsCapitalises', description: "Stock d'ouverture et résultats capitalisés avant le début de la période (C09 [P]). La période lue n'y est pas encore incluse." },
   { key: 'bpm.patrimoineFinPeriode', label: 'Estimation après la période', unit: 'EUR', group: 'Patrimoine', formula: 'bpm.patrimoineConstitue + bpm.resultatPeriode', description: "Stock enregistré + effet signé de la période (une seule fois)." },
@@ -195,6 +197,12 @@ export default {
       },
     },
     lifeGoal: { collection: 'lifeGoals', prefix: 'obj', label: 'Objectif de projection' },
+    projectOverrun: {
+      collection: 'projectOverruns',
+      prefix: 'ovr',
+      label: 'Dépassement de projet',
+      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task' } },
+    },
   },
 
   parameters: [
@@ -214,10 +222,14 @@ export default {
     },
   ],
 
+  variables: projectVariables,
+
   metrics: METRICS,
 
   extensions: {
     metricContext,
+    // Projets de la vie : garde de rattachement, retour à la complétion, autorisation de dépassement.
+    ...projectExtensions,
 
     /** Parcours métier BPM appliqués aux projets noyau (contrat J1 §8 : guident, n'interdisent pas le stockage). */
     coreProjectContext(state, projectId, socle, acc) {
@@ -230,7 +242,14 @@ export default {
         };
       }
       if (kind === 'standard') {
-        return { pathways: { canAddTask: true, isTaskDestination: true, tasksCanChangeProject: false, note: 'Projet de la vie budgétisé : le changement de rattachement de ses tâches attend la règle A-PARC-01.' } };
+        return {
+          pathways: {
+            canAddTask: true,
+            isTaskDestination: true,
+            tasksCanChangeProject: true,
+            note: 'Projet de la vie budgétisé : une tâche qui porte une part de budget, une dépense ou un retour ne change de projet qu’une fois ces données retirées.',
+          },
+        };
       }
       return {};
     },
@@ -406,6 +425,9 @@ export default {
       closuresOf,
     });
 
+    // Projets de la vie : budget attribué, ventilation, dépassements, retours (voir projects.mjs).
+    const projects = createProjects(socle, { requireComposition, cycleState });
+
     /** Hypothèses de vision validées (pourcentages, montants en centimes). */
     function visionFields(current, input = {}) {
       const v = { ...DEFAULT_VISION, ...(current ?? {}) };
@@ -437,6 +459,7 @@ export default {
       compositionOf,
       metricContext: (state, userId, options) => metricContext(state, userId, socle, options),
       reads,
+      projects,
 
       async updateVision(ctx, input = {}) {
         await om.command('updateVision', ctx, input, (tx) => {
@@ -860,7 +883,17 @@ export default {
       const ok = unique && cap && cap.amountCents === c.resultCents && cap.source?.id === c.id;
       out.push(check('CLO-01', 'integrity', 'bpm', `Clôture ${c.periodLabel} : unique, résultat transféré une seule fois`, 'une capitalisation du même montant, une clôture par période', ok ? 'cohérent' : 'incohérent', ok ? 'passed' : 'failed', [c.id, c.capitalizationId].filter(Boolean)));
     }
-    out.push({ rule: 'C05', category: 'not-implemented', description: 'Flux monétaires entre le « Projet de vie » et ses projets de la vie', expected: 'décision ouverte', observed: 'aucun flux calculé', result: 'not-run', execution: 'not-run', ids: [] });
+    // Projets de la vie financés par le budget de vie (C05, règles du 4 novembre 2026 [P]).
+    const now = today();
+    for (const b of Object.values(state.budgets).filter(inRegime)) {
+      const fig = projectBudget(state, b, now);
+      out.push(check('PRJ-01', 'integrity', 'bpm', `Projet ${b.name} : parts des tâches dans le budget autorisé`, 'somme des parts ≤ budget attribué + dépassements autorisés', `${fig.sharesCents / 100} € sur ${fig.ceilingCents / 100} €`, fig.sharesCents <= fig.ceilingCents ? 'passed' : 'failed', [b.id]));
+      const late = Object.values(state.projectOverruns ?? {}).filter((x) => x.budgetId === b.id && x.status === 'approved' && x.billingDate && x.billingDate < now);
+      if (late.length) out.push(check('PRJ-02', 'pathway', 'bpm', `Projet ${b.name} : dépassement autorisé à facturer au budget de vie`, 'facturé à la fin du cycle', `${late.length} dépassement(s) dont la fin de cycle est passée`, 'warning', [b.id, ...late.map((x) => x.id)]));
+      if (cycleChecks(state, b, fig).some((c) => c.level === 'warning')) out.push(check('PRJ-03', 'pathway', 'bpm', `Projet ${b.name} : contrôles de fin de cycle`, 'budget = somme des parts ; charges des tâches planifiées et à jour', 'au moins un point à revoir', 'warning', [b.id]));
+    }
+    // Reste ouvert : les projets de la vie sans montant attribué ne sont pas consolidés dans le budget de vie.
+    out.push({ rule: 'C05', category: 'not-implemented', description: 'Consolidation des projets de la vie sans budget attribué par le budget de vie', expected: 'décision ouverte', observed: 'flux non consolidés (chaque Budget présenté séparément)', result: 'not-run', execution: 'not-run', ids: [] });
     return out;
   },
 
@@ -956,6 +989,17 @@ export default {
       ['GET', '/api/bpm/closures', ({ ctx }) => s.closures(ctx)],
       ['POST', '/api/bpm/closures', ({ ctx, body }) => s.closePeriod(ctx, body)],
       ['GET', '/api/bpm/life-projects', ({ ctx }) => s.lifeProjects(ctx)],
+      // Projets et tâches du budget de vie (les projets et tâches sont ceux du noyau ; BPM porte leurs budgets).
+      ['GET', '/api/bpm/projects', ({ ctx }) => s.projects.overview(ctx)],
+      ['POST', '/api/bpm/projects/adopt', ({ ctx, body }) => s.projects.adoptProject(ctx, body)],
+      ['GET', '/api/bpm/projects/:id', ({ ctx, params }) => s.projects.projectDetail(ctx, params.id)],
+      ['GET', '/api/bpm/tasks', ({ ctx }) => s.projects.tasksOverview(ctx)],
+      ['PUT', '/api/bpm/project-budgets/:id/allocation', ({ ctx, params, body }) => s.projects.allocate(ctx, params.id, body)],
+      ['PUT', '/api/bpm/project-budgets/:id/shares/:taskId', ({ ctx, params, body }) => s.projects.setTaskShare(ctx, params.id, params.taskId, body)],
+      ['PUT', '/api/bpm/project-budgets/:id/returns/:taskId', ({ ctx, params, body }) => s.projects.setTaskReturn(ctx, params.id, params.taskId, body)],
+      ['POST', '/api/bpm/project-budgets/:id/overruns', ({ ctx, params, body }) => s.projects.requestOverrun(ctx, params.id, body)],
+      ['POST', '/api/bpm/overruns/bill', ({ ctx, body }) => s.projects.billOverruns(ctx, body)],
+      ['POST', '/api/bpm/overruns/:id/decision', ({ ctx, params, body }) => s.projects.decideOverrun(ctx, params.id, body)],
       ['POST', '/api/bpm/life-projects', ({ ctx, body }) => s.createLifeProject(ctx, body)],
       ['GET', '/api/bpm/cost-centers', ({ ctx }) => budget.costCenters(ctx)],
       ['POST', '/api/bpm/cost-centers', ({ ctx, body }) => budget.addCustomCostCenter(ctx, body)],

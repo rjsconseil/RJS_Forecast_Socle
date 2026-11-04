@@ -35,7 +35,10 @@ export const routes: Routes = [
   { path: 'app', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
   { path: 'app/operations', redirectTo: 'depenses' },
   { path: 'app/bienvenue', redirectTo: 'utilisateurs' },
-  { path: 'app/projets', title: 'Projets de la vie — RJS Forecast', loadComponent: () => import('./bpm/life-projects').then((m) => m.BpmLifeProjects) },
+  // Projets et tâches du budget de vie : tableaux par statut réimplémentés depuis le noyau, enrichis du budget des projets.
+  { path: 'app/projets', title: 'Projets de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/projects.page').then((m) => m.BpmProjectsPage) },
+  { path: 'app/projets/:id', title: 'Projet de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
+  { path: 'app/taches', title: 'Tâches des projets — RJS Forecast', loadComponent: () => import('./bpm/projects/tasks.page').then((m) => m.BpmTasksPage) },
   { path: 'app/reglages', title: 'Réglages — RJS Forecast', loadComponent: () => import('./bpm/settings').then((m) => m.BpmSettings) },
 
   // ---------- Socle : niveau 1 (noyau) ----------

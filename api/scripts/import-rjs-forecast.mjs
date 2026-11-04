@@ -8,7 +8,8 @@
 // Le store est sauvegardé avant toute écriture. Les objets existants ne sont pas touchés ; chaque
 // objet importé reçoit un ID de la politique du socle et garde son ID d'origine dans `importRef`.
 // Phase 1 (une seule écriture) : users, projets et tâches du noyau, Budgets, Patrimoines, compositions,
-// cycles, centres, opérations, récurrences et règlements, objectifs. Phase 2 : les périodes closes du
+// cycles, centres, opérations, récurrences et règlements, objectifs, budget attribué aux projets de la vie
+// et parts de leurs tâches. Phase 2 : les périodes closes du
 // lien principal sont re-clôturées par la commande réelle `closePeriod`, dans l'ordre, et le résultat
 // recalculé est comparé au résultat enregistré par la référence.
 // Ce qui n'a pas de contrat dans le socle est conservé tel quel dans `data/imports/rjs-forecast/`.
@@ -20,6 +21,7 @@ import { DEFAULT_VISION } from '../src/modules/bpm/reads.mjs';
 import { GOAL_TYPES } from '../src/modules/bpm/projection.mjs';
 import { isOccurrence } from '../src/modules/budget/recurrence.mjs';
 import { STORE_SCHEMA } from '../src/socle/store.mjs';
+import { today } from '../src/socle/clock.mjs';
 
 const SOURCE = 'rjs-forecast';
 const API_DIR = resolve(import.meta.dirname, '..');
@@ -340,6 +342,25 @@ try {
           tag(om.create(tx, 'lifeGoal', { label: g.label, type: g.kind, date: g.targetDate, targetTodayCents: g.targetCents, removed: false }), g.id, { note: g.note || null });
           count('lifeGoals');
         }
+      }
+
+      // Budget attribué aux projets de la vie et parts de leurs tâches : cible (`plannedBudgetCents`) et répartition
+      // (`taskAllocations`, règle LIA-03) des enveloppes de la référence. L'attribution prend effet à la date de
+      // l'import : les règlements antérieurs restent dans l'historique des projets, les chiffres déjà clos ne changent pas.
+      for (const bp of BM.budgetProjects.filter((b) => b.entityId === ru.id && b.id !== main.budgetProjectId && Number.isInteger(b.plannedBudgetCents))) {
+        const target = budgets.get(bp.id);
+        const shares = {};
+        for (const a of bp.taskAllocations ?? []) {
+          const t = tasks.get(a.coreTaskId);
+          if (t && t.projectId === target.coreProjectId && Number.isInteger(a.amountCents) && a.amountCents >= 0) shares[t.id] = (shares[t.id] ?? 0) + a.amountCents;
+          else count('taskSharesDropped');
+        }
+        const total = Object.values(shares).reduce((sum, v) => sum + v, 0);
+        const allocation = Math.max(bp.plannedBudgetCents, total);
+        if (allocation > bp.plannedBudgetCents) note(`Budget ${bp.id} : parts des tâches (${total / 100} €) au-delà de la cible (${bp.plannedBudgetCents / 100} €) ; budget attribué porté à la somme des parts.`);
+        om.update(tx, target, { allocationCents: allocation, allocationDate: today(), taskSharesCents: shares, taskReturns: {} });
+        count('projectAllocations');
+        count('taskShares', Object.keys(shares).length);
       }
 
       // Clôtures : celles du lien principal sont rejouées ; celles des autres liens sont conservées hors contrat.

@@ -120,24 +120,37 @@ export default {
 
     // ---------- commandes ----------
 
-    /** Mutation d'une tâche avec contrôle de version ; `apply` renvoie false si rien ne change. */
+    /**
+     * Mutation d'une tâche avec contrôle de version ; `apply` renvoie false si rien ne change.
+     * Les niveaux supérieurs interviennent par extensions, dans la même écriture atomique, sans que le
+     * noyau les connaisse : `taskMoveGuard` peut refuser un changement de projet (la tâche porte des
+     * données d'un module), `onTaskStatusChange` réagit à un changement d'état et décrit ses effets.
+     */
     async function mutateTask(action, ctx, id, input, apply) {
       let before = null;
       const r = await om.command(action, ctx, input, (tx) => {
         const t = om.owned(tx.draft, 'task', id, tx.userId);
         om.checkRevision(t, expectedRevisionOf(input));
         before = t.projectId;
+        const previousStatus = t.status;
         const patch = apply(tx, t);
         if (patch === false) {
           tx.unchanged = true;
           return {};
         }
+        if ('projectId' in patch && (patch.projectId ?? null) !== (t.projectId ?? null)) {
+          for (const guard of registry.extensions('taskMoveGuard')) guard(tx.draft, { task: t, fromProjectId: t.projectId ?? null, toProjectId: patch.projectId ?? null }, socle);
+        }
         om.update(tx, t, patch);
-        return { taskId: t.id };
+        const effects = [];
+        if (t.status !== previousStatus) {
+          for (const react of registry.extensions('onTaskStatusChange')) effects.push(...(react(tx, { task: t, previousStatus }, socle) ?? []));
+        }
+        return { taskId: t.id, effects };
       });
       const view = readTask(ctx, id);
       const affected = [...new Set([before, view.task.projectId].filter(Boolean))];
-      return { written: r.written, ...view, affectedProjects: affected.map((pid) => projectSummary(socle.state, pid)) };
+      return { written: r.written, ...view, affectedProjects: affected.map((pid) => projectSummary(socle.state, pid)), effects: r.effects ?? [] };
     }
 
     return {

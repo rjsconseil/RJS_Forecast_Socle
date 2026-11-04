@@ -382,8 +382,10 @@ test('T-PARC-01 parcours : racine principale, branche budgétisée, projet gén�
   const branch = core.readProjectDetail(ctx, life.coreProjectId);
   assert.equal(branch.enrichment.kind, 'standard');
   assert.equal(branch.pathways.canAddTask, true);
-  assert.equal(branch.pathways.tasksCanChangeProject, false);
-  assert.equal(branch.tasks[0].pathways.canChangeProject, false);
+  // Règle du 4 novembre 2026 : le rattachement se fait depuis le noyau comme depuis BPM ; une tâche qui porte des
+  // données du budget de son projet est retenue par la garde `taskMoveGuard` (voir projects.test.mjs).
+  assert.equal(branch.pathways.tasksCanChangeProject, true);
+  assert.equal(branch.tasks[0].pathways.canChangeProject, true);
   assert.equal(core.readProjectDetail(ctx, bundle.coreProjectId).branches.length, 1);
 
   const generic = await project(socle, ctx, 'Générique');

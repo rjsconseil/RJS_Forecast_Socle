@@ -1,0 +1,565 @@
+@use 'functions' as *;
+
+/* Projets de la vie dans BPM : les tableaux par statut du noyau (`_workspace.scss`), enrichis du budget de chaque
+   projet et de chaque tâche. Le rouge est réservé au dépassement autorisé par le budget de vie ; l'orange signale un
+   engagé au-delà du budget ; les montants sont en chiffres tabulaires. */
+
+.bpm-projects {
+  --bpm-ok: var(--status-success);
+  --bpm-ok-soft: var(--status-success-surface);
+  --bpm-warn: var(--status-warning);
+  --bpm-warn-soft: var(--status-warning-surface);
+  --bpm-danger: var(--status-danger);
+  --bpm-danger-soft: var(--status-danger-surface);
+  --bpm-shared: var(--app-accent);
+  --bpm-paid: color-mix(in srgb, var(--ink) 72%, var(--app-accent));
+}
+
+/* ---------- état budgétaire ---------- */
+.bpm-state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  padding: var(--ecart-2) var(--ecart-8);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  background: var(--raised-surface);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.bpm-state-chip::before {
+  content: '';
+  width: var(--ecart-6);
+  height: var(--ecart-6);
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+.bpm-state-chip[data-state='ok'] {
+  border-color: color-mix(in srgb, var(--bpm-ok) 40%, transparent);
+  color: var(--bpm-ok);
+  background: var(--bpm-ok-soft);
+}
+.bpm-state-chip[data-state='at-risk'] {
+  border-color: color-mix(in srgb, var(--bpm-warn) 45%, transparent);
+  color: var(--bpm-warn);
+  background: var(--bpm-warn-soft);
+}
+.bpm-state-chip[data-state='deficit'] {
+  border-color: var(--bpm-danger);
+  color: var(--bpm-danger);
+  background: var(--bpm-danger-soft);
+}
+
+/* Carte d'un projet en dépassement : passe au rouge. */
+.bpm-projects .task-card[data-budget-state='deficit'] {
+  --card-border: var(--bpm-danger);
+  background: linear-gradient(var(--bpm-danger-soft), var(--bpm-danger-soft)) top / 100% var(--ecart-4) no-repeat, var(--card-surface, var(--raised-surface));
+  box-shadow: inset var(--trait-3) 0 0 var(--bpm-danger), var(--app-panel-shadow);
+}
+.bpm-projects .task-card[data-budget-state='at-risk'] {
+  box-shadow: inset var(--trait-3) 0 0 var(--bpm-warn), var(--app-panel-shadow);
+}
+
+/* ---------- jauge du budget d'un projet ---------- */
+.bpm-budget {
+  display: grid;
+  gap: var(--ecart-6);
+  margin: var(--ecart-8) 0 var(--ecart-6);
+  padding: var(--ecart-8) var(--ecart-10);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--raised-surface) 70%, var(--app-accent-soft));
+  font-variant-numeric: tabular-nums;
+}
+.bpm-budget[data-state='deficit'] {
+  border-color: color-mix(in srgb, var(--bpm-danger) 55%, transparent);
+  background: var(--bpm-danger-soft);
+}
+.bpm-budget-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--ecart-4) var(--ecart-8);
+  font-size: scaled(var(--fs-xs));
+}
+.bpm-budget-head > span {
+  color: var(--muted);
+  font-weight: var(--fw-semibold);
+}
+.bpm-budget-head strong {
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+}
+.bpm-budget-over {
+  color: var(--bpm-danger);
+  font-weight: var(--fw-bold);
+}
+.bpm-budget-track {
+  position: relative;
+  height: var(--ecart-8);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+}
+.bpm-budget-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--radius-pill);
+}
+.bpm-budget-fill.is-shared {
+  background: color-mix(in srgb, var(--bpm-shared) 38%, transparent);
+}
+.bpm-budget-fill.is-paid {
+  background: var(--bpm-paid);
+}
+.bpm-budget[data-state='deficit'] .bpm-budget-fill.is-paid {
+  background: var(--bpm-danger);
+}
+.bpm-budget-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--dim-80, 5rem), 1fr));
+  gap: var(--ecart-4) var(--ecart-10);
+  margin: 0;
+}
+.bpm-budget-figures div {
+  display: grid;
+  min-width: 0;
+}
+.bpm-budget-figures dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-medium, 500);
+}
+.bpm-budget-figures dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+.bpm-budget-empty {
+  margin: var(--ecart-8) 0 var(--ecart-6);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-style: italic;
+}
+.bpm-task-budget {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-4) var(--ecart-10);
+  margin: var(--ecart-6) 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+  font-variant-numeric: tabular-nums;
+}
+.bpm-task-budget strong {
+  color: var(--ink);
+}
+.bpm-task-budget .is-over {
+  color: var(--bpm-danger);
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- panneau du budget de vie (à droite de l'en-tête) ---------- */
+.bpm-life-panel {
+  display: grid;
+  align-content: start;
+  gap: var(--ecart-12);
+  margin-bottom: var(--ecart-24);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--board-column-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.bpm-life-panel h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-lg));
+}
+.bpm-life-panel > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-normal);
+}
+.bpm-life-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ecart-8);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.bpm-life-figures div {
+  padding: var(--ecart-8) var(--ecart-10);
+  border-radius: var(--radius-md);
+  background: var(--raised-surface);
+}
+.bpm-life-figures dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+}
+.bpm-life-figures dd {
+  margin: 0;
+  font-size: scaled(var(--fs-md));
+  font-weight: var(--fw-bold);
+}
+.bpm-life-figures .is-danger dd {
+  color: var(--bpm-danger);
+}
+.bpm-adopt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--ecart-8);
+  align-items: end;
+}
+.bpm-adopt label {
+  display: grid;
+  gap: var(--ecart-4);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+}
+
+/* ---------- demande de dépassement (décision du budget de vie) ---------- */
+.bpm-overrun {
+  display: grid;
+  gap: var(--ecart-6);
+  padding: var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid color-mix(in srgb, var(--bpm-danger) 45%, transparent);
+  border-left: var(--trait-4) solid var(--bpm-danger);
+  border-radius: var(--radius-md);
+  background: var(--bpm-danger-soft);
+}
+.bpm-overrun p {
+  margin: 0;
+  font-size: scaled(var(--fs-xs));
+  line-height: var(--lh-normal);
+}
+.bpm-overrun-help {
+  color: var(--muted);
+}
+.bpm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+}
+
+/* ---------- fiche d'un projet ---------- */
+.bpm-project-page {
+  display: grid;
+  gap: var(--ecart-28);
+  padding-bottom: var(--ecart-56);
+}
+.bpm-project-head {
+  display: grid;
+  gap: var(--ecart-10);
+  padding-bottom: var(--ecart-20);
+  border-bottom: var(--trait-1) solid var(--line);
+}
+.bpm-project-head h1 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(var(--texte-32), var(--texte-3-5vw), var(--texte-48, 3rem));
+  letter-spacing: calc(-1 * var(--lettrage-0-04em));
+}
+.bpm-project-head .page-intro {
+  margin: 0;
+}
+.bpm-project-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-8) var(--ecart-16);
+}
+.bpm-section {
+  display: grid;
+  gap: var(--ecart-14);
+}
+.bpm-section > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ecart-8);
+}
+.bpm-section > header h2 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: scaled(var(--fs-xl));
+}
+.bpm-section > header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.bpm-panel {
+  padding: var(--ecart-16) var(--ecart-20);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--board-column-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.bpm-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--ecart-10);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.bpm-kpis div {
+  display: grid;
+  gap: var(--ecart-2);
+  padding: var(--ecart-12) var(--ecart-14);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--raised-surface);
+}
+.bpm-kpis dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+}
+.bpm-kpis dd {
+  margin: 0;
+  font-size: scaled(var(--fs-lg));
+  font-weight: var(--fw-bold);
+}
+.bpm-kpis small {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+}
+.bpm-kpis .is-danger {
+  border-color: var(--bpm-danger);
+  background: var(--bpm-danger-soft);
+}
+.bpm-kpis .is-danger dd {
+  color: var(--bpm-danger);
+}
+.bpm-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ecart-8) var(--ecart-12);
+}
+.bpm-inline-form label {
+  display: grid;
+  gap: var(--ecart-4);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+}
+.bpm-inline-form input,
+.bpm-inline-form select {
+  min-width: 8rem;
+}
+.bpm-amount-input {
+  width: 9rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bpm-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+  line-height: var(--lh-normal);
+}
+.bpm-feedback {
+  margin: 0;
+  padding: var(--ecart-10) var(--ecart-14);
+  border-radius: var(--radius-md);
+  background: var(--app-accent-soft);
+  font-size: scaled(var(--fs-xs));
+}
+.bpm-feedback.is-error {
+  color: var(--error-ink);
+  background: var(--error-surface);
+}
+
+/* Tableau de ventilation : une ligne par tâche. */
+.bpm-table-wrap {
+  overflow-x: auto;
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--board-column-surface);
+}
+.bpm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: scaled(var(--fs-xs));
+  font-variant-numeric: tabular-nums;
+}
+.bpm-table th,
+.bpm-table td {
+  padding: var(--ecart-10) var(--ecart-12);
+  border-bottom: var(--trait-1) solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+.bpm-table th {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.bpm-table td.num,
+.bpm-table th.num {
+  text-align: right;
+  white-space: nowrap;
+}
+.bpm-table tr:last-child td {
+  border-bottom: 0;
+}
+.bpm-table tr[data-over='true'] td {
+  background: var(--bpm-danger-soft);
+}
+.bpm-table .is-over {
+  color: var(--bpm-danger);
+  font-weight: var(--fw-bold);
+}
+.bpm-table select {
+  max-width: 10rem;
+}
+.bpm-cell-form {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-4);
+}
+.bpm-cell-form input {
+  width: 7rem;
+  text-align: right;
+}
+
+/* Contrôles de fin de cycle. */
+.bpm-checks {
+  display: grid;
+  gap: var(--ecart-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bpm-checks li {
+  display: flex;
+  gap: var(--ecart-8);
+  padding: var(--ecart-8) var(--ecart-12);
+  border-radius: var(--radius-md);
+  background: var(--raised-surface);
+  font-size: scaled(var(--fs-xs));
+}
+.bpm-checks li::before {
+  content: '✓';
+  color: var(--bpm-ok);
+  font-weight: var(--fw-bold);
+}
+.bpm-checks li[data-level='info']::before {
+  content: 'i';
+  color: var(--app-accent);
+}
+.bpm-checks li[data-level='warning'] {
+  background: var(--bpm-warn-soft);
+}
+.bpm-checks li[data-level='warning']::before {
+  content: '!';
+  color: var(--bpm-warn);
+}
+
+/* Charges du projet. */
+.bpm-charge-state {
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+}
+.bpm-charge-state[data-state='validated'] {
+  color: var(--bpm-ok);
+}
+.bpm-charge-state[data-state='planned'] {
+  color: var(--muted);
+}
+
+/* Tâches à rattacher. */
+.bpm-attachable {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bpm-attachable li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-8) var(--ecart-16);
+  padding: var(--ecart-10) var(--ecart-14);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--board-column-surface);
+  font-size: scaled(var(--fs-xs));
+}
+.bpm-attachable small {
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .bpm-adopt {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bpm-life-figures {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- ajustements après relecture visuelle ---------- */
+.bpm-budget-head bpm-budget-state {
+  margin-left: auto;
+}
+.bpm-budget-rows {
+  display: grid;
+  gap: var(--ecart-2);
+  margin: 0;
+  font-size: scaled(var(--fs-2xs));
+}
+.bpm-budget-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ecart-8);
+}
+.bpm-budget-rows dt {
+  color: var(--muted);
+}
+.bpm-budget-rows dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+.bpm-card-move {
+  margin: var(--ecart-4) 0;
+  font-size: scaled(var(--fs-2xs));
+}
+.bpm-card-move summary {
+  color: var(--app-accent);
+  cursor: pointer;
+  font-weight: var(--fw-semibold);
+}
+.bpm-card-move label {
+  display: block;
+  margin-top: var(--ecart-6);
+}
+.bpm-card-move select {
+  width: 100%;
+}
+.bpm-table th,
+.bpm-table td {
+  padding: var(--ecart-8) var(--ecart-10);
+}
+.bpm-table select {
+  max-width: 8.5rem;
+}
+.bpm-cell-form input {
+  width: 5.5rem;
+}
+@media (min-width: 1200px) {
+  .bpm-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
