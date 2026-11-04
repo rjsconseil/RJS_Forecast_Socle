@@ -1,7 +1,7 @@
-// Jeu d'essai des projets de la vie : ajoute au stockage un foyer d'essai dont les sept projets ont été rejoués sur
-// quatre périodes de cycle (voir project-scenarios.mjs) : budgets attribués et ventilés, dépassements autorisés ou
-// refusés, facturation de fin de cycle, retours, clôtures. Les trois périodes rejouées sont les trois mois qui
-// précèdent le mois en cours ; le scénario s'arrête le 1er du mois en cours.
+// Jeu d'essai des projets de la vie : ajoute au stockage un foyer d'essai dont les dix projets sont rejoués sur les six
+// mois qui précèdent le mois en cours (clos) et sur le mois en cours jusqu'à aujourd'hui (voir project-scenarios.mjs) :
+// budgets attribués et ventilés, dépassements autorisés ou refusés, facturation de fin de cycle, retours, clôtures.
+// La suite du mois en cours reste prévue (dépenses, échéances, loisirs) : aucun règlement n'est daté dans le futur.
 // Usage : API arrêtée (un seul écrivain), puis
 //   npm run seed:projets -- [--nom "TEST PROJETS · Famille Laurent"] [--data <store.json>]
 // Le stockage existant est sauvegardé à côté avant l'écriture ; les autres users ne sont pas touchés.
@@ -26,7 +26,8 @@ function refuse(message) {
 
 const now = new Date();
 const pad = (n) => String(n).padStart(2, '0');
-const startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+const startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+const until = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 const start = `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}`;
 
 let socle;
@@ -43,8 +44,8 @@ try {
     await copyFile(DATA_FILE, backup);
     console.log(`Sauvegarde : ${backup}`);
   }
-  const r = await runProjectScenarios(socle, { start, label: LABEL });
-  console.log(`\nFoyer d'essai « ${r.label} » — périodes ${r.months.join(', ')} (la dernière est en cours)\n`);
+  const r = await runProjectScenarios(socle, { start, until, label: LABEL });
+  console.log(`\nFoyer d'essai « ${r.label} » — périodes ${r.months.join(', ')} (la dernière en cours, jouée jusqu'au ${r.until} : ${r.played}/${r.total} événements)\n`);
   for (const s of r.steps) console.log(`  ${s.date}  ${s.text}`);
   console.log('\nContrôles :');
   for (const c of r.checks) console.log(`  ${c.ok ? '✓' : '✖'} ${c.name}${c.ok ? '' : ` — attendu ${JSON.stringify(c.expected)}, observé ${JSON.stringify(c.observed)}`}`);

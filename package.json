@@ -12,6 +12,7 @@
     "seed:projets": "node api/scripts/seed-projets.mjs",
     "import:rjs-forecast": "node api/scripts/import-rjs-forecast.mjs",
     "test": "node --test 'api/test/*.test.mjs'",
+    "e2e:projets": "node e2e/projets.e2e.mjs",
     "build": "npm --prefix web run build"
   },
   "engines": {

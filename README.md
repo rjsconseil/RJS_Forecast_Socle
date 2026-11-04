@@ -11,7 +11,8 @@ npm install --prefix web
 npm start          # API (http://localhost:3410) et site (http://localhost:4300) ensemble ; Ctrl+C arrête les deux
 npm run api        # API locale http://localhost:3410 (réinitialisation de recette activée)
 npm run seed       # jeux d'essai via les contrats HTTP réels (API lancée, voir plus bas)
-npm run seed:projets   # foyer d'essai : 7 projets de la vie rejoués sur 4 périodes (API arrêtée)
+npm run seed:projets   # foyer d'essai : 10 projets de la vie sur 6 mois clos et le mois en cours (API arrêtée)
+npm run e2e:projets    # bout en bout dans un navigateur (après npm run build ; API et ports temporaires)
 npm run import:rjs-forecast -- --remplacer   # données du site de référence voisin, ../RJS_Forecast (API arrêtée, voir plus bas)
 npm run web        # site Angular http://localhost:4300 (proxy /api → 3410)
 npm test           # tests node:test (api/test/*.test.mjs) sur persistance réelle
@@ -191,25 +192,43 @@ Après réinitialisation, le seed crée par HTTP, avec des dates relatives au jo
 - **Famille Durand** (famille, stock inconnu, objectif 80 000 €, cycle à configurer) : un centre de coût
   personnalisé et des opérations prévues ce mois-ci, pour montrer les valeurs inconnues.
 
-## Cas d'essai des projets de la vie (`npm run seed:projets`)
+## Cas d'essai des projets de la vie (`npm run seed:projets`, `npm run e2e:projets`)
 
-API arrêtée, `npm run seed:projets` ajoute au stockage le foyer « TEST PROJETS · Famille Laurent » (autre nom :
-`-- --nom "…"`), dont les projets sont rejoués par les commandes réelles sur les trois mois précédents et le 1er du
-mois en cours (`api/scripts/project-scenarios.mjs`) ; trois périodes sont closes. Sauvegarde préalable du stockage.
+Un seul scénario (`api/scripts/project-scenarios.mjs`), écrit comme une suite d'événements datés, rejoue un foyer et
+dix projets de la vie sur **sept périodes d'un cycle mensuel** : les six mois qui précèdent le mois en cours (clos le
+1er du mois suivant) et le **mois en cours sur tout le mois** (salaires, loyer, courses, énergie, loisirs, anniversaire,
+dépenses des projets jusqu'au dernier jour). La date du jour avance avec les événements ; ce qui suit l'arrêt reste
+prévu (aucun règlement n'est daté dans le futur).
 
 | Projet | Budget attribué | Ce que le cas montre |
 |---|---|---|
 | Cuisine équipée | 5 000 € | dans son budget, terminé ; retour ponctuel (revente de l'ancienne cuisine) |
-| Voyage en Islande | 3 000 € → 3 450 € | règlement en dépassement de 450 € autorisé, facturé en fin de cycle, parts revalidées |
+| Voyage en Islande | 3 000 € → 3 450 € | règlement en dépassement (450 €) autorisé, facturé en fin de cycle, parts revalidées |
 | Salle de bain | 4 000 € → 4 500 € | part en dépassement refusée puis autorisée (500 €), facturée en fin de cycle |
-| Vélo électrique | 1 200 € | dépassement de 200 € autorisé dans la période en cours : en rouge jusqu'à sa fin |
+| Vélo électrique | 1 200 € → 1 400 € | règlement en dépassement (200 €) autorisé, facturé le cycle suivant |
 | Location du garage | 400 € | retour récurrent de 90 €/mois au budget de vie dès la mise en location |
-| Permis moto | 1 500 € | charges récurrentes ; demande de dépassement refusée, rien n'est écrit |
+| Permis moto | 1 500 € | leçons récurrentes ; part en dépassement refusée, rien n'est écrit |
 | Cabane au jardin | aucun | dépenses hors budget de vie tant qu'aucun montant n'est attribué |
+| Rentrée scolaire | 900 € | dans son budget ; cantine récurrente |
+| Week-end à Lyon | 700 € | dépassement (50 €) autorisé dans le mois en cours : en rouge jusqu'à la fin du cycle |
+| Noël en famille | 1 200 € | part en dépassement autorisée (60 €) ; règlement en dépassement refusé (90 €) |
 
-Le script affiche le journal daté et 18 contrôles recalculés à part (résultat de chaque clôture = reçu − dépenses du
-budget de vie − charges de projet validées, états des projets, facturations, retours, contrôles PRJ et intégrité) ;
-le même scénario est un test automatique (`api/test/projects-cycles.test.mjs`).
+Chaque attendu est recalculé à part : résultat de chaque clôture (reçu − dépenses du budget de vie − charges de projet
+validées), reçu et dépensé du mois en cours, état, budget, dépassements et retours de chaque projet, intégrité.
+
+- **Jeu d'essai** : API arrêtée, `npm run seed:projets` ajoute le foyer « TEST PROJETS · Famille Laurent » au stockage
+  (autre nom : `-- --nom "…"`), joué jusqu'à aujourd'hui, après sauvegarde du stockage.
+- **Tests node** : `api/test/projects-cycles.test.mjs` (jusqu'au 30 novembre 2026, puis arrêt au 4 novembre).
+- **Bout en bout** : `npm run build`, puis `npm run e2e:projets`. Le test démarre sa propre API de recette (stockage et
+  ports temporaires : les données du poste ne sont jamais touchées) et le site construit, puis rejoue le scénario de
+  mai au 30 novembre 2026 dans un vrai navigateur : création des projets et des tâches dans les formulaires du noyau,
+  financement, montant attribué, parts, demandes de dépassement et décisions du budget de vie, validation des
+  règlements, retours, glisser-déposer des tâches, facturation de fin de cycle ; la vie courante du budget et les
+  clôtures passent par l'API. L'horloge de recette de l'API (`PUT /api/_recette/today`, seulement avec
+  `J1_ENABLE_RECETTE_RESET=1`) et celle du navigateur avancent ensemble. Les chiffres affichés (tableau de bord,
+  projets en rouge, panneau du budget de vie, charges spéciales de Dépenses) sont comparés aux attendus.
+  Options : `-- --jusqu-au AAAA-MM-JJ`, `-- --captures <dossier>`. Prérequis : Playwright et Chromium
+  (`npm i -D playwright && npx playwright install chromium`).
 
 ## Données du site de référence (`npm run import:rjs-forecast`)
 
@@ -249,7 +268,7 @@ npm run import:rjs-forecast -- --remplacer
 - `projects.test.mjs` — projets de la vie dans BPM : isolement, budget attribué (charge spéciale), ventilation,
   dépassements (demande, refus, accord), règlement compté à sa validation, facturation de fin de cycle, retours,
   rattachement et garde ;
-- `projects-cycles.test.mjs` — les sept cas d'essai des projets sur quatre périodes (18 contrôles) ;
+- `projects-cycles.test.mjs` — les dix cas d'essai des projets sur six mois clos et le mois en cours (26 contrôles), puis arrêt en cours de mois ;
 - `calendar.test.mjs` — module Calendrier : calendriers livrés, noyau, isolement et lecture sans écriture,
   paramétrage du survol, des couleurs et de la vue, configurations refusées, Budget/Patrimoine, configuration
   fournie à l'appel, fenêtre de lecture, répétitions.

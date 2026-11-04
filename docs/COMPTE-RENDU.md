@@ -185,3 +185,15 @@ accord, Permis moto), facturation de fin de cycle et revalidation des parts, ret
 non financé, trois clôtures. 18 contrôles, tous réussis : sur la base d'août à novembre 2026, résultats clos
 1 420 €, −5 760 € et −1 560 € (charges de projet validées 880 €, 8 300 €, 3 950 €), 1 400 € de charges de projet
 validées dans la période en cours, Vélo électrique en dépassement jusqu'au 30 novembre.
+
+### Bout en bout sur six mois et le mois en cours
+
+Le scénario couvre désormais dix projets sur sept périodes (mai à octobre 2026 clos, novembre sur tout le mois) et
+se rejoue par trois pilotes : services (jeu d'essai, tests node), HTTP et navigateur. `npm run e2e:projets` : 166
+événements de mai au 30 novembre, 160 gestes dans les pages (29 glisser-déposer, 2 replis sur le sélecteur
+« Déplacer vers », même commande du noyau), 32 vérifications sur 32 — 26 attendus recalculés (six clôtures,
+mois en cours, dix projets, intégrité) et 6 lectures des pages (reçu 4 290 € et dépensé 4 135 € du tableau de bord
+de novembre, Noël en famille et Week-end à Lyon en rouge, 110 € de dépassements autorisés au panneau du budget de
+vie, charges spéciales de Dépenses, aucune erreur console). Jeu d'essai joué au 4 novembre : 146 événements, 23
+contrôles réussis ; tests node : 132/132. Horloge de recette ajoutée à l'API (`PUT /api/_recette/today`, recette
+seulement).
