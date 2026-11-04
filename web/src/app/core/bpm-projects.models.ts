@@ -11,6 +11,46 @@ export type OverrunStatus = 'pending' | 'approved' | 'refused' | 'billed';
 export type OverrunReason = 'ventilation' | 'reglement';
 export type ReturnCadence = 'once' | 'weekly' | 'monthly' | 'yearly';
 
+export interface TaskBudgetRequest {
+  id: string;
+  revision: number;
+  budgetId: string;
+  taskId: string;
+  coreProjectId: string;
+  taskTitle: string;
+  budgetName: string;
+  amountCents: number;
+  grantedCents: number | null;
+  note: string | null;
+  status: 'pending' | 'awaiting-life' | 'approved' | 'refused' | 'cancelled';
+  statusLabel: string;
+  requestedAt: string;
+  decidedAt: string | null;
+  overrunId: string | null;
+}
+
+export interface BpmProjectInput {
+  requestKey: string;
+  title: string;
+  description?: string;
+  priority?: 'low' | 'medium' | 'high';
+  startDate?: string | null;
+  dueDate?: string | null;
+  amount?: number | null;
+}
+
+export interface BpmTaskInput {
+  requestKey: string;
+  title: string;
+  description?: string;
+  projectId?: string | null;
+  status?: 'todo' | 'blocked' | 'doing' | 'done';
+  plannedHours?: number | null;
+  spentHours?: number;
+  startDate?: string | null;
+  dueDate?: string | null;
+}
+
 export interface TaskReturn {
   label: string;
   amountCents: number;
@@ -49,6 +89,7 @@ export interface ProjectBudget {
   parentBudgetId: string;
   revision: number;
   regime: boolean;
+  taskFundingRequired: boolean;
   allocationCents: number | null;
   allocationDate: string | null;
   initialAllocationCents: number | null;
@@ -61,6 +102,10 @@ export interface ProjectBudget {
   engagedCents: number;
   paidCents: number;
   remainingCents: number | null;
+  toPayCents: number;
+  uncommittedCents: number | null;
+  periodPaidCents: number | null;
+  pendingRequestsCents: number;
   paidBeforeAllocationCents: number;
   unsharedChargesCents: number;
   state: ProjectBudgetState;
@@ -92,6 +137,11 @@ export interface LifeSummary {
   allocatedCents: number;
   paidCents: number;
   approvedOverrunCents: number;
+  sharesCents: number;
+  availableCents: number;
+  remainingCents: number;
+  periodPaidCents: number | null;
+  taskRequests: TaskBudgetRequest[];
   deficitCount: number;
   pendingRequests: ProjectOverrun[];
   billable: ProjectOverrun[];
@@ -115,6 +165,10 @@ export interface TaskBudget {
   over: boolean;
   unbounded: boolean;
   return: TaskReturn | null;
+  request: TaskBudgetRequest | null;
+  timeConsumptionPercent: number | null;
+  timeConsumedCents: number | null;
+  timeRemainingCents: number | null;
 }
 
 export interface BpmTaskCard extends TaskView {
@@ -153,6 +207,7 @@ export interface BpmProjectDetail {
   attachable: BpmTaskCard[];
   overruns: ProjectOverrun[];
   checks: CycleCheck[];
+  requests: TaskBudgetRequest[];
   charges: ProjectChargeLine[];
   life: (LifeSummary & { projects: { projectId: string; title: string; budget: ProjectBudget }[] }) | null;
   effects?: { module: string; kind: string; message: string; ids: string[] }[];

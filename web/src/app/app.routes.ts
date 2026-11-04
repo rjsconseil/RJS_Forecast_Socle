@@ -36,6 +36,8 @@ export const routes: Routes = [
   { path: 'app/operations', redirectTo: 'depenses' },
   { path: 'app/bienvenue', redirectTo: 'utilisateurs' },
   // Projets et tâches du budget de vie : tableaux par statut réimplémentés depuis le noyau, enrichis du budget des projets.
+  { path: 'app/gestion-projet', title: 'Gestion de projet — RJS Forecast', loadComponent: () => import('./bpm/projects/management.page').then((m) => m.BpmProjectManagementPage) },
+  { path: 'app/gestion-projet/:id', title: 'Piloter un projet de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
   { path: 'app/projets', title: 'Projets de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/projects.page').then((m) => m.BpmProjectsPage) },
   { path: 'app/projets/:id', title: 'Projet de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
   { path: 'app/taches', title: 'Tâches des projets — RJS Forecast', loadComponent: () => import('./bpm/projects/tasks.page').then((m) => m.BpmTasksPage) },

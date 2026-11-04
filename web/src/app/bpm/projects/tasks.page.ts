@@ -30,16 +30,15 @@ import { displayDate, dueTitle, dueUrgency, FilterOption, ItemBoardToolsComponen
         <aside class="section-home-task-intro">
           <p class="page-intro">
             Les tâches de votre projet de vie et de ses projets standards, avec leur part de budget. Changer l’état d’une
-            tâche fait évoluer celui de son projet ; une tâche se crée dans le noyau.
+            tâche fait évoluer celui de son projet. Créez les tâches et demandez leur montant dans Gestion de projet.
           </p>
         </aside>
         <rjs-item-summary class="section-home-task-summary" kind="task" [remaining]="remaining()" [counts]="counts()" [progress]="progress()" />
         <rjs-item-board-tools
           class="section-home-task-tools"
           kind="task"
-          createLink="/tasks/new"
-          [createQuery]="selectedProjectId() ? { projectId: selectedProjectId()! } : null"
-          [createLabel]="selectedProjectId() ? 'Créer une tâche de ce projet dans le noyau' : 'Créer une tâche dans le noyau'"
+          createLink="/app/gestion-projet"
+          createLabel="Créer et gérer les tâches"
           [filterOptions]="filterOptions()"
           [filter]="filter()"
           (filterChange)="setFilter({ project: $event === 'all' ? null : $event })"

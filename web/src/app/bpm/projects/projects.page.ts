@@ -26,14 +26,14 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
             <h1 class="display">Projets de la vie</h1>
             <p class="page-intro">
               Votre projet de vie et ses projets standards. Le budget de vie attribue un montant à chaque projet, qui le
-              ventile sur ses tâches. Les projets et les tâches viennent du noyau : créez-les dans le noyau, financez-les ici.
+              ventile sur ses tâches. Créez vos projets et leurs tâches dans Gestion de projet, puis suivez leur avancement ici.
             </p>
           </div>
           <rjs-item-summary kind="project" [remaining]="remaining()" [counts]="counts()" [progress]="progress()" />
           <rjs-item-board-tools
             kind="project"
-            createLink="/projects/new"
-            createLabel="Créer un projet dans le noyau"
+            createLink="/app/gestion-projet"
+            createLabel="Créer et gérer un projet"
             [filterOptions]="filterOptions()"
             [filter]="filter()"
             (filterChange)="setParams({ project: $event === 'all' ? null : $event })"

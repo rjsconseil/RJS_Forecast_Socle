@@ -89,6 +89,51 @@ partagent un même cadre (nombre d'or au-dessus de 1 280 px, 4:3 jusqu'à 900 px
 
 ## Projets de la vie dans Budget/Patrimoine : un projet, un budget attribué
 
+La sous-section **Mes projets de la vie → Gestion de projet** (`/app/gestion-projet`) permet de créer et de
+piloter les projets directement dans BPM. Chaque projet occupe une ligne complète : cadre, avancement, dates,
+temps, budget attribué, ventilation, engagé, consommé, reste, demandes et remontée dans le cycle. Les actions
+permettent de modifier le projet, ajouter ou rattacher des tâches, attribuer le budget et ouvrir les demandes,
+dépenses et contrôles. Le projet de vie principal unique reste distinct de ces projets enfants.
+
+**Ajouter une tâche** crée directement la tâche dans le projet concerné, avec ce rattachement fixé dans le
+formulaire. **Rattacher une tâche** propose uniquement les tâches sans projet disponibles pour le rattachement.
+Une tâche rattachée disparaît de cette liste et apparaît dans le détail du projet.
+
+Les boutons du projet sont regroupés juste au-dessus de la bande **« + Détail du projet & tâches »**. Déplier
+cette bande affiche les chiffres complémentaires et les tâches, avec leurs commandes en colonne à droite.
+Chaque tâche dispose du bouton **Demander**, de sa part de budget et d’une jauge de temps placée en dessous.
+Les montants et leurs libellés encadrent la jauge de budget, horizontalement ou verticalement selon la place.
+L’attribution se fait exclusivement au niveau du projet ; la demande de part
+se fait dans la tâche. Le budget restant est vert à partir de 50 %, orange entre 20 % et moins de 50 %, rouge
+sous 20 %. Le temps consommé est bleu avant 50 %, jaune entre 50 % et moins de 100 %, vert à partir de 100 %.
+
+Le budget consommé **selon le temps** d’une tâche est indicatif : part accordée × temps consommé / temps prévu
+(par exemple 60 % du temps → 60 % de la part). Sans temps prévu positif ou sans part attribuée, cette valeur
+reste inconnue. Les règlements réellement validés sont présentés séparément et restent la seule source de
+dépenses dans le budget du projet de vie. Un dépassement de temps reste visible sans créer d’écriture financière.
+
+La création compose un projet du noyau et son Budget standard dans une seule écriture rejouable. Le projet
+peut être préparé sans financement ni tâche ; les tâches peuvent être créées seules et rattachées ensuite.
+Chaque tâche peut demander sa **part totale** de budget (une nouvelle demande remplace le montant souhaité,
+elle ne s’ajoute pas à la part actuelle). La validation accorde la part si les fonds suffisent, ou demande au
+budget du projet de vie l’autorisation du seul manque. Son accord accorde la part dans la même transaction ;
+si d’autres décisions ont entre-temps consommé les fonds, la demande revient à valider. Refus et annulation
+ne réservent rien. Les demandes, décisions et historiques sont persistants et inspectables dans Object Management.
+
+Les nouveaux projets créés depuis cette section exigent une dépense reliée à une tâche et un règlement dans
+la part accordée. Les projets historiques conservent leurs règles de lecture et de règlement. L’attribution,
+la réservation et l’autorisation de dépassement ne dépensent rien : seuls les règlements validés sont consolidés
+dans le budget du projet de vie. La facturation des dépassements en fin de cycle ne les compte pas une seconde
+fois. Les contrôles rapprochent les charges du cycle avec les tâches et vérifient le consommé toutes périodes
+par rapport au plafond autorisé. Les comparaisons conservent le budget initial et les dépassements distincts.
+
+Nouveaux contrats HTTP : `POST /api/bpm/projects`, `POST /api/bpm/tasks`,
+`POST /api/bpm/project-budgets/:id/requests/:taskId`,
+`POST /api/bpm/task-budget-requests/:id/decision` (`approve`, `refuse`, `cancel`). Une validation porte les
+révisions attendues de la demande et du budget ; toutes les commandes vérifient le user et les références.
+Les scénarios de création différée, reprise, demandes, concurrence, isolement et consommation sont vérifiés
+dans `api/test/project-management.test.mjs`.
+
 Les projets et les tâches viennent du **noyau**, seule source : ils s'y créent et s'y modifient. Budget/Patrimoine
 réimplémente leurs tableaux par statut (`/app/projets`, `/app/taches`, fiche `/app/projets/:id`), limités au
 **projet de vie** du user et à ses **projets standards** (Budgets standards enfants du budget de vie). Le

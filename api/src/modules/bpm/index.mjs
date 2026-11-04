@@ -201,7 +201,13 @@ export default {
       collection: 'projectOverruns',
       prefix: 'ovr',
       label: 'Dépassement de projet',
-      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task' } },
+      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task' }, taskBudgetRequestId: { kind: 'taskBudgetRequest' } },
+    },
+    taskBudgetRequest: {
+      collection: 'taskBudgetRequests',
+      prefix: 'dmt',
+      label: 'Demande de montant d’une tâche',
+      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task', required: true }, overrunId: { kind: 'projectOverrun' } },
     },
   },
 
@@ -991,9 +997,13 @@ export default {
       ['GET', '/api/bpm/life-projects', ({ ctx }) => s.lifeProjects(ctx)],
       // Projets et tâches du budget de vie (les projets et tâches sont ceux du noyau ; BPM porte leurs budgets).
       ['GET', '/api/bpm/projects', ({ ctx }) => s.projects.overview(ctx)],
+      ['POST', '/api/bpm/projects', ({ ctx, body }) => s.projects.createProject(ctx, body)],
       ['POST', '/api/bpm/projects/adopt', ({ ctx, body }) => s.projects.adoptProject(ctx, body)],
       ['GET', '/api/bpm/projects/:id', ({ ctx, params }) => s.projects.projectDetail(ctx, params.id)],
       ['GET', '/api/bpm/tasks', ({ ctx }) => s.projects.tasksOverview(ctx)],
+      ['POST', '/api/bpm/tasks', ({ ctx, body }) => s.projects.createTask(ctx, body)],
+      ['POST', '/api/bpm/project-budgets/:id/requests/:taskId', ({ ctx, params, body }) => s.projects.requestTaskBudget(ctx, params.id, params.taskId, body)],
+      ['POST', '/api/bpm/task-budget-requests/:id/decision', ({ ctx, params, body }) => s.projects.decideTaskBudget(ctx, params.id, body)],
       ['PUT', '/api/bpm/project-budgets/:id/allocation', ({ ctx, params, body }) => s.projects.allocate(ctx, params.id, body)],
       ['PUT', '/api/bpm/project-budgets/:id/shares/:taskId', ({ ctx, params, body }) => s.projects.setTaskShare(ctx, params.id, params.taskId, body)],
       ['PUT', '/api/bpm/project-budgets/:id/returns/:taskId', ({ ctx, params, body }) => s.projects.setTaskReturn(ctx, params.id, params.taskId, body)],

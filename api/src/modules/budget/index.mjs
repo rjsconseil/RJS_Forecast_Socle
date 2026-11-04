@@ -441,6 +441,10 @@ export default {
           // Une occurrence garde son identité : sa date prévue reste celle de la définition.
           if (o.recurrenceId && patch.date !== o.date) fail('FORBIDDEN_BY_RULE', "La date prévue d'une occurrence est fixée par sa définition récurrente.", { field: 'date' });
           guard(tx.draft, o, [o.date, o.realizedDate, patch.date].filter(Boolean));
+          // Changer la tâche ou le sens d'une charge déjà réglée ne contourne pas le financement de la tâche.
+          if (o.status === 'realized' && (patch.direction !== o.direction || patch.taskId !== undefined && patch.taskId !== o.taskId)) {
+            settlementGuard(tx.draft, { userId: o.userId, budgetId: o.budgetId, direction: patch.direction, amountCents: o.realizedAmountCents, realizedDate: o.realizedDate, taskId: patch.taskId !== undefined ? patch.taskId : o.taskId, operationId: o.id });
+          }
           om.update(tx, o, patch);
           return { operationId: id };
         });
@@ -564,17 +568,21 @@ export default {
             if (!isOccurrence(rec, occurrenceDate)) fail('VALIDATION', "Cette date n'est pas une occurrence de la définition.", { field: 'occurrenceDate' });
             const existing = om.list(tx.draft, 'operation', (o) => o.recurrenceId === rec.id && o.occurrenceDate === occurrenceDate)[0];
             if (existing?.status === 'realized') fail('ALREADY_SETTLED', 'Cette occurrence est déjà réglée.', { operationId: existing.id, realizedDate: existing.realizedDate });
+            // Une occurrence matérialisée conserve sa tâche et son sens, même après annulation.
+            // La garde contrôle les valeurs effectivement portées par l'opération qui sera réglée.
+            const taskId = existing ? existing.taskId ?? null : rec.taskId ?? null;
+            const direction = existing ? existing.direction : rec.direction;
             const realizedDate = realizedDateOf(input.realizedDate ?? occurrenceDate);
             const realizedAmountCents = money('realizedAmount', input.realizedAmount ?? toEuros(rec.amountCents), { positive: true });
             guard(tx.draft, rec, [realizedDate]);
-            settlementGuard(tx.draft, { userId: rec.userId, budgetId: rec.budgetId, direction: rec.direction, amountCents: realizedAmountCents, realizedDate, taskId: rec.taskId ?? null, operationId: existing?.id ?? null, recurrenceId: rec.id, occurrenceDate });
+            settlementGuard(tx.draft, { userId: rec.userId, budgetId: rec.budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId, operationId: existing?.id ?? null, recurrenceId: rec.id, occurrenceDate });
             if (existing) {
               om.update(tx, existing, { status: 'realized', realizedAmountCents, realizedDate });
               return { operationId: existing.id };
             }
             const op = om.create(tx, 'operation', {
               budgetId: rec.budgetId,
-              direction: rec.direction,
+              direction,
               label: rec.label,
               amountCents: rec.amountCents,
               date: occurrenceDate,
@@ -584,7 +592,7 @@ export default {
               recurrenceId: rec.id,
               occurrenceDate,
               note: note(input.note) ?? rec.note ?? null,
-              taskId: rec.taskId ?? null,
+              taskId,
               standardCostCenter: rec.standardCostCenter,
               costCenterId: rec.costCenterId,
             });

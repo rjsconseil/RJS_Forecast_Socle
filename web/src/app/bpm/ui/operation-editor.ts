@@ -147,16 +147,16 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
               <small>Ajouté à votre liste personnelle uniquement, pas au catalogue global.</small>
             </label>
           }
-          @if (branchTasks().length) {
+          @if (branchTasks().length || taskFundingRequired()) {
             <label
-              >Tâche du projet (facultatif)
+              >{{ taskFundingRequired() && direction() === 'charge' ? 'Tâche du projet' : 'Tâche du projet (facultatif)' }}
               <select name="taskId" [(ngModel)]="taskId">
-                <option value="">Sans tâche</option>
+                <option value="">{{ taskFundingRequired() && direction() === 'charge' ? 'Choisir une tâche' : 'Sans tâche' }}</option>
                 @for (t of branchTasks(); track t.id) {
                   <option [value]="t.id">{{ t.title }}</option>
                 }
               </select>
-              <small>Rattachement informatif : aucune allocation financière n'est déduite du temps de la tâche.</small>
+              <small>{{ taskFundingRequired() && direction() === 'charge' ? 'Le règlement doit respecter le montant accordé à cette tâche dans Gestion de projet.' : 'Rattachement informatif : aucune allocation financière ne découle du temps de la tâche.' }}</small>
             </label>
           }
           <label class="fe-wide"
@@ -237,6 +237,7 @@ export class BpmOperationEditor implements OnInit {
   /** Ligne à modifier ; absente = création. */
   readonly line = input<RegisterLine | null>(null);
   readonly defaults = input<Partial<EntryInput>>({});
+  readonly taskFundingRequired = input(false);
   readonly closed = output<void>();
   readonly saved = output<string>();
 
@@ -380,6 +381,10 @@ export class BpmOperationEditor implements OnInit {
 
   async save() {
     if (this.busy()) return;
+    if (this.taskFundingRequired() && this.direction() === 'charge' && !this.taskId()) {
+      this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Choisissez la tâche qui porte cette dépense. Créez une tâche dans le projet si nécessaire.', details: { field: 'taskId' } }));
+      return;
+    }
     const amount = parseAmount(this.amount());
     if (typeof amount !== 'number' || amount <= 0) {
       this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Montant positif attendu (ex. 120,50).', details: { field: 'amount' } }));

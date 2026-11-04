@@ -15,6 +15,8 @@ describe('plan du site', () => {
     expect(locate('/tasks')).toMatchObject({ zone: { id: 'noyau' }, section: { id: 'taches' } });
     expect(locate('/projects/abc')).toMatchObject({ kind: 'detail', detailLabel: 'Détail du projet' });
     expect(locate('/admin/calculs')).toMatchObject({ page: { id: 'calculs' } });
+    expect(locate('/app/gestion-projet')).toMatchObject({ zone: { id: 'bpm' }, section: { id: 'projets-vie' }, page: { id: 'gestion-projet' } });
+    expect(locate('/app/gestion-projet/prj_1')).toMatchObject({ section: { id: 'projets-vie' }, page: { id: 'gestion-projet' } });
   });
 
   it('ouvre chaque zone sur son accueil et chaque section sur son accueil ou sa page utile', () => {

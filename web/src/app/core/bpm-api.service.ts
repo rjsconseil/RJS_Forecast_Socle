@@ -28,7 +28,7 @@ import {
   Vision,
 } from './bpm-models';
 import { Operation } from './models';
-import { BpmProjectDetail, BpmProjectsOverview, BpmTasksOverview, CycleCheck, ProjectOverrun, ReturnCadence } from './bpm-projects.models';
+import { BpmProjectDetail, BpmProjectInput, BpmProjectsOverview, BpmTaskInput, BpmTasksOverview, CycleCheck, ProjectOverrun, ReturnCadence, TaskBudgetRequest } from './bpm-projects.models';
 
 type Query = Record<string, string | number | null | undefined>;
 
@@ -173,6 +173,18 @@ export class BpmApi {
 
   projectsOverview() {
     return this.get<BpmProjectsOverview>('/api/bpm/projects');
+  }
+  createProject(input: BpmProjectInput) {
+    return this.post<{ replayed: boolean; coreProjectId: string; budgetId: string; detail: BpmProjectDetail }>('/api/bpm/projects', input);
+  }
+  createTask(input: BpmTaskInput) {
+    return this.post<import('./models').TaskMutationResult>('/api/bpm/tasks', input);
+  }
+  requestTaskBudget(budgetId: string, taskId: string, input: { requestKey: string; amount: number; note?: string }) {
+    return this.post<{ request: TaskBudgetRequest }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/requests/${encodeURIComponent(taskId)}`, input);
+  }
+  decideTaskBudget(id: string, decision: 'approve' | 'refuse' | 'cancel', expectedRevision: number, expectedBudgetRevision?: number) {
+    return this.post<{ request: TaskBudgetRequest; detail: BpmProjectDetail }>(`/api/bpm/task-budget-requests/${encodeURIComponent(id)}/decision`, { decision, expectedRevision, expectedBudgetRevision });
   }
   projectDetail(coreProjectId: string) {
     return this.get<BpmProjectDetail>(`/api/bpm/projects/${encodeURIComponent(coreProjectId)}`);
