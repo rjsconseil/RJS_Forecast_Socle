@@ -19,6 +19,8 @@ export const ERROR_HTTP = {
   STORE_LOCKED: 409,
   PERSISTENCE_CONFLICT: 409,
   ALREADY_SETTLED: 409,
+  // Dépassement du budget attribué à un projet : le budget de vie doit l'autoriser avant l'écriture.
+  OVERRUN_AUTHORIZATION_REQUIRED: 422,
 };
 
 export class DomainError extends Error {

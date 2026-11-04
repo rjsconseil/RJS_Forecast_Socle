@@ -137,6 +137,12 @@ const OBJECT_ID = /^[a-z]{2,4}_[0-9a-f]{8}-/;
                                 <textarea [value]="draft()" (input)="draft.set($any($event.target).value)" spellcheck="false" rows="10"></textarea>
                               </label>
                             }
+                            @case ('object') {
+                              <label>
+                                <span>Valeur (JSON, objet)</span>
+                                <textarea [value]="draft()" (input)="draft.set($any($event.target).value)" spellcheck="false" rows="18"></textarea>
+                              </label>
+                            }
                             @case ('text') {
                               <label>
                                 <span>Valeur (texte)</span>
@@ -419,7 +425,7 @@ export class AdminPage implements OnInit {
     this.resetError.set(null);
     this.note.set('');
     if (p.type === 'boolean') this.draftBool.set(p.value === true);
-    else this.draft.set(p.type === 'list' ? JSON.stringify(p.value, null, 2) : String(p.value ?? ''));
+    else this.draft.set(p.type === 'list' || p.type === 'object' ? JSON.stringify(p.value, null, 2) : String(p.value ?? ''));
   }
 
   cancelEdit() {
@@ -447,6 +453,20 @@ export class AdminPage implements OnInit {
         }
         if (!Array.isArray(value)) {
           this.invalid('Une liste JSON est attendue (commençant par « [ »).');
+          return { ok: false };
+        }
+        return { ok: true, value };
+      }
+      case 'object': {
+        let value: unknown;
+        try {
+          value = JSON.parse(raw);
+        } catch (e) {
+          this.invalid(`JSON invalide : ${(e as Error).message}`);
+          return { ok: false };
+        }
+        if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+          this.invalid('Un objet JSON est attendu (commençant par « { »).');
           return { ok: false };
         }
         return { ok: true, value };

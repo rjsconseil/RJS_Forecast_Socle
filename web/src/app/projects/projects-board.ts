@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api, toApiError } from '../core/api.service';
 import { COLUMNS, PRIORITY_LABEL, ProjectSummary, TaskStatus } from '../core/models';
 import { HoursPipe, PlannedTotalPipe } from '../core/format';
+import { CalendarRange, inRange, rangeFrom } from '../calendar/calendar-dates';
+import { MiniCalendarComponent } from '../calendar/mini-calendar';
 import {
   displayDate,
   dueTitle,
@@ -16,13 +18,15 @@ import {
 
 /**
  * Projets du noyau, ventilés par statut sur le gabarit de la référence (`section-home.page.ts`,
- * `item-summary`, `item-board-tools`, `project-filter`, `item-board`, styles `_workspace.scss`).
+ * `item-summary`, `item-board-tools`, `project-filter`, `mini-calendar`, `item-board`, styles `_workspace.scss`).
  * L'état d'un projet est calculé depuis ses tâches : les cartes ne se déplacent pas.
- * Le filtre projet (`project`) et la recherche (`q`) sont gardés dans l'URL.
+ * Le filtre projet (`project`), la recherche (`q`) et le créneau de lecture du calendrier (`du`, `au`) sont gardés
+ * dans l'URL. Le créneau suit la règle de la référence : seuls les projets dont la date de début est comprise
+ * entre ses bornes sont affichés et comptés ; il ne réécrit aucune date.
  */
 @Component({
   selector: 'app-projects-board',
-  imports: [RouterLink, HoursPipe, PlannedTotalPipe, ItemSummaryComponent, ItemBoardToolsComponent],
+  imports: [RouterLink, HoursPipe, PlannedTotalPipe, ItemSummaryComponent, ItemBoardToolsComponent, MiniCalendarComponent],
   template: `
     <div class="page page-wide landing-page section-home">
       <div class="section-home-top">
@@ -47,6 +51,12 @@ import {
             (searchChange)="setParams({ q: $event || null })"
           />
         </header>
+        <rjs-mini-calendar
+          class="landing-manifesto section-home-calendar"
+          kind="project"
+          [selectedRange]="range()"
+          (rangeChange)="setRange($event)"
+        />
       </div>
 
       <div class="section-home-board">
@@ -98,11 +108,6 @@ import {
                             >Début prévu · {{ date(p.project.startDate) }}</span
                           >
                         }
-                        <p [attr.title]="'État ' + p.view.explanation"><strong>État</strong> {{ p.view.explanation }}</p>
-                        <p>
-                          <strong>Tâches</strong> {{ p.view.doneCount }}/{{ p.view.time.taskCount }} terminées ·
-                          {{ p.view.completionPercent }} %
-                        </p>
                         <p>
                           <strong>Temps</strong> {{ p.view.time | plannedTotal }} prévu ·
                           {{ p.view.time.spentHoursTotal | hours }} consommé
@@ -115,26 +120,22 @@ import {
                           [attr.data-urgency]="urgency(p.project.dueDate, done)"
                           [attr.title]="dueTitle(p.project.dueDate, done)"
                           >{{ p.project.dueDate ? date(p.project.dueDate) : 'Sans échéance' }}</span
-                        >
+                        ><span [attr.title]="progressTitle(p)">{{ progressLabel(p) }}</span>
+                        <!-- Pastille de l'application rattachée (référence : badges des satellites), libellé complet au survol. -->
                         @if (p.enrichment) {
-                          <span class="task-card-badge" [attr.title]="p.enrichment.label">{{ p.enrichment.label }}</span>
+                          <span class="task-card-badge" [attr.title]="p.enrichment.label">{{
+                            p.enrichment.kind === 'life' ? 'Racine principale' : 'Racine de branche'
+                          }}</span>
                         }
                       </div>
-                      <!-- Le statut d'un projet est calculé : il se lit ici, au même endroit que le sélecteur d'une tâche. -->
+                      <!-- Le statut d'un projet est calculé : il se lit ici, au même endroit que le sélecteur d'une tâche ;
+                           son explication (tâches qui le déterminent) reste lisible au survol et dans la fiche du projet. -->
                       <p class="status-change">
                         Statut
-                        <span class="status-value" [attr.data-status]="p.view.status"
+                        <span class="status-value" [attr.data-status]="p.view.status" [attr.title]="p.view.explanation"
                           ><span class="status-dot" [attr.data-status]="p.view.status"></span>{{ p.view.statusLabel }}</span
                         >
                       </p>
-                      <div class="task-card-links">
-                        @if (p.pathways.canAddTask) {
-                          <a class="text-link task-card-edit" routerLink="/tasks/new" [queryParams]="{ projectId: p.project.id }"
-                            >Ajouter une tâche</a
-                          >
-                        }
-                        <a class="text-link task-card-edit" [routerLink]="['/projects', p.project.id, 'edit']">Modifier le projet</a>
-                      </div>
                     </article>
                   } @empty {
                     <div class="board-empty">Aucun projet ici</div>
@@ -149,10 +150,6 @@ import {
         </nav>
       </div>
     </div>
-  `,
-  styles: `
-    .task-card-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--ecart-8); margin-top: var(--ecart-12); }
-    .task-card-links .task-card-edit { margin: 0; }
   `,
 })
 export class ProjectsBoard implements OnInit {
@@ -170,6 +167,10 @@ export class ProjectsBoard implements OnInit {
   private params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   protected search = computed(() => this.params().get('q') ?? '');
   protected filter = computed(() => this.params().get('project') || 'all');
+  /** Créneau de lecture du calendrier miniature (`du`, `au` dans l'URL) ; invalide ou absent : aucun créneau. */
+  protected range = computed(() => rangeFrom(this.params().get('du'), this.params().get('au')));
+  /** Projets du créneau : base du résumé et du tableau, comme `visibleProjects` dans la référence. */
+  private inWindow = computed(() => this.projects().filter((p) => inRange(p.project.startDate, this.range())));
 
   protected filterOptions = computed<FilterOption[]>(() => [
     { value: 'all', label: 'Tous les projets' },
@@ -178,7 +179,7 @@ export class ProjectsBoard implements OnInit {
   protected visible = computed(() => {
     const q = normalizeSearch(this.search().trim());
     const f = this.filter();
-    return this.projects().filter(
+    return this.inWindow().filter(
       (p) =>
         (f === 'all' || p.project.id === f) &&
         (!q || normalizeSearch(`${p.project.title} ${p.project.description} ${p.project.id}`).includes(q)),
@@ -191,12 +192,12 @@ export class ProjectsBoard implements OnInit {
   });
   protected counts = computed(() => {
     const counts: Partial<Record<TaskStatus, number>> = {};
-    for (const p of this.projects()) counts[p.view.column] = (counts[p.view.column] ?? 0) + 1;
+    for (const p of this.inWindow()) counts[p.view.column] = (counts[p.view.column] ?? 0) + 1;
     return counts;
   });
-  protected remaining = computed(() => this.projects().filter((p) => p.view.column !== 'done').length);
+  protected remaining = computed(() => this.inWindow().filter((p) => p.view.column !== 'done').length);
   protected progress = computed(() => {
-    const all = this.projects();
+    const all = this.inWindow();
     return all.length ? Math.round((100 * all.filter((p) => p.view.column === 'done').length) / all.length) : 0;
   });
 
@@ -215,7 +216,22 @@ export class ProjectsBoard implements OnInit {
     }
   }
 
-  protected setParams(patch: { project?: string | null; q?: string | null }) {
+  protected setParams(patch: { project?: string | null; q?: string | null; du?: string | null; au?: string | null }) {
     this.router.navigate([], { queryParams: patch, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  protected setRange(range: CalendarRange | null) {
+    this.setParams({ du: range?.start ?? null, au: range?.end ?? null });
+  }
+
+  /** Repère de la référence (« 3 tâches à suivre ») : tâches non terminées du projet. */
+  protected progressLabel(p: ProjectSummary): string {
+    const open = p.view.time.taskCount - p.view.doneCount;
+    return `${open} ${open === 1 ? 'tâche' : 'tâches'} à suivre`;
+  }
+
+  /** Détail au survol du repère : avancement complet du projet. */
+  protected progressTitle(p: ProjectSummary): string {
+    return `${p.view.doneCount}/${p.view.time.taskCount} tâches terminées · ${p.view.completionPercent} %`;
   }
 }

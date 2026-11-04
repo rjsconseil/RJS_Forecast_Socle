@@ -28,6 +28,7 @@ import {
   Vision,
 } from './bpm-models';
 import { Operation } from './models';
+import { BpmProjectDetail, BpmProjectsOverview, BpmTasksOverview, CycleCheck, ProjectOverrun, ReturnCadence } from './bpm-projects.models';
 
 type Query = Record<string, string | number | null | undefined>;
 
@@ -166,5 +167,43 @@ export class BpmApi {
   }
   closePeriod(body: { requestKey: string; periodKey: string; expectedResultCents: number }) {
     return this.post<unknown>('/api/bpm/closures', body);
+  }
+
+  // ---------- projets de la vie (projets et tâches du noyau, budgets portés par BPM) ----------
+
+  projectsOverview() {
+    return this.get<BpmProjectsOverview>('/api/bpm/projects');
+  }
+  projectDetail(coreProjectId: string) {
+    return this.get<BpmProjectDetail>(`/api/bpm/projects/${encodeURIComponent(coreProjectId)}`);
+  }
+  tasksOverview() {
+    return this.get<BpmTasksOverview>('/api/bpm/tasks');
+  }
+  /** Budgéter un projet du noyau : il devient un projet standard du budget de vie. */
+  adoptProject(body: { requestKey: string; coreProjectId: string; name?: string }) {
+    return this.post<{ budgetId: string; coreProjectId: string; detail: BpmProjectDetail }>('/api/bpm/projects/adopt', body);
+  }
+  /** Montant en euros attribué par le budget de vie. */
+  allocate(budgetId: string, amount: number, expectedRevision: number) {
+    return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/allocation`, { amount, expectedRevision });
+  }
+  /** Part d'une tâche en euros ; `null` la retire. */
+  setTaskShare(budgetId: string, taskId: string, amount: number | null, expectedRevision: number) {
+    return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/shares/${encodeURIComponent(taskId)}`, { amount, expectedRevision });
+  }
+  setTaskReturn(budgetId: string, taskId: string, body: { label?: string; amount: number | null; cadence?: ReturnCadence; expectedRevision: number }) {
+    return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/returns/${encodeURIComponent(taskId)}`, body);
+  }
+  requestOverrun(budgetId: string, body: { requestKey: string; taskId?: string | null; reason: 'ventilation' | 'reglement'; amount: number; note?: string }) {
+    return this.post<{ overrunId: string; overrun: ProjectOverrun }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/overruns`, body);
+  }
+  /** Décision du budget de vie sur une demande de dépassement. */
+  decideOverrun(id: string, decision: 'approve' | 'refuse', expectedRevision: number) {
+    return this.post<{ overrun: ProjectOverrun; detail: BpmProjectDetail }>(`/api/bpm/overruns/${encodeURIComponent(id)}/decision`, { decision, expectedRevision });
+  }
+  /** Fin de cycle : facture au budget de vie les dépassements autorisés dont la date est atteinte. */
+  billOverruns(budgetId?: string) {
+    return this.post<{ projects: { budgetId: string; name: string; coreProjectId: string; allocationCents: number; billedOverrunCents: number; checks: CycleCheck[] }[] }>('/api/bpm/overruns/bill', budgetId ? { budgetId } : {});
   }
 }

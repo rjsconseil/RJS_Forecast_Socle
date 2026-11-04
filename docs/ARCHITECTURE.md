@@ -12,10 +12,11 @@ réversible.
 | `users` — Gestion des utilisateurs | 0 transverse | — | `user` (usr) |
 | `administration` — Administration | 0 transverse | — | (paramètres, journal : collections système) |
 | `object-management` — Object Management (routes de debug) | 0 transverse | — | — |
+| `calendar` — Calendrier (service paramétrable) | 0 transverse | users | — (lit les natures déclarées au registre) |
 | `core` — Noyau transverse | 1 | users | `coreProject` (prj), `task` (tsk) |
 | `budget` — Budget Management (middleware) | 2 | core | `budget` (bud), `costCenter` (cc), `operation` (op) |
 | `patrimoine` — Patrimoine Management (middleware) | 2 | core, budget | `patrimoine` (pat), `capitalization` (cap) |
-| `bpm` — Budget/Patrimoine Management (application) | 3 | core, budget, patrimoine | `bpmComposition` (bpm), `cycleLink` (cyc), `closure` (clo) |
+| `bpm` — Budget/Patrimoine Management (application) | 3 | core, budget, patrimoine | `bpmComposition` (bpm), `cycleLink` (cyc), `closure` (clo), `lifeGoal` (obj), `projectOverrun` (ovr) |
 
 Règle : un module ne dépend que de modules de niveau inférieur ou égal (vérifié par `Registry.register`).
 Un niveau supérieur **enrichit** un niveau inférieur par des **extensions** (inversion de dépendance) : le
@@ -65,6 +66,9 @@ fourni par l'extension `metricContext` du niveau 3.
 | `taskContext` | bpm | core | `(state, task, socle) => { qualification }` |
 | `operationGuard` | bpm | budget | `(state, { userId, budgetId, date, previousDate }, socle) => void` (lève `PERIOD_CLOSED`) |
 | `metricContext` | bpm | administration (aperçu de formule) | `(state, userId, socle, { periodKey? }) => ctx` |
+| `taskMoveGuard` | bpm | core | `(state, { task, fromProjectId, toProjectId }, socle) => void` : peut refuser un changement de projet (`FORBIDDEN_BY_RULE`, `details.links`) |
+| `onTaskStatusChange` | bpm | core | `(tx, { task, previousStatus }, socle) => effects[]` : dans la même écriture que le changement d'état ; effets rendus par la commande (`effects`) |
+| `settlementGuard` | bpm | budget | `(state, { userId, budgetId, direction, amountCents, realizedDate, taskId, operationId, recurrenceId, occurrenceDate }, socle) => void` : validation d'un règlement (lève `OVERRUN_AUTHORIZATION_REQUIRED`) |
 
 Compositions enregistrées : `initialUserBundle` (bpm) déclenchée par `users.createUser` ; dans une seule
 transaction : user → projet noyau principal → Budget « Projet de vie » → Patrimoine → composition BPM → liaison de cycle.
@@ -96,15 +100,42 @@ transaction : user → projet noyau principal → Budget « Projet de vie » →
 
 ### bpm (`socle.modules.bpm`) — niveau 3
 - Composition `initialUserBundle`, commande `createLifeSubproject` (branche : Budget standard + projet noyau propre + ≥ 1 tâche).
+- Projets de la vie (`projects.mjs`, `s.projects`) — les projets et tâches restent ceux du noyau (création et
+  édition dans le noyau ; rattachement et état par ses commandes) ; BPM porte leur budget dans des champs des
+  Budgets standards (`allocationCents`, `allocationDate`, `taskSharesCents`, `taskReturns`) et la nature
+  `projectOverrun` : `overview(ctx)`, `tasksOverview(ctx)`, `projectDetail(ctx, coreProjectId)`,
+  `adoptProject(ctx, {requestKey, coreProjectId, name?})`, `allocate(ctx, budgetId, {amount, expectedRevision})`,
+  `setTaskShare(ctx, budgetId, taskId, {amount|null, expectedRevision})`, `setTaskReturn(ctx, budgetId, taskId,
+  {label, amount|null, cadence, expectedRevision})`, `requestOverrun(ctx, budgetId, {requestKey, taskId?, reason,
+  amount})`, `decideOverrun(ctx, id, {decision, expectedRevision})`, `billOverruns(ctx, {budgetId?})`. Règles [P] :
+  le budget attribué est une charge non récurrente spéciale du budget de vie (présentée, jamais totalisée) ; les
+  charges d'un projet comptent dans le Dépensé du budget de vie à la validation de leur règlement, depuis la date
+  d'attribution (`projets.chargesReglees`) ; tout dépassement (part ou règlement) attend l'accord du budget de vie,
+  puis il est facturé à la fin de la période en cours du cycle et intégré au budget attribué ; contrôles PRJ-01 à 03.
 - `dashboard(ctx)`, `explainFigure(ctx, key, {periodKey?})`, `configureCycle(ctx, {anchorDay, startDate, expectedRevision})`, `closePeriod(ctx, {requestKey, periodKey, expectedResultCents})` (aperçu partagé `closingContract`, refus `CLOSING_PREVIEW_STALE`), `closures(ctx)`. Une clôture enregistre `figures` (chiffres de la période) et `stockBeforeCents` ; `figuresFor` relit une période close avec ses chiffres enregistrés et une comparaison séparée.
 - Préparation (C06) : `preparation(ctx)` (prêt / à préparer / incohérent, sans écriture) et `prepareComposition(ctx)` ; contrôle BPM-01 « exactement un » ensemble principal.
 - Lectures communes (`reads.mjs`, `s.reads`) : `summary`, `register`, `lineDetail`, `centers`, `centerDetail`, `incomes`, `balance` (avec rapprochement), `history` (paginé), `impact`, `budgetType`, `due`, `events`, `directives`, `projection` (+ simulation `extra`, comparaison des apports), `previewEntry` (aucune mutation). Chaque lecture porte le contexte commun (user, périmètre, budgets, période début inclus/fin exclue, date de calcul, révision).
 - Partir de zéro : `setupProfile(ctx)` et `setupProject(ctx, input)` — une commande rejouable ; mode `principal` (configure l'ensemble existant, met à jour les lignes du budget type sans les recréer) ou `branch` (Budget standard + projet noyau + ≥ 1 tâche, sans second Patrimoine).
 - Vision et objectifs : `updateVision`, `goals`, `createGoal`, `updateGoal`, `removeGoal` (archivage `removed`) ; projection pure dans `projection.mjs` (convention annuelle de la spec, objectifs consommant/réservant le capital).
 
+### calendar (`socle.modules.calendar`) — transverse
+- Moteur unique (`engine.mjs`) piloté par une configuration ; aucune extension à déclarer par les autres modules.
+  `read(ctx, id, {from, to})` lit le calendrier nommé (paramètre `calendrier.<id>`), `preview(ctx, {configuration,
+  from, to})` une configuration fournie à l'appel (contrôlée par `validateConfiguration`), `list()`, `catalog()`.
+- Lecture seule des objets **du user du contexte**, par nature du registre (collection déclarée) ; fenêtre bornée
+  (400 jours). Références (`reference`), paramètres (`parametre`), objets reliés (`relies`) et répétitions
+  (`repetition`) sont résolus par le moteur, sans code propre à un module.
+- Replanifier n'est jamais une écriture du calendrier : la configuration nomme la commande de l'API du module
+  propriétaire (`replanifier: { methode, route, champ, si }`) ; le site l'appelle avec la révision lue, et les
+  règles, refus et conflits restent ceux de ce module.
+- Repère produit : `{ key, element, nature, objectId, revision, date, title, done, status, statusLabel, urgent,
+  groupId, groupLabel, amountCents, direction, link, details[], reschedule }`.
+
 ## 6. Ce qui reste ouvert (non tranché par le code)
 
-C03 (paramètres obligatoires à la création), C05 (flux père/enfants : aucun flux monétaire calculé),
+C03 (paramètres obligatoires à la création), C05 (flux père/enfants : tranché le 4 novembre 2026 pour les projets
+auxquels le budget de vie attribue un montant — voir `projects.mjs` ; les projets sans montant attribué restent
+présentés séparément, sans consolidation),
 C06 (réalisation automatique : non implémentée, réalisation manuelle [P] ; une échéance d'une période close peut être réglée plus tard, à sa date réelle, sans modifier l'historique clos [P]), C07 (cycle mensuel seul et clôture
 explicite d'une période terminée [P] ; source d'une période close refusée [P]), C08 (centres standards
 administrables [P]), C09 (stock = ouverture + résultats capitalisés, formule administrable [P]), C10

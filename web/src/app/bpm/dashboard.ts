@@ -259,7 +259,7 @@ interface SectionView {
             </div>
             @if (d.lifeProjects.length === 0) {
               <p class="muted">Aucun projet de la vie pour l'instant : un voyage, un équipement, une formation…</p>
-              <a class="btn small" routerLink="/app/projets">Créer un projet de la vie</a>
+              <a class="btn small" routerLink="/app/projets">Financer un projet du noyau</a>
             } @else {
               <ul class="lps">
                 @for (lp of d.lifeProjects; track lp.budgetId) {

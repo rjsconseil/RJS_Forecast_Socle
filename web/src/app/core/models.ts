@@ -117,6 +117,8 @@ export interface TaskMutationResult extends TaskView {
   written?: boolean;
   replayed?: boolean;
   affectedProjects?: ProjectSummary[];
+  /** Effets des niveaux supérieurs dans la même écriture (ex. retour d'un projet au budget de vie). */
+  effects?: { module: string; kind: string; message: string; ids: string[] }[];
 }
 
 export interface TestUser {
@@ -415,7 +417,7 @@ export interface EffectiveParameter {
   description: string | null;
   module: string;
   group: string;
-  type: 'formula' | 'number' | 'integer' | 'text' | 'list' | 'boolean';
+  type: 'formula' | 'number' | 'integer' | 'text' | 'list' | 'object' | 'boolean';
   scope: string;
   unit: string | null;
   value: unknown;

@@ -5,6 +5,8 @@ import { Period } from './models';
 export type Direction = 'income' | 'charge';
 export type Cadence = 'once' | 'weekly' | 'monthly' | 'yearly';
 export type LineStatus = 'settled' | 'due' | 'late' | 'pending' | 'unrealized';
+/** État d'une charge spéciale de projet (budget attribué, dépassement) : présentée, jamais totalisée. */
+export type RegisterLineStatus = LineStatus | 'project';
 export type GoalType = 'etudes' | 'retraite' | 'achat' | 'securite' | 'transmission' | 'autre';
 export type CoverageStatus = 'funded' | 'partial' | 'unfunded' | 'outOfHorizon' | 'unknown';
 
@@ -50,7 +52,7 @@ export interface BpmSummary {
 
 export interface RegisterLine {
   id: string;
-  kind: 'operation' | 'occurrence';
+  kind: 'operation' | 'occurrence' | 'projectAllocation' | 'projectOverrun';
   operationId: string | null;
   recurrenceId: string | null;
   occurrenceDate: string | null;
@@ -66,8 +68,13 @@ export interface RegisterLine {
   realizedCents: number | null;
   differenceCents: number | null;
   settled: boolean;
-  status: LineStatus;
+  status: RegisterLineStatus;
   statusLabel: string;
+  /** Charge spéciale d'un projet de la vie (budget attribué, dépassement) : hors totaux. */
+  special?: boolean;
+  /** Charge d'un projet de la vie validée comme réglée : comptée dans le budget de vie. */
+  projectCharge?: boolean;
+  project?: { budgetId: string; coreProjectId: string; name: string };
   costCenterRef: string;
   costCenterLabel: string | null;
   centerKnown: boolean;
@@ -107,7 +114,7 @@ export interface BpmRegister {
     netSettledCents?: number;
     netPlannedCents?: number;
   };
-  groups: { key: string; label: string; plannedCents: number; paidCents: number; toPayCents: number; lineIds: string[] }[];
+  groups: { key: string; label: string; plannedCents: number; paidCents: number; toPayCents: number; specialCents?: number; lineIds: string[] }[];
   lines: RegisterLine[];
 }
 

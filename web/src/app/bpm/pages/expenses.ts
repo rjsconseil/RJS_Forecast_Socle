@@ -218,7 +218,7 @@ const REFINE_KEYS = ['status', 'center', 'taskId', 'budgetId', 'scope', 'from', 
               <header class="expense-center-heading" data-ui-pattern="section-heading">
                 <div>
                   <h2 [id]="'expenses-' + $index">
-                    @if (groupBy() === 'center' && g.key && !isNoneGroup(g.key)) {
+                    @if (groupBy() === 'center' && g.key && !isNoneGroup(g.key) && g.key !== 'projects') {
                       <a [routerLink]="['/argent/postes', g.key]" [queryParams]="centerQuery()" [attr.aria-label]="'Détail du poste ' + g.label">{{ g.label }}</a>
                     } @else {
                       {{ groupBy() === 'date' ? (g.label | shortDate) : g.label }}
@@ -227,7 +227,11 @@ const REFINE_KEYS = ['status', 'center', 'taskId', 'budgetId', 'scope', 'from', 
                   <p>{{ g.lineIds.length }} échéance(s)</p>
                 </div>
                 <div class="expense-center-total">
-                  <small>Total des échéances</small><strong>{{ g.plannedCents | cents }}</strong>
+                  @if (g.specialCents && !g.plannedCents) {
+                    <small>Charges spéciales · non comptées</small><strong>{{ g.specialCents | cents }}</strong>
+                  } @else {
+                    <small>Total des échéances</small><strong>{{ g.plannedCents | cents }}</strong>
+                  }
                 </div>
                 <p class="expense-center-breakdown">
                   <span>{{ labels().paid }} <strong>{{ g.paidCents | cents }}</strong></span>
@@ -240,7 +244,8 @@ const REFINE_KEYS = ['status', 'center', 'taskId', 'budgetId', 'scope', 'from', 
               @for (id of g.lineIds; track id) {
                 @if (byId().get(id); as l) {
                   <article class="expense-row" [attr.data-selected]="isSelected(l) || null" [attr.data-status]="rowStatus(l)" data-ui-pattern="panel">
-                    <a class="expense-charge-summary" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Ouvrir le détail : ' + l.label + ', ' + date(l.plannedDate)">
+                    <!-- Charge spéciale d'un projet de la vie : elle s'ouvre sur la fiche du projet, pas sur un détail d'échéance. -->
+                    <a class="expense-charge-summary" [routerLink]="l.special && l.project ? ['/app/projets', l.project.coreProjectId] : []" [queryParams]="l.special ? null : lineQuery(l)" [queryParamsHandling]="l.special ? '' : 'merge'" [attr.aria-label]="(l.special ? 'Ouvrir le projet : ' : 'Ouvrir le détail : ') + l.label + ', ' + date(l.plannedDate)">
                       <span class="expense-date">
                         <small>Date prévue</small>{{ l.plannedDate | shortDate }}
                         @if (l.realizedDate && l.realizedDate !== l.plannedDate) { <small>{{ l.direction === 'income' ? 'Date de réception' : 'Date de paiement' }} · {{ l.realizedDate | shortDate }}</small> }
@@ -257,6 +262,7 @@ const REFINE_KEYS = ['status', 'center', 'taskId', 'budgetId', 'scope', 'from', 
                           }
                           @if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }
                           @if (l.taskTitle) { · {{ l.taskTitle }} }
+                          @if (l.projectCharge) { · Projet de la vie, règlement validé }
                         </small>
                       </span>
                       <span class="expense-amount" [attr.data-flow]="l.direction === 'income' ? 'income' : 'expense'">
@@ -489,7 +495,7 @@ export class BpmExpensesPage {
   protected groupFlow = computed(() => (this.direction() === 'income' ? 'income' : this.direction() === 'charge' ? 'expense' : null));
   /** État source de la ligne : réglée = « recorded », ouverte = « pending », sinon non réalisée. */
   protected rowStatus(l: RegisterLine) {
-    return l.status === 'settled' ? 'recorded' : l.status === 'unrealized' ? 'unrealized' : 'pending';
+    return l.status === 'settled' ? 'recorded' : l.status === 'unrealized' || l.status === 'project' ? 'unrealized' : 'pending';
   }
   protected setBudget(v: string) {
     if (v === '__all__') this.ctx.setQuery({ budgetId: null, scope: 'consolidated' });

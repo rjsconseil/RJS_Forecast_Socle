@@ -180,6 +180,13 @@ export class Api {
   changeTaskStatus(id: string, status: TaskStatus, expectedRevision: number) {
     return this.post<TaskMutationResult>(`/api/tasks/${encodeURIComponent(id)}/status`, { status, expectedRevision });
   }
+  /** Rattachement d'une tâche à un projet : commande du noyau, quelle que soit l'interface qui l'appelle. */
+  attachTask(id: string, projectId: string, expectedRevision: number) {
+    return this.post<TaskMutationResult>(`/api/tasks/${encodeURIComponent(id)}/attach`, { projectId, expectedRevision });
+  }
+  detachTask(id: string, expectedRevision: number) {
+    return this.post<TaskMutationResult>(`/api/tasks/${encodeURIComponent(id)}/detach`, { expectedRevision });
+  }
 
   // ---------- niveau 3 : application BPM ----------
 

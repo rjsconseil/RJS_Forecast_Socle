@@ -8,6 +8,7 @@ import { date, money, oneOf } from '../../socle/validation.mjs';
 import { CADENCES, PER_YEAR, monthlyAverageCents, occurrenceDates, parseOccurrenceKey } from '../budget/recurrence.mjs';
 import { addDays, today } from './periods.mjs';
 import { GOAL_TYPES, project } from './projection.mjs';
+import { fundedStandardsOf, specialProjectLines } from './projects.mjs';
 
 const RESULT = 'bpm.resultatPeriode';
 const SUMMARY_KEYS = ['bpm.revenus', 'bpm.charges', RESULT, 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu', 'bpm.tauxEpargne', 'bpm.patrimoineConstitue', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif'];
@@ -95,6 +96,56 @@ export function createReads(socle, h) {
     return { from: b.period.start, to: b.period.end, kind: 'period' };
   }
 
+  /**
+   * Charges des projets de la vie validées comme réglées (Budgets standards financés par le budget de vie, réglées
+   * depuis l'attribution) : elles comptent dans les dépenses du budget de vie, jamais avant leur validation.
+   */
+  const validatedProjectLines = (b, { from, to, by }) =>
+    fundedStandardsOf(b.state, b.comp.budgetId).flatMap((sb) =>
+      budget()
+        .budgetLines(b.state, [sb.id], { from, to, by })
+        .filter((l) => l.kind === 'operation' && l.direction === 'charge' && l.settled && l.realizedDate >= sb.allocationDate),
+    );
+
+  /** Charge spéciale du budget de vie (budget attribué, dépassement facturé) : présentée, jamais totalisée. */
+  const specialLine = (b, sp) => ({
+    id: sp.id,
+    kind: sp.kind,
+    operationId: null,
+    recurrenceId: null,
+    occurrenceDate: null,
+    occurrenceKey: null,
+    budgetId: b.comp.budgetId,
+    userId: b.userId,
+    direction: 'charge',
+    label: sp.label,
+    plannedDate: sp.date,
+    plannedCents: sp.cents,
+    realizedDate: null,
+    realizedCents: null,
+    settled: false,
+    standardCostCenter: null,
+    costCenterId: null,
+    costCenterRef: 'projects',
+    costCenterLabel: 'Charges des projets de la vie',
+    centerKnown: true,
+    budgetName: 'Budget du projet de vie',
+    budgetRole: 'life',
+    cadence: 'once',
+    cadenceLabel: 'Ponctuelle',
+    firstDate: null,
+    endDate: null,
+    note: null,
+    taskId: null,
+    taskTitle: null,
+    revision: null,
+    differenceCents: null,
+    status: 'project',
+    statusLabel: sp.statusLabel,
+    special: true,
+    project: { budgetId: sp.budget.id, coreProjectId: sp.budget.coreProjectId, name: sp.budget.name },
+  });
+
   const budgetIdsOf = (b, q) => {
     if (q.budgetId) {
       if (!b.budgets.some((x) => x.id === q.budgetId)) fail('NOT_FOUND', 'Budget inconnu pour ce user.', { field: 'budgetId' });
@@ -124,6 +175,12 @@ export function createReads(socle, h) {
     const b = base(ctx, { periodKey: q.period });
     const win = windowOf(b, q);
     const all = budget().budgetLines(b.state, budgetIdsOf(b, q), { from: win.from, to: win.to, by: 'planned' }).map((l) => decorate(b, l));
+    // Budget du projet de vie : ses charges de projet validées comptent ; ses charges spéciales sont présentées à part.
+    if (!q.budgetId && q.scope !== 'consolidated') {
+      for (const l of validatedProjectLines(b, { from: win.from, to: win.to, by: 'planned' })) all.push({ ...decorate(b, l), projectCharge: true });
+      for (const sp of specialProjectLines(b.state, b.comp.budgetId, win)) all.push(specialLine(b, sp));
+      all.sort((x, y) => x.plannedDate.localeCompare(y.plannedDate) || x.label.localeCompare(y.label));
+    }
     const needle = q.q?.trim().toLowerCase();
     const lines = all.filter(
       (l) =>
@@ -138,14 +195,20 @@ export function createReads(socle, h) {
     const groups = new Map();
     for (const l of lines) {
       const [k, label] = keyOf(l);
-      if (!groups.has(k)) groups.set(k, { key: k, label, plannedCents: 0, paidCents: 0, toPayCents: 0, lineIds: [] });
+      if (!groups.has(k)) groups.set(k, { key: k, label, plannedCents: 0, paidCents: 0, toPayCents: 0, specialCents: 0, lineIds: [] });
       const g = groups.get(k);
+      g.lineIds.push(l.id);
+      // Charges spéciales des projets : présentées, jamais totalisées (comptées à la validation de leurs dépenses).
+      if (l.special) {
+        g.specialCents += l.plannedCents;
+        continue;
+      }
       g.plannedCents += l.plannedCents;
       g.paidCents += l.settled ? l.realizedCents : 0;
       g.toPayCents += ['late', 'due', 'pending'].includes(l.status) ? l.plannedCents : 0;
-      g.lineIds.push(l.id);
     }
     const open = (l) => ['late', 'due', 'pending'].includes(l.status);
+    const counted = lines.filter((l) => !l.special);
     return {
       context: contextOf(b, q.budgetId ? 'budget' : q.scope === 'consolidated' ? 'consolidated' : 'principal'),
       window: win,
@@ -153,19 +216,20 @@ export function createReads(socle, h) {
       filters: { q: q.q ?? null, direction: q.direction ?? null, status: q.status ?? null, center: q.center ?? null, taskId: q.taskId ?? null, budgetId: q.budgetId ?? null, groupBy },
       totals: {
         followsFilters: true,
-        paidCents: sum(lines.filter((l) => l.settled), (l) => l.realizedCents),
-        toPayCents: sum(lines.filter(open), (l) => l.plannedCents),
-        unrealizedCents: sum(lines.filter((l) => l.status === 'unrealized'), (l) => l.plannedCents),
-        plannedCents: sum(lines, (l) => l.plannedCents),
+        paidCents: sum(counted.filter((l) => l.settled), (l) => l.realizedCents),
+        toPayCents: sum(counted.filter(open), (l) => l.plannedCents),
+        unrealizedCents: sum(counted.filter((l) => l.status === 'unrealized'), (l) => l.plannedCents),
+        plannedCents: sum(counted, (l) => l.plannedCents),
+        specialCents: sum(lines.filter((l) => l.special), (l) => l.plannedCents),
         // Vue « Tout » : entrées et charges séparées, et net signé (reçu − payé ; prévu entrées − prévu charges).
         byDirection: Object.fromEntries(
           ['income', 'charge'].map((d) => {
-            const ls = lines.filter((l) => l.direction === d);
+            const ls = counted.filter((l) => l.direction === d);
             return [d, { settledCents: sum(ls.filter((l) => l.settled), (l) => l.realizedCents), openCents: sum(ls.filter(open), (l) => l.plannedCents), plannedCents: sum(ls, (l) => l.plannedCents), lineCount: ls.length }];
           }),
         ),
-        netSettledCents: sum(lines.filter((l) => l.settled), (l) => (l.direction === 'income' ? l.realizedCents : -l.realizedCents)),
-        netPlannedCents: sum(lines, (l) => (l.direction === 'income' ? l.plannedCents : -l.plannedCents)),
+        netSettledCents: sum(counted.filter((l) => l.settled), (l) => (l.direction === 'income' ? l.realizedCents : -l.realizedCents)),
+        netPlannedCents: sum(counted, (l) => (l.direction === 'income' ? l.plannedCents : -l.plannedCents)),
         lineCount: lines.length,
         unfilteredCount: all.length,
       },
@@ -220,6 +284,8 @@ export function createReads(socle, h) {
   function centersRead(b, direction, budgetIds) {
     const { start, end } = b.period;
     const realized = budget().budgetLines(b.state, budgetIds, { from: start, to: end, by: 'realized' });
+    // Budget du projet de vie : les charges de projet validées font partie du dépensé, réparties sur leurs centres.
+    if (budgetIds.length === 1 && budgetIds[0] === b.comp.budgetId) realized.push(...validatedProjectLines(b, { from: start, to: end, by: 'realized' }));
     const planned = budget().budgetLines(b.state, budgetIds, { from: start, to: end, by: 'planned' });
     const caps = b.state.budgets[b.comp.budgetId].capsCents ?? {};
     const centers = budget().costCentersOf(b.state, b.userId).filter((c) => c.direction === direction);
@@ -252,7 +318,7 @@ export function createReads(socle, h) {
 
   function centers(ctx, q = {}) {
     const b = base(ctx, { periodKey: q.period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.');
+    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
     const direction = oneOf('direction', q.direction, ['charge', 'income'], 'charge');
     const r = centersRead(b, direction, [b.comp.budgetId]);
     const rows = r.rows.filter((x) => x.paidCents || x.remainingCents || x.capCents !== null || q.all === 'true');
@@ -280,7 +346,8 @@ export function createReads(socle, h) {
     if (!c) fail('NOT_FOUND', 'Centre inconnu pour ce user.', { ref });
     const read = centers(ctx, { period: q.period, direction: c.direction, all: 'true' });
     const row = read.rows.find((x) => x.ref === c.ref);
-    const reg = register(ctx, { period: q.period, center: c.ref, groupBy: 'date', budgetId: b.comp.budgetId });
+    // Périmètre du budget de vie, avec ses charges de projet validées (mêmes lignes que le dépensé du poste).
+    const reg = register(ctx, { period: q.period, center: c.ref, groupBy: 'date' });
     return { context: read.context, center: { ...c, ...row }, basis: read.basis, lines: reg.lines, totals: reg.totals };
   }
 
@@ -370,7 +437,7 @@ export function createReads(socle, h) {
 
   function impact(ctx, { period } = {}) {
     const b = base(ctx, { periodKey: period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.');
+    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
     const { start, end } = b.period;
     const rows = b.budgets.map((x) => {
       const real = budget().budgetLines(b.state, [x.id], { from: start, to: end, by: 'realized' });

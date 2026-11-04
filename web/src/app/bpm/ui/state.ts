@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiError } from '../../core/api.service';
 
 /**
@@ -8,10 +9,23 @@ import { ApiError } from '../../core/api.service';
  */
 @Component({
   selector: 'bpm-state',
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './bpm-ui.scss',
   template: `
     @if (error(); as e) {
+      @if (isCycleToConfigure(e)) {
+        <!-- Règle, pas panne : sans cycle, aucune période n'existe à lire ; réessayer ne changerait rien. -->
+        <div class="bm-empty bpm-state-empty bpm-state-cycle" role="status">
+          <p>
+            <strong>Cycle à configurer.</strong> Les chiffres d'une période sont inconnus tant que le cycle du Budget du projet
+            de vie n'a pas de date de début : ils ne valent pas zéro.
+          </p>
+          <div class="bpm-actions">
+            <a class="btn btn-primary" routerLink="/app/reglages">Configurer le cycle</a>
+          </div>
+        </div>
+      } @else {
       <div class="bpm-error bpm-state-error" role="alert">
         <p>{{ e.message }}</p>
         @if (e.body.details?.['field']) {
@@ -21,6 +35,7 @@ import { ApiError } from '../../core/api.service';
           <button type="button" class="btn btn-secondary" (click)="retry.emit()">Réessayer</button>
         </div>
       </div>
+      }
     } @else if (loading()) {
       <div class="bpm-state-loading" aria-busy="true">
         <p class="bpm-help" role="status">Lecture en cours…</p>
@@ -44,4 +59,8 @@ export class BpmState {
   readonly lines = input(3);
   readonly retry = output<void>();
   protected rows = () => Array.from({ length: this.lines() }, (_, i) => i);
+  /** Refus de l'API « Cycle à configurer » (règle sur la période), distinct d'une panne. */
+  protected isCycleToConfigure(e: ApiError) {
+    return e.body.code === 'FORBIDDEN_BY_RULE' && e.body.details?.['field'] === 'period';
+  }
 }

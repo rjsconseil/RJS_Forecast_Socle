@@ -8,8 +8,12 @@ Node sans dépendance et un site Angular. Le contrat détaillé entre modules es
 
 ```bash
 npm install --prefix web
+npm start          # API (http://localhost:3410) et site (http://localhost:4300) ensemble ; Ctrl+C arrête les deux
 npm run api        # API locale http://localhost:3410 (réinitialisation de recette activée)
 npm run seed       # jeux d'essai via les contrats HTTP réels (API lancée, voir plus bas)
+npm run seed:projets   # foyer d'essai : 10 projets de la vie sur 6 mois clos et le mois en cours (API arrêtée)
+npm run e2e:projets    # bout en bout dans un navigateur (après npm run build ; API et ports temporaires)
+npm run import:rjs-forecast -- --remplacer   # données du site de référence voisin, ../RJS_Forecast (API arrêtée, voir plus bas)
 npm run web        # site Angular http://localhost:4300 (proxy /api → 3410)
 npm test           # tests node:test (api/test/*.test.mjs) sur persistance réelle
 npm --prefix web test -- --watch=false   # tests unitaires du site (Vitest)
@@ -35,6 +39,7 @@ Exemple d'API privée pour des essais : `SOCLE_TODAY=2026-11-03 J1_API_PORT=3501
 | 0 transverse | `users` | Gestion des utilisateurs ; le type (individuel, famille…) est un paramètre | `user` (usr) |
 | 0 transverse | `administration` | Paramètres effectifs, formules des chiffres, journal, erreurs récentes | — |
 | 0 transverse | `object-management` | Inventaire, inspection, relations, contrôles, export debug et CSV | — |
+| 0 transverse | `calendar` | Calendrier : un seul moteur, piloté par sa configuration (paramètre `calendrier.<id>`), lit les données du user et produit des repères datés (semaine, mois, année) | — |
 | 1 noyau | `core` | Projets et tâches, 7 états dérivés, complétude, temps | `coreProject` (prj), `task` (tsk) |
 | 2 middleware | `budget` | Budgets (« Projet de vie », Budgets standards), centres de coût, opérations prévues / réalisées, définitions récurrentes et leurs occurrences, plafonds | `budget` (bud), `costCenter` (cc), `operation` (op), `recurrence` (rec) |
 | 2 middleware | `patrimoine` | Patrimoine unique par user, stock d'ouverture, objectif, capitalisations | `patrimoine` (pat), `capitalization` (cap) |
@@ -58,6 +63,54 @@ Règles structurantes :
   écriture est refusée si le fichier a été modifié par un autre écrivain (`PERSISTENCE_CONFLICT`) ; les
   mutations d'une instance sont sérialisées. Les anciens schémas (`j1-store/0.2`, `socle-store/0.3`, `0.4`)
   sont migrés au démarrage par des migrations de module déclarées, enregistrées dans `state.migrations`.
+
+## Calendrier : un service paramétrable pour tous les modules
+
+Le module transverse `calendar` (API `api/src/modules/calendar/`, site `web/src/app/calendar/`) sert le même
+calendrier à tous les modules. **Un seul code** : le moteur lit, en lecture seule, les objets du user du contexte
+(par nature d'objet déclarée au registre) selon les **paramètres qu'on lui donne** ; aucun module n'est modifié
+pour être affiché. Chaque calendrier est un paramètre administrable `calendrier.<id>` (type objet, révision et
+historique comme tout paramètre) :
+
+| Calendrier | Page | Éléments livrés |
+|---|---|---|
+| `calendrier.noyau` | `/calendrier` (Noyau transverse) | débuts et échéances des projets, dates prévues et échéances des tâches |
+| `calendrier.budgetPatrimoine` | `/calendrier-budget` (Budget/Patrimoine) | revenus et dépenses (réglés à leur date réelle, attendus à leur date prévue), revenus et dépenses récurrents attendus, fins de période du cycle, versements au patrimoine |
+| `calendrier.patrimoine` | `/patrimoine/calendrier` (Patrimoine) | ouverture du patrimoine, versements des résultats de période, objectifs de vie datés |
+
+Une configuration règle : la vue d'ouverture (`semaine`, `mois`, `annee` — les trois restent proposées), le
+nombre de repères par case et au survol, les **indicateurs du survol** (`elements`, `dates`, `suivi`, `flux`,
+`solde`), et pour chaque élément : nature d'objet, champ date (ou liste : le premier renseigné), modèle de titre,
+couleur, repère (début, échéance, ponctuel), affichage à l'ouverture, filtre, condition « terminé », montant et
+sens, regroupement, lien, **entrées montrées au survol** (champ, format, référence vers un autre objet, valeur
+d'un paramètre, objets reliés), répétition (cadence, ancrage, veille de l'occurrence suivante, remplacement par
+un objet réel) et commande de l'API qui replanifie un repère (glisser-déposer ou « Replanifier »). Les trois vues
+partagent un même cadre (nombre d'or au-dessus de 1 280 px, 4:3 jusqu'à 900 px).
+
+## Projets de la vie dans Budget/Patrimoine : un projet, un budget attribué
+
+Les projets et les tâches viennent du **noyau**, seule source : ils s'y créent et s'y modifient. Budget/Patrimoine
+réimplémente leurs tableaux par statut (`/app/projets`, `/app/taches`, fiche `/app/projets/:id`), limités au
+**projet de vie** du user et à ses **projets standards** (Budgets standards enfants du budget de vie). Le
+rattachement d'une tâche (`attachTask`, `detachTask`) et son changement d'état (glisser-déposer ou « Déplacer
+vers », `changeTaskStatus`) passent par les commandes du noyau, depuis le noyau comme depuis BPM ; l'état d'un
+projet suit toujours ses tâches. Un projet du noyau devient projet standard par « Financer un projet du noyau ».
+
+BPM porte le budget de chaque projet standard (`api/src/modules/bpm/projects.mjs`) :
+
+- **Budget attribué** par le budget de vie : il figure dans le budget de vie comme une **charge non récurrente
+  spéciale** (registre de Dépenses, groupe « Charges des projets de la vie »), jamais comptée à sa date. Seules
+  les dépenses du projet **validées comme réglées** (depuis la date d'attribution) entrent dans le Dépensé du
+  budget de vie, à leur date réelle (variable `projets.chargesReglees`, métrique `bpm.chargesProjets`) ;
+- **ventilation sur les tâches** : chaque part réduit le budget à ventiler ;
+- **dépassement** : une part ou un règlement qui dépasse le budget du projet est refusé
+  (`OVERRUN_AUTHORIZATION_REQUIRED`) tant que le budget de vie ne l'a pas autorisé. Autorisé, le projet passe en
+  dépassement (rouge) et la charge de dépassement est **facturée au budget de vie à la fin de la période en cours
+  du cycle** : « Facturer au budget de vie » intègre alors le dépassement au budget attribué et rend les contrôles
+  de fin de cycle (budget = somme des parts, charges des tâches planifiées avec montants et récurrences à jour) ;
+- **retour** : une tâche peut retourner au budget de vie un revenu ponctuel ou récurrent, enregistré quand elle est
+  terminée (une seule fois) ;
+- **garde** : une tâche qui porte une part, une dépense ou un retour ne change pas de projet tant qu'ils existent.
 
 ## Chiffres configurables et explicables
 
@@ -100,6 +153,7 @@ Montants : centimes entiers dans le stockage et les contrats de lecture (champs 
 | BPM — commandes | `POST /api/bpm/setup` (Partir de zéro, principal ou branche), `POST /api/bpm/operations` (ponctuelle ou récurrente), `PUT /api/bpm/operations/:id`, `POST /api/bpm/operations/:id/{realize,cancel-realization}`, `PUT /api/bpm/recurrences/:id`, `POST /api/bpm/recurrences/:id/settle`, `PUT /api/bpm/caps`, `PUT /api/bpm/vision`, `POST /api/bpm/goals`, `PUT /api/bpm/goals/:id`, `POST /api/bpm/goals/:id/remove`, `PUT /api/bpm/cycle`, `GET/POST /api/bpm/closures`, `GET /api/bpm/closures/preview`, `GET/POST /api/bpm/cost-centers` |
 | BPM — historique | `GET /api/bpm/dashboard[?period=AAAA-MM]`, `GET /api/bpm/figures/:key`, `GET/POST /api/bpm/life-projects`, `PUT /api/bpm/patrimoine`, `GET /api/bpm/preparation`, `POST /api/bpm/prepare` |
 | Administration | `GET /api/admin/modules`, `GET /api/admin/parameters[/:key]`, `PUT /api/admin/parameters/:key`, `POST /api/admin/parameters/:key/reset`, `GET /api/admin/metrics[/:key]`, `POST /api/admin/metrics/:key/preview`, `GET /api/admin/journal`, `GET /api/admin/errors` |
+| Calendrier | `GET /api/calendar` (calendriers paramétrés), `GET /api/calendar/catalog` (vocabulaire des configurations), `GET /api/calendar/:id?from=AAAA-MM-JJ&to=AAAA-MM-JJ` (repères d'un calendrier nommé), `POST /api/calendar/preview` (configuration fournie à l'appel ; aucune écriture) |
 | Object Management | `GET /api/om/objects[/:id]`, `GET /api/om/kinds`, `GET /api/om/checks`, `GET /api/om/debug`, `GET /api/om/csv[/:file]`, `GET /api/om/export.zip` (archive de preuve JSON + CSV d’un instantané figé), `POST /api/_recette/reset` |
 
 Le user de contexte est passé par l'en-tête `x-user-id` (pas d'authentification à ce stade, C04).
@@ -117,7 +171,8 @@ La période, les filtres et la sélection sont dans l'URL. Anciens liens : `/app
 `/app/operations` → `/depenses`, `/app/bienvenue` → `/utilisateurs` ; `/app/projets` et `/app/reglages`
 restent accessibles hors menu. Espaces distincts : `/utilisateurs` (gestion des utilisateurs) et le socle :
 `/projects`, `/tasks`, `/socle/budget`, `/socle/patrimoine`, `/object-management` (`?inspect=<id>` ouvre un
-objet), `/admin`, `/admin/calculs`, `/admin/calculs/:key`.
+objet), `/admin`, `/admin/calculs`, `/admin/calculs/:key`. Calendriers (même page, configuration par route) : `/calendrier`,
+`/calendrier-budget`, `/patrimoine/calendrier` (`?vue=semaine|mois|annee&jour=AAAA-MM-JJ`).
 
 Présentation : styles en couches (`web/src/styles/` : tokens, base, contrôles, structure, composants, pages du
 socle), polices locales Inter, IBM Plex Mono et Newsreader (`@fontsource`). Composants partagés des pages BPM
@@ -137,6 +192,66 @@ Après réinitialisation, le seed crée par HTTP, avec des dates relatives au jo
 - **Famille Durand** (famille, stock inconnu, objectif 80 000 €, cycle à configurer) : un centre de coût
   personnalisé et des opérations prévues ce mois-ci, pour montrer les valeurs inconnues.
 
+## Cas d'essai des projets de la vie (`npm run seed:projets`, `npm run e2e:projets`)
+
+Un seul scénario (`api/scripts/project-scenarios.mjs`), écrit comme une suite d'événements datés, rejoue un foyer et
+dix projets de la vie sur **sept périodes d'un cycle mensuel** : les six mois qui précèdent le mois en cours (clos le
+1er du mois suivant) et le **mois en cours sur tout le mois** (salaires, loyer, courses, énergie, loisirs, anniversaire,
+dépenses des projets jusqu'au dernier jour). La date du jour avance avec les événements ; ce qui suit l'arrêt reste
+prévu (aucun règlement n'est daté dans le futur).
+
+| Projet | Budget attribué | Ce que le cas montre |
+|---|---|---|
+| Cuisine équipée | 5 000 € | dans son budget, terminé ; retour ponctuel (revente de l'ancienne cuisine) |
+| Voyage en Islande | 3 000 € → 3 450 € | règlement en dépassement (450 €) autorisé, facturé en fin de cycle, parts revalidées |
+| Salle de bain | 4 000 € → 4 500 € | part en dépassement refusée puis autorisée (500 €), facturée en fin de cycle |
+| Vélo électrique | 1 200 € → 1 400 € | règlement en dépassement (200 €) autorisé, facturé le cycle suivant |
+| Location du garage | 400 € | retour récurrent de 90 €/mois au budget de vie dès la mise en location |
+| Permis moto | 1 500 € | leçons récurrentes ; part en dépassement refusée, rien n'est écrit |
+| Cabane au jardin | aucun | dépenses hors budget de vie tant qu'aucun montant n'est attribué |
+| Rentrée scolaire | 900 € | dans son budget ; cantine récurrente |
+| Week-end à Lyon | 700 € | dépassement (50 €) autorisé dans le mois en cours : en rouge jusqu'à la fin du cycle |
+| Noël en famille | 1 200 € | part en dépassement autorisée (60 €) ; règlement en dépassement refusé (90 €) |
+
+Chaque attendu est recalculé à part : résultat de chaque clôture (reçu − dépenses du budget de vie − charges de projet
+validées), reçu et dépensé du mois en cours, état, budget, dépassements et retours de chaque projet, intégrité.
+
+- **Jeu d'essai** : API arrêtée, `npm run seed:projets` ajoute le foyer « TEST PROJETS · Famille Laurent » au stockage
+  (autre nom : `-- --nom "…"`), joué jusqu'à aujourd'hui, après sauvegarde du stockage.
+- **Tests node** : `api/test/projects-cycles.test.mjs` (jusqu'au 30 novembre 2026, puis arrêt au 4 novembre).
+- **Bout en bout** : `npm run build`, puis `npm run e2e:projets`. Le test démarre sa propre API de recette (stockage et
+  ports temporaires : les données du poste ne sont jamais touchées) et le site construit, puis rejoue le scénario de
+  mai au 30 novembre 2026 dans un vrai navigateur : création des projets et des tâches dans les formulaires du noyau,
+  financement, montant attribué, parts, demandes de dépassement et décisions du budget de vie, validation des
+  règlements, retours, glisser-déposer des tâches, facturation de fin de cycle ; la vie courante du budget et les
+  clôtures passent par l'API. L'horloge de recette de l'API (`PUT /api/_recette/today`, seulement avec
+  `J1_ENABLE_RECETTE_RESET=1`) et celle du navigateur avancent ensemble. Les chiffres affichés (tableau de bord,
+  projets en rouge, panneau du budget de vie, charges spéciales de Dépenses) sont comparés aux attendus.
+  Options : `-- --jusqu-au AAAA-MM-JJ`, `-- --captures <dossier>`. Prérequis : Playwright et Chromium
+  (`npm i -D playwright && npx playwright install chromium`).
+
+## Données du site de référence (`npm run import:rjs-forecast`)
+
+Importe les users du site de référence ([`rjsconseil/rjs-forecast`](https://github.com/rjsconseil/rjs-forecast))
+avec leurs projets et tâches, Budgets, Patrimoines, opérations, récurrences, règlements, objectifs et périodes
+closes, par les règles du socle : chaque objet reçoit un identifiant du socle et garde son ID d'origine dans
+`importRef` ; les clôtures sont rejouées par `closePeriod` et comparées au résultat enregistré par la référence.
+L'API doit être arrêtée (un seul écrivain) :
+
+```bash
+npm run import:rjs-forecast -- --remplacer
+```
+
+- source : le dossier `site/data` de la référence. Sans `--source <dossier>` (chemin relatif au dossier du
+  socle), l'import lit les fichiers copiés dans `api/sources/rjs-forecast/`, sinon ceux du site de référence
+  voisin, `../RJS_Forecast/site/data`. Ces données ne sont pas versionnées ici : ce dépôt est public, celui de la
+  référence privé ;
+- `--remplacer` : repart des seules données de la référence ; l'ancien stockage est d'abord sauvegardé
+  (`api/data/store.before-rjs-forecast-<date>.json`). Sans cette option, les données sont ajoutées au stockage
+  existant et un second import est refusé ;
+- rapport et données sans équivalent dans le socle (idées non décidées, actifs et allocations du patrimoine,
+  versements entre entités, factures…) : `api/data/imports/rjs-forecast/` (`rapport.json`, `hors-contrat.json`).
+
 ## Tests
 
 `npm test` lance `api/test/*.test.mjs` :
@@ -149,10 +264,17 @@ Après réinitialisation, le seed crée par HTTP, avec des dates relatives au jo
   tableau de bord administrable, centres de coût ;
 - `corrections.test.mjs` — corrections C01 à C11, exemples financiers, migration d'un stockage `j1-store/0.2` ;
 - `contracts.test.mjs` — récurrences et occurrences, registre, centres, solde et rapprochement, projection et
-  couverture des objectifs, aperçu et simulation sans écriture, directives, Partir de zéro (principal et branche).
+  couverture des objectifs, aperçu et simulation sans écriture, directives, Partir de zéro (principal et branche) ;
+- `projects.test.mjs` — projets de la vie dans BPM : isolement, budget attribué (charge spéciale), ventilation,
+  dépassements (demande, refus, accord), règlement compté à sa validation, facturation de fin de cycle, retours,
+  rattachement et garde ;
+- `projects-cycles.test.mjs` — les dix cas d'essai des projets sur six mois clos et le mois en cours (26 contrôles), puis arrêt en cours de mois ;
+- `calendar.test.mjs` — module Calendrier : calendriers livrés, noyau, isolement et lecture sans écriture,
+  paramétrage du survol, des couleurs et de la vue, configurations refusées, Budget/Patrimoine, configuration
+  fournie à l'appel, fenêtre de lecture, répétitions.
 
 `npm --prefix web test -- --watch=false` lance les tests unitaires du site (routes et redirections, lectures
-protégées contre les réponses périmées, graphes, éditeur d'opération rejouable).
+protégées contre les réponses périmées, graphes, éditeur d'opération rejouable, dates et modèle du calendrier).
 
 La matrice de recette « exigence → page/service → preuve → statut » est dans [`docs/RECETTE.md`](docs/RECETTE.md).
 

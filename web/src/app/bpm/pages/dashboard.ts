@@ -749,7 +749,8 @@ export class BpmDashboard {
     const active = (this.recurrences.data() ?? []).filter((r) => (!life || r.budgetId === life) && (!r.endDate || r.endDate >= from));
     return [...active.filter((r) => r.direction === 'income'), ...active.filter((r) => r.direction === 'charge')];
   });
-  private lines = computed(() => this.register.data()?.lines ?? []);
+  /** Lignes comptées : les charges spéciales des projets (budget attribué, dépassement) sont présentées dans Dépenses, jamais totalisées. */
+  private lines = computed(() => (this.register.data()?.lines ?? []).filter((l) => !l.special));
   protected incomeLines = computed(() => this.lines().filter((l) => l.direction === 'income'));
   protected chargeLines = computed(() => this.lines().filter((l) => l.direction === 'charge'));
   /** Montant d'une échéance : réel une fois réglée, sinon prévu. */
