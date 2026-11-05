@@ -4,3 +4,6 @@ web/dist/
 
 # Données du site de référence (dépôt privé) : copiées sur le poste, jamais versionnées ici (dépôt public).
 api/sources/rjs-forecast/*.json
+
+# Fichiers du Finder (macOS) : réécrits à chaque ouverture d’un dossier, jamais versionnés.
+.DS_Store
