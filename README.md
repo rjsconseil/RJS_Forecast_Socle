@@ -95,14 +95,31 @@ temps, budget attribué, ventilation, engagé, consommé, reste, demandes et rem
 permettent de modifier le projet, ajouter ou rattacher des tâches, attribuer le budget et ouvrir les demandes,
 dépenses et contrôles. Le projet de vie principal unique reste distinct de ces projets enfants.
 
+Les pages **Projets de la vie**, **Gestion de projet** et les fiches projet partagent un bandeau de commandes
+fixé sous la navigation. Recherche, filtres, création et rattachement y restent accessibles pendant le défilement.
+La synthèse financière défile sous ce bandeau. Dans la gestion, chaque projet occupe une ligne :
+sa synthèse utilise la largeur disponible à côté d’un panneau de commandes sur deux colonnes. Les formulaires
+de budget et de rattachement s’ouvrent dans cette colonne ; les tâches se déplient sur toute la largeur.
+Sur mobile, les commandes se placent sous la synthèse.
+
+**Piloter ce projet** ouvre la fiche avec ses chiffres clés et son avancement dans une bande horizontale,
+puis le tableau des tâches sur toute la largeur. Les couleurs restent celles du tableau de bord budgétaire.
+L’édition de l’**enveloppe budgétaire** se termine avec **Enregistrer** ; une erreur conserve la saisie.
+Le tableau reprend les quatre statuts du noyau, la recherche, le glisser-déposer annulable avec Échap
+et le sélecteur de statut. Chaque carte regroupe ses demandes de part, leur validation, ses dépenses,
+ses règlements et ses retours au budget de vie. Sur petit écran, les chiffres et les colonnes s’empilent.
+Les tâches créées depuis cette fiche appartiennent obligatoirement au projet affiché.
+
 **Ajouter une tâche** crée directement la tâche dans le projet concerné, avec ce rattachement fixé dans le
 formulaire. **Rattacher une tâche** propose uniquement les tâches sans projet disponibles pour le rattachement.
 Une tâche rattachée disparaît de cette liste et apparaît dans le détail du projet.
 
-Les boutons du projet sont regroupés juste au-dessus de la bande **« + Détail du projet & tâches »**. Déplier
-cette bande affiche les chiffres complémentaires et les tâches, avec leurs commandes en colonne à droite.
-Chaque tâche dispose du bouton **Demander**, de sa part de budget et d’une jauge de temps placée en dessous.
-Les montants et leurs libellés encadrent la jauge de budget, horizontalement ou verticalement selon la place.
+Les actions du projet occupent le panneau de droite, au-dessus du disponible aux tâches et du nombre de
+demandes à valider. La bande **« Tâches & détails + »**, en bas de la synthèse, déplie les chiffres
+complémentaires et les tâches. Chaque tâche regroupe ses informations et dépenses réelles, son budget et son
+temps estimés, puis les commandes **Demander**, **Modifier**, **Détacher** et le statut. Les jauges verticales
+restent à droite de leurs chiffres, avec les pourcentages à gauche. Les trois montants sont alignés : budget
+accordé, consommé estimé et reste estimé. Un budget non attribué affiche un message distinct et lisible.
 L’attribution se fait exclusivement au niveau du projet ; la demande de part
 se fait dans la tâche. Le budget restant est vert à partir de 50 %, orange entre 20 % et moins de 50 %, rouge
 sous 20 %. Le temps consommé est bleu avant 50 %, jaune entre 50 % et moins de 100 %, vert à partir de 100 %.

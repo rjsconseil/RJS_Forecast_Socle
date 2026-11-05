@@ -1,0 +1,555 @@
+:host {
+  display: block;
+}
+.project-workspace {
+  --cockpit-line: var(--line);
+  max-width: none;
+}
+.project-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+.project-back {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.project-detail-banner .life-banner-copy h1 {
+  overflow-wrap: anywhere;
+}
+.project-detail-tools {
+  grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.5fr) auto auto auto;
+}
+.project-section-label {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.project-description {
+  max-width: 933px;
+  position: relative;
+  padding-right: 120px;
+}
+.project-description p {
+  font-size: 18px;
+  line-height: 1.45;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-line;
+}
+.project-description p.is-expanded {
+  display: block;
+}
+.project-description button {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 12px;
+}
+.project-cockpit {
+  min-width: 0;
+  position: static;
+  max-height: none;
+  overflow: visible;
+}
+.cockpit-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0;
+}
+.cockpit-status .status-value {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--field-surface);
+  color: var(--field-ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+.cockpit-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.cockpit-actions .btn {
+  padding: 10px;
+  font-size: 12px;
+  min-height: 42px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.4;
+}
+.cockpit-body {
+  display: grid;
+  gap: 24px;
+  padding: 0;
+}
+.cockpit-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.cockpit-section-heading h2 {
+  margin: 0;
+  font: 700 16px/1.4 var(--font-sans);
+  letter-spacing: -0.02em;
+}
+.cockpit-section-heading > strong {
+  font-size: 12px;
+  color: var(--muted);
+}
+.cockpit-section-heading button {
+  font-size: 13px;
+}
+.envelope-editor {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--app-accent-line);
+  background: var(--app-accent-soft);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.envelope-editor label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.envelope-editor p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.envelope-editor input {
+  width: 100%;
+  min-width: 0;
+  font-size: 20px;
+}
+.cockpit-progress {
+  padding: 0;
+}
+.cockpit-progress-track,
+.task-time-track {
+  height: 7px;
+  background: var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.cockpit-progress-track > span,
+.task-time-track > span {
+  display: block;
+  height: 100%;
+  background: var(--status-success);
+  border-radius: inherit;
+}
+.cockpit-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0 0;
+  font-size: 13px;
+}
+.cockpit-facts > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.cockpit-facts dt {
+  color: var(--muted);
+}
+.cockpit-facts dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.cockpit-facts small {
+  font-weight: 400;
+}
+.cockpit-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.cockpit-details > :not(details),
+.cockpit-details > details[open] {
+  grid-column: 1 / -1;
+}
+.cockpit-disclosure {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--raised-surface);
+  padding: 12px 16px;
+  min-width: 0;
+}
+.cockpit-disclosure summary {
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.cockpit-disclosure-body {
+  padding-top: 14px;
+  font-size: 13px;
+}
+.cockpit-disclosure-body h3 {
+  font: 600 14px/1.5 var(--font-sans);
+}
+.cockpit-disclosure-body .bpm-checks {
+  padding-left: 20px;
+}
+.project-task-space {
+  min-width: 0;
+  container-type: inline-size;
+}
+.project-tasks-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0 20px;
+}
+.project-tasks-heading h2 {
+  margin: 0;
+  font: 700 26px/1.2 var(--font-sans);
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.task-completion {
+  color: var(--status-success);
+  font-size: 13px;
+  font-weight: 600;
+}
+.project-task-board {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.project-task-board .board-column {
+  min-height: 200px;
+}
+.project-task-board .board-column-head {
+  padding: 14px;
+}
+.project-task-board .board-column-head h3 {
+  font-size: 14px;
+}
+.project-task-board .board-column-content {
+  padding: 10px;
+  gap: 12px;
+}
+.project-task-card {
+  min-width: 0;
+  padding: 16px !important;
+  font-weight: 400;
+}
+.project-task-card h4 {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  white-space: normal;
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+.project-task-card h4 .grip {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.project-task-card .task-title-link {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.project-task-card .task-card-description {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.task-dates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  padding-bottom: 12px;
+}
+.task-money {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  margin: 0 0 16px;
+}
+.task-money dt {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.task-money dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.money-rest dd {
+  color: var(--status-success);
+}
+.money-paid dd,
+.money-rest.is-danger dd {
+  color: var(--status-danger);
+}
+.task-time {
+  margin-bottom: 18px;
+  --time-color: var(--app-accent);
+}
+.task-time[data-tone='blue'] {
+  --time-color: #3b82f6;
+}
+.task-time[data-tone='yellow'] {
+  --time-color: #d5a315;
+}
+.task-time[data-tone='green'] {
+  --time-color: var(--status-success);
+}
+.task-time[data-tone='unknown'] {
+  --time-color: var(--muted);
+}
+.task-time > div:first-child {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.task-time-track > span {
+  background: var(--time-color);
+}
+.task-time p {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+.project-task-card .status-change {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  font-size: 12px;
+  margin: 0;
+}
+.project-task-card .status-change select {
+  width: 100%;
+  min-height: 36px;
+  max-width: none;
+}
+.task-card-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 14px 0;
+}
+.task-card-actions .text-link {
+  font-size: 12px;
+}
+.task-detail {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.task-detail summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.task-detail-body {
+  display: grid;
+  gap: 20px;
+  padding-top: 16px;
+  font-size: 13px;
+}
+.task-detail h5 {
+  font: 700 14px/1.5 var(--font-sans);
+  margin: 0 0 10px;
+}
+.task-detail-body form,
+.task-funding-box form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.task-detail-body label,
+.task-funding-box label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.task-detail-body :is(input, select),
+.task-funding-box input {
+  width: 100%;
+  min-width: 0;
+}
+.task-detail-body .btn,
+.task-funding-box .btn {
+  font-size: 12px;
+  min-height: 38px;
+  padding: 10px;
+  white-space: normal;
+}
+.task-funding-box {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--app-accent-line);
+  background: var(--app-accent-soft);
+  margin-bottom: 14px;
+}
+.task-funding-box p,
+.task-detail-body form p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--muted);
+}
+.project-first-task {
+  padding: 24px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+.project-first-task h3 {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+.project-first-task p {
+  color: var(--muted);
+  font-size: 14px;
+}
+.project-feedback {
+  margin-bottom: 20px;
+}
+.is-error {
+  color: var(--status-danger);
+}
+@container (min-width: 960px) {
+  .project-task-board {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@container (max-width: 540px) {
+  .project-task-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 1500px) {
+  .project-detail-tools {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .project-detail-tools .life-budget-project {
+    grid-column: span 2;
+  }
+}
+@media (max-width: 700px) {
+  .project-detail-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .project-detail-tools .life-budget-project {
+    grid-column: auto;
+  }
+  .project-description {
+    padding-right: 0;
+  }
+  .project-description button {
+    position: static;
+    margin-top: 6px;
+  }
+  .project-description p {
+    font-size: 16px;
+  }
+  .cockpit-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cockpit-facts {
+    gap: 12px;
+    font-size: 12px;
+  }
+  .project-summary-band .life-financial-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .task-card {
+    transition: none;
+  }
+}
+.task-charge-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+.task-charge {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+}
+.task-charge-heading {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.task-charge dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.task-charge dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+.task-charge dt,
+.task-charge small {
+  color: var(--muted);
+}
+.task-charge dd {
+  margin: 0;
+  font-weight: 600;
+}
+.task-charge form {
+  display: grid;
+  gap: 10px;
+}
+.task-charge label {
+  display: grid;
+  gap: 6px;
+}
+.task-charge input {
+  width: 100%;
+  min-width: 0;
+}
+
+.task-request-pending {
+  font-size: 12px;
+  color: var(--status-warning);
+  font-weight: 600;
+}

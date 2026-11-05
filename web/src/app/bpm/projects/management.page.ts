@@ -14,12 +14,17 @@ import { CoreProject, PRIORITY_LABEL, TaskStatus } from '../../core/models';
 import { CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
 import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-parts';
 import { BpmProjectEditor, BpmTaskEditor } from './project-editors';
+import { ModalComponent } from '../../shared/modal.component';
+import { BpmProjectOverviewSummaryComponent } from './project-overview-summary';
 import { BpmProjectMetricsComponent } from './project-metrics';
 import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
 
 @Component({
   selector: 'app-bpm-project-management',
+  styleUrl: './projects.page.scss',
   imports: [
+    ModalComponent,
+    BpmProjectOverviewSummaryComponent,
     RouterLink,
     CentsPipe,
     ShortDatePipe,
@@ -32,31 +37,103 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
   ],
   template: `
     <div class="page page-wide bpm-projects bpm-project-page bpm-management">
-      <header class="bpm-project-head">
-        <p class="eyebrow">
-          <span class="eyebrow-line"></span>Budget/Patrimoine · Mes projets de la vie
-        </p>
-        <h1>Gestion de projet</h1>
-        <p class="page-intro">
-          Donnez un cadre à chaque projet de la vie : préparez ses tâches, attribuez son budget,
-          puis validez les montants dont les tâches ont besoin.
-        </p>
-        <div class="bpm-actions">
+      <header class="life-projects-banner" data-ui-pattern="heading" data-sticky-hero>
+        <div class="life-banner-copy">
+          <p class="eyebrow">Budget/Patrimoine · Mes projets de la vie</p>
+          <h1 class="display">Gestion de projet</h1>
+          <p class="page-intro">
+            Donnez un cadre à chaque projet de la vie : préparez ses tâches, attribuez son budget,
+            puis validez les montants dont les tâches ont besoin.
+          </p>
+        </div>
+        <div class="life-header-actions">
+          <button class="btn btn-secondary" type="button" [disabled]="!data()" (click)="openTask()">
+            Créer une tâche
+          </button>
           <button
-            class="btn btn-primary"
+            class="btn btn-secondary"
+            type="button"
+            [disabled]="!data()"
+            (click)="cycleOpen.set(true)"
+          >
+            Suivi & cycle
+            @if (data()?.life?.pendingRequests?.length) {
+              <span class="life-alert-count">{{ data()!.life.pendingRequests.length }}</span>
+            }
+          </button>
+        </div>
+        <div class="life-banner-tools" aria-label="Commandes de gestion des projets">
+          <label>
+            Afficher les projets
+            <select [value]="filter()" (change)="filter.set($any($event.target).value)">
+              <option value="all">Tous les projets</option>
+              <option value="open">À poursuivre</option>
+              <option value="unfunded">Budget à attribuer</option>
+              <option value="done">Terminés</option>
+              <option value="deficit">En dépassement</option>
+            </select>
+          </label>
+          <label>
+            Rechercher un projet
+            <span class="life-search-field">
+              <input
+                type="search"
+                aria-label="Rechercher un projet"
+                placeholder="Nom ou description…"
+                [value]="search()"
+                (input)="search.set($any($event.target).value)"
+              />
+              @if (search()) {
+                <button
+                  type="button"
+                  aria-label="Effacer la recherche"
+                  title="Effacer la recherche"
+                  (click)="search.set('')"
+                >
+                  ×
+                </button>
+              }
+            </span>
+          </label>
+          <form class="life-budget-project" (submit)="$event.preventDefault(); adopt()">
+            <label>
+              Projet à budgéter
+              <select
+                [value]="candidate()"
+                [disabled]="busy() || !data()?.candidates?.length"
+                (change)="candidate.set($any($event.target).value)"
+              >
+                <option value="">
+                  {{
+                    !data()
+                      ? 'Chargement…'
+                      : data()?.candidates?.length
+                        ? 'Choisir un projet…'
+                        : 'Aucun projet à budgéter'
+                  }}
+                </option>
+                @for (p of data()?.candidates ?? []; track p.projectId) {
+                  <option [value]="p.projectId">
+                    {{ p.title }} ({{ p.taskCount }} tâche{{ p.taskCount > 1 ? 's' : '' }})
+                  </option>
+                }
+              </select>
+            </label>
+            <button type="submit" class="btn btn-secondary" [disabled]="busy() || !candidate()">
+              Budgéter
+            </button>
+          </form>
+          <button
+            class="btn btn-primary life-create"
             type="button"
             [disabled]="!data()"
             (click)="openProject()"
           >
-            Créer un projet de la vie
+            <span aria-hidden="true">+</span> Créer un projet de la vie
           </button>
-          <button class="btn btn-secondary" type="button" [disabled]="!data()" (click)="openTask()">
-            Créer une tâche
-          </button>
-          <a class="text-link" routerLink="/app/projets">Tableau des projets ↗</a>
-          <a class="text-link" routerLink="/app/taches">Tableau des tâches ↗</a>
         </div>
       </header>
+      <bpm-project-overview-summary [data]="data()" />
       @if (notice(); as n) {
         <p
           class="bpm-feedback"
@@ -76,57 +153,6 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
         <p role="status">Chargement des projets et des tâches…</p>
       }
       @if (data(); as d) {
-        <section class="bpm-panel bpm-management-summary" aria-labelledby="life-context-title">
-          <div class="bpm-section">
-            <header>
-              <h2 id="life-context-title">Le budget de votre projet de vie</h2>
-              <a
-                class="text-link"
-                [routerLink]="['/app/projets', d.context.lifeBudget.coreProjectId]"
-                >Voir le projet de vie ↗</a
-              >
-            </header>
-            <p class="bpm-note">
-              {{ d.context.user.label }} · Un projet de vie unique finance
-              {{ d.life.projectCount }} projet(s) de la vie. Les sommes ci-dessous concernent les
-              projets ayant un budget attribué.
-            </p>
-            <dl class="bpm-kpis">
-              <div>
-                <dt>Attribué aux projets</dt>
-                <dd>{{ d.life.allocatedCents | cents }}</dd>
-              </div>
-              <div>
-                <dt>Ventilé aux tâches</dt>
-                <dd>{{ d.life.sharesCents | cents }}</dd>
-              </div>
-              <div>
-                <dt>Encore à ventiler</dt>
-                <dd>{{ d.life.availableCents | cents }}</dd>
-              </div>
-              <div>
-                <dt>Consommé toutes périodes</dt>
-                <dd>{{ d.life.paidCents | cents }}</dd>
-              </div>
-              <div>
-                <dt>Reste à consommer</dt>
-                <dd>{{ d.life.remainingCents | cents }}</dd>
-              </div>
-              <div>
-                <dt>Remonté dans le cycle actuel</dt>
-                <dd>{{ d.life.periodPaidCents | cents }}</dd>
-                <small>{{ d.context.period?.label ?? 'Cycle à configurer' }}</small>
-              </div>
-            </dl>
-            @if (d.context.cycleState === 'to_configure') {
-              <p class="bpm-note">
-                Configurez le cycle pour dater les remontées et la facturation de fin de cycle.
-                <a routerLink="/app/reglages">Configurer le cycle</a>
-              </p>
-            }
-          </div>
-        </section>
-
         <section class="bpm-section" aria-labelledby="management-projects-title">
           <header>
             <h2 id="management-projects-title">Vos projets de la vie</h2>
@@ -134,216 +160,225 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
               >{{ d.life.fundedCount }} financé(s) sur {{ d.life.projectCount }}</span
             >
           </header>
-          <div class="bpm-inline-form bpm-management-filters">
-            <label
-              >Rechercher un projet<input
-                type="search"
-                [value]="search()"
-                (input)="search.set($any($event.target).value)"
-                placeholder="Nom ou description"
-            /></label>
-            <label
-              >Suivi<select [value]="filter()" (change)="filter.set($any($event.target).value)">
-                <option value="all">Tous les projets</option>
-                <option value="open">À poursuivre</option>
-                <option value="unfunded">Budget à attribuer</option>
-                <option value="done">Terminés</option>
-                <option value="deficit">En dépassement</option>
-              </select></label
-            >
-          </div>
           <div class="bpm-management-grid">
             @for (p of visibleProjects(); track p.project.id) {
               <article
-                class="bpm-panel bpm-management-card"
+                class="bpm-management-card"
                 [class.is-expanded]="expandedProjects().has(p.project.id)"
                 [attr.data-budget-state]="p.budget?.state"
                 [attr.aria-label]="'Projet ' + p.project.title"
               >
-                <div class="bpm-project-row-summary">
-                  <div class="bpm-project-links">
-                    <span
-                      class="status-value pm-project-status"
-                      [attr.data-status]="p.view.status"
-                      >{{ p.view.statusLabel }}</span
-                    ><span class="pm-project-priority" [attr.data-priority]="p.project.priority"
-                      >Priorité {{ priority[p.project.priority].toLowerCase() }}</span
-                    >
+                <div class="bpm-panel pm-project-overview">
+                  <div class="bpm-project-row-summary">
+                    <div class="bpm-project-links">
+                      <span
+                        class="status-value pm-project-status"
+                        [attr.data-status]="p.view.status"
+                        >{{ p.view.statusLabel }}</span
+                      ><span class="pm-project-priority" [attr.data-priority]="p.project.priority"
+                        >Priorité {{ priority[p.project.priority].toLowerCase() }}</span
+                      >
+                    </div>
+                    <h3>
+                      <a
+                        [routerLink]="['/app/gestion-projet', p.project.id]"
+                        [title]="p.project.title"
+                        >{{ p.project.title }}</a
+                      >
+                    </h3>
+                    <p class="pm-project-description" [class.is-empty]="!p.project.description">
+                      <span [title]="p.project.description || 'Description non renseignée.'">{{
+                        p.project.description || 'Description non renseignée.'
+                      }}</span>
+                    </p>
+                    <dl class="pm-project-facts">
+                      <div>
+                        <dt>Tâches terminées</dt>
+                        <dd>
+                          {{ p.view.doneCount }} <small>/ {{ p.view.time.taskCount }}</small>
+                        </dd>
+                        <small>{{ p.view.completionPercent }} % du projet</small>
+                      </div>
+                      <div>
+                        <dt>Début</dt>
+                        <dd>
+                          {{
+                            p.project.startDate ? (p.project.startDate | shortDate) : 'À définir'
+                          }}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Échéance</dt>
+                        <dd>
+                          {{ p.project.dueDate ? (p.project.dueDate | shortDate) : 'À définir' }}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
-                  <h3>
-                    <a [routerLink]="['/app/gestion-projet', p.project.id]">{{
-                      p.project.title
-                    }}</a>
-                  </h3>
-                  <p class="pm-project-description" [class.is-empty]="!p.project.description">
-                    <span>{{ p.project.description || 'Description non renseignée.' }}</span>
-                  </p>
-                  <dl class="pm-project-facts">
-                    <div>
-                      <dt>Tâches terminées</dt>
-                      <dd>
-                        {{ p.view.doneCount }} <small>/ {{ p.view.time.taskCount }}</small>
-                      </dd>
-                      <small>{{ p.view.completionPercent }} % du projet</small>
+                  @if (p.budget; as b) {
+                    <div class="bpm-project-row-budget">
+                      <bpm-project-metrics [budget]="b" [time]="p.view.time" [vertical]="true" />
                     </div>
+                    @if (b.pendingOverrun) {
+                      <p class="pm-project-alert">
+                        Autorisation du projet de vie attendue :
+                        {{ b.pendingOverrun.amountCents | cents }}.
+                      </p>
+                    }
+                  }
+                  <button
+                    type="button"
+                    class="pm-project-disclosure"
+                    [attr.aria-expanded]="expandedProjects().has(p.project.id)"
+                    [attr.aria-controls]="'project-tasks-' + p.project.id"
+                    (click)="toggleTasks(p.project.id)"
+                  >
+                    <span
+                      ><strong>{{
+                        expandedProjects().has(p.project.id)
+                          ? 'Masquer les tâches'
+                          : 'Tâches & détails'
+                      }}</strong
+                      ><span
+                        >{{ p.view.time.taskCount }} tâche(s)
+                        @if (requestCount(p.project.id)) {
+                          · {{ requestCount(p.project.id) }} demande(s) en attente
+                        }
+                      </span></span
+                    >
+                    <span class="pm-disclosure-sign" aria-hidden="true">{{
+                      expandedProjects().has(p.project.id) ? '−' : '+'
+                    }}</span>
+                  </button>
+                </div>
+                <aside
+                  class="pm-project-command-panel"
+                  [attr.aria-label]="'Commandes de ' + p.project.title"
+                >
+                  <div
+                    class="bpm-actions bpm-project-row-actions"
+                    [attr.aria-label]="'Actions du projet ' + p.project.title"
+                  >
+                    <a class="btn btn-primary" [routerLink]="['/app/gestion-projet', p.project.id]"
+                      >Piloter ce projet</a
+                    >
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [disabled]="busy()"
+                      (click)="openProject(p.project)"
+                    >
+                      Modifier le projet
+                    </button>
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [disabled]="busy()"
+                      (click)="openTask(p.project.id)"
+                    >
+                      Ajouter une tâche
+                    </button>
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [disabled]="busy() || !availableTasks().length"
+                      [attr.aria-expanded]="attachProjectId() === p.project.id"
+                      (click)="
+                        attachProjectId.set(attachProjectId() === p.project.id ? '' : p.project.id)
+                      "
+                    >
+                      Rattacher une tâche
+                    </button>
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [disabled]="busy()"
+                      [attr.aria-expanded]="allocationProjectId() === p.project.id"
+                      (click)="
+                        allocationProjectId.set(
+                          allocationProjectId() === p.project.id ? '' : p.project.id
+                        )
+                      "
+                    >
+                      {{ p.budget?.regime ? 'Modifier le budget' : 'Attribuer un budget' }}
+                    </button>
+                  </div>
+                  <dl class="pm-command-figures" aria-label="Repères du projet">
                     <div>
-                      <dt>Début</dt>
-                      <dd>
-                        {{ p.project.startDate ? (p.project.startDate | shortDate) : 'À définir' }}
-                      </dd>
+                      <dt>Disponible aux tâches</dt>
+                      <dd>{{ p.budget?.availableCents | cents }}</dd>
                     </div>
-                    <div>
-                      <dt>Échéance</dt>
-                      <dd>
-                        {{ p.project.dueDate ? (p.project.dueDate | shortDate) : 'À définir' }}
-                      </dd>
+                    <div [class.has-pending]="requestCount(p.project.id) > 0">
+                      <dt>Demandes à valider</dt>
+                      <dd>{{ requestCount(p.project.id) }}</dd>
                     </div>
                   </dl>
-                </div>
-                @if (p.budget; as b) {
-                  <div class="bpm-project-row-budget">
-                    <bpm-project-metrics [budget]="b" [time]="p.view.time" />
-                  </div>
-                  @if (b.pendingOverrun) {
-                    <p class="pm-project-alert">
-                      Autorisation du projet de vie attendue :
-                      {{ b.pendingOverrun.amountCents | cents }}.
-                    </p>
+                  @if (allocationProjectId() === p.project.id && p.budget; as b) {
+                    <form
+                      class="bpm-inline-form bpm-project-row-editor"
+                      (submit)="
+                        $event.preventDefault();
+                        allocate(p, $any($event.target).elements.amount.value)
+                      "
+                    >
+                      <label
+                        >Montant total attribué au projet (€)<input
+                          name="amount"
+                          inputmode="decimal"
+                          required
+                          [value]="
+                            b.allocationCents === null
+                              ? ''
+                              : (b.allocationCents / 100).toString().replace('.', ',')
+                          "
+                      /></label>
+                      <button class="btn btn-primary" type="submit" [disabled]="busy()">
+                        Enregistrer le budget
+                      </button>
+                      <button
+                        class="btn btn-secondary"
+                        type="button"
+                        (click)="allocationProjectId.set('')"
+                      >
+                        Annuler
+                      </button>
+                      <p class="bpm-note">
+                        L’attribution ne crée aucune dépense ; les règlements validés seront
+                        remontés au budget du projet de vie.
+                      </p>
+                    </form>
                   }
-                }
-                <div
-                  class="bpm-actions bpm-project-row-actions"
-                  [attr.aria-label]="'Actions du projet ' + p.project.title"
-                >
-                  <a class="btn btn-primary" [routerLink]="['/app/gestion-projet', p.project.id]"
-                    >Piloter ce projet</a
-                  >
-                  <button
-                    class="btn btn-secondary"
-                    type="button"
-                    [disabled]="busy()"
-                    (click)="openProject(p.project)"
-                  >
-                    Modifier le projet
-                  </button>
-                  <button
-                    class="btn btn-secondary"
-                    type="button"
-                    [disabled]="busy()"
-                    (click)="openTask(p.project.id)"
-                  >
-                    Ajouter une tâche
-                  </button>
-                  <button
-                    class="btn btn-secondary"
-                    type="button"
-                    [disabled]="busy() || !availableTasks().length"
-                    [attr.aria-expanded]="attachProjectId() === p.project.id"
-                    (click)="
-                      attachProjectId.set(attachProjectId() === p.project.id ? '' : p.project.id)
-                    "
-                  >
-                    Rattacher une tâche
-                  </button>
-                  <button
-                    class="btn btn-secondary"
-                    type="button"
-                    [disabled]="busy()"
-                    [attr.aria-expanded]="allocationProjectId() === p.project.id"
-                    (click)="
-                      allocationProjectId.set(
-                        allocationProjectId() === p.project.id ? '' : p.project.id
-                      )
-                    "
-                  >
-                    {{ p.budget?.regime ? 'Modifier le budget' : 'Attribuer un budget' }}
-                  </button>
-                </div>
-                @if (allocationProjectId() === p.project.id && p.budget; as b) {
-                  <form
-                    class="bpm-inline-form bpm-project-row-editor"
-                    (submit)="
-                      $event.preventDefault();
-                      allocate(p, $any($event.target).elements.amount.value)
-                    "
-                  >
-                    <label
-                      >Montant total attribué au projet (€)<input
-                        name="amount"
-                        inputmode="decimal"
-                        required
-                        [value]="
-                          b.allocationCents === null
-                            ? ''
-                            : (b.allocationCents / 100).toString().replace('.', ',')
-                        "
-                    /></label>
-                    <button class="btn btn-primary" type="submit" [disabled]="busy()">
-                      Enregistrer le budget
-                    </button>
-                    <button
-                      class="btn btn-secondary"
-                      type="button"
-                      (click)="allocationProjectId.set('')"
+                  @if (attachProjectId() === p.project.id) {
+                    <form
+                      class="bpm-inline-form bpm-project-row-editor"
+                      (submit)="
+                        $event.preventDefault();
+                        attachById($any($event.target).elements.taskId.value, p.project.id)
+                      "
                     >
-                      Annuler
-                    </button>
-                    <p class="bpm-note">
-                      L’attribution ne crée aucune dépense ; les règlements validés seront remontés
-                      au budget du projet de vie.
-                    </p>
-                  </form>
-                }
-                @if (attachProjectId() === p.project.id) {
-                  <form
-                    class="bpm-inline-form bpm-project-row-editor"
-                    (submit)="
-                      $event.preventDefault();
-                      attachById($any($event.target).elements.taskId.value, p.project.id)
-                    "
-                  >
-                    <label
-                      >Tâche à rattacher<select name="taskId" required>
-                        <option value="">Choisir une tâche</option>
-                        @for (t of availableTasks(); track t.task.id) {
-                          <option [value]="t.task.id">
-                            {{ t.task.title }}
-                          </option>
-                        }
-                      </select></label
-                    >
-                    <button class="btn btn-primary" type="submit" [disabled]="busy()">
-                      Rattacher au projet
-                    </button>
-                    <button
-                      class="btn btn-secondary"
-                      type="button"
-                      (click)="attachProjectId.set('')"
-                    >
-                      Annuler
-                    </button>
-                  </form>
-                }
-                <button
-                  type="button"
-                  class="pm-project-disclosure"
-                  [attr.aria-expanded]="expandedProjects().has(p.project.id)"
-                  [attr.aria-controls]="'project-tasks-' + p.project.id"
-                  (click)="toggleTasks(p.project.id)"
-                >
-                  <span
-                    ><strong>Détail du projet & tâches</strong
-                    ><span
-                      >{{ p.view.time.taskCount }} tâche(s)
-                      @if (requestCount(p.project.id)) {
-                        · {{ requestCount(p.project.id) }} demande(s) en attente
-                      }
-                    </span></span
-                  >
-                  <span class="pm-disclosure-sign" aria-hidden="true">{{
-                    expandedProjects().has(p.project.id) ? '−' : '+'
-                  }}</span>
-                </button>
+                      <label
+                        >Tâche à rattacher<select name="taskId" required>
+                          <option value="">Choisir une tâche</option>
+                          @for (t of availableTasks(); track t.task.id) {
+                            <option [value]="t.task.id">
+                              {{ t.task.title }}
+                            </option>
+                          }
+                        </select></label
+                      >
+                      <button class="btn btn-primary" type="submit" [disabled]="busy()">
+                        Rattacher au projet
+                      </button>
+                      <button
+                        class="btn btn-secondary"
+                        type="button"
+                        (click)="attachProjectId.set('')"
+                      >
+                        Annuler
+                      </button>
+                    </form>
+                  }
+                </aside>
                 @if (expandedProjects().has(p.project.id)) {
                   <div
                     class="pm-project-tasks"
@@ -361,7 +396,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                             </div>
                             <div>
                               <dt>Encore à ventiler</dt>
-                              <dd>{{ b.availableCents | cents }}</dd>
+                              <dd [class.is-deficit]="(b.availableCents ?? 0) < 0">{{ b.availableCents | cents }}</dd>
                             </div>
                             <div>
                               <dt>Réglé dans le cycle</dt>
@@ -434,7 +469,8 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                       <div>
                         <h4>Les tâches du projet</h4>
                         <p class="bpm-note">
-                          Chaque tâche demande sa part du budget et suit sa consommation.
+                          Consommation estimée selon le temps saisi · Seuls les règlements validés
+                          sont facturés au budget de vie.
                         </p>
                       </div>
                       <button
@@ -509,31 +545,6 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
               </div>
             }
           </div>
-          @if (d.candidates.length) {
-            <details class="bpm-panel">
-              <summary>
-                Rattacher un projet déjà créé dans le noyau ({{ d.candidates.length }})
-              </summary>
-              <form class="bpm-inline-form" (submit)="$event.preventDefault(); adopt()">
-                <label
-                  >Projet à budgéter<select
-                    [value]="candidate()"
-                    (change)="candidate.set($any($event.target).value)"
-                  >
-                    <option value="">Choisir un projet</option>
-                    @for (p of d.candidates; track p.projectId) {
-                      <option [value]="p.projectId">
-                        {{ p.title }} · {{ p.taskCount }} tâche(s)
-                      </option>
-                    }
-                  </select></label
-                >
-                <button type="submit" class="btn btn-secondary" [disabled]="busy() || !candidate()">
-                  Créer son budget de projet
-                </button>
-              </form>
-            </details>
-          }
         </section>
 
         <section class="bpm-section" aria-labelledby="task-inbox-title">
@@ -553,36 +564,103 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
           />
         </section>
 
-        <section class="bpm-section" aria-labelledby="life-decisions-title">
-          <header><h2 id="life-decisions-title">Décisions du budget du projet de vie</h2></header>
-          @for (o of d.life.pendingRequests; track o.id) {
-            <bpm-overrun-request
-              [overrun]="o"
-              [busy]="busy()"
-              (decide)="decideOverrun(o, $event)"
-            />
-          }
-          @if (!d.life.pendingRequests.length) {
-            <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
-          }
-          @if (d.life.approvedOverrunCents) {
-            <p class="bpm-note">
-              {{ d.life.approvedOverrunCents | cents }} autorisés, à facturer en fin de cycle.
-              {{
-                d.life.nextBillingDate
-                  ? 'Prochaine date : ' + (d.life.nextBillingDate | shortDate)
-                  : ''
-              }}
+        @if (cycleOpen()) {
+          <rjs-modal
+            [open]="cycleOpen()"
+            [headed]="true"
+            title="Suivi du budget de vie & fin de cycle"
+            [busy]="busy()"
+            (closed)="cycleOpen.set(false)"
+          >
+            <p>
+              {{ d.context.user.label }} · Un projet de vie unique finance
+              {{ d.life.projectCount }} projet(s) de la vie.
             </p>
-          }
-          @if (d.life.billable.length) {
+            <dl class="bpm-kpis">
+              <div>
+                <dt>Ventilé aux tâches</dt>
+                <dd>{{ d.life.sharesCents | cents }}</dd>
+              </div>
+              <div>
+                <dt>Remonté dans le cycle actuel</dt>
+                <dd>{{ d.life.periodPaidCents | cents }}</dd>
+                <small>{{ d.context.period?.label ?? 'Cycle à configurer' }}</small>
+              </div>
+            </dl>
+            @if (d.context.cycleState === 'to_configure') {
+              <p class="bpm-note">
+                Configurez le cycle pour dater les remontées et la facturation de fin de cycle.
+                <a routerLink="/app/reglages">Configurer le cycle</a>
+              </p>
+            }
+            @if (notice(); as n) {
+              <p
+                class="bpm-feedback"
+                [class.is-error]="n.error"
+                [attr.role]="n.error ? 'alert' : 'status'"
+              >
+                {{ n.text }}
+              </p>
+            }
+            <section class="bpm-section" aria-labelledby="life-decisions-title">
+              <header>
+                <h2 id="life-decisions-title">Décisions du budget du projet de vie</h2>
+              </header>
+              @for (o of d.life.pendingRequests; track o.id) {
+                <bpm-overrun-request
+                  [overrun]="o"
+                  [busy]="busy()"
+                  (decide)="decideOverrun(o, $event)"
+                />
+              }
+              @if (!d.life.pendingRequests.length) {
+                <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
+              }
+              @if (d.life.approvedOverrunCents) {
+                <p class="bpm-note">
+                  {{ d.life.approvedOverrunCents | cents }} autorisés, à facturer en fin de cycle.
+                  {{
+                    d.life.nextBillingDate
+                      ? 'Prochaine date : ' + (d.life.nextBillingDate | shortDate)
+                      : ''
+                  }}
+                </p>
+              }
+              @if (d.life.billable.length) {
+                <div class="bpm-actions">
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    [disabled]="busy()"
+                    (click)="bill()"
+                  >
+                    Facturer les dépassements au projet de vie ({{ d.life.billableCents | cents }})
+                  </button>
+                </div>
+              }
+            </section>
+
+            <nav class="bpm-actions" aria-label="Vues complémentaires">
+              <a
+                class="text-link"
+                [routerLink]="['/app/projets', d.context.lifeBudget.coreProjectId]"
+                >Voir le projet de vie ↗</a
+              >
+              <a class="text-link" routerLink="/app/projets">Tableau des projets ↗</a>
+              <a class="text-link" routerLink="/app/taches">Tableau des tâches ↗</a>
+            </nav>
             <div class="bpm-actions">
-              <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="bill()">
-                Facturer les dépassements au projet de vie ({{ d.life.billableCents | cents }})
+              <button
+                type="button"
+                class="btn btn-secondary"
+                [disabled]="busy()"
+                (click)="cycleOpen.set(false)"
+              >
+                Fermer
               </button>
             </div>
-          }
-        </section>
+          </rjs-modal>
+        }
 
         <section class="bpm-section" aria-labelledby="unlinked-tasks-title">
           <header>
@@ -695,6 +773,7 @@ export class BpmProjectManagementPage implements OnInit {
   protected search = signal('');
   protected filter = signal('all');
   protected candidate = signal('');
+  protected cycleOpen = signal(false);
   protected editingProject = signal<CoreProject | null>(null);
   protected taskProjectId = signal('');
   protected allocationProjectId = signal('');
