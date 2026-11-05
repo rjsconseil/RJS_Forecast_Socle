@@ -27,6 +27,8 @@ import {
   SetupResult,
   Vision,
 } from './bpm-models';
+import { BpmLifeManagement } from './bpm-life.models';
+import { CapAlert, CapsReview, ChargeCategory, SpendingCaps } from './bpm-caps.models';
 import { Operation } from './models';
 import { BpmProjectDetail, BpmProjectInput, BpmProjectsOverview, BpmTaskInput, BpmTasksOverview, CycleCheck, ProjectOverrun, ReturnCadence, TaskBudgetRequest } from './bpm-projects.models';
 
@@ -100,6 +102,10 @@ export class BpmApi {
   directives() {
     return this.get<BpmDirectives>('/api/bpm/directives');
   }
+  /** Gestion du projet de vie : cycle, charges par nature, projets financés, résultats des cycles, patrimoine. */
+  lifeManagement(period?: string) {
+    return this.get<BpmLifeManagement>('/api/bpm/life-management', { period });
+  }
   /** Projection ou simulation (paramètres facultatifs : aucune écriture). */
   projection(q: { horizon?: number; rate?: number; inflation?: number; contribution?: number; extra?: number } = {}) {
     return this.get<BpmProjection>('/api/bpm/projection', q);
@@ -127,28 +133,49 @@ export class BpmApi {
 
   /** Éditeur partagé : ponctuelle → opération ; cadence → définition récurrente. */
   createEntry(input: EntryInput & { requestKey: string }) {
-    return this.post<{ replayed: boolean; operation?: Operation; recurrence?: Recurrence }>('/api/bpm/operations', input);
+    return this.post<{ replayed: boolean; operation?: Operation; recurrence?: Recurrence; capAlerts?: CapAlert[] }>('/api/bpm/operations', input);
   }
   updateOperation(id: string, body: Record<string, unknown> & { expectedRevision: number }) {
-    return this.put<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}`, body);
+    return this.put<{ operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/operations/${encodeURIComponent(id)}`, body);
   }
   realizeOperation(id: string, body: { expectedRevision: number; realizedAmount?: number; realizedDate?: string }) {
-    return this.post<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}/realize`, body);
+    return this.post<{ operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/operations/${encodeURIComponent(id)}/realize`, body);
   }
   cancelRealization(id: string, expectedRevision: number) {
     return this.post<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}/cancel-realization`, { expectedRevision });
   }
   updateRecurrence(id: string, body: Record<string, unknown> & { expectedRevision: number }) {
-    return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number } }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
+    return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number }; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
   }
   settleOccurrence(recurrenceId: string, body: { requestKey: string; occurrenceDate: string; realizedAmount?: number; realizedDate?: string; note?: string }) {
-    return this.post<{ replayed: boolean; operation: Operation }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/settle`, body);
+    return this.post<{ replayed: boolean; operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/settle`, body);
   }
   addCostCenter(body: { requestKey: string; label: string; direction: 'income' | 'charge' }) {
     return this.post<{ replayed: boolean; costCenterId: string }>('/api/bpm/cost-centers', body);
   }
-  setCaps(body: { expectedRevision: number; caps: Record<string, number | null> }) {
+  /** Plafonds des centres (euros) ; `merge` ne change que les centres fournis (null retire le plafond). */
+  setCaps(body: { expectedRevision: number; caps: Record<string, number | null>; merge?: boolean }) {
     return this.put<unknown>('/api/bpm/caps', body);
+  }
+
+  // ---------- plafonds de dépenses : centres et catégories (jamais bloquants) ----------
+
+  spendingCaps(period?: string) {
+    return this.get<SpendingCaps>('/api/bpm/spending-caps', { period });
+  }
+  /** Revue des plafonds de la période : postes, catégories et charges en cause (récurrence, antériorité). */
+  capsReview(period?: string) {
+    return this.get<CapsReview>('/api/bpm/caps-review', { period });
+  }
+  /** Catégories actives ; `archived` ajoute les catégories retirées (encore portées par des dépenses). */
+  categories(archived = false) {
+    return this.get<ChargeCategory[]>('/api/bpm/categories', { archived: archived ? 'true' : undefined });
+  }
+  createCategory(body: { requestKey: string; label: string; costCenterRef: string; cap?: number | null }) {
+    return this.post<{ replayed: boolean; category: ChargeCategory }>('/api/bpm/categories', body);
+  }
+  updateCategory(id: string, body: { expectedRevision: number; label?: string; cap?: number | null; archived?: boolean }) {
+    return this.put<{ category: ChargeCategory }>(`/api/bpm/categories/${encodeURIComponent(id)}`, body);
   }
   updateVision(body: Record<string, unknown> & { expectedRevision: number }) {
     return this.put<{ revision: number; vision: Vision }>('/api/bpm/vision', body);

@@ -1,0 +1,200 @@
+{
+  "source": "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forecast/site/data",
+  "dataFile": "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forecast_Socle/api/data/store.json",
+  "startedAt": "2026-11-05T12:09:35.511Z",
+  "counts": {
+    "users": 26,
+    "coreProjects": 88,
+    "tasks": 68,
+    "budgets": 56,
+    "bpmCompositions": 26,
+    "costCenters": 160,
+    "recurrences": 260,
+    "settlements": 568,
+    "operations": 173,
+    "taskLinksDropped": 31,
+    "lifeGoals": 7,
+    "projectAllocations": 17,
+    "taskShares": 24,
+    "closures": 21
+  },
+  "notes": [
+    "Types d'utilisateur ajoutés : Célibataire, Entreprise personnelle, Association, Personne physique.",
+    "Budget PBM-CCB7C4609F : parts des tâches (7000 €) au-delà de la cible (6500 €) ; budget attribué porté à la somme des parts.",
+    "Budget ATELIER-20261024-PBM-PETENF : son projet noyau ATELIER-20261024-PETIT sert déjà de racine, un projet « ATELIER · Budget des enfants » est créé."
+  ],
+  "closures": [
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-01-01",
+      "periodKey": "2026-01",
+      "closureId": "clo_bfcff6cc-6e54-465a-9f0b-64d02a278c16",
+      "referenceNetCents": 178930,
+      "resultCents": 178930,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-02-01",
+      "periodKey": "2026-02",
+      "closureId": "clo_4a082475-a3bd-418e-bb76-c81eae488c41",
+      "referenceNetCents": 180974,
+      "resultCents": 180974,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-03-01",
+      "periodKey": "2026-03",
+      "closureId": "clo_38331ae7-9ee3-405a-a592-270c63672aac",
+      "referenceNetCents": 199175,
+      "resultCents": 199175,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-04-01",
+      "periodKey": "2026-04",
+      "closureId": "clo_9fcd283d-b7c4-4642-97a1-6c7d10f8142b",
+      "referenceNetCents": 149177,
+      "resultCents": 149177,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-05-01",
+      "periodKey": "2026-05",
+      "closureId": "clo_2b3ced26-cb85-400c-8503-14c1df084955",
+      "referenceNetCents": 174461,
+      "resultCents": 174461,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-06-01",
+      "periodKey": "2026-06",
+      "closureId": "clo_64f4c9f3-9ae7-4ab0-bba0-91e64b27e7aa",
+      "referenceNetCents": 185103,
+      "resultCents": 185103,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-07-01",
+      "periodKey": "2026-07",
+      "closureId": "clo_36636034-c378-487f-b9ea-df4b9869e534",
+      "referenceNetCents": -113479,
+      "resultCents": -113479,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-08-01",
+      "periodKey": "2026-08",
+      "closureId": "clo_fa2dda5b-8c02-451e-b316-abbf40160338",
+      "referenceNetCents": 169367,
+      "resultCents": 169367,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-09-01",
+      "periodKey": "2026-09",
+      "closureId": "clo_049a64d5-7750-4a8f-83d1-30a073f30760",
+      "referenceNetCents": 183115,
+      "resultCents": 183115,
+      "same": true
+    },
+    {
+      "ref": "LIEN-E9D0FFEAB6:2026-10-01",
+      "periodKey": "2026-10",
+      "closureId": "clo_babc725b-e560-429c-a6de-30096673a481",
+      "referenceNetCents": 21353,
+      "resultCents": 21353,
+      "same": true
+    },
+    {
+      "ref": "USR-L-FA000002:2026-10-01",
+      "periodKey": "2026-10",
+      "closureId": "clo_d3c70d63-c908-419a-aeff-d6762b5c1e06",
+      "referenceNetCents": 89500,
+      "resultCents": 89500,
+      "same": true
+    },
+    {
+      "ref": "USR-L-A7260001:2026-10-01",
+      "periodKey": "2026-10",
+      "closureId": "clo_6708369d-1fe7-438e-8366-b9c0b9d8928c",
+      "referenceNetCents": 31000,
+      "resultCents": 31000,
+      "same": true
+    },
+    {
+      "ref": "USR-L-A7260002:2026-10-01",
+      "periodKey": "2026-10",
+      "closureId": "clo_923680a4-bc2a-4169-99d0-92da02051e31",
+      "referenceNetCents": 54700,
+      "resultCents": 54700,
+      "same": true
+    },
+    {
+      "ref": "USR-L-A7260007:2026-10-01",
+      "periodKey": "2026-10",
+      "closureId": "clo_de4d19a5-a4c5-40ab-be38-cdd14815407b",
+      "referenceNetCents": 79500,
+      "resultCents": 79500,
+      "same": true
+    },
+    {
+      "ref": "USR-L-A7260008:2026-10-01",
+      "periodKey": "2026-10",
+      "closureId": "clo_b6581a29-6b08-4300-b5a9-4c5867474ece",
+      "referenceNetCents": 232300,
+      "resultCents": 232300,
+      "same": true
+    },
+    {
+      "ref": "USR-L-6309FB40:2026-05-01",
+      "periodKey": "2026-05",
+      "closureId": "clo_502410b1-c3d7-4314-b7b2-d58907cacec6",
+      "referenceNetCents": 130000,
+      "resultCents": 130000,
+      "same": true
+    },
+    {
+      "ref": "USR-L-6309FB40:2026-06-01",
+      "periodKey": "2026-06",
+      "closureId": "clo_eeeb44e3-c48d-4b75-82eb-36da2557cbe4",
+      "referenceNetCents": 60000,
+      "resultCents": 60000,
+      "same": true
+    },
+    {
+      "ref": "USR-L-6309FB40:2026-07-01",
+      "periodKey": "2026-07",
+      "closureId": "clo_a19cee37-afe9-471c-b0c0-e55e8b20b10b",
+      "referenceNetCents": -40000,
+      "resultCents": -40000,
+      "same": true
+    },
+    {
+      "ref": "USR-L-6309FB40:2026-08-01",
+      "periodKey": "2026-08",
+      "closureId": "clo_91e9451f-3d60-4ddc-9135-4764240567ea",
+      "referenceNetCents": 200000,
+      "resultCents": 200000,
+      "same": true
+    },
+    {
+      "ref": "USR-L-6309FB40:2026-09-01",
+      "periodKey": "2026-09",
+      "closureId": "clo_7f23d54a-f5da-4fb7-8ede-294e4c833912",
+      "referenceNetCents": 90000,
+      "resultCents": 90000,
+      "same": true
+    },
+    {
+      "ref": "USR-L-6309FB40:2026-10-01",
+      "periodKey": "2026-10",
+      "closureId": "clo_0f53d620-9bab-44e8-b9c2-db92ba37e4eb",
+      "referenceNetCents": 800000,
+      "resultCents": 800000,
+      "same": true
+    }
+  ],
+  "backup": "/Users/rjsconseil/Documents/Claude/GitHub/RJS_Forecast_Socle/api/data/store.before-rjs-forecast-2026-11-05T12-09-35-512Z.json",
+  "integrity": "Tous les contrôles d’intégrité passent.",
+  "finishedAt": "2026-11-05T12:09:37.386Z",
+  "revision": 103
+}

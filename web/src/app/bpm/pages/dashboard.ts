@@ -8,7 +8,7 @@ import { CenterRow, EntryInput, Recurrence, RegisterLine } from '../../core/bpm-
 import { cents, CentsPipe, euros, figureValue, percentText, ShortDatePipe, signedCents, SignedCentsPipe } from '../../core/format';
 import { ClosingPreview } from '../../core/models';
 import { MetricDetail, MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmLineDetail, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmRefresh, BpmState, bpmLoader, newRequestKey } from '../ui';
+import { BpmLineDetail, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmRefresh, BpmState, bpmLoader, newRequestKey, overCapsOf } from '../ui';
 import { BpmDashboardHistory } from './dashboard-history';
 import { BpmDashboardWealth, BpmSetupNeeded, setupProblem } from './dashboard-parts';
 
@@ -57,6 +57,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
       (periodChange)="goPeriod($event)"
     >
       <button actions type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée ou une charge</button>
+      <a actions class="bpm-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
       <a actions class="bpm-link" routerLink="/depenses" [queryParams]="carry()">Dépenses de la période →</a>
 
       <div class="bpm-money bpm-money-body" data-tone="budget">
@@ -145,6 +146,17 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
               [carry]="carry()"
             />
           </section>
+
+          <!-- Plafonds dépassés (postes et catégories, lus indépendamment) : signalés en rouge, jamais bloquants -->
+          @if (overCaps().length) {
+            <p class="bm-caps-alert" role="status">
+              <strong>{{ overCaps().length }} plafond{{ overCaps().length > 1 ? 's' : '' }} dépassé{{ overCaps().length > 1 ? 's' : '' }}</strong>
+              @for (o of overCaps(); track o.key) {
+                <span>{{ o.level }} « {{ o.label }} » <strong>+{{ o.overCents | cents }}</strong></span>
+              }
+              <a routerLink="/plafonds" [queryParams]="carry()">Voir les plafonds →</a>
+            </p>
+          }
 
           <!-- 2. Budget de la période : entrées, charges (avec le zoom sur les postes) et projets -->
           <section class="bm-budget-frame" aria-labelledby="bm-budget-title" data-ui-pattern="panel">
@@ -500,6 +512,9 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
   `,
   styles: `
     :host { display: block; }
+    .bm-caps-alert { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ecart-6) var(--ecart-12); margin: 0; padding: var(--ecart-10) var(--ecart-16); border: 1px solid color-mix(in srgb, var(--status-danger) 40%, var(--line)); border-radius: var(--radius-sm); background: var(--status-danger-surface); color: var(--status-danger); }
+    .bm-caps-alert > span { color: var(--ink); }
+    .bm-caps-alert a { margin-left: auto; font-weight: var(--fw-semibold); }
     .bm-head-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ecart-8); }
     .bm-statement-head h2 { margin: 0; font-size: var(--fs-lg); }
     /* Corps d'un tiroir, comme l'hôte des listes source (rjs-bpm-income-list / rjs-bpm-period-expenses). */
@@ -535,6 +550,8 @@ export class BpmDashboard {
   protected recurrences = bpmLoader(() => 0, () => this.bpm.recurrences());
   protected lifeProjects = bpmLoader(() => 0, () => this.api.lifeProjects());
   protected centers = bpmLoader(() => this.period(), (p) => this.bpm.centers({ period: p, direction: 'charge' }));
+  /** Plafonds dépassés de la période, lus avec le registre (aucune lecture de plus). */
+  protected overCaps = computed(() => overCapsOf(this.register.data()?.caps, (ref) => this.centers.data()?.rows.find((r) => r.ref === ref)?.label));
 
   protected info = computed(() => this.summary.data()?.context ?? null);
   protected problem = computed(() => setupProblem(this.summary.error()));
@@ -826,7 +843,7 @@ export class BpmDashboard {
     if (r.paidCents === 0) parts.push('Sans paiement encore');
     if (r.remainingCents > 0) parts.push(`+ ${cents(r.remainingCents)} encore prévus`);
     if (r.sharePct !== null && r.paidCents > 0) parts.push(`${percentText(r.sharePct)} ${basis === 'received' ? 'des entrées' : 'des dépenses'}`);
-    if (r.capCents !== null) parts.push(`plafond ${cents(r.capCents)}`);
+    if (r.capCents !== null) parts.push(r.marginCents !== null && r.marginCents < 0 ? `plafond ${cents(r.capCents)} dépassé de ${cents(-r.marginCents)}` : `plafond ${cents(r.capCents)}`);
     return parts.join(' · ');
   }
   protected incomeReminder = computed(() => {

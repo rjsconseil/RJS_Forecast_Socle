@@ -5,6 +5,7 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { LineDetail, RegisterLine } from '../../core/bpm-models';
 import { cents, parseAmount, shortDate, signedCents } from '../../core/format';
 import { ModalComponent } from '../../shared/modal.component';
+import { withCapAlerts } from './caps';
 import { bpmLoader, BpmRefresh, newRequestKey } from './page-context';
 import { BpmState } from './state';
 
@@ -43,6 +44,9 @@ import { BpmState } from './state';
             <dl>
               <div><dt>Budget / projet</dt><dd>{{ v.line.budgetRole === 'life' ? 'Budget du projet de vie' : v.line.budgetName }}</dd></div>
               <div><dt>Centre</dt><dd>{{ v.line.costCenterLabel ?? 'À préciser' }}</dd></div>
+              @if (v.line.direction === 'charge') {
+                <div><dt>Catégorie</dt><dd>{{ v.line.categoryLabel ?? 'Sans catégorie' }}</dd></div>
+              }
               <div><dt>Tâche</dt><dd>{{ v.line.taskTitle ?? '—' }}</dd></div>
               <div><dt>Date prévue</dt><dd>{{ date(v.line.plannedDate) }}</dd></div>
               <div><dt>Montant prévu</dt><dd class="num">{{ c(v.line.plannedCents) }}</dd></div>
@@ -171,12 +175,12 @@ export class BpmLineDetail {
     this.actionError.set(null);
     try {
       const body = { realizedDate: this.realDate(), ...(typeof amount === 'number' ? { realizedAmount: amount } : {}) };
-      if (v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate) {
-        await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body });
-      } else {
-        await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body });
-      }
-      this.message.set(v.line.direction === 'income' ? 'Entrée marquée reçue.' : 'Charge marquée payée.');
+      const r =
+        v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate
+          ? await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body })
+          : await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body });
+      // Un plafond dépassé est signalé, jamais bloquant : le règlement est enregistré.
+      this.message.set(withCapAlerts(v.line.direction === 'income' ? 'Entrée marquée reçue.' : 'Charge marquée payée.', r.capAlerts));
       this.settleKey = newRequestKey('settle');
       this.refresh.bump();
     } catch (e) {

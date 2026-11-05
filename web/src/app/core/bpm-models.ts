@@ -1,3 +1,4 @@
+import type { CategoryCapRow, CenterCapRow, RegisterCaps } from './bpm-caps.models';
 // Contrats de lecture BPM (API `/api/bpm/*`). Tous les montants `…Cents` sont des centimes entiers ;
 // `null` est une valeur inconnue, jamais zéro. Chaque lecture porte son contexte commun.
 import { Period } from './models';
@@ -25,6 +26,8 @@ export interface BpmContextInfo {
   scopeLabel: string;
   budgets: BpmBudgetRef[];
   period: (Period & { index?: number; endExclusive: string }) | null;
+  /** Bornes de navigation : première période du cycle et période courante (seules lisibles). */
+  periods?: { firstKey: string; currentKey: string } | null;
   calculationDate: string;
   revision: number;
   unit: string;
@@ -74,9 +77,14 @@ export interface RegisterLine {
   special?: boolean;
   /** Charge d'un projet de la vie validée comme réglée : comptée dans le budget de vie. */
   projectCharge?: boolean;
+  /** Nature d'une charge (paramètre `bpm.chargesIndispensables`) ; null pour une entrée. */
+  nature?: ChargeNature | null;
   project?: { budgetId: string; coreProjectId: string; name: string };
   costCenterRef: string;
   costCenterLabel: string | null;
+  /** Catégorie personnalisée de la dépense (facultative), rangée dans son centre. */
+  categoryId?: string | null;
+  categoryLabel?: string | null;
   centerKnown: boolean;
   cadence: Cadence;
   cadenceLabel: string;
@@ -99,8 +107,19 @@ export interface RegisterQuery {
   taskId?: string;
   budgetId?: string;
   scope?: 'principal' | 'consolidated';
-  groupBy?: 'center' | 'project' | 'date' | 'none';
+  nature?: ChargeNature | '';
+  /** Catégorie de dépense (`__none__` = sans catégorie). */
+  category?: string;
+  groupBy?: 'center' | 'category' | 'project' | 'nature' | 'date' | 'none';
 }
+
+/** Nature des charges du projet de vie [P] : indispensables, courantes (vie de tous les jours), projets de la vie. */
+export type ChargeNature = 'indispensable' | 'courante' | 'projet';
+export const CHARGE_NATURE_LABEL: Record<ChargeNature, string> = {
+  indispensable: 'Charges indispensables',
+  courante: 'Charges courantes',
+  projet: 'Charges des projets de la vie',
+};
 
 export interface BpmRegister {
   context: BpmContextInfo;
@@ -115,6 +134,8 @@ export interface BpmRegister {
     netPlannedCents?: number;
   };
   groups: { key: string; label: string; plannedCents: number; paidCents: number; toPayCents: number; specialCents?: number; lineIds: string[] }[];
+  /** État des plafonds de la période (budget du projet de vie, période du cycle) ; null sinon. */
+  caps?: RegisterCaps | null;
   lines: RegisterLine[];
 }
 
@@ -174,6 +195,10 @@ export interface BpmCenterDetail {
   basis: BpmCenters['basis'];
   lines: RegisterLine[];
   totals: BpmRegister['totals'];
+  /** Plafond du centre sur la période (charges seulement) et catégories rangées dans ce centre. */
+  cap: CenterCapRow | null;
+  categories: CategoryCapRow[];
+  lifeBudget: { budgetId: string; revision: number };
 }
 
 export interface BpmIncomes {
@@ -393,6 +418,7 @@ export interface EntryInput {
   realizedAmount?: number;
   note?: string | null;
   taskId?: string | null;
+  categoryId?: string | null;
 }
 
 export interface SetupProfile {

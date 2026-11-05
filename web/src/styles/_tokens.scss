@@ -105,7 +105,8 @@
   --page-padding-top: var(--ecart-24);
   --page-padding-bottom: var(--ecart-80);
   --landing-padding-bottom: var(--ecart-96);
-  /* --page-max-width : valeur livrée par le contrat (pattern page), cadre de lecture centré. */
+  /* Le contenu des pages prend toute la largeur disponible (la valeur du contrat, 1600px, est levée ici). */
+  --page-max-width: none;
   --page-wide-max-width: none;
   --page-head-direction: row;
   --page-head-align: flex-end;

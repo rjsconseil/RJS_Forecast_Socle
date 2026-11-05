@@ -7,6 +7,8 @@ import { check } from '../../socle/object-management/inspect.mjs';
 import { date, expectedRevisionOf, integer, money, oneOf, text } from '../../socle/validation.mjs';
 import { CADENCES } from '../budget/recurrence.mjs';
 import { createReads, DEFAULT_VISION, percent } from './reads.mjs';
+import { createLife } from './life.mjs';
+import { essentialsParameter } from './natures.mjs';
 import { GOAL_TYPES } from './projection.mjs';
 import { createProjects, cycleChecks, inRegime, projectBudget, projectExtensions, projectVariables } from './projects.mjs';
 import { cycleBounds, dayBefore, indexOfKey, periodByIndex, periodByKey, periodsPage, today } from './periods.mjs';
@@ -226,6 +228,8 @@ export default {
         }
       },
     },
+    // Nature des charges du projet de vie (indispensables / courantes / projets) : voir natures.mjs.
+    essentialsParameter,
   ],
 
   variables: projectVariables,
@@ -432,7 +436,10 @@ export default {
     });
 
     // Projets de la vie : budget attribué, ventilation, dépassements, retours (voir projects.mjs).
-    const projects = createProjects(socle, { requireComposition, cycleState });
+    const projects = createProjects(socle, { requireComposition, cycleState, figuresFor });
+
+    // Gestion du projet de vie : lecture de pilotage du projet unique (voir life.mjs).
+    const life = createLife(socle, { figuresFor, closuresOf, closingOf }, reads, projects);
 
     /** Hypothèses de vision validées (pourcentages, montants en centimes). */
     function visionFields(current, input = {}) {
@@ -466,6 +473,7 @@ export default {
       metricContext: (state, userId, options) => metricContext(state, userId, socle, options),
       reads,
       projects,
+      life,
 
       async updateVision(ctx, input = {}) {
         await om.command('updateVision', ctx, input, (tx) => {
@@ -956,6 +964,17 @@ export default {
     const s = socle.modules.bpm;
     const { budget, patrimoine } = socle.modules;
     const lifeBudgetId = (ctx) => socle.modules.bpm.compositionOf(socle.state, socle.om.requireUser(socle.state, ctx))?.budgetId;
+    /** Ajoute les plafonds dépassés touchés par la dépense écrite : information, jamais un refus. */
+    const withCapAlerts = (ctx, r) => {
+      const x = r?.operation ?? r?.recurrence;
+      if (!x) return r;
+      try {
+        const alerts = s.reads.capAlertsFor(ctx, { date: x.realizedDate ?? x.date ?? x.firstDate, costCenterRef: x.costCenterRef, categoryId: x.categoryId, direction: x.direction });
+        return { ...r, capAlerts: alerts };
+      } catch {
+        return { ...r, capAlerts: [] };
+      }
+    };
     return [
       ['GET', '/api/bpm/dashboard', ({ ctx, query }) => s.dashboard(ctx, { periodKey: query.get('period') || undefined })],
       ['GET', '/api/bpm/figures/:key', ({ ctx, params, query }) => s.figure(ctx, params.key, { periodKey: query.get('period') || undefined })],
@@ -973,6 +992,7 @@ export default {
       ['GET', '/api/bpm/events', ({ ctx }) => s.reads.events(ctx)],
       ['GET', '/api/bpm/directives', ({ ctx }) => s.reads.directives(ctx)],
       ['GET', '/api/bpm/projection', ({ ctx, query }) => s.reads.projection(ctx, Object.fromEntries(query))],
+      ['GET', '/api/bpm/life-management', ({ ctx, query }) => s.life.lifeManagement(ctx, { periodKey: query.get('period') || undefined })],
       ['POST', '/api/bpm/operations/preview', ({ ctx, body }) => s.reads.previewEntry(ctx, body)],
       ['PUT', '/api/bpm/vision', ({ ctx, body }) => s.updateVision(ctx, body)],
       ['GET', '/api/bpm/goals', ({ ctx }) => s.goals(ctx)],
@@ -982,11 +1002,17 @@ export default {
       ['GET', '/api/bpm/setup', ({ ctx }) => s.setupProfile(ctx)],
       ['POST', '/api/bpm/setup', ({ ctx, body }) => s.setupProject(ctx, body)],
       ['GET', '/api/bpm/recurrences', ({ ctx, query }) => budget.recurrences(ctx, { budgetId: query.get('budgetId') || undefined })],
-      ['PUT', '/api/bpm/recurrences/:id', ({ ctx, params, body }) => budget.updateRecurrence(ctx, params.id, body)],
-      ['POST', '/api/bpm/recurrences/:id/settle', ({ ctx, params, body }) => budget.settleOccurrence(ctx, params.id, body)],
-      ['PUT', '/api/bpm/operations/:id', ({ ctx, params, body }) => budget.updateOperation(ctx, params.id, body)],
+      ['PUT', '/api/bpm/recurrences/:id', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.updateRecurrence(ctx, params.id, body))],
+      ['POST', '/api/bpm/recurrences/:id/settle', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.settleOccurrence(ctx, params.id, body))],
+      ['PUT', '/api/bpm/operations/:id', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.updateOperation(ctx, params.id, body))],
       ['POST', '/api/bpm/operations/:id/cancel-realization', ({ ctx, params, body }) => budget.cancelRealization(ctx, params.id, body)],
       ['PUT', '/api/bpm/caps', ({ ctx, body }) => budget.setCaps(ctx, lifeBudgetId(ctx), body)],
+      // Plafonds de dépenses : centres de coût et catégories personnalisées (jamais bloquants).
+      ['GET', '/api/bpm/spending-caps', ({ ctx, query }) => s.reads.spendingCaps(ctx, Object.fromEntries(query))],
+      ['GET', '/api/bpm/caps-review', ({ ctx, query }) => s.reads.capsReview(ctx, Object.fromEntries(query))],
+      ['GET', '/api/bpm/categories', ({ ctx, query }) => budget.categories(ctx, { archived: query.get('archived') === 'true' })],
+      ['POST', '/api/bpm/categories', ({ ctx, body }) => budget.createCategory(ctx, body)],
+      ['PUT', '/api/bpm/categories/:id', ({ ctx, params, body }) => budget.updateCategory(ctx, params.id, body)],
       ['GET', '/api/bpm/periods', ({ ctx, query }) => s.periods(ctx, { before: query.get('before') ?? undefined, limit: query.get('limit') ?? undefined })],
       ['GET', '/api/bpm/closures/preview', ({ ctx, query }) => s.closingPreview(ctx, query.get('period'))],
       ['GET', '/api/bpm/preparation', ({ ctx }) => s.preparation(ctx)],
@@ -1014,8 +1040,8 @@ export default {
       ['GET', '/api/bpm/cost-centers', ({ ctx }) => budget.costCenters(ctx)],
       ['POST', '/api/bpm/cost-centers', ({ ctx, body }) => budget.addCustomCostCenter(ctx, body)],
       // Éditeur partagé : ponctuelle ou récurrente ; Budget du projet de vie par défaut, ou une branche du user.
-      ['POST', '/api/bpm/operations', ({ ctx, body }) => budget.createEntry(ctx, { ...body, budgetId: body?.budgetId || lifeBudgetId(ctx) })],
-      ['POST', '/api/bpm/operations/:id/realize', ({ ctx, params, body }) => budget.realizeOperation(ctx, params.id, body)],
+      ['POST', '/api/bpm/operations', async ({ ctx, body }) => withCapAlerts(ctx, await budget.createEntry(ctx, { ...body, budgetId: body?.budgetId || lifeBudgetId(ctx) }))],
+      ['POST', '/api/bpm/operations/:id/realize', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.realizeOperation(ctx, params.id, body))],
       ['PUT', '/api/bpm/patrimoine', ({ ctx, body }) => patrimoine.updatePatrimoine(ctx, socle.modules.bpm.compositionOf(socle.state, socle.om.requireUser(socle.state, ctx))?.patrimoineId, body)],
     ];
   },

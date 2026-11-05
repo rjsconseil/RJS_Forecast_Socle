@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { Cadence, Direction, Recurrence } from '../../core/bpm-models';
@@ -49,7 +50,7 @@ const toCents = (raw: string) => {
  */
 @Component({
   selector: 'bpm-act-budget-type',
-  imports: [BpmState, MetricTilesComponent, CentsPipe, ShortDatePipe],
+  imports: [RouterLink, BpmState, MetricTilesComponent, CentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-month-type.component.scss'],
   template: `
     <section class="bm-month" data-bpm-frame="form" id="budget-type" aria-labelledby="bm-month-title">
@@ -165,7 +166,8 @@ const toCents = (raw: string) => {
                 }
               </div>
             </fieldset>
-            <p class="bpm-help">Un champ vide retire le plafond. Les plafonds s'appliquent au Budget du projet de vie ; la marge = plafond − payé − restant prévu.</p>
+            <p class="bpm-help">Un champ vide retire le plafond. Les plafonds s'appliquent au Budget du projet de vie ; la marge = plafond − payé − restant prévu. Un dépassement est signalé en rouge, jamais bloquant.</p>
+            <p class="bpm-help">Plafonds plus fins, par catégorie de dépense rangée dans un centre : <a routerLink="/plafonds">Plafonds &amp; catégories →</a></p>
             <div class="bpm-actions">
               <button type="button" class="btn btn-secondary" (click)="saveCaps()" [disabled]="capsBusy() || !capsDirty()">{{ capsBusy() ? 'Enregistrement…' : 'Enregistrer les plafonds' }}</button>
             </div>

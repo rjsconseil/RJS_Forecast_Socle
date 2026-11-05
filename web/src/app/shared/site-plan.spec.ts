@@ -11,6 +11,8 @@ describe('plan du site', () => {
     expect(locate('/')).toMatchObject({ kind: 'portal', zone: null });
     expect(locate('/piloter/agir')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'agir' } });
     expect(locate('/piloter')).toMatchObject({ page: { id: 'piloter' } });
+    expect(locate('/projet-de-vie')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'projet-de-vie' } });
+    expect(locate('/plafonds')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'plafonds', label: 'Plafonds & catégories' } });
     expect(locate('/argent/postes/std%3Alogement')).toMatchObject({ kind: 'detail', section: { id: 'vision' } });
     expect(locate('/tasks')).toMatchObject({ zone: { id: 'noyau' }, section: { id: 'taches' } });
     expect(locate('/projects/abc')).toMatchObject({ kind: 'detail', detailLabel: 'Détail du projet' });

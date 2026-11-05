@@ -1,0 +1,172 @@
+@use 'functions' as *;
+
+// Plafonds & catégories : deux niveaux lus indépendamment (centre de coût, catégorie), jamais bloquants.
+
+.caps-section {
+  display: grid;
+  gap: var(--ecart-12);
+}
+
+.caps-message {
+  margin: 0;
+  padding: var(--ecart-10) var(--ecart-16);
+  border-radius: var(--radius-sm);
+  background: var(--status-success-surface);
+  color: var(--status-success);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+
+  &[data-state='danger'] {
+    background: var(--status-danger-surface);
+    color: var(--status-danger);
+  }
+}
+
+// Plafonds dépassés : en rouge, sans bloquer.
+.caps-alerts {
+  display: grid;
+  gap: var(--ecart-6);
+  padding: var(--ecart-12) var(--ecart-16);
+  border: 1px solid color-mix(in srgb, var(--status-danger) 40%, var(--line));
+  border-radius: var(--radius-sm);
+  background: var(--status-danger-surface);
+  color: var(--status-danger);
+
+  ul {
+    margin: 0;
+    padding-left: var(--ecart-20);
+  }
+  li[data-level='category'] {
+    list-style: circle;
+  }
+  small {
+    color: var(--ink);
+  }
+}
+
+.caps-table {
+  th small {
+    display: block;
+    color: var(--muted);
+    font-size: scaled(var(--fs-xs));
+    font-weight: var(--fw-regular, 400);
+  }
+  tr[data-tone='over'] > th,
+  tr[data-tone='over'] .num strong {
+    color: var(--status-danger);
+  }
+  tr.is-archived > * {
+    opacity: 0.7;
+  }
+  .is-over {
+    color: var(--status-danger);
+    font-weight: var(--fw-semibold);
+  }
+}
+
+.caps-input {
+  width: 8.5rem;
+  min-height: 2.25rem;
+  text-align: right;
+}
+.caps-label {
+  width: min(16rem, 100%);
+  text-align: left;
+}
+
+// État d'un niveau : sans plafond, dans le plafond, proche, dépassé.
+.caps-state {
+  display: inline-flex;
+  padding: 1px var(--ecart-8);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--line) 30%, var(--raised-surface));
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+
+  &[data-tone='ok'] {
+    background: var(--status-success-surface);
+    color: var(--status-success);
+  }
+  &[data-tone='near'] {
+    background: var(--status-warning-surface);
+    color: var(--status-warning);
+  }
+  &[data-tone='over'] {
+    background: var(--status-danger-surface);
+    color: var(--status-danger);
+  }
+}
+
+// Consommation du plafond (barre horizontale, plafonnée à 100 %).
+.caps-meter {
+  --meter: var(--status-success);
+  position: relative;
+  display: inline-block;
+  width: 6.5rem;
+  height: 8px;
+  margin-right: var(--ecart-6);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--meter) 18%, transparent);
+  overflow: hidden;
+  vertical-align: middle;
+
+  > span {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 4px;
+    background: var(--meter);
+  }
+  &[data-tone='near'] {
+    --meter: var(--status-warning);
+  }
+  &[data-tone='over'] {
+    --meter: var(--status-danger);
+  }
+}
+.caps-meter-none {
+  color: var(--muted);
+}
+
+.caps-row-actions {
+  white-space: nowrap;
+
+  > * + * {
+    margin-left: var(--ecart-8);
+  }
+}
+
+// Création d'une catégorie : nom, centre, plafond, bouton.
+.caps-create {
+  display: grid;
+  grid-template-columns: minmax(12rem, 2fr) minmax(10rem, 1.4fr) minmax(8rem, 1fr) auto;
+  gap: var(--ecart-12);
+  align-items: end;
+  padding: var(--ecart-12);
+  border: 1px dashed color-mix(in srgb, var(--app-accent) 35%, var(--line));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--app-accent) 4%, var(--raised-surface));
+
+  label {
+    display: grid;
+    gap: var(--ecart-4, 4px);
+    font-size: scaled(var(--fs-sm));
+    font-weight: var(--fw-semibold);
+  }
+  input,
+  select {
+    min-height: 2.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .caps-create {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .caps-create {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -82,11 +82,59 @@ export interface ProjectOverrun {
   coreProjectId: string | null;
 }
 
+/** Variante du budget d'un projet : `standard` (projet de la vie financé) ou `life` (projet de vie, non standard). */
+export type ProjectBudgetKind = 'standard' | 'life';
+
+export interface LifeFundingRow {
+  budgetId: string;
+  coreProjectId: string;
+  name: string;
+  regime: boolean;
+  state: ProjectBudgetState;
+  allocationCents: number | null;
+  initialAllocationCents: number | null;
+  allocationDate: string | null;
+  allocationPeriodKey: string | null;
+  approvedOverrunCents: number;
+  billedOverrunCents: number;
+  pendingOverrunCents: number;
+  paidCents: number;
+  remainingCents: number | null;
+  byPeriod: Record<string, number>;
+  overruns: { id: string; status: ProjectOverrun['status']; statusLabel: string; amountCents: number; periodKey: string | null; billingDate: string | null }[];
+}
+
+/** Financement des projets fils par le budget de vie, cycle par cycle. */
+export interface LifeFunding {
+  periods: { key: string; label: string; start: string; end: string; status: string }[];
+  rows: LifeFundingRow[];
+  totals: { byPeriod: Record<string, number>; paidCents: number; allocatedCents: number };
+}
+
+/** Extension de la variante non standard : accès au projet de vie, au patrimoine, au cycle et aux budgets fils. */
+export interface LifeBudgetExtension {
+  unique: true;
+  compositionId: string;
+  lifeProjectId: string;
+  patrimoineId: string;
+  patrimoine: { stockCents: number | null; objectiveCents: number | null; openingStockCents: number | null };
+  period: { key: string; label: string; start: string; end: string } | null;
+  expectedCents: number | null;
+  projectsPaidCents: number | null;
+  childCount: number;
+  fundedCount: number;
+  children: ProjectBudget[];
+  funding: LifeFunding | null;
+}
+
 export interface ProjectBudget {
   budgetId: string;
+  /** Paramètre différenciant : `life` = projet de vie unique, non standard, rattaché au patrimoine. */
+  kind: ProjectBudgetKind;
+  nonStandard: boolean;
   name: string;
   coreProjectId: string;
-  parentBudgetId: string;
+  parentBudgetId: string | null;
   revision: number;
   regime: boolean;
   taskFundingRequired: boolean;
@@ -114,7 +162,10 @@ export interface ProjectBudget {
   byTask: Record<string, { engagedCents: number; paidCents: number; unbounded: boolean }>;
   shares: Record<string, number>;
   returns: Record<string, TaskReturn>;
+  life: LifeBudgetExtension | null;
 }
+
+export const isLifeBudget = (b: ProjectBudget | null | undefined): b is ProjectBudget & { life: LifeBudgetExtension } => !!b && b.kind === 'life' && !!b.life;
 
 export interface ProjectsContext {
   user: { id: string; label: string; userType: string };

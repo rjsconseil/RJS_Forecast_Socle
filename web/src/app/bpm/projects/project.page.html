@@ -807,78 +807,147 @@
       </div>
     }
     @if (d.role === 'life' && d.life; as l) {
-      <section class="bpm-section" aria-labelledby="life-title">
-        <header>
-          <h2 id="life-title">Projets financés par le budget de vie</h2>
-          <p>
-            Le budget de vie attribue un montant à chaque projet standard et décide de leurs
-            dépassements.
-          </p>
-        </header>
-        @for (o of l.pendingRequests; track o.id) {
-          <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
-        }
-        @if (l.billable.length) {
-          <div class="bpm-overrun">
-            <p>
-              <strong>Fin de cycle :</strong> {{ l.billableCents | cents }} de dépassement(s)
-              autorisé(s) à facturer au budget de vie.
-            </p>
-            <div class="bpm-actions">
-              <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="bill()">
-                Facturer au budget de vie
-              </button>
+      <!-- Variante non standard : même cockpit qu'un projet standard, lu sur les ressources du cycle en cours. -->
+      @if (d.budget; as b) {
+        <section class="project-cockpit life-project-cockpit" aria-label="Chiffres clés du budget de vie">
+          <div class="cockpit-body">
+            <div class="life-summary project-summary-band">
+              <section class="cockpit-progress" aria-labelledby="life-identity-title">
+                <div class="cockpit-section-heading">
+                  <h2 id="life-identity-title">Projet non standard</h2>
+                  <strong>{{ b.life?.period?.label ?? 'Cycle à configurer' }}</strong>
+                </div>
+                <dl class="cockpit-facts">
+                  <div>
+                    <dt>Projet de vie</dt>
+                    <dd>Unique · racine du budget de vie</dd>
+                  </div>
+                  <div>
+                    <dt>Patrimoine</dt>
+                    <dd>{{ b.life?.patrimoine?.stockCents | cents }}</dd>
+                  </div>
+                  <div>
+                    <dt>Projets de la vie</dt>
+                    <dd>{{ b.life?.fundedCount ?? 0 }} financé(s) sur {{ b.life?.childCount ?? 0 }}</dd>
+                  </div>
+                </dl>
+                <a class="text-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
+              </section>
+              <dl class="life-financial-stats" aria-label="Chiffres essentiels du budget de vie">
+                @for (tile of budgetTiles(); track tile.id) {
+                  <div class="life-financial-stat" [attr.data-tone]="tile.tone">
+                    <dt>{{ tile.label }}</dt>
+                    <dd>{{ tile.value }}</dd>
+                    <span>{{ tile.note }}</span>
+                  </div>
+                }
+              </dl>
+            </div>
+            <div class="cockpit-details">
+              <details class="cockpit-disclosure">
+                <summary>Ventilation vers les projets & cycle actuel</summary>
+                <div class="cockpit-disclosure-body">
+                  <dl class="cockpit-facts">
+                    <div>
+                      <dt>Accordé aux projets</dt>
+                      <dd>{{ b.sharesCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Budget initial du cycle</dt>
+                      <dd>{{ b.availableCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Solde attendu</dt>
+                      <dd>{{ b.life?.expectedCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Demandes de tâches en attente</dt>
+                      <dd>{{ b.pendingRequestsCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Dépassements autorisés</dt>
+                      <dd>{{ b.approvedOverrunCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Charges propres du budget de vie</dt>
+                      <dd>{{ b.unsharedChargesCents | cents }}</dd>
+                    </div>
+                  </dl>
+                  <p class="bpm-note">
+                    Le budget de vie ne reçoit pas d’enveloppe : ses ressources sont les entrées du cycle. Il attribue une
+                    enveloppe à chacun de ses projets, décide de leurs dépassements et les facture en fin de cycle.
+                  </p>
+                </div>
+              </details>
+              @for (o of l.pendingRequests; track o.id) {
+                <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
+              }
+              @if (l.billable.length) {
+                <div class="bpm-overrun">
+                  <p>
+                    <strong>Fin de cycle :</strong> {{ l.billableCents | cents }} de dépassement(s)
+                    autorisé(s) à facturer au budget de vie.
+                  </p>
+                  <div class="bpm-actions">
+                    <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="bill()">
+                      Facturer au budget de vie
+                    </button>
+                  </div>
+                </div>
+              }
+              <details class="cockpit-disclosure">
+                <summary>Contrôles & fin de cycle ({{ d.overruns.length }} dépassement{{ d.overruns.length > 1 ? 's' : '' }})</summary>
+                <div class="cockpit-disclosure-body">
+                  @if (d.overruns.length) {
+                    <div class="bpm-table-wrap">
+                      <table class="bpm-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Demandé le</th>
+                            <th scope="col">Projet</th>
+                            <th scope="col">Objet</th>
+                            <th scope="col" class="num">Montant</th>
+                            <th scope="col">Décision</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (o of d.overruns; track o.id) {
+                            <tr>
+                              <td>{{ o.requestedAt | shortDate }}</td>
+                              <td>{{ o.budgetName }}</td>
+                              <td>{{ o.reasonLabel }}@if (o.taskTitle) { · {{ o.taskTitle }} }</td>
+                              <td class="num">{{ o.amountCents | cents }}</td>
+                              <td>{{ o.statusLabel }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  } @else {
+                    <p class="bpm-note">Aucun dépassement demandé par ses projets.</p>
+                  }
+                  @if (d.checks.length) {
+                    <ul class="bpm-checks" aria-label="Contrôles de fin de cycle">
+                      @for (c of d.checks; track $index) {
+                        <li [attr.data-level]="c.level">{{ c.message }}</li>
+                      }
+                    </ul>
+                  }
+                </div>
+              </details>
             </div>
           </div>
-        }
-        <div class="bpm-table-wrap">
-          <table class="bpm-table">
-            <thead>
-              <tr>
-                <th scope="col">Projet</th>
-                <th scope="col" class="num">Attribué</th>
-                <th scope="col" class="num">Ventilé</th>
-                <th scope="col" class="num">Réglé validé</th>
-                <th scope="col" class="num">Reste</th>
-                <th scope="col">État</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (p of l.projects; track p.projectId) {
-                <tr>
-                  <th scope="row">
-                    <a class="text-link" [routerLink]="['/app/projets', p.projectId]">{{
-                      p.title
-                    }}</a>
-                  </th>
-                  @if (p.budget.regime) {
-                    <td class="num">{{ p.budget.allocationCents | cents }}</td>
-                    <td class="num">{{ p.budget.sharesCents | cents }}</td>
-                    <td class="num">{{ p.budget.paidCents | cents }}</td>
-                    <td class="num">{{ p.budget.remainingCents | cents }}</td>
-                  } @else {
-                    <td class="num">Non attribué</td>
-                    <td class="num">—</td>
-                    <td
-                      class="num"
-                      title="Ses dépenses ne sont pas comptées dans le budget de vie tant qu’aucun montant ne lui est attribué"
-                    >
-                      —
-                    </td>
-                    <td class="num">—</td>
-                  }
-                  <td><bpm-budget-state [state]="p.budget.state" /></td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="6">
-                    Aucun projet standard : budgétez un projet du noyau depuis Projets de la vie.
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+        </section>
+      }
+      <section class="bpm-section" aria-labelledby="life-title">
+        <header>
+          <h2 id="life-title">Financement des projets de la vie</h2>
+          <p>
+            Le budget de vie porte tous les projets de la vie qui lui sont rattachés : enveloppe de chacun, cycle où
+            elle a été attribuée et montants remontés période par période.
+          </p>
+        </header>
+        <bpm-life-funding [funding]="d.budget?.life?.funding ?? null" [highlight]="d.context.period?.key ?? null" />
         @if (d.tasks.length) {
           <p class="bpm-note">
             {{ d.tasks.length }} tâche(s) reliée(s) directement à la racine du projet de vie, hors

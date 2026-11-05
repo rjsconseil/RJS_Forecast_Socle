@@ -19,8 +19,10 @@ export const routes: Routes = [
   // ---------- Application BPM : Ma vision budgétaire ----------
   { path: 'tableau-de-bord', title: 'Tableau de bord — RJS Forecast', loadComponent: () => import('./bpm/pages/dashboard').then((m) => m.BpmDashboard) },
   { path: 'depenses', title: 'Dépenses de la période — RJS Forecast', loadComponent: () => import('./bpm/pages/expenses').then((m) => m.BpmExpensesPage) },
+  { path: 'plafonds', title: 'Plafonds & catégories — RJS Forecast', loadComponent: () => import('./bpm/pages/caps').then((m) => m.BpmCapsPage) },
   { path: 'piloter', title: 'Graphiques et chiffres — RJS Forecast', loadComponent: () => import('./bpm/pages/pilot').then((m) => m.BpmPilotPage) },
   { path: 'piloter/agir', title: "Ce qu'il faut faire — RJS Forecast", loadComponent: () => import('./bpm/pages/act').then((m) => m.BpmActPage) },
+  { path: 'projet-de-vie', title: 'Gestion du projet de vie — RJS Forecast', loadComponent: () => import('./bpm/life/life-management.page').then((m) => m.BpmLifeManagementPage) },
   { path: 'vision', title: 'Objectifs et avenir — RJS Forecast', loadComponent: () => import('./bpm/pages/vision').then((m) => m.BpmVisionPage) },
 
   // ---------- Sous-pages de détail (atteintes depuis les chiffres, graphes et listes) ----------

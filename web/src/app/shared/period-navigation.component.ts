@@ -8,18 +8,24 @@ import { Params, RouterLink } from '@angular/router';
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './period-navigation.component.scss',
   template: `
-    <nav class="period-navigation bm-period" [attr.aria-label]="label()" [attr.aria-busy]="busy()">
-      <a
-        class="period-nav-arrow period-nav-previous"
-        [routerLink]="[]"
-        [queryParams]="previousQuery()"
-        [attr.aria-label]="previousLabel()"
-        [title]="previousLabel()"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M5 12h14m-6-6 6 6-6 6" />
-        </svg>
-      </a>
+    <nav class="period-navigation bm-period" [class.is-accent]="tone() === 'accent'" [attr.aria-label]="label()" [attr.aria-busy]="busy()">
+      @if (previousDisabled()) {
+        <span class="period-nav-arrow period-nav-previous is-disabled" role="link" aria-disabled="true" [attr.aria-label]="previousLabel()" [title]="previousLimit()">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+        </span>
+      } @else {
+        <a
+          class="period-nav-arrow period-nav-previous"
+          [routerLink]="[]"
+          [queryParams]="previousQuery()"
+          [attr.aria-label]="previousLabel()"
+          [title]="previousLabel()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5 12h14m-6-6 6 6-6 6" />
+          </svg>
+        </a>
+      }
       <a
         class="period-nav-current"
         [routerLink]="[]"
@@ -44,17 +50,23 @@ import { Params, RouterLink } from '@angular/router';
           ><span>{{ compactCurrentLabel() || currentLabel() }}</span></span
         >
       </a>
-      <a
-        class="period-nav-arrow period-nav-next"
-        [routerLink]="[]"
-        [queryParams]="nextQuery()"
-        [attr.aria-label]="nextLabel()"
-        [title]="nextLabel()"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M5 12h14m-6-6 6 6-6 6" />
-        </svg>
-      </a>
+      @if (nextDisabled()) {
+        <span class="period-nav-arrow period-nav-next is-disabled" role="link" aria-disabled="true" [attr.aria-label]="nextLabel()" [title]="nextLimit()">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
+        </span>
+      } @else {
+        <a
+          class="period-nav-arrow period-nav-next"
+          [routerLink]="[]"
+          [queryParams]="nextQuery()"
+          [attr.aria-label]="nextLabel()"
+          [title]="nextLabel()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M5 12h14m-6-6 6 6-6 6" />
+          </svg>
+        </a>
+      }
     </nav>
   `,
 })
@@ -72,6 +84,13 @@ export class PeriodNavigationComponent {
   readonly currentQuery = input.required<Params>();
   readonly status = input('');
   readonly busy = input(false);
+  /** Bornes de lecture : flèche inactive avant la première période du cycle et après la période courante. */
+  readonly previousDisabled = input(false);
+  readonly nextDisabled = input(false);
+  readonly previousLimit = input('Première période du cycle');
+  readonly nextLimit = input('Période en cours : pas de période suivante à lire');
+  /** `accent` : boutons violets, pour un bandeau sombre (Gestion du projet de vie). */
+  readonly tone = input<'default' | 'accent'>('default');
   protected readonly nonEmpty = (value: string) => Boolean(value);
   protected readonly title = computed(() => this.formatTitle(false));
   protected readonly periodParts = computed(() => {

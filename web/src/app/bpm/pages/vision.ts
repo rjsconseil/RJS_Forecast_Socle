@@ -39,6 +39,7 @@ const DEFAULT_TYPES: GoalTypeOption[] = [
       <ng-container actions>
         <button type="button" class="app-hero-action" (click)="openGoal(null)">＋ Ajouter un objectif</button>
         <a class="bpm-link" [routerLink]="[]" queryParamsHandling="preserve" fragment="hypotheses" (click)="openHyp()">Hypothèses →</a>
+        <a class="bpm-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
       </ng-container>
 
       <div class="bpm-vision" data-tone="budget">

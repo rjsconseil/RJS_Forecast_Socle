@@ -25,6 +25,7 @@ import {
 import { COLUMNS, TASK_STATUS_LABEL, TaskStatus } from '../../core/models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
 import { BpmOperationEditor } from '../ui/operation-editor';
+import { BpmLifeFundingComponent } from '../life/life-funding';
 import {
   BpmBudgetStateComponent,
   BpmOverrunRequestComponent,
@@ -80,6 +81,7 @@ interface OverrunFlow {
     BpmOverrunRequestComponent,
     BpmOperationEditor,
     BpmTaskRequestsComponent,
+    BpmLifeFundingComponent,
     BpmProjectEditor,
     BpmTaskEditor,
   ],
@@ -165,6 +167,39 @@ export class BpmProjectPage {
   protected budgetTiles = computed<MetricTile[]>(() => {
     const b = this.data()?.budget;
     if (!b) return [];
+    // Variante non standard (projet de vie) : mêmes tuiles, lues sur les ressources du cycle en cours.
+    if (b.kind === 'life') {
+      return [
+        {
+          id: 'envelope',
+          label: 'Entrées prévues du cycle',
+          value: b.regime ? cents(b.allocationCents) : 'Cycle à configurer',
+          tone: 'accent',
+          note: b.life?.period ? `Ressources du budget de vie · ${b.life.period.label}` : 'Ressources du budget de vie',
+        },
+        {
+          id: 'paid',
+          label: 'Dépensé du cycle',
+          value: cents(b.paidCents),
+          tone: 'danger',
+          note: `dont ${cents(b.life?.projectsPaidCents ?? 0)} remontés par ses projets`,
+        },
+        {
+          id: 'remaining',
+          label: 'Reste sur les entrées',
+          value: cents(b.remainingCents),
+          tone: b.remainingCents === null ? null : b.remainingCents < 0 ? 'danger' : 'success',
+          note: 'Entrées prévues − Dépensé',
+        },
+        {
+          id: 'toPay',
+          label: 'Encore à régler',
+          value: cents(b.toPayCents),
+          tone: 'warning',
+          note: 'Charges prévues du cycle non réglées',
+        },
+      ];
+    }
     return [
       {
         id: 'envelope',

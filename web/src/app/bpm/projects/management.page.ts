@@ -646,6 +646,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                 [routerLink]="['/app/projets', d.context.lifeBudget.coreProjectId]"
                 >Voir le projet de vie ↗</a
               >
+              <a class="text-link" routerLink="/projet-de-vie">Gestion du projet de vie ↗</a>
               <a class="text-link" routerLink="/app/projets">Tableau des projets ↗</a>
               <a class="text-link" routerLink="/app/taches">Tableau des tâches ↗</a>
             </nav>

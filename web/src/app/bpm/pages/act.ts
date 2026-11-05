@@ -58,6 +58,7 @@ export function scrollToAnchor(target: () => string | null = () => null) {
     <bpm-page title="Ce qu’il faut faire" lead="Saisir, vérifier, ajuster." [context]="summary.data()?.context ?? due.data()?.context">
       <ng-container actions>
         <button type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir un flux</button>
+        <a class="bpm-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
         <a class="bpm-link" routerLink="/piloter" [queryParams]="ctx.carry()">Voir les graphiques →</a>
         <a class="bpm-link" routerLink="/depenses" [queryParams]="ctx.carry()">Dépenses →</a>
       </ng-container>

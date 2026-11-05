@@ -427,7 +427,8 @@ async function seedLike() {
   await operation(socle, ctx, { direction: 'income', label: 'Salaire', amount: 3200, date: '2026-08-01' });
   await operation(socle, ctx, { direction: 'charge', label: 'Loyer', amount: 950, date: '2026-08-05', costCenterRef: 'std:logement' });
   await operation(socle, ctx, { direction: 'charge', label: 'Courses', amount: 120, date: '2026-11-20', status: 'planned', costCenterRef: 'std:alimentation' });
-  await socle.modules.budget.createRecurrence(ctx, { requestKey: key(), direction: 'charge', label: 'Abonnement', amount: 15, cadence: 'monthly', firstDate: '2026-09-10', costCenterRef: 'std:loisirs' });
+  const streaming = await socle.modules.budget.createCategory(ctx, { requestKey: key(), label: 'Streaming', costCenterRef: 'std:loisirs', cap: 20 });
+  await socle.modules.budget.createRecurrence(ctx, { requestKey: key(), direction: 'charge', label: 'Abonnement', amount: 15, cadence: 'monthly', firstDate: '2026-09-10', costCenterRef: 'std:loisirs', categoryId: streaming.category.id });
   await socle.modules.bpm.closePeriod(ctx, { requestKey: key(), periodKey: '2026-08' });
   const life = await socle.modules.bpm.createLifeProject(ctx, { requestKey: key(), name: 'Voyage au Japon', tasks: [{ title: 'Réserver les vols', plannedHours: 3 }, { title: 'Demander le visa' }] });
   const generic = await project(socle, ctx, 'Exemple');

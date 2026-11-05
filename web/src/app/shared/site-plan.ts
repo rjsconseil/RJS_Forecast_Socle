@@ -142,7 +142,7 @@ export const PLAN_ZONES: PlanZone[] = [
         acronym: '02',
         label: 'Ma vision budgétaire',
         intention: 'Comprendre · agir · préparer l’avenir',
-        description: 'Lire son budget, comprendre les flux et les dépenses, piloter la période et préparer ses objectifs.',
+        description: 'Piloter le projet de vie : lire son budget, régler l’essentiel, maîtriser les dépenses courantes, suivre les résultats des cycles et préparer ses objectifs.',
         tone: 'nav-iris',
         homeTone: 'nav-lagoon',
         home: 'direct',
@@ -150,7 +150,9 @@ export const PLAN_ZONES: PlanZone[] = [
         space: 'bpm-parcours',
         pages: [
           { id: 'tableau-de-bord', label: 'Tableau de bord', link: '/tableau-de-bord', symbol: '◎', tone: 'nav-blue', description: 'Reçu, dépensé, reste et impact patrimonial : les entrées, charges et projets de votre période, avec le détail de chaque flux.', result: 'Lire votre budget et son impact sur votre patrimoine, puis agir depuis chaque montant.' },
+          { id: 'projet-de-vie', label: 'Gestion du projet de vie', link: '/projet-de-vie', symbol: '◫', tone: 'nav-indigo', description: 'Le projet unique qui englobe tous les autres : cycle en cours, charges indispensables et courantes, projets financés, résultats des cycles, objectif d’excédent et patrimoine.', result: 'Piloter d’un coup d’œil tout le budget de vie et agir sur chaque volet.' },
           { id: 'depenses', label: 'Dépenses de la période', link: '/depenses', symbol: '≡', tone: 'nav-ocean', description: 'Toutes les dépenses effectuées ou attendues, par projet budgétaire, poste et tâche.', result: 'Comprendre chaque dépense et retrouver sa fiche complète.' },
+          { id: 'plafonds', label: 'Plafonds & catégories', link: '/plafonds', symbol: '⌈', tone: 'nav-cobalt', description: 'Un plafond par centre de coût et des catégories de dépenses, rangées dans un centre, avec leur propre plafond.', result: 'Voir ce qui dépasse, au niveau du centre et de la catégorie, sans jamais bloquer une dépense.' },
           { id: 'piloter', label: 'Piloter · Graphiques & chiffres', link: '/piloter', symbol: '◎', tone: 'nav-cobalt', exact: true, description: 'Le bilan de la période : chiffres, graphiques, réel face au prévu, postes et clôtures.', result: 'Comprendre le bilan chiffré de la période.' },
           { id: 'agir', label: 'Piloter · Ce qu’il faut faire', link: '/piloter/agir', symbol: '→', tone: 'nav-indigo', description: 'Les actions utiles de la période, classées par priorité.', result: 'Savoir quoi faire maintenant sur votre budget.' },
           { id: 'vision', label: 'Objectifs & avenir', link: '/vision', symbol: '✦', tone: 'nav-iris', description: 'Vos objectifs et la projection des prochaines périodes.', result: 'Préparer l’avenir à partir des seules données saisies.' },

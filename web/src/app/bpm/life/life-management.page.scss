@@ -1,0 +1,259 @@
+@use 'functions' as *;
+
+// Gestion du projet de vie : mêmes cadres que « Gestion de projet » (styles globaux `.bpm-management`),
+// complétés par l'état de santé de chaque volet et la jauge du projet de vie.
+
+.bpm-life-management {
+  --life-header-actions-width: 380px;
+  // Violet des boutons de la page, résolu ici (hors du bandeau, qui redéfinit --app-accent en blanc).
+  --period-nav-accent: var(--app-accent);
+}
+
+// Titres des volets : un cran sous la gestion de projet, pour que « Charges indispensables » tienne sur deux lignes.
+.bpm-life-management .bpm-management-card h3 {
+  font-size: scaled(var(--fs-xl));
+}
+
+// Bandeau : le sélecteur de période (violet, comme les boutons de la page) sous « Réglages » et « Suivi & clôture ».
+.bpm-life-management .life-header-actions {
+  justify-content: flex-end;
+  max-width: var(--life-header-actions-width);
+}
+.life-period-nav {
+  flex: 1 0 100%;
+}
+.life-period-empty {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: scaled(var(--fs-sm));
+  opacity: 0.85;
+}
+// L'introduction s'arrête avant la colonne des commandes, qui porte maintenant le sélecteur.
+.bpm-life-management .life-banner-copy .page-intro {
+  max-width: min(933px, calc(100% - var(--life-header-actions-width) - 24px));
+}
+// Trois commandes dans la barre d'outils : volets affichés, échéance à régler, saisie.
+.bpm-life-management .life-banner-tools {
+  grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.7fr) auto;
+}
+
+// Consultation d'une autre période que la période en cours.
+.life-reading-note {
+  margin: 0;
+  padding: var(--ecart-10) var(--ecart-16);
+  border: 1px solid color-mix(in srgb, var(--app-accent) 35%, var(--line));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--app-accent) 7%, var(--raised-surface));
+  color: var(--ink);
+  font-size: scaled(var(--fs-sm));
+
+  a {
+    margin-left: var(--ecart-6);
+    font-weight: var(--fw-semibold);
+  }
+}
+
+// Synthèse : couleur des états de santé (volets).
+.life-health-dot {
+  --dot: var(--muted);
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot);
+
+  &[data-health='ok'] {
+    --dot: #198353;
+  }
+  &[data-health='watch'] {
+    --dot: #ed8b23;
+  }
+  &[data-health='alert'] {
+    --dot: #df414c;
+  }
+}
+
+// La jauge prend la place de `bpm-project-metrics` dans la carte.
+bpm-life-gauge {
+  display: grid;
+  container: project-metrics / inline-size;
+  gap: var(--ecart-10);
+  min-width: 0;
+}
+.bpm-project-row-budget > bpm-life-gauge {
+  grid-template-rows: minmax(min-content, 1fr) auto;
+}
+
+// Pastilles d'identité du volet : état de santé, puis repère (numéro et contexte).
+.pm-life-health,
+.pm-life-tag {
+  --pm-badge-ink: #171717;
+  --pm-badge-surface: #f3f4f6;
+  --pm-badge-line: #cdd1d5;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ecart-6);
+  padding: var(--ecart-2) var(--ecart-10);
+  border: 1px solid var(--pm-badge-line);
+  border-radius: var(--radius-pill);
+  color: var(--pm-badge-ink);
+  background: var(--pm-badge-surface);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+}
+.pm-life-health::before {
+  content: '';
+  width: var(--ecart-6);
+  height: var(--ecart-6);
+  flex: 0 0 var(--ecart-6);
+  border-radius: 50%;
+  background: currentColor;
+}
+.pm-life-health[data-health='ok'] {
+  --pm-badge-ink: #166534;
+  --pm-badge-surface: #ecfdf3;
+  --pm-badge-line: #92d4ad;
+}
+.pm-life-health[data-health='watch'] {
+  --pm-badge-ink: #765300;
+  --pm-badge-surface: #fff2b3;
+  --pm-badge-line: #d6b540;
+}
+.pm-life-health[data-health='alert'] {
+  --pm-badge-ink: #b42318;
+  --pm-badge-surface: #fff1f1;
+  --pm-badge-line: #f3b8b3;
+}
+.pm-life-tag {
+  --pm-badge-ink: #1754b5;
+  --pm-badge-surface: #edf4ff;
+  --pm-badge-line: #a6c3f7;
+}
+.pm-life-index {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: 50%;
+  color: var(--raised-surface);
+  background: var(--pm-badge-ink);
+  font-size: scaled(var(--fs-xs));
+}
+
+// Volet à traiter : la carte et son alerte prennent la couleur du danger.
+.life-volet[data-health='alert'] > .pm-project-overview {
+  border-color: color-mix(in srgb, #df414c 45%, var(--line));
+}
+.pm-project-alert[data-health='alert'] {
+  background: var(--status-danger-surface, #fff1f1);
+  color: var(--status-danger);
+}
+.pm-project-alert[data-health='unknown'] {
+  background: color-mix(in srgb, var(--line) 30%, var(--raised-surface));
+  color: var(--muted);
+}
+
+// Détail déplié d'un volet.
+.life-volet-detail {
+  gap: var(--ecart-16);
+}
+.life-flag {
+  margin-left: var(--ecart-8);
+  padding: 0 var(--ecart-6);
+  border-radius: var(--radius-pill);
+  color: var(--status-warning);
+  background: var(--status-warning-surface);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+}
+.bpm-table .is-deficit {
+  color: var(--status-danger);
+}
+.bpm-table tr.is-over th {
+  color: var(--status-danger);
+}
+.life-line-status {
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+
+  &[data-status='late'] {
+    color: var(--status-danger);
+  }
+  &[data-status='due'] {
+    color: var(--status-warning);
+  }
+  &[data-status='settled'] {
+    color: var(--status-success);
+  }
+}
+.life-surplus-note,
+.life-essentials-note {
+  margin: 0;
+  font-style: italic;
+}
+.life-conditions {
+  margin: 0 0 var(--ecart-12);
+  padding-left: var(--ecart-20);
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+}
+// Lien visible vers la fiche du projet de vie (interface commune des projets, variante non standard).
+.bpm-life-management .life-fiche-link {
+  margin-left: auto;
+}
+
+// Rattachements du projet de vie : unique, patrimoine, projets de la vie qu'il finance.
+.life-relations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-8);
+  margin: 0 0 var(--ecart-12);
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ecart-6);
+    padding: var(--ecart-4, 4px) var(--ecart-12);
+    border: 1px solid color-mix(in srgb, var(--app-accent) 30%, var(--line));
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--app-accent) 6%, var(--raised-surface));
+    font-size: scaled(var(--fs-sm));
+  }
+  a {
+    font-weight: var(--fw-semibold);
+  }
+}
+.life-relation-kind {
+  color: var(--app-accent);
+  font-weight: var(--fw-semibold);
+}
+
+// Petits écrans : la carte passe sur une colonne (mêmes points de rupture que la gestion de projet).
+@media (max-width: 1100px) {
+  .bpm-life-management .life-banner-tools {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .bpm-life-management .life-header-actions {
+    max-width: none;
+    justify-content: flex-start;
+  }
+  .bpm-life-management .life-banner-copy .page-intro {
+    max-width: none;
+  }
+  .bpm-life-management .life-banner-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .bpm-life-management .bpm-management-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bpm-life-management .pm-project-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

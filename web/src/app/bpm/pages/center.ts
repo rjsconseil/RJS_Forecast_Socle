@@ -1,10 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { EntryInput, RegisterLine } from '../../core/bpm-models';
 import { cents, CentsPipe, percentText, ShortDatePipe } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmCapChart, BpmLineDetail, bpmLoader, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmState, CapRow } from '../ui';
+import { BpmCapChart, BpmCapGauge, BpmLineDetail, bpmLoader, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmState, capEuroText, capInput, CapRow, newRequestKey } from '../ui';
 
 /** Page d'où l'on vient (`?from=`) : surtitre du bandeau et lien de retour. */
 const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
@@ -21,7 +23,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
  */
 @Component({
   selector: 'bpm-page-center',
-  imports: [RouterLink, BpmPageFrame, BpmState, BpmCapChart, BpmLineDetail, BpmOperationEditor, MetricTilesComponent, CentsPipe, ShortDatePipe],
+  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmCapChart, BpmCapGauge, BpmLineDetail, BpmOperationEditor, MetricTilesComponent, CentsPipe, ShortDatePipe],
   providers: [BpmPageContext],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
@@ -57,10 +59,51 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
           </p>
 
           @if (!isIncome()) {
-            <section class="bm-statement" aria-labelledby="bmd-cap-title" data-ui-pattern="panel" data-bpm-frame="chart">
-              <h2 id="bmd-cap-title">Plafond et marge</h2>
+            <section class="bm-statement bmd-caps" aria-labelledby="bmd-cap-title" data-ui-pattern="panel" data-bpm-frame="chart">
+              <header class="bmd-caps-head">
+                <h2 id="bmd-cap-title">Plafond et marge</h2>
+                @if (d.cap; as m) {
+                  <bpm-cap-gauge [measure]="m" />
+                }
+              </header>
               <bpm-cap-chart [rows]="capRows()" />
-              <p class="bpm-help">Les montants payés restent ceux de la période ; un plafond n'est jamais converti en dépense.</p>
+              <form class="bmd-cap-form" (ngSubmit)="saveCap()" aria-label="Plafond du poste">
+                <label>
+                  Plafond du poste, par période (€)
+                  <input name="cap" inputmode="decimal" [(ngModel)]="capDraft" placeholder="Sans plafond" [disabled]="capBusy()" />
+                </label>
+                <button type="submit" class="btn btn-primary" [disabled]="capBusy() || !capDirty()">Enregistrer le plafond</button>
+                @if (d.cap && d.cap.capCents !== null) {
+                  <button type="button" class="btn btn-secondary" [disabled]="capBusy()" (click)="saveCap(null)">Retirer le plafond</button>
+                }
+              </form>
+              <p class="bpm-help">Engagé = payé + encore prévu sur la période. Au-delà du plafond, le poste passe en rouge sans jamais bloquer une dépense ; un plafond n'est jamais converti en dépense.</p>
+
+              <h3 class="bmd-caps-sub">Catégories de ce poste <span class="bmd-count">({{ d.categories.length }})</span></h3>
+              @if (d.categories.length) {
+                <ul class="bmd-categories">
+                  @for (k of d.categories; track k.id) {
+                    <li>
+                      <span class="bmd-cat-name">
+                        <a [routerLink]="'/depenses'" [queryParams]="categoryQuery(k.id)" [attr.aria-label]="'Dépenses de la catégorie ' + k.label">{{ k.label }}</a>
+                        <small>{{ k.engagedCents | cents }} engagés · {{ k.lineCount }} dépense(s){{ k.archived ? ' · retirée' : '' }}</small>
+                      </span>
+                      <bpm-cap-gauge [measure]="k" />
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="bm-empty">Aucune catégorie : créez-en une pour suivre une dépense précise de ce poste avec son propre plafond.</p>
+              }
+              <form class="bmd-cat-create" (ngSubmit)="createCategory()" aria-label="Nouvelle catégorie dans ce poste">
+                <label>Nouvelle catégorie <input name="catLabel" [(ngModel)]="catLabel" maxlength="120" placeholder="Ex. Cinéma, Abonnements…" [disabled]="capBusy()" /></label>
+                <label>Plafond (€, facultatif) <input name="catCap" inputmode="decimal" [(ngModel)]="catCap" placeholder="Sans plafond" [disabled]="capBusy()" /></label>
+                <button type="submit" class="btn btn-secondary" [disabled]="capBusy()">＋ Ajouter la catégorie</button>
+              </form>
+              @if (capNotice(); as n) {
+                <p class="bmd-cap-notice" [attr.data-state]="n.error ? 'danger' : null" [attr.role]="n.error ? 'alert' : 'status'">{{ n.text }}</p>
+              }
+              <p class="bpm-help"><a routerLink="/plafonds" [queryParams]="ctx.carry()">Tous les plafonds et catégories →</a></p>
             </section>
           }
 
@@ -81,7 +124,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
                       <time [attr.datetime]="l.realizedDate ?? l.plannedDate">{{ (l.realizedDate ?? l.plannedDate) | shortDate }}</time>
                       <span class="bmd-entry-title">
                         <strong>{{ l.label }}</strong>
-                        <small>{{ l.budgetRole === 'life' ? 'Budget du projet de vie' : l.budgetName }} · prévue le {{ l.plannedDate | shortDate }}@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} } · prévu {{ l.plannedCents | cents }}</small>
+                        <small>{{ l.budgetRole === 'life' ? 'Budget du projet de vie' : l.budgetName }} · prévue le {{ l.plannedDate | shortDate }}@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }@if (l.categoryLabel) { · <span class="bmd-category-tag">{{ l.categoryLabel }}</span> } · prévu {{ l.plannedCents | cents }}</small>
                       </span>
                       <span class="bmd-entry-amount">{{ l.realizedCents === null ? '—' : (l.realizedCents | cents) }}</span>
                       <a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Voir le détail : ' + l.label">Voir le détail</a>
@@ -108,7 +151,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
                   <li [attr.data-due]="l.status === 'late' || l.status === 'due' || null" [class.is-selected]="isSelected(l)">
                     <span>
                       {{ l.plannedDate | shortDate }} · {{ l.label }}
-                      <small>@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }@if (l.taskTitle) { · {{ l.taskTitle }} }</small>
+                      <small>@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }@if (l.categoryLabel) { · <span class="bmd-category-tag">{{ l.categoryLabel }}</span> }@if (l.taskTitle) { · {{ l.taskTitle }} }</small>
                       @if (l.status === 'late' || l.status === 'due') {
                         <em class="bmd-late">{{ l.status === 'late' ? 'en retard' : 'aujourd’hui' }}</em>
                       } @else if (l.status === 'unrealized') {
@@ -146,6 +189,23 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
     :host { display: block; }
     .bmd-note-banner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ecart-8); }
     .bm-empty .bmd-precise-open { margin-inline-start: var(--ecart-12); }
+    .bmd-caps { display: grid; gap: var(--ecart-12); }
+    .bmd-caps-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ecart-8); }
+    .bmd-caps-head h2 { margin: 0; }
+    .bmd-cap-form, .bmd-cat-create { display: flex; flex-wrap: wrap; align-items: end; gap: var(--ecart-12); }
+    .bmd-cap-form label, .bmd-cat-create label { display: grid; gap: 4px; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+    .bmd-cap-form input { width: 10rem; min-height: 2.5rem; text-align: right; }
+    .bmd-cat-create input { min-height: 2.5rem; }
+    .bmd-cat-create { padding: var(--ecart-12); border: 1px dashed color-mix(in srgb, var(--app-accent) 35%, var(--line)); border-radius: var(--radius-sm); }
+    .bmd-caps-sub { margin: var(--ecart-8) 0 0; font-size: var(--fs-md, 1rem); }
+    .bmd-categories { display: grid; gap: var(--ecart-8); margin: 0; padding: 0; list-style: none; }
+    .bmd-categories li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ecart-8); padding: var(--ecart-8) var(--ecart-12); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+    .bmd-cat-name { display: grid; }
+    .bmd-cat-name a { font-weight: var(--fw-semibold); }
+    .bmd-cat-name small { color: var(--muted); }
+    .bmd-category-tag { display: inline-block; padding: 0 var(--ecart-6); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--app-accent) 10%, var(--raised-surface)); color: var(--app-accent); font-weight: var(--fw-semibold); }
+    .bmd-cap-notice { margin: 0; padding: var(--ecart-8) var(--ecart-12); border-radius: var(--radius-sm); background: var(--status-success-surface); color: var(--status-success); font-weight: var(--fw-semibold); }
+    .bmd-cap-notice[data-state='danger'] { background: var(--status-danger-surface); color: var(--status-danger); }
   `,
 })
 export class BpmCenterPage {
@@ -182,6 +242,61 @@ export class BpmCenterPage {
     return c ? [{ key: c.ref, label: c.label, paidCents: c.paidCents, remainingCents: c.remainingCents, capCents: c.capCents }] : [];
   });
 
+  // ---------- plafond du poste et catégories du poste (jamais bloquants) ----------
+
+  protected capBusy = signal(false);
+  protected capNotice = signal<{ text: string; error: boolean } | null>(null);
+  /** Saisie du plafond du poste (euros), recalée sur chaque lecture. */
+  protected capDraft = linkedSignal(() => capEuroText(this.read.data()?.cap?.capCents));
+  protected capDirty = computed(() => this.capDraft().trim() !== capEuroText(this.read.data()?.cap?.capCents));
+  protected catLabel = signal('');
+  protected catCap = signal('');
+  private catKey = newRequestKey('category');
+
+  /** Plafond du seul poste lu (les autres plafonds restent) ; `null` le retire. */
+  async saveCap(value: string | null = this.capDraft()) {
+    const d = this.read.data();
+    if (!d || this.capBusy()) return;
+    const amount = value === null ? null : capInput(value);
+    if (amount === undefined) return this.capNotice.set({ text: 'Plafond : montant positif attendu (ex. 250 ou 120,50), ou vide pour aucun plafond.', error: true });
+    await this.capRun(async () => {
+      await this.bpm.setCaps({ expectedRevision: d.lifeBudget.revision, caps: { [d.center.ref]: amount }, merge: true });
+      return amount === null ? `Plafond du poste ${d.center.label} retiré.` : `Plafond du poste ${d.center.label} : ${cents(Math.round(amount * 100))} par période.`;
+    });
+  }
+
+  async createCategory() {
+    const d = this.read.data();
+    if (!d || this.capBusy()) return;
+    const cap = capInput(this.catCap());
+    if (!this.catLabel().trim()) return this.capNotice.set({ text: 'Nommez la catégorie.', error: true });
+    if (cap === undefined) return this.capNotice.set({ text: 'Plafond : montant positif attendu, ou vide pour aucun plafond.', error: true });
+    await this.capRun(async () => {
+      const r = await this.bpm.createCategory({ requestKey: this.catKey, label: this.catLabel().trim(), costCenterRef: d.center.ref, cap });
+      this.catKey = newRequestKey('category');
+      this.catLabel.set('');
+      this.catCap.set('');
+      return `Catégorie « ${r.category.label} » ajoutée : choisissez-la dans la saisie d'une dépense de ce poste.`;
+    });
+  }
+
+  private async capRun(fn: () => Promise<string>) {
+    this.capBusy.set(true);
+    this.capNotice.set(null);
+    try {
+      this.capNotice.set({ text: await fn(), error: false });
+      this.ctx.refresh.bump();
+    } catch (e) {
+      this.capNotice.set({ text: toApiError(e).message, error: true });
+    } finally {
+      this.capBusy.set(false);
+    }
+  }
+
+  protected categoryQuery(id: string) {
+    return { ...this.ctx.carry(), category: id, groupBy: 'category' };
+  }
+
   /** Tuiles source : payé, encore prévu, montants, part, plafond du poste (marge en note). Inconnu n'est jamais zéro. */
   protected tiles = computed<MetricTile[]>(() => {
     const d = this.read.data();
@@ -212,7 +327,7 @@ export class BpmCenterPage {
         tone: margin !== null && margin < 0 ? 'danger' : null,
         note:
           c.capCents === null
-            ? 'Facultatif : à définir dans Ce qu’il faut faire › Budget type.'
+            ? 'Facultatif : à définir ci-dessous, section « Plafond et marge ».'
             : margin === null
               ? 'Marge non calculable.'
               : margin < 0

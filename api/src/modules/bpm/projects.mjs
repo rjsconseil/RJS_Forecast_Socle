@@ -15,7 +15,7 @@
 import { fail } from '../../socle/errors.mjs';
 import { expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL, CADENCES, occurrenceDates } from '../budget/recurrence.mjs';
-import { addDays, periodContaining, today } from './periods.mjs';
+import { addDays, periodByIndex, periodContaining, today } from './periods.mjs';
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 const fmt = (cents) => euro.format(cents / 100).replace(/[  ]/g, ' ');
@@ -124,6 +124,9 @@ export function projectBudget(state, b, now = today()) {
   const period = cycle?.state === 'active' ? periodContaining(now, cycle.anchorDay) : null;
   return {
     budgetId: b.id,
+    /** Paramètre différenciant : `standard` (projet de la vie financé) ou `life` (projet de vie, non standard). */
+    kind: 'standard',
+    nonStandard: false,
     name: b.name,
     coreProjectId: b.coreProjectId,
     parentBudgetId: b.parentBudgetId,
@@ -155,6 +158,91 @@ export function projectBudget(state, b, now = today()) {
     byTask,
     shares: { ...shares },
     returns: structuredClone(returnsOf(b)),
+    life: null,
+  };
+}
+
+/** Métriques du cycle en cours lues pour la variante non standard (budget de vie). */
+export const LIFE_BUDGET_KEYS = [
+  'bpm.revenusPrevus', 'bpm.chargesPrevues', 'bpm.resultatPrevu', 'bpm.charges', 'bpm.chargesProjets',
+  'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.patrimoineConstitue',
+];
+
+/**
+ * Variante non standard de `projectBudget` : le budget de vie, unique par user, rattaché au projet de vie unique et
+ * au patrimoine, lu avec la même interface qu'un projet standard, sur le cycle en cours [P] :
+ * - budget attribué / plafond = entrées prévues du cycle (ses ressources ; il ne reçoit pas d'enveloppe) ;
+ * - ventilation (`shares`, `sharesCents`) = enveloppes attribuées à ses projets fils, comme un projet ventile sur ses tâches ;
+ * - disponible = budget initial du cycle (entrées prévues − charges prévues) ;
+ * - engagé = charges prévues du budget de vie + charges validées des projets ; réglé = Dépensé du cycle ;
+ * - dépassements = ceux de ses projets fils, qu'il décide et qui lui sont facturés en fin de cycle ;
+ * - `life` = accès au projet de vie, au patrimoine, au cycle et à tous ses budgets fils (avec leurs propres chiffres).
+ */
+export function lifeProjectBudget(state, comp, { figures, period, children, overruns, requests, funding = null, now = today() }) {
+  const lifeB = state.budgets[comp.budgetId];
+  const c = (k) => (figures[k]?.value === null || figures[k]?.value === undefined ? null : Math.round(figures[k].value * 100));
+  const regime = !!period;
+  const planned = c('bpm.revenusPrevus');
+  const plannedCharges = c('bpm.chargesPrevues');
+  const projectsPaid = c('bpm.chargesProjets') ?? 0;
+  const paid = c('bpm.charges') ?? 0;
+  const expected = c('bpm.soldeAttendu');
+  const approved = overruns.filter((x) => x.status === 'approved');
+  const pending = overruns.find((x) => x.status === 'pending') ?? null;
+  const funded = children.filter((f) => f.regime);
+  const shares = Object.fromEntries(funded.map((f) => [f.budgetId, f.allocationCents]));
+  const sharesCents = sum(Object.values(shares));
+  const engaged = regime ? (plannedCharges ?? 0) + projectsPaid : 0;
+  const billing = approved.map((x) => x.billingDate).filter(Boolean).sort();
+  const pat = state.patrimoines[comp.patrimoineId];
+  return {
+    budgetId: lifeB.id,
+    kind: 'life',
+    nonStandard: true,
+    name: 'Budget du projet de vie',
+    coreProjectId: comp.coreProjectId,
+    parentBudgetId: null,
+    revision: lifeB.revision,
+    regime,
+    taskFundingRequired: false,
+    allocationCents: regime ? planned : null,
+    allocationDate: period?.start ?? null,
+    initialAllocationCents: regime ? planned : null,
+    approvedOverrunCents: sum(approved, (x) => x.amountCents),
+    billedOverrunCents: sum(overruns.filter((x) => x.status === 'billed'), (x) => x.amountCents),
+    pendingOverrun: pending,
+    ceilingCents: regime ? planned : null,
+    sharesCents,
+    availableCents: regime ? c('bpm.resultatPrevu') : null,
+    engagedCents: engaged,
+    paidCents: paid,
+    remainingCents: regime && planned !== null ? planned - paid : null,
+    toPayCents: c('bpm.resteAPayer') ?? 0,
+    uncommittedCents: regime && planned !== null ? planned - engaged : null,
+    periodPaidCents: regime ? paid : null,
+    pendingRequestsCents: sum(requests, (x) => x.amountCents),
+    paidBeforeAllocationCents: 0,
+    unsharedChargesCents: paid - projectsPaid,
+    state: !regime ? 'unallocated' : expected !== null && expected < 0 ? 'deficit' : planned !== null && engaged > planned ? 'at-risk' : 'ok',
+    deficit: expected !== null && expected < 0,
+    nextBillingDate: billing.find((d) => d > now) ?? billing[0] ?? null,
+    byTask: {},
+    shares,
+    returns: {},
+    life: {
+      unique: true,
+      compositionId: comp.id,
+      lifeProjectId: comp.coreProjectId,
+      patrimoineId: comp.patrimoineId,
+      patrimoine: { stockCents: c('bpm.patrimoineConstitue'), objectiveCents: pat?.objectiveCents ?? null, openingStockCents: pat?.openingStockCents ?? null },
+      period: period ? { key: period.key, label: period.label, start: period.start, end: period.end } : null,
+      expectedCents: expected,
+      projectsPaidCents: regime ? projectsPaid : null,
+      childCount: children.length,
+      fundedCount: funded.length,
+      children,
+      funding,
+    },
   };
 }
 
@@ -194,6 +282,88 @@ export function cycleChecks(state, b, fig = projectBudget(state, b)) {
   }
   if (fig.unsharedChargesCents) out.push({ code: 'no-task', level: 'info', taskId: null, message: `${fmt(fig.unsharedChargesCents)} de charges du projet ne sont reliées à aucune tâche.` });
   return out;
+}
+
+/**
+ * Contrôles de fin de cycle de la variante non standard (budget de vie) : mêmes codes de lecture que `cycleChecks`,
+ * appliqués à ses projets fils (financement, dépassements à décider ou à facturer) et à son cycle.
+ */
+export function lifeChecks(state, fig, { toCloseCount = 0, now = today() } = {}) {
+  const out = [];
+  const life = fig.life;
+  if (!fig.regime) return [{ code: 'cycle', level: 'warning', taskId: null, message: 'Cycle budgétaire à configurer : le budget de vie n’a pas encore de ressources de cycle.' }];
+  out.push(
+    toCloseCount
+      ? { code: 'cycle', level: 'warning', taskId: null, message: `${toCloseCount} période${toCloseCount > 1 ? 's' : ''} terminée${toCloseCount > 1 ? 's' : ''} à clôturer avant de lire le résultat du cycle.` }
+      : { code: 'cycle', level: 'ok', taskId: null, message: `Toutes les périodes terminées sont clôturées ; cycle en cours : ${life.period.label}.` },
+  );
+  out.push(
+    fig.deficit
+      ? { code: 'expected', level: 'warning', taskId: null, message: `Solde attendu négatif (${fmt(life.expectedCents)}) : les charges prévues dépassent les entrées du cycle.` }
+      : { code: 'expected', level: 'ok', taskId: null, message: `Solde attendu du cycle : ${fmt(life.expectedCents ?? 0)}.` },
+  );
+  const unfunded = life.children.filter((c) => !c.regime);
+  out.push(
+    unfunded.length
+      ? { code: 'shares', level: 'info', taskId: null, message: `${unfunded.length} projet${unfunded.length > 1 ? 's' : ''} rattaché${unfunded.length > 1 ? 's' : ''} sans enveloppe : ${unfunded.map((c) => `« ${c.name} »`).join(', ')}.` }
+      : { code: 'shares', level: 'ok', taskId: null, message: `Enveloppes attribuées à ses ${life.fundedCount} projet${life.fundedCount > 1 ? 's' : ''} : ${fmt(fig.sharesCents)}.` },
+  );
+  if (fig.pendingOverrun) out.push({ code: 'overrun-pending', level: 'warning', taskId: null, message: `Dépassement de ${fmt(fig.pendingOverrun.amountCents)} à décider pour « ${state.budgets[fig.pendingOverrun.budgetId]?.name ?? ''} ».` });
+  const billable = Object.values(state.projectOverruns ?? {}).filter((x) => x.status === 'approved' && life.children.some((c) => c.budgetId === x.budgetId) && (!x.billingDate || x.billingDate <= now));
+  if (billable.length) out.push({ code: 'overrun-billable', level: 'warning', taskId: null, message: `${fmt(sum(billable, (x) => x.amountCents))} de dépassements autorisés à facturer au budget de vie.` });
+  for (const c of life.children.filter((x) => x.regime && x.paidCents > x.ceilingCents)) {
+    out.push({ code: 'task-paid', level: 'warning', taskId: null, message: `« ${c.name} » : réglé ${fmt(c.paidCents)}, au-delà de son budget (${fmt(c.ceilingCents)}).` });
+  }
+  if (fig.pendingRequestsCents) out.push({ code: 'requests', level: 'info', taskId: null, message: `${fmt(fig.pendingRequestsCents)} de demandes de montant de tâches attendent l’autorisation du budget de vie.` });
+  return out;
+}
+
+/**
+ * Financement des projets fils par le budget de vie, cycle par cycle [P] : enveloppe attribuée (et sa période),
+ * dépassements par période de décision, charges validées remontées au budget de vie par période.
+ */
+export function lifeFunding(state, children, cs, { limit = 12 } = {}) {
+  if (!cs) return { periods: [], rows: [], totals: { byPeriod: {}, paidCents: 0, allocatedCents: 0 } };
+  const from = Math.max(cs.first.index, cs.current.index - limit + 1);
+  const periods = [];
+  for (let i = from; i <= cs.current.index; i++) {
+    // La clé d'une période ne dépend que de son mois de début : `find` la relit avec le jour d'ancrage du cycle.
+    const p = cs.find(periodByIndex(i, 1).key);
+    if (p) periods.push({ key: p.key, label: p.label, start: p.start, end: p.end, status: p.status });
+  }
+  const keyOf = (ymd) => (ymd ? periods.find((p) => ymd >= p.start && ymd <= p.end)?.key ?? null : null);
+  const rows = children.map((c) => {
+    const b = state.budgets[c.budgetId];
+    const byPeriod = Object.fromEntries(periods.map((p) => [p.key, 0]));
+    for (const o of Object.values(state.operations)) {
+      if (!isValidatedCharge(o, b)) continue;
+      const k = keyOf(o.realizedDate);
+      if (k) byPeriod[k] += o.realizedAmountCents;
+    }
+    const overruns = overrunsOf(state, c.budgetId)
+      .filter((x) => x.status !== 'refused')
+      .map((x) => ({ id: x.id, status: x.status, statusLabel: OVERRUN_STATUS[x.status], amountCents: x.amountCents, periodKey: x.periodKey ?? keyOf(x.decidedAt ?? x.requestedAt), billingDate: x.billingDate }));
+    return {
+      budgetId: c.budgetId,
+      coreProjectId: c.coreProjectId,
+      name: c.name,
+      regime: c.regime,
+      state: c.state,
+      allocationCents: c.allocationCents,
+      initialAllocationCents: c.initialAllocationCents,
+      allocationDate: c.allocationDate,
+      allocationPeriodKey: keyOf(c.allocationDate),
+      approvedOverrunCents: c.approvedOverrunCents,
+      billedOverrunCents: c.billedOverrunCents,
+      pendingOverrunCents: sum(overruns.filter((x) => x.status === 'pending'), (x) => x.amountCents),
+      paidCents: c.regime ? c.paidCents : 0,
+      remainingCents: c.remainingCents,
+      byPeriod,
+      overruns,
+    };
+  });
+  const byPeriod = Object.fromEntries(periods.map((p) => [p.key, sum(rows, (r) => r.byPeriod[p.key])]));
+  return { periods, rows, totals: { byPeriod, paidCents: sum(rows, (r) => r.paidCents), allocatedCents: sum(rows, (r) => r.allocationCents ?? 0) } };
 }
 
 /** Projets standards du budget de vie auxquels un montant est attribué (régime des charges de projet). */
@@ -346,6 +516,7 @@ export function createProjects(socle, h) {
   function standardOf(state, userId, budgetId) {
     const b = om.owned(state, 'budget', budgetId, userId);
     const comp = compositionOf(state, userId);
+    if (b.role === 'life' && b.id === comp?.budgetId) fail('FORBIDDEN_BY_RULE', 'Le budget de vie est non standard : ses ressources sont les entrées du cycle et il finance ses projets fils ; il ne reçoit ni enveloppe, ni part de tâche, ni dépassement.', { field: 'budgetId', budgetId, kind: 'life' });
     if (b.role !== 'standard' || b.parentBudgetId !== comp?.budgetId) fail('INCOMPATIBLE_REFERENCE', 'Ce Budget n’est pas un projet standard de votre budget de vie.', { field: 'budgetId', budgetId });
     return b;
   }
@@ -423,6 +594,17 @@ export function createProjects(socle, h) {
     };
   }
 
+  /** Chiffres du budget de vie dans l'interface d'un projet (variante non standard), sur le cycle en cours. */
+  function lifeFigures(state, comp, standards, now) {
+    const cs = h.cycleState(state, cycleOf(state, comp.id));
+    const { figures } = h.figuresFor(state, comp.userId, LIFE_BUDGET_KEYS, {});
+    const children = standards.map((b) => projectBudget(state, b, now));
+    const overruns = standards.flatMap((b) => overrunsOf(state, b.id));
+    const requests = standards.flatMap((b) => requestsOf(state, b.id).filter((x) => x.status === 'awaiting-life'));
+    const fig = lifeProjectBudget(state, comp, { figures, period: cs?.current ?? null, children, overruns, requests, funding: lifeFunding(state, children, cs), now });
+    return { fig, cs };
+  }
+
   const projectCard = (state, projectId, role, fig) => ({ ...core().projectSummary(state, projectId), role, budget: fig });
 
   /** Tableau des projets BPM : projet de vie et projets standards du user, avec leur budget. */
@@ -434,7 +616,7 @@ export function createProjects(socle, h) {
     const roots = new Set([...Object.values(state.budgets).map((b) => b.coreProjectId), ...Object.values(state.patrimoines ?? {}).map((p) => p.coreProjectId)]);
     return {
       context: contextOf(state, userId, comp),
-      lifeProject: projectCard(state, comp.coreProjectId, 'life', null),
+      lifeProject: projectCard(state, comp.coreProjectId, 'life', lifeFigures(state, comp, standards, now).fig),
       life: lifeSummary(state, comp, standards, now),
       projects: standards.map((b) => projectCard(state, b.coreProjectId, 'standard', projectBudget(state, b, now))),
       // Projets du noyau que le budget de vie peut financer : ni racine d'un Budget ou d'un Patrimoine, ni déjà budgétés.
@@ -512,7 +694,9 @@ export function createProjects(socle, h) {
     if (!projectIds.has(coreProjectId)) fail('NOT_FOUND', 'Ce projet n’appartient pas à votre budget de vie : budgétez-le d’abord depuis Projets.', { coreProjectId });
     const figs = figuresByProject(state, standards, comp, now);
     const b = standards.find((x) => x.coreProjectId === coreProjectId) ?? null;
-    const fig = b ? figs.get(coreProjectId) : null;
+    // Même interface pour les deux variantes : `budget.kind` dit si le projet est standard ou le projet de vie (non standard).
+    const lf = b ? null : lifeFigures(state, comp, standards, now);
+    const fig = b ? figs.get(coreProjectId) : lf.fig;
     const tasks = om.list(state, 'task', (t) => t.projectId === coreProjectId).sort((a, c) => a.createdAt.localeCompare(c.createdAt));
     const out = {
       context: contextOf(state, userId, comp),
@@ -524,9 +708,10 @@ export function createProjects(socle, h) {
         .list(state, 'task', (t) => t.userId === userId && !projectIds.has(t.projectId))
         .sort((a, c) => a.createdAt.localeCompare(c.createdAt))
         .map((t) => taskCard(state, t, figs)),
-      overruns: b ? overrunsOf(state, b.id).sort((x, y) => y.createdAt.localeCompare(x.createdAt)).map((x) => overrunView(state, x)) : [],
-      checks: b ? cycleChecks(state, b, fig) : [],
-      requests: b ? requestsOf(state, b.id).sort((x, y) => y.createdAt.localeCompare(x.createdAt)).map((x) => requestView(state, x)) : [],
+      // Projet de vie : il porte les dépassements et les demandes de tous ses projets fils, qu'il décide.
+      overruns: (b ? overrunsOf(state, b.id) : standards.flatMap((x) => overrunsOf(state, x.id))).sort((x, y) => y.createdAt.localeCompare(x.createdAt)).map((x) => overrunView(state, x)),
+      checks: b ? cycleChecks(state, b, fig) : lifeChecks(state, fig, { toCloseCount: lf.cs ? lf.cs.current.index - lf.cs.firstOpen.index : 0, now }),
+      requests: (b ? requestsOf(state, b.id) : standards.flatMap((x) => requestsOf(state, x.id))).sort((x, y) => y.createdAt.localeCompare(x.createdAt)).map((x) => requestView(state, x)),
       charges: [],
       life: null,
     };
@@ -539,6 +724,9 @@ export function createProjects(socle, h) {
           return { ...v, validated: l.settled && inRegime(b) && l.realizedDate >= b.allocationDate, beforeAllocation: l.settled && inRegime(b) && l.realizedDate < b.allocationDate };
         });
     } else {
+      // Charges propres du budget de vie sur le cycle en cours (les projets fils gardent les leurs).
+      const p = lf.cs?.current;
+      if (p) out.charges = budgetModule().budgetLines(state, [comp.budgetId], { from: p.start, to: p.end, by: 'planned' }).filter((l) => l.direction === 'charge').map((l) => ({ ...budgetModule().lineView(state, l), validated: l.settled, beforeAllocation: false }));
       out.life = {
         ...lifeSummary(state, comp, standards, now),
         projects: standards.map((x) => ({ projectId: x.coreProjectId, title: state.coreProjects[x.coreProjectId]?.title ?? x.name, budget: figs.get(x.coreProjectId) })),

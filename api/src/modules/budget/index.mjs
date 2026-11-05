@@ -54,6 +54,7 @@ const lineOfOperation = (o) => ({
   settled: o.status === 'realized',
   standardCostCenter: o.standardCostCenter,
   costCenterId: o.costCenterId,
+  categoryId: o.categoryId ?? null,
   note: o.note ?? null,
   taskId: o.taskId ?? null,
   revision: o.revision,
@@ -77,6 +78,7 @@ const lineOfOccurrence = (r, date) => ({
   settled: false,
   standardCostCenter: r.standardCostCenter,
   costCenterId: r.costCenterId,
+  categoryId: r.categoryId ?? null,
   note: r.note ?? null,
   taskId: r.taskId ?? null,
   revision: null,
@@ -106,6 +108,69 @@ export function budgetLines(state, budgetIds, { from, to, by = 'planned' }) {
   }
   const dateOf = (l) => (by === 'planned' ? l.plannedDate : l.realizedDate);
   return out.sort((a, b) => dateOf(a).localeCompare(dateOf(b)) || a.label.localeCompare(b.label));
+}
+
+/**
+ * Plafonds de dépenses sur une période [P] : deux niveaux indépendants, jamais bloquants.
+ * - centre de coût : plafond du Budget (`capsCents[ref]`) ;
+ * - catégorie personnalisée (dans un centre) : plafond de la catégorie.
+ * Engagé = charges réglées dans la période (date réelle) + charges prévues de la période non réglées.
+ * Une ligne compte dans son centre ET dans sa catégorie : chaque niveau est lu pour lui-même.
+ * @param realized lignes `by: 'realized'` de la période ; @param planned lignes `by: 'planned'` de la période.
+ */
+export function capReport({ centers, caps = {}, categories = [], realized, planned, withLines = false }) {
+  const refOf = (l) => l.costCenterId ?? STD + l.standardCostCenter;
+  const charges = (ls) => ls.filter((l) => l.direction === 'charge');
+  const measure = (match, capCents) => {
+    const paid = charges(realized).filter(match);
+    const toPay = charges(planned).filter((l) => !l.settled && match(l));
+    const paidCents = paid.reduce((t, l) => t + l.realizedCents, 0);
+    const toPayCents = toPay.reduce((t, l) => t + l.plannedCents, 0);
+    const engagedCents = paidCents + toPayCents;
+    const cap = capCents ?? null;
+    return {
+      // Composition exacte de l'engagé (sur demande) : la somme des lignes vaut `engagedCents`.
+      ...(withLines
+        ? {
+            lines: [
+              ...paid.map((l) => ({ line: l, engagedCents: l.realizedCents, engagedDate: l.realizedDate, engagedAs: 'paid' })),
+              ...toPay.map((l) => ({ line: l, engagedCents: l.plannedCents, engagedDate: l.plannedDate, engagedAs: 'toPay' })),
+            ],
+          }
+        : {}),
+      paidCents,
+      toPayCents,
+      engagedCents,
+      capCents: cap,
+      marginCents: cap === null ? null : cap - engagedCents,
+      usedPct: cap ? Math.round((engagedCents / cap) * 1000) / 10 : null,
+      over: cap !== null && engagedCents > cap,
+      lineCount: charges(realized).filter(match).length + charges(planned).filter((l) => !l.settled && match(l)).length,
+    };
+  };
+  const centerRows = centers
+    .filter((c) => c.direction === 'charge')
+    .map((c) => ({ ref: c.ref, label: c.label, standard: c.standard, ...measure((l) => refOf(l) === c.ref, caps[c.ref]) }));
+  const categoryRows = categories.map((k) => ({
+    id: k.id,
+    label: k.label,
+    costCenterRef: k.costCenterRef,
+    costCenterLabel: centers.find((c) => c.ref === k.costCenterRef)?.label ?? k.costCenterRef,
+    archived: !!k.archived,
+    revision: k.revision,
+    ...measure((l) => l.categoryId === k.id, k.capCents),
+  }));
+  const overCenters = centerRows.filter((r) => r.over);
+  const overCategories = categoryRows.filter((r) => r.over);
+  return {
+    centers: centerRows,
+    categories: categoryRows,
+    overCount: overCenters.length + overCategories.length,
+    alerts: [
+      ...overCenters.map((r) => ({ level: 'center', ref: r.ref, id: null, label: r.label, capCents: r.capCents, engagedCents: r.engagedCents, overCents: -r.marginCents })),
+      ...overCategories.map((r) => ({ level: 'category', ref: r.costCenterRef, id: r.id, label: r.label, capCents: r.capCents, engagedCents: r.engagedCents, overCents: -r.marginCents })),
+    ],
+  };
 }
 
 const sourceOf = (l, realized) => ({
@@ -147,17 +212,19 @@ export default {
       references: { coreProjectId: { kind: 'coreProject', required: true }, parentBudgetId: { kind: 'budget' } },
     },
     costCenter: { collection: 'costCenters', prefix: 'cc', label: 'Centre de coût personnalisé' },
+    /** Catégorie personnalisée d'un centre de charges : regroupe des dépenses précises, avec un plafond facultatif. */
+    chargeCategory: { collection: 'chargeCategories', prefix: 'cat', label: 'Catégorie de dépense' },
     operation: {
       collection: 'operations',
       prefix: 'op',
       label: 'Opération',
-      references: { budgetId: { kind: 'budget', required: true }, costCenterId: { kind: 'costCenter' }, recurrenceId: { kind: 'recurrence' }, taskId: { kind: 'task' } },
+      references: { budgetId: { kind: 'budget', required: true }, costCenterId: { kind: 'costCenter' }, categoryId: { kind: 'chargeCategory' }, recurrenceId: { kind: 'recurrence' }, taskId: { kind: 'task' } },
     },
     recurrence: {
       collection: 'recurrences',
       prefix: 'rec',
       label: 'Opération récurrente (définition)',
-      references: { budgetId: { kind: 'budget', required: true }, costCenterId: { kind: 'costCenter' }, taskId: { kind: 'task' } },
+      references: { budgetId: { kind: 'budget', required: true }, costCenterId: { kind: 'costCenter' }, categoryId: { kind: 'chargeCategory' }, taskId: { kind: 'task' } },
     },
   },
 
@@ -269,6 +336,52 @@ export default {
         ? state.costCenters[o.costCenterId]?.label ?? null
         : parameters.value(state, 'budget.centresStandards').find((c) => c.key === o.standardCostCenter)?.label ?? `${o.standardCostCenter} (retiré)`;
 
+    const categoryLabel = (state, o) => (o.categoryId ? state.chargeCategories?.[o.categoryId]?.label ?? null : null);
+
+    function categoriesOf(state, userId, { archived = false } = {}) {
+      return om
+        .list(state, 'chargeCategory', (k) => k.userId === userId && (archived || !k.archived))
+        .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+    }
+
+    /** Libellé d'une catégorie active, unique dans son centre (sans tenir compte de la casse). */
+    function uniqueCategoryLabel(state, userId, ref, label, exceptId = null) {
+      const same = (k) => k.id !== exceptId && k.costCenterRef === ref && k.label.toLocaleLowerCase('fr') === label.toLocaleLowerCase('fr');
+      if (categoriesOf(state, userId).some(same)) fail('UNIQUENESS_VIOLATION', `La catégorie « ${label} » existe déjà dans ce centre.`, { field: 'label' });
+      return label;
+    }
+
+    function categoryView(state, k) {
+      const center = costCentersOf(state, k.userId).find((c) => c.ref === k.costCenterRef);
+      return { ...structuredClone(k), capCents: k.capCents ?? null, costCenterLabel: center?.label ?? `${k.costCenterRef} (retiré)` };
+    }
+
+    /**
+     * Catégorie d'une dépense : facultative, du user, active, dans le centre de la dépense. Elle ne
+     * concerne que les charges ; une catégorie choisie sans centre donne son centre à la dépense.
+     */
+    function categoryFor(state, userId, categoryId, { direction, costCenterRef }) {
+      if (categoryId === undefined || categoryId === null || categoryId === '') return null;
+      const k = om.owned(state, 'chargeCategory', categoryId, userId);
+      if (k.archived) fail('FORBIDDEN_BY_RULE', `La catégorie « ${k.label} » est retirée : choisissez-en une autre.`, { field: 'categoryId' });
+      if (direction !== 'charge') fail('INCOMPATIBLE_REFERENCE', 'Une catégorie de dépense ne concerne que les charges.', { field: 'categoryId' });
+      if (costCenterRef && costCenterRef !== k.costCenterRef) fail('INCOMPATIBLE_REFERENCE', `La catégorie « ${k.label} » appartient à un autre centre de coût.`, { field: 'categoryId' });
+      return k;
+    }
+
+    /**
+     * Catégorie après modification d'une dépense : celle demandée, sinon l'actuelle tant qu'elle reste dans le
+     * centre de la dépense ; un changement de centre ou de sens détache une catégorie devenue incohérente.
+     */
+    function categoryPatch(state, userId, current, input, next) {
+      const ref = next.costCenterId ?? (next.standardCostCenter ? STD + next.standardCostCenter : null) ?? current.costCenterId ?? STD + current.standardCostCenter;
+      // Catégorie inchangée : elle reste sur la dépense (même retirée) tant qu'elle reste cohérente avec son centre.
+      const same = 'categoryId' in input && (input.categoryId || null) === (current.categoryId ?? null);
+      if ('categoryId' in input && !same) return { categoryId: categoryFor(state, userId, input.categoryId, { direction: next.direction, costCenterRef: ref })?.id ?? null };
+      const k = current.categoryId ? state.chargeCategories?.[current.categoryId] : null;
+      return k && (next.direction !== 'charge' || k.costCenterRef !== ref) ? { categoryId: null } : {};
+    }
+
     /** Garde des niveaux supérieurs (ex. période close) sur les dates d'une opération. */
     function guard(state, op, dates) {
       for (const ext of socle.registry.extensions('operationGuard')) ext(state, { userId: op.userId, budgetId: op.budgetId, dates }, socle);
@@ -289,6 +402,8 @@ export default {
       directionLabel: DIRECTION_LABEL[o.direction],
       costCenterRef: o.costCenterId ?? STD + o.standardCostCenter,
       costCenterLabel: costCenterLabel(state, o),
+      categoryId: o.categoryId ?? null,
+      categoryLabel: categoryLabel(state, o),
       budgetName: state.budgets[o.budgetId]?.name ?? null,
     });
 
@@ -333,6 +448,8 @@ export default {
       directionLabel: DIRECTION_LABEL[r.direction],
       costCenterRef: r.costCenterId ?? STD + r.standardCostCenter,
       costCenterLabel: costCenterLabel(state, r),
+      categoryId: r.categoryId ?? null,
+      categoryLabel: categoryLabel(state, r),
       budgetName: state.budgets[r.budgetId]?.name ?? null,
       settlementIds: om.list(state, 'operation', (o) => o.recurrenceId === r.id).map((o) => o.id),
     });
@@ -344,6 +461,7 @@ export default {
         ...l,
         costCenterRef: l.costCenterId ?? STD + l.standardCostCenter,
         costCenterLabel: costCenterLabel(state, l),
+        categoryLabel: categoryLabel(state, l),
         budgetName: state.budgets[l.budgetId]?.name ?? null,
         budgetRole: state.budgets[l.budgetId]?.role ?? null,
         cadence: rec?.cadence ?? 'once',
@@ -362,6 +480,9 @@ export default {
       recurrenceView,
       lifeBudgetOf,
       costCentersOf,
+      categoriesOf,
+      categoryView,
+      capReport,
       operationsOf,
       operationView,
 
@@ -397,6 +518,7 @@ export default {
         const realizedAmountCents = status === 'realized' ? money('realizedAmount', input.realizedAmount ?? input.amount, { positive: true }) : null;
         const realizedDate = status === 'realized' ? realizedDateOf(input.realizedDate ?? input.date) : null;
         const budget = tx.draft.budgets[budgetId];
+        const cat = categoryFor(tx.draft, tx.userId, input.categoryId, { direction, costCenterRef: input.costCenterRef });
         const fields = {
           recurrenceId: null,
           occurrenceDate: null,
@@ -410,7 +532,8 @@ export default {
           status,
           realizedAmountCents,
           realizedDate,
-          ...costCenterFields(tx.draft, tx.userId, input.costCenterRef, direction),
+          ...costCenterFields(tx.draft, tx.userId, input.costCenterRef || cat?.costCenterRef, direction),
+          categoryId: cat?.id ?? null,
         };
         guard(tx.draft, { userId: tx.userId, budgetId }, [opDate, realizedDate].filter(Boolean));
         if (status === 'realized') settlementGuard(tx.draft, { userId: tx.userId, budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId: fields.taskId, operationId: null });
@@ -436,6 +559,7 @@ export default {
           if ('costCenterRef' in input || direction !== o.direction) {
             Object.assign(patch, costCenterFields(tx.draft, tx.userId, input.costCenterRef ?? (o.costCenterId ?? STD + o.standardCostCenter), direction));
           }
+          Object.assign(patch, categoryPatch(tx.draft, tx.userId, o, input, { direction, ...patch }));
           if ('note' in input) patch.note = note(input.note);
           if ('taskId' in input) patch.taskId = taskFor(tx.draft, tx.userId, tx.draft.budgets[o.budgetId], input.taskId);
           // Une occurrence garde son identité : sa date prévue reste celle de la définition.
@@ -500,6 +624,7 @@ export default {
         const firstDate = date('firstDate', input.firstDate ?? input.date, { required: true });
         const endDate = date('endDate', input.endDate);
         if (endDate && endDate < firstDate) fail('VALIDATION', 'La fin ne peut pas précéder la première date.', { field: 'endDate' });
+        const cat = categoryFor(tx.draft, tx.userId, input.categoryId, { direction, costCenterRef: input.costCenterRef });
         return om.create(tx, 'recurrence', {
           budgetId,
           direction,
@@ -510,7 +635,8 @@ export default {
           endDate,
           note: note(input.note),
           taskId: taskFor(tx.draft, tx.userId, budget, input.taskId),
-          ...costCenterFields(tx.draft, tx.userId, input.costCenterRef, direction),
+          ...costCenterFields(tx.draft, tx.userId, input.costCenterRef || cat?.costCenterRef, direction),
+          categoryId: cat?.id ?? null,
         });
       },
 
@@ -543,6 +669,7 @@ export default {
           const endDate = 'endDate' in patch ? patch.endDate : r.endDate;
           if (endDate && endDate < firstDate) fail('VALIDATION', 'La fin ne peut pas précéder la première date.', { field: 'endDate' });
           if ('costCenterRef' in input) Object.assign(patch, costCenterFields(tx.draft, tx.userId, input.costCenterRef, r.direction));
+          Object.assign(patch, categoryPatch(tx.draft, tx.userId, r, input, { direction: r.direction, ...patch }));
           if ('taskId' in input) patch.taskId = taskFor(tx.draft, tx.userId, tx.draft.budgets[r.budgetId], input.taskId);
           om.update(tx, r, patch);
           scope = { appliesTo: 'occurrences encore attendues', settledUntouched: settlements.length };
@@ -595,6 +722,7 @@ export default {
               taskId,
               standardCostCenter: rec.standardCostCenter,
               costCenterId: rec.costCenterId,
+              categoryId: rec.categoryId ?? null,
             });
             return { operationId: op.id };
           },
@@ -608,9 +736,13 @@ export default {
         await om.command('setCaps', ctx, input, (tx) => {
           const b = om.owned(tx.draft, 'budget', budgetId, tx.userId);
           om.checkRevision(b, expectedRevisionOf(input));
-          const caps = {};
+          // `merge` : seuls les centres fournis changent (null retire leur plafond) ; sinon la liste remplace tout.
+          const caps = input.merge === true ? { ...(b.capsCents ?? {}) } : {};
           for (const [ref, amount] of Object.entries(input.caps ?? {})) {
-            if (amount === null || amount === '') continue;
+            if (amount === null || amount === '') {
+              delete caps[ref];
+              continue;
+            }
             if (!costCentersOf(tx.draft, tx.userId).some((c) => c.ref === ref && c.direction === 'charge')) fail('REFERENCE_NOT_FOUND', 'Plafond sur un centre de charges inconnu.', { field: `caps.${ref}` });
             caps[ref] = money(`caps.${ref}`, amount, { positive: true });
           }
@@ -638,6 +770,50 @@ export default {
           { creation: true },
         );
         return { replayed: r.replayed, costCenters: costCentersOf(socle.state, ctx.userId), costCenterId: r.costCenterId };
+      },
+
+      // ---------- catégories de dépenses (plafond facultatif, jamais bloquant) ----------
+
+      categories(ctx, { archived = false } = {}) {
+        const state = socle.state;
+        const userId = om.requireUser(state, ctx);
+        return categoriesOf(state, userId, { archived }).map((k) => categoryView(state, k));
+      },
+
+      async createCategory(ctx, input = {}) {
+        const r = await om.command(
+          'createChargeCategory',
+          ctx,
+          input,
+          (tx) => {
+            const ref = text('costCenterRef', input.costCenterRef, { required: true, max: 120 });
+            const center = costCentersOf(tx.draft, tx.userId).find((c) => c.ref === ref);
+            if (!center) fail('REFERENCE_NOT_FOUND', 'Centre de coût inconnu pour ce user.', { field: 'costCenterRef', ref });
+            if (center.direction !== 'charge') fail('INCOMPATIBLE_REFERENCE', 'Une catégorie de dépense se range dans un centre de charges.', { field: 'costCenterRef' });
+            const label = uniqueCategoryLabel(tx.draft, tx.userId, ref, text('label', input.label, { required: true, max: 120 }));
+            const capCents = input.cap === undefined || input.cap === null || input.cap === '' ? null : money('cap', input.cap, { positive: true });
+            return { categoryId: om.create(tx, 'chargeCategory', { label, costCenterRef: ref, capCents, archived: false }).id };
+          },
+          { creation: true },
+        );
+        return { replayed: r.replayed, category: categoryView(socle.state, socle.state.chargeCategories[r.categoryId]) };
+      },
+
+      /** Libellé, plafond (vide = sans plafond) ; `archived: true` retire la catégorie des choix sans toucher aux dépenses. */
+      async updateCategory(ctx, id, input = {}) {
+        await om.command('updateChargeCategory', ctx, input, (tx) => {
+          const k = om.owned(tx.draft, 'chargeCategory', id, tx.userId);
+          om.checkRevision(k, expectedRevisionOf(input));
+          const patch = {};
+          if ('label' in input) patch.label = text('label', input.label, { required: true, max: 120 });
+          if ('cap' in input) patch.capCents = input.cap === null || input.cap === '' ? null : money('cap', input.cap, { positive: true });
+          if ('archived' in input) patch.archived = !!input.archived;
+          // Libellé unique parmi les catégories actives du centre : au renommage comme au rétablissement.
+          if (!(patch.archived ?? k.archived)) uniqueCategoryLabel(tx.draft, tx.userId, k.costCenterRef, patch.label ?? k.label, k.id);
+          om.update(tx, k, patch);
+          return { categoryId: id };
+        });
+        return { category: categoryView(socle.state, socle.state.chargeCategories[id]) };
       },
 
       // ---------- lectures (interfaces de test) ----------
@@ -680,6 +856,19 @@ export default {
     const stdKeys = new Set(socle.parameters.value(state, 'budget.centresStandards').map((c) => c.key));
     const orphans = Object.values(state.operations).filter((o) => o.standardCostCenter && !stdKeys.has(o.standardCostCenter));
     out.push(check('BUD-CC-01', 'pathway', 'budget', 'Les opérations désignent un centre standard encore paramétré', '0 centre retiré', `${orphans.length} opération(s)`, orphans.length ? 'warning' : 'passed', orphans.map((o) => o.id)));
+    // Catégories de dépenses : rangées dans un centre de charges du user ; une dépense catégorisée est une charge
+    // du même user, dans le centre de sa catégorie (le plafond n'est jamais bloquant, la cohérence l'est).
+    const centerRefs = new Map(Object.values(state.users).map((u) => [u.id, new Set(socle.modules.budget.costCentersOf(state, u.id).filter((c) => c.direction === 'charge').map((c) => c.ref))]));
+    const categories = Object.values(state.chargeCategories ?? {});
+    const badCategories = categories.filter((k) => !centerRefs.get(k.userId)?.has(k.costCenterRef));
+    out.push(check('BUD-CAT-01', 'integrity', 'budget', 'Chaque catégorie de dépense est rangée dans un centre de charges de son user', '0 catégorie hors centre', `${badCategories.length} catégorie(s)`, badCategories.length ? 'warning' : 'passed', badCategories.map((k) => k.id)));
+    const refOf = (o) => o.costCenterId ?? STD + o.standardCostCenter;
+    const entries = [...Object.values(state.operations), ...Object.values(state.recurrences ?? {})].filter((o) => o.categoryId);
+    const badEntries = entries.filter((o) => {
+      const k = state.chargeCategories?.[o.categoryId];
+      return !k || k.userId !== o.userId || o.direction !== 'charge' || k.costCenterRef !== refOf(o);
+    });
+    out.push(check('BUD-CAT-02', 'integrity', 'budget', 'Une dépense catégorisée est une charge du même user, dans le centre de sa catégorie', '0 dépense incohérente', `${badEntries.length} sur ${entries.length}`, badEntries.length ? 'failed' : 'passed', badEntries.map((o) => o.id)));
     return out;
   },
 
@@ -691,21 +880,25 @@ export default {
         budgets: Object.values(state.budgets)
           .filter(inScope)
           .map((x) => ({ budgetId: x.id, name: x.name, role: x.role, userId: x.userId, coreProjectId: x.coreProjectId, parentBudgetId: x.parentBudgetId })),
+        categories: Object.values(state.chargeCategories ?? {})
+          .filter(inScope)
+          .map((k) => ({ categoryId: k.id, userId: k.userId, label: k.label, costCenterRef: k.costCenterRef, cap: k.capCents === null || k.capCents === undefined ? null : k.capCents / 100, archived: !!k.archived })),
         recurrences: Object.values(state.recurrences)
           .filter(inScope)
-          .map((r) => ({ recurrenceId: r.id, userId: r.userId, budgetId: r.budgetId, direction: r.direction, label: r.label, amount: r.amountCents / 100, cadence: r.cadence, firstDate: r.firstDate, endDate: r.endDate, costCenterRef: r.costCenterId ?? STD + r.standardCostCenter, settlementCount: Object.values(state.operations).filter((o) => o.recurrenceId === r.id).length })),
+          .map((r) => ({ recurrenceId: r.id, userId: r.userId, budgetId: r.budgetId, direction: r.direction, label: r.label, amount: r.amountCents / 100, cadence: r.cadence, firstDate: r.firstDate, endDate: r.endDate, costCenterRef: r.costCenterId ?? STD + r.standardCostCenter, categoryId: r.categoryId ?? null, settlementCount: Object.values(state.operations).filter((o) => o.recurrenceId === r.id).length })),
         operations: Object.values(state.operations)
           .filter(inScope)
           .map((o) => {
             const v = b.operationView(state, o);
-            return { operationId: o.id, userId: o.userId, budgetId: o.budgetId, direction: o.direction, label: o.label, amount: v.amount, date: o.date, status: o.status, realizedAmount: v.realizedAmount, realizedDate: o.realizedDate, costCenterRef: v.costCenterRef, costCenterLabel: v.costCenterLabel, recurrenceId: o.recurrenceId ?? null, occurrenceDate: o.occurrenceDate ?? null };
+            return { operationId: o.id, userId: o.userId, budgetId: o.budgetId, direction: o.direction, label: o.label, amount: v.amount, date: o.date, status: o.status, realizedAmount: v.realizedAmount, realizedDate: o.realizedDate, costCenterRef: v.costCenterRef, costCenterLabel: v.costCenterLabel, categoryId: v.categoryId, categoryLabel: v.categoryLabel, recurrenceId: o.recurrenceId ?? null, occurrenceDate: o.occurrenceDate ?? null };
           }),
       };
     },
     csv: {
-      'recurrences.csv': { view: 'recurrences', columns: ['recurrenceId', 'userId', 'budgetId', 'direction', 'label', 'amount', 'cadence', 'firstDate', 'endDate', 'costCenterRef', 'settlementCount'] },
+      'recurrences.csv': { view: 'recurrences', columns: ['recurrenceId', 'userId', 'budgetId', 'direction', 'label', 'amount', 'cadence', 'firstDate', 'endDate', 'costCenterRef', 'categoryId', 'settlementCount'] },
+      'categories.csv': { view: 'categories', columns: ['categoryId', 'userId', 'label', 'costCenterRef', 'cap', 'archived'] },
       'budgets.csv': { view: 'budgets', columns: ['budgetId', 'name', 'role', 'userId', 'coreProjectId', 'parentBudgetId'] },
-      'operations.csv': { view: 'operations', columns: ['operationId', 'userId', 'budgetId', 'direction', 'label', 'amount', 'date', 'status', 'realizedAmount', 'realizedDate', 'costCenterRef', 'costCenterLabel', 'recurrenceId', 'occurrenceDate'] },
+      'operations.csv': { view: 'operations', columns: ['operationId', 'userId', 'budgetId', 'direction', 'label', 'amount', 'date', 'status', 'realizedAmount', 'realizedDate', 'costCenterRef', 'costCenterLabel', 'categoryId', 'categoryLabel', 'recurrenceId', 'occurrenceDate'] },
     },
   },
 
@@ -725,6 +918,9 @@ export default {
       ['PUT', '/api/budget/recurrences/:id', ({ ctx, params, body }) => s.updateRecurrence(ctx, params.id, body)],
       ['POST', '/api/budget/recurrences/:id/settle', ({ ctx, params, body }) => s.settleOccurrence(ctx, params.id, body)],
       ['PUT', '/api/budget/budgets/:id/caps', ({ ctx, params, body }) => s.setCaps(ctx, params.id, body)],
+      ['GET', '/api/budget/categories', ({ ctx, query }) => s.categories(ctx, { archived: query.get('archived') === 'true' })],
+      ['POST', '/api/budget/categories', ({ ctx, body }) => s.createCategory(ctx, body)],
+      ['PUT', '/api/budget/categories/:id', ({ ctx, params, body }) => s.updateCategory(ctx, params.id, body)],
     ];
   },
 };

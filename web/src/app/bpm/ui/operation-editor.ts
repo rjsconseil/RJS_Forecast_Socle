@@ -1,10 +1,13 @@
 import { Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Api, ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmBudgetRef, Cadence, Direction, EntryInput, EntryPreview, RegisterLine } from '../../core/bpm-models';
-import { parseAmount, signedCents } from '../../core/format';
+import { ChargeCategory } from '../../core/bpm-caps.models';
+import { CentsPipe, parseAmount, signedCents } from '../../core/format';
 import { ModalComponent } from '../../shared/modal.component';
+import { withCapAlerts } from './caps';
 import { BpmRefresh, newRequestKey } from './page-context';
 
 let editorId = 0;
@@ -13,7 +16,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
 
 /**
  * Éditeur d'opération partagé par toutes les pages BPM : Budget cible, entrée/charge, libellé,
- * montant, centre, date, cadence, fin facultative, note et tâche éventuelle d'une branche.
+ * montant, centre, catégorie facultative (charges), date, cadence, fin facultative, note et tâche éventuelle d'une branche.
  * Création : opération ponctuelle ou définition récurrente, avec aperçu sans mutation.
  * Modification : conserve l'identité de l'opération (ou de la définition récurrente, avec sa portée).
  * Le brouillon est conservé en cas d'erreur ou de conflit.
@@ -22,7 +25,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
  */
 @Component({
   selector: 'bpm-operation-editor',
-  imports: [FormsModule, ModalComponent],
+  imports: [FormsModule, RouterLink, CentsPipe, ModalComponent],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss', '../ref-styles/bpm-flow-editor.component.scss', './operation-editor.scss'],
   template: `
     <rjs-modal [open]="true" [headed]="true" [title]="heading()" [busy]="busy()" (closed)="close()">
@@ -140,6 +143,29 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
               <small class="fe-field-error">{{ fieldErr('costCenterRef') }}</small>
             }
           </label>
+          @if (direction() === 'charge' && center() !== '__new__') {
+            <label
+              >Catégorie (facultatif)
+              <select name="categoryId" [(ngModel)]="categoryId" [attr.aria-invalid]="fieldErr('categoryId') ? 'true' : null">
+                <option value="">Sans catégorie</option>
+                @for (k of categoryOptions(); track k.id) {
+                  <option [value]="k.id">{{ k.label }}{{ k.archived ? ' (retirée)' : k.capCents === null ? '' : ' · plafond ' + (k.capCents | cents) }}</option>
+                }
+              </select>
+              @if (fieldErr('categoryId')) {
+                <small class="fe-field-error">{{ fieldErr('categoryId') }}</small>
+              } @else {
+                <small>
+                  @if (categoryOptions().length) {
+                    Range la dépense dans une catégorie de ce centre : son plafond est suivi à part, sans jamais bloquer.
+                  } @else {
+                    Aucune catégorie dans ce centre.
+                  }
+                  <a routerLink="/plafonds" (click)="close()">Gérer les catégories</a>
+                </small>
+              }
+            </label>
+          }
           @if (center() === '__new__') {
             <label
               >Nom du nouveau centre
@@ -252,11 +278,13 @@ export class BpmOperationEditor implements OnInit {
   protected endDate = signal('');
   protected note = signal('');
   protected taskId = signal('');
+  protected categoryId = signal('');
   protected realized = signal(false);
   protected realizedDate = signal('');
   protected realizedAmount = signal('');
 
   protected centers = signal<CenterOption[]>([]);
+  protected categories = signal<ChargeCategory[]>([]);
   private tasks = signal<{ id: string; title: string; projectId: string | null }[]>([]);
   protected busy = signal(false);
   protected error = signal<ApiError | null>(null);
@@ -273,6 +301,8 @@ export class BpmOperationEditor implements OnInit {
   protected isRecurrence = computed(() => !!this.line()?.recurrenceId);
   protected heading = computed(() => (this.editing() ? (this.isRecurrence() ? 'Modifier l’opération récurrente' : 'Modifier l’opération') : 'Ajouter une entrée ou une charge'));
   protected centerOptions = computed(() => this.centers().filter((c) => c.direction === this.direction()));
+  /** Catégories actives du centre choisi ; la catégorie actuelle d'une ligne reste proposée même retirée. */
+  protected categoryOptions = computed(() => this.categories().filter((k) => k.costCenterRef === this.center() && (!k.archived || k.id === this.line()?.categoryId)));
   protected branchTasks = computed(() => {
     const b = this.budgets().find((x) => x.id === this.budgetId());
     return b && b.role === 'standard' ? this.tasks().filter((t) => t.projectId === b.coreProjectId) : [];
@@ -316,10 +346,12 @@ export class BpmOperationEditor implements OnInit {
     this.endDate.set(l?.endDate ?? '');
     this.note.set(l?.note ?? d.note ?? '');
     this.taskId.set(l?.taskId ?? d.taskId ?? '');
+    this.categoryId.set(l?.categoryId ?? d.categoryId ?? '');
     this.revision = l?.revision ?? null;
     try {
-      const [centers, tasks] = await Promise.all([this.bpm.costCenters(), this.api.tasks().catch(() => [])]);
+      const [centers, tasks, categories] = await Promise.all([this.bpm.costCenters(), this.api.tasks().catch(() => []), this.bpm.categories(true).catch(() => [] as ChargeCategory[])]);
       this.centers.set(centers);
+      this.categories.set(categories);
       this.tasks.set(tasks.map((t) => ({ id: t.task.id, title: t.task.title, projectId: t.task.projectId })));
       const wanted = l?.costCenterRef ?? d.costCenterRef;
       this.center.set(wanted && centers.some((c) => c.ref === wanted) ? wanted : (this.centerOptions()[0]?.ref ?? '__new__'));
@@ -350,6 +382,7 @@ export class BpmOperationEditor implements OnInit {
   protected setDirection(d: Direction) {
     this.direction.set(d);
     if (!this.centerOptions().some((c) => c.ref === this.center())) this.center.set(this.centerOptions()[0]?.ref ?? '__new__');
+    if (d !== 'charge') this.categoryId.set('');
   }
 
   protected fieldErr(name: string) {
@@ -372,8 +405,15 @@ export class BpmOperationEditor implements OnInit {
       ...(once && this.realized() ? { status: 'realized' as const, realizedDate: this.realizedDate() || this.date(), ...(typeof realizedAmount === 'number' ? { realizedAmount } : {}) } : { status: 'planned' as const }),
       note: this.note().trim() || null,
       taskId: this.branchTasks().length ? this.taskId() || null : undefined,
+      categoryId: this.categoryValue(),
     };
   });
+
+  /** Catégorie envoyée : seulement pour une charge et si elle appartient au centre choisi. */
+  private categoryValue() {
+    const id = this.categoryId();
+    return this.direction() === 'charge' && id && this.categoryOptions().some((k) => k.id === id) ? id : null;
+  }
 
   protected close() {
     this.closed.emit();
@@ -405,15 +445,15 @@ export class BpmOperationEditor implements OnInit {
       let message: string;
       if (!l) {
         const r = await this.bpm.createEntry({ ...this.input(), costCenterRef: centerRef, requestKey: this.requestKey });
-        message = r.recurrence ? `Opération récurrente « ${r.recurrence.label} » enregistrée (${r.recurrence.cadenceLabel}).` : `Opération « ${r.operation?.label} » enregistrée.`;
+        message = withCapAlerts(r.recurrence ? `Opération récurrente « ${r.recurrence.label} » enregistrée (${r.recurrence.cadenceLabel}).` : `Opération « ${r.operation?.label} » enregistrée.`, r.capAlerts);
       } else if (l.recurrenceId) {
-        const body = { expectedRevision: this.recurrenceRevision ?? 0, label: this.label().trim(), amount, costCenterRef: centerRef, note: this.note().trim() || null, endDate: this.endDate() || null, ...(this.cadence() !== this.original?.cadence ? { cadence: this.cadence() } : {}), ...(this.date() !== this.original?.firstDate ? { firstDate: this.date() } : {}), ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
+        const body = { expectedRevision: this.recurrenceRevision ?? 0, label: this.label().trim(), amount, costCenterRef: centerRef, note: this.note().trim() || null, endDate: this.endDate() || null, categoryId: this.categoryValue(), ...(this.cadence() !== this.original?.cadence ? { cadence: this.cadence() } : {}), ...(this.date() !== this.original?.firstDate ? { firstDate: this.date() } : {}), ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
         const r = await this.bpm.updateRecurrence(l.recurrenceId, body);
-        message = `Définition modifiée : ${r.scope.appliesTo}` + (r.scope.settledUntouched ? ` ${r.scope.settledUntouched} règlement(s) déjà effectué(s) inchangé(s).` : '');
+        message = withCapAlerts(`Définition modifiée : ${r.scope.appliesTo}` + (r.scope.settledUntouched ? ` ${r.scope.settledUntouched} règlement(s) déjà effectué(s) inchangé(s).` : ''), r.capAlerts);
       } else {
-        const body = { expectedRevision: this.revision ?? 0, label: this.label().trim(), amount, date: this.date(), costCenterRef: centerRef, note: this.note().trim() || null, ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
-        await this.bpm.updateOperation(l.operationId ?? l.id, body);
-        message = 'Opération modifiée.';
+        const body = { expectedRevision: this.revision ?? 0, label: this.label().trim(), amount, date: this.date(), costCenterRef: centerRef, note: this.note().trim() || null, categoryId: this.categoryValue(), ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
+        const r = await this.bpm.updateOperation(l.operationId ?? l.id, body);
+        message = withCapAlerts('Opération modifiée.', r.capAlerts);
       }
       this.refresh.bump();
       this.saved.emit(message);

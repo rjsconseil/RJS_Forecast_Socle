@@ -46,6 +46,7 @@ interface ZoomRow {
       (periodChange)="ctx.setQuery({ period: $event })"
     >
       <a actions class="app-hero-action" routerLink="/piloter/agir" [queryParams]="ctx.carry()" fragment="saisie-des-flux">＋ Saisir un flux</a>
+      <a actions class="bpm-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
       <a actions class="bpm-link" routerLink="/piloter/agir" [queryParams]="ctx.carry()">Ce qu’il faut faire →</a>
       <a actions class="bpm-link" routerLink="/depenses" [queryParams]="ctx.carry()">Dépenses →</a>
 

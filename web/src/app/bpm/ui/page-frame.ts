@@ -72,6 +72,8 @@ const PERIOD_NAV = {
                 [compactStatus]="text[compactState()]"
                 [previousQuery]="query(prev())"
                 [nextQuery]="query(next())"
+                [previousDisabled]="atFirst()"
+                [nextDisabled]="atCurrent()"
                 [currentQuery]="query(null)"
               />
             }
@@ -114,6 +116,9 @@ export class BpmPageFrame {
   private key = computed(() => this.period()?.key ?? null);
   protected prev = computed(() => (this.key() ? shiftPeriod(this.key()!, -1) : null));
   protected next = computed(() => (this.key() ? shiftPeriod(this.key()!, 1) : null));
+  /** Bornes du cycle renvoyées par l'API : l'API refuse toute période hors de cet intervalle. */
+  protected atFirst = computed(() => !!this.key() && this.key() === this.context()?.periods?.firstKey);
+  protected atCurrent = computed(() => !!this.key() && this.key() === this.context()?.periods?.currentKey);
   /** Période passée, actuelle ou à venir au regard de la date de calcul renvoyée par l'API. */
   protected state = computed<'past' | 'present' | 'future'>(() => {
     const p = this.period();

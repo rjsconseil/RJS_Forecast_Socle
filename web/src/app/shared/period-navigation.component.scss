@@ -17,7 +17,8 @@
   border-radius: var(--card-radius);
   background: var(--soft);
 }
-.period-navigation > a {
+.period-navigation > a,
+.period-navigation > .period-nav-arrow {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -122,6 +123,39 @@
     display: block;
   }
 }
+// Flèche inactive : borne du cycle atteinte (aucune période lisible au-delà).
+.period-navigation > .is-disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+// Variante violette, alignée sur les boutons d'un bandeau sombre. La page fixe `--period-nav-accent`
+// (un bandeau sombre redéfinit `--app-accent` en blanc, il ne peut donc pas servir ici).
+.period-navigation.is-accent {
+  border-color: color-mix(in srgb, #ffffff 22%, transparent);
+  background: color-mix(in srgb, #ffffff 8%, transparent);
+}
+.period-navigation.is-accent > a,
+.period-navigation.is-accent > .period-nav-arrow {
+  border-color: color-mix(in srgb, var(--period-nav-accent, #4338ca) 70%, #ffffff);
+  color: #ffffff;
+  background: var(--period-nav-accent, #4338ca);
+}
+.period-navigation.is-accent > .period-nav-current {
+  background: color-mix(in srgb, var(--period-nav-accent, #4338ca) 82%, #000000);
+}
+.period-navigation.is-accent > a:hover {
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--period-nav-accent, #4338ca) 55%, #ffffff);
+  background: color-mix(in srgb, var(--period-nav-accent, #4338ca) 85%, #ffffff);
+}
+.period-navigation.is-accent .period-nav-arrow > svg {
+  color: #ffffff;
+}
+.period-navigation.is-accent > a:focus-visible {
+  outline-color: #ffffff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .period-navigation > a {
     transition: none;
