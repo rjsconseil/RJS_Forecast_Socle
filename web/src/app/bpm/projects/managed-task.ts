@@ -27,20 +27,34 @@ export interface TaskFundingSubmission {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let t = task();
-    <article class="bpm-managed-task" [attr.aria-label]="'Tâche ' + t.task.title">
+    <article
+      class="bpm-managed-task"
+      [attr.data-status]="t.task.status"
+      [attr.aria-label]="'Tâche ' + t.task.title"
+    >
       <div class="pm-task-summary">
         <header class="pm-task-heading">
-          <p class="pm-task-eyebrow">Tâche du projet</p>
           <h4>
             <button type="button" class="text-link" [disabled]="busy()" (click)="edit.emit(t)">
               {{ t.task.title }}
             </button>
           </h4>
           @if (t.task.description) {
-            <p class="bpm-note">{{ t.task.description }}</p>
+            <p class="bpm-note pm-task-description" [title]="t.task.description">
+              {{ t.task.description }}
+            </p>
           }
+          <dl class="pm-task-dates">
+            <div>
+              <dt>Début</dt>
+              <dd>{{ t.task.startDate ? (t.task.startDate | shortDate) : 'À définir' }}</dd>
+            </div>
+            <div>
+              <dt>Échéance</dt>
+              <dd>{{ t.task.dueDate ? (t.task.dueDate | shortDate) : 'À définir' }}</dd>
+            </div>
+          </dl>
         </header>
-        <bpm-project-metrics [task]="t" />
         <dl class="pm-task-cash">
           <div>
             <dt>Engagé en dépenses</dt>
@@ -52,52 +66,18 @@ export interface TaskFundingSubmission {
           </div>
           <div>
             <dt>Reste disponible</dt>
-            <dd>{{ t.budget?.remainingCents | cents }}</dd>
+            <dd [class.is-deficit]="(t.budget?.remainingCents ?? 0) < 0">
+              {{ t.budget?.remainingCents | cents }}
+            </dd>
           </div>
         </dl>
-        <p class="bpm-note pm-task-footnote">
-          Le prorata du temps estime la consommation. Seuls les règlements validés remontent au
-          budget du projet de vie.
-        </p>
-        @if (requestOpen() && !t.budget?.request) {
-          <form class="pm-task-funding-form" (ngSubmit)="submit()">
-            <label
-              >Montant total souhaité (€)<input
-                name="amount"
-                inputmode="decimal"
-                [(ngModel)]="amount"
-                required
-            /></label>
-            <label
-              >Motif, facultatif<input name="note" maxlength="1000" [(ngModel)]="note"
-            /></label>
-            <p class="bpm-note">
-              Part actuelle : {{ t.budget?.shareCents | cents }}. Indiquez le nouveau montant total
-              souhaité.
-            </p>
-            @if (error()) {
-              <p class="bpm-feedback is-error" role="alert">{{ error() }}</p>
-            }
-            <div class="bpm-actions">
-              <button type="submit" class="btn btn-primary" [disabled]="busy()">Envoyer</button
-              ><button
-                type="button"
-                class="btn btn-secondary"
-                [disabled]="busy()"
-                (click)="requestOpen.set(false)"
-              >
-                Annuler
-              </button>
-            </div>
-          </form>
-        }
       </div>
+      <bpm-project-metrics [task]="t" [vertical]="true" />
       <aside
         class="pm-side-panel pm-task-sidebar"
         [attr.aria-label]="'Pilotage de ' + t.task.title"
       >
-        <p class="pm-detail-eyebrow">Piloter la tâche</p>
-        <label class="pm-task-status"
+        <label class="pm-task-status" [attr.data-status]="t.task.status"
           >État
           <select
             [attr.aria-label]="'État de ' + t.task.title"
@@ -110,16 +90,6 @@ export interface TaskFundingSubmission {
             }
           </select>
         </label>
-        <dl class="pm-task-dates">
-          <div>
-            <dt>Début</dt>
-            <dd>{{ t.task.startDate ? (t.task.startDate | shortDate) : 'À définir' }}</dd>
-          </div>
-          <div>
-            <dt>Échéance</dt>
-            <dd>{{ t.task.dueDate ? (t.task.dueDate | shortDate) : 'À définir' }}</dd>
-          </div>
-        </dl>
         <div class="bpm-actions pm-task-actions">
           <button
             class="btn btn-primary"
@@ -155,11 +125,43 @@ export interface TaskFundingSubmission {
           </button>
         </div>
         @if (!funded()) {
-          <p class="bpm-note">Attribuez un budget au projet pour demander une part.</p>
+          <p class="bpm-note pm-task-warning">
+            Attribuez un budget au projet pour demander une part.
+          </p>
         }
       </aside>
+      @if (requestOpen() && !t.budget?.request) {
+        <form class="pm-task-funding-form" (ngSubmit)="submit()">
+          <label
+            >Montant total souhaité (€)<input
+              name="amount"
+              inputmode="decimal"
+              [(ngModel)]="amount"
+              required
+          /></label>
+          <label>Motif, facultatif<input name="note" maxlength="1000" [(ngModel)]="note" /></label>
+          <p class="bpm-note">
+            Part actuelle : {{ t.budget?.shareCents | cents }}. Indiquez le nouveau montant total
+            souhaité.
+          </p>
+          @if (error()) {
+            <p class="bpm-feedback is-error" role="alert">{{ error() }}</p>
+          }
+          <div class="bpm-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="busy()">Envoyer</button
+            ><button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="busy()"
+              (click)="requestOpen.set(false)"
+            >
+              Annuler
+            </button>
+          </div>
+        </form>
+      }
       @if (t.budget?.request; as r) {
-        <div class="pm-task-decision">
+        <div class="pm-task-decision" [attr.data-status]="r.status" role="status">
           <div>
             <strong>Demande : {{ r.amountCents | cents }}</strong>
             <p class="bpm-note">{{ r.statusLabel }}{{ r.note ? ' · ' + r.note : '' }}</p>

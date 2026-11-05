@@ -1,0 +1,981 @@
+<div class="page page-wide bpm-projects bpm-project-page project-workspace">
+  @if (error() && !data()) {
+    <div class="empty-state" role="alert">
+      <h2>Projet indisponible</h2>
+      <p>{{ error() }}</p>
+      <button class="btn btn-secondary" (click)="load()">Réessayer</button
+      ><a routerLink="/app/gestion-projet">← Gestion de projet</a>
+    </div>
+  } @else if (!data()) {
+    <div class="empty-state" role="status"><h2>Chargement du projet…</h2></div>
+  } @else {
+    @let d = data()!;
+    <header
+      class="life-projects-banner project-detail-banner"
+      data-ui-pattern="heading"
+      data-sticky-hero
+    >
+      <div class="life-banner-copy">
+        <a class="text-link project-back" routerLink="/app/gestion-projet">← Gestion de projet</a>
+        <p class="eyebrow">
+          {{
+            d.role === 'life'
+              ? 'Projet de vie · racine du budget de vie'
+              : 'Projet standard du budget de vie'
+          }}
+        </p>
+        <h1 class="display">{{ d.project.project.title }}</h1>
+        <div class="project-description">
+          <p [class.is-expanded]="descriptionExpanded()">
+            {{
+              d.project.project.description ||
+                'Ajoutez une description pour préciser le but de ce projet.'
+            }}
+          </p>
+          @if (d.project.project.description) {
+            <button
+              type="button"
+              class="text-link"
+              [attr.aria-expanded]="descriptionExpanded()"
+              (click)="descriptionExpanded.set(!descriptionExpanded())"
+            >
+              {{ descriptionExpanded() ? 'Réduire' : 'Lire la description' }}
+            </button>
+          }
+        </div>
+      </div>
+      <div class="life-header-actions cockpit-status">
+        <span
+          class="status-value"
+          [attr.data-status]="d.project.view.status"
+          [title]="d.project.view.explanation"
+        >
+          <span class="status-dot" [attr.data-status]="d.project.view.status"></span
+          >{{ d.project.view.statusLabel }}
+        </span>
+        @if (d.budget; as b) {
+          <bpm-budget-state [state]="b.state" />
+        }
+      </div>
+      @if (d.role === 'standard' && d.budget; as b) {
+        <div class="life-banner-tools project-detail-tools" aria-label="Commandes du projet">
+          <label>
+            Rechercher une tâche
+            <span class="life-search-field">
+              <input
+                type="search"
+                aria-label="Rechercher une tâche"
+                placeholder="Titre, description…"
+                [value]="query()"
+                (input)="query.set($any($event.target).value)"
+              />
+              @if (query()) {
+                <button
+                  type="button"
+                  aria-label="Effacer la recherche"
+                  title="Effacer la recherche"
+                  (click)="query.set('')"
+                >
+                  ×
+                </button>
+              }
+            </span>
+          </label>
+          <form
+            class="life-budget-project"
+            (submit)="$event.preventDefault(); attach($any($event.target).elements.task.value)"
+          >
+            <label>
+              Rattacher une tâche
+              <select name="task" required [disabled]="busy() || !availableTasks().length">
+                <option value="">
+                  {{
+                    availableTasks().length
+                      ? 'Choisir une tâche sans projet…'
+                      : 'Aucune tâche sans projet disponible'
+                  }}
+                </option>
+                @for (t of availableTasks(); track t.task.id) {
+                  <option [value]="t.task.id">{{ t.task.title }}</option>
+                }
+              </select>
+            </label>
+            <button
+              type="submit"
+              class="btn btn-secondary"
+              [disabled]="busy() || !availableTasks().length"
+            >
+              Rattacher
+            </button>
+          </form>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="busy()"
+            (click)="projectEditor.set(true)"
+          >
+            Modifier le projet
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="busy()"
+            [attr.aria-expanded]="allocationEditing()"
+            aria-controls="project-envelope-form"
+            (click)="editAllocation()"
+          >
+            {{ b.regime ? 'Modifier l’enveloppe' : 'Attribuer l’enveloppe' }}
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="createTask()">
+            + Créer une tâche
+          </button>
+        </div>
+      }
+    </header>
+    @if (notice(); as n) {
+      <p
+        class="bpm-feedback project-feedback"
+        [class.is-error]="n.error"
+        [attr.role]="n.error ? 'alert' : 'status'"
+      >
+        {{ n.text }}
+      </p>
+    }
+    @if (error()) {
+      <p class="bpm-feedback is-error" role="alert">
+        Actualisation impossible : {{ error() }}
+        <button class="text-link" (click)="load()">Réessayer</button>
+      </p>
+    }
+    @if (d.role === 'standard' && d.budget; as b) {
+      <div class="project-layout">
+        <section class="project-cockpit" aria-label="Chiffres clés et suivi du projet">
+          <div class="cockpit-body">
+            <div class="life-summary project-summary-band">
+              <section class="cockpit-progress" aria-labelledby="progress-title">
+                <div class="cockpit-section-heading">
+                  <h2 id="progress-title">Avancement</h2>
+                  <strong>{{ doneCount() }} / {{ d.tasks.length }} tâches</strong>
+                </div>
+                <div
+                  class="cockpit-progress-track"
+                  role="progressbar"
+                  aria-label="Tâches terminées"
+                  [attr.aria-valuenow]="progress()"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span [style.width.%]="progress()"></span>
+                </div>
+                <dl class="cockpit-facts">
+                  <div>
+                    <dt>Temps consommé</dt>
+                    <dd>
+                      {{ d.project.view.time.spentHoursTotal }} h
+                      <small
+                        >/ {{ d.project.view.time.plannedIsPartial ? '≥ ' : ''
+                        }}{{ d.project.view.time.plannedHoursKnown }} h prévues</small
+                      >
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Début</dt>
+                    <dd>{{ (d.project.project.startDate | shortDate) || 'À définir' }}</dd>
+                  </div>
+                  <div>
+                    <dt>Échéance</dt>
+                    <dd>{{ (d.project.project.dueDate | shortDate) || 'À définir' }}</dd>
+                  </div>
+                </dl>
+              </section>
+              <dl
+                id="budget-title"
+                class="life-financial-stats"
+                aria-label="Chiffres essentiels du projet"
+              >
+                @for (tile of budgetTiles(); track tile.id) {
+                  <div class="life-financial-stat" [attr.data-tone]="tile.tone">
+                    <dt>{{ tile.label }}</dt>
+                    <dd>{{ tile.value }}</dd>
+                    <span>{{ tile.note }}</span>
+                  </div>
+                }
+              </dl>
+            </div>
+            @if (allocationEditing()) {
+              <form
+                id="project-envelope-form"
+                class="envelope-editor"
+                (submit)="$event.preventDefault(); allocate(b.budgetId, allocationRevision())"
+              >
+                <label for="project-envelope">Montant de l’enveloppe (€)</label>
+                <input
+                  id="project-envelope"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  [value]="allocation()"
+                  [disabled]="busy()"
+                  (input)="allocation.set($any($event.target).value)"
+                  aria-describedby="envelope-help"
+                />
+                <p id="envelope-help">
+                  Ce montant finance le projet. Chaque tâche demande ensuite sa part.
+                </p>
+                @if (allocationError()) {
+                  <p class="is-error" role="alert">{{ allocationError() }}</p>
+                }
+                <div class="cockpit-actions">
+                  <button type="submit" class="btn btn-primary" [disabled]="busy()">
+                    {{ busy() ? 'Enregistrement…' : 'Enregistrer' }}</button
+                  ><button
+                    type="button"
+                    class="btn btn-secondary"
+                    [disabled]="busy()"
+                    (click)="allocationEditing.set(false)"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            }
+            <div class="cockpit-details">
+              <details class="cockpit-disclosure">
+                <summary>Ventilation & cycle actuel</summary>
+                <div class="cockpit-disclosure-body">
+                  <dl class="cockpit-facts">
+                    <div>
+                      <dt>Accordé aux tâches</dt>
+                      <dd>{{ b.sharesCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Encore à ventiler</dt>
+                      <dd>{{ b.availableCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Demandes en attente</dt>
+                      <dd>{{ b.pendingRequestsCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Dépassement autorisé</dt>
+                      <dd>{{ b.approvedOverrunCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Réglé dans le cycle</dt>
+                      <dd>{{ b.periodPaidCents | cents }}</dd>
+                    </div>
+                    <div>
+                      <dt>Cycle actuel</dt>
+                      <dd>{{ d.context.period?.label ?? 'À configurer' }}</dd>
+                    </div>
+                  </dl>
+                  <p class="bpm-note">
+                    Seuls les règlements validés sont remontés au budget de vie. L’enveloppe ne
+                    constitue pas une dépense immédiate.
+                  </p>
+                  @if (b.paidBeforeAllocationCents) {
+                    <p class="bpm-note">
+                      {{ b.paidBeforeAllocationCents | cents }} réglés avant l’attribution, hors
+                      budget de vie.
+                    </p>
+                  }
+                </div>
+              </details>
+              @if (flow(); as f) {
+                <section
+                  class="bpm-overrun"
+                  id="project-overrun-flow"
+                  tabindex="-1"
+                  aria-live="polite"
+                  aria-label="Autorisation du budget de vie"
+                >
+                  <p><strong>Budget du projet dépassé</strong> · {{ f.label }}</p>
+                  <p>{{ f.message }}</p>
+                  @if (!f.request) {
+                    <div class="bpm-actions">
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        [disabled]="busy()"
+                        (click)="requestAuthorization()"
+                      >
+                        Demander l’autorisation ({{ f.refusal.overrunCents | cents }})
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        [disabled]="busy()"
+                        (click)="flow.set(null)"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  } @else {
+                    <bpm-overrun-request
+                      [overrun]="f.request"
+                      [busy]="busy()"
+                      (decide)="decideFlow($event)"
+                    />
+                  }
+                </section>
+              }
+              @if (b.pendingOverrun && !b.pendingOverrun.taskId && !flow()?.request) {
+                <bpm-overrun-request
+                  [overrun]="b.pendingOverrun"
+                  [busy]="busy()"
+                  (decide)="decide(b.pendingOverrun, $event)"
+                />
+              }
+              <!-- ---------- dépassements et fin de cycle ---------- -->
+              <details class="cockpit-disclosure" id="cycle-title">
+                <summary>Contrôles & fin de cycle</summary>
+                <div class="cockpit-disclosure-body">
+                  <header>
+                    <h3>Dépassements et fin de cycle</h3>
+                    <p>
+                      À la fin du cycle, les dépassements autorisés sont facturés au budget de vie,
+                      puis le budget du projet est revalidé.
+                    </p>
+                  </header>
+                  @if (d.overruns.length) {
+                    <div class="bpm-table-wrap">
+                      <table class="bpm-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Demandé le</th>
+                            <th scope="col">Objet</th>
+                            <th scope="col" class="num">Montant</th>
+                            <th scope="col">Décision</th>
+                            <th scope="col">Facturation</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (o of d.overruns; track o.id) {
+                            <tr>
+                              <td>{{ o.requestedAt | shortDate }}</td>
+                              <td>
+                                {{ o.reasonLabel }}
+                                @if (o.taskTitle) {
+                                  · {{ o.taskTitle }}
+                                }
+                              </td>
+                              <td class="num">{{ o.amountCents | cents }}</td>
+                              <td>{{ o.statusLabel }}</td>
+                              <td>
+                                {{
+                                  o.billedAt
+                                    ? 'Facturé le '
+                                    : o.billingDate
+                                      ? 'Fin de cycle, le '
+                                      : ''
+                                }}{{ o.billedAt ?? o.billingDate | shortDate }}
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                    @if (billable()) {
+                      <div class="bpm-actions">
+                        <button
+                          type="button"
+                          class="btn btn-primary"
+                          [disabled]="busy()"
+                          (click)="bill(b.budgetId)"
+                        >
+                          Facturer au budget de vie (fin de cycle)
+                        </button>
+                      </div>
+                    }
+                  } @else {
+                    <p class="bpm-note">Aucun dépassement demandé pour ce projet.</p>
+                  }
+                  @if (d.checks.length) {
+                    <ul class="bpm-checks" aria-label="Contrôles de fin de cycle">
+                      @for (c of d.checks; track $index) {
+                        <li [attr.data-level]="c.level">{{ c.message }}</li>
+                      }
+                    </ul>
+                  }
+                </div>
+              </details>
+              <details class="cockpit-disclosure" id="charges-title">
+                <summary>Dépenses sans tâche ({{ unassignedCharges().length }})</summary>
+                <div class="cockpit-disclosure-body">
+                  <p class="bpm-note">Historique des dépenses non rattachées à une tâche.</p>
+                  @if (!b.taskFundingRequired) {
+                    <button class="btn btn-secondary" (click)="addExpense(null)">
+                      Ajouter une dépense
+                    </button>
+                  }
+                  <ng-container
+                    *ngTemplateOutlet="chargeList; context: { $implicit: unassignedCharges() }"
+                  />
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+        <section class="project-task-space" aria-labelledby="shares-title">
+          <header class="project-tasks-heading">
+            <div>
+              <span class="project-section-label">Le travail du projet</span>
+              <h2 id="shares-title">
+                Ses tâches <span class="count-badge">{{ d.tasks.length }}</span>
+              </h2>
+            </div>
+            <span class="task-completion">{{ doneCount() }} terminée(s) · {{ progress() }} %</span>
+          </header>
+          <p class="board-move-help" id="project-move-help">
+            Glissez par la poignée ⠿ ou choisissez « Déplacer vers ». Échap annule le glissement.
+          </p>
+          @if (query()) {
+            <p role="status" class="board-result-count">
+              {{ visibleTasks().length }} résultat(s) dans ce projet.
+            </p>
+          }
+          @if (!d.tasks.length) {
+            <div class="project-first-task">
+              <h3>La première étape de votre projet</h3>
+              <p>Créez une tâche, estimez son temps puis demandez sa part de l’enveloppe.</p>
+              <button class="btn btn-primary" [disabled]="busy()" (click)="createTask()">
+                Créer la première tâche
+              </button>
+            </div>
+          }
+          <section
+            class="board project-task-board"
+            cdkDropListGroup
+            aria-label="Tableau des tâches du projet"
+            aria-describedby="project-move-help"
+            [class.has-task-move]="dragActive()"
+            [attr.aria-busy]="busy()"
+          >
+            @for (col of columns; track col.id) {
+              <div
+                class="board-column"
+                [attr.data-column]="col.id"
+                [class.is-drop-target]="dropTarget() === col.id"
+                cdkDropList
+                [cdkDropListData]="col.id"
+                [cdkDropListDisabled]="busy()"
+                (cdkDropListEntered)="dropTarget.set(col.id)"
+                (cdkDropListExited)="dropTarget.set(null)"
+                (cdkDropListDropped)="dropped($event)"
+              >
+                <div class="board-column-head">
+                  <div>
+                    <span class="status-dot" [attr.data-status]="col.id"></span>
+                    <h3>{{ col.label }}</h3>
+                  </div>
+                  <span class="count-badge">{{ byColumn()[col.id].length }}</span>
+                </div>
+                <div class="board-column-content">
+                  @for (t of byColumn()[col.id]; track t.task.id) {
+                    @let tb = t.budget;
+                    <article
+                      class="card task-card project-task-card"
+                      [attr.aria-label]="t.task.title"
+                      [attr.data-urgency]="urgency(t.task.dueDate, t.task.status === 'done')"
+                      cdkDrag
+                      [cdkDragData]="t"
+                      [cdkDragDisabled]="busy()"
+                      [cdkDragStartDelay]="{ touch: 300, mouse: 0 }"
+                      (cdkDragStarted)="started()"
+                      (cdkDragEnded)="dragActive.set(false); dropTarget.set(null)"
+                    >
+                      <h4>
+                        <span
+                          class="grip"
+                          cdkDragHandle
+                          title="Glisser pour changer de statut"
+                          aria-hidden="true"
+                          >⠿</span
+                        ><button class="task-title-link" [disabled]="busy()" (click)="editTask(t)">
+                          {{ t.task.title }}
+                        </button>
+                      </h4>
+                      <p class="task-card-description" [title]="t.task.description">
+                        {{ t.task.description || 'Aucune description renseignée.' }}
+                      </p>
+                      <div class="task-dates">
+                        <span
+                          >Début ·
+                          {{ t.task.startDate ? date(t.task.startDate) : 'À définir' }}</span
+                        ><span
+                          class="due-date"
+                          [attr.data-urgency]="urgency(t.task.dueDate, t.task.status === 'done')"
+                          [title]="dueTitle(t.task.dueDate, t.task.status === 'done')"
+                          >{{ t.task.dueDate ? date(t.task.dueDate) : 'Sans échéance' }}</span
+                        >
+                      </div>
+                      <dl class="task-money">
+                        <div>
+                          <dt>Budget accordé</dt>
+                          <dd>
+                            {{
+                              tb?.shareCents === null
+                                ? 'À demander'
+                                : (tb?.shareCents ?? null | cents)
+                            }}
+                          </dd>
+                        </div>
+                        <div class="money-rest" [class.is-danger]="(tb?.remainingCents ?? 0) < 0">
+                          <dt>Reste réel</dt>
+                          <dd>
+                            {{
+                              tb?.shareCents === null
+                                ? 'Non attribué'
+                                : (tb?.remainingCents ?? null | cents)
+                            }}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Engagé</dt>
+                          <dd>{{ tb?.engagedCents ?? 0 | cents }}</dd>
+                        </div>
+                        <div class="money-paid">
+                          <dt>Réglé validé</dt>
+                          <dd>{{ tb?.paidCents ?? 0 | cents }}</dd>
+                        </div>
+                      </dl>
+                      <div class="task-time" [attr.data-tone]="timeTone(t)">
+                        <div>
+                          <span>Temps consommé</span
+                          ><strong
+                            >{{ t.task.spentHours }} / {{ t.task.plannedHours ?? '—' }} h</strong
+                          >
+                        </div>
+                        <div
+                          class="task-time-track"
+                          role="progressbar"
+                          aria-label="Temps consommé"
+                          [attr.aria-valuenow]="timeWidth(t)"
+                          [attr.aria-valuetext]="
+                            tb?.timeConsumptionPercent === null
+                              ? 'Temps à estimer'
+                              : tb?.timeConsumptionPercent + ' %'
+                          "
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                        >
+                          <span [style.width.%]="timeWidth(t)"></span>
+                        </div>
+                        <p>
+                          {{
+                            tb?.timeConsumptionPercent === null
+                              ? 'Temps prévu à renseigner'
+                              : tb?.timeConsumptionPercent + ' % du temps prévu'
+                          }}
+                          · Budget au prorata :
+                          {{
+                            tb?.timeConsumedCents === null
+                              ? 'À estimer'
+                              : (tb?.timeConsumedCents ?? null | cents)
+                          }}
+                        </p>
+                      </div>
+                      <label class="status-change"
+                        >Déplacer vers<select
+                          [attr.aria-label]="'Déplacer vers · ' + t.task.title"
+                          [disabled]="busy()"
+                          (change)="changeStatus(t, $any($event.target).value, $any($event.target))"
+                        >
+                          @for (c of columns; track c.id) {
+                            <option [value]="c.id" [selected]="c.id === t.task.status">
+                              {{ c.label }}
+                            </option>
+                          }
+                        </select></label
+                      >
+                      <div class="task-card-actions">
+                        <button class="text-link" [disabled]="busy()" (click)="editTask(t)">
+                          Modifier la tâche
+                        </button>
+                        @if (!tb?.request) {
+                          <button
+                            class="text-link"
+                            [disabled]="busy()"
+                            [attr.aria-expanded]="fundingTask() === t.task.id"
+                            [attr.aria-controls]="'funding-' + t.task.id"
+                            (click)="
+                              fundingTask.set(fundingTask() === t.task.id ? null : t.task.id)
+                            "
+                          >
+                            Demander un montant
+                          </button>
+                        } @else {
+                          <span class="task-request-pending">Demande en cours</span>
+                        }
+                      </div>
+                      @if (fundingTask() === t.task.id || tb?.request) {
+                        <div class="task-funding-box" id="funding-{{ t.task.id }}">
+                          @if (tb?.request; as r) {
+                            <bpm-task-requests
+                              [requests]="[r]"
+                              [busy]="busy()"
+                              (decide)="decideRequest($event)"
+                            />
+                          } @else {
+                            <form
+                              (submit)="
+                                $event.preventDefault();
+                                requestBudget(b.budgetId, t, $any($event.target).elements)
+                              "
+                            >
+                              <label
+                                >Part totale souhaitée (€)<input
+                                  name="amount"
+                                  inputmode="decimal"
+                                  required
+                                  [value]="tb?.shareCents ? tb!.shareCents! / 100 : ''" /></label
+                              ><label
+                                >Motif (facultatif)<input
+                                  name="note"
+                                  maxlength="1000"
+                                  placeholder="Devis, achat…"
+                              /></label>
+                              <p>
+                                Le total remplace la part actuelle. Il reste
+                                {{ b.availableCents | cents }} à ventiler dans le projet.
+                              </p>
+                              <button class="btn btn-primary" [disabled]="busy()">
+                                Envoyer la demande
+                              </button>
+                            </form>
+                          }
+                        </div>
+                      }
+                      @for (o of taskOverruns(t.task.id); track o.id) {
+                        <bpm-overrun-request
+                          [overrun]="o"
+                          [busy]="busy()"
+                          (decide)="decide(o, $event)"
+                        />
+                      }
+                      <details class="task-detail">
+                        <summary>
+                          Budget & opérations <span>{{ taskCharges(t.task.id).length }}</span>
+                        </summary>
+                        <div class="task-detail-body">
+                          @if (b.regime) {
+                            <details>
+                              <summary>Ajuster la part accordée</summary>
+                              <form
+                                (submit)="
+                                  $event.preventDefault();
+                                  saveShare(
+                                    b.budgetId,
+                                    t,
+                                    $any($event.target).elements.share.value,
+                                    b.revision
+                                  )
+                                "
+                              >
+                                <label
+                                  >Part accordée (€)<input
+                                    name="share"
+                                    inputmode="decimal"
+                                    [value]="
+                                      tb?.shareCents === null ? '' : (tb?.shareCents ?? 0) / 100
+                                    "
+                                /></label>
+                                <p>Videz le champ pour retirer la part.</p>
+                                <button class="btn btn-secondary" [disabled]="busy()">
+                                  Enregistrer la part
+                                </button>
+                              </form>
+                            </details>
+                          }
+                          <section>
+                            <h5>Dépenses de la tâche</h5>
+                            <button
+                              class="btn btn-secondary"
+                              [disabled]="busy()"
+                              (click)="addExpense(t.task.id)"
+                            >
+                              Ajouter une dépense</button
+                            ><ng-container
+                              *ngTemplateOutlet="
+                                chargeList;
+                                context: { $implicit: taskCharges(t.task.id) }
+                              "
+                            />
+                          </section>
+                          <section>
+                            <h5>Retour au budget de vie</h5>
+                            @if (tb?.return; as r) {
+                              <span
+                                >{{ r.amountCents | cents }} · {{ cadenceLabel(r.cadence) }} ·
+                                {{
+                                  r.entryId
+                                    ? 'enregistré le ' + (r.triggeredAt ?? '')
+                                    : 'à la complétion'
+                                }}</span
+                              >
+                              @if (!r.entryId) {
+                                <button
+                                  type="button"
+                                  class="text-link"
+                                  [disabled]="busy()"
+                                  (click)="removeReturn(b.budgetId, t, b.revision)"
+                                >
+                                  Retirer
+                                </button>
+                              }
+                            } @else if (returnEditor() === t.task.id) {
+                              <form
+                                class="bpm-inline-form"
+                                (submit)="
+                                  $event.preventDefault();
+                                  saveReturn(
+                                    b.budgetId,
+                                    t,
+                                    $any($event.target).elements,
+                                    b.revision
+                                  )
+                                "
+                              >
+                                <label
+                                  >Libellé<input
+                                    name="label"
+                                    maxlength="200"
+                                    [value]="'Retour · ' + t.task.title"
+                                /></label>
+                                <label
+                                  >Montant (€)<input
+                                    name="amount"
+                                    class="bpm-amount-input"
+                                    inputmode="decimal"
+                                    autocomplete="off"
+                                /></label>
+                                <label
+                                  >Cadence
+                                  <select name="cadence">
+                                    @for (c of cadences; track c.id) {
+                                      <option [value]="c.id">{{ c.label }}</option>
+                                    }
+                                  </select>
+                                </label>
+                                <button type="submit" class="btn btn-primary" [disabled]="busy()">
+                                  Enregistrer
+                                </button>
+                                <button
+                                  type="button"
+                                  class="btn btn-secondary"
+                                  (click)="returnEditor.set(null)"
+                                >
+                                  Annuler
+                                </button>
+                              </form>
+                            } @else {
+                              <button
+                                type="button"
+                                class="text-link"
+                                (click)="returnEditor.set(t.task.id)"
+                              >
+                                Prévoir un retour
+                              </button>
+                            }
+                          </section>
+                          <details>
+                            <summary>Historique des demandes</summary>
+                            <bpm-task-requests
+                              [requests]="taskHistory(t.task.id)"
+                              [busy]="busy()"
+                            />
+                          </details>
+                          <button
+                            class="text-link"
+                            [disabled]="busy() || !t.pathways.canChangeProject || !!tb?.request"
+                            (click)="detach(t)"
+                          >
+                            Détacher du projet
+                          </button>
+                        </div>
+                      </details>
+                    </article>
+                  } @empty {
+                    <div class="board-empty">
+                      {{ query() ? 'Aucune tâche correspondante' : 'Aucune tâche ici' }}
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </section>
+        </section>
+      </div>
+    }
+    @if (d.role === 'life' && d.life; as l) {
+      <section class="bpm-section" aria-labelledby="life-title">
+        <header>
+          <h2 id="life-title">Projets financés par le budget de vie</h2>
+          <p>
+            Le budget de vie attribue un montant à chaque projet standard et décide de leurs
+            dépassements.
+          </p>
+        </header>
+        @for (o of l.pendingRequests; track o.id) {
+          <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
+        }
+        @if (l.billable.length) {
+          <div class="bpm-overrun">
+            <p>
+              <strong>Fin de cycle :</strong> {{ l.billableCents | cents }} de dépassement(s)
+              autorisé(s) à facturer au budget de vie.
+            </p>
+            <div class="bpm-actions">
+              <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="bill()">
+                Facturer au budget de vie
+              </button>
+            </div>
+          </div>
+        }
+        <div class="bpm-table-wrap">
+          <table class="bpm-table">
+            <thead>
+              <tr>
+                <th scope="col">Projet</th>
+                <th scope="col" class="num">Attribué</th>
+                <th scope="col" class="num">Ventilé</th>
+                <th scope="col" class="num">Réglé validé</th>
+                <th scope="col" class="num">Reste</th>
+                <th scope="col">État</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of l.projects; track p.projectId) {
+                <tr>
+                  <th scope="row">
+                    <a class="text-link" [routerLink]="['/app/projets', p.projectId]">{{
+                      p.title
+                    }}</a>
+                  </th>
+                  @if (p.budget.regime) {
+                    <td class="num">{{ p.budget.allocationCents | cents }}</td>
+                    <td class="num">{{ p.budget.sharesCents | cents }}</td>
+                    <td class="num">{{ p.budget.paidCents | cents }}</td>
+                    <td class="num">{{ p.budget.remainingCents | cents }}</td>
+                  } @else {
+                    <td class="num">Non attribué</td>
+                    <td class="num">—</td>
+                    <td
+                      class="num"
+                      title="Ses dépenses ne sont pas comptées dans le budget de vie tant qu’aucun montant ne lui est attribué"
+                    >
+                      —
+                    </td>
+                    <td class="num">—</td>
+                  }
+                  <td><bpm-budget-state [state]="p.budget.state" /></td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6">
+                    Aucun projet standard : budgétez un projet du noyau depuis Projets de la vie.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (d.tasks.length) {
+          <p class="bpm-note">
+            {{ d.tasks.length }} tâche(s) reliée(s) directement à la racine du projet de vie, hors
+            parcours : rattachez-les à un projet standard depuis le tableau des tâches.
+          </p>
+        }
+      </section>
+    }
+  }
+</div>
+<ng-template #chargeList let-charges>
+  <div class="task-charge-list">
+    @for (c of charges; track c.id) {
+      <article class="task-charge">
+        <div class="task-charge-heading">
+          <strong>{{ c.label }}</strong
+          ><span
+            class="bpm-charge-state"
+            [attr.data-state]="c.validated ? 'validated' : 'planned'"
+            >{{ chargeState(c) }}</span
+          >
+        </div>
+        <dl>
+          <div>
+            <dt>Prévu le {{ c.plannedDate | shortDate }}</dt>
+            <dd>{{ c.plannedCents | cents }}</dd>
+          </div>
+          @if (c.settled) {
+            <div>
+              <dt>Réglé le {{ c.realizedDate | shortDate }}</dt>
+              <dd>{{ c.realizedCents | cents }}</dd>
+            </div>
+          }
+        </dl>
+        <small>{{ c.cadenceLabel }}</small>
+        @if (!c.settled) {
+          @if (settling() === c.id) {
+            <form (submit)="$event.preventDefault(); settle(c, $any($event.target).elements)">
+              <label
+                >Date réelle<input
+                  name="date"
+                  type="date"
+                  required
+                  [max]="today"
+                  [value]="defaultDate(c)"
+              /></label>
+              <label
+                >Montant réglé (€)<input
+                  name="amount"
+                  inputmode="decimal"
+                  required
+                  [value]="(c.plannedCents / 100).toString().replace('.', ',')"
+              /></label>
+              <button class="btn btn-primary" [disabled]="busy()">Valider le règlement</button
+              ><button
+                type="button"
+                class="text-link"
+                [disabled]="busy()"
+                (click)="settling.set(null)"
+              >
+                Annuler
+              </button>
+            </form>
+          } @else {
+            <button class="text-link" [disabled]="busy()" (click)="settling.set(c.id)">
+              Valider le règlement
+            </button>
+          }
+        }
+      </article>
+    } @empty {
+      <p class="bpm-note">Aucune dépense sur les douze derniers et prochains mois.</p>
+    }
+  </div>
+</ng-template>
+@if (editorOpen() && budgetRef(); as ref) {
+  <bpm-operation-editor
+    [budgets]="[ref]"
+    [defaults]="{ budgetId: ref.id, direction: 'charge', taskId: expenseTaskId() }"
+    [taskFundingRequired]="data()?.budget?.taskFundingRequired ?? false"
+    (closed)="editorOpen.set(false)"
+    (saved)="onSaved($event)"
+  />
+}
+@if (projectEditor() && data(); as d) {
+  <bpm-project-editor
+    [project]="d.project.project"
+    (closed)="projectEditor.set(false)"
+    (saved)="projectSaved()"
+  />
+}
+@if (taskEditor()) {
+  <bpm-task-editor
+    [task]="editingTask()"
+    [projects]="taskProjectOptions()"
+    [defaultProjectId]="data()?.project?.project?.id ?? ''"
+    (closed)="closeTask()"
+    (saved)="taskSaved($event)"
+  />
+}

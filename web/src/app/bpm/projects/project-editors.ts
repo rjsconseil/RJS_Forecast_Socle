@@ -307,7 +307,7 @@ export class BpmTaskEditor implements OnInit {
       else
         await this.bpm.createTask({
           ...input,
-          projectId: this.projectId || null,
+          projectId: this.defaultProjectId() || this.projectId || null,
           requestKey: this.requestKey,
         });
       this.saved.emit(

@@ -11,7 +11,12 @@ import { TimeAggregates } from '../../core/models';
   template: `
     @let b = displayBudget();
     @let t = displayTime();
-    <div class="pm-budget" [class.is-unfunded]="!b.regime" [attr.data-tone]="budgetTone()">
+    <div
+      class="pm-budget"
+      [class.pm-vertical-metrics]="vertical()"
+      [class.is-unfunded]="!b.regime"
+      [attr.data-tone]="budgetTone()"
+    >
       <div class="pm-metric-heading">
         <span>{{ task() ? 'Budget de la tâche' : 'Budget du projet' }}</span
         ><span class="pm-signal">{{ budgetLabel() }}</span>
@@ -22,6 +27,12 @@ import { TimeAggregates } from '../../core/models';
             <small>{{ task() ? 'Montant accordé' : 'Budget autorisé' }}</small>
             <strong>{{ b.ceilingCents | cents }}</strong>
           </div>
+          @if (vertical()) {
+            <div class="pm-consumed">
+              <span>{{ task() ? 'Consommé estimé' : 'Consommé' }}</span
+              ><strong>{{ b.paidCents | cents }}</strong>
+            </div>
+          }
           <div class="pm-budget-meter">
             <span class="pm-budget-percent">{{
               budgetPercent() === null ? 'À estimer' : budgetPercent() + ' % restant'
@@ -30,6 +41,7 @@ import { TimeAggregates } from '../../core/models';
               class="pm-track pm-budget-track"
               role="progressbar"
               aria-label="Budget restant"
+              [attr.aria-orientation]="vertical() ? 'vertical' : 'horizontal'"
               [attr.aria-valuenow]="budgetPercent() === null ? null : budgetWidth()"
               [attr.aria-valuetext]="
                 budgetPercent() === null
@@ -39,7 +51,10 @@ import { TimeAggregates } from '../../core/models';
               aria-valuemin="0"
               aria-valuemax="100"
             >
-              <span [style.width.%]="budgetWidth()"></span>
+              <span
+                [style.width.%]="vertical() ? 100 : budgetWidth()"
+                [style.height.%]="vertical() ? budgetWidth() : null"
+              ></span>
             </div>
           </div>
           <div class="pm-remaining">
@@ -47,8 +62,11 @@ import { TimeAggregates } from '../../core/models';
             ><strong>{{ b.remainingCents | cents }}</strong>
           </div>
         </div>
-        <div class="pm-metric-caption">
-          <span
+        <div
+          class="pm-metric-caption"
+          [class.pm-caption-hidden]="vertical() && !b.approvedOverrunCents"
+        >
+          <span [hidden]="vertical()"
             >{{ task() ? 'Consommé selon le temps' : 'Consommé' }} :
             <strong>{{ b.paidCents | cents }}</strong>
             @if (task() && consumedPercent() !== null) {
@@ -62,60 +80,65 @@ import { TimeAggregates } from '../../core/models';
           }
         </div>
       } @else {
-        <div class="pm-money">
-          <div class="pm-envelope">
-            <strong>{{ task() ? 'À demander' : 'À attribuer' }}</strong
-            ><small>{{
+        <div class="pm-budget-empty">
+          <strong>{{ task() ? 'À demander' : 'À attribuer' }}</strong>
+          <p>
+            {{
               task()
                 ? 'Demandez une part du budget du projet pour cette tâche.'
                 : 'Définissez le montant pour commencer à financer les tâches.'
-            }}</small>
+            }}
+          </p>
+        </div>
+      }
+      <div class="pm-time" [attr.data-tone]="timeTone()">
+        <div class="pm-time-heading">
+          <div>
+            <span class="pm-metric-label">Temps consommé</span
+            ><strong>{{ t.spentHoursTotal }} <small>h</small></strong
+            ><span class="pm-time-planned"
+              >sur {{ t.plannedHoursKnown }} h {{ t.plannedIsPartial ? '(partiel)' : '' }}</span
+            >
           </div>
+          <span class="pm-time-percent">{{
+            timePercent() === null ? 'À estimer' : timePercent() + ' %'
+          }}</span>
         </div>
-      }
-    </div>
-    <div class="pm-time" [attr.data-tone]="timeTone()">
-      <div class="pm-time-heading">
-        <div>
-          <span class="pm-metric-label">Temps consommé</span
-          ><strong>{{ t.spentHoursTotal }} <small>h</small></strong
-          ><span class="pm-time-planned"
-            >sur {{ t.plannedHoursKnown }} h {{ t.plannedIsPartial ? '(partiel)' : '' }}</span
+        @if (timePercent() !== null) {
+          <div
+            class="pm-track pm-time-track"
+            role="progressbar"
+            aria-label="Temps consommé"
+            [attr.aria-orientation]="vertical() ? 'vertical' : 'horizontal'"
+            [attr.aria-valuenow]="timeWidth()"
+            [attr.aria-valuetext]="timePercent() + ' % du temps prévu consommés'"
+            aria-valuemin="0"
+            aria-valuemax="100"
           >
-        </div>
-        <span class="pm-time-percent">{{
-          timePercent() === null ? 'À estimer' : timePercent() + ' %'
-        }}</span>
-      </div>
-      @if (timePercent() !== null) {
-        <div
-          class="pm-track pm-time-track"
-          role="progressbar"
-          aria-label="Temps consommé"
-          [attr.aria-valuenow]="timeWidth()"
-          [attr.aria-valuetext]="timePercent() + ' % du temps prévu consommés'"
-          aria-valuemin="0"
-          aria-valuemax="100"
-        >
-          <span [style.width.%]="timeWidth()"></span>
-        </div>
-        @if ((timePercent() ?? 0) > 100) {
-          <p class="pm-time-note">Temps prévu dépassé de {{ extraHours() }} h.</p>
+            <span
+              [style.width.%]="vertical() ? 100 : timeWidth()"
+              [style.height.%]="vertical() ? timeWidth() : null"
+            ></span>
+          </div>
+          @if ((timePercent() ?? 0) > 100) {
+            <p class="pm-time-note">Temps prévu dépassé de {{ extraHours() }} h.</p>
+          }
+        } @else {
+          <div class="pm-track pm-time-track is-unknown" aria-hidden="true"></div>
+          <p class="pm-time-note">
+            {{
+              t.taskCount
+                ? 'Complétez les temps prévus de chaque tâche pour calculer la consommation.'
+                : 'Ajoutez des tâches et estimez leur temps pour suivre la consommation.'
+            }}
+          </p>
         }
-      } @else {
-        <div class="pm-track pm-time-track is-unknown" aria-hidden="true"></div>
-        <p class="pm-time-note">
-          {{
-            t.taskCount
-              ? 'Complétez les temps prévus de chaque tâche pour calculer la consommation.'
-              : 'Ajoutez des tâches et estimez leur temps pour suivre la consommation.'
-          }}
-        </p>
-      }
+      </div>
     </div>
   `,
 })
 export class BpmProjectMetricsComponent {
+  readonly vertical = input(false);
   readonly budget = input<ProjectBudget | null>(null);
   readonly time = input<TimeAggregates | null>(null);
   readonly task = input<BpmTaskCard | null>(null);
