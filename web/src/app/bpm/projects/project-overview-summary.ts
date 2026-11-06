@@ -2,6 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { BpmProjectsOverview } from '../../core/bpm-projects.models';
 import { COLUMNS, TaskStatus } from '../../core/models';
 import { CentsPipe } from '../../core/format';
+import { FUNDING } from '../ui/project-funding';
 
 /** Même synthèse pour le tableau et la gestion, sur tous les projets du périmètre. */
 @Component({
@@ -47,20 +48,20 @@ import { CentsPipe } from '../../core/format';
         aria-label="Budgets de tous les projets de la vie, toutes périodes"
       >
         <div class="life-financial-stat life-allocated">
-          <dt>Enveloppe budgétaire allouée</dt>
+          <dt>{{ L.envelopes }}</dt>
           <dd>{{ data() ? (data()!.life.allocatedCents | cents) : '—' }}</dd>
-          <span>Attribuée aux projets</span>
+          <span>Aux projets financés</span>
         </div>
         <div class="life-financial-stat life-paid">
-          <dt>Consommé réel</dt>
+          <dt>{{ L.paidOnEnvelopes }}</dt>
           <dd>{{ data() ? (data()!.life.paidCents | cents) : '—' }}</dd>
-          <span>Règlements validés</span>
+          <span>Règlements validés depuis chaque attribution</span>
         </div>
         <div
           class="life-financial-stat life-remaining"
           [class.is-negative]="(data()?.life?.remainingCents ?? 0) < 0"
         >
-          <dt>Reste à consommer</dt>
+          <dt>{{ L.remaining }}</dt>
           <dd>{{ data() ? (data()!.life.remainingCents | cents) : '—' }}</dd>
           <span>Dépassements autorisés inclus</span>
         </div>
@@ -68,15 +69,16 @@ import { CentsPipe } from '../../core/format';
           class="life-financial-stat life-available"
           [class.is-negative]="(data()?.life?.availableCents ?? 0) < 0"
         >
-          <dt>Disponible aux tâches</dt>
+          <dt>{{ L.toShare }}</dt>
           <dd>{{ data() ? (data()!.life.availableCents | cents) : '—' }}</dd>
-          <span>Reste à ventiler</span>
+          <span>Enveloppes pas encore accordées en parts</span>
         </div>
       </dl>
     </section>
   `,
 })
 export class BpmProjectOverviewSummaryComponent {
+  protected readonly L = FUNDING;
   readonly data = input<BpmProjectsOverview | null>(null);
   readonly includeLifeProject = input(false);
   protected readonly columns = COLUMNS;

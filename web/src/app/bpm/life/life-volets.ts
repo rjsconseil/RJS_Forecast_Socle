@@ -3,6 +3,7 @@
 // Fonctions pures : aucun appel, aucun état ; les montants restent ceux de l'API (centimes).
 import { BpmLifeManagement, LifeHealth, LifeNature, LifeVoletKey } from '../../core/bpm-life.models';
 import { cents, percentText, shortDate, signedCents } from '../../core/format';
+import { FUNDING } from '../ui/project-funding';
 import { LifeGauge, LifeGaugeTone } from './life-gauge';
 
 export type VoletAction = 'entry-income' | 'entry-charge' | 'follow' | 'close';
@@ -177,7 +178,7 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
     tag: `${p.fundedCount} / ${p.projectCount} financé${p.fundedCount > 1 ? 's' : ''}`,
     description: 'Les enveloppes des autres projets : leurs dépenses validées entrent dans le cycle.',
     facts: [
-      { label: 'Projets financés', value: `${p.fundedCount} / ${p.projectCount}`, note: p.unfundedCount ? `${p.unfundedCount} sans budget` : p.projectCount ? 'Tous budgétés' : 'Aucun projet' },
+      { label: 'Projets financés', value: `${p.fundedCount} / ${p.projectCount}`, note: p.unfundedCount ? `${p.unfundedCount} sans enveloppe` : p.projectCount ? 'Tous dotés d’une enveloppe' : 'Aucun projet' },
       { label: 'Réglé validé ce cycle', value: cents(p.periodPaidCents), note: 'Compté dans le Dépensé' },
       {
         label: 'Décisions attendues',
@@ -189,19 +190,20 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
       heading: 'Enveloppes des projets',
       signal: p.healthLabel,
       tone: HEALTH_TONE[p.health],
-      first: { label: 'Enveloppes attribuées', value: cents(p.allocatedCents) },
-      middle: { label: 'Consommé', value: cents(p.paidCents), kind: 'spend' },
-      last: { label: 'Reste à consommer', value: cents(p.remainingCents) },
+      first: { label: FUNDING.envelopes, value: cents(p.allocatedCents) },
+      middle: { label: FUNDING.paidOnEnvelopes, value: cents(p.paidCents), kind: 'spend' },
+      last: { label: FUNDING.remaining, value: cents(p.remainingCents) },
       meter: { percent: remaining, label: `${percentText(remaining, 0)} restant`, aria: remaining === null ? 'Aucune enveloppe attribuée' : `${percentText(remaining, 0)} des enveloppes restent à consommer` },
-      caption: p.approvedOverrunCents ? `Dont ${cents(p.approvedOverrunCents)} de dépassement autorisé · ${cents(p.availableCents)} encore à ventiler` : `${cents(p.availableCents)} encore à ventiler aux tâches`,
+      caption: p.approvedOverrunCents ? `Dont ${cents(p.approvedOverrunCents)} de dépassement autorisé · ${cents(p.availableCents)} à répartir entre les tâches` : `${cents(p.availableCents)} à répartir entre les tâches`,
       band: { label: 'Projets financés', value: `${p.fundedCount}`, sub: `sur ${p.projectCount}`, percent: funded, percentLabel: funded === null ? 'Aucun projet' : percentText(funded, 0), tone: p.unfundedCount ? 'yellow' : 'green' },
     },
     alert: p.alert,
     disclosure: { label: 'Projets & décisions', summary: `${count(p.projectCount, 'projet')} · ${count(decisions, 'décision attendue', 'décisions attendues')}` },
-    primary: { label: 'Piloter les projets', link: '/app/gestion-projet' },
+    // Parcours le plus courant d'abord : décider ce qui attend, sinon piloter les projets.
+    primary: decisions > 0 ? { label: `Décider (${decisions})`, link: '/projet-de-vie', fragment: 'life-decisions' } : { label: 'Piloter les projets', link: '/app/gestion-projet' },
     actions: [
-      { label: 'Décisions & facturation', action: 'follow' },
-      { label: 'Fiche du projet de vie', link: `/app/projets/${d.lifeProject.coreProjectId}` },
+      decisions > 0 ? { label: 'Piloter les projets', link: '/app/gestion-projet' } : { label: 'Décisions & facturation', link: '/projet-de-vie', fragment: 'life-decisions' },
+      { label: 'Dépenses des projets à régler', link: '/projet-de-vie', fragment: 'life-due' },
       { label: 'Tableau des projets', link: '/app/projets' },
       { label: 'Tâches des projets', link: '/app/taches' },
     ],

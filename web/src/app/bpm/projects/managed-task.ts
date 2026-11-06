@@ -6,6 +6,7 @@ import { CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
 import { COLUMNS, TaskStatus } from '../../core/models';
 import { BpmProjectMetricsComponent } from './project-metrics';
 import { BpmOverrunRequestComponent } from './project-parts';
+import { FUNDING, FUNDING_ACTIONS } from '../ui/project-funding';
 
 export interface TaskFundingSubmission {
   task: BpmTaskCard;
@@ -57,15 +58,15 @@ export interface TaskFundingSubmission {
         </header>
         <dl class="pm-task-cash">
           <div>
-            <dt>Engagé en dépenses</dt>
+            <dt>{{ L.engaged }}</dt>
             <dd>{{ t.budget?.engagedCents ?? 0 | cents }}</dd>
           </div>
           <div>
-            <dt>Réellement réglé</dt>
+            <dt>{{ L.sharePaid }}</dt>
             <dd>{{ t.budget?.paidCents ?? 0 | cents }}</dd>
           </div>
           <div>
-            <dt>Reste disponible</dt>
+            <dt>{{ L.shareRest }}</dt>
             <dd [class.is-deficit]="(t.budget?.remainingCents ?? 0) < 0">
               {{ t.budget?.remainingCents | cents }}
             </dd>
@@ -99,7 +100,7 @@ export interface TaskFundingSubmission {
             [attr.aria-expanded]="requestOpen()"
             (click)="requestOpen.set(!requestOpen())"
           >
-            Demander
+            Demander un montant
           </button>
           <button
             class="btn btn-secondary"
@@ -141,7 +142,7 @@ export interface TaskFundingSubmission {
           /></label>
           <label>Motif, facultatif<input name="note" maxlength="1000" [(ngModel)]="note" /></label>
           <p class="bpm-note">
-            Part actuelle : {{ t.budget?.shareCents | cents }}. Indiquez le nouveau montant total
+            Part accordée : {{ t.budget?.shareCents | cents }}. Indiquez le nouveau montant total
             souhaité.
           </p>
           @if (error()) {
@@ -174,7 +175,7 @@ export interface TaskFundingSubmission {
                 [disabled]="busy() || !funded()"
                 (click)="decide.emit({ request: r, decision: 'approve' })"
               >
-                Valider
+                {{ act.grantShare(r.amountCents, t.task.title) }}
               </button>
               <button
                 type="button"
@@ -182,7 +183,7 @@ export interface TaskFundingSubmission {
                 [disabled]="busy()"
                 (click)="decide.emit({ request: r, decision: 'refuse' })"
               >
-                Refuser
+                {{ act.refuseRequest }}
               </button>
             }
             <button
@@ -223,6 +224,8 @@ export class BpmManagedTaskComponent {
   }>();
   readonly decideOverrun = output<{ overrun: ProjectOverrun; decision: 'approve' | 'refuse' }>();
   protected columns = COLUMNS;
+  protected readonly L = FUNDING;
+  protected readonly act = FUNDING_ACTIONS;
   protected requestOpen = signal(false);
   protected error = signal('');
   protected amount = '';

@@ -95,6 +95,7 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
                     }
                   } @else {
                     <span class="life-funding-none">Non attribuée</span>
+                    <a class="text-link life-funding-assign" [routerLink]="['/app/gestion-projet', r.coreProjectId]" fragment="enveloppe">Attribuer</a>
                   }
                 </td>
                 @for (p of shown(); track p.key) {

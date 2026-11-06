@@ -1,7 +1,7 @@
 {
   "schemaVersion": "socle-store/0.5",
-  "revision": 372,
-  "updatedAt": "2026-11-05T20:22:16.202Z",
+  "revision": 434,
+  "updatedAt": "2026-11-06T10:41:53.437Z",
   "journal": [
     {
       "at": "2026-11-05T12:09:25.130Z",
@@ -5651,6 +5651,704 @@
         "tsk_1fe1eeba-7510-4e4c-ad81-5d34f9dfdf31"
       ],
       "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T07:57:57.069Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_de0d75c3-0db0-4973-b3e0-2dfd0ab1cf3b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:07:18.165Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "entry-5ae0a132-1715-4489-906a-bef3cee195aa",
+      "created": [
+        "op_513fa68e-4d5c-4871-bf40-a479d1f75a41"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:07:40.301Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_513fa68e-4d5c-4871-bf40-a479d1f75a41"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:11:32.171Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_158da489-4a6b-463f-86fa-621ced11c201"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:58:29.860Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "71ab9ad6-c0a8-49c7-8ef6-512ae5c74d69",
+      "created": [
+        "op_68cbe815-c5a5-4bf6-99bc-c521218465ac"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:58:30.000Z",
+      "command": "updateOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_68cbe815-c5a5-4bf6-99bc-c521218465ac"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:58:30.137Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_68cbe815-c5a5-4bf6-99bc-c521218465ac"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:58:30.269Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "165dd36d-5fe8-4f9f-9481-09a04c55a1b5",
+      "created": [
+        "op_1f191c7e-2fbe-4b7a-adf6-f4586fb08466"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:58:30.405Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_1f191c7e-2fbe-4b7a-adf6-f4586fb08466"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:58:30.538Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "2e8a6a66-0b1d-476b-a6c6-68c6f12eff7e",
+      "created": [
+        "op_4bb5f987-3845-49bd-b8d7-6244ee010cee"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T08:58:30.674Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_4bb5f987-3845-49bd-b8d7-6244ee010cee"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:03:42.174Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_7652ff66-35ed-44f3-9f32-f21269faf800"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:07:11.061Z",
+      "command": "requestProjectOverrun",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "overrun-7239b1f3-36f7-46c0-9df4-2a71ca1cef9d",
+      "created": [
+        "ovr_65f71bfa-0b3b-42c1-951f-5a07986c81e5"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:07:11.202Z",
+      "command": "decideProjectOverrun",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "ovr_65f71bfa-0b3b-42c1-951f-5a07986c81e5"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:07:11.440Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_fe20c80d-b511-4970-806a-17e4bddf43e9"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:36:17.165Z",
+      "command": "adoptProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": "web-aca2e284-3485-479a-8a58-f98625a49c2f",
+      "created": [
+        "bud_3431b230-bd89-4d3c-a163-872943973e2e"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:36:38.906Z",
+      "command": "adoptProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": "web-f8dd56df-21ce-4f9d-bc94-b791ccdcc8b2",
+      "created": [
+        "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:37:06.364Z",
+      "command": "adoptProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": "web-d9aa33f5-375b-416b-bd2d-614043722752",
+      "created": [
+        "bud_312386b3-44ed-4442-9a90-a782bf76f8b8"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:14.649Z",
+      "command": "createBpmProject",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "1eeee490-96e2-46ab-b957-2982f0b8b27e",
+      "created": [
+        "prj_3282f872-288f-48e0-863c-84329a468d3a",
+        "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+      ],
+      "updated": [
+        "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:14.802Z",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "c64f7ec9-307f-4eb8-8e9a-a12e4d9a2a67",
+      "created": [
+        "tsk_289526fc-2d62-4ade-bab7-f3ede87d6721"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:14.933Z",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "4e216af4-b3e4-434a-a784-075557727de5",
+      "created": [
+        "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:15.053Z",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "d05009ce-dbae-4e58-846c-ab0de11632f1",
+      "created": [
+        "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:15.174Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "93cdbb1f-a82a-431e-a11e-d5eaf7332584",
+      "created": [
+        "op_8c41f0ff-6733-4184-b4b9-889edfe8f68f"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:15.447Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:15.578Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:15.802Z",
+      "command": "requestTaskBudget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "9d56b2ca-018b-44a1-bbe2-b0a0aa4a06b4",
+      "created": [
+        "dmt_69a76254-bd35-4d03-890e-3055819a8069"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:15.932Z",
+      "command": "decideTaskBudget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [
+        "ovr_743c4b2b-e6d8-4186-b17f-c18ade842e7b"
+      ],
+      "updated": [
+        "dmt_69a76254-bd35-4d03-890e-3055819a8069"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:39:16.061Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_8c41f0ff-6733-4184-b4b9-889edfe8f68f"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:41:50.302Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "885b63c7-7146-4b42-874d-eb662f712f8a",
+      "created": [
+        "op_fd5fa73e-817b-40ca-a38c-8fa99480c1b6"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:41:50.456Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "09dc82d1-7e7e-484d-a0cf-7222e0a1509a",
+      "created": [
+        "op_ed8031d2-f004-43c2-8fd2-ddfdc844ed24"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:42:48.634Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:42:48.802Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_fd5fa73e-817b-40ca-a38c-8fa99480c1b6"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:47:37.394Z",
+      "command": "decideProjectOverrun",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "ovr_743c4b2b-e6d8-4186-b17f-c18ade842e7b",
+        "dmt_69a76254-bd35-4d03-890e-3055819a8069"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:51:55.828Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:51:56.018Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_ed8031d2-f004-43c2-8fd2-ddfdc844ed24"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:17.869Z",
+      "command": "createBpmProject",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "80d86380-3246-4869-b8a0-31f5f41fbd10",
+      "created": [
+        "prj_090f97a7-05de-43d1-8735-b68222d57bd2",
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:18.020Z",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "1442d7e4-154d-4ded-bb3b-612a7a036d89",
+      "created": [
+        "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:18.158Z",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "382334be-785a-4fdb-b7ed-9f44d7024683",
+      "created": [
+        "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:18.285Z",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "ebbbf052-f4f9-4bac-a194-f1949d06e8d1",
+      "created": [
+        "tsk_a13aae94-c08a-486d-9516-4df5e5d04a7b"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:18.404Z",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "6d3d9c53-acbe-4e7a-ae48-f8684ec9258b",
+      "created": [
+        "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:18.583Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:18.742Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:18.878Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:19.053Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:19.223Z",
+      "command": "cancelRealization",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:19.366Z",
+      "command": "realizeOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:19.497Z",
+      "command": "updateOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:19.638Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:19.760Z",
+      "command": "createRecurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "07656d55-2d94-40d0-8f26-ea6b205b6d48",
+      "created": [
+        "rec_cc7bca2f-774a-4211-8b73-123b195145b3"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:19.894Z",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "49f735c5-c526-435c-b43d-c6494478b142",
+      "created": [
+        "op_6537b838-8248-46f7-99b5-405058d49cbd"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:20.034Z",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "8f170363-30d0-4c58-bc38-2d7251af639c",
+      "created": [
+        "op_2dc88324-06d3-494a-804e-d6fd30099862"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:20.222Z",
+      "command": "setTaskReturn",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:20.362Z",
+      "command": "changeTaskStatus",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [
+        "op_21e64b6b-2136-4d0f-8785-4fa51e549d97"
+      ],
+      "updated": [
+        "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d",
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:20.497Z",
+      "command": "changeTaskStatus",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T09:53:20.686Z",
+      "command": "updateTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_a13aae94-c08a-486d-9516-4df5e5d04a7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T10:07:33.526Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T10:07:33.685Z",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "web-718578cd-9a09-4d7b-861a-aa2f17d789b5",
+      "created": [
+        "op_16e15870-9da3-4554-bfc3-472c0eb657fa"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T10:07:41.615Z",
+      "command": "changeTaskStatus",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T10:07:44.109Z",
+      "command": "setTaskShare",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T10:35:11.430Z",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "web-d43aca5b-c9cc-44ca-83c9-0e972df9dc4f",
+      "created": [
+        "op_ad7f5918-a93d-4f1b-b7b4-da75ea5b339d"
+      ],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T10:36:25.916Z",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "requestKey": "settle-56dfcc3f-5f0f-4a68-8295-8b7dbacb61dc",
+      "created": [
+        "op_a5ddd0ec-3eb7-4118-aa76-7911739e58af"
+      ],
+      "updated": [
+        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-06T10:41:53.436Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_95510eae-dc86-4a9b-b40a-a8d9edaaaf27"
+      ],
+      "outcome": "committed"
     }
   ],
   "migrations": [],
@@ -8696,6 +9394,42 @@
       "priority": "medium",
       "startDate": null,
       "dueDate": null
+    },
+    "prj_3282f872-288f-48e0-863c-84329a468d3a": {
+      "id": "prj_3282f872-288f-48e0-863c-84329a468d3a",
+      "kind": "coreProject",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:39:14.649Z",
+      "updatedAt": "2026-11-06T09:39:14.649Z",
+      "provenance": {
+        "command": "createBpmProject",
+        "requestKey": "1eeee490-96e2-46ab-b957-2982f0b8b27e",
+        "at": "2026-11-06T09:39:14.649Z"
+      },
+      "title": "TEST R2 · Vacances d’été",
+      "description": "Projet de test des cas limites (passe 2).",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
+    },
+    "prj_090f97a7-05de-43d1-8735-b68222d57bd2": {
+      "id": "prj_090f97a7-05de-43d1-8735-b68222d57bd2",
+      "kind": "coreProject",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:53:17.869Z",
+      "updatedAt": "2026-11-06T09:53:17.869Z",
+      "provenance": {
+        "command": "createBpmProject",
+        "requestKey": "80d86380-3246-4869-b8a0-31f5f41fbd10",
+        "at": "2026-11-06T09:53:17.869Z"
+      },
+      "title": "TEST R3 · Chambre d’ami",
+      "description": "Passe 3 : enveloppe nulle, annulation, récurrence, retour, déplacement.",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
     }
   },
   "tasks": {
@@ -11502,6 +12236,140 @@
       "startDate": null,
       "dueDate": null,
       "projectId": "prj_e401013f-d85c-4e28-9404-5becc248434e"
+    },
+    "tsk_289526fc-2d62-4ade-bab7-f3ede87d6721": {
+      "id": "tsk_289526fc-2d62-4ade-bab7-f3ede87d6721",
+      "kind": "task",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:39:14.802Z",
+      "updatedAt": "2026-11-06T09:39:14.802Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "c64f7ec9-307f-4eb8-8e9a-a12e4d9a2a67",
+        "at": "2026-11-06T09:39:14.802Z"
+      },
+      "title": "Location",
+      "description": "",
+      "status": "todo",
+      "plannedHours": null,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_3282f872-288f-48e0-863c-84329a468d3a"
+    },
+    "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e": {
+      "id": "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e",
+      "kind": "task",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:39:14.933Z",
+      "updatedAt": "2026-11-06T09:39:14.933Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "4e216af4-b3e4-434a-a784-075557727de5",
+        "at": "2026-11-06T09:39:14.933Z"
+      },
+      "title": "Train",
+      "description": "",
+      "status": "todo",
+      "plannedHours": null,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_3282f872-288f-48e0-863c-84329a468d3a"
+    },
+    "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71": {
+      "id": "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71",
+      "kind": "task",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:39:15.053Z",
+      "updatedAt": "2026-11-06T09:39:15.053Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "d05009ce-dbae-4e58-846c-ab0de11632f1",
+        "at": "2026-11-06T09:39:15.053Z"
+      },
+      "title": "Activités",
+      "description": "",
+      "status": "todo",
+      "plannedHours": null,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_3282f872-288f-48e0-863c-84329a468d3a"
+    },
+    "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d": {
+      "id": "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d",
+      "kind": "task",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 4,
+      "createdAt": "2026-11-06T09:53:18.020Z",
+      "updatedAt": "2026-11-06T10:07:41.615Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "1442d7e4-154d-4ded-bb3b-612a7a036d89",
+        "at": "2026-11-06T09:53:18.020Z"
+      },
+      "title": "Peinture",
+      "description": "",
+      "status": "done",
+      "plannedHours": null,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_090f97a7-05de-43d1-8735-b68222d57bd2",
+      "lastChange": {
+        "command": "changeTaskStatus",
+        "at": "2026-11-06T10:07:41.615Z"
+      }
+    },
+    "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6": {
+      "id": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6",
+      "kind": "task",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:53:18.158Z",
+      "updatedAt": "2026-11-06T09:53:18.158Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "382334be-785a-4fdb-b7ed-9f44d7024683",
+        "at": "2026-11-06T09:53:18.158Z"
+      },
+      "title": "Meubles",
+      "description": "",
+      "status": "todo",
+      "plannedHours": null,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_090f97a7-05de-43d1-8735-b68222d57bd2"
+    },
+    "tsk_a13aae94-c08a-486d-9516-4df5e5d04a7b": {
+      "id": "tsk_a13aae94-c08a-486d-9516-4df5e5d04a7b",
+      "kind": "task",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T09:53:18.285Z",
+      "updatedAt": "2026-11-06T09:53:20.686Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "ebbbf052-f4f9-4bac-a194-f1949d06e8d1",
+        "at": "2026-11-06T09:53:18.285Z"
+      },
+      "title": "Literie",
+      "description": "",
+      "status": "todo",
+      "plannedHours": null,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_3282f872-288f-48e0-863c-84329a468d3a",
+      "lastChange": {
+        "command": "updateTask",
+        "at": "2026-11-06T09:53:20.686Z"
+      }
     }
   },
   "budgets": {
@@ -11560,9 +12428,9 @@
       "id": "bud_95510eae-dc86-4a9b-b40a-a8d9edaaaf27",
       "kind": "budget",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-05T12:09:26.283Z",
-      "updatedAt": "2026-11-05T12:09:26.283Z",
+      "updatedAt": "2026-11-06T10:41:53.436Z",
       "provenance": {
         "command": "createLifeProject",
         "requestKey": "seed-cuisine-2a257ae1-5f62-4fab-93e3-beea0b6e328c",
@@ -11572,7 +12440,15 @@
       "name": "Rénovation de la cuisine",
       "coreProjectId": "prj_645a57d9-6591-4086-a507-f7d6b7fc49ed",
       "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
-      "capsCents": {}
+      "capsCents": {},
+      "allocationCents": 80000,
+      "allocationDate": "2026-11-06",
+      "taskSharesCents": {},
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-06T10:41:53.436Z"
+      }
     },
     "bud_08393722-1e17-4d13-858b-c0ae7dcb5416": {
       "id": "bud_08393722-1e17-4d13-858b-c0ae7dcb5416",
@@ -13428,9 +14304,9 @@
       "id": "bud_de0d75c3-0db0-4973-b3e0-2dfd0ab1cf3b",
       "kind": "budget",
       "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
-      "revision": 5,
+      "revision": 6,
       "createdAt": "2026-11-05T12:10:06.916Z",
-      "updatedAt": "2026-11-05T12:10:07.380Z",
+      "updatedAt": "2026-11-06T07:57:57.069Z",
       "provenance": {
         "command": "adoptProject",
         "requestKey": "scenario-adopt-1793880606884-131",
@@ -13441,7 +14317,7 @@
       "coreProjectId": "prj_e401013f-d85c-4e28-9404-5becc248434e",
       "parentBudgetId": "bud_b1ca76a7-43f7-4b77-8e80-fb3ecaadd48f",
       "capsCents": {},
-      "allocationCents": 120000,
+      "allocationCents": 620000,
       "allocationDate": "2026-11-03",
       "taskSharesCents": {
         "tsk_9228f5f5-029b-4ac9-8699-c3bd63208602": 70000,
@@ -13450,8 +14326,8 @@
       },
       "taskReturns": {},
       "lastChange": {
-        "command": "setTaskShare",
-        "at": "2026-11-05T12:10:07.380Z"
+        "command": "allocateProjectBudget",
+        "at": "2026-11-06T07:57:57.069Z"
       }
     },
     "bud_6c57d470-85e7-44e2-8820-107035e8a50d": {
@@ -13481,6 +14357,130 @@
         "command": "setCaps",
         "at": "2026-11-05T18:08:38.680Z"
       }
+    },
+    "bud_3431b230-bd89-4d3c-a163-872943973e2e": {
+      "id": "bud_3431b230-bd89-4d3c-a163-872943973e2e",
+      "kind": "budget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:36:17.165Z",
+      "updatedAt": "2026-11-06T09:36:17.165Z",
+      "provenance": {
+        "command": "adoptProject",
+        "requestKey": "web-aca2e284-3485-479a-8a58-f98625a49c2f",
+        "at": "2026-11-06T09:36:17.165Z"
+      },
+      "role": "standard",
+      "name": "Exemple temps et complétude",
+      "coreProjectId": "prj_ca3273f2-d60f-463a-9541-049c16053b52",
+      "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
+      "capsCents": {}
+    },
+    "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7": {
+      "id": "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7",
+      "kind": "budget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:36:38.906Z",
+      "updatedAt": "2026-11-06T09:36:38.906Z",
+      "provenance": {
+        "command": "adoptProject",
+        "requestKey": "web-f8dd56df-21ce-4f9d-bc94-b791ccdcc8b2",
+        "at": "2026-11-06T09:36:38.906Z"
+      },
+      "role": "standard",
+      "name": "Préparer mon installation",
+      "coreProjectId": "prj_53e97ffb-15aa-42e9-8270-3d3d6223852d",
+      "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
+      "capsCents": {}
+    },
+    "bud_312386b3-44ed-4442-9a90-a782bf76f8b8": {
+      "id": "bud_312386b3-44ed-4442-9a90-a782bf76f8b8",
+      "kind": "budget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:37:06.364Z",
+      "updatedAt": "2026-11-06T09:37:06.364Z",
+      "provenance": {
+        "command": "adoptProject",
+        "requestKey": "web-d9aa33f5-375b-416b-bd2d-614043722752",
+        "at": "2026-11-06T09:37:06.364Z"
+      },
+      "role": "standard",
+      "name": "État — À faire (vide)",
+      "coreProjectId": "prj_e4cdea29-d5ad-4931-a405-6e53aab543a0",
+      "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
+      "capsCents": {}
+    },
+    "bud_01d3daa0-6bef-445e-8856-3633034f1cd9": {
+      "id": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9",
+      "kind": "budget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 6,
+      "createdAt": "2026-11-06T09:39:14.649Z",
+      "updatedAt": "2026-11-06T09:51:55.828Z",
+      "provenance": {
+        "command": "createBpmProject",
+        "requestKey": "1eeee490-96e2-46ab-b957-2982f0b8b27e",
+        "at": "2026-11-06T09:39:14.649Z"
+      },
+      "role": "standard",
+      "name": "TEST R2 · Vacances d’été",
+      "coreProjectId": "prj_3282f872-288f-48e0-863c-84329a468d3a",
+      "parentBudgetId": "bud_b1ca76a7-43f7-4b77-8e80-fb3ecaadd48f",
+      "capsCents": {},
+      "taskFundingRequired": true,
+      "taskSharesCents": {
+        "tsk_289526fc-2d62-4ade-bab7-f3ede87d6721": 70000,
+        "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e": 23000,
+        "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71": 12000
+      },
+      "taskReturns": {},
+      "allocationCents": 100000,
+      "allocationDate": "2026-11-06",
+      "lastChange": {
+        "command": "setTaskShare",
+        "at": "2026-11-06T09:51:55.828Z"
+      }
+    },
+    "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b": {
+      "id": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "kind": "budget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 12,
+      "createdAt": "2026-11-06T09:53:17.869Z",
+      "updatedAt": "2026-11-06T10:36:25.916Z",
+      "provenance": {
+        "command": "createBpmProject",
+        "requestKey": "80d86380-3246-4869-b8a0-31f5f41fbd10",
+        "at": "2026-11-06T09:53:17.869Z"
+      },
+      "role": "standard",
+      "name": "TEST R3 · Chambre d’ami",
+      "coreProjectId": "prj_090f97a7-05de-43d1-8735-b68222d57bd2",
+      "parentBudgetId": "bud_b1ca76a7-43f7-4b77-8e80-fb3ecaadd48f",
+      "capsCents": {},
+      "taskFundingRequired": true,
+      "taskSharesCents": {
+        "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d": 15000,
+        "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6": 20000
+      },
+      "taskReturns": {
+        "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d": {
+          "label": "R3 · Revente pots restants",
+          "amountCents": 3000,
+          "cadence": "once",
+          "entryId": "op_21e64b6b-2136-4d0f-8785-4fa51e549d97",
+          "entryKind": "operation",
+          "triggeredAt": "2026-11-06"
+        }
+      },
+      "lastChange": {
+        "command": "settleOccurrence",
+        "at": "2026-11-06T10:36:25.916Z"
+      },
+      "allocationCents": 60000,
+      "allocationDate": "2026-11-06"
     }
   },
   "costCenters": {
@@ -42857,9 +43857,9 @@
       "id": "op_fe20c80d-b511-4970-806a-17e4bddf43e9",
       "kind": "operation",
       "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-05T12:10:04.907Z",
-      "updatedAt": "2026-11-05T12:10:04.907Z",
+      "updatedAt": "2026-11-06T09:07:11.440Z",
       "provenance": {
         "command": "createOperation",
         "requestKey": "scenario-op-1793880604876-116",
@@ -42874,11 +43874,15 @@
       "label": "Hôtel deux nuits",
       "amountCents": 38000,
       "date": "2026-11-08",
-      "status": "planned",
-      "realizedAmountCents": null,
-      "realizedDate": null,
+      "status": "realized",
+      "realizedAmountCents": 60000,
+      "realizedDate": "2026-11-06",
       "standardCostCenter": "divers",
-      "costCenterId": null
+      "costCenterId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T09:07:11.440Z"
+      }
     },
     "op_23c2aba8-4aa1-4fed-b971-3e4d37e96e09": {
       "id": "op_23c2aba8-4aa1-4fed-b971-3e4d37e96e09",
@@ -43132,9 +44136,9 @@
       "id": "op_158da489-4a6b-463f-86fa-621ced11c201",
       "kind": "operation",
       "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-05T12:10:07.494Z",
-      "updatedAt": "2026-11-05T12:10:07.494Z",
+      "updatedAt": "2026-11-06T08:11:32.171Z",
       "provenance": {
         "command": "createOperation",
         "requestKey": "scenario-op-1793880607464-132",
@@ -43149,19 +44153,23 @@
       "label": "Cadeaux des enfants",
       "amountCents": 70000,
       "date": "2026-11-10",
-      "status": "planned",
-      "realizedAmountCents": null,
-      "realizedDate": null,
+      "status": "realized",
+      "realizedAmountCents": 70000,
+      "realizedDate": "2025-11-25",
       "standardCostCenter": "divers",
-      "costCenterId": null
+      "costCenterId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T08:11:32.171Z"
+      }
     },
     "op_7652ff66-35ed-44f3-9f32-f21269faf800": {
       "id": "op_7652ff66-35ed-44f3-9f32-f21269faf800",
       "kind": "operation",
       "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-05T12:10:07.605Z",
-      "updatedAt": "2026-11-05T12:10:07.605Z",
+      "updatedAt": "2026-11-06T09:03:42.174Z",
       "provenance": {
         "command": "createOperation",
         "requestKey": "scenario-op-1793880607573-133",
@@ -43176,11 +44184,15 @@
       "label": "Sapin et guirlandes",
       "amountCents": 10000,
       "date": "2026-11-12",
-      "status": "planned",
-      "realizedAmountCents": null,
-      "realizedDate": null,
+      "status": "realized",
+      "realizedAmountCents": 10000,
+      "realizedDate": "2026-11-06",
       "standardCostCenter": "divers",
-      "costCenterId": null
+      "costCenterId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T09:03:42.174Z"
+      }
     },
     "op_630cdc09-910f-46bd-82a9-4823c55759b7": {
       "id": "op_630cdc09-910f-46bd-82a9-4823c55759b7",
@@ -43542,6 +44554,430 @@
       "standardCostCenter": "divers",
       "costCenterId": null,
       "categoryId": "cat_433adeca-4228-4d5f-a737-4844f428ce86"
+    },
+    "op_513fa68e-4d5c-4871-bf40-a479d1f75a41": {
+      "id": "op_513fa68e-4d5c-4871-bf40-a479d1f75a41",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T08:07:18.165Z",
+      "updatedAt": "2026-11-06T08:07:40.301Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "entry-5ae0a132-1715-4489-906a-bef3cee195aa",
+        "at": "2026-11-06T08:07:18.165Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_9228f5f5-029b-4ac9-8699-c3bd63208602",
+      "budgetId": "bud_de0d75c3-0db0-4973-b3e0-2dfd0ab1cf3b",
+      "direction": "charge",
+      "label": "Cadeau de Mathieu",
+      "amountCents": 70000,
+      "date": "2026-11-18",
+      "status": "realized",
+      "realizedAmountCents": 70000,
+      "realizedDate": "2026-11-06",
+      "standardCostCenter": "divers",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T08:07:40.301Z"
+      }
+    },
+    "op_68cbe815-c5a5-4bf6-99bc-c521218465ac": {
+      "id": "op_68cbe815-c5a5-4bf6-99bc-c521218465ac",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 3,
+      "createdAt": "2026-11-06T08:58:29.860Z",
+      "updatedAt": "2026-11-06T08:58:30.137Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "71ab9ad6-c0a8-49c7-8ef6-512ae5c74d69",
+        "at": "2026-11-06T08:58:29.860Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_5d9df6ab-7876-4f66-aa91-42a7ea7aa224",
+      "budgetId": "bud_de0d75c3-0db0-4973-b3e0-2dfd0ab1cf3b",
+      "direction": "charge",
+      "label": "TEST T1 · guirlandes (prévue fév. → avancée)",
+      "amountCents": 3000,
+      "date": "2026-11-06",
+      "status": "realized",
+      "realizedAmountCents": 3000,
+      "realizedDate": "2026-11-06",
+      "standardCostCenter": "logement",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T08:58:30.137Z"
+      }
+    },
+    "op_1f191c7e-2fbe-4b7a-adf6-f4586fb08466": {
+      "id": "op_1f191c7e-2fbe-4b7a-adf6-f4586fb08466",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T08:58:30.269Z",
+      "updatedAt": "2026-11-06T08:58:30.405Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "165dd36d-5fe8-4f9f-9481-09a04c55a1b5",
+        "at": "2026-11-06T08:58:30.269Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_5d9df6ab-7876-4f66-aa91-42a7ea7aa224",
+      "budgetId": "bud_de0d75c3-0db0-4973-b3e0-2dfd0ab1cf3b",
+      "direction": "charge",
+      "label": "TEST T2 · sapin réglé avant attribution",
+      "amountCents": 4000,
+      "date": "2026-11-06",
+      "status": "realized",
+      "realizedAmountCents": 4000,
+      "realizedDate": "2026-11-01",
+      "standardCostCenter": "logement",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T08:58:30.405Z"
+      }
+    },
+    "op_4bb5f987-3845-49bd-b8d7-6244ee010cee": {
+      "id": "op_4bb5f987-3845-49bd-b8d7-6244ee010cee",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T08:58:30.538Z",
+      "updatedAt": "2026-11-06T08:58:30.674Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "2e8a6a66-0b1d-476b-a6c6-68c6f12eff7e",
+        "at": "2026-11-06T08:58:30.538Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_5d9df6ab-7876-4f66-aa91-42a7ea7aa224",
+      "budgetId": "bud_de0d75c3-0db0-4973-b3e0-2dfd0ab1cf3b",
+      "direction": "charge",
+      "label": "TEST T3 · réglée en octobre clos",
+      "amountCents": 1500,
+      "date": "2026-11-06",
+      "status": "realized",
+      "realizedAmountCents": 1500,
+      "realizedDate": "2026-10-20",
+      "standardCostCenter": "logement",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T08:58:30.674Z"
+      }
+    },
+    "op_8c41f0ff-6733-4184-b4b9-889edfe8f68f": {
+      "id": "op_8c41f0ff-6733-4184-b4b9-889edfe8f68f",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T09:39:15.174Z",
+      "updatedAt": "2026-11-06T09:39:16.061Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "93cdbb1f-a82a-431e-a11e-d5eaf7332584",
+        "at": "2026-11-06T09:39:15.174Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e",
+      "budgetId": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9",
+      "direction": "charge",
+      "label": "R2 · Billets de train",
+      "amountCents": 18000,
+      "date": "2026-11-06",
+      "status": "realized",
+      "realizedAmountCents": 18000,
+      "realizedDate": "2026-11-06",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T09:39:16.061Z"
+      }
+    },
+    "op_fd5fa73e-817b-40ca-a38c-8fa99480c1b6": {
+      "id": "op_fd5fa73e-817b-40ca-a38c-8fa99480c1b6",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T09:41:50.302Z",
+      "updatedAt": "2026-11-06T09:42:48.802Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "885b63c7-7146-4b42-874d-eb662f712f8a",
+        "at": "2026-11-06T09:41:50.302Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e",
+      "budgetId": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9",
+      "direction": "charge",
+      "label": "R2 · Supplément bagage",
+      "amountCents": 5000,
+      "date": "2026-11-06",
+      "status": "realized",
+      "realizedAmountCents": 5000,
+      "realizedDate": "2026-11-06",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T09:42:48.802Z"
+      }
+    },
+    "op_ed8031d2-f004-43c2-8fd2-ddfdc844ed24": {
+      "id": "op_ed8031d2-f004-43c2-8fd2-ddfdc844ed24",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T09:41:50.456Z",
+      "updatedAt": "2026-11-06T09:51:56.018Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "09dc82d1-7e7e-484d-a0cf-7222e0a1509a",
+        "at": "2026-11-06T09:41:50.456Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71",
+      "budgetId": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9",
+      "direction": "charge",
+      "label": "R2 · Kayak",
+      "amountCents": 12000,
+      "date": "2026-11-07",
+      "status": "realized",
+      "realizedAmountCents": 12000,
+      "realizedDate": "2026-11-06",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-06T09:51:56.018Z"
+      }
+    },
+    "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7": {
+      "id": "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 5,
+      "createdAt": "2026-11-06T09:53:18.404Z",
+      "updatedAt": "2026-11-06T09:53:19.497Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "6d3d9c53-acbe-4e7a-ae48-f8684ec9258b",
+        "at": "2026-11-06T09:53:18.404Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d",
+      "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "direction": "charge",
+      "label": "R3 · Pots de peinture",
+      "amountCents": 15000,
+      "date": "2026-11-06",
+      "status": "realized",
+      "realizedAmountCents": 15000,
+      "realizedDate": "2026-11-06",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "updateOperation",
+        "at": "2026-11-06T09:53:19.497Z"
+      }
+    },
+    "op_6537b838-8248-46f7-99b5-405058d49cbd": {
+      "id": "op_6537b838-8248-46f7-99b5-405058d49cbd",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:53:19.894Z",
+      "updatedAt": "2026-11-06T09:53:19.894Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "49f735c5-c526-435c-b43d-c6494478b142",
+        "at": "2026-11-06T09:53:19.894Z"
+      },
+      "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "direction": "charge",
+      "label": "R3 · Location meuble",
+      "amountCents": 4000,
+      "date": "2026-11-06",
+      "status": "realized",
+      "realizedAmountCents": 4000,
+      "realizedDate": "2026-11-06",
+      "recurrenceId": "rec_cc7bca2f-774a-4211-8b73-123b195145b3",
+      "occurrenceDate": "2026-11-06",
+      "note": null,
+      "taskId": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_2dc88324-06d3-494a-804e-d6fd30099862": {
+      "id": "op_2dc88324-06d3-494a-804e-d6fd30099862",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:53:20.034Z",
+      "updatedAt": "2026-11-06T09:53:20.034Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "8f170363-30d0-4c58-bc38-2d7251af639c",
+        "at": "2026-11-06T09:53:20.034Z"
+      },
+      "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "direction": "charge",
+      "label": "R3 · Location meuble",
+      "amountCents": 4000,
+      "date": "2026-12-06",
+      "status": "realized",
+      "realizedAmountCents": 4000,
+      "realizedDate": "2026-11-06",
+      "recurrenceId": "rec_cc7bca2f-774a-4211-8b73-123b195145b3",
+      "occurrenceDate": "2026-12-06",
+      "note": null,
+      "taskId": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_21e64b6b-2136-4d0f-8785-4fa51e549d97": {
+      "id": "op_21e64b6b-2136-4d0f-8785-4fa51e549d97",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:53:20.362Z",
+      "updatedAt": "2026-11-06T09:53:20.362Z",
+      "provenance": {
+        "command": "changeTaskStatus",
+        "requestKey": null,
+        "at": "2026-11-06T09:53:20.362Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Retour du projet « TEST R3 · Chambre d’ami » à la complétion de « Peinture ».",
+      "taskId": null,
+      "budgetId": "bud_b1ca76a7-43f7-4b77-8e80-fb3ecaadd48f",
+      "direction": "income",
+      "label": "R3 · Revente pots restants",
+      "amountCents": 3000,
+      "date": "2026-11-06",
+      "status": "planned",
+      "realizedAmountCents": null,
+      "realizedDate": null,
+      "standardCostCenter": "autresRevenus",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_16e15870-9da3-4554-bfc3-472c0eb657fa": {
+      "id": "op_16e15870-9da3-4554-bfc3-472c0eb657fa",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T10:07:33.685Z",
+      "updatedAt": "2026-11-06T10:07:33.685Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "web-718578cd-9a09-4d7b-861a-aa2f17d789b5",
+        "at": "2026-11-06T10:07:33.685Z"
+      },
+      "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "direction": "charge",
+      "label": "R3 · Location meuble",
+      "amountCents": 4000,
+      "date": "2027-01-06",
+      "status": "realized",
+      "realizedAmountCents": 4000,
+      "realizedDate": "2026-11-06",
+      "recurrenceId": "rec_cc7bca2f-774a-4211-8b73-123b195145b3",
+      "occurrenceDate": "2027-01-06",
+      "note": null,
+      "taskId": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_ad7f5918-a93d-4f1b-b7b4-da75ea5b339d": {
+      "id": "op_ad7f5918-a93d-4f1b-b7b4-da75ea5b339d",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T10:35:11.430Z",
+      "updatedAt": "2026-11-06T10:35:11.430Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "web-d43aca5b-c9cc-44ca-83c9-0e972df9dc4f",
+        "at": "2026-11-06T10:35:11.430Z"
+      },
+      "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "direction": "charge",
+      "label": "R3 · Location meuble",
+      "amountCents": 4000,
+      "date": "2027-02-06",
+      "status": "realized",
+      "realizedAmountCents": 4000,
+      "realizedDate": "2026-11-06",
+      "recurrenceId": "rec_cc7bca2f-774a-4211-8b73-123b195145b3",
+      "occurrenceDate": "2027-02-06",
+      "note": null,
+      "taskId": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_a5ddd0ec-3eb7-4118-aa76-7911739e58af": {
+      "id": "op_a5ddd0ec-3eb7-4118-aa76-7911739e58af",
+      "kind": "operation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T10:36:25.916Z",
+      "updatedAt": "2026-11-06T10:36:25.916Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "settle-56dfcc3f-5f0f-4a68-8295-8b7dbacb61dc",
+        "at": "2026-11-06T10:36:25.916Z"
+      },
+      "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "direction": "charge",
+      "label": "R3 · Location meuble",
+      "amountCents": 4000,
+      "date": "2027-03-06",
+      "status": "realized",
+      "realizedAmountCents": 4000,
+      "realizedDate": "2026-11-06",
+      "recurrenceId": "rec_cc7bca2f-774a-4211-8b73-123b195145b3",
+      "occurrenceDate": "2027-03-06",
+      "note": null,
+      "taskId": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": null
     }
   },
   "recurrences": {
@@ -51040,6 +52476,31 @@
       "note": null,
       "taskId": null,
       "standardCostCenter": "logement",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "rec_cc7bca2f-774a-4211-8b73-123b195145b3": {
+      "id": "rec_cc7bca2f-774a-4211-8b73-123b195145b3",
+      "kind": "recurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 1,
+      "createdAt": "2026-11-06T09:53:19.760Z",
+      "updatedAt": "2026-11-06T09:53:19.760Z",
+      "provenance": {
+        "command": "createRecurrence",
+        "requestKey": "07656d55-2d94-40d0-8f26-ea6b205b6d48",
+        "at": "2026-11-06T09:53:19.760Z"
+      },
+      "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b",
+      "direction": "charge",
+      "label": "R3 · Location meuble",
+      "amountCents": 4000,
+      "cadence": "monthly",
+      "firstDate": "2026-11-06",
+      "endDate": null,
+      "note": null,
+      "taskId": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6",
+      "standardCostCenter": "loisirs",
       "costCenterId": null,
       "categoryId": null
     }
@@ -134813,9 +136274,92 @@
         "command": "billProjectOverruns",
         "at": "2026-11-05T12:10:01.834Z"
       }
+    },
+    "ovr_65f71bfa-0b3b-42c1-951f-5a07986c81e5": {
+      "id": "ovr_65f71bfa-0b3b-42c1-951f-5a07986c81e5",
+      "kind": "projectOverrun",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T09:07:11.061Z",
+      "updatedAt": "2026-11-06T09:07:11.202Z",
+      "provenance": {
+        "command": "requestProjectOverrun",
+        "requestKey": "overrun-7239b1f3-36f7-46c0-9df4-2a71ca1cef9d",
+        "at": "2026-11-06T09:07:11.061Z"
+      },
+      "budgetId": "bud_d63775a8-0eac-4c08-af56-93435b87718b",
+      "taskId": "tsk_ff62b040-7790-47c0-9c81-0b5bb5c96f4e",
+      "reason": "reglement",
+      "amountCents": 12000,
+      "note": "Règlement de « Hôtel deux nuits » autorisé depuis le projet de vie.",
+      "status": "approved",
+      "requestedAt": "2026-11-06",
+      "decidedAt": "2026-11-06",
+      "billingDate": "2026-11-30",
+      "periodKey": "2026-11",
+      "billedAt": null,
+      "lastChange": {
+        "command": "decideProjectOverrun",
+        "at": "2026-11-06T09:07:11.202Z"
+      }
+    },
+    "ovr_743c4b2b-e6d8-4186-b17f-c18ade842e7b": {
+      "id": "ovr_743c4b2b-e6d8-4186-b17f-c18ade842e7b",
+      "kind": "projectOverrun",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 2,
+      "createdAt": "2026-11-06T09:39:15.932Z",
+      "updatedAt": "2026-11-06T09:47:37.394Z",
+      "provenance": {
+        "command": "decideTaskBudget",
+        "requestKey": null,
+        "at": "2026-11-06T09:39:15.932Z"
+      },
+      "budgetId": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9",
+      "taskId": "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71",
+      "taskBudgetRequestId": "dmt_69a76254-bd35-4d03-890e-3055819a8069",
+      "reason": "ventilation",
+      "amountCents": 20000,
+      "note": "Kayak et visites",
+      "status": "approved",
+      "requestedAt": "2026-11-06",
+      "decidedAt": "2026-11-06",
+      "billingDate": "2026-11-30",
+      "periodKey": "2026-11",
+      "billedAt": null,
+      "lastChange": {
+        "command": "decideProjectOverrun",
+        "at": "2026-11-06T09:47:37.394Z"
+      }
     }
   },
-  "taskBudgetRequests": {},
+  "taskBudgetRequests": {
+    "dmt_69a76254-bd35-4d03-890e-3055819a8069": {
+      "id": "dmt_69a76254-bd35-4d03-890e-3055819a8069",
+      "kind": "taskBudgetRequest",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "revision": 3,
+      "createdAt": "2026-11-06T09:39:15.802Z",
+      "updatedAt": "2026-11-06T09:47:37.394Z",
+      "provenance": {
+        "command": "requestTaskBudget",
+        "requestKey": "9d56b2ca-018b-44a1-bbe2-b0a0aa4a06b4",
+        "at": "2026-11-06T09:39:15.802Z"
+      },
+      "budgetId": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9",
+      "taskId": "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71",
+      "amountCents": 30000,
+      "note": "Kayak et visites",
+      "status": "pending",
+      "requestedAt": "2026-11-06",
+      "decidedAt": null,
+      "overrunId": null,
+      "lastChange": {
+        "command": "decideProjectOverrun",
+        "at": "2026-11-06T09:47:37.394Z"
+      }
+    }
+  },
   "creationRequests": {
     "seed-camille-fe7a1b55-1025-4fac-9eb0-994f4e14f444": {
       "requestKey": "seed-camille-fe7a1b55-1025-4fac-9eb0-994f4e14f444",
@@ -139435,6 +140979,479 @@
         "categoryId": "cat_d986700f-f00e-4ef7-a6ab-48ff4747f94c"
       },
       "completedAt": "2026-11-05T20:07:56.766Z"
+    },
+    "entry-5ae0a132-1715-4489-906a-bef3cee195aa": {
+      "requestKey": "entry-5ae0a132-1715-4489-906a-bef3cee195aa",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "9c8f19272f18181c205452ed06df4ed3844e8058f500e9ebb142a6b835670253",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_513fa68e-4d5c-4871-bf40-a479d1f75a41"
+        }
+      ],
+      "result": {
+        "operationId": "op_513fa68e-4d5c-4871-bf40-a479d1f75a41"
+      },
+      "completedAt": "2026-11-06T08:07:18.165Z"
+    },
+    "71ab9ad6-c0a8-49c7-8ef6-512ae5c74d69": {
+      "requestKey": "71ab9ad6-c0a8-49c7-8ef6-512ae5c74d69",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "d9ca1a66a8a94f99594bbfe0ce31ac8fe96f720fa64dd5dc6741b46322c0d34c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_68cbe815-c5a5-4bf6-99bc-c521218465ac"
+        }
+      ],
+      "result": {
+        "operationId": "op_68cbe815-c5a5-4bf6-99bc-c521218465ac"
+      },
+      "completedAt": "2026-11-06T08:58:29.860Z"
+    },
+    "165dd36d-5fe8-4f9f-9481-09a04c55a1b5": {
+      "requestKey": "165dd36d-5fe8-4f9f-9481-09a04c55a1b5",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "6f2c2898d762f47cb4e3dfd9050235d199d7ee09f42de09874705f62c5ddf0b5",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_1f191c7e-2fbe-4b7a-adf6-f4586fb08466"
+        }
+      ],
+      "result": {
+        "operationId": "op_1f191c7e-2fbe-4b7a-adf6-f4586fb08466"
+      },
+      "completedAt": "2026-11-06T08:58:30.269Z"
+    },
+    "2e8a6a66-0b1d-476b-a6c6-68c6f12eff7e": {
+      "requestKey": "2e8a6a66-0b1d-476b-a6c6-68c6f12eff7e",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "972d78044bea9259f2720bab848f3439fb4c2af252c7585b4803890a5a3be18e",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_4bb5f987-3845-49bd-b8d7-6244ee010cee"
+        }
+      ],
+      "result": {
+        "operationId": "op_4bb5f987-3845-49bd-b8d7-6244ee010cee"
+      },
+      "completedAt": "2026-11-06T08:58:30.538Z"
+    },
+    "overrun-7239b1f3-36f7-46c0-9df4-2a71ca1cef9d": {
+      "requestKey": "overrun-7239b1f3-36f7-46c0-9df4-2a71ca1cef9d",
+      "command": "requestProjectOverrun",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "74b7bf3fc4eb6b47e7bdcc84ce28ac29e2898804e65ba8096cf46a17f2da0e6c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "projectOverrun",
+          "id": "ovr_65f71bfa-0b3b-42c1-951f-5a07986c81e5"
+        }
+      ],
+      "result": {
+        "overrunId": "ovr_65f71bfa-0b3b-42c1-951f-5a07986c81e5",
+        "budgetId": "bud_d63775a8-0eac-4c08-af56-93435b87718b"
+      },
+      "completedAt": "2026-11-06T09:07:11.061Z"
+    },
+    "web-aca2e284-3485-479a-8a58-f98625a49c2f": {
+      "requestKey": "web-aca2e284-3485-479a-8a58-f98625a49c2f",
+      "command": "adoptProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "fingerprint": "d8c6df74c8716d53eaf4248d2c0330fa19aabcf7252f51b91a9199b63ef9af9d",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "budget",
+          "id": "bud_3431b230-bd89-4d3c-a163-872943973e2e"
+        }
+      ],
+      "result": {
+        "budgetId": "bud_3431b230-bd89-4d3c-a163-872943973e2e",
+        "coreProjectId": "prj_ca3273f2-d60f-463a-9541-049c16053b52"
+      },
+      "completedAt": "2026-11-06T09:36:17.165Z"
+    },
+    "web-f8dd56df-21ce-4f9d-bc94-b791ccdcc8b2": {
+      "requestKey": "web-f8dd56df-21ce-4f9d-bc94-b791ccdcc8b2",
+      "command": "adoptProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "fingerprint": "78cefe14be73ae66b17ecaaf9cb26a5b42c3f2e518cc1d82fbea313550bdb270",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "budget",
+          "id": "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7"
+        }
+      ],
+      "result": {
+        "budgetId": "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7",
+        "coreProjectId": "prj_53e97ffb-15aa-42e9-8270-3d3d6223852d"
+      },
+      "completedAt": "2026-11-06T09:36:38.906Z"
+    },
+    "web-d9aa33f5-375b-416b-bd2d-614043722752": {
+      "requestKey": "web-d9aa33f5-375b-416b-bd2d-614043722752",
+      "command": "adoptProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "fingerprint": "20a40f3f87c85fb0cd199d01682eaf4f30ad279261e5d68d3c2861cd0060cc90",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "budget",
+          "id": "bud_312386b3-44ed-4442-9a90-a782bf76f8b8"
+        }
+      ],
+      "result": {
+        "budgetId": "bud_312386b3-44ed-4442-9a90-a782bf76f8b8",
+        "coreProjectId": "prj_e4cdea29-d5ad-4931-a405-6e53aab543a0"
+      },
+      "completedAt": "2026-11-06T09:37:06.364Z"
+    },
+    "1eeee490-96e2-46ab-b957-2982f0b8b27e": {
+      "requestKey": "1eeee490-96e2-46ab-b957-2982f0b8b27e",
+      "command": "createBpmProject",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "dc31237617fbf7db62530c75e43d7268cd17a93a2a8a6454ca3189d930f50879",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_3282f872-288f-48e0-863c-84329a468d3a"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+        }
+      ],
+      "result": {
+        "coreProjectId": "prj_3282f872-288f-48e0-863c-84329a468d3a",
+        "budgetId": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9"
+      },
+      "completedAt": "2026-11-06T09:39:14.649Z"
+    },
+    "c64f7ec9-307f-4eb8-8e9a-a12e4d9a2a67": {
+      "requestKey": "c64f7ec9-307f-4eb8-8e9a-a12e4d9a2a67",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "f945e015065ae066e0436c3dd8d9db294676112a62d154bd495f3787ca08c0e3",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_289526fc-2d62-4ade-bab7-f3ede87d6721"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_289526fc-2d62-4ade-bab7-f3ede87d6721"
+      },
+      "completedAt": "2026-11-06T09:39:14.802Z"
+    },
+    "4e216af4-b3e4-434a-a784-075557727de5": {
+      "requestKey": "4e216af4-b3e4-434a-a784-075557727de5",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "6297b21896f0f370d495a4e6e5224de472c14a0ed47df17838e99e3ad663f5b5",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_809d7437-c688-4f8b-8ca8-be2a4c70906e"
+      },
+      "completedAt": "2026-11-06T09:39:14.933Z"
+    },
+    "d05009ce-dbae-4e58-846c-ab0de11632f1": {
+      "requestKey": "d05009ce-dbae-4e58-846c-ab0de11632f1",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "03be9d804c17d648d36d36e7c6e94e8069500ea2ffa2d3377dce22886df69bd7",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_5d16a0c1-21cc-4e8e-b97d-af8799d48b71"
+      },
+      "completedAt": "2026-11-06T09:39:15.053Z"
+    },
+    "93cdbb1f-a82a-431e-a11e-d5eaf7332584": {
+      "requestKey": "93cdbb1f-a82a-431e-a11e-d5eaf7332584",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "1064e268b6c45042f4c4e672cf72d96521fba40385d02eb9ce2a82ede3a869d7",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_8c41f0ff-6733-4184-b4b9-889edfe8f68f"
+        }
+      ],
+      "result": {
+        "operationId": "op_8c41f0ff-6733-4184-b4b9-889edfe8f68f"
+      },
+      "completedAt": "2026-11-06T09:39:15.174Z"
+    },
+    "9d56b2ca-018b-44a1-bbe2-b0a0aa4a06b4": {
+      "requestKey": "9d56b2ca-018b-44a1-bbe2-b0a0aa4a06b4",
+      "command": "requestTaskBudget",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "3b12bd10ea714a81d6c7b1fb87a9666f0610bf3180261277eb6b72337c2abbfe",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "taskBudgetRequest",
+          "id": "dmt_69a76254-bd35-4d03-890e-3055819a8069"
+        }
+      ],
+      "result": {
+        "requestId": "dmt_69a76254-bd35-4d03-890e-3055819a8069"
+      },
+      "completedAt": "2026-11-06T09:39:15.802Z"
+    },
+    "885b63c7-7146-4b42-874d-eb662f712f8a": {
+      "requestKey": "885b63c7-7146-4b42-874d-eb662f712f8a",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "8c3f2408f8de315ccd2ec5aa209d30ef7fab8659774f01f8a97d2ba73e056e55",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_fd5fa73e-817b-40ca-a38c-8fa99480c1b6"
+        }
+      ],
+      "result": {
+        "operationId": "op_fd5fa73e-817b-40ca-a38c-8fa99480c1b6"
+      },
+      "completedAt": "2026-11-06T09:41:50.302Z"
+    },
+    "09dc82d1-7e7e-484d-a0cf-7222e0a1509a": {
+      "requestKey": "09dc82d1-7e7e-484d-a0cf-7222e0a1509a",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "6f414d43f66a894732ea23bb278795f0cc7eab66a7e5fec4e2dc799da2563b11",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_ed8031d2-f004-43c2-8fd2-ddfdc844ed24"
+        }
+      ],
+      "result": {
+        "operationId": "op_ed8031d2-f004-43c2-8fd2-ddfdc844ed24"
+      },
+      "completedAt": "2026-11-06T09:41:50.456Z"
+    },
+    "80d86380-3246-4869-b8a0-31f5f41fbd10": {
+      "requestKey": "80d86380-3246-4869-b8a0-31f5f41fbd10",
+      "command": "createBpmProject",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "3ef9958c4e4438ee9ae551550fbf03034c5a426dba7cb392c3eaa2500b368354",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_090f97a7-05de-43d1-8735-b68222d57bd2"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+        }
+      ],
+      "result": {
+        "coreProjectId": "prj_090f97a7-05de-43d1-8735-b68222d57bd2",
+        "budgetId": "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
+      },
+      "completedAt": "2026-11-06T09:53:17.869Z"
+    },
+    "1442d7e4-154d-4ded-bb3b-612a7a036d89": {
+      "requestKey": "1442d7e4-154d-4ded-bb3b-612a7a036d89",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "cbeb3298585d3f543189a5bbe7600aa6c0de98e814955b7fa80e62423d92e8b7",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_1443db0b-10bb-49b4-a3be-47411409fe4d"
+      },
+      "completedAt": "2026-11-06T09:53:18.020Z"
+    },
+    "382334be-785a-4fdb-b7ed-9f44d7024683": {
+      "requestKey": "382334be-785a-4fdb-b7ed-9f44d7024683",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "9c9257a80fa01e957a5489d788fedcb272d238ebed055ba6f31b542087f95266",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_c0fe64c2-1349-4c63-8041-b1bd9dc4c5a6"
+      },
+      "completedAt": "2026-11-06T09:53:18.158Z"
+    },
+    "ebbbf052-f4f9-4bac-a194-f1949d06e8d1": {
+      "requestKey": "ebbbf052-f4f9-4bac-a194-f1949d06e8d1",
+      "command": "createBpmTask",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "ba9e45f8efc2517047e02e78c9ca4bf3b69ce73db5c22232d8fcd096a699b27a",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_a13aae94-c08a-486d-9516-4df5e5d04a7b"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_a13aae94-c08a-486d-9516-4df5e5d04a7b"
+      },
+      "completedAt": "2026-11-06T09:53:18.285Z"
+    },
+    "6d3d9c53-acbe-4e7a-ae48-f8684ec9258b": {
+      "requestKey": "6d3d9c53-acbe-4e7a-ae48-f8684ec9258b",
+      "command": "createOperation",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "fd08d970fc06445566e2f636c375a1d545d0cf2ab09cfd838a380b6a5dc8f352",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7"
+        }
+      ],
+      "result": {
+        "operationId": "op_ed68649b-6f4f-48c7-8ce9-76df304b7ba7"
+      },
+      "completedAt": "2026-11-06T09:53:18.404Z"
+    },
+    "07656d55-2d94-40d0-8f26-ea6b205b6d48": {
+      "requestKey": "07656d55-2d94-40d0-8f26-ea6b205b6d48",
+      "command": "createRecurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "6496b7bd5a32a35fac24e73444b2b54f9f82e374eb2e5931c53eec1c60a4cae8",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "recurrence",
+          "id": "rec_cc7bca2f-774a-4211-8b73-123b195145b3"
+        }
+      ],
+      "result": {
+        "recurrenceId": "rec_cc7bca2f-774a-4211-8b73-123b195145b3"
+      },
+      "completedAt": "2026-11-06T09:53:19.760Z"
+    },
+    "49f735c5-c526-435c-b43d-c6494478b142": {
+      "requestKey": "49f735c5-c526-435c-b43d-c6494478b142",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "50506e6d2f1de2b824aab691e90b2f2f9f5d5cf74555022768cca29dd5680a0a",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_6537b838-8248-46f7-99b5-405058d49cbd"
+        }
+      ],
+      "result": {
+        "operationId": "op_6537b838-8248-46f7-99b5-405058d49cbd"
+      },
+      "completedAt": "2026-11-06T09:53:19.894Z"
+    },
+    "8f170363-30d0-4c58-bc38-2d7251af639c": {
+      "requestKey": "8f170363-30d0-4c58-bc38-2d7251af639c",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "73d67d9e8752e4d3e34c9e8da3000b193bf9847c59ae579adf30e01f209c7923",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_2dc88324-06d3-494a-804e-d6fd30099862"
+        }
+      ],
+      "result": {
+        "operationId": "op_2dc88324-06d3-494a-804e-d6fd30099862"
+      },
+      "completedAt": "2026-11-06T09:53:20.034Z"
+    },
+    "web-718578cd-9a09-4d7b-861a-aa2f17d789b5": {
+      "requestKey": "web-718578cd-9a09-4d7b-861a-aa2f17d789b5",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "cc6d87b75e9983d7cc689e63899605097a03bb7e990b5bec6cd98ec86728bb58",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_16e15870-9da3-4554-bfc3-472c0eb657fa"
+        }
+      ],
+      "result": {
+        "operationId": "op_16e15870-9da3-4554-bfc3-472c0eb657fa"
+      },
+      "completedAt": "2026-11-06T10:07:33.685Z"
+    },
+    "web-d43aca5b-c9cc-44ca-83c9-0e972df9dc4f": {
+      "requestKey": "web-d43aca5b-c9cc-44ca-83c9-0e972df9dc4f",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "9f3f803e983a624f88a7b6e69b6cc4fde2efd8fc8ac1d86a8411e8e0f025b46f",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_ad7f5918-a93d-4f1b-b7b4-da75ea5b339d"
+        }
+      ],
+      "result": {
+        "operationId": "op_ad7f5918-a93d-4f1b-b7b4-da75ea5b339d"
+      },
+      "completedAt": "2026-11-06T10:35:11.430Z"
+    },
+    "settle-56dfcc3f-5f0f-4a68-8295-8b7dbacb61dc": {
+      "requestKey": "settle-56dfcc3f-5f0f-4a68-8295-8b7dbacb61dc",
+      "command": "settleOccurrence",
+      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
+      "fingerprint": "fafc600c3ec03ee9d7447193692cf0510938c7c17ea88a5f67e294525e624d02",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_a5ddd0ec-3eb7-4118-aa76-7911739e58af"
+        }
+      ],
+      "result": {
+        "operationId": "op_a5ddd0ec-3eb7-4118-aa76-7911739e58af"
+      },
+      "completedAt": "2026-11-06T10:36:25.916Z"
     }
   },
   "parameters": {

@@ -32,6 +32,28 @@ export class BpmFragmentNavigation {
       }
       target.scrollIntoView?.({ block: 'start' });
       this.handled = fragment;
+      this.settle(target);
     });
+  }
+
+  /**
+   * Le contenu chargé au-dessus de la section (volets, tableaux) peut la repousser après le premier défilement :
+   * la section est remise en vue tant que la page se stabilise, sauf si l'utilisateur fait défiler lui-même.
+   */
+  private settle(target: HTMLElement) {
+    const win = this.host.ownerDocument.defaultView;
+    if (!win) return;
+    let userMoved = false;
+    const stop = () => (userMoved = true);
+    const events = ['wheel', 'touchstart', 'keydown', 'mousedown'] as const;
+    for (const e of events) win.addEventListener(e, stop, { once: true, passive: true });
+    const first = target.getBoundingClientRect().top;
+    for (const delay of [250, 700, 1500]) {
+      win.setTimeout(() => {
+        if (userMoved || !target.isConnected) return;
+        if (Math.abs(target.getBoundingClientRect().top - first) > 40) target.scrollIntoView?.({ block: 'start' });
+      }, delay);
+    }
+    win.setTimeout(() => events.forEach((e) => win.removeEventListener(e, stop)), 1600);
   }
 }

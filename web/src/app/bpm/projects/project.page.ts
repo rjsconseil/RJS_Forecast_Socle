@@ -24,7 +24,10 @@ import {
 } from '../../core/bpm-projects.models';
 import { COLUMNS, TASK_STATUS_LABEL, TaskStatus } from '../../core/models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
+import { FUNDING, FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from '../ui/project-funding';
 import { BpmOperationEditor } from '../ui/operation-editor';
+import { BpmOverflowDirective } from '../ui/overflow';
+import { ModalComponent } from '../../shared/modal.component';
 import { BpmLifeFundingComponent } from '../life/life-funding';
 import {
   BpmBudgetStateComponent,
@@ -51,11 +54,27 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
 ];
 
 /** Action refusée faute de budget, en attente de la décision du budget de vie. */
+const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+/**
+ * Écriture de la page. `fund` : rejouée après un refus de financement, elle demande au middleware Budget d'accorder
+ * dans la même écriture la part et le dépassement nécessaires (règlement financé, part avec dépassement autorisé).
+ */
+type Write<T> = (fund?: boolean) => Promise<T>;
+
+/** Règlement refusé faute de part suffisante (projet en mode strict) : la part est accordée avec le règlement. */
+interface ShareFlow {
+  gap: { budgetId: string; taskId: string; taskTitle: string; shareCents: number | null; neededCents: number; availableCents: number; grantOverrunCents: number };
+  message: string;
+  label: string;
+  retry: Write<unknown>;
+}
+
 interface OverrunFlow {
   refusal: OverrunRefusal;
   message: string;
   label: string;
-  retry: () => Promise<unknown>;
+  retry: Write<unknown>;
   request: ProjectOverrun | null;
 }
 
@@ -84,6 +103,8 @@ interface OverrunFlow {
     BpmLifeFundingComponent,
     BpmProjectEditor,
     BpmTaskEditor,
+    BpmOverflowDirective,
+    ModalComponent,
   ],
   templateUrl: './project.page.html',
   styleUrls: ['./projects.page.scss', './project.page.scss'],
@@ -91,6 +112,10 @@ interface OverrunFlow {
 export class BpmProjectPage {
   private api = inject(Api);
   private bpm = inject(BpmApi);
+  /** Gestes de financement partagés avec la fiche d'échéance et la page projet de vie. */
+  private funding = inject(ProjectFunding);
+  protected readonly L = FUNDING;
+  protected readonly act = FUNDING_ACTIONS;
   private route = inject(ActivatedRoute);
   private injector = inject(Injector);
   private document = inject(DOCUMENT);
@@ -107,6 +132,7 @@ export class BpmProjectPage {
   protected busy = signal(false);
   protected notice = signal<{ text: string; error: boolean } | null>(null);
   protected flow = signal<OverrunFlow | null>(null);
+  protected shareFlow = signal<ShareFlow | null>(null);
   protected allocation = signal('');
   protected returnEditor = signal<string | null>(null);
   protected settling = signal<string | null>(null);
@@ -133,6 +159,12 @@ export class BpmProjectPage {
   protected allocationError = signal<string | null>(null);
   protected query = signal('');
   protected fundingTask = signal<string | null>(null);
+  /** Tâche ouverte dans sa fenêtre : la carte du tableau garde une taille fixe. */
+  protected openTaskId = signal<string | null>(null);
+  protected openTask = computed(() => {
+    const id = this.openTaskId();
+    return id ? (this.data()?.tasks ?? []).find((t) => t.task.id === id) ?? null : null;
+  });
   protected expenseTaskId = signal<string | null>(null);
   protected dragActive = signal(false);
   protected dropTarget = signal<TaskStatus | null>(null);
@@ -203,36 +235,65 @@ export class BpmProjectPage {
     return [
       {
         id: 'envelope',
-        label: 'Enveloppe budgétaire allouée',
+        label: FUNDING.envelope,
         value: b.regime ? cents(b.allocationCents) : 'À attribuer',
         tone: 'accent',
-        note: b.approvedOverrunCents
-          ? `${cents(b.approvedOverrunCents)} de dépassement autorisé en complément`
-          : 'Montant alloué au projet',
+        note: !b.regime
+          ? 'Sans enveloppe, ses dépenses restent hors budget de vie'
+          : b.approvedOverrunCents
+            ? `Depuis le ${displayDate(b.allocationDate!)} · + ${cents(b.approvedOverrunCents)} de dépassement autorisé`
+            : `Par le projet de vie, le ${displayDate(b.allocationDate!)}`,
       },
       {
         id: 'paid',
-        label: 'Consommé réel',
+        label: b.regime ? FUNDING.paidOnEnvelope : FUNDING.paidOutside,
         value: cents(b.paidCents),
         tone: 'danger',
-        note: 'Règlements validés · toutes périodes',
+        note: !b.regime
+          ? 'Règlements validés, non comptés dans le projet de vie'
+          : b.paidBeforeAllocationCents
+            ? `Depuis l’attribution · ${cents(b.paidBeforeAllocationCents)} réglés avant, hors enveloppe`
+            : 'Règlements validés depuis l’attribution',
       },
       {
         id: 'remaining',
-        label: 'Reste à consommer',
-        value: cents(b.remainingCents),
+        label: FUNDING.remaining,
+        value: b.regime ? cents(b.remainingCents) : '—',
         tone: b.remainingCents === null ? null : b.remainingCents < 0 ? 'danger' : 'success',
-        note: 'Budget autorisé − règlements validés',
+        note: b.regime ? 'Enveloppe − réglé sur l’enveloppe' : 'Attribuez une enveloppe pour suivre le reste',
       },
       {
         id: 'toPay',
-        label: 'Encore à régler',
+        label: FUNDING.toPay,
         value: cents(b.toPayCents),
         tone: 'warning',
         note: 'Dépenses engagées non réglées',
       },
     ];
   });
+
+
+  protected statusLabel(s: TaskStatus) {
+    return TASK_STATUS_LABEL[s];
+  }
+  /** Ouvre la fenêtre de la tâche, au besoin sur sa part (demande) ou ses dépenses. */
+  protected showTask(t: BpmTaskCard, section: 'funding' | 'charges' | null = null) {
+    this.fundingTask.set(section === 'funding' && !t.budget?.request ? t.task.id : null);
+    this.returnEditor.set(null);
+    this.settling.set(null);
+    this.openTaskId.set(t.task.id);
+    if (section)
+      afterNextRender(
+        () => this.document.getElementById(`task-panel-${section}`)?.scrollIntoView({ block: 'start' }),
+        { injector: this.injector },
+      );
+  }
+  protected closeTaskPanel() {
+    this.openTaskId.set(null);
+    this.fundingTask.set(null);
+    this.returnEditor.set(null);
+    this.settling.set(null);
+  }
 
   protected taskCharges(id: string) {
     return (this.data()?.charges ?? []).filter((c) => c.taskId === id);
@@ -350,6 +411,7 @@ export class BpmProjectPage {
       this.projectEditor.set(false);
       this.editorOpen.set(false);
       this.fundingTask.set(null);
+      this.openTaskId.set(null);
       this.query.set('');
       this.descriptionExpanded.set(false);
       this.returnEditor.set(null);
@@ -393,6 +455,11 @@ export class BpmProjectPage {
   private scrollToSection() {
     const section = this.pendingSection;
     this.pendingSection = null;
+    // Raccourci depuis le projet de vie : #enveloppe ouvre directement l'attribution du budget du projet.
+    if (section === 'enveloppe') {
+      if (this.data()?.role === 'standard' && !this.allocationEditing()) this.editAllocation();
+      return;
+    }
     if (
       section &&
       ['requests-title', 'budget-title', 'shares-title', 'charges-title', 'cycle-title'].includes(
@@ -431,18 +498,25 @@ export class BpmProjectPage {
    * Écriture avec relecture. Un refus « autorisation de dépassement requise » ouvre la demande au budget de vie ;
    * une fois le dépassement autorisé, la même écriture est rejouée.
    */
-  private async run(action: () => Promise<unknown>, success: string, label = '') {
+  private async run<T>(action: Write<T>, success: string | ((result: T) => string), label = '') {
     if (this.busy()) return false;
     this.busy.set(true);
     this.notice.set(null);
     try {
-      await action();
+      const result = await action();
       this.flow.set(null);
+      this.shareFlow.set(null);
       await this.load();
-      this.notice.set({ text: success, error: false });
+      this.notice.set({ text: typeof success === 'function' ? success(result) : success, error: false });
       return true;
     } catch (err) {
       const e = toApiError(err);
+      const gap = e.body.details as unknown as (ShareFlow['gap'] & { reason?: string }) | undefined;
+      if (e.body.code === 'FORBIDDEN_BY_RULE' && gap?.reason === 'task-share' && label) {
+        this.shareFlow.set({ gap, message: e.message, label, retry: action });
+        this.revealControl('project-share-flow');
+        return false;
+      }
       if (e.body.code === 'OVERRUN_AUTHORIZATION_REQUIRED') {
         this.flow.set({
           refusal: e.body.details as unknown as OverrunRefusal,
@@ -467,17 +541,29 @@ export class BpmProjectPage {
     }
   }
 
+  /** Rejoue l'écriture refusée en la finançant : la part (et son dépassement éventuel) est accordée dans la même écriture. */
+  protected grantShareFlow() {
+    const sf = this.shareFlow();
+    if (!sf) return;
+    this.shareFlow.set(null);
+    const granted = FUNDING_RESULTS.granted(sf.gap.taskTitle, sf.gap.neededCents, sf.gap.grantOverrunCents);
+    return this.run(() => sf.retry(true), `${granted} ${capitalize(sf.label)} est enregistré.`, sf.label);
+  }
+
+  /** Geste nominal : vous pilotez aussi le projet de vie, l'écriture refusée est rejouée avec son dépassement autorisé. */
+  protected authorizeFlow() {
+    const f = this.flow();
+    if (!f) return;
+    return this.run(() => f.retry(true), `${FUNDING_RESULTS.approved} ${capitalize(f.label || 'l’écriture')} est enregistrée.`, f.label);
+  }
+
+  /** Variante : déposer la demande sans décider ; elle attend dans les décisions du projet de vie. */
   protected async requestAuthorization() {
     const f = this.flow();
     if (!f) return;
     this.busy.set(true);
     try {
-      const r = await this.bpm.requestOverrun(f.refusal.budgetId, {
-        requestKey: newRequestKey(),
-        taskId: f.refusal.taskId,
-        reason: f.refusal.reason,
-        amount: f.refusal.overrunCents / 100,
-      });
+      const r = await this.funding.request(f.refusal.budgetId, { taskId: f.refusal.taskId, reason: f.refusal.reason, overrunCents: f.refusal.overrunCents });
       this.flow.set({ ...f, request: r.overrun });
     } catch (err) {
       this.notice.set({ text: toApiError(err).message, error: true });
@@ -491,8 +577,9 @@ export class BpmProjectPage {
     const f = this.flow();
     if (!f?.request) return;
     this.busy.set(true);
+    let decided: { message: string };
     try {
-      await this.bpm.decideOverrun(f.request.id, decision, f.request.revision);
+      decided = await this.funding.decide(f.request, decision);
     } catch (err) {
       this.busy.set(false);
       this.notice.set({ text: toApiError(err).message, error: true });
@@ -502,26 +589,14 @@ export class BpmProjectPage {
     if (decision === 'refuse') {
       this.flow.set(null);
       await this.load();
-      this.notice.set({
-        text: 'Dépassement refusé par le budget du projet de vie : rien n’a été enregistré.',
-        error: false,
-      });
+      this.notice.set({ text: `${decided.message} Rien n’a été enregistré.`, error: false });
       return;
     }
-    await this.run(
-      f.retry,
-      `Dépassement autorisé par le budget du projet de vie : ${f.label || 'l’écriture'} est enregistrée ; le projet passe en dépassement jusqu’à la facturation de fin de cycle.`,
-      f.label,
-    );
+    await this.run(() => f.retry(), `${decided.message} ${capitalize(f.label || 'l’écriture')} est enregistrée.`, f.label);
   }
 
   protected decide(o: ProjectOverrun, decision: 'approve' | 'refuse') {
-    return this.run(
-      () => this.bpm.decideOverrun(o.id, decision, o.revision),
-      decision === 'approve'
-        ? 'Dépassement autorisé par le budget du projet de vie.'
-        : 'Demande refusée par le budget du projet de vie.',
-    );
+    return this.run(() => this.funding.decide(o, decision), (r) => r.message);
   }
 
   protected async allocate(budgetId: string, revision: number) {
@@ -564,12 +639,17 @@ export class BpmProjectPage {
       return;
     }
     return this.run(
-      () => this.bpm.setTaskShare(budgetId, t.task.id, amount, revision),
+      (fund) => this.bpm.setTaskShare(budgetId, t.task.id, amount, revision, { authorizeOverrun: fund }),
       amount === null
         ? `Part de « ${t.task.title} » retirée.`
         : `Part de « ${t.task.title} » enregistrée.`,
       `la part de « ${t.task.title} »`,
     );
+  }
+
+  /** Tâche terminée : la part non consommée revient à l'enveloppe (part ramenée au réglé, par le middleware). */
+  protected releaseShare(budgetId: string, t: BpmTaskCard, revision: number) {
+    return this.run(() => this.funding.releaseShare({ budgetId, taskId: t.task.id, revision }), (r) => r.message);
   }
 
   protected async requestBudget(
@@ -603,14 +683,7 @@ export class BpmProjectPage {
     decision: 'approve' | 'refuse' | 'cancel';
   }) {
     const revision = this.data()?.budget?.revision;
-    return this.run(
-      async () => {
-        await this.bpm.decideTaskBudget(e.request.id, e.decision, e.request.revision, revision);
-      },
-      e.decision === 'approve'
-        ? 'Demande validée : part accordée si le budget suffit, sinon autorisation de dépassement transmise au budget du projet de vie.'
-        : 'Demande traitée.',
-    );
+    return this.run(() => this.funding.decideTaskRequest(e.request, e.decision, revision), (r) => r.message);
   }
 
   protected closeTask() {
@@ -721,22 +794,24 @@ export class BpmProjectPage {
       return;
     }
     const requestKey = newRequestKey();
-    const action = () =>
+    const action = (fund?: boolean) =>
       c.kind === 'occurrence' && c.recurrenceId && c.occurrenceDate
         ? this.bpm.settleOccurrence(c.recurrenceId, {
             requestKey,
             occurrenceDate: c.occurrenceDate,
             realizedAmount: amount,
             realizedDate,
+            fund,
           })
         : this.bpm.realizeOperation(c.operationId!, {
             expectedRevision: c.revision ?? 0,
             realizedAmount: amount,
             realizedDate,
+            fund,
           });
     return this.run(
-      async () => {
-        await action();
+      async (fund) => {
+        await action(fund);
         this.settling.set(null);
       },
       `Règlement de « ${c.label} » validé : il compte maintenant dans les dépenses du budget du projet de vie.`,

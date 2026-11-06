@@ -1,7 +1,7 @@
-// Projets de la vie dans l'application BPM (niveau 3). Le budget de vie (Budget « Projet de vie ») attribue un
-// montant à chacun de ses projets standards (Budgets standards enfants) ; chaque projet ventile ce montant sur
-// ses tâches ; tout dépassement est autorisé par le budget de vie, puis facturé au budget de vie à la fin de son
-// cycle. Un projet peut aussi retourner un revenu au budget de vie quand une de ses tâches est terminée.
+// Projets de la vie dans l'application BPM (niveau 3) : lectures de présentation (fiches, synthèses, contrôles de fin
+// de cycle), composition des créations et enchaînement des commandes. Les règles et commandes du financement
+// (enveloppe, parts des tâches, retours, demandes, dépassements, facturation) sont celles du middleware Budget
+// (`../budget/funding.mjs`) ; BPM lui fournit la période du cycle (extension `fundingPeriod`).
 //
 // Les projets et les tâches restent ceux du noyau, seule source : leur création passe par le noyau. BPM les lit,
 // les rattache et change leur état par les commandes du noyau ; il ne porte que ses propres données (montant
@@ -13,154 +13,36 @@
 // l'utilisateur a validées comme réglées (opérations réglées du Budget standard, depuis la date d'attribution)
 // comptent dans les dépenses du budget de vie, à leur date réelle (variable `projets.chargesReglees`).
 import { fail } from '../../socle/errors.mjs';
-import { expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
-import { CADENCE_LABEL, CADENCES, occurrenceDates } from '../budget/recurrence.mjs';
+import { money, text } from '../../socle/validation.mjs';
+import { CADENCE_LABEL } from '../budget/recurrence.mjs';
+import {
+  fmt, frDate, fundingFigures, inRegime, isValidatedCharge, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, sharesOf, standardOfProject, sum, taskFunding,
+} from '../budget/funding.mjs';
 import { addDays, periodByIndex, periodContaining, today } from './periods.mjs';
 
-const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
-const fmt = (cents) => euro.format(cents / 100).replace(/[  ]/g, ' ');
-const sum = (list, f = (x) => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
-
-export const OVERRUN_REASONS = { ventilation: 'Part de budget d’une tâche', reglement: 'Règlement d’une dépense' };
-export const OVERRUN_STATUS = {
-  pending: 'En attente de la décision du budget de vie',
-  approved: 'Autorisé · facturé au budget de vie en fin de cycle',
-  refused: 'Refusé par le budget de vie',
-  billed: 'Facturé au budget de vie',
-};
-const RETURN_CADENCES = ['once', ...CADENCES];
-/** Engagé d'une récurrence sans date de fin : ses occurrences des 12 prochains mois [P]. */
-const HORIZON_DAYS = 365;
+export { inRegime, isValidatedCharge, OVERRUN_REASONS, OVERRUN_STATUS } from '../budget/funding.mjs';
 
 const compositionOf = (state, userId) => Object.values(state.bpmCompositions ?? {}).find((c) => c.userId === userId) ?? null;
 const cycleOf = (state, compositionId) => Object.values(state.cycleLinks ?? {}).find((c) => c.bpmCompositionId === compositionId) ?? null;
 
-/** Projet standard financé par le budget de vie : un montant lui est attribué (régime des charges de projet). */
-export const inRegime = (b) => b?.role === 'standard' && Number.isInteger(b.allocationCents) && typeof b.allocationDate === 'string';
-const standardOfProject = (state, coreProjectId) => Object.values(state.budgets).find((b) => b.role === 'standard' && b.coreProjectId === coreProjectId) ?? null;
-const sharesOf = (b) => b.taskSharesCents ?? {};
-const returnsOf = (b) => b.taskReturns ?? {};
-const overrunsOf = (state, budgetId) => Object.values(state.projectOverruns ?? {}).filter((x) => x.budgetId === budgetId);
-const requestsOf = (state, budgetId) => Object.values(state.taskBudgetRequests ?? {}).filter((x) => x.budgetId === budgetId);
-const openRequest = (x) => ['pending', 'awaiting-life'].includes(x.status);
-const REQUEST_STATUS = { pending: 'À valider par le projet', 'awaiting-life': 'Autorisation du budget du projet de vie attendue', approved: 'Montant accordé', refused: 'Demande refusée', cancelled: 'Demande annulée' };
-
-function requestView(state, x) {
-  const b = state.budgets[x.budgetId];
-  return { ...structuredClone(x), statusLabel: REQUEST_STATUS[x.status], taskTitle: state.tasks[x.taskId]?.title ?? '', budgetName: b?.name ?? '', coreProjectId: b?.coreProjectId ?? null, grantedCents: sharesOf(b ?? {})[x.taskId] ?? null };
-}
-
-/** Charge d'un projet validée comme réglée pour ses besoins, depuis l'attribution : comptée dans le budget de vie. */
-export const isValidatedCharge = (o, b) => inRegime(b) && o.budgetId === b.id && o.direction === 'charge' && o.status === 'realized' && o.realizedDate >= b.allocationDate;
-
-/**
- * Charges du projet qui forment son engagé : réglées validées, prévues ponctuelles, occurrences attendues.
- * Les règlements antérieurs à l'attribution restent dans l'historique du projet, hors budget attribué.
- */
-function chargeItems(state, b, now) {
-  const from = inRegime(b) ? b.allocationDate : null;
-  const horizon = addDays(now, HORIZON_DAYS);
-  const items = [];
-  const materialized = new Set();
-  for (const o of Object.values(state.operations)) {
-    if (o.budgetId !== b.id) continue;
-    if (o.recurrenceId) materialized.add(`${o.recurrenceId}@${o.occurrenceDate}`);
-    if (o.direction !== 'charge') continue;
-    if (o.status === 'realized') {
-      if (from && o.realizedDate < from) items.push({ taskId: o.taskId ?? null, cents: o.realizedAmountCents, paid: false, before: true });
-      else items.push({ taskId: o.taskId ?? null, cents: o.realizedAmountCents, paid: true });
-    } else items.push({ taskId: o.taskId ?? null, cents: o.amountCents, paid: false });
-  }
-  for (const r of Object.values(state.recurrences ?? {})) {
-    if (r.budgetId !== b.id || r.direction !== 'charge') continue;
-    const start = from && from > r.firstDate ? from : r.firstDate;
-    for (const d of occurrenceDates(r, start, r.endDate ?? horizon)) {
-      if (!materialized.has(`${r.id}@${d}`)) items.push({ taskId: r.taskId ?? null, cents: r.amountCents, paid: false, unbounded: !r.endDate });
-    }
-  }
-  return items;
-}
-
-function overrunView(state, x) {
-  const b = state.budgets[x.budgetId];
-  return {
-    ...structuredClone(x),
-    statusLabel: OVERRUN_STATUS[x.status],
-    reasonLabel: OVERRUN_REASONS[x.reason],
-    taskTitle: x.taskId ? state.tasks[x.taskId]?.title ?? null : null,
-    budgetName: b?.name ?? null,
-    coreProjectId: b?.coreProjectId ?? null,
-  };
-}
-
-/** Chiffres d'un projet standard (centimes) : attribué, dépassements, ventilé, engagé, réglé validé, reste. */
+/** Chiffres d'un projet standard : ceux du financement (middleware Budget), plus le réglé de la période du cycle. */
 export function projectBudget(state, b, now = today()) {
-  const regime = inRegime(b);
-  const overruns = overrunsOf(state, b.id);
-  const approved = overruns.filter((x) => x.status === 'approved');
-  const approvedCents = sum(approved, (x) => x.amountCents);
-  const billedCents = sum(overruns.filter((x) => x.status === 'billed'), (x) => x.amountCents);
-  const pending = overruns.find((x) => x.status === 'pending') ?? null;
-  const shares = sharesOf(b);
-  const sharesCents = sum(Object.values(shares));
-  const items = chargeItems(state, b, now);
-  const allocationCents = regime ? b.allocationCents : null;
-  const ceilingCents = regime ? allocationCents + approvedCents : null;
-  const byTask = {};
-  for (const i of items) {
-    if (!i.taskId || i.before) continue;
-    const t = (byTask[i.taskId] ??= { engagedCents: 0, paidCents: 0, unbounded: false });
-    t.engagedCents += i.cents;
-    if (i.paid) t.paidCents += i.cents;
-    if (i.unbounded) t.unbounded = true;
-  }
-  const current = items.filter((i) => !i.before);
-  const paidCents = sum(current.filter((i) => i.paid), (i) => i.cents);
-  const engagedCents = sum(current, (i) => i.cents);
-  const deficit = regime && approvedCents > 0;
-  const billing = approved.map((x) => x.billingDate).filter(Boolean).sort();
+  const fig = fundingFigures(state, b, now);
   const comp = compositionOf(state, b.userId);
   const cycle = comp ? cycleOf(state, comp.id) : null;
   const period = cycle?.state === 'active' ? periodContaining(now, cycle.anchorDay) : null;
-  return {
-    budgetId: b.id,
-    /** Paramètre différenciant : `standard` (projet de la vie financé) ou `life` (projet de vie, non standard). */
-    kind: 'standard',
-    nonStandard: false,
-    name: b.name,
-    coreProjectId: b.coreProjectId,
-    parentBudgetId: b.parentBudgetId,
-    revision: b.revision,
-    regime,
-    taskFundingRequired: !!b.taskFundingRequired,
-    allocationCents,
-    allocationDate: regime ? b.allocationDate : null,
-    /** Montant attribué hors dépassements déjà facturés (ligne « Budget attribué » du budget de vie). */
-    initialAllocationCents: regime ? allocationCents - billedCents : null,
-    approvedOverrunCents: approvedCents,
-    billedOverrunCents: billedCents,
-    pendingOverrun: pending ? overrunView(state, pending) : null,
-    ceilingCents,
-    sharesCents,
-    availableCents: regime ? ceilingCents - sharesCents : null,
-    engagedCents,
-    paidCents,
-    remainingCents: regime ? ceilingCents - paidCents : null,
-    toPayCents: engagedCents - paidCents,
-    uncommittedCents: regime ? ceilingCents - engagedCents : null,
-    periodPaidCents: period ? sum(Object.values(state.operations).filter((o) => isValidatedCharge(o, b) && o.realizedDate >= period.start && o.realizedDate <= period.end), (o) => o.realizedAmountCents) : null,
-    pendingRequestsCents: sum(requestsOf(state, b.id).filter(openRequest), (x) => Math.max(0, x.amountCents - (shares[x.taskId] ?? 0))),
-    paidBeforeAllocationCents: sum(items.filter((i) => i.before), (i) => i.cents),
-    unsharedChargesCents: sum(current.filter((i) => !i.taskId), (i) => i.cents),
-    state: !regime ? 'unallocated' : deficit ? 'deficit' : engagedCents > ceilingCents ? 'at-risk' : 'ok',
-    deficit,
-    nextBillingDate: billing[0] ?? null,
-    byTask,
-    shares: { ...shares },
-    returns: structuredClone(returnsOf(b)),
-    life: null,
-  };
+  fig.periodPaidCents = period ? sum(Object.values(state.operations).filter((o) => isValidatedCharge(o, b) && o.realizedDate >= period.start && o.realizedDate <= period.end), (o) => o.realizedAmountCents) : null;
+  return fig;
 }
+
+/** Période du cycle de l'application qui contient une date : fournie au middleware Budget pour dater la facturation. */
+export const projectExtensions = {
+  fundingPeriod(state, userId, ymd) {
+    const comp = compositionOf(state, userId);
+    const cycle = comp ? cycleOf(state, comp.id) : null;
+    return cycle?.state === 'active' ? periodContaining(ymd, cycle.anchorDay) : null;
+  },
+};
 
 /** Métriques du cycle en cours lues pour la variante non standard (budget de vie). */
 export const LIFE_BUDGET_KEYS = [
@@ -227,6 +109,7 @@ export function lifeProjectBudget(state, comp, { figures, period, children, over
     deficit: expected !== null && expected < 0,
     nextBillingDate: billing.find((d) => d > now) ?? billing[0] ?? null,
     byTask: {},
+    beforeByTask: {},
     shares,
     returns: {},
     life: {
@@ -254,31 +137,39 @@ export function cycleChecks(state, b, fig = projectBudget(state, b)) {
   if (!fig.regime) return [];
   const out = [];
   const gap = fig.ceilingCents - fig.sharesCents;
-  out.push({ code: 'paid-ceiling', level: fig.paidCents <= fig.ceilingCents ? 'ok' : 'warning', taskId: null, message: `Charges réglées toutes périodes : ${fmt(fig.paidCents)} sur ${fmt(fig.ceilingCents)} autorisés (attribution et dépassements autorisés).` });
+  out.push({ code: 'paid-ceiling', level: fig.paidCents <= fig.ceilingCents ? 'ok' : 'warning', taskId: null, message: `Réglé sur l’enveloppe depuis son attribution : ${fmt(fig.paidCents)} sur ${fmt(fig.ceilingCents)} (enveloppe et dépassements autorisés)${fig.paidBeforeAllocationCents ? ` ; ${fmt(fig.paidBeforeAllocationCents)} réglés avant, hors enveloppe` : ''}.` });
   const comp = compositionOf(state, b.userId);
   const cycle = comp ? cycleOf(state, comp.id) : null;
   if (cycle?.state === 'active') {
     const period = periodContaining(today(), cycle.anchorDay);
     const charges = Object.values(state.operations).filter((o) => isValidatedCharge(o, b) && o.realizedDate >= period.start && o.realizedDate <= period.end);
     const unlinked = charges.filter((o) => !o.taskId || state.tasks[o.taskId]?.projectId !== b.coreProjectId);
-    out.push({ code: 'period-reconciliation', level: unlinked.length ? 'warning' : 'ok', taskId: null, message: `Cycle du ${period.start} au ${period.end} : ${fmt(sum(charges, (o) => o.realizedAmountCents))} remontés au budget du projet de vie ; ${unlinked.length ? `${fmt(sum(unlinked, (o) => o.realizedAmountCents))} sans tâche du projet, à rapprocher` : 'toutes les charges sont reliées aux tâches du projet'}.` });
+    out.push({ code: 'period-reconciliation', level: unlinked.length ? 'warning' : 'ok', taskId: null, message: `Cycle du ${frDate(period.start)} au ${frDate(period.end)} : ${fmt(sum(charges, (o) => o.realizedAmountCents))} remontés au budget du projet de vie ; ${unlinked.length ? `${fmt(sum(unlinked, (o) => o.realizedAmountCents))} sans tâche du projet, à rapprocher` : 'toutes les charges sont reliées aux tâches du projet'}.` });
   }
   out.push(
     gap === 0
-      ? { code: 'shares', level: 'ok', taskId: null, message: `Le budget du projet (${fmt(fig.ceilingCents)}) correspond à la somme des parts de ses tâches.` }
-      : { code: 'shares', level: 'warning', taskId: null, message: `${fmt(gap)} du budget du projet ne sont ventilés sur aucune tâche (parts : ${fmt(fig.sharesCents)} sur ${fmt(fig.ceilingCents)}).` },
+      ? { code: 'shares', level: 'ok', taskId: null, message: `L’enveloppe du projet (${fmt(fig.ceilingCents)}) est entièrement répartie entre les parts de ses tâches.` }
+      : { code: 'shares', level: 'warning', taskId: null, message: gap > 0 ? `${fmt(gap)} de l’enveloppe ne sont encore répartis sur aucune tâche (parts : ${fmt(fig.sharesCents)} sur ${fmt(fig.ceilingCents)}).` : `Les parts des tâches (${fmt(fig.sharesCents)}) dépassent l’enveloppe (${fmt(fig.ceilingCents)}) de ${fmt(-gap)}.` },
   );
   for (const [taskId, share] of Object.entries(fig.shares)) {
     const title = state.tasks[taskId]?.title ?? taskId;
     const s = fig.byTask[taskId] ?? { engagedCents: 0, unbounded: false };
     if ((s.paidCents ?? 0) > share) out.push({ code: 'task-paid', level: 'warning', taskId, message: `« ${title} » : réglé ${fmt(s.paidCents)}, au-delà de sa part de ${fmt(share)}.` });
     if (s.unbounded) out.push({ code: 'recurrence', level: 'warning', taskId, message: `« ${title} » : une charge récurrente n'a pas de date de fin ; son engagé est compté sur 12 mois.` });
+    if (state.tasks[taskId]?.status === 'done') {
+      // Tâche terminée : ce qui reste prévu est à régler ou retirer ; la part non utilisée peut revenir à l'enveloppe.
+      const f = taskFunding(state, fig, taskId);
+      if (f.openCents > 0) out.push({ code: 'done-open', level: 'warning', taskId, message: `« ${title} » est terminée mais garde ${fmt(f.openCents)} de charges prévues non réglées : réglez-les ou retirez-les.` });
+      else if (f.unusedCents) out.push({ code: 'done-unused', level: 'info', taskId, message: `« ${title} » est terminée : ${fmt(f.unusedCents)} de sa part n’ont pas servi ; « Rendre à l’enveloppe » ramène sa part à ${fmt(f.paidCents)}.` });
+      else out.push({ code: 'done', level: 'ok', taskId, message: `« ${title} » est terminée : sa part (${fmt(share)}) est entièrement réglée.` });
+      continue;
+    }
     if (s.engagedCents > share) out.push({ code: 'engaged', level: 'warning', taskId, message: `« ${title} » : charges planifiées (${fmt(s.engagedCents)}) au-delà de sa part (${fmt(share)}).` });
     else if (s.engagedCents < share) out.push({ code: 'engaged', level: 'info', taskId, message: `« ${title} » : ${fmt(share - s.engagedCents)} de sa part ne sont pas encore planifiés en charges.` });
     else out.push({ code: 'engaged', level: 'ok', taskId, message: `« ${title} » : charges planifiées égales à sa part (${fmt(share)}).` });
   }
   for (const [taskId, s] of Object.entries(fig.byTask)) {
-    if (!(taskId in fig.shares)) out.push({ code: 'unshared', level: 'warning', taskId, message: `« ${state.tasks[taskId]?.title ?? taskId} » porte ${fmt(s.engagedCents)} de charges sans part de budget.` });
+    if (!(taskId in fig.shares)) out.push({ code: 'unshared', level: 'warning', taskId, message: `« ${state.tasks[taskId]?.title ?? taskId} » porte ${fmt(s.engagedCents)} de charges sans part de l’enveloppe : demandez sa part.` });
   }
   if (fig.unsharedChargesCents) out.push({ code: 'no-task', level: 'info', taskId: null, message: `${fmt(fig.unsharedChargesCents)} de charges du projet ne sont reliées à aucune tâche.` });
   return out;
@@ -312,7 +203,7 @@ export function lifeChecks(state, fig, { toCloseCount = 0, now = today() } = {})
   const billable = Object.values(state.projectOverruns ?? {}).filter((x) => x.status === 'approved' && life.children.some((c) => c.budgetId === x.budgetId) && (!x.billingDate || x.billingDate <= now));
   if (billable.length) out.push({ code: 'overrun-billable', level: 'warning', taskId: null, message: `${fmt(sum(billable, (x) => x.amountCents))} de dépassements autorisés à facturer au budget de vie.` });
   for (const c of life.children.filter((x) => x.regime && x.paidCents > x.ceilingCents)) {
-    out.push({ code: 'task-paid', level: 'warning', taskId: null, message: `« ${c.name} » : réglé ${fmt(c.paidCents)}, au-delà de son budget (${fmt(c.ceilingCents)}).` });
+    out.push({ code: 'task-paid', level: 'warning', taskId: null, message: `« ${c.name} » : réglé ${fmt(c.paidCents)}, au-delà de son enveloppe (${fmt(c.ceilingCents)}).` });
   }
   if (fig.pendingRequestsCents) out.push({ code: 'requests', level: 'info', taskId: null, message: `${fmt(fig.pendingRequestsCents)} de demandes de montant de tâches attendent l’autorisation du budget de vie.` });
   return out;
@@ -427,81 +318,6 @@ export const projectVariables = [
   },
 ];
 
-/** Crée le revenu de retour d'une tâche dans le budget de vie (ponctuel ou récurrent), dans la transaction. */
-function triggerReturn(tx, socle, b, task, ret) {
-  const { budget } = socle.modules;
-  const centers = budget.costCentersOf(tx.draft, tx.userId).filter((c) => c.direction === 'income');
-  const center = centers.find((c) => c.ref === 'std:autresRevenus') ?? centers[0];
-  if (!center) return { module: 'bpm', kind: 'projectReturn', message: `Retour de « ${task.title} » non créé : aucun centre de revenus pour ce user.`, ids: [] };
-  const now = today();
-  const input = {
-    budgetId: b.parentBudgetId,
-    direction: 'income',
-    label: ret.label,
-    amount: ret.amountCents / 100,
-    costCenterRef: center.ref,
-    note: `Retour du projet « ${b.name} » à la complétion de « ${task.title} ».`,
-  };
-  const entry = ret.cadence === 'once' ? budget.buildOperation(tx, { ...input, date: now, status: 'planned' }) : budget.buildRecurrence(tx, { ...input, cadence: ret.cadence, firstDate: now });
-  socle.om.update(tx, b, { taskReturns: { ...returnsOf(b), [task.id]: { ...ret, entryId: entry.id, entryKind: entry.kind, triggeredAt: now } } });
-  const when = ret.cadence === 'once' ? `prévu le ${now}` : `${CADENCE_LABEL[ret.cadence].toLowerCase()}, dès le ${now}`;
-  return { module: 'bpm', kind: 'projectReturn', message: `Retour au budget de vie enregistré : « ${ret.label} », ${fmt(ret.amountCents)} (${when}).`, ids: [entry.id] };
-}
-
-/** Extensions consommées par le noyau (rattachement, état d'une tâche) et par Budget (validation d'un règlement). */
-export const projectExtensions = {
-  /** Une tâche qui porte des données du budget de son projet ne change pas de projet tant qu'elles existent. */
-  taskMoveGuard(state, { task, fromProjectId }) {
-    const b = fromProjectId ? standardOfProject(state, fromProjectId) : null;
-    if (!b) return;
-    const links = [];
-    if (task.id in sharesOf(b)) links.push('une part de budget');
-    if (task.id in returnsOf(b)) links.push('un retour au budget de vie');
-    if (requestsOf(state, b.id).some((x) => x.taskId === task.id && openRequest(x))) links.push('une demande de montant en attente (à annuler avant le rattachement)');
-    const entries = Object.values(state.operations).filter((o) => o.taskId === task.id).length + Object.values(state.recurrences ?? {}).filter((r) => r.taskId === task.id).length;
-    if (entries) links.push(entries > 1 ? `${entries} dépenses ou entrées` : 'une dépense ou entrée');
-    if (links.length) {
-      fail('FORBIDDEN_BY_RULE', `« ${task.title} » porte des données du budget du projet « ${b.name} » (${links.join(', ')}) : retirez-les avant de changer la tâche de projet.`, {
-        field: 'projectId',
-        taskId: task.id,
-        budgetId: b.id,
-        links,
-      });
-    }
-  },
-
-  /** Une tâche terminée déclenche son retour au budget de vie, une seule fois. */
-  onTaskStatusChange(tx, { task }, socle) {
-    if (task.status !== 'done' || !task.projectId) return [];
-    const b = standardOfProject(tx.draft, task.projectId);
-    const ret = b ? returnsOf(b)[task.id] : null;
-    if (!ret || ret.entryId) return [];
-    return [triggerReturn(tx, socle, b, task, ret)];
-  },
-
-  /** Valider un règlement qui ferait dépasser le budget du projet exige l'autorisation du budget de vie. */
-  settlementGuard(state, { budgetId, direction, amountCents, realizedDate, taskId, operationId, recurrenceId, occurrenceDate }) {
-    const b = state.budgets[budgetId];
-    const previous = operationId ? state.operations[operationId] : null;
-    const previousPaid = previous && isValidatedCharge(previous, b) ? previous.realizedAmountCents : 0;
-    if (direction === 'charge' && b?.taskFundingRequired) {
-      if (!inRegime(b)) fail('FORBIDDEN_BY_RULE', 'Attribuez un montant au projet avant de valider ses dépenses.');
-      if (!taskId || state.tasks[taskId]?.projectId !== b.coreProjectId) fail('FORBIDDEN_BY_RULE', 'Reliez cette dépense à une tâche de ce projet avant de valider son règlement.', { field: 'taskId' });
-      const taskPaid = (projectBudget(state, b).byTask[taskId]?.paidCents ?? 0) - (previous?.taskId === taskId ? previousPaid : 0);
-      if (taskPaid + amountCents > (sharesOf(b)[taskId] ?? 0)) fail('FORBIDDEN_BY_RULE', 'Le règlement dépasse le montant accordé à la tâche. Faites valider sa demande de montant dans Gestion de projet.', { field: 'taskId', taskId });
-    }
-    if (direction !== 'charge' || !inRegime(b) || realizedDate < b.allocationDate) return;
-    const fig = projectBudget(state, b);
-    const after = fig.paidCents - previousPaid + amountCents;
-    if (after <= fig.ceilingCents) return;
-    fail(
-      'OVERRUN_AUTHORIZATION_REQUIRED',
-      `Ce règlement porterait les dépenses réglées du projet « ${b.name} » à ${fmt(after)}, au-delà de son budget (${fmt(fig.ceilingCents)}) : le budget de vie doit autoriser un dépassement de ${fmt(after - fig.ceilingCents)}.`,
-      { reason: 'reglement', budgetId, taskId: taskId ?? null, overrunCents: after - fig.ceilingCents, paidCents: fig.paidCents, ceilingCents: fig.ceilingCents, amountCents, operationId: operationId ?? null, recurrenceId: recurrenceId ?? null, occurrenceDate: occurrenceDate ?? null },
-    );
-  },
-};
-
 /**
  * Service des projets de l'application BPM.
  * @param socle socle complet
@@ -511,6 +327,7 @@ export function createProjects(socle, h) {
   const { om } = socle;
   const core = () => socle.modules.core;
   const budgetModule = () => socle.modules.budget;
+  const funding = () => socle.modules.budget.funding;
 
   /** Budget standard du user, enfant de son budget de vie. */
   function standardOf(state, userId, budgetId) {
@@ -521,29 +338,11 @@ export function createProjects(socle, h) {
     return b;
   }
 
-  function taskOf(state, userId, b, taskId) {
-    const t = om.owned(state, 'task', taskId, userId);
-    if (t.projectId !== b.coreProjectId) fail('INCOMPATIBLE_REFERENCE', `La tâche doit appartenir au projet « ${b.name} ».`, { field: 'taskId', taskId });
-    return t;
-  }
-
   /** Période du cycle du budget de vie qui contient une date, ou null si le cycle est à configurer. */
   function periodOf(state, userId, ymd) {
     const comp = compositionOf(state, userId);
     const cycle = comp ? cycleOf(state, comp.id) : null;
     return cycle?.state === 'active' ? periodContaining(ymd, cycle.anchorDay) : null;
-  }
-
-  function overrunRefusal(b, fig, sharesAfter, taskId) {
-    const over = sharesAfter - fig.ceilingCents;
-    fail('OVERRUN_AUTHORIZATION_REQUIRED', `Cette part porterait la ventilation du projet « ${b.name} » à ${fmt(sharesAfter)}, au-delà de son budget (${fmt(fig.ceilingCents)}) : le budget de vie doit autoriser un dépassement de ${fmt(over)}.`, {
-      reason: 'ventilation',
-      budgetId: b.id,
-      taskId,
-      overrunCents: over,
-      sharesCents: fig.sharesCents,
-      ceilingCents: fig.ceilingCents,
-    });
   }
 
   // ---------- lectures ----------
@@ -631,8 +430,8 @@ export function createProjects(socle, h) {
   function taskCard(state, t, figsByProject) {
     const view = core().readTask({ userId: t.userId }, t.id);
     const fig = t.projectId ? figsByProject.get(t.projectId) : null;
-    const share = fig ? fig.shares[t.id] ?? null : null;
-    const s = fig?.byTask[t.id] ?? null;
+    const f = fig ? taskFunding(state, fig, t.id) : null;
+    const share = f?.shareCents ?? null;
     const ret = fig?.returns[t.id] ?? null;
     // Valorisation indicative de la part au prorata du temps. Elle n'écrit aucune opération financière.
     const timeRatio = t.plannedHours > 0 ? t.spentHours / t.plannedHours : null;
@@ -643,12 +442,7 @@ export function createProjects(socle, h) {
       budgetId: fig?.budgetId ?? null,
       budget: fig
         ? {
-            shareCents: share,
-            engagedCents: s?.engagedCents ?? 0,
-            paidCents: s?.paidCents ?? 0,
-            remainingCents: share === null ? null : share - (s?.paidCents ?? 0),
-            over: share !== null && (s?.paidCents ?? 0) > share,
-            unbounded: s?.unbounded ?? false,
+            ...f,
             return: ret ? { ...ret, cadenceLabel: CADENCE_LABEL[ret.cadence] } : null,
             request: requestsOf(state, fig.budgetId).filter((x) => x.taskId === t.id && openRequest(x)).map((x) => requestView(state, x))[0] ?? null,
             timeConsumptionPercent: timeRatio === null ? null : Math.round(timeRatio * 1000) / 10,
@@ -745,8 +539,7 @@ export function createProjects(socle, h) {
       const p = core().buildProject(tx, input);
       const b = budgetModule().buildStandardBudget(tx, { coreProjectId: p.id, parentBudgetId: comp.budgetId, name: p.title });
       // Les projets historiques restent lisibles ; les nouveaux parcours financent leurs dépenses par tâche.
-      const cents = money('amount', input.amount, { nullable: true });
-      om.update(tx, b, { taskFundingRequired: true, taskSharesCents: {}, taskReturns: {}, ...(cents === null ? {} : { allocationCents: cents, allocationDate: today() }) });
+      funding().startTaskFunding(tx, b, money('amount', input.amount, { nullable: true }));
       return { coreProjectId: p.id, budgetId: b.id };
     }, { creation: true });
     return { ...r, detail: projectDetail(ctx, r.coreProjectId) };
@@ -766,59 +559,6 @@ export function createProjects(socle, h) {
       return { taskId: core().buildTask(tx, { ...input, projectId }).id };
     }, { creation: true });
     return { ...r, ...core().readTask(ctx, r.taskId) };
-  }
-
-  async function requestTaskBudget(ctx, budgetId, taskId, input = {}) {
-    const r = await om.command('requestTaskBudget', ctx, input, (tx) => {
-      const b = standardOf(tx.draft, tx.userId, budgetId);
-      taskOf(tx.draft, tx.userId, b, taskId);
-      if (requestsOf(tx.draft, b.id).some((x) => x.taskId === taskId && openRequest(x))) fail('UNIQUENESS_VIOLATION', 'Cette tâche a déjà une demande en attente.');
-      const amountCents = money('amount', input.amount, { positive: true });
-      if (amountCents <= (sharesOf(b)[taskId] ?? 0)) fail('FORBIDDEN_BY_RULE', 'Le montant total demandé doit dépasser la part déjà accordée à la tâche.', { field: 'amount' });
-      const x = om.create(tx, 'taskBudgetRequest', { budgetId, taskId, amountCents, note: text('note', input.note, { max: 1000 }) || null, status: 'pending', requestedAt: today(), decidedAt: null, overrunId: null });
-      return { requestId: x.id };
-    }, { creation: true });
-    return { ...r, request: requestView(socle.state, socle.state.taskBudgetRequests[r.requestId]) };
-  }
-
-  /** Valider accorde la part, ou transmet le seul manque au budget du projet de vie, sans dépense. */
-  async function decideTaskBudget(ctx, id, input = {}) {
-    await om.command('decideTaskBudget', ctx, input, (tx) => {
-      const x = om.owned(tx.draft, 'taskBudgetRequest', id, tx.userId);
-      om.checkRevision(x, expectedRevisionOf(input));
-      const b = standardOf(tx.draft, tx.userId, x.budgetId);
-      taskOf(tx.draft, tx.userId, b, x.taskId);
-      if (!openRequest(x)) fail('FORBIDDEN_BY_RULE', 'Cette demande est déjà traitée.');
-      const decision = oneOf('decision', input.decision, ['approve', 'refuse', 'cancel']);
-      if (decision !== 'approve') {
-        const overrun = tx.draft.projectOverruns[x.overrunId];
-        if (overrun?.status === 'pending') om.update(tx, overrun, { status: 'refused', decidedAt: today() });
-        om.update(tx, x, { status: decision === 'cancel' ? 'cancelled' : 'refused', decidedAt: today() });
-        return { requestId: id };
-      }
-      if (x.status !== 'pending') fail('FORBIDDEN_BY_RULE', 'Le budget du projet de vie doit d’abord décider du dépassement.');
-      om.checkRevision(b, expectedRevisionOf({ expectedRevision: input.expectedBudgetRevision }));
-      if (!inRegime(b)) fail('FORBIDDEN_BY_RULE', 'Attribuez d’abord un montant au budget du projet.');
-      const fig = projectBudget(tx.draft, b);
-      const after = fig.sharesCents - (fig.shares[x.taskId] ?? 0) + x.amountCents;
-      if (after <= fig.ceilingCents) {
-        grantRequest(tx, b, x);
-      } else {
-        if (fig.pendingOverrun) fail('UNIQUENESS_VIOLATION', 'Une demande de dépassement de ce projet attend déjà la décision du budget du projet de vie. Traitez-la d’abord.');
-        const overrun = om.create(tx, 'projectOverrun', { budgetId: b.id, taskId: x.taskId, taskBudgetRequestId: x.id, reason: 'ventilation', amountCents: after - fig.ceilingCents, note: x.note, status: 'pending', requestedAt: today(), decidedAt: null, billingDate: null, periodKey: null, billedAt: null });
-        om.update(tx, x, { status: 'awaiting-life', overrunId: overrun.id });
-      }
-      return { requestId: id };
-    });
-    const x = socle.state.taskBudgetRequests[id];
-    return { request: requestView(socle.state, x), detail: projectDetail(ctx, socle.state.budgets[x.budgetId].coreProjectId) };
-  }
-
-  function grantRequest(tx, b, x) {
-    const current = sharesOf(b)[x.taskId] ?? 0;
-    // Une autre décision peut déjà avoir augmenté la part : ne jamais la réduire lors d'une approbation.
-    om.update(tx, b, { taskSharesCents: { ...sharesOf(b), [x.taskId]: Math.max(current, x.amountCents) } });
-    om.update(tx, x, { status: 'approved', decidedAt: today() });
   }
 
   /** Budgéter un projet du noyau : il devient un projet standard du budget de vie (le projet reste celui du noyau). */
@@ -842,190 +582,47 @@ export function createProjects(socle, h) {
     return { ...r, detail: projectDetail(ctx, r.coreProjectId) };
   }
 
-  /**
-   * Montant attribué par le budget de vie (charge non récurrente spéciale du budget de vie). La première attribution
-   * fixe la date à partir de laquelle les charges validées du projet comptent dans le budget de vie.
-   */
+  // ---------- commandes du financement : exécutées par le middleware Budget, rendues avec la fiche du projet ----------
+
+  const detailOf = (ctx, budgetId) => projectDetail(ctx, socle.state.budgets[budgetId].coreProjectId);
+
+  async function requestTaskBudget(ctx, budgetId, taskId, input = {}) {
+    return funding().requestTaskBudget(ctx, budgetId, taskId, input);
+  }
+  async function decideTaskBudget(ctx, id, input = {}) {
+    const r = await funding().decideTaskBudget(ctx, id, input);
+    return { ...r, detail: detailOf(ctx, r.request.budgetId) };
+  }
   async function allocate(ctx, budgetId, input = {}) {
-    await om.command('allocateProjectBudget', ctx, input, (tx) => {
-      const b = standardOf(tx.draft, tx.userId, budgetId);
-      om.checkRevision(b, expectedRevisionOf(input));
-      const cents = money('amount', input.amount);
-      const fig = projectBudget(tx.draft, b);
-      if (fig.regime) {
-        const billed = fig.billedOverrunCents;
-        if (cents < billed) fail('FORBIDDEN_BY_RULE', `Le budget attribué ne peut pas descendre sous les dépassements déjà facturés (${fmt(billed)}).`, { field: 'amount' });
-        if (cents + fig.approvedOverrunCents < fig.sharesCents) fail('FORBIDDEN_BY_RULE', `Les parts des tâches (${fmt(fig.sharesCents)}) dépassent ce montant : réduisez d’abord les parts.`, { field: 'amount', sharesCents: fig.sharesCents });
-        if (cents + fig.approvedOverrunCents < fig.paidCents) fail('FORBIDDEN_BY_RULE', `Les dépenses déjà réglées du projet (${fmt(fig.paidCents)}) dépassent ce montant.`, { field: 'amount', paidCents: fig.paidCents });
-        if (cents === b.allocationCents) {
-          tx.unchanged = true;
-          return {};
-        }
-        om.update(tx, b, { allocationCents: cents });
-      } else {
-        om.update(tx, b, { allocationCents: cents, allocationDate: today(), taskSharesCents: sharesOf(b), taskReturns: returnsOf(b) });
-      }
-      return { budgetId };
-    });
-    return projectDetail(ctx, socle.state.budgets[budgetId].coreProjectId);
+    await funding().allocate(ctx, budgetId, input);
+    return detailOf(ctx, budgetId);
   }
-
-  /** Part du budget du projet réservée à une tâche ; `amount: null` la retire. Le budget du projet s'en trouve décrémenté. */
   async function setTaskShare(ctx, budgetId, taskId, input = {}) {
-    await om.command('setTaskShare', ctx, input, (tx) => {
-      const b = standardOf(tx.draft, tx.userId, budgetId);
-      om.checkRevision(b, expectedRevisionOf(input));
-      if (!inRegime(b)) fail('FORBIDDEN_BY_RULE', 'Attribuez d’abord un budget à ce projet depuis le budget de vie.', { field: 'amount' });
-      taskOf(tx.draft, tx.userId, b, taskId);
-      const cents = money('amount', input.amount, { nullable: true });
-      const shares = { ...sharesOf(b) };
-      if (cents === null) delete shares[taskId];
-      else shares[taskId] = cents;
-      if (cents === (sharesOf(b)[taskId] ?? null)) {
-        tx.unchanged = true;
-        return {};
-      }
-      const fig = projectBudget(tx.draft, b);
-      const after = sum(Object.values(shares));
-      if ((cents ?? 0) < (fig.byTask[taskId]?.paidCents ?? 0)) fail('FORBIDDEN_BY_RULE', 'La part ne peut pas être inférieure aux dépenses déjà réglées de la tâche.', { field: 'amount' });
-      if (cents !== null && after > fig.ceilingCents && after > fig.sharesCents) overrunRefusal(b, fig, after, taskId);
-      om.update(tx, b, { taskSharesCents: shares });
-      return { budgetId };
-    });
-    return projectDetail(ctx, socle.state.budgets[budgetId].coreProjectId);
+    const r = await funding().setTaskShare(ctx, budgetId, taskId, input);
+    return { ...detailOf(ctx, budgetId), overrunCents: r.overrunCents };
   }
-
-  /** Retour d'une tâche vers le budget de vie (revenu ponctuel ou récurrent), créé quand la tâche est terminée. */
+  async function releaseTaskShare(ctx, budgetId, taskId, input = {}) {
+    const r = await funding().releaseTaskShare(ctx, budgetId, taskId, input);
+    return { ...detailOf(ctx, budgetId), released: { releasedCents: r.releasedCents, shareCents: r.shareCents, taskTitle: r.taskTitle } };
+  }
   async function setTaskReturn(ctx, budgetId, taskId, input = {}) {
-    const effects = [];
-    await om.command('setTaskReturn', ctx, input, (tx) => {
-      const b = standardOf(tx.draft, tx.userId, budgetId);
-      om.checkRevision(b, expectedRevisionOf(input));
-      const t = taskOf(tx.draft, tx.userId, b, taskId);
-      const returns = { ...returnsOf(b) };
-      const current = returns[taskId] ?? null;
-      const cents = money('amount', input.amount, { nullable: true, positive: input.amount !== null && input.amount !== undefined && input.amount !== '' });
-      if (cents === null) {
-        if (!current) {
-          tx.unchanged = true;
-          return {};
-        }
-        delete returns[taskId];
-        om.update(tx, b, { taskReturns: returns });
-        return { budgetId };
-      }
-      if (current?.entryId) fail('FORBIDDEN_BY_RULE', 'Ce retour est déjà enregistré dans le budget de vie : modifiez-le depuis les entrées du budget de vie.', { field: 'amount', entryId: current.entryId });
-      const ret = {
-        label: text('label', input.label, { max: 200 }) || `Retour · ${t.title}`,
-        amountCents: cents,
-        cadence: oneOf('cadence', input.cadence, RETURN_CADENCES, 'once'),
-        entryId: null,
-        entryKind: null,
-        triggeredAt: null,
-      };
-      returns[taskId] = ret;
-      om.update(tx, b, { taskReturns: returns });
-      // Tâche déjà terminée : le retour est dû tout de suite.
-      if (t.status === 'done') effects.push(triggerReturn(tx, socle, b, t, ret));
-      return { budgetId };
-    });
-    return { ...projectDetail(ctx, socle.state.budgets[budgetId].coreProjectId), effects };
+    const r = await funding().setTaskReturn(ctx, budgetId, taskId, input);
+    return { ...detailOf(ctx, budgetId), effects: r.effects };
   }
-
-  /** Demande d'autorisation de dépassement adressée au budget de vie (une demande en attente par projet). */
   async function requestOverrun(ctx, budgetId, input = {}) {
-    const r = await om.command(
-      'requestProjectOverrun',
-      ctx,
-      input,
-      (tx) => {
-        const b = standardOf(tx.draft, tx.userId, budgetId);
-        if (!inRegime(b)) fail('FORBIDDEN_BY_RULE', 'Ce projet n’a pas de budget attribué : attribuez-lui d’abord un montant.', { field: 'budgetId' });
-        if (overrunsOf(tx.draft, b.id).some((x) => x.status === 'pending')) fail('UNIQUENESS_VIOLATION', 'Une demande de dépassement de ce projet attend déjà la décision du budget de vie.', { budgetId });
-        const taskId = input.taskId ? taskOf(tx.draft, tx.userId, b, input.taskId).id : null;
-        const x = om.create(tx, 'projectOverrun', {
-          budgetId: b.id,
-          taskId,
-          reason: oneOf('reason', input.reason, Object.keys(OVERRUN_REASONS)),
-          amountCents: money('amount', input.amount, { positive: true }),
-          note: text('note', input.note, { max: 1000 }) || null,
-          status: 'pending',
-          requestedAt: today(),
-          decidedAt: null,
-          billingDate: null,
-          periodKey: null,
-          billedAt: null,
-        });
-        return { overrunId: x.id, budgetId: b.id };
-      },
-      { creation: true },
-    );
-    return { ...r, overrun: overrunView(socle.state, socle.state.projectOverruns[r.overrunId]) };
+    const r = await funding().requestOverrun(ctx, budgetId, input);
+    return { ...r, detail: detailOf(ctx, budgetId) };
   }
-
-  /**
-   * Décision du budget de vie. Autoriser : le projet passe en déficit (rouge), son plafond augmente du montant
-   * autorisé et la charge de dépassement sera facturée au budget de vie à la fin de la période en cours du cycle.
-   */
   async function decideOverrun(ctx, id, input = {}) {
-    await om.command('decideProjectOverrun', ctx, input, (tx) => {
-      const x = om.owned(tx.draft, 'projectOverrun', id, tx.userId);
-      om.checkRevision(x, expectedRevisionOf(input));
-      if (x.status !== 'pending') fail('FORBIDDEN_BY_RULE', 'Cette demande a déjà reçu une décision.', { status: x.status });
-      const decision = oneOf('decision', input.decision, ['approve', 'refuse']);
-      const now = today();
-      if (decision === 'refuse') om.update(tx, x, { status: 'refused', decidedAt: now });
-      else {
-        const period = periodOf(tx.draft, tx.userId, now);
-        om.update(tx, x, { status: 'approved', decidedAt: now, billingDate: period?.end ?? null, periodKey: period?.key ?? null });
-      }
-      const request = x.taskBudgetRequestId ? tx.draft.taskBudgetRequests[x.taskBudgetRequestId] : null;
-      if (request?.status === 'awaiting-life') {
-        const b = standardOf(tx.draft, tx.userId, x.budgetId);
-        taskOf(tx.draft, tx.userId, b, request.taskId);
-        if (decision === 'refuse') om.update(tx, request, { status: 'refused', decidedAt: now });
-        else {
-          const fig = projectBudget(tx.draft, b);
-          const after = fig.sharesCents + Math.max(0, request.amountCents - (fig.shares[request.taskId] ?? 0));
-          if (after <= fig.ceilingCents) grantRequest(tx, b, request);
-          // Si la ventilation a changé entre-temps, la demande reste visible et doit être réexaminée.
-          else om.update(tx, request, { status: 'pending', overrunId: null });
-        }
-      }
-      return { overrunId: id };
-    });
-    const x = socle.state.projectOverruns[id];
-    return { overrun: overrunView(socle.state, x), detail: projectDetail(ctx, socle.state.budgets[x.budgetId].coreProjectId) };
+    const r = await funding().decideOverrun(ctx, id, input);
+    return { ...r, detail: detailOf(ctx, r.overrun.budgetId) };
   }
-
-  /**
-   * Fin de cycle : les dépassements autorisés dont la date de facturation est atteinte sont facturés au budget de vie ;
-   * le budget attribué de chaque projet concerné intègre ces montants, son déficit est soldé et ses contrôles de fin
-   * de cycle (budget = somme des parts, charges des tâches planifiées et à jour) sont rendus.
-   */
+  /** Fin de cycle : facturation par le middleware, puis contrôles de fin de cycle de chaque projet concerné. */
   async function billOverruns(ctx, input = {}) {
-    const touched = new Set();
-    await om.command('billProjectOverruns', ctx, input, (tx) => {
-      const comp = compositionOf(tx.draft, tx.userId);
-      if (!comp) fail('NOT_FOUND', 'Espace BPM à préparer.');
-      const now = today();
-      const due = om.list(tx.draft, 'projectOverrun', (x) => x.userId === tx.userId && x.status === 'approved' && (!input.budgetId || x.budgetId === input.budgetId));
-      const billable = due.filter((x) => !x.billingDate || x.billingDate <= now);
-      if (!billable.length) {
-        const next = due.map((x) => x.billingDate).filter(Boolean).sort()[0];
-        fail('FORBIDDEN_BY_RULE', next ? `Aucun dépassement à facturer avant la fin du cycle (${next}).` : 'Aucun dépassement autorisé à facturer.', { nextBillingDate: next ?? null });
-      }
-      for (const x of billable) {
-        const b = tx.draft.budgets[x.budgetId];
-        om.update(tx, b, { allocationCents: b.allocationCents + x.amountCents });
-        om.update(tx, x, { status: 'billed', billedAt: now });
-        touched.add(b.id);
-      }
-      return { billed: billable.map((x) => x.id) };
-    });
+    const r = await funding().billOverruns(ctx, input);
     const state = socle.state;
     return {
-      projects: [...touched].map((id) => {
+      projects: r.budgetIds.map((id) => {
         const b = state.budgets[id];
         const fig = projectBudget(state, b);
         return { budgetId: id, name: b.name, coreProjectId: b.coreProjectId, allocationCents: fig.allocationCents, billedOverrunCents: fig.billedOverrunCents, checks: cycleChecks(state, b, fig) };
@@ -1033,5 +630,5 @@ export function createProjects(socle, h) {
     };
   }
 
-  return { overview, tasksOverview, projectDetail, createProject, createTask, requestTaskBudget, decideTaskBudget, adoptProject, allocate, setTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns };
+  return { overview, tasksOverview, projectDetail, createProject, createTask, requestTaskBudget, decideTaskBudget, adoptProject, allocate, setTaskShare, releaseTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns };
 }

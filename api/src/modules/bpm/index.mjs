@@ -199,18 +199,6 @@ export default {
       },
     },
     lifeGoal: { collection: 'lifeGoals', prefix: 'obj', label: 'Objectif de projection' },
-    projectOverrun: {
-      collection: 'projectOverruns',
-      prefix: 'ovr',
-      label: 'Dépassement de projet',
-      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task' }, taskBudgetRequestId: { kind: 'taskBudgetRequest' } },
-    },
-    taskBudgetRequest: {
-      collection: 'taskBudgetRequests',
-      prefix: 'dmt',
-      label: 'Demande de montant d’une tâche',
-      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task', required: true }, overrunId: { kind: 'projectOverrun' } },
-    },
   },
 
   parameters: [
@@ -238,7 +226,7 @@ export default {
 
   extensions: {
     metricContext,
-    // Projets de la vie : garde de rattachement, retour à la complétion, autorisation de dépassement.
+    // Projets de la vie : période du cycle fournie au financement du middleware Budget.
     ...projectExtensions,
 
     /** Parcours métier BPM appliqués aux projets noyau (contrat J1 §8 : guident, n'interdisent pas le stockage). */
@@ -275,11 +263,15 @@ export default {
     /** Une période close est figée [P] : aucune opération du Budget « Projet de vie » n'y entre ni n'en sort. */
     operationGuard(state, { userId, budgetId, dates }) {
       const comp = compositionOf(state, userId);
-      if (!comp || comp.budgetId !== budgetId) return;
+      // Les dépenses d'un projet financé entrent dans les chiffres du budget de vie : une période close l'est aussi pour elles
+      // (depuis l'attribution ; avant, ou sans budget attribué, elles restent hors budget de vie).
+      const b = state.budgets[budgetId];
+      const funded = b?.parentBudgetId === comp?.budgetId && Number.isInteger(b.allocationCents) && typeof b.allocationDate === 'string';
+      if (!comp || (comp.budgetId !== budgetId && !funded)) return;
       const cycle = cycleOf(state, comp.id);
       for (const c of closuresOf(state, cycle?.id)) {
-        const d = dates.find((x) => x >= c.periodStart && x <= c.periodEnd);
-        if (d) fail('PERIOD_CLOSED', `La période ${c.periodLabel} est close : opération refusée (${d}).`, { periodKey: c.periodKey, closureId: c.id, date: d });
+        const d = dates.find((x) => x >= c.periodStart && x <= c.periodEnd && (!funded || x >= b.allocationDate));
+        if (d) fail('PERIOD_CLOSED', `La période ${c.periodLabel} est close : ${comp.budgetId === budgetId ? 'opération refusée' : `dépense du projet « ${b.name} » refusée`} (${d}). Datez-la dans la période en cours.`, { periodKey: c.periodKey, closureId: c.id, date: d });
       }
     },
 
@@ -1033,6 +1025,7 @@ export default {
       ['POST', '/api/bpm/task-budget-requests/:id/decision', ({ ctx, params, body }) => s.projects.decideTaskBudget(ctx, params.id, body)],
       ['PUT', '/api/bpm/project-budgets/:id/allocation', ({ ctx, params, body }) => s.projects.allocate(ctx, params.id, body)],
       ['PUT', '/api/bpm/project-budgets/:id/shares/:taskId', ({ ctx, params, body }) => s.projects.setTaskShare(ctx, params.id, params.taskId, body)],
+      ['POST', '/api/bpm/project-budgets/:id/shares/:taskId/release', ({ ctx, params, body }) => s.projects.releaseTaskShare(ctx, params.id, params.taskId, body)],
       ['PUT', '/api/bpm/project-budgets/:id/returns/:taskId', ({ ctx, params, body }) => s.projects.setTaskReturn(ctx, params.id, params.taskId, body)],
       ['POST', '/api/bpm/project-budgets/:id/overruns', ({ ctx, params, body }) => s.projects.requestOverrun(ctx, params.id, body)],
       ['POST', '/api/bpm/overruns/bill', ({ ctx, body }) => s.projects.billOverruns(ctx, body)],

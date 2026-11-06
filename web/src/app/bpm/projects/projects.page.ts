@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { newRequestKey, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
+import { ProjectFunding } from '../ui/project-funding';
 import {
   BpmProjectCard,
   BpmProjectsOverview,
@@ -311,6 +312,8 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
 })
 export class BpmProjectsPage implements OnInit {
   private bpm = inject(BpmApi);
+  /** Décisions de financement communes à toutes les pages (mêmes gestes, mêmes messages). */
+  private funding = inject(ProjectFunding);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   protected columns = COLUMNS;
@@ -391,13 +394,13 @@ export class BpmProjectsPage implements OnInit {
     return `${p.view.doneCount}/${p.view.time.taskCount} tâches terminées · ${p.view.completionPercent} %`;
   }
 
-  private async run(action: () => Promise<unknown>, success: string) {
+  private async run<T>(action: () => Promise<T>, success: string | ((result: T) => string)) {
     this.busy.set(true);
     this.notice.set(null);
     try {
-      await action();
+      const result = await action();
       await this.load();
-      this.notice.set({ text: success, error: false });
+      this.notice.set({ text: typeof success === 'function' ? success(result) : success, error: false });
     } catch (err) {
       const e = toApiError(err);
       await this.load();
@@ -413,12 +416,7 @@ export class BpmProjectsPage implements OnInit {
   }
 
   protected decide(o: ProjectOverrun, decision: 'approve' | 'refuse') {
-    return this.run(
-      () => this.bpm.decideOverrun(o.id, decision, o.revision),
-      decision === 'approve'
-        ? `Dépassement autorisé pour « ${o.budgetName} » : le projet passe en dépassement jusqu’à la facturation de fin de cycle.`
-        : `Demande refusée pour « ${o.budgetName} ».`,
-    );
+    return this.run(() => this.funding.decide(o, decision), (r) => `« ${o.budgetName} » · ${r.message}`);
   }
 
   protected bill() {

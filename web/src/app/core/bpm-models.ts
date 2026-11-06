@@ -167,6 +167,8 @@ export interface LineDetail {
   definition: Recurrence | null;
   settlements: { operationId: string; occurrenceDate: string | null; plannedCents: number; realizedCents: number; realizedDate: string; outsidePeriod: boolean }[];
   ids: { lineId: string; operationId: string | null; recurrenceId: string | null; budgetId: string; taskId: string | null };
+  /** Projet de la vie qui porte l'échéance ; null pour le budget de vie. */
+  project?: { budgetId: string; coreProjectId: string; name: string; funded: boolean; allocationDate: string | null; taskTitle: string | null } | null;
   actions: { canSettle: boolean; canCancelSettlement: boolean; canEdit: boolean; settlementPolicy: string };
 }
 

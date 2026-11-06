@@ -91,6 +91,19 @@ export function createLife(socle, h, reads, projects) {
       .filter((l) => OPEN.includes(l.status))
       .sort((x, y) => x.plannedDate.localeCompare(y.plannedDate) || x.label.localeCompare(y.label));
 
+    // Dépenses prévues des projets de la vie arrivées à échéance : réglées depuis le projet de vie sans ouvrir chaque projet.
+    const projectBudgets = Object.values(state.budgets).filter((x) => x.role === 'standard' && x.parentBudgetId === comp.budgetId);
+    const projectOpen = (projectBudgets.length ? budget().budgetLines(state, projectBudgets.map((x) => x.id), { from: openFrom, to: addDays(now, 7), by: 'planned' }) : [])
+      .filter((l) => !l.settled && l.direction === 'charge')
+      .map((l) => reads.decorate(b, l))
+      .filter((l) => OPEN.includes(l.status))
+      .map((l) => {
+        const pb = state.budgets[l.budgetId];
+        const funded = Number.isInteger(pb?.allocationCents) && typeof pb?.allocationDate === 'string';
+        const taskId = l.taskId ?? (l.operationId ? state.operations[l.operationId]?.taskId : null) ?? null;
+        return { ...lineOf(l, essentials), nature: null, project: { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, taskTitle: taskId ? state.tasks[taskId]?.title ?? null : null } };
+      });
+
     // ---------- volet 1 : cycle en cours ----------
     const expected = f('bpm.soldeAttendu');
     const initial = f('bpm.resultatPrevu');
@@ -278,6 +291,8 @@ export function createLife(socle, h, reads, projects) {
       pendingOverrun: !!p.budget.pendingOverrun,
     }));
     const life = ov.life;
+    // Une demande de part « en attente du projet de vie » est déjà présente comme dépassement à autoriser : comptée une fois.
+    const taskRequests = life.taskRequests.filter((x) => x.status === 'pending');
     const unfundedCount = list.filter((p) => !p.regime).length;
     const projectsBlock = {
       key: 'projets',
@@ -292,7 +307,8 @@ export function createLife(socle, h, reads, projects) {
       approvedOverrunCents: life.approvedOverrunCents,
       periodPaidCents: period ? f('bpm.chargesProjets') : null,
       pendingRequests: life.pendingRequests,
-      taskRequestCount: life.taskRequests.length,
+      taskRequestCount: taskRequests.length,
+      taskRequests: taskRequests.map((x) => ({ id: x.id, coreProjectId: x.coreProjectId, budgetName: x.budgetName, taskTitle: x.taskTitle, amountCents: x.amountCents, grantedCents: x.grantedCents })),
       billable: life.billable,
       billableCents: life.billableCents,
       nextBillingDate: life.nextBillingDate,
@@ -300,8 +316,8 @@ export function createLife(socle, h, reads, projects) {
       projects: list,
       // Financement des projets fils cycle par cycle, lu dans l'interface commune (variante non standard du budget).
       funding: ov.lifeProject.budget?.life?.funding ?? null,
-      ...(life.pendingRequests.length || life.taskRequests.length
-        ? health('alert', `${life.pendingRequests.length + life.taskRequests.length} décision(s) du budget de vie attendue(s).`)
+      ...(life.pendingRequests.length || taskRequests.length
+        ? health('alert', `${life.pendingRequests.length + taskRequests.length} décision(s) attendue(s) : dépassements à autoriser ou parts de tâches à accorder.`)
         : life.billable.length
           ? health('watch', `${life.billable.length} dépassement(s) autorisé(s) à facturer.`)
           : life.deficitCount
@@ -441,7 +457,13 @@ export function createLife(socle, h, reads, projects) {
         availableCents: directives.available?.valueCents ?? null,
         weeklyCents: directives.weekly?.valueCents ?? null,
       },
-      dueSoon: { from: openFrom, to: addDays(now, 7), lines: open.map((l) => lineOf(l, essentials)), lateCount: open.filter((l) => l.status === 'late').length },
+      dueSoon: {
+        from: openFrom,
+        to: addDays(now, 7),
+        lines: [...open.map((l) => lineOf(l, essentials)), ...projectOpen].sort((x, y) => x.plannedDate.localeCompare(y.plannedDate) || x.label.localeCompare(y.label)),
+        lateCount: open.filter((l) => l.status === 'late').length + projectOpen.filter((l) => l.status === 'late').length,
+        projectCount: projectOpen.length,
+      },
       essentials: { parameter: ESSENTIALS_PARAMETER, refs: [...essentials], labels: chargeCenters.filter((c) => essentials.has(c.ref)).map((c) => c.label) },
     };
   }

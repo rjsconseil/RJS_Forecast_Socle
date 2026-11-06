@@ -27,6 +27,8 @@ export interface LifeLine {
   costCenterRef: string | null;
   costCenterLabel: string | null;
   cadenceLabel: string | null;
+  /** Dépense prévue d'un projet de la vie (échéances à régler du projet de vie). */
+  project?: { budgetId: string; coreProjectId: string; name: string; funded: boolean; taskTitle: string | null };
 }
 
 export interface LifeCycle extends LifeHealthInfo {
@@ -132,6 +134,7 @@ export interface LifeProjects extends LifeHealthInfo {
   periodPaidCents: number | null;
   pendingRequests: ProjectOverrun[];
   taskRequestCount: number;
+  taskRequests?: { id: string; coreProjectId: string | null; budgetName: string; taskTitle: string; amountCents: number; grantedCents: number | null }[];
   billable: ProjectOverrun[];
   billableCents: number;
   nextBillingDate: string | null;
@@ -231,6 +234,6 @@ export interface BpmLifeManagement {
   patrimoine: LifePatrimoine;
   budgetType: { empty: boolean; averageIncomeCents: number; averageChargeCents: number; averageNetCents: number; byNature: { indispensable: number; courante: number } };
   directives: { savingsCents: number | null; provisionsCents: number | null; availableCents: number | null; weeklyCents: number | null };
-  dueSoon: { from: string; to: string; lines: LifeLine[]; lateCount: number };
+  dueSoon: { from: string; to: string; lines: LifeLine[]; lateCount: number; projectCount?: number };
   essentials: { parameter: string; refs: string[]; labels: string[] };
 }

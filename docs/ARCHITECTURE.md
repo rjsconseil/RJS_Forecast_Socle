@@ -14,13 +14,23 @@ réversible.
 | `object-management` — Object Management (routes de debug) | 0 transverse | — | — |
 | `calendar` — Calendrier (service paramétrable) | 0 transverse | users | — (lit les natures déclarées au registre) |
 | `core` — Noyau transverse | 1 | users | `coreProject` (prj), `task` (tsk) |
-| `budget` — Budget Management (middleware) | 2 | core | `budget` (bud), `costCenter` (cc), `operation` (op) |
+| `budget` — Budget Management (middleware) | 2 | core | `budget` (bud), `costCenter` (cc), `operation` (op), `recurrence`, `projectOverrun` (ovr), `taskBudgetRequest` (dmt) |
 | `patrimoine` — Patrimoine Management (middleware) | 2 | core, budget | `patrimoine` (pat), `capitalization` (cap) |
-| `bpm` — Budget/Patrimoine Management (application) | 3 | core, budget, patrimoine | `bpmComposition` (bpm), `cycleLink` (cyc), `closure` (clo), `lifeGoal` (obj), `projectOverrun` (ovr) |
+| `bpm` — Budget/Patrimoine Management (application) | 3 | core, budget, patrimoine | `bpmComposition` (bpm), `cycleLink` (cyc), `closure` (clo), `lifeGoal` (obj) |
 
 Règle : un module ne dépend que de modules de niveau inférieur ou égal (vérifié par `Registry.register`).
 Un niveau supérieur **enrichit** un niveau inférieur par des **extensions** (inversion de dépendance) : le
 noyau ne connaît ni Budget ni BPM.
+
+**Répartition des responsabilités.** Le noyau est la colle des trois niveaux (projets, tâches, Object Management) et
+reste minimal. Les deux middlewares portent **toutes** les règles métier et fonctionnelles de leur domaine (Budget :
+opérations, récurrences, règlements, plafonds, financement des projets de la vie ; Patrimoine : stock et
+capitalisations). BPM est le module applicatif : il compose les objets, porte le cycle et les clôtures, et prend en
+charge la complexité de l'interface — présentation, facilitation (raccourcis, parcours guidés), enchaînements de cause à
+conséquence. Il ne réécrit pas une règle d'un middleware : il appelle ses commandes et affiche ses refus. Côté site,
+les gestes de financement passent par un seul service (`web/src/app/bpm/ui/project-funding.ts` : `ProjectFunding`,
+vocabulaire `FUNDING`, libellés d'actions `FUNDING_ACTIONS`), partagé par la fiche d'échéance, la page projet, la
+gestion des projets et la page projet de vie.
 
 ## 2. Socle technique (`api/src/socle`)
 
@@ -66,9 +76,10 @@ fourni par l'extension `metricContext` du niveau 3.
 | `taskContext` | bpm | core | `(state, task, socle) => { qualification }` |
 | `operationGuard` | bpm | budget | `(state, { userId, budgetId, date, previousDate }, socle) => void` (lève `PERIOD_CLOSED`) |
 | `metricContext` | bpm | administration (aperçu de formule) | `(state, userId, socle, { periodKey? }) => ctx` |
-| `taskMoveGuard` | bpm | core | `(state, { task, fromProjectId, toProjectId }, socle) => void` : peut refuser un changement de projet (`FORBIDDEN_BY_RULE`, `details.links`) |
-| `onTaskStatusChange` | bpm | core | `(tx, { task, previousStatus }, socle) => effects[]` : dans la même écriture que le changement d'état ; effets rendus par la commande (`effects`) |
-| `settlementGuard` | bpm | budget | `(state, { userId, budgetId, direction, amountCents, realizedDate, taskId, operationId, recurrenceId, occurrenceDate }, socle) => void` : validation d'un règlement (lève `OVERRUN_AUTHORIZATION_REQUIRED`) |
+| `taskMoveGuard` | budget (financement) | core | `(state, { task, fromProjectId, toProjectId }, socle) => void` : peut refuser un changement de projet (`FORBIDDEN_BY_RULE`, `details.links`) |
+| `onTaskStatusChange` | budget (financement) | core | `(tx, { task, previousStatus }, socle) => effects[]` : dans la même écriture que le changement d'état ; effets rendus par la commande (`effects`) |
+| `settlementGuard` | budget (financement) | budget | `(state, { userId, budgetId, direction, amountCents, realizedDate, taskId, operationId, recurrenceId, occurrenceDate }, socle) => void` : validation d'un règlement (lève `OVERRUN_AUTHORIZATION_REQUIRED`) |
+| `fundingPeriod` | bpm | budget (financement) | `(state, userId, ymd, socle) => { key, start, end } \| null` : période du cycle qui contient la date (datation de la facturation des dépassements) |
 
 Compositions enregistrées : `initialUserBundle` (bpm) déclenchée par `users.createUser` ; dans une seule
 transaction : user → projet noyau principal → Budget « Projet de vie » → Patrimoine → composition BPM → liaison de cycle.
@@ -92,6 +103,20 @@ transaction : user → projet noyau principal → Budget « Projet de vie » →
 - Récurrences (`recurrence.mjs`) : définition `recurrence` (cadence `weekly|monthly|yearly`, `firstDate`, `endDate?`, montant, centre, note, tâche) ; occurrences virtuelles de clé `rec_…@AAAA-MM-JJ` (mensuelle bornée à la fin de mois) ; `settleOccurrence` crée l'opération réglée (double règlement refusé : `ALREADY_SETTLED`) ; `updateRecurrence` s'applique aux occurrences encore attendues, les règlements restent intacts et la première date/cadence sont figées dès le premier règlement.
 - Moteur unique de lignes : `budgetLines(state, budgetIds, { from, to, by: 'planned'|'realized' })` — le registre sélectionne par date prévue, les sommes du réalisé par date réelle ; les six variables `budget.*` en dérivent.
 - `setCaps(ctx, { caps, expectedRevision })` : plafonds facultatifs par centre de charge (`capsCents`).
+- Financement des projets de la vie (`funding.mjs`, `socle.modules.budget.funding`) : règles et commandes de
+  l'enveloppe attribuée par le budget de vie à ses Budgets standards, des parts des tâches, des retours, des demandes
+  de part et des dépassements. Chiffres purs `fundingFigures(state, budget)` et `taskFunding(state, figures, taskId)`
+  (part, engagé, réglé, reste, `openCents`, `paidBeforeCents`, `unusedCents` d'une tâche terminée) ; commandes
+  `allocate`, `setTaskShare` (`authorizeOverrun: true` : le manque au-delà de l'enveloppe est autorisé dans la même
+  écriture), `releaseTaskShare` (part non consommée d'une tâche terminée rendue à l'enveloppe), `setTaskReturn`,
+  `requestTaskBudget`, `decideTaskBudget`, `requestOverrun` (`approve: true` : demandé et autorisé d'une écriture),
+  `decideOverrun` (rend `notice` quand la demande liée revient au projet), `billOverruns` ; règlement financé
+  `fundSettlement` : un règlement (`createOperation`, `updateOperation`, `realizeOperation`, `settleOccurrence`) passé
+  avec `fund: true` porte d'abord la part de la tâche au nécessaire et autorise le dépassement éventuel, puis subit la
+  garde ; builder `startTaskFunding(tx, budget, cents|null)` (enveloppe de 0 € refusée) ; extensions `settlementGuard`
+  (part de tâche et enveloppe ; ses refus disent `grantOverrunCents` et `pendingCovers`), `taskMoveGuard`,
+  `onTaskStatusChange` (retour au budget de vie). Les commandes rendent l'essentiel ; la fiche du projet est relue par
+  BPM. Un geste de l'interface = une commande : l'interface n'enchaîne plus demande, décision et écriture rejouée.
 
 ### patrimoine (`socle.modules.patrimoine`) — niveau 2
 - Builders : `buildPatrimoine(tx, { coreProjectId, principalBudgetId, openingStock?, openingDate?, objective? })` (unicité PAT-01), `buildCapitalization(tx, { patrimoineId, amountCents, date, source })`.
@@ -101,9 +126,10 @@ transaction : user → projet noyau principal → Budget « Projet de vie » →
 ### bpm (`socle.modules.bpm`) — niveau 3
 - Composition `initialUserBundle`, commande `createLifeSubproject` (branche : Budget standard + projet noyau propre + ≥ 1 tâche).
 - Projets de la vie (`projects.mjs`, `s.projects`) — les projets et tâches restent ceux du noyau (création et
-  édition dans le noyau ; rattachement et état par ses commandes) ; BPM porte leur budget dans des champs des
-  Budgets standards (`allocationCents`, `allocationDate`, `taskSharesCents`, `taskReturns`) et la nature
-  `projectOverrun` : `overview(ctx)`, `tasksOverview(ctx)`, `projectDetail(ctx, coreProjectId)`,
+  édition dans le noyau ; rattachement et état par ses commandes) ; leur financement (champs `allocationCents`,
+  `allocationDate`, `taskSharesCents`, `taskReturns` des Budgets standards, natures `projectOverrun` et
+  `taskBudgetRequest`) est exécuté par le middleware Budget (`budget/funding.mjs`) ; BPM compose les créations, ajoute
+  le réglé de la période du cycle (`projectBudget`), rend les fiches et les contrôles de fin de cycle, et expose : `overview(ctx)`, `tasksOverview(ctx)`, `projectDetail(ctx, coreProjectId)`,
   `adoptProject(ctx, {requestKey, coreProjectId, name?})`, `allocate(ctx, budgetId, {amount, expectedRevision})`,
   `setTaskShare(ctx, budgetId, taskId, {amount|null, expectedRevision})`, `setTaskReturn(ctx, budgetId, taskId,
   {label, amount|null, cadence, expectedRevision})`, `requestOverrun(ctx, budgetId, {requestKey, taskId?, reason,

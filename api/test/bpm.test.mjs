@@ -236,6 +236,14 @@ test('période close : opération refusée en création, modification et réalis
   const child = await budget.createOperation(ctx, { requestKey: key(), budgetId: life.budgetId, direction: 'charge', label: 'Acompte', amount: 300, date: '2026-08-15', status: 'realized', costCenterRef: 'std:loisirs' });
   assert.equal(child.operation.budgetId, life.budgetId);
   assert.equal(figure(socle, ctx, 'bpm.charges', '2026-08').value, 20, 'le Budget enfant n’entre pas dans le résultat du « Projet de vie »');
+
+  // Projet financé : ses dépenses entrent dans les chiffres du budget de vie depuis l'attribution, la période close les protège aussi.
+  const funded = await socle.modules.bpm.createLifeProject(ctx, { requestKey: key(), name: 'Cuisine', tasks: [{ title: 'Devis' }] });
+  const std = socle.state.budgets[funded.budgetId];
+  socle.state.budgets[funded.budgetId] = { ...std, allocationCents: 100000, allocationDate: '2026-08-01' };
+  await rejects(budget.createOperation(ctx, { requestKey: key(), budgetId: funded.budgetId, direction: 'charge', label: 'Acompte', amount: 300, date: '2026-08-15', status: 'realized', costCenterRef: 'std:loisirs' }), 'PERIOD_CLOSED');
+  const later = await budget.createOperation(ctx, { requestKey: key(), budgetId: funded.budgetId, direction: 'charge', label: 'Solde', amount: 300, date: '2026-09-15', costCenterRef: 'std:loisirs' });
+  await rejects(budget.realizeOperation(ctx, later.operation.id, { expectedRevision: 1, realizedDate: '2026-08-20' }), 'PERIOD_CLOSED');
 });
 
 test('cycle figé après une clôture', async () => {

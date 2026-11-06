@@ -143,7 +143,8 @@ export class BpmApi {
   updateOperation(id: string, body: Record<string, unknown> & { expectedRevision: number }) {
     return this.put<{ operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/operations/${encodeURIComponent(id)}`, body);
   }
-  realizeOperation(id: string, body: { expectedRevision: number; realizedAmount?: number; realizedDate?: string }) {
+  /** `fund` : la part et le dépassement nécessaires au règlement sont accordés dans la même écriture. */
+  realizeOperation(id: string, body: { expectedRevision: number; realizedAmount?: number; realizedDate?: string; fund?: boolean }) {
     return this.post<{ operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/operations/${encodeURIComponent(id)}/realize`, body);
   }
   cancelRealization(id: string, expectedRevision: number) {
@@ -152,7 +153,7 @@ export class BpmApi {
   updateRecurrence(id: string, body: Record<string, unknown> & { expectedRevision: number }) {
     return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number }; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
   }
-  settleOccurrence(recurrenceId: string, body: { requestKey: string; occurrenceDate: string; realizedAmount?: number; realizedDate?: string; note?: string }) {
+  settleOccurrence(recurrenceId: string, body: { requestKey: string; occurrenceDate: string; realizedAmount?: number; realizedDate?: string; note?: string; fund?: boolean }) {
     return this.post<{ replayed: boolean; operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/settle`, body);
   }
   addCostCenter(body: { requestKey: string; label: string; direction: 'income' | 'charge' }) {
@@ -233,18 +234,27 @@ export class BpmApi {
     return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/allocation`, { amount, expectedRevision });
   }
   /** Part d'une tâche en euros ; `null` la retire. */
-  setTaskShare(budgetId: string, taskId: string, amount: number | null, expectedRevision: number) {
-    return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/shares/${encodeURIComponent(taskId)}`, { amount, expectedRevision });
+  /** `authorizeOverrun` : au-delà de l'enveloppe, le manque est autorisé en dépassement dans la même écriture. */
+  setTaskShare(budgetId: string, taskId: string, amount: number | null, expectedRevision: number, opts: { authorizeOverrun?: boolean; note?: string } = {}) {
+    return this.put<BpmProjectDetail & { overrunCents: number }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/shares/${encodeURIComponent(taskId)}`, { amount, expectedRevision, ...opts });
+  }
+  /** Tâche terminée : sa part non consommée revient à l'enveloppe. */
+  releaseTaskShare(budgetId: string, taskId: string, expectedRevision: number) {
+    return this.post<BpmProjectDetail & { released: { releasedCents: number; shareCents: number | null; taskTitle: string } }>(
+      `/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/shares/${encodeURIComponent(taskId)}/release`,
+      { expectedRevision },
+    );
   }
   setTaskReturn(budgetId: string, taskId: string, body: { label?: string; amount: number | null; cadence?: ReturnCadence; expectedRevision: number }) {
     return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/returns/${encodeURIComponent(taskId)}`, body);
   }
-  requestOverrun(budgetId: string, body: { requestKey: string; taskId?: string | null; reason: 'ventilation' | 'reglement'; amount: number; note?: string }) {
-    return this.post<{ overrunId: string; overrun: ProjectOverrun }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/overruns`, body);
+  /** `approve` : la demande est autorisée dans la même écriture. */
+  requestOverrun(budgetId: string, body: { requestKey: string; taskId?: string | null; reason: 'ventilation' | 'reglement'; amount: number; note?: string; approve?: boolean }) {
+    return this.post<{ overrunId: string; overrun: ProjectOverrun; detail: BpmProjectDetail }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/overruns`, body);
   }
   /** Décision du budget de vie sur une demande de dépassement. */
   decideOverrun(id: string, decision: 'approve' | 'refuse', expectedRevision: number) {
-    return this.post<{ overrun: ProjectOverrun; detail: BpmProjectDetail }>(`/api/bpm/overruns/${encodeURIComponent(id)}/decision`, { decision, expectedRevision });
+    return this.post<{ overrun: ProjectOverrun; notice?: string | null; detail: BpmProjectDetail }>(`/api/bpm/overruns/${encodeURIComponent(id)}/decision`, { decision, expectedRevision });
   }
   /** Fin de cycle : facture au budget de vie les dépassements autorisés dont la date est atteinte. */
   billOverruns(budgetId?: string) {

@@ -11,7 +11,7 @@ import { cents, CentsPipe, percentText, ShortDatePipe, SignedCentsPipe } from '.
 import { ModalComponent } from '../../shared/modal.component';
 import { PeriodNavigationComponent } from '../../shared/period-navigation.component';
 import { BpmOverrunRequestComponent } from '../projects/project-parts';
-import { BpmLineDetail, BpmOperationEditor, BpmRefresh } from '../ui';
+import { BpmLineDetail, BpmOperationEditor, BpmRefresh, FUNDING, ProjectFunding } from '../ui';
 import { BpmActBudgetType } from '../pages/act-budget-type';
 import { shiftPeriod } from '../ui/page-context';
 import { BpmFragmentNavigation } from '../ui/fragment-navigation';
@@ -107,6 +107,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
             <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-objectives">Objectifs et avenir</a>
             <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-budget-type">Budget type</a>
             <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-due">Échéances à régler</a>
+            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-decisions">Décisions attendues</a>
             <a routerLink="/plafonds" [queryParams]="period() ? { period: period() } : {}">Plafonds et catégories</a>
           </nav>
         </div>
@@ -314,7 +315,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                           <table class="bpm-table">
                             <caption class="visually-hidden">Projets de la vie financés par le projet de vie</caption>
                             <thead>
-                              <tr><th>Projet</th><th>Avancement</th><th>Enveloppe</th><th>Consommé</th><th>Reste</th><th>Réglé ce cycle</th></tr>
+                              <tr><th>Projet</th><th>Avancement</th><th>{{ L.envelope }}</th><th>{{ L.paidOnEnvelope }}</th><th>{{ L.remaining }}</th><th>Réglé ce cycle</th></tr>
                             </thead>
                             <tbody>
                               @for (p of d.projects.projects; track p.budgetId) {
@@ -420,14 +421,52 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           <bpm-life-funding [funding]="d.projects.funding" [highlight]="shownKey()" />
         </section>
 
+        <section class="bpm-section" id="life-decisions" aria-labelledby="life-decisions-title">
+          <header>
+            <h2 id="life-decisions-title">Décisions attendues</h2>
+            <span class="count-badge">{{ d.projects.pendingRequests.length + d.projects.taskRequestCount }}</span>
+          </header>
+          <p class="bpm-note">
+            Ce que les projets demandent au projet de vie : autoriser un dépassement d’enveloppe (facturé en fin de cycle) et,
+            dans chaque projet, accorder les parts demandées par les tâches.
+          </p>
+          @for (o of d.projects.pendingRequests; track o.id) {
+            <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decideOverrun(o, $event)" />
+            <p class="bpm-note"><a [routerLink]="['/app/gestion-projet', o.coreProjectId]">Ouvrir le projet « {{ o.budgetName }} » →</a></p>
+          } @empty {
+            <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
+          }
+          @if (d.projects.taskRequests?.length) {
+            <ul class="life-task-requests">
+              @for (r of d.projects.taskRequests; track r.id) {
+                <li>
+                  Part demandée pour « {{ r.taskTitle }} » ({{ r.budgetName }}) : {{ r.amountCents | cents }}
+                  @if (r.grantedCents) { <small>· {{ r.grantedCents | cents }} déjà accordés</small> }
+                  · <a [routerLink]="['/app/gestion-projet', r.coreProjectId]" fragment="requests-title">Accorder ou refuser dans le projet →</a>
+                </li>
+              }
+            </ul>
+          }
+          @if (d.projects.billable.length) {
+            <div class="bpm-actions">
+              <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="bill()">
+                Facturer les dépassements au projet de vie ({{ d.projects.billableCents | cents }})
+              </button>
+            </div>
+          } @else if (d.projects.nextBillingDate) {
+            <p class="bpm-note">Prochaine facturation des dépassements autorisés : {{ d.projects.nextBillingDate | shortDate }}.</p>
+          }
+        </section>
+
         <section class="bpm-section" id="life-due" aria-labelledby="life-due-title">
           <header>
             <h2 id="life-due-title">Échéances à régler</h2>
             <span class="count-badge">{{ d.dueSoon.lines.length }}</span>
           </header>
           <p class="bpm-note">
-            Échéances ouvertes du projet de vie à ce jour, quelle que soit la période consultée : en retard depuis le
-            {{ d.dueSoon.from | shortDate }}, puis celles des sept prochains jours. Ouvrez une échéance pour la régler ou la modifier.
+            Échéances ouvertes à ce jour, quelle que soit la période consultée — celles du projet de vie et les dépenses
+            prévues de ses projets : en retard depuis le {{ d.dueSoon.from | shortDate }}, puis celles des sept prochains jours.
+            Ouvrez une échéance pour la régler ou la modifier ; la dépense réglée d’un projet financé entre dans le Dépensé à sa date réelle.
           </p>
           <ng-container *ngTemplateOutlet="lineTable; context: { $implicit: d.dueSoon.lines, empty: 'Aucune échéance ouverte : tout est réglé.', caption: 'Échéances à régler', nature: true }" />
         </section>
@@ -503,31 +542,10 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                 </p>
               }
             </section>
-            <section class="bpm-section" aria-labelledby="life-decisions-title">
-              <header>
-                <h2 id="life-decisions-title">Décisions du budget du projet de vie</h2>
-              </header>
-              @for (o of d.projects.pendingRequests; track o.id) {
-                <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decideOverrun(o, $event)" />
-              } @empty {
-                <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
-              }
-              @if (d.projects.taskRequestCount) {
-                <p class="bpm-note">
-                  {{ d.projects.taskRequestCount }} demande(s) de montant de tâche à valider dans
-                  <a routerLink="/app/gestion-projet">Gestion de projet</a>.
-                </p>
-              }
-              @if (d.projects.billable.length) {
-                <div class="bpm-actions">
-                  <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="bill()">
-                    Facturer les dépassements au projet de vie ({{ d.projects.billableCents | cents }})
-                  </button>
-                </div>
-              } @else if (d.projects.nextBillingDate) {
-                <p class="bpm-note">Prochaine facturation des dépassements autorisés : {{ d.projects.nextBillingDate | shortDate }}.</p>
-              }
-            </section>
+            <p class="bpm-note">
+              Décisions de dépassement et facturation :
+              <a routerLink="/projet-de-vie" fragment="life-decisions" (click)="followOpen.set(false)">Décisions attendues</a>.
+            </p>
             <nav class="bpm-actions" aria-label="Vues complémentaires">
               <a class="text-link" [routerLink]="['/app/projets', d.lifeProject.coreProjectId]">Fiche du projet de vie ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord">Tableau de bord ↗</a>
@@ -589,7 +607,15 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                 <td>{{ l.plannedDate | shortDate }}</td>
                 <th><button type="button" class="text-link" (click)="openLine(l.id)">{{ l.label }}</button></th>
                 @if (nature) {
-                  <td>{{ natureLabel(l) }}</td>
+                  <td>
+                    @if (l.project; as p) {
+                      <a class="text-link" [routerLink]="['/app/gestion-projet', p.coreProjectId]" [title]="'Ouvrir le projet ' + p.name">Projet · {{ p.name }}</a>
+                      @if (p.taskTitle) { <small class="life-line-task">{{ p.taskTitle }}</small> }
+                      @if (!p.funded) { <small class="life-line-task">Sans budget attribué · hors budget de vie</small> }
+                    } @else {
+                      {{ natureLabel(l) }}
+                    }
+                  </td>
                 }
                 <td>{{ l.costCenterLabel ?? 'À préciser' }}</td>
                 <td>{{ amountOf(l) | cents }}</td>
@@ -612,6 +638,8 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
 })
 export class BpmLifeManagementPage {
   private bpm = inject(BpmApi);
+  private funding = inject(ProjectFunding);
+  protected readonly L = FUNDING;
   private api = inject(Api);
   private route = inject(ActivatedRoute);
   private refresh = inject(BpmRefresh);
@@ -709,14 +737,14 @@ export class BpmLifeManagementPage {
     }
   }
 
-  private async run(action: () => Promise<unknown>, success: string) {
+  private async run<T>(action: () => Promise<T>, success: string | ((result: T) => string)) {
     if (this.busy()) return;
     this.busy.set(true);
     this.notice.set(null);
     try {
-      await action();
+      const result = await action();
       await this.load();
-      this.notice.set({ text: success, error: false });
+      this.notice.set({ text: typeof success === 'function' ? success(result) : success, error: false });
     } catch (err) {
       await this.load();
       this.notice.set({ text: toApiError(err).message, error: true });
@@ -804,8 +832,8 @@ export class BpmLifeManagementPage {
   }
   protected decideOverrun(o: ProjectOverrun, decision: 'approve' | 'refuse') {
     return this.run(
-      () => this.bpm.decideOverrun(o.id, decision, o.revision),
-      decision === 'approve' ? 'Dépassement autorisé ; il sera facturé au projet de vie en fin de cycle.' : 'Dépassement refusé ; la demande associée est refusée.',
+      () => this.funding.decide(o, decision),
+      (r) => r.message,
     );
   }
   protected bill() {

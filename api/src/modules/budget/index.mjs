@@ -7,6 +7,7 @@ import { check } from '../../socle/object-management/inspect.mjs';
 import { today } from '../../socle/clock.mjs';
 import { date, expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL, CADENCES, isOccurrence, occurrenceDates, occurrenceKey } from './recurrence.mjs';
+import { createFunding, fundingExtensions } from './funding.mjs';
 
 export const DIRECTIONS = ['income', 'charge'];
 const DIRECTION_LABEL = { income: 'Revenu', charge: 'Charge' };
@@ -205,6 +206,19 @@ export default {
   level: 2,
   dependsOn: ['users', 'core'],
   kinds: {
+    // Financement des projets de la vie (funding.mjs) : demandes de part des tâches et dépassements d'enveloppe.
+    projectOverrun: {
+      collection: 'projectOverruns',
+      prefix: 'ovr',
+      label: 'Dépassement de projet',
+      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task' }, taskBudgetRequestId: { kind: 'taskBudgetRequest' } },
+    },
+    taskBudgetRequest: {
+      collection: 'taskBudgetRequests',
+      prefix: 'dmt',
+      label: 'Demande de montant d’une tâche',
+      references: { budgetId: { kind: 'budget', required: true }, taskId: { kind: 'task', required: true }, overrunId: { kind: 'projectOverrun' } },
+    },
     budget: {
       collection: 'budgets',
       prefix: 'bud',
@@ -284,6 +298,8 @@ export default {
   ],
 
   extensions: {
+    // Financement des projets : garde de rattachement d'une tâche, retour à sa complétion, validation d'un règlement.
+    ...fundingExtensions,
     /** Enrichit les projets noyau qui servent de racine à un Budget. */
     coreProjectContext(state, projectId, socle) {
       const budgets = socle.om.list(state, 'budget', (b) => b.coreProjectId === projectId);
@@ -387,12 +403,16 @@ export default {
       for (const ext of socle.registry.extensions('operationGuard')) ext(state, { userId: op.userId, budgetId: op.budgetId, dates }, socle);
     }
 
+    const funding = createFunding(socle, { lifeBudgetOf });
+
     /**
      * Garde des niveaux supérieurs sur la validation d'un règlement (opération réglée, réalisation,
      * règlement d'une occurrence) : par exemple le dépassement du budget attribué à un projet.
      */
-    function settlementGuard(state, input) {
-      for (const ext of socle.registry.extensions('settlementGuard')) ext(state, input, socle);
+    function settlementGuard(tx, input, fund) {
+      // Règlement financé : la part et le dépassement nécessaires sont accordés dans la même écriture.
+      if (fund === true) funding.fundSettlement(tx, input);
+      for (const ext of socle.registry.extensions('settlementGuard')) ext(tx.draft, input, socle);
     }
 
     const operationView = (state, o) => ({
@@ -475,6 +495,8 @@ export default {
 
     return {
       DIRECTIONS,
+      /** Financement des projets de la vie : règles et commandes (enveloppe, parts, retours, demandes, dépassements). */
+      funding,
       budgetLines,
       lineView,
       recurrenceView,
@@ -536,7 +558,7 @@ export default {
           categoryId: cat?.id ?? null,
         };
         guard(tx.draft, { userId: tx.userId, budgetId }, [opDate, realizedDate].filter(Boolean));
-        if (status === 'realized') settlementGuard(tx.draft, { userId: tx.userId, budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId: fields.taskId, operationId: null });
+        if (status === 'realized') settlementGuard(tx, { userId: tx.userId, budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId: fields.taskId, operationId: null }, input.fund);
         return om.create(tx, 'operation', fields);
       },
 
@@ -567,7 +589,7 @@ export default {
           guard(tx.draft, o, [o.date, o.realizedDate, patch.date].filter(Boolean));
           // Changer la tâche ou le sens d'une charge déjà réglée ne contourne pas le financement de la tâche.
           if (o.status === 'realized' && (patch.direction !== o.direction || patch.taskId !== undefined && patch.taskId !== o.taskId)) {
-            settlementGuard(tx.draft, { userId: o.userId, budgetId: o.budgetId, direction: patch.direction, amountCents: o.realizedAmountCents, realizedDate: o.realizedDate, taskId: patch.taskId !== undefined ? patch.taskId : o.taskId, operationId: o.id });
+            settlementGuard(tx, { userId: o.userId, budgetId: o.budgetId, direction: patch.direction, amountCents: o.realizedAmountCents, realizedDate: o.realizedDate, taskId: patch.taskId !== undefined ? patch.taskId : o.taskId, operationId: o.id }, input.fund);
           }
           om.update(tx, o, patch);
           return { operationId: id };
@@ -587,7 +609,7 @@ export default {
             realizedDate: realizedDateOf(input.realizedDate ?? o.date),
           };
           guard(tx.draft, o, [patch.realizedDate, o.realizedDate].filter(Boolean));
-          settlementGuard(tx.draft, { userId: o.userId, budgetId: o.budgetId, direction: o.direction, amountCents: patch.realizedAmountCents, realizedDate: patch.realizedDate, taskId: o.taskId ?? null, operationId: o.id });
+          settlementGuard(tx, { userId: o.userId, budgetId: o.budgetId, direction: o.direction, amountCents: patch.realizedAmountCents, realizedDate: patch.realizedDate, taskId: o.taskId ?? null, operationId: o.id }, input.fund);
           om.update(tx, o, patch);
           return { operationId: id };
         });
@@ -702,7 +724,7 @@ export default {
             const realizedDate = realizedDateOf(input.realizedDate ?? occurrenceDate);
             const realizedAmountCents = money('realizedAmount', input.realizedAmount ?? toEuros(rec.amountCents), { positive: true });
             guard(tx.draft, rec, [realizedDate]);
-            settlementGuard(tx.draft, { userId: rec.userId, budgetId: rec.budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId, operationId: existing?.id ?? null, recurrenceId: rec.id, occurrenceDate });
+            settlementGuard(tx, { userId: rec.userId, budgetId: rec.budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId, operationId: existing?.id ?? null, recurrenceId: rec.id, occurrenceDate }, input.fund);
             if (existing) {
               om.update(tx, existing, { status: 'realized', realizedAmountCents, realizedDate });
               return { operationId: existing.id };

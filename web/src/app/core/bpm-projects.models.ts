@@ -208,10 +208,17 @@ export interface BpmProjectsOverview {
   candidates: { projectId: string; title: string; taskCount: number }[];
 }
 
+/** Financement d'une tâche, calculé par le middleware Budget (`taskFunding`). */
 export interface TaskBudget {
   shareCents: number | null;
   engagedCents: number;
   paidCents: number;
+  /** Charges prévues non encore réglées. */
+  openCents: number;
+  /** Réglé avant l'attribution de l'enveloppe : hors part, gardé dans l'historique. */
+  paidBeforeCents: number;
+  /** Tâche terminée sans charge à régler : part non consommée, à rendre à l'enveloppe. */
+  unusedCents: number;
   remainingCents: number | null;
   over: boolean;
   unbounded: boolean;

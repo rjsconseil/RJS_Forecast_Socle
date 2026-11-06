@@ -11,3 +11,7 @@
 .bld-ids dd { font-weight: var(--fw-regular); font-family: var(--font-mono); font-size: scaled(var(--fs-xs)); overflow-wrap: anywhere; }
 
 .bld-saved.is-warning { color: var(--status-danger); background: var(--status-danger-surface); }
+.bpm-feedback.is-warning { color: var(--status-warning, var(--status-danger)); background: var(--status-warning-surface, var(--status-danger-surface)); padding: 0.5rem 0.75rem; border-radius: 6px; }
+.bld-project { margin: 0 0 0.75rem; }
+.bld-overrun { margin: 0.5rem 0 1rem; padding: 0.75rem; border-radius: 8px; background: var(--status-warning-surface, var(--app-canvas)); }
+.bld-notice { margin: 0 0 0.5rem; font-weight: 600; }

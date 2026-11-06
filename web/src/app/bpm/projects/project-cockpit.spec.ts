@@ -177,16 +177,46 @@ describe('cockpit du projet', () => {
     const root: HTMLElement = fixture.nativeElement;
     const flow = root.querySelector('[aria-label="Autorisation du budget du projet de vie"]');
     expect(flow?.textContent).toContain('Il manque 100 €');
-    expect(flow?.querySelector('button')?.textContent).toContain('Demander l’autorisation');
-    flow?.querySelector('button')?.click();
+    const buttons = flow?.querySelectorAll('button') ?? [];
+    // Geste nominal en premier (vous pilotez aussi le projet de vie) ; la demande seule reste possible.
+    expect(buttons[0]?.textContent).toMatch(/Autoriser 100,00\s€ de dépassement et enregistrer/);
+    expect(buttons[1]?.textContent).toContain('Demander sans décider maintenant');
+    (buttons[1] as HTMLButtonElement).click();
     await fixture.whenStable();
     fixture.detectChanges();
     expect(
       root.querySelector('[aria-label="Autorisation du budget du projet de vie"] bpm-overrun-request'),
     ).toBeTruthy();
     await page.decideFlow('approve');
+    // La demande déposée puis autorisée, la part est rejouée telle quelle (sans financement : elle tient désormais).
     expect(setTaskShare).toHaveBeenCalledTimes(2);
-    expect(setTaskShare).toHaveBeenLastCalledWith('bud_1', 'tsk_1', 600, 7);
+    expect(setTaskShare).toHaveBeenLastCalledWith('bud_1', 'tsk_1', 600, 7, { authorizeOverrun: undefined });
+    expect(page.flow()).toBeNull();
+  });
+
+  it('autorise le dépassement et enregistre la part en une seule écriture du middleware', async () => {
+    const { page, bpm, state } = await setup();
+    const setTaskShare = vi
+      .fn()
+      .mockRejectedValueOnce(
+        new ApiError(422, {
+          code: 'OVERRUN_AUTHORIZATION_REQUIRED',
+          action: null,
+          message: 'Il manque 100 €.',
+          details: { budgetId: 'bud_1', taskId: 'tsk_1', overrunCents: 10000, ceilingCents: 50000, reason: 'ventilation' },
+        }),
+      )
+      .mockResolvedValue({});
+    const requestOverrun = vi.fn(async () => ({ overrunId: 'ovr_1', overrun: { id: 'ovr_1', revision: 1 } }));
+    const decideOverrun = vi.fn(async () => ({ notice: null }));
+    Object.assign(bpm, { setTaskShare, requestOverrun, decideOverrun });
+    await page.saveShare('bud_1', state.tasks[0], '600', 7);
+    await page.authorizeFlow();
+    // Plus d'enchaînement côté interface : la part est rejouée avec l'autorisation du dépassement dans la même écriture.
+    expect(requestOverrun).not.toHaveBeenCalled();
+    expect(decideOverrun).not.toHaveBeenCalled();
+    expect(setTaskShare).toHaveBeenCalledTimes(2);
+    expect(setTaskShare).toHaveBeenLastCalledWith('bud_1', 'tsk_1', 600, 7, { authorizeOverrun: true });
     expect(page.flow()).toBeNull();
   });
 
@@ -267,6 +297,43 @@ describe('cockpit du projet', () => {
     expect(api.attachTask).not.toHaveBeenCalled();
     await page.attach('free');
     expect(api.attachTask).toHaveBeenCalledExactlyOnceWith('free', 'prj_1', 3);
+  });
+
+  it('garde des cartes de taille fixe : les dépenses s’ouvrent dans la fenêtre de la tâche', async () => {
+    const { fixture, page, state } = await setup(true);
+    const charge = (i: number) => ({
+      id: `op_${i}`,
+      taskId: 'tsk_1',
+      label: `Location ${i}`,
+      plannedDate: '2026-11-06',
+      plannedCents: 4000,
+      realizedDate: null,
+      realizedCents: null,
+      settled: false,
+      validated: false,
+      cadenceLabel: 'Mensuelle',
+    });
+    page.data.set({ ...state, charges: Array.from({ length: 13 }, (_, i) => charge(i)) });
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const card = root.querySelector('.project-task-card') as HTMLElement;
+    // La carte n'énumère pas les dépenses : elle en donne le nombre et ouvre la fenêtre.
+    expect(card.querySelectorAll('.task-charge').length).toBe(0);
+    const open = [...card.querySelectorAll('button')].find((b) => b.textContent?.includes('Dépenses · 13'));
+    expect(open).toBeTruthy();
+    open!.click();
+    fixture.detectChanges();
+    const dialog = root.querySelector('dialog') as HTMLElement;
+    expect(dialog.querySelectorAll('.task-charge').length).toBe(13);
+    expect(dialog.textContent).toContain('Dépenses de la tâche · 13');
+    // « Demander un montant » ouvre la même fenêtre, formulaire de part déjà déplié.
+    page.closeTaskPanel();
+    fixture.detectChanges();
+    expect(root.querySelector('dialog')).toBeNull();
+    const ask = [...card.querySelectorAll('button')].find((b) => b.textContent?.includes('Demander un montant'));
+    ask!.click();
+    fixture.detectChanges();
+    expect(root.querySelector('dialog .task-funding-box input[name="amount"]')).toBeTruthy();
   });
 
   it('réinitialise les formulaires quand le projet affiché change', async () => {

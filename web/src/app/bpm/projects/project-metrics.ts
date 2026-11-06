@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { BpmTaskCard, ProjectBudget } from '../../core/bpm-projects.models';
 import { CentsPipe } from '../../core/format';
 import { TimeAggregates } from '../../core/models';
+import { FUNDING } from '../ui/project-funding';
 
 /** Les deux repères de la ligne de gestion : argent encore disponible et temps effectivement consommé. */
 @Component({
@@ -24,12 +25,12 @@ import { TimeAggregates } from '../../core/models';
       @if (b.regime) {
         <div class="pm-money">
           <div class="pm-envelope">
-            <small>{{ task() ? 'Montant accordé' : 'Budget autorisé' }}</small>
+            <small>{{ task() ? L.share : b.approvedOverrunCents ? L.envelopeWithOverrun : L.envelope }}</small>
             <strong>{{ b.ceilingCents | cents }}</strong>
           </div>
           @if (vertical()) {
             <div class="pm-consumed">
-              <span>{{ task() ? 'Consommé estimé' : 'Consommé' }}</span
+              <span>{{ task() ? 'Consommé estimé' : 'Réglé' }}</span
               ><strong>{{ b.paidCents | cents }}</strong>
             </div>
           }
@@ -58,7 +59,7 @@ import { TimeAggregates } from '../../core/models';
             </div>
           </div>
           <div class="pm-remaining">
-            <span>{{ task() ? 'Reste selon le temps' : 'Reste à consommer' }}</span
+            <span>{{ task() ? 'Reste selon le temps' : L.remaining }}</span
             ><strong>{{ b.remainingCents | cents }}</strong>
           </div>
         </div>
@@ -67,7 +68,7 @@ import { TimeAggregates } from '../../core/models';
           [class.pm-caption-hidden]="vertical() && !b.approvedOverrunCents"
         >
           <span [hidden]="vertical()"
-            >{{ task() ? 'Consommé selon le temps' : 'Consommé' }} :
+            >{{ task() ? 'Consommé selon le temps' : L.paidOnEnvelope }} :
             <strong>{{ b.paidCents | cents }}</strong>
             @if (task() && consumedPercent() !== null) {
               <strong> · {{ consumedPercent() }} %</strong>
@@ -138,6 +139,7 @@ import { TimeAggregates } from '../../core/models';
   `,
 })
 export class BpmProjectMetricsComponent {
+  protected readonly L = FUNDING;
   readonly vertical = input(false);
   readonly budget = input<ProjectBudget | null>(null);
   readonly time = input<TimeAggregates | null>(null);

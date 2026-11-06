@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
@@ -6,6 +7,7 @@ import { LineDetail, RegisterLine } from '../../core/bpm-models';
 import { cents, parseAmount, shortDate, signedCents } from '../../core/format';
 import { ModalComponent } from '../../shared/modal.component';
 import { capAlertText, withCapAlerts } from './caps';
+import { FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from './project-funding';
 import { bpmLoader, BpmRefresh, newRequestKey } from './page-context';
 import { BpmState } from './state';
 
@@ -15,9 +17,34 @@ import { BpmState } from './state';
  * La modification ouvre l'éditeur BPM partagé (sortie `edit`).
  * Présentation de la référence : fenêtre `rjs-modal` et fiche `.bpm-guide` (`bpm-settlement`, `bpm-workspace-nav`).
  */
+interface ShareGap {
+  reason: 'task-share';
+  budgetId: string;
+  budgetRevision: number;
+  taskId: string;
+  taskTitle: string;
+  shareCents: number | null;
+  neededCents: number;
+  availableCents: number | null;
+  /** Dépassement qu'accorder la part demande (calculé par le middleware Budget). */
+  grantOverrunCents: number;
+  pendingOverrun: PendingOverrun | null;
+  /** La demande en attente, une fois autorisée, couvre la part nécessaire (calculé par le middleware Budget). */
+  pendingCovers: boolean;
+}
+
+interface PendingOverrun {
+  id: string;
+  revision: number;
+  amountCents: number;
+  taskId: string | null;
+  taskTitle: string | null;
+  requestCents: number | null;
+}
+
 @Component({
   selector: 'bpm-line-detail',
-  imports: [FormsModule, BpmState, ModalComponent],
+  imports: [FormsModule, BpmState, ModalComponent, RouterLink],
   styleUrls: ['../ref-styles/bpm-context.scss', '../ref-styles/bpm-pages.scss', './line-detail.scss'],
   template: `
     <rjs-modal [open]="true" [headed]="true" [title]="d()?.line?.label ?? 'Détail de l’échéance'" [busy]="busy()" (closed)="closed.emit()">
@@ -28,6 +55,66 @@ import { BpmState } from './state';
         }
         @if (actionError(); as e) {
           <p class="bpm-error" role="alert">{{ e.message }} <small>Votre saisie est conservée.</small></p>
+          @if (shareGap(); as g) {
+            @if (g.pendingOverrun; as po) {
+              <div class="bld-overrun">
+                @if (g.pendingCovers) {
+                  <p>
+                    Une demande de {{ money(po.requestCents ?? 0) }} pour « {{ po.taskTitle }} » attend votre décision
+                    (dépassement de l’enveloppe de {{ money(po.amountCents) }}). L’autoriser accorde cette part et couvre ce règlement.
+                  </p>
+                  <div class="bpm-actions">
+                    <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="approvePendingAndSettle(po)">
+                      {{ act.approveRequest + act.andSettle }}
+                    </button>
+                    <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="actionError.set(null)">Garder la dépense prévue</button>
+                  </div>
+                } @else {
+                  <p>
+                    Une demande de dépassement de {{ money(po.amountCents) }}{{ po.taskTitle ? ' pour « ' + po.taskTitle + ' »' : '' }}
+                    attend déjà votre décision : décidez-la d’abord, puis revenez régler cette dépense.
+                  </p>
+                  <div class="bpm-actions">
+                    <a class="btn btn-primary" routerLink="/projet-de-vie" fragment="life-decisions" (click)="closed.emit()">Voir les décisions attendues</a>
+                    <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="actionError.set(null)">Garder la dépense prévue</button>
+                  </div>
+                }
+              </div>
+            } @else {
+            <div class="bld-overrun">
+              @if (decisionNotice(); as n) {
+                <p class="bld-notice">{{ n }}</p>
+              }
+              <p>
+                Vous pilotez aussi le projet : accordez {{ money(g.neededCents) }} à « {{ g.taskTitle }} »
+                @if (g.grantOverrunCents) {
+                  — l’enveloppe n’a que {{ money(g.availableCents ?? 0) }} à répartir : {{ money(g.grantOverrunCents) }} seront autorisés en dépassement
+                }
+                et le règlement est enregistré dans la même écriture.
+              </p>
+              <div class="bpm-actions">
+                <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="grantShareAndSettle(g)">
+                  {{ act.grantShare(g.neededCents, g.taskTitle) + act.andSettle }}
+                </button>
+                <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="actionError.set(null)">Garder la dépense prévue</button>
+              </div>
+            </div>
+            }
+          }
+          @if (overrun(); as o) {
+            <div class="bld-overrun">
+              <p>
+                Vous décidez pour le projet de vie : autorisez ce dépassement de {{ money(o.overrunCents) }} et le règlement
+                est enregistré aussitôt. Le dépassement sera facturé au budget de vie à la fin du cycle.
+              </p>
+              <div class="bpm-actions">
+                <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="authorizeAndSettle()">
+                  {{ act.authorize(o.overrunCents) + act.andSettle }}
+                </button>
+                <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="actionError.set(null)">Garder la dépense prévue</button>
+              </div>
+            </div>
+          }
         }
         @if (d(); as v) {
           <header>
@@ -70,6 +157,13 @@ import { BpmState } from './state';
             <p><strong>Note :</strong> {{ v.line.note }}</p>
           }
 
+          @if (v.project; as p) {
+            <p class="bld-project">
+              Dépense du projet <a [routerLink]="['/app/gestion-projet', p.coreProjectId]" (click)="closed.emit()">{{ p.name }}</a>
+              @if (p.taskTitle) { · tâche « {{ p.taskTitle }} » }
+              · {{ p.funded ? 'enveloppe attribuée le ' + date(p.allocationDate!) : 'sans budget attribué (hors budget de vie)' }}
+            </p>
+          }
           @if (v.actions.canSettle) {
             <section>
               <h3>{{ v.line.direction === 'income' ? 'Marquer reçu' : 'Marquer payé' }}</h3>
@@ -77,6 +171,9 @@ import { BpmState } from './state';
                 <label>Date réelle<input type="date" [(ngModel)]="realDate" name="realDate" /></label>
                 <label>Montant réel (€)<input inputmode="decimal" [(ngModel)]="realAmount" name="realAmount" /></label>
               </div>
+              @for (w of settleWarnings(v); track w) {
+                <p class="bpm-feedback is-warning" role="status">{{ w }}</p>
+              }
               <p class="bpm-help">{{ v.actions.settlementPolicy }}</p>
               <div class="bpm-actions">
                 <button type="button" class="btn btn-primary" (click)="settle(v)" [disabled]="busy()">{{ settleConfirmation() ? 'Confirmer le paiement malgré l’alerte' : v.line.direction === 'income' ? 'Reçu' : 'Payé' }}</button>
@@ -158,6 +255,20 @@ export class BpmLineDetail {
   protected message = signal<string | null>(null);
   protected actionError = signal<ApiError | null>(null);
   protected realDate = signal(new Date().toISOString().slice(0, 10));
+
+  /** Avertissements avant règlement : cas acceptés mais rarement voulus (hors enveloppe, année probablement erronée). */
+  protected settleWarnings(v: LineDetail): string[] {
+    const d = this.realDate();
+    const out: string[] = [];
+    if (!d || v.line.direction !== 'charge') return out;
+    const p = v.project;
+    if (p && !p.funded) out.push(`« ${p.name} » n’a pas encore d’enveloppe : ce règlement restera dans l’historique du projet, hors budget de vie.`);
+    else if (p?.allocationDate && d < p.allocationDate)
+      out.push(`Date antérieure à l’attribution de l’enveloppe (${this.date(p.allocationDate)}) : ce règlement restera dans l’historique du projet, hors enveloppe et hors budget de vie.`);
+    const gap = (Date.parse(v.line.plannedDate) - Date.parse(d)) / 86400000;
+    if (gap > 90) out.push(`La date réelle précède de plus de trois mois la date prévue (${this.date(v.line.plannedDate)}) : vérifiez le jour, le mois et l’année.`);
+    return out;
+  }
   protected realAmount = signal('');
   protected settleConfirmation = signal<string | null>(null);
   private settleKey = newRequestKey('settle');
@@ -166,7 +277,8 @@ export class BpmLineDetail {
   protected s = signedCents;
   protected date = shortDate;
 
-  async settle(v: LineDetail) {
+  /** Règle l'échéance. `fund` : la part et le dépassement nécessaires sont accordés par le middleware dans la même écriture. */
+  async settle(v: LineDetail, fund?: { notice: string }) {
     const amount = this.realAmount() ? parseAmount(this.realAmount()) : undefined;
     if (amount === 'invalid' || (typeof amount === 'number' && amount <= 0)) {
       this.actionError.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Montant réel positif attendu.' }));
@@ -204,10 +316,11 @@ export class BpmLineDetail {
       }
       const r =
         v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate
-          ? await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body })
-          : await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body });
+          ? await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body, fund: !!fund })
+          : await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body, fund: !!fund });
       // Un plafond dépassé est signalé, jamais bloquant : le règlement est enregistré.
-      this.message.set(withCapAlerts(v.line.direction === 'income' ? 'Entrée marquée reçue.' : 'Charge marquée payée.', r.capAlerts));
+      const done = v.line.direction === 'income' ? 'Entrée marquée reçue.' : 'Charge marquée payée.';
+      this.message.set(withCapAlerts(fund ? `${fund.notice} ${done}` : done, r.capAlerts));
       this.settleConfirmation.set(null);
       this.settleKey = newRequestKey('settle');
       this.refresh.bump();
@@ -216,6 +329,59 @@ export class BpmLineDetail {
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** Refus « dépassement à autoriser » : le budget de vie peut l'accorder ici et enchaîner le règlement. */
+  protected overrun = computed(() => {
+    const e = this.actionError();
+    if (e?.body.code !== 'OVERRUN_AUTHORIZATION_REQUIRED') return null;
+    const x = e.body.details as unknown as { budgetId: string; taskId: string | null; overrunCents: number };
+    return x?.budgetId && x.overrunCents > 0 ? x : null;
+  });
+  protected money = cents;
+  protected decisionNotice = signal<string | null>(null);
+  protected readonly funding = inject(ProjectFunding);
+  protected readonly act = FUNDING_ACTIONS;
+
+  /** Refus « part de tâche insuffisante » (projet en mode strict) : la part peut être portée au montant nécessaire ici. */
+  protected shareGap = computed(() => {
+    const e = this.actionError();
+    const x = e?.body.details as unknown as ShareGap | undefined;
+    return x?.reason === 'task-share' && x.budgetId && x.taskId ? x : null;
+  });
+
+  /** Enchaîne un geste de financement (fonctions de `ProjectFunding`, communes aux pages projet) puis le règlement. */
+  private async fundThenSettle(step: () => Promise<string | null>) {
+    const v = this.d();
+    if (!v) return;
+    this.busy.set(true);
+    try {
+      this.decisionNotice.set(await step());
+    } catch (e) {
+      this.actionError.set(toApiError(e));
+      this.busy.set(false);
+      return;
+    }
+    this.busy.set(false);
+    // L'alerte de plafond déjà confirmée reste confirmée : le règlement s'enchaîne sans seconde confirmation.
+    await this.settle(v);
+  }
+
+  /** La demande en attente couvre ce règlement ; si les parts ont changé depuis, l'avertissement s'affiche et « Accorder … » prend le relais. */
+  approvePendingAndSettle(po: PendingOverrun) {
+    return this.fundThenSettle(async () => (await this.funding.decide(po, 'approve')).notice ?? null);
+  }
+
+  /** Une écriture : la part de la tâche est portée au nécessaire (dépassement compris) et l'échéance réglée. */
+  grantShareAndSettle(g: ShareGap) {
+    const v = this.d();
+    return v && this.settle(v, { notice: FUNDING_RESULTS.granted(g.taskTitle, g.neededCents, g.grantOverrunCents) });
+  }
+
+  /** Une écriture : le dépassement est autorisé et l'échéance réglée. */
+  authorizeAndSettle() {
+    const v = this.d();
+    return v && this.settle(v, { notice: FUNDING_RESULTS.approved });
   }
 
   async cancel(v: LineDetail) {

@@ -226,3 +226,18 @@ test('budget de vie : même interface que le budget d’un projet standard, vari
   const err = await rejects(P.allocate(ctx, fig.budgetId, { amount: 10, expectedRevision: fig.revision }), 'FORBIDDEN_BY_RULE');
   assert.match(err.message, /non standard/);
 });
+
+test('échéances à régler : les dépenses prévues des projets y figurent avec leur projet, et en sortent une fois réglées', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  const budgetId = await fundedProjectWithCharge(socle, ctx);
+  const planned = await socle.modules.budget.createOperation(ctx, { requestKey: key('op'), budgetId, direction: 'charge', label: 'Hôtel', costCenterRef: 'std:loisirs', status: 'planned', date: TODAY, amount: 120 });
+  const due = life(socle, ctx).dueSoon;
+  const line = due.lines.find((l) => l.id === planned.operation.id);
+  assert.ok(line, 'la dépense prévue du projet est listée');
+  assert.equal(line.project.name, 'Voyage au Japon');
+  assert.equal(line.project.funded, true);
+  assert.equal(due.projectCount, 1);
+  await socle.modules.budget.realizeOperation(ctx, planned.operation.id, { expectedRevision: planned.operation.revision });
+  assert.ok(!life(socle, ctx).dueSoon.lines.some((l) => l.id === planned.operation.id), 'réglée, elle sort des échéances');
+});

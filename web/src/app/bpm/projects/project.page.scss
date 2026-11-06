@@ -252,9 +252,66 @@
   gap: 12px;
 }
 .project-task-card {
+  /* Cadre fixe : toutes les cartes ont la même hauteur, quel que soit leur contenu. */
+  --task-card-height: 30rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: var(--task-card-height);
   min-width: 0;
   padding: 16px !important;
   font-weight: 400;
+  overflow: hidden;
+}
+.task-card-clip {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.task-card-clip.is-overflowing {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent);
+}
+.task-card-more {
+  align-self: center;
+  margin: -1.6rem 0 0.25rem;
+  position: relative;
+  padding: 4px 12px;
+  border: 1px solid var(--app-accent-line);
+  border-radius: 999px;
+  background: var(--raised-surface, var(--surface));
+  color: var(--app-accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.task-card-foot {
+  flex: none;
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.task-alert {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.task-alert[data-tone='warning'] {
+  border-color: var(--status-warning);
+}
+.task-alert[data-tone='danger'] {
+  border-color: var(--status-danger);
+}
+.task-alert .btn {
+  font-size: 12px;
+  min-height: 34px;
+  padding: 6px 10px;
+  white-space: normal;
 }
 .project-task-card h4 {
   display: flex;
@@ -270,10 +327,19 @@
   margin: 0;
 }
 .project-task-card .task-title-link {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: left;
   white-space: normal;
   overflow-wrap: anywhere;
 }
 .project-task-card .task-card-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: 13px;
   line-height: 1.6;
   margin-bottom: 14px;
@@ -351,8 +417,9 @@
 }
 .project-task-card .status-change {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
   margin: 0;
 }
@@ -366,29 +433,15 @@
   gap: 12px;
   flex-wrap: wrap;
   justify-content: space-between;
-  padding: 14px 0;
 }
 .task-card-actions .text-link {
   font-size: 12px;
-}
-.task-detail {
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
-}
-.task-detail summary {
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
 }
 .task-detail-body {
   display: grid;
   gap: 20px;
   padding-top: 16px;
   font-size: 13px;
-}
-.task-detail h5 {
-  font: 700 14px/1.5 var(--font-sans);
-  margin: 0 0 10px;
 }
 .task-detail-body form,
 .task-funding-box form {
@@ -552,4 +605,132 @@
   font-size: 12px;
   color: var(--status-warning);
   font-weight: 600;
+}
+
+.project-back-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}
+
+
+
+/* Fenêtre d'une tâche : tout le détail que la carte de taille fixe ne montre pas. */
+.task-panel {
+  display: grid;
+  gap: 18px;
+  padding: 20px 28px 24px;
+  font-size: 13px;
+}
+.task-panel-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.task-panel-description {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.task-panel .task-money {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+}
+.task-panel .task-time {
+  margin: 0;
+}
+.task-panel-section {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 12px;
+}
+.task-panel-section h3 {
+  margin: 0;
+  font: 700 14px/1.5 var(--font-sans);
+}
+.task-panel-section summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.task-panel-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.task-panel .task-funding-box {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.task-panel .task-funding-box label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.task-panel .task-charge-list {
+  margin-top: 0;
+}
+.task-panel-actions {
+  justify-content: flex-end;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .task-panel {
+    padding: 16px;
+  }
+  .task-panel .task-money {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* Dépenses dans la fenêtre : une ligne par échéance (libellé, montants, action). */
+.task-panel .task-charge-list {
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.task-panel .task-charge {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 0;
+}
+.task-panel .task-charge + .task-charge {
+  border-top: 1px solid var(--line);
+}
+.task-panel .task-charge-heading {
+  gap: 2px;
+  grid-row: span 2;
+}
+.task-panel .task-charge dl {
+  gap: 2px;
+  grid-row: span 2;
+}
+.task-panel .task-charge small {
+  grid-column: 1;
+}
+.task-panel .task-charge > .text-link {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  font-size: 12px;
+}
+.task-panel .task-charge form {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+}
+@media (max-width: 640px) {
+  .task-panel .task-charge {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .task-panel .task-charge dl {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
 }

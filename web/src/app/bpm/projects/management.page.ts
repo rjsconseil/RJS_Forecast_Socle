@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
+import { FUNDING, ProjectFunding } from '../ui/project-funding';
 import {
   BpmProjectCard,
   BpmProjectsOverview,
@@ -391,11 +392,11 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                           <p class="pm-detail-eyebrow">Du budget du projet aux tâches</p>
                           <dl class="pm-finance-summary">
                             <div>
-                              <dt>Ventilé aux tâches</dt>
+                              <dt>{{ L.shared }}</dt>
                               <dd>{{ b.sharesCents | cents }}</dd>
                             </div>
                             <div>
-                              <dt>Encore à ventiler</dt>
+                              <dt>{{ L.toShare }}</dt>
                               <dd [class.is-deficit]="(b.availableCents ?? 0) < 0">{{ b.availableCents | cents }}</dd>
                             </div>
                             <div>
@@ -408,27 +409,27 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                             <summary>Tous les chiffres du projet</summary>
                             <dl class="bpm-row-figures">
                               <div>
-                                <dt>Budget attribué</dt>
+                                <dt>{{ L.envelope }}</dt>
                                 <dd>{{ b.allocationCents | cents }}</dd>
                               </div>
                               <div>
-                                <dt>Dépassement autorisé</dt>
+                                <dt>{{ L.overrunApproved }}</dt>
                                 <dd>{{ b.approvedOverrunCents | cents }}</dd>
                               </div>
                               <div>
-                                <dt>Engagé en dépenses</dt>
+                                <dt>{{ L.engaged }}</dt>
                                 <dd>{{ b.engagedCents | cents }}</dd>
                               </div>
                               <div>
-                                <dt>Consommé / réglé</dt>
+                                <dt>{{ L.paidOnEnvelope }}</dt>
                                 <dd>{{ b.paidCents | cents }}</dd>
                               </div>
                               <div>
-                                <dt>Reste à consommer</dt>
+                                <dt>{{ L.remaining }}</dt>
                                 <dd>{{ b.remainingCents | cents }}</dd>
                               </div>
                               <div>
-                                <dt>Encore à régler</dt>
+                                <dt>{{ L.toPay }}</dt>
                                 <dd>{{ b.toPayCents | cents }}</dd>
                               </div>
                               <div>
@@ -755,6 +756,9 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
 })
 export class BpmProjectManagementPage implements OnInit {
   private bpm = inject(BpmApi);
+  /** Décisions de financement communes à toutes les pages (mêmes gestes, mêmes messages). */
+  private funding = inject(ProjectFunding);
+  protected readonly L = FUNDING;
   private api = inject(Api);
   private router = inject(Router);
   private sequence = 0;
@@ -826,14 +830,14 @@ export class BpmProjectManagementPage implements OnInit {
       if (sequence === this.sequence) this.error.set(toApiError(err).message);
     }
   }
-  private async run(action: () => Promise<unknown>, success: string) {
+  private async run<T>(action: () => Promise<T>, success: string | ((result: T) => string)) {
     if (this.busy()) return;
     this.busy.set(true);
     this.notice.set(null);
     try {
-      await action();
+      const result = await action();
       await this.load();
-      this.notice.set({ text: success, error: false });
+      this.notice.set({ text: typeof success === 'function' ? success(result) : success, error: false });
     } catch (err) {
       await this.load();
       this.notice.set({ text: toApiError(err).message, error: true });
@@ -951,20 +955,10 @@ export class BpmProjectManagementPage implements OnInit {
   }) {
     const revision = this.data()?.projects.find((p) => p.budget?.budgetId === e.request.budgetId)
       ?.budget?.revision;
-    return this.run(
-      () => this.bpm.decideTaskBudget(e.request.id, e.decision, e.request.revision, revision),
-      e.decision === 'approve'
-        ? 'Décision enregistrée : part accordée, ou autorisation transmise au budget du projet de vie si le budget est insuffisant.'
-        : 'Demande traitée.',
-    );
+    return this.run(() => this.funding.decideTaskRequest(e.request, e.decision, revision), (r) => r.message);
   }
   protected decideOverrun(o: ProjectOverrun, decision: 'approve' | 'refuse') {
-    return this.run(
-      () => this.bpm.decideOverrun(o.id, decision, o.revision),
-      decision === 'approve'
-        ? 'Dépassement autorisé ; la demande de la tâche a été réexaminée et sa part accordée si les fonds sont disponibles.'
-        : 'Dépassement refusé ; la demande associée est refusée.',
-    );
+    return this.run(() => this.funding.decide(o, decision), (r) => r.message);
   }
   protected bill() {
     return this.run(

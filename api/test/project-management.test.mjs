@@ -204,6 +204,49 @@ test('validation tardive du parent : une ventilation modifiée laisse la demande
   assert.equal(d.budget.ceilingCents, 15000);
 });
 
+test('validation tardive : l’accord explique pourquoi la demande revient au projet', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  const p = await project(socle, ctx);
+  const a = await task(socle, ctx, p, 'A');
+  const b = await task(socle, ctx, p, 'B');
+  const waiting = await decide(socle, ctx, p, await request(socle, ctx, p, a, 150));
+  await decide(socle, ctx, p, await request(socle, ctx, p, b, 60));
+  const o = waiting.detail.budget.pendingOverrun;
+  const r = await projects(socle).decideOverrun(ctx, o.id, { decision: 'approve', expectedRevision: o.revision });
+  assert.match(r.notice, /Dépassement de 50,00 € autorisé/);
+  assert.match(r.notice, /« A » demanderait encore 60,00 €/);
+});
+
+test('enveloppe de 0 € refusée à l’attribution ; tâche terminée : part inutilisée signalée, facturation datée en clair', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  await rejects(projects(socle).createProject(ctx, { requestKey: key(), title: 'Vide', amount: 0 }), 'FORBIDDEN_BY_RULE');
+  const p = await projects(socle).createProject(ctx, { requestKey: key(), title: 'Plus tard', amount: null });
+  await rejects(projects(socle).allocate(ctx, p.budgetId, { amount: 0, expectedRevision: detail(socle, ctx, p).budget.revision }), 'FORBIDDEN_BY_RULE');
+  await projects(socle).allocate(ctx, p.budgetId, { amount: 100, expectedRevision: detail(socle, ctx, p).budget.revision });
+  const t = await task(socle, ctx, p);
+  await projects(socle).setTaskShare(ctx, p.budgetId, t.task.id, { amount: 60, expectedRevision: detail(socle, ctx, p).budget.revision });
+  await operation(socle, ctx, p, t, 40);
+  await socle.modules.core.changeTaskStatus(ctx, t.task.id, { status: 'done', expectedRevision: socle.state.tasks[t.task.id].revision });
+  const checks = detail(socle, ctx, p).checks.filter((c) => c.taskId === t.task.id);
+  assert.deepEqual(checks.map((c) => c.code), ['done-unused']);
+  assert.match(checks[0].message, /20,00 € de sa part n’ont pas servi ; « Rendre à l’enveloppe » ramène sa part à 40,00 €/);
+  const card = detail(socle, ctx, p).tasks.find((x) => x.task.id === t.task.id).budget;
+  assert.equal(card.unusedCents, 2000);
+  assert.equal(card.openCents, 0);
+  const released = await projects(socle).releaseTaskShare(ctx, p.budgetId, t.task.id, { expectedRevision: detail(socle, ctx, p).budget.revision });
+  assert.deepEqual(released.released, { releasedCents: 2000, shareCents: 4000, taskTitle: 'Travaux' });
+  assert.equal(released.budget.sharesCents, 4000);
+  await rejects(projects(socle).releaseTaskShare(ctx, p.budgetId, t.task.id, { expectedRevision: detail(socle, ctx, p).budget.revision }), 'FORBIDDEN_BY_RULE');
+  // Projet en régime : ramener l'enveloppe à 0 reste soumis aux parts et au réglé.
+  await rejects(projects(socle).allocate(ctx, p.budgetId, { amount: 0, expectedRevision: detail(socle, ctx, p).budget.revision }), 'FORBIDDEN_BY_RULE');
+  await projects(socle).requestOverrun(ctx, p.budgetId, { requestKey: key(), reason: 'ventilation', amount: 10 }).then((x) =>
+    projects(socle).decideOverrun(ctx, x.overrunId, { decision: 'approve', expectedRevision: x.overrun.revision }),
+  );
+  await assert.rejects(projects(socle).billOverruns(ctx, { requestKey: key(), budgetId: p.budgetId }), (e) => /fin du cycle, le \d{2}\/\d{2}\/\d{4}/.test(e.message));
+});
+
 test('règlements : part obligatoire dans les nouveaux projets et refus des baisses sous le consommé', async () => {
   const { socle } = await makeSocle();
   const { ctx } = await camille(socle);
@@ -321,4 +364,56 @@ test('isolation : aucun projet, tâche ou demande d’un autre utilisateur ne pe
   assert.equal(JSON.stringify(projects(socle).overview(other)).includes(r.id), false);
   const checks = socle.inspector.checks(socle.state).filter((c) => c.result === 'failed');
   assert.deepEqual(checks, []);
+});
+
+test('gestes en une écriture : part avec dépassement autorisé, dépassement demandé et autorisé, part rendue refusée si la tâche n’est pas terminée', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  const p = await project(socle, ctx);
+  const a = await task(socle, ctx, p, 'A');
+  const b = await task(socle, ctx, p, 'B');
+  const rev = () => detail(socle, ctx, p).budget.revision;
+  // Sans autorisation, la part au-delà de l'enveloppe est refusée et rien n'est écrit.
+  await rejects(projects(socle).setTaskShare(ctx, p.budgetId, a.task.id, { amount: 130, expectedRevision: rev() }), 'OVERRUN_AUTHORIZATION_REQUIRED');
+  assert.equal(detail(socle, ctx, p).overruns.length, 0);
+  const granted = await projects(socle).setTaskShare(ctx, p.budgetId, a.task.id, { amount: 130, expectedRevision: rev(), authorizeOverrun: true });
+  assert.equal(granted.overrunCents, 3000);
+  assert.equal(granted.budget.sharesCents, 13000);
+  assert.equal(granted.budget.ceilingCents, 13000);
+  assert.equal(granted.budget.state, 'deficit');
+  const o = granted.overruns.find((x) => x.taskId === a.task.id);
+  assert.equal(o.status, 'approved');
+  assert.match(o.note, /Part de « A » portée à 130,00 €/);
+  // Demander et autoriser d'un geste : le plafond monte, aucune décision ne reste en attente.
+  const authorized = await projects(socle).requestOverrun(ctx, p.budgetId, { requestKey: key(), taskId: b.task.id, reason: 'reglement', amount: 20, approve: true });
+  assert.equal(authorized.overrun.status, 'approved');
+  assert.equal(authorized.detail.budget.ceilingCents, 15000);
+  assert.equal(authorized.detail.budget.pendingOverrun, null);
+  // Une demande en attente bloque l'autorisation directe d'un autre dépassement.
+  await projects(socle).requestOverrun(ctx, p.budgetId, { requestKey: key(), reason: 'ventilation', amount: 5 });
+  await rejects(projects(socle).setTaskShare(ctx, p.budgetId, b.task.id, { amount: 100, expectedRevision: rev(), authorizeOverrun: true }), 'UNIQUENESS_VIOLATION');
+  await rejects(projects(socle).releaseTaskShare(ctx, p.budgetId, a.task.id, { expectedRevision: rev() }), 'FORBIDDEN_BY_RULE');
+});
+
+test('règlement financé : part portée au nécessaire et dépassement autorisé dans la même écriture que le règlement', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  const p = await project(socle, ctx);
+  const t = await task(socle, ctx, p);
+  // Sans part : refus explicite, qui dit aussi le dépassement qu'accorder la part demanderait.
+  await assert.rejects(operation(socle, ctx, p, t, 30), (e) => e.details?.reason === 'task-share' && e.details.grantOverrunCents === 0);
+  await operation(socle, ctx, p, t, 30, { fund: true });
+  let d = detail(socle, ctx, p);
+  assert.equal(d.budget.shares[t.task.id], 3000);
+  assert.equal(d.budget.paidCents, 3000);
+  assert.equal(d.overruns.length, 0);
+  // Au-delà de l'enveloppe (100 €) : la part monte à 120 €, dont 20 € autorisés en dépassement, et le règlement passe.
+  await assert.rejects(operation(socle, ctx, p, t, 90), (e) => e.details?.grantOverrunCents === 2000);
+  await operation(socle, ctx, p, t, 90, { fund: true });
+  d = detail(socle, ctx, p);
+  assert.equal(d.budget.shares[t.task.id], 12000);
+  assert.equal(d.budget.ceilingCents, 12000);
+  assert.equal(d.budget.paidCents, 12000);
+  assert.deepEqual(d.overruns.map((o) => [o.status, o.reason, o.amountCents]), [['approved', 'ventilation', 2000]]);
+  assert.equal(d.budget.state, 'deficit');
 });

@@ -269,6 +269,14 @@ export function createReads(socle, h) {
   }
 
   /** Détail d'une ligne (opération ou occurrence attendue) : définition, règlements et identifiants. */
+  /** Projet de la vie qui porte une échéance (null pour le budget de vie) : de quoi prévenir avant un règlement hors enveloppe. */
+  function projectOfLine(state, view) {
+    const pb = state.budgets[view.budgetId];
+    if (pb?.role !== 'standard') return null;
+    const funded = Number.isInteger(pb.allocationCents) && typeof pb.allocationDate === 'string';
+    return { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, allocationDate: funded ? pb.allocationDate : null, taskTitle: view.taskId ? state.tasks[view.taskId]?.title ?? null : null };
+  }
+
   function lineDetail(ctx, lineId, { periodKey } = {}) {
     const b = base(ctx, { periodKey });
     const state = b.state;
@@ -300,6 +308,7 @@ export function createReads(socle, h) {
       definition: rec ? budget().recurrenceView(state, rec) : null,
       settlements,
       ids: { lineId, operationId: view.operationId, recurrenceId: view.recurrenceId, budgetId: view.budgetId, taskId: view.taskId },
+      project: projectOfLine(state, view),
       actions: {
         canSettle: !view.settled,
         canCancelSettlement: view.settled && !closedPeriodOf(state, b.cycle, view.realizedDate),

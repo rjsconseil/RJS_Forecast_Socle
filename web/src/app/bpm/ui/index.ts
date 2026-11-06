@@ -7,3 +7,5 @@ export * from './charts';
 export * from './operation-editor';
 export * from './line-detail';
 export * from './caps';
+export * from './project-funding';
+export * from './overflow';

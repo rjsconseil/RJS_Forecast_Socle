@@ -267,3 +267,9 @@ bpm-life-gauge {
 .life-budget-type-disclosure > summary span { margin-left: 16px; color: var(--muted); font-size: 13px; }
 .life-budget-type-disclosure > bpm-act-budget-type { display: block; padding: 0 20px 20px; min-width: 0; }
 @media (max-width: 640px) { .life-budget-type-disclosure > summary span { display: block; margin: 6px 0 0; } }
+
+.life-line-task {
+  display: block;
+  color: var(--text-muted, inherit);
+  font-size: 0.85em;
+}
