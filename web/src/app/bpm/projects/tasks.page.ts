@@ -7,7 +7,7 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { BpmTaskCard, BpmTasksOverview } from '../../core/bpm-projects.models';
 import { COLUMNS, TASK_STATUS_LABEL, TaskMutationResult, TaskStatus } from '../../core/models';
 import { CentsPipe } from '../../core/format';
-import { displayDate, dueTitle, dueUrgency, FilterOption, ItemBoardToolsComponent, ItemSummaryComponent, normalizeSearch } from '../../projects/workspace-parts';
+import { displayDate, dueTitle, dueUrgency, FilterOption, ItemSummaryComponent, normalizeSearch } from '../../projects/workspace-parts';
 
 /**
  * Tâches des projets de la vie : réimplémentation, dans Budget/Patrimoine, du tableau des tâches du noyau. Glisser
@@ -17,35 +17,25 @@ import { displayDate, dueTitle, dueUrgency, FilterOption, ItemBoardToolsComponen
  */
 @Component({
   selector: 'app-bpm-tasks',
-  imports: [RouterLink, CentsPipe, CdkDropListGroup, CdkDropList, CdkDrag, CdkDragHandle, ItemSummaryComponent, ItemBoardToolsComponent],
+  imports: [RouterLink, CentsPipe, CdkDropListGroup, CdkDropList, CdkDrag, CdkDragHandle, ItemSummaryComponent],
+  styleUrl: './projects.page.scss',
   template: `
-    <div class="page page-wide landing-page section-home bpm-projects">
-      <div class="section-home-top section-home-top-task">
-        <header class="section-home-hero">
-          <div class="section-home-banner" data-ui-pattern="heading">
-            <p class="eyebrow"><span class="eyebrow-line"></span>Budget/Patrimoine · Projets de la vie</p>
-            <h1 class="display">Tâches des projets</h1>
-          </div>
-        </header>
-        <aside class="section-home-task-intro">
-          <p class="page-intro">
-            Les tâches de votre projet de vie et de ses projets standards, avec leur part de budget. Changer l’état d’une
-            tâche fait évoluer celui de son projet. Créez les tâches et demandez leur montant dans Gestion de projet.
-          </p>
-        </aside>
-        <rjs-item-summary class="section-home-task-summary" kind="task" [remaining]="remaining()" [counts]="counts()" [progress]="progress()" />
-        <rjs-item-board-tools
-          class="section-home-task-tools"
-          kind="task"
-          createLink="/app/gestion-projet"
-          createLabel="Créer et gérer les tâches"
-          [filterOptions]="filterOptions()"
-          [filter]="filter()"
-          (filterChange)="setFilter({ project: $event === 'all' ? null : $event })"
-          [search]="query()"
-          (searchChange)="setFilter({ q: $event || null })"
-        />
-      </div>
+    <div class="page page-wide landing-page section-home bpm-projects bpm-tasks-page">
+      <header class="life-projects-banner" data-ui-pattern="heading" data-sticky-hero>
+        <div class="life-banner-copy">
+          <p class="eyebrow">Budget/Patrimoine · Mes projets de la vie</p>
+          <h1 class="display">Tâches des projets</h1>
+          <p class="page-intro">Suivez les tâches par statut et leur part de budget. L’avancement des tâches met à jour celui de leur projet.</p>
+        </div>
+        <div class="life-header-actions"><a class="btn btn-primary" routerLink="/app/gestion-projet">Créer et gérer les tâches</a></div>
+        <div class="life-banner-tools" aria-label="Rechercher et filtrer les tâches">
+          <label class="life-filter">Projet<select [value]="filter()" (change)="setFilter({ project: $any($event.target).value === 'all' ? null : $any($event.target).value })">
+            @for (option of filterOptions(); track option.value) { <option [value]="option.value">{{ option.label }}</option> }
+          </select></label>
+          <label class="life-search">Rechercher une tâche<input type="search" placeholder="Titre ou description…" [value]="query()" (input)="setFilter({ q: $any($event.target).value || null })" /></label>
+        </div>
+      </header>
+      <rjs-item-summary kind="task" [remaining]="remaining()" [counts]="counts()" [progress]="progress()" />
 
       <div class="section-home-board">
         @if (loading()) {
@@ -61,8 +51,7 @@ import { displayDate, dueTitle, dueUrgency, FilterOption, ItemBoardToolsComponen
             <p class="board-result-count" role="status">{{ visible().length }} résultat(s) pour « {{ query().trim() }} » dans le filtre courant.</p>
           }
           <p class="board-move-help" id="bpm-tasks-move-help">
-            Glissez une tâche par sa poignée ⠿ jusqu’au statut choisi, ou utilisez « Déplacer vers » : même commande du
-            noyau, mêmes contrôles. Échap annule un glissement en cours.
+            Glissez une tâche par sa poignée ⠿ ou utilisez « Déplacer vers » pour changer son statut. Échap annule le glissement.
           </p>
           <p class="board-move-feedback" [class.is-error]="notice()?.error" [attr.role]="notice()?.error ? 'alert' : 'status'" aria-live="polite">{{ notice()?.text }}</p>
           <section
@@ -155,7 +144,7 @@ import { displayDate, dueTitle, dueUrgency, FilterOption, ItemBoardToolsComponen
                           </select>
                         </label>
                       </details>
-                      <a class="text-link task-card-edit" [routerLink]="['/tasks', t.task.id, 'edit']">Modifier dans le noyau</a>
+                      <a class="text-link task-card-edit" [routerLink]="['/tasks', t.task.id, 'edit']">Modifier la tâche</a>
                       @if (pending().has(t.task.id)) {
                         <small class="field-hint" role="status">Enregistrement…</small>
                       }
@@ -171,7 +160,7 @@ import { displayDate, dueTitle, dueUrgency, FilterOption, ItemBoardToolsComponen
           @if (data()?.attachable?.length) {
             <section class="bpm-section" aria-labelledby="bpm-attach-title" style="margin-top: var(--ecart-32)">
               <header>
-                <h2 id="bpm-attach-title">Tâches du noyau à rattacher</h2>
+                <h2 id="bpm-attach-title">Tâches disponibles pour rattachement</h2>
                 <p>Tâches sans projet ou d’un projet non financé : rattachez-les à un projet de la vie.</p>
               </header>
               <ul class="bpm-attachable">
@@ -198,7 +187,7 @@ import { displayDate, dueTitle, dueUrgency, FilterOption, ItemBoardToolsComponen
         }
         <nav class="board-nav" aria-label="Changer de section">
           <a routerLink="/app/projets" class="text-link">Parcourir les projets de la vie <span aria-hidden="true">↗</span></a>
-          <a routerLink="/tasks" class="text-link">Tâches du noyau <span aria-hidden="true">↗</span></a>
+          <a routerLink="/tasks" class="text-link">Toutes les tâches du noyau <span aria-hidden="true">↗</span></a>
         </nav>
       </div>
     </div>
@@ -248,7 +237,7 @@ export class BpmTasksPage implements OnInit {
   protected progress = computed(() => (this.tasks().length ? Math.round((100 * this.tasks().filter((t) => t.task.status === 'done').length) / this.tasks().length) : 0));
   protected counts = computed(() => Object.fromEntries(COLUMNS.map((c) => [c.id, this.tasks().filter((t) => t.task.status === c.id).length])) as Record<TaskStatus, number>);
 
-  /** Projets proposés pour une tâche : les projets standards, et son projet actuel s'il est la racine du budget de vie. */
+  /** Projets proposés pour une tâche : les projets de la vie, et son projet actuel s'il est la racine du budget de vie. */
   protected destinations(t: BpmTaskCard) {
     return (this.data()?.projects ?? []).filter((p) => p.role === 'standard' || p.projectId === t.task.projectId);
   }

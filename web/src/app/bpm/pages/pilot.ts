@@ -25,7 +25,7 @@ interface ZoomRow {
 }
 
 /**
- * Graphiques & chiffres (/piloter), sur la lecture « analyse » du pilotage de la référence (`bpm-pilot.page`) :
+ * Graphiques et chiffres (/piloter), sur la lecture « analyse » du pilotage de la référence (`bpm-pilot.page`) :
  * synthèse des flux et passage au patrimoine, zoom sur le projet de vie, résultat réalisé et prévu par période,
  * charges par poste, entrées par source, dépenses à anticiper, budget type, épargne et clôtures.
  * Lecture seule : chaque bloc est alimenté par un contrat de lecture réel et mène à son détail.
@@ -37,7 +37,7 @@ interface ZoomRow {
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss', '../ref-styles/bpm-pilot-charts.scss', '../ref-styles/bpm-flow-pilot.component.scss'],
   template: `
     <bpm-page
-      title="Graphiques & chiffres"
+      title="Graphiques et chiffres"
       lead="Ce qui est réalisé, ce qui est prévu."
       pageClass="bpm-vision bpm-analysis"
       [context]="summary.data()?.context"
@@ -209,7 +209,7 @@ interface ZoomRow {
         </section>
 
         <!-- 01 · État des lieux : ce qui s'est passé, puis ce qui vient. -->
-        <section data-ui-pattern="panel cockpit" data-cockpit-phase="state" id="etat-des-lieux" aria-label="Graphiques & chiffres">
+        <section data-ui-pattern="panel cockpit" data-cockpit-phase="state" id="etat-des-lieux" aria-label="Graphiques et chiffres">
           <h3 class="bp-group" id="bp-groupe-reel">
             Réalisé et prévu
             <small>Résultat, charges et entrées.</small>
@@ -479,7 +479,7 @@ interface ZoomRow {
                   <p class="bp-gauge-legend">{{ savings()!.valueCents! < 0 ? 'Prélèvement possible sur le patrimoine : ' + abs(savings()!.valueCents!) : 'Objectif : équilibrer la période sans puiser dans le patrimoine.' }}</p>
                   <p>Solde réel à comparer à la cible : <strong>{{ net | signedCents }}</strong></p>
                 } @else {
-                  <p class="bv-empty">Épargne nécessaire non calculable : {{ savings()?.reason ?? 'repères indisponibles' }}. Fixez vos objectifs dans « Objectifs &amp; avenir ».</p>
+                  <p class="bv-empty">Épargne nécessaire non calculable : {{ savings()?.reason ?? 'repères indisponibles' }}. Fixez vos objectifs dans « Objectifs et avenir ».</p>
                 }
                 @if (directives.data()?.surplus; as sp) {
                   <bpm-progress

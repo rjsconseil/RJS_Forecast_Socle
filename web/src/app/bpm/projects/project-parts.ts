@@ -28,7 +28,7 @@ export class BpmBudgetStateComponent {
   template: `
     @let b = budget();
     @if (!b.regime) {
-      <p class="bpm-budget-empty">Aucun montant attribué par le budget de vie.</p>
+      <p class="bpm-budget-empty">Aucun montant attribué par le budget du projet de vie.</p>
     } @else {
       <div class="bpm-budget" [attr.data-state]="b.state" [class.is-compact]="compact()">
         <div class="bpm-budget-head">
@@ -69,7 +69,7 @@ export class BpmBudgetMeterComponent {
   readonly showState = input(false);
   protected stateTitle = computed(() => {
     const b = this.budget();
-    if (b.state === 'deficit') return 'Dépassement autorisé par le budget de vie, facturé à la fin de son cycle.';
+    if (b.state === 'deficit') return 'Dépassement autorisé par le budget du projet de vie, facturé à la fin de son cycle.';
     if (b.state === 'at-risk') return 'Les charges planifiées du projet dépassent son budget.';
     return 'Dépenses réglées et parts des tâches dans le budget du projet.';
   });
@@ -87,13 +87,13 @@ export class BpmBudgetMeterComponent {
     @let o = overrun();
     <div class="bpm-overrun" role="group" [attr.aria-label]="'Demande de dépassement du projet ' + (o.budgetName ?? '')">
       <p>
-        <strong>Demande au budget de vie</strong> · {{ o.budgetName }}@if (o.taskTitle) { · {{ o.taskTitle }} }
+        <strong>Demande au budget du projet de vie</strong> · {{ o.budgetName }}@if (o.taskTitle) { · {{ o.taskTitle }} }
       </p>
       <p>
         {{ o.reasonLabel }} : dépassement de <strong>{{ o.amountCents | cents }}</strong>, demandé le {{ o.requestedAt | shortDate }}.
       </p>
       <p class="bpm-overrun-help">
-        Autoriser fait passer le projet en dépassement ; la charge sera facturée au budget de vie à la fin de son cycle.
+        Autoriser fait passer le projet en dépassement ; la charge sera facturée au budget du projet de vie à la fin de son cycle.
       </p>
       <div class="bpm-actions">
         <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="decide.emit('approve')">Autoriser le dépassement</button>

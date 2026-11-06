@@ -91,7 +91,7 @@ export const STEPS: { n: number; label: string; milestone: string; help: string;
     n: 1,
     label: 'Votre situation',
     milestone: 'Point de départ',
-    help: 'Ce qui est déjà enregistré pour votre user et le profil de départ proposé. Rien n’est enregistré avant la confirmation de l’étape 7.',
+    help: 'Ce qui est déjà enregistré pour votre profil financier et le profil de départ proposé. Rien n’est enregistré avant la confirmation de l’étape 7.',
     why: null,
   },
   {
@@ -99,7 +99,7 @@ export const STEPS: { n: number; label: string; milestone: string; help: string;
     label: 'Le projet',
     milestone: 'Le projet',
     help: 'Choisissez le rôle du projet : compléter le Budget du projet de vie ou créer un projet de la vie.',
-    why: 'Le rôle est choisi ici et n’est jamais déduit du nom. Le Budget du projet de vie est unique et créé avec votre user ; un projet de la vie est une branche qui en dépend. Aucun objet existant n’est réassemblé.',
+    why: 'Le rôle est choisi ici et n’est jamais déduit du nom. Le Budget du projet de vie est unique et créé avec votre profil financier ; un projet de la vie est une branche qui en dépend. Aucun objet existant n’est réassemblé.',
   },
   {
     n: 3,
@@ -112,8 +112,8 @@ export const STEPS: { n: number; label: string; milestone: string; help: string;
     n: 4,
     label: 'Le patrimoine',
     milestone: 'Le patrimoine',
-    help: 'Le stock initial du Patrimoine unique de votre user et, si vous le souhaitez, un objectif de stock.',
-    why: 'Chaque user possède exactement un Patrimoine. Les détails d’actifs et les phases patrimoniales avancées ne sont pas encore disponibles (choix métier non validé).',
+    help: 'Le stock initial du Patrimoine unique de votre profil financier et, si vous le souhaitez, un objectif de stock.',
+    why: 'Chaque profil financier possède exactement un Patrimoine. Les détails d’actifs et les phases patrimoniales avancées ne sont pas encore disponibles (choix métier non validé).',
   },
   {
     n: 5,

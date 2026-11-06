@@ -25,7 +25,7 @@ import { BpmBudgetRef, Direction, EntryInput } from '../../core/bpm-models';
               <strong>Mon projet de vie</strong><span>Revenus et charges du quotidien.</span>
             </button>
             <button type="button" [class.is-selected]="scope() === 'projects'" [attr.aria-pressed]="scope() === 'projects'" [disabled]="!projects().length" (click)="scope.set('projects')">
-              <strong>Mes autres projets</strong><span>Entrées et charges liées à un projet.</span>
+              <strong>Mes projets de la vie</strong><span>Entrées et charges liées à un projet.</span>
             </button>
           </div>
           @if (scope() === 'projects' && projects().length) {

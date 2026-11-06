@@ -9,3 +9,5 @@
 .bpm-guide p { margin: 0; }
 .bld-ids dl div { flex-wrap: nowrap; }
 .bld-ids dd { font-weight: var(--fw-regular); font-family: var(--font-mono); font-size: scaled(var(--fs-xs)); overflow-wrap: anywhere; }
+
+.bld-saved.is-warning { color: var(--status-danger); background: var(--status-danger-surface); }

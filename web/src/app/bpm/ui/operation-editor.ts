@@ -4,10 +4,10 @@ import { RouterLink } from '@angular/router';
 import { Api, ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmBudgetRef, Cadence, Direction, EntryInput, EntryPreview, RegisterLine } from '../../core/bpm-models';
-import { ChargeCategory } from '../../core/bpm-caps.models';
+import { CapPreview, ChargeCategory } from '../../core/bpm-caps.models';
 import { CentsPipe, parseAmount, signedCents } from '../../core/format';
 import { ModalComponent } from '../../shared/modal.component';
-import { withCapAlerts } from './caps';
+import { capAlertText, withCapAlerts } from './caps';
 import { BpmRefresh, newRequestKey } from './page-context';
 
 let editorId = 0;
@@ -132,12 +132,12 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
             </label>
           }
           <label
-            >Poste (centre)
+            >Poste (centre de coûts)
             <select name="center" [(ngModel)]="center" [attr.aria-invalid]="fieldErr('costCenterRef') ? 'true' : null">
               @for (c of centerOptions(); track c.ref) {
                 <option [value]="c.ref">{{ c.label }}{{ c.standard ? '' : ' (personnel)' }}</option>
               }
-              <option value="__new__">＋ Nouveau centre personnel…</option>
+              <option value="__new__">＋ Nouveau poste personnel…</option>
             </select>
             @if (fieldErr('costCenterRef')) {
               <small class="fe-field-error">{{ fieldErr('costCenterRef') }}</small>
@@ -157,9 +157,9 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
               } @else {
                 <small>
                   @if (categoryOptions().length) {
-                    Range la dépense dans une catégorie de ce centre : son plafond est suivi à part, sans jamais bloquer.
+                    Choisissez une catégorie de ce poste. Son plafond est suivi indépendamment et ne bloque jamais la dépense.
                   } @else {
-                    Aucune catégorie dans ce centre.
+                    Aucune catégorie dans ce poste.
                   }
                   <a routerLink="/plafonds" (click)="close()">Gérer les catégories</a>
                 </small>
@@ -243,9 +243,32 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
             }
           </section>
         }
+        @if (capPreview(); as cp) {
+          @if (direction() === 'charge') {
+            <section class="fe-impact" aria-live="polite" aria-label="Impact sur les plafonds">
+              <h3 class="fe-section-title">Plafonds · {{ cp.period.label }}</h3>
+              @for (row of [cp.after.center, cp.after.category]; track $index) {
+                @if (row && row.capCents !== null) {
+                  <p [class.bpm-error]="row.over">
+                    <strong>{{ $index === 0 ? 'Centre' : 'Catégorie' }} · {{ row.label }}</strong> :
+                    {{ row.engagedCents | cents }} engagés sur {{ row.capCents | cents }}.
+                    {{ row.over ? 'Dépassement' : 'Disponible après cette saisie' }} : {{ abs(row.marginCents ?? 0) | cents }}.
+                  </p>
+                }
+              }
+              @if (cp.alerts.length) {
+                <p class="bpm-error" role="alert">{{ capWarning(cp) }} La dépense reste autorisée. Vous pouvez modifier le montant ou enregistrer malgré le dépassement.</p>
+              }
+              @if (cp.note) { <p>{{ cp.note }}</p> }
+            </section>
+          }
+        }
+        @if (capPreviewError()) {
+          <p class="bpm-error" role="alert">{{ capPreviewError() }} Vous pouvez réessayer ou enregistrer sans cette vérification.</p>
+        }
         <div class="bpm-actions">
           <button type="submit" class="btn btn-primary" [disabled]="busy()">
-            {{ busy() ? 'Enregistrement…' : editing() ? 'Enregistrer les modifications' : 'Enregistrer' }}
+            {{ busy() ? 'Vérification et enregistrement…' : capConfirmation() ? (capPreviewError() ? 'Enregistrer sans vérification' : 'Enregistrer malgré le dépassement') : editing() ? 'Enregistrer les modifications' : 'Enregistrer' }}
           </button>
           <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="close()">Annuler</button>
         </div>
@@ -289,6 +312,15 @@ export class BpmOperationEditor implements OnInit {
   protected busy = signal(false);
   protected error = signal<ApiError | null>(null);
   protected scopeNote = signal<string | null>(null);
+  protected capPreview = signal<CapPreview | null>(null);
+  protected capPreviewError = signal<string | null>(null);
+  protected capConfirmation = signal<string | null>(null);
+  protected abs = Math.abs;
+  protected capWarning = (p: CapPreview) => p.alerts.map(capAlertText).join(' ');
+  private capInput() {
+    const l = this.line();
+    return { ...this.input(), ...(l ? { replaceId: l.recurrenceId ?? l.operationId ?? l.id } : {}) };
+  }
   protected preview = signal<EntryPreview | null>(null);
   protected previewError = signal<string | null>(null);
   private requestKey = newRequestKey('entry');
@@ -312,6 +344,21 @@ export class BpmOperationEditor implements OnInit {
   protected readonly impactId = `fe-impact-title-${++editorId}`;
 
   constructor() {
+    effect((onCleanup) => {
+      const input = this.capInput();
+      this.capConfirmation.set(null);
+      this.capPreview.set(null);
+      this.capPreviewError.set(null);
+      if (input.direction !== 'charge' || !input.amount || !(input.date || input.firstDate) || input.costCenterRef === '__new__') return;
+      let active = true;
+      const timer = setTimeout(() => {
+        this.bpm.previewCaps(input).then(
+          p => { if (active) this.capPreview.set(p); },
+          () => { if (active) this.capPreviewError.set('Vérification des plafonds indisponible.'); },
+        );
+      }, 350);
+      onCleanup(() => { active = false; clearTimeout(timer); });
+    });
     // Aperçu sans mutation, relancé après une courte pause de saisie ; seule la dernière réponse compte.
     let timer: ReturnType<typeof setTimeout> | undefined;
     let token = 0;
@@ -440,6 +487,24 @@ export class BpmOperationEditor implements OnInit {
         centerRef = r.costCenterId;
         this.centers.set(await this.bpm.costCenters());
         this.center.set(centerRef);
+      }
+      // Relecture juste avant l’écriture : ne jamais enregistrer silencieusement un dépassement.
+      if (this.direction() === 'charge') {
+        const input = { ...this.capInput(), costCenterRef: centerRef };
+        let signature: string | null = null;
+        try {
+          const cp = await this.bpm.previewCaps(input);
+          this.capPreview.set(cp);
+          this.capPreviewError.set(null);
+          if (cp.alerts.length) signature = JSON.stringify({ input, alerts: cp.alerts });
+        } catch {
+          this.capPreviewError.set('Vérification des plafonds indisponible.');
+          signature = JSON.stringify({ input, unavailable: true });
+        }
+        if (signature && this.capConfirmation() !== signature) {
+          this.capConfirmation.set(signature);
+          return;
+        }
       }
       const l = this.line();
       let message: string;

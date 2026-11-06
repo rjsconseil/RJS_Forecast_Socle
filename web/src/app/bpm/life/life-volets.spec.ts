@@ -132,7 +132,7 @@ describe('Gestion du projet de vie — volets', () => {
 
   it('propose la clôture de la première période terminée, sinon l’historique', () => {
     expect(lifeVolets(lecture()).find((x) => x.key === 'resultats')!.primary).toEqual({ label: 'Clôturer Octobre 2026', action: 'close' });
-    expect(lifeVolets(lecture({ toClose: 0 })).find((x) => x.key === 'resultats')!.primary).toMatchObject({ link: '/piloter', fragment: 'bp-history-title' });
+    expect(lifeVolets(lecture({ toClose: 0 })).find((x) => x.key === 'resultats')!.primary).toMatchObject({ link: '/tableau-de-bord', fragment: 'bm-history' });
   });
 
   it('mesure l’objectif d’excédent quand il existe, l’épargne visée ou les résultats sinon', () => {

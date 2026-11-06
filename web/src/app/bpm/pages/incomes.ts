@@ -20,7 +20,7 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
   template: `
     <bpm-page
       kicker="Tableau de bord"
-      title="D’où vient l’argent"
+      title="Détail des entrées"
       pageClass="bpm-money bpm-money-detail"
       [lead]="lead()"
       [context]="d()?.context"

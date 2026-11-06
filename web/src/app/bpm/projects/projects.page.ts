@@ -23,7 +23,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
 
 /**
  * Projets de la vie : réimplémentation, dans Budget/Patrimoine, du tableau des projets du noyau (mêmes colonnes,
- * mêmes cartes, état calculé depuis les tâches), limitée au projet de vie et aux projets standards du user, et
+ * mêmes cartes, état calculé depuis les tâches), limitée au projet de vie et aux projets de la vie du user, et
  * enrichie du budget que le budget de vie attribue à chacun. Les projets viennent du noyau : la création y reste.
  */
 @Component({
@@ -45,8 +45,8 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
           <p class="eyebrow">Budget/Patrimoine · Projets de la vie</p>
           <h1 class="display">Projets de la vie</h1>
           <p class="page-intro">
-            Votre projet de vie et ses projets standards. Le budget de vie attribue un montant à
-            chaque projet, qui le ventile sur ses tâches.
+            Votre projet de vie finance vos projets de la vie. Chaque projet reçoit une enveloppe
+            budgétaire à répartir entre ses tâches.
           </p>
         </div>
         @if (data(); as d) {
@@ -55,7 +55,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
             class="btn btn-secondary life-cycle-trigger"
             (click)="cycleOpen.set(true)"
           >
-            Autorisations & cycle
+            Autorisations et cycle
             @if (d.life.pendingRequests.length) {
               <span class="life-alert-count">{{ d.life.pendingRequests.length }}</span>
             }
@@ -139,13 +139,13 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
         <rjs-modal
           [open]="cycleOpen()"
           [headed]="true"
-          title="Autorisations & fin de cycle"
+          title="Autorisations et fin de cycle"
           [busy]="busy()"
           (closed)="cycleOpen.set(false)"
         >
           @if (data(); as d) {
             <p>
-              Le budget de vie autorise les dépassements des projets, puis les intègre en fin de
+              Le budget du projet de vie autorise les dépassements des projets, puis les intègre en fin de
               cycle.
             </p>
             <p>
@@ -167,10 +167,10 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
               <div class="bpm-overrun">
                 <p>
                   <strong>Fin de cycle :</strong> {{ d.life.billableCents | cents }} de
-                  dépassement(s) autorisé(s) à facturer au budget de vie.
+                  dépassement(s) autorisé(s) à facturer au budget du projet de vie.
                 </p>
                 <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="bill()">
-                  Facturer au budget de vie
+                  Facturer au budget du projet de vie
                 </button>
               </div>
             } @else if (d.life.nextBillingDate) {
@@ -256,7 +256,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
                       } @else if (data(); as d) {
                         <div class="bpm-task-budget">
                           <span
-                            >Budget de vie ·
+                            >Budget du projet de vie ·
                             <strong>{{ d.life.allocatedCents | cents }}</strong> attribués aux
                             projets</span
                           >
@@ -331,7 +331,7 @@ export class BpmProjectsPage implements OnInit {
   protected search = computed(() => this.params().get('q') ?? '');
   protected filter = computed(() => this.params().get('project') || 'all');
 
-  /** Projet de vie et projets standards : seuls projets du user présentés ici. */
+  /** Projet de vie et projets de la vie : seuls projets du user présentés ici. */
   private cards = computed<BpmProjectCard[]>(() => {
     const d = this.data();
     return d ? [d.lifeProject, ...d.projects] : [];
@@ -424,7 +424,7 @@ export class BpmProjectsPage implements OnInit {
   protected bill() {
     return this.run(
       () => this.bpm.billOverruns(),
-      'Dépassements facturés au budget de vie : les budgets attribués les intègrent. Ouvrez chaque projet pour relire ses contrôles de fin de cycle.',
+      'Dépassements facturés au budget du projet de vie : les budgets attribués les intègrent. Ouvrez chaque projet pour relire ses contrôles de fin de cycle.',
     );
   }
 
@@ -434,6 +434,6 @@ export class BpmProjectsPage implements OnInit {
     return this.run(async () => {
       await this.bpm.adoptProject({ requestKey: newRequestKey(), coreProjectId: id });
       this.candidate.set('');
-    }, `« ${title} » est maintenant un projet standard du budget de vie : attribuez-lui un montant depuis sa fiche.`);
+    }, `« ${title} » est maintenant rattaché au budget du projet de vie. Attribuez-lui une enveloppe depuis sa fiche.`);
   }
 }

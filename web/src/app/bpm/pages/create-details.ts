@@ -166,14 +166,14 @@ export type CreateDetailsSection = 'tasks' | 'budget' | 'goals';
         }
 
         <section aria-labelledby="cd-centers">
-          <h3 id="cd-centers">Centres personnels · {{ d().centers.length }}</h3>
-          <p class="muted">Un centre personnel est propre à votre user ; il n'est pas ajouté au catalogue des autres users. Il est créé à la confirmation.</p>
+          <h3 id="cd-centers">Postes personnels · {{ d().centers.length }}</h3>
+          <p class="muted">Un poste personnel appartient uniquement à votre profil financier. Il sera créé à la confirmation.</p>
           @for (c of d().centers; track c.tempRef) {
             <details [open]="true">
-              <summary>{{ c.label.trim() || 'Nouveau centre (sans nom)' }} · {{ c.direction === 'income' ? 'revenus' : 'charges' }}</summary>
+              <summary>{{ c.label.trim() || 'Nouveau poste (sans nom)' }} · {{ c.direction === 'income' ? 'revenus' : 'charges' }}</summary>
               <div class="start-fields">
                 <label
-                  >Nom du centre
+                  >Nom du poste
                   <input [(ngModel)]="c.label" maxlength="120" [attr.aria-invalid]="e('center.' + c.tempRef + '.label') ? 'true' : null" />
                   @if (e('center.' + c.tempRef + '.label')) {
                     <span class="err">{{ e('center.' + c.tempRef + '.label') }}</span>
@@ -187,15 +187,15 @@ export type CreateDetailsSection = 'tasks' | 'budget' | 'goals';
                   </select>
                 </label>
               </div>
-              <button type="button" class="btn btn-secondary" (click)="removeCenter(c.tempRef)" [attr.aria-label]="'Retirer le centre ' + (c.label || 'sans nom')">Retirer</button>
+              <button type="button" class="btn btn-secondary" (click)="removeCenter(c.tempRef)" [attr.aria-label]="'Retirer le poste ' + (c.label || 'sans nom')">Retirer</button>
             </details>
           }
-          <button type="button" class="btn btn-secondary" (click)="addCenter()">Ajouter un centre personnel</button>
+          <button type="button" class="btn btn-secondary" (click)="addCenter()">Ajouter un poste personnel</button>
         </section>
 
         @if (d().mode === 'principal') {
           <section aria-labelledby="cd-caps">
-            <h3 id="cd-caps">Plafonds par centre de charge <span class="muted">(facultatifs)</span></h3>
+            <h3 id="cd-caps">Plafonds par poste de dépenses <span class="muted">(facultatifs)</span></h3>
             <details>
               <summary>Plafonds · {{ capCount() }} renseigné(s)</summary>
               <p class="muted">Plafond de dépense par période pour le Budget du projet de vie. Laisser vide : pas de plafond.</p>

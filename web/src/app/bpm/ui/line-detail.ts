@@ -5,7 +5,7 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { LineDetail, RegisterLine } from '../../core/bpm-models';
 import { cents, parseAmount, shortDate, signedCents } from '../../core/format';
 import { ModalComponent } from '../../shared/modal.component';
-import { withCapAlerts } from './caps';
+import { capAlertText, withCapAlerts } from './caps';
 import { bpmLoader, BpmRefresh, newRequestKey } from './page-context';
 import { BpmState } from './state';
 
@@ -24,7 +24,7 @@ import { BpmState } from './state';
       <div class="bpm-guide">
         <bpm-state [loading]="loader.loading() && !d()" [error]="loader.error()" (retry)="loader.reload()" />
         @if (message()) {
-          <p class="bld-saved" role="status">{{ message() }}</p>
+          <p class="bld-saved" [class.is-warning]="settleConfirmation()" [attr.role]="settleConfirmation() ? 'alert' : 'status'">{{ message() }}</p>
         }
         @if (actionError(); as e) {
           <p class="bpm-error" role="alert">{{ e.message }} <small>Votre saisie est conservée.</small></p>
@@ -79,7 +79,7 @@ import { BpmState } from './state';
               </div>
               <p class="bpm-help">{{ v.actions.settlementPolicy }}</p>
               <div class="bpm-actions">
-                <button type="button" class="btn btn-primary" (click)="settle(v)" [disabled]="busy()">{{ v.line.direction === 'income' ? 'Reçu' : 'Payé' }}</button>
+                <button type="button" class="btn btn-primary" (click)="settle(v)" [disabled]="busy()">{{ settleConfirmation() ? 'Confirmer le paiement malgré l’alerte' : v.line.direction === 'income' ? 'Reçu' : 'Payé' }}</button>
               </div>
             </section>
           }
@@ -159,6 +159,7 @@ export class BpmLineDetail {
   protected actionError = signal<ApiError | null>(null);
   protected realDate = signal(new Date().toISOString().slice(0, 10));
   protected realAmount = signal('');
+  protected settleConfirmation = signal<string | null>(null);
   private settleKey = newRequestKey('settle');
 
   protected c = cents;
@@ -175,12 +176,39 @@ export class BpmLineDetail {
     this.actionError.set(null);
     try {
       const body = { realizedDate: this.realDate(), ...(typeof amount === 'number' ? { realizedAmount: amount } : {}) };
+      if (v.line.direction === 'charge') {
+        const input = {
+          budgetId: v.line.budgetId, direction: v.line.direction, label: v.line.label,
+          amount: v.line.plannedCents / 100, date: v.line.plannedDate,
+          costCenterRef: v.line.costCenterRef ?? undefined, categoryId: v.line.categoryId,
+          settle: true, ...body,
+          ...(v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate
+            ? { recurrenceId: v.line.recurrenceId, occurrenceDate: v.line.occurrenceDate }
+            : { replaceId: v.line.operationId ?? v.line.id }),
+        };
+        let signature: string | null = null;
+        try {
+          const preview = await this.bpm.previewCaps(input);
+          if (preview.alerts.length) {
+            signature = JSON.stringify({ input, alerts: preview.alerts });
+            this.message.set(`Attention avant paiement (${preview.period.label}) : ${preview.alerts.map(capAlertText).join(' ; ')}. Le paiement reste autorisé.`);
+          }
+        } catch {
+          signature = JSON.stringify({ input, unavailable: true });
+          this.message.set('Vérification des plafonds indisponible. Vous pouvez confirmer le paiement sans cette vérification.');
+        }
+        if (signature && signature !== this.settleConfirmation()) {
+          this.settleConfirmation.set(signature);
+          return;
+        }
+      }
       const r =
         v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate
           ? await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body })
           : await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body });
       // Un plafond dépassé est signalé, jamais bloquant : le règlement est enregistré.
       this.message.set(withCapAlerts(v.line.direction === 'income' ? 'Entrée marquée reçue.' : 'Charge marquée payée.', r.capAlerts));
+      this.settleConfirmation.set(null);
       this.settleKey = newRequestKey('settle');
       this.refresh.bump();
     } catch (e) {

@@ -44,14 +44,14 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
           <span>{{ funded() }} projet{{ funded() > 1 ? 's' : '' }} financé{{ funded() > 1 ? 's' : '' }} sur {{ f.rows.length }}</span>
         </div>
         <div>
-          <dt>Remonté au budget de vie</dt>
+          <dt>Remonté au budget du projet de vie</dt>
           <dd>{{ f.totals.paidCents | cents }}</dd>
           <span>Charges réglées validées des projets</span>
         </div>
         <div>
           <dt>Dépassements autorisés</dt>
           <dd>{{ overrunCents() | cents }}</dd>
-          <span>Facturés au budget de vie en fin de cycle</span>
+          <span>Facturés au budget du projet de vie en fin de cycle</span>
         </div>
       </dl>
       @if (hidden() > 0) {
@@ -67,7 +67,7 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
       }
       <div class="bpm-table-wrap">
         <table class="bpm-table life-funding-table">
-          <caption class="visually-hidden">Charges validées remontées au budget de vie, par projet et par période du cycle</caption>
+          <caption class="visually-hidden">Charges validées remontées au budget du projet de vie, par projet et par période du cycle</caption>
           <thead>
             <tr>
               <th scope="col">Projet de la vie</th>
@@ -119,14 +119,14 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
               </tr>
             } @empty {
               <tr>
-                <td [attr.colspan]="shown().length + 4">Aucun projet de la vie rattaché : budgétez un projet du noyau depuis Gestion de projet.</td>
+                <td [attr.colspan]="shown().length + 4">Aucun projet de la vie rattaché. Créez ou choisissez un projet à financer dans « Gestion de projet ».</td>
               </tr>
             }
           </tbody>
           @if (f.rows.length) {
             <tfoot>
               <tr>
-                <th scope="row">Budget de vie</th>
+                <th scope="row">Budget du projet de vie</th>
                 <td class="num">{{ f.totals.allocatedCents | cents }}</td>
                 @for (p of shown(); track p.key) {
                   <td class="num" [class.is-read]="p.key === highlight()">{{ f.totals.byPeriod[p.key] | cents }}</td>
@@ -140,7 +140,7 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
       </div>
       <p class="bpm-note">
         Une enveloppe n’est pas une dépense : seules les charges des projets validées comme réglées entrent dans le Dépensé
-        du budget de vie, à leur date réelle. Les dépassements autorisés lui sont facturés en fin de cycle.
+        du budget du projet de vie, à leur date réelle. Les dépassements autorisés lui sont facturés en fin de cycle.
       </p>
     }
   `,

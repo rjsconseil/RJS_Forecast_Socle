@@ -241,7 +241,7 @@ const effectiveDate = (o: Operation) => o.realizedDate ?? o.date;
             </div>
 
             <label class="field">
-              <span>Centre de coût</span>
+              <span>Poste (centre de coûts)</span>
               <select [value]="fCenter()" (change)="fCenter.set($any($event.target).value)">
                 @if (!centersForDirection().length) {
                   <option value="">Aucun centre disponible</option>
@@ -264,9 +264,9 @@ const effectiveDate = (o: Operation) => o.realizedDate ?? o.date;
             </label>
 
             @if (!ccOpen()) {
-              <button type="button" class="linkish add-cc" (click)="openCenterForm()" aria-controls="cc-form">+ Créer un centre personnel</button>
+              <button type="button" class="linkish add-cc" (click)="openCenterForm()" aria-controls="cc-form">+ Créer un poste personnel</button>
             } @else {
-              <div id="cc-form" class="cc-form" role="group" aria-label="Nouveau centre personnel" (keydown.escape)="$event.stopPropagation(); ccOpen.set(false)">
+              <div id="cc-form" class="cc-form" role="group" aria-label="Nouveau poste personnel" (keydown.escape)="$event.stopPropagation(); ccOpen.set(false)">
                 <label class="field">
                   <span>Nom du centre</span>
                   <input id="cc-label" maxlength="120" autocomplete="off" [value]="ccLabel()" (input)="ccLabel.set($any($event.target).value)" (keydown.enter)="$event.preventDefault(); addCenter()" />
@@ -611,7 +611,7 @@ export class BpmOperations {
     if (!label) return this.invalid('form', 'Indiquez un libellé.', 'label');
     if (amount === null || amount === 'invalid' || amount <= 0) return this.invalid('form', 'Le montant doit être un nombre positif (ex. 1 250,50).', 'amount');
     if (!this.fDate()) return this.invalid('form', 'Indiquez une date.', 'date');
-    if (!this.fCenter()) return this.invalid('form', 'Choisissez un centre de coût.', 'costCenterRef');
+    if (!this.fCenter()) return this.invalid('form', 'Choisissez un poste.', 'costCenterRef');
 
     this.saving.set(true);
     this.formError.set(null);

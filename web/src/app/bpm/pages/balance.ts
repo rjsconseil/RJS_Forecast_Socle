@@ -22,7 +22,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
   template: `
     <bpm-page
       kicker="Tableau de bord"
-      title="Le solde de la période"
+      title="Solde de la période"
       pageClass="bpm-money bpm-money-detail"
       lead="Le solde rejoint le patrimoine."
       [context]="b()?.context"

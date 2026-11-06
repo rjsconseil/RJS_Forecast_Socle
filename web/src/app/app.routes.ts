@@ -14,12 +14,12 @@ export const routes: Routes = [
   { path: 'zones/:zone/:section', title: planRouteTitle, loadComponent: () => import('./home/section-landing').then((m) => m.SectionLandingPage) },
 
   // ---------- Application BPM (niveau 3) : Démarrer un projet ----------
-  { path: 'creer', title: 'Partir de zéro — RJS Forecast', loadComponent: () => import('./bpm/pages/create').then((m) => m.BpmCreatePage) },
+  { path: 'creer', title: 'Démarrer un projet — RJS Forecast', loadComponent: () => import('./bpm/pages/create').then((m) => m.BpmCreatePage) },
 
   // ---------- Application BPM : Ma vision budgétaire ----------
   { path: 'tableau-de-bord', title: 'Tableau de bord — RJS Forecast', loadComponent: () => import('./bpm/pages/dashboard').then((m) => m.BpmDashboard) },
   { path: 'depenses', title: 'Dépenses de la période — RJS Forecast', loadComponent: () => import('./bpm/pages/expenses').then((m) => m.BpmExpensesPage) },
-  { path: 'plafonds', title: 'Plafonds & catégories — RJS Forecast', loadComponent: () => import('./bpm/pages/caps').then((m) => m.BpmCapsPage) },
+  { path: 'plafonds', title: 'Plafonds et catégories — RJS Forecast', loadComponent: () => import('./bpm/pages/caps').then((m) => m.BpmCapsPage) },
   { path: 'piloter', title: 'Graphiques et chiffres — RJS Forecast', loadComponent: () => import('./bpm/pages/pilot').then((m) => m.BpmPilotPage) },
   { path: 'piloter/agir', title: "Ce qu'il faut faire — RJS Forecast", loadComponent: () => import('./bpm/pages/act').then((m) => m.BpmActPage) },
   { path: 'projet-de-vie', title: 'Gestion du projet de vie — RJS Forecast', loadComponent: () => import('./bpm/life/life-management.page').then((m) => m.BpmLifeManagementPage) },
@@ -43,7 +43,7 @@ export const routes: Routes = [
   { path: 'app/projets', title: 'Projets de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/projects.page').then((m) => m.BpmProjectsPage) },
   { path: 'app/projets/:id', title: 'Projet de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
   { path: 'app/taches', title: 'Tâches des projets — RJS Forecast', loadComponent: () => import('./bpm/projects/tasks.page').then((m) => m.BpmTasksPage) },
-  { path: 'app/reglages', title: 'Réglages — RJS Forecast', loadComponent: () => import('./bpm/settings').then((m) => m.BpmSettings) },
+  { path: 'app/reglages', title: 'Cycle et réglages — RJS Forecast', loadComponent: () => import('./bpm/settings').then((m) => m.BpmSettings) },
 
   // ---------- Socle : niveau 1 (noyau) ----------
   { path: 'projects', title: 'Projets — Noyau', loadComponent: () => import('./projects/projects-board').then((m) => m.ProjectsBoard) },

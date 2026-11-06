@@ -1,4 +1,4 @@
-// Revue des plafonds : de la lecture `caps-review` aux cartes de la page « Plafonds & catégories ».
+// Revue des plafonds : de la lecture `caps-review` aux cartes de la page « Plafonds et catégories ».
 // Une carte par plafond (poste, catégorie, ou poste avec ses catégories) : état, jauge, alerte, et les charges
 // qui, ensemble, forment l'engagé — avec leur récurrence et leur antériorité. Rien n'est retiré à la place de
 // l'utilisateur : la page montre ce qui pèse, l'utilisateur décide.
@@ -172,7 +172,7 @@ export function reviewCards(d: CapsReview, mode: ReviewMode): CapCard[] {
       const cappedCats = cats.filter((k) => k.capCents !== null);
       if (c.capCents === null && !cappedCats.length) continue;
       const overCats = cappedCats.filter((k) => k.over);
-      const health: CardHealth = c.capCents !== null ? healthOf(c) : overCats.length ? 'alert' : cappedCats.some((k) => healthOf(k) === 'watch') ? 'watch' : 'ok';
+      const health: CardHealth = c.over || overCats.length ? 'alert' : healthOf(c) === 'watch' || cappedCats.some((k) => healthOf(k) === 'watch') ? 'watch' : 'ok';
       const all = pick(d, c.chargeIds);
       const groups: ChargeGroup[] = cats
         .map((k) => ({
@@ -195,8 +195,8 @@ export function reviewCards(d: CapsReview, mode: ReviewMode): CapCard[] {
         centerRef: c.ref,
         categoryId: null,
         health,
-        healthLabel: c.capCents === null && overCats.length ? (overCats.length > 1 ? 'Catégories dépassées' : 'Catégorie dépassée') : HEALTH_LABEL[health],
-        description: cappedCats.length ? `${plural(cappedCats.length, 'catégorie plafonnée', 'catégories plafonnées')} dans ce poste, lues indépendamment du poste.` : 'Aucune catégorie plafonnée dans ce poste.',
+        healthLabel: !c.over && overCats.length ? (overCats.length > 1 ? 'Catégories dépassées' : 'Catégorie dépassée') : HEALTH_LABEL[health],
+        description: cappedCats.length ? `${plural(cappedCats.length, 'catégorie plafonnée', 'catégories plafonnées')} dans ce poste, avec une limite indépendante.` : 'Aucune catégorie plafonnée dans ce poste.',
         facts: [...facts(c).slice(0, 3), { label: 'Catégories dépassées', value: overCats.length ? catAlerts.join(', ') : 'Aucune' }],
         gauge: gaugeOf(c),
         alert: centerAlert(c) ?? (overCats.length ? categoryAlert(overCats[0], c) : null),

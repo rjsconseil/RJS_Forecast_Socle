@@ -116,3 +116,13 @@ export interface CapsReview {
     initialCents: number | null;
   };
 }
+
+/** Aperçu sans écriture, sur la période de la dépense. */
+export interface CapPreview {
+  mutation: false;
+  period: { key: string; label: string };
+  before: { center: CenterCapRow | null; category: CategoryCapRow | null };
+  after: { center: CenterCapRow | null; category: CategoryCapRow | null };
+  alerts: CapAlert[];
+  note: string | null;
+}

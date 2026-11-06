@@ -32,12 +32,41 @@ import {
   weekDays,
   yearMonths,
 } from './calendar-dates';
-import { CalendarData, CalendarElement, CalendarEvent, CalendarIndicatorKey, CalendarPeriod } from './calendar.models';
-import { DayStat, MARKER_LABEL, MARKER_SYMBOL, dayStats, detailRows, formatAmount, groupByDay, toneColor } from './calendar-model';
+import {
+  CalendarData,
+  CalendarElement,
+  CalendarEvent,
+  CalendarIndicatorKey,
+  CalendarPeriod,
+} from './calendar.models';
+import {
+  DayStat,
+  MARKER_LABEL,
+  MARKER_SYMBOL,
+  dayStats,
+  detailRows,
+  formatAmount,
+  groupByDay,
+  toneColor,
+} from './calendar-model';
+import { RecetteContext } from '../core/api.service';
+import {
+  BPM_DAY_FIELDS,
+  BpmCalendarPreferences,
+  BpmDayField,
+  displayDefaults,
+  readDisplayPreferences,
+  writeDisplayPreferences,
+} from './bpm-calendar-preferences';
 
 const VIEW_PARAM: Record<CalendarView, string> = { week: 'semaine', month: 'mois', year: 'annee' };
 const PARAM_VIEW: Record<string, CalendarView> = { semaine: 'week', mois: 'month', annee: 'year' };
-const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
 const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone: 'UTC' });
 
 /**
@@ -50,79 +79,294 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
 @Component({
   selector: 'rjs-calendar',
   imports: [FormsModule, NgTemplateOutlet],
+  styleUrl: './bpm-calendar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="calendar is-360 calendar-module" [attr.aria-label]="data()?.calendar?.label ?? 'Calendrier'" [attr.aria-busy]="loading() || busy()">
-      <div class="calendar-layout is-compact" [class.is-year]="view() === 'year'" [class.is-week]="view() === 'week'">
+    <section
+      class="calendar is-360 calendar-module"
+      [class.is-bpm-calendar]="bpm()"
+      [attr.aria-label]="data()?.calendar?.label ?? 'Calendrier'"
+      [attr.aria-busy]="loading() || busy()"
+    >
+      <div
+        class="calendar-layout is-compact"
+        [class.is-year]="view() === 'year'"
+        [class.is-week]="view() === 'week'"
+      >
         <div class="calendar-right-rail">
           <div class="calendar-control-row">
             <div class="calendar-options">
-              <select class="calendar-date-filter" aria-label="Regroupement affiché" [ngModel]="group()" (ngModelChange)="group.set($event)">
+              <select
+                class="calendar-date-filter"
+                aria-label="Regroupement affiché"
+                [ngModel]="group()"
+                (ngModelChange)="group.set($event)"
+              >
                 <option value="all">Tous les regroupements</option>
                 @for (g of groups(); track g.key) {
                   <option [value]="g.key">{{ g.label }}</option>
                 }
               </select>
               <label class="calendar-completed-control">
-                <input type="checkbox" aria-label="Afficher les éléments terminés" [ngModel]="includeDone()" (ngModelChange)="includeDone.set($event)" />
+                <input
+                  type="checkbox"
+                  aria-label="Afficher les éléments terminés"
+                  [ngModel]="includeDone()"
+                  (ngModelChange)="setIncludeDone($event)"
+                />
                 <span>Terminés inclus</span>
                 <span class="calendar-help">
-                  <button type="button" class="calendar-help-trigger" aria-label="Aide : afficher les éléments terminés" aria-describedby="calendar-completed-help">i</button>
-                  <span id="calendar-completed-help" class="calendar-help-tooltip" role="tooltip">Afficher les éléments terminés ou réglés ; ils restent atténués.</span>
+                  <button
+                    type="button"
+                    class="calendar-help-trigger"
+                    aria-label="Aide : afficher les éléments terminés"
+                    aria-describedby="calendar-completed-help"
+                  >
+                    i
+                  </button>
+                  <span id="calendar-completed-help" class="calendar-help-tooltip" role="tooltip"
+                    >Afficher les éléments terminés ou réglés ; ils restent atténués.</span
+                  >
                 </span>
               </label>
             </div>
             <div class="calendar-toolbar">
               <div class="calendar-period-control">
                 <div class="calendar-view-switch" role="group" aria-label="Vue du calendrier">
-                  <button type="button" [attr.aria-pressed]="view() === 'year'" aria-label="Vue annuelle" title="Année" (click)="setView('year')">Année</button>
-                  <button type="button" [attr.aria-pressed]="view() === 'month'" aria-label="Vue mensuelle" title="Mois" (click)="setView('month')">Mois</button>
-                  <button type="button" [attr.aria-pressed]="view() === 'week'" aria-label="Vue hebdomadaire" title="Semaine" (click)="setView('week')">Semaine</button>
+                  <button
+                    type="button"
+                    [attr.aria-pressed]="view() === 'year'"
+                    aria-label="Vue annuelle"
+                    title="Année"
+                    (click)="setView('year')"
+                  >
+                    Année
+                  </button>
+                  <button
+                    type="button"
+                    [attr.aria-pressed]="view() === 'month'"
+                    aria-label="Vue mensuelle"
+                    title="Mois"
+                    (click)="setView('month')"
+                  >
+                    Mois
+                  </button>
+                  <button
+                    type="button"
+                    [attr.aria-pressed]="view() === 'week'"
+                    aria-label="Vue hebdomadaire"
+                    title="Semaine"
+                    (click)="setView('week')"
+                  >
+                    Semaine
+                  </button>
                 </div>
-                <div class="calendar-paging" [attr.aria-label]="'Changer la période : ' + periodName()">
-                  <button class="btn btn-secondary" type="button" [attr.aria-label]="previousLabel()" (click)="movePeriod(-1)">←</button>
-                  <h2 aria-live="polite" class="visually-hidden" [title]="periodName()">{{ periodName() }}</h2>
-                  <button class="btn btn-secondary" type="button" [attr.aria-label]="nextLabel()" (click)="movePeriod(1)">→</button>
+                <div
+                  class="calendar-paging"
+                  [attr.aria-label]="'Changer la période : ' + periodName()"
+                >
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    [attr.aria-label]="previousLabel()"
+                    (click)="movePeriod(-1)"
+                  >
+                    ←
+                  </button>
+                  <h2 aria-live="polite" class="visually-hidden" [title]="periodName()">
+                    {{ periodName() }}
+                  </h2>
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    [attr.aria-label]="nextLabel()"
+                    (click)="movePeriod(1)"
+                  >
+                    →
+                  </button>
                 </div>
                 <div class="calendar-actions">
-                  <button class="btn btn-secondary" type="button" (click)="selectDay(today)">Aujourd’hui</button>
+                  <button class="btn btn-secondary" type="button" (click)="selectDay(today)">
+                    Aujourd’hui
+                  </button>
                   <span class="calendar-month-picker">
-                    <button class="btn btn-secondary calendar-month-trigger" type="button" [attr.aria-label]="'Choisir un mois : ' + monthButtonLabel()" (click)="openMonthPicker(monthPicker)">
+                    <button
+                      class="btn btn-secondary calendar-month-trigger"
+                      type="button"
+                      [attr.aria-label]="'Choisir un mois : ' + monthButtonLabel()"
+                      (click)="openMonthPicker(monthPicker)"
+                    >
                       {{ monthButtonLabel() }}
                     </button>
-                    <input #monthPicker class="calendar-month-input" type="month" tabindex="-1" aria-hidden="true" [ngModel]="month()" (ngModelChange)="chooseMonth($event)" />
+                    <input
+                      #monthPicker
+                      class="calendar-month-input"
+                      type="month"
+                      tabindex="-1"
+                      aria-hidden="true"
+                      [ngModel]="month()"
+                      (ngModelChange)="chooseMonth($event)"
+                    />
                   </span>
                 </div>
+                @if (bpm()) {
+                  <button
+                    type="button"
+                    class="btn btn-secondary bpm-calendar-customize"
+                    [attr.aria-expanded]="customizing()"
+                    aria-controls="bpm-calendar-personalization"
+                    (click)="customizing.set(!customizing())"
+                  >
+                    Personnaliser l’affichage
+                    <span aria-hidden="true">{{ customizing() ? '−' : '+' }}</span>
+                  </button>
+                }
               </div>
             </div>
-            @if (elements().length) {
+            @if (bpm()) {
+              @if (customizing()) {
+                <section
+                  id="bpm-calendar-personalization"
+                  class="bpm-calendar-personalization"
+                  aria-label="Personnaliser le calendrier"
+                >
+                  <div class="bpm-calendar-preference-head">
+                    <div>
+                      <h3>Votre calendrier, vos repères</h3>
+                      <p>
+                        Mémorisé pour ce profil sur ce navigateur. Les données financières restent
+                        inchangées.
+                      </p>
+                    </div>
+                    <button class="text-link" type="button" (click)="resetDisplay()">
+                      Réinitialiser
+                    </button>
+                  </div>
+                  <div class="bpm-calendar-preference-grid">
+                    <fieldset>
+                      <legend>Sources affichées</legend>
+                      <p>Les sources disponibles proviennent de votre calendrier BPM.</p>
+                      @for (el of elements(); track el.id) {
+                        <label class="bpm-calendar-choice" [style.--event-tone]="tone(el.tone)"
+                          ><input
+                            type="checkbox"
+                            [checked]="!hidden().has(el.id)"
+                            (change)="toggleElement(el.id)"
+                          /><i aria-hidden="true"></i><span>{{ el.label }}</span
+                          ><small>{{ countInPeriod(el.id) }}</small></label
+                        >
+                      }
+                      <button type="button" class="text-link" (click)="showAllSources()">
+                        Tout afficher
+                      </button>
+                    </fieldset>
+                    <fieldset>
+                      <legend>Informations par événement</legend>
+                      <p>Dans les cases et la liste des événements.</p>
+                      @for (field of dayFields; track field.key) {
+                        <label class="bpm-calendar-choice"
+                          ><input
+                            type="checkbox"
+                            [checked]="showField(field.key)"
+                            (change)="toggleField(field.key)"
+                          /><span>{{ field.label }}</span></label
+                        >
+                      }
+                      <label class="bpm-calendar-density"
+                        >Événements par case<select
+                          aria-label="Événements par case"
+                          [ngModel]="perCell()"
+                          (ngModelChange)="setDensity($event)"
+                        >
+                          @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+                            <option [ngValue]="n">{{ n }}</option>
+                          }
+                        </select></label
+                      >
+                    </fieldset>
+                    <fieldset>
+                      <legend>Bilan au survol d’un jour</legend>
+                      <p>Choisissez les indicateurs de l’aperçu.</p>
+                      @for (indicator of data()?.indicators ?? []; track indicator.key) {
+                        <label class="bpm-calendar-choice"
+                          ><input
+                            type="checkbox"
+                            [checked]="indicatorShown(indicator.key)"
+                            (change)="toggleIndicator(indicator.key)"
+                          /><span>{{ indicator.label }}</span></label
+                        >
+                      }
+                    </fieldset>
+                  </div>
+                </section>
+              }
+              <p class="bpm-calendar-source-summary" role="status">
+                {{ visibleSourceCount() }} / {{ elements().length }} sources ·
+                {{ periodEvents().length }} événements affichés
+              </p>
+            } @else if (elements().length) {
               <div class="calendar-elements" role="group" aria-label="Éléments affichés">
                 @for (el of elements(); track el.id) {
-                  <label class="calendar-element-toggle" [class.is-off]="hidden().has(el.id)" [style.--event-tone]="tone(el.tone)" [title]="markerLabel(el) + ' · ' + el.label">
-                    <input type="checkbox" [checked]="!hidden().has(el.id)" (change)="toggleElement(el.id)" />
+                  <label
+                    class="calendar-element-toggle"
+                    [class.is-off]="hidden().has(el.id)"
+                    [style.--event-tone]="tone(el.tone)"
+                    [title]="markerLabel(el) + ' · ' + el.label"
+                  >
+                    <input
+                      type="checkbox"
+                      [checked]="!hidden().has(el.id)"
+                      (change)="toggleElement(el.id)"
+                    />
                     <span class="calendar-element-mark" aria-hidden="true">{{ symbol(el) }}</span>
                     <span class="calendar-element-label">{{ el.label }}</span>
-                    <span class="calendar-element-count" [attr.aria-label]="countInPeriod(el.id) + ' sur la période'">{{ countInPeriod(el.id) }}</span>
+                    <span
+                      class="calendar-element-count"
+                      [attr.aria-label]="countInPeriod(el.id) + ' sur la période'"
+                      >{{ countInPeriod(el.id) }}</span
+                    >
                   </label>
                 }
               </div>
             }
           </div>
-          <button class="calendar-grid-shortcut" type="button" (click)="focusCalendarGrid()">Aller aux jours du calendrier</button>
+          <button class="calendar-grid-shortcut" type="button" (click)="focusCalendarGrid()">
+            Aller aux jours du calendrier
+          </button>
           <aside class="calendar-agenda" aria-label="Repères de la période">
             <div class="calendar-agenda-heading">
               <div>
-                <p class="eyebrow">Journées de la période</p>
+                <p class="eyebrow">
+                  {{ bpm() ? 'Événements de la période' : 'Journées de la période' }}
+                </p>
                 <h3>{{ periodName() }}</h3>
               </div>
-              <span>{{ periodDays().length }} {{ periodDays().length === 1 ? 'jour' : 'jours' }}</span>
+              <span
+                >{{ periodDays().length }} {{ periodDays().length === 1 ? 'jour' : 'jours' }}</span
+              >
             </div>
-            @if (pinnedEventKeys().size) {
-              <button class="text-link calendar-clear-highlights" type="button" (click)="clearHighlights()">Tout désélectionner ({{ pinnedEventKeys().size }})</button>
+            @if (bpm() || pinnedEventKeys().size) {
+              <button
+                class="text-link calendar-clear-highlights"
+                type="button"
+                [disabled]="!pinnedEventKeys().size"
+                (click)="clearHighlights()"
+              >
+                {{ bpm() ? 'Effacer la sélection' : 'Tout désélectionner' }} ({{
+                  pinnedEventKeys().size
+                }})
+              </button>
             }
-            <div class="calendar-agenda-list">
+            <div
+              class="calendar-agenda-list"
+              [attr.tabindex]="bpm() ? 0 : null"
+              [attr.aria-label]="bpm() ? 'Liste des événements de la période' : null"
+            >
               @for (group of periodDays(); track group.day) {
-                <section class="calendar-agenda-day" [class.is-selected]="group.day === selectedDay()">
+                <section
+                  class="calendar-agenda-day"
+                  [class.is-selected]="group.day === selectedDay()"
+                >
                   <h4>{{ date(group.day) }}</h4>
                   @for (event of group.events; track event.key) {
                     <article
@@ -141,59 +385,122 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                         class="calendar-agenda-select"
                         type="button"
                         [attr.aria-pressed]="isPinned(event.key)"
-                        [attr.aria-label]="(isPinned(event.key) ? 'Désélectionner ' : 'Mettre en évidence ') + event.title + ' dans le calendrier'"
+                        [attr.aria-label]="
+                          (isPinned(event.key) ? 'Désélectionner ' : 'Mettre en évidence ') +
+                          event.title +
+                          ' dans le calendrier'
+                        "
                         (click)="toggleHighlight(event.key)"
                       >
-                        <span class="calendar-agenda-select-mark" aria-hidden="true">{{ isPinned(event.key) ? '●' : '○' }}</span>
+                        <span class="calendar-agenda-select-mark" aria-hidden="true">{{
+                          isPinned(event.key) ? '●' : '○'
+                        }}</span>
                         <span class="calendar-agenda-select-content">
-                          <small>{{ element(event)?.label }}{{ event.statusLabel ? ' · ' + event.statusLabel : '' }}</small>
+                          @if (showField('type') || (showField('status') && event.statusLabel)) {
+                            <small
+                              >{{ showField('type') ? element(event)?.label : ''
+                              }}{{
+                                showField('status') && event.statusLabel
+                                  ? (showField('type') ? ' · ' : '') + event.statusLabel
+                                  : ''
+                              }}</small
+                            >
+                          }
                           <span class="calendar-agenda-title">{{ event.title }}</span>
                           <small>
-                            @if (event.amountCents !== null) {
-                              <span class="calendar-amount" [attr.data-direction]="event.direction">{{ amount(event) }}</span>
-                              @if (event.groupLabel) {
+                            @if (showField('amount') && event.amountCents !== null) {
+                              <span
+                                class="calendar-amount"
+                                [attr.data-direction]="event.direction"
+                                >{{ amount(event) }}</span
+                              >
+                              @if (showField('group') && event.groupLabel) {
                                 ·
                               }
                             }
-                            {{ event.groupLabel }}
+                            {{ showField('group') ? event.groupLabel : '' }}
                           </small>
                         </span>
                       </button>
                       <div class="calendar-agenda-actions">
                         @if (event.link) {
-                          <button class="text-link" type="button" (click)="open.emit(event)">Ouvrir</button>
+                          <button class="text-link" type="button" (click)="open.emit(event)">
+                            Ouvrir
+                          </button>
                         }
                         @if (event.reschedule) {
-                          <button class="text-link" type="button" (click)="plan(event)">Replanifier</button>
+                          <button class="text-link" type="button" (click)="plan(event)">
+                            Replanifier
+                          </button>
                         }
                       </div>
                     </article>
                   }
                 </section>
               } @empty {
-                <p class="muted">Aucun repère pour cette période.</p>
+                <p class="muted">
+                  {{
+                    bpm()
+                      ? !visibleSourceCount()
+                        ? 'Aucune source sélectionnée. Affichez au moins une source pour retrouver vos événements.'
+                        : 'Aucun repère pour cette période avec ces choix d’affichage.'
+                      : 'Aucun repère pour cette période.'
+                  }}
+                </p>
+                @if (bpm() && !visibleSourceCount()) {
+                  <button class="text-link" type="button" (click)="showAllSources()">
+                    Afficher toutes les sources
+                  </button>
+                }
               }
             </div>
             @if (planning(); as item) {
               <form class="calendar-plan" (ngSubmit)="savePlan()">
                 <h4>{{ item.title }}</h4>
-                <p class="calendar-plan-note">{{ element(item)?.label }} · actuellement le {{ date(item.date) }}</p>
-                <label class="field">Nouvelle date<input name="newDate" type="date" required [(ngModel)]="plannedDate" /></label>
-                <button class="btn btn-primary" type="submit" [disabled]="busy() || !valid(plannedDate)">Enregistrer la date</button>
-                <button class="text-link" type="button" (click)="planning.set(null)">Annuler</button>
+                <p class="calendar-plan-note">
+                  {{ element(item)?.label }} · actuellement le {{ date(item.date) }}
+                </p>
+                <label class="field"
+                  >Nouvelle date<input
+                    name="newDate"
+                    type="date"
+                    required
+                    [(ngModel)]="plannedDate"
+                /></label>
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [disabled]="busy() || !valid(plannedDate)"
+                >
+                  Enregistrer la date
+                </button>
+                <button class="text-link" type="button" (click)="planning.set(null)">
+                  Annuler
+                </button>
               </form>
             }
           </aside>
         </div>
 
-        <div class="calendar-month-wrap" tabindex="-1" [attr.aria-label]="'Jours du calendrier · ' + periodName()" (scroll)="repositionVisiblePeek()">
+        <div
+          class="calendar-month-wrap"
+          tabindex="-1"
+          [attr.aria-label]="'Jours du calendrier · ' + periodName()"
+          (scroll)="repositionVisiblePeek()"
+        >
           <div class="calendar-grid-head">
             <h3>{{ periodName() }}</h3>
             <span>{{ gridHint() }}</span>
           </div>
 
           <!-- Aperçu d'une journée au survol : indicateurs paramétrés, puis repères et leurs entrées de survol. -->
-          <ng-template #peekBody let-day let-events="events" let-expanded="expanded" let-year="year">
+          <ng-template
+            #peekBody
+            let-day
+            let-events="events"
+            let-expanded="expanded"
+            let-year="year"
+          >
             <div class="calendar-day-peek-head">
               <strong>{{ date(day) }}</strong>
               @if (isDayPinned(day, year)) {
@@ -201,26 +508,41 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
               }
               <span>{{ events.length }} {{ events.length === 1 ? 'repère' : 'repères' }}</span>
             </div>
-            <div class="calendar-day-peek-stats" aria-label="Bilan de la journée" [style.grid-template-columns]="'repeat(' + indicators().length + ', minmax(0, 1fr))'">
-              @for (stat of statsOf(events); track stat.key) {
-                <button
-                  type="button"
-                  [attr.aria-label]="stat.aria"
-                  [attr.aria-expanded]="activePeekDay() === day && activePeekStat() === stat.key"
-                  [class.is-detail-active]="activePeekDay() === day && activePeekStat() === stat.key"
-                  (pointerenter)="openPeekDetails($event, day, stat.key)"
-                  (pointerleave)="closePeekDetails()"
-                  (focus)="openPeekDetails($event, day, stat.key)"
-                  (blur)="closePeekDetails()"
-                  (click)="openPeekDetails($event, day, stat.key)"
-                >
-                  <span>{{ stat.label }}</span>
-                  @for (line of stat.lines; track $index) {
-                    <strong [class.is-alert]="line.tone === 'alert'" [class.is-success]="line.tone === 'success'" [class.is-zero]="line.tone === 'zero'">{{ line.text }}</strong>
-                  }
-                </button>
-              }
-            </div>
+            @if (indicators().length) {
+              <div
+                class="calendar-day-peek-stats"
+                aria-label="Bilan de la journée"
+                [style.grid-template-columns]="
+                  'repeat(' + indicators().length + ', minmax(0, 1fr))'
+                "
+              >
+                @for (stat of statsOf(events); track stat.key) {
+                  <button
+                    type="button"
+                    [attr.aria-label]="stat.aria"
+                    [attr.aria-expanded]="activePeekDay() === day && activePeekStat() === stat.key"
+                    [class.is-detail-active]="
+                      activePeekDay() === day && activePeekStat() === stat.key
+                    "
+                    (pointerenter)="openPeekDetails($event, day, stat.key)"
+                    (pointerleave)="closePeekDetails()"
+                    (focus)="openPeekDetails($event, day, stat.key)"
+                    (blur)="closePeekDetails()"
+                    (click)="openPeekDetails($event, day, stat.key)"
+                  >
+                    <span>{{ stat.label }}</span>
+                    @for (line of stat.lines; track $index) {
+                      <strong
+                        [class.is-alert]="line.tone === 'alert'"
+                        [class.is-success]="line.tone === 'success'"
+                        [class.is-zero]="line.tone === 'zero'"
+                        >{{ line.text }}</strong
+                      >
+                    }
+                  </button>
+                }
+              </div>
+            }
             @if (activePeekDay() === day && activePeekStat(); as stat) {
               @let rows = statRows(events, stat);
               <aside
@@ -233,7 +555,9 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                 <h4 class="calendar-peek-details-title">{{ statLabel(stat) }}</h4>
                 <div class="calendar-peek-details-content">
                   @for (row of rows.slice(0, 8); track $index) {
-                    <p><strong>{{ row.label }}</strong> {{ row.title }}</p>
+                    <p>
+                      <strong>{{ row.label }}</strong> {{ row.title }}
+                    </p>
                   } @empty {
                     <p>Aucun élément pour cette rubrique.</p>
                   }
@@ -244,7 +568,10 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
               </aside>
             }
             <div class="calendar-day-peek-list">
-              @for (event of events.slice(0, expanded ? events.length : perPeek()); track event.key) {
+              @for (
+                event of events.slice(0, expanded ? events.length : perPeek());
+                track event.key
+              ) {
                 <article
                   class="calendar-peek-card"
                   [attr.data-kind]="marker(event)"
@@ -263,16 +590,28 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                       type="button"
                       class="calendar-peek-card-pin"
                       [attr.aria-pressed]="isPinned(event.key)"
-                      [attr.aria-label]="(isPinned(event.key) ? 'Ne plus mettre en évidence ' : 'Mettre en évidence ') + event.title"
+                      [attr.aria-label]="
+                        (isPinned(event.key)
+                          ? 'Ne plus mettre en évidence '
+                          : 'Mettre en évidence ') + event.title
+                      "
                       (click)="togglePeekHighlight(event, $event, year)"
                     >
                       <span aria-hidden="true">{{ symbol(element(event)) }}</span>
                     </button>
-                    <button type="button" class="calendar-peek-card-title" [title]="event.link ? 'Ouvrir ' + event.title : event.title" [disabled]="!event.link" (click)="open.emit(event)">
+                    <button
+                      type="button"
+                      class="calendar-peek-card-title"
+                      [title]="event.link ? 'Ouvrir ' + event.title : event.title"
+                      [disabled]="!event.link"
+                      (click)="open.emit(event)"
+                    >
                       {{ event.title }}
                     </button>
                     @if (event.amountCents !== null) {
-                      <span class="calendar-amount" [attr.data-direction]="event.direction">{{ amount(event) }}</span>
+                      <span class="calendar-amount" [attr.data-direction]="event.direction">{{
+                        amount(event)
+                      }}</span>
                     }
                   </header>
                   <p class="calendar-peek-card-kind">
@@ -296,7 +635,12 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                 </article>
               }
               @if (events.length > perPeek()) {
-                <button type="button" class="calendar-more calendar-peek-more" [attr.aria-expanded]="expanded" (click)="toggleExpansion(day, year)">
+                <button
+                  type="button"
+                  class="calendar-more calendar-peek-more"
+                  [attr.aria-expanded]="expanded"
+                  (click)="toggleExpansion(day, year)"
+                >
                   @if (expanded) {
                     Réduire
                   } @else {
@@ -308,218 +652,295 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
           </ng-template>
 
           <!-- Cadre commun aux trois vues : même largeur et même hauteur (proportions du nombre d'or). -->
-          <div class="calendar-frame" [attr.data-view]="view()">
-          @if (view() === 'year') {
-            <div class="calendar-year-grid" (scroll)="repositionVisiblePeek()">
-              @for (yearMonth of months(); track yearMonth.key) {
-                <section
-                  class="calendar-year-month"
-                  [class.is-open]="visibleYearDay()?.slice(0, 7) === yearMonth.key"
-                  [attr.aria-label]="monthName(yearMonth.key)"
-                  (mouseleave)="scheduleYearPeekClose()"
-                  (focusout)="clearYearDayFocus($event)"
-                >
-                  <h3>{{ monthName(yearMonth.key) }}</h3>
-                  <div class="calendar-year-weekdays" aria-hidden="true">
-                    @for (weekday of weekdays; track $index) {
-                      <span>{{ weekday.slice(0, 1) }}</span>
-                    }
-                  </div>
-                  <div class="calendar-year-days">
-                    @for (day of yearMonth.days; track day) {
-                      @let dayEvents = byDay().get(day) ?? [];
-                      @if (day.startsWith(yearMonth.key) && dayEvents.length) {
-                        <button
-                          type="button"
-                          class="calendar-year-day has-events"
-                          [attr.data-day]="day"
-                          [class.is-today]="day === today"
-                          [class.is-selected]="day === pinnedYearDay()"
-                          [class.has-highlighted-events]="isDayHighlighted(day)"
-                          [class.is-busy]="dayEvents.length >= 4"
-                          [class.is-heavy]="dayEvents.length >= 8"
-                          [class.has-attention]="hasAttention(dayEvents)"
-                          [class.has-progress]="hasProgress(dayEvents)"
-                          [style.--day-tone]="dominantTone(dayEvents)"
-                          [attr.aria-label]="yearDayLabel(day, dayEvents.length)"
-                          [attr.aria-expanded]="day === visibleYearDay()"
-                          (pointerenter)="enterYearDay(day, $event)"
-                          (pointermove)="orientYearPeek(day, $event)"
-                          (pointerleave)="leaveYearDay(day)"
-                          (focus)="cancelYearPeekClose(); focusedYearDay.set(day); positionYearPeekOnFocus($event)"
-                          (click)="toggleYearDay(day, $event)"
-                          (keydown)="onDayKeydown($event, day)"
-                          (dragover)="allowDrop($event)"
-                          (drop)="drop($event, day)"
-                        >
-                          <span class="calendar-year-number">
-                            {{ day.slice(-2) }}
-                            <span class="calendar-year-load" aria-hidden="true">{{ dayEvents.length }}</span>
-                          </span>
-                        </button>
-                      } @else if (day.startsWith(yearMonth.key)) {
-                        <span class="calendar-year-empty-day" [class.is-today]="day === today" (dragover)="allowDrop($event)" (drop)="drop($event, day)"
-                          ><span class="calendar-year-number">{{ day.slice(-2) }}</span></span
-                        >
-                      } @else {
-                        <span class="calendar-year-outside-day" aria-hidden="true"><span class="calendar-year-number">{{ day.slice(-2) }}</span></span>
+          <div
+            class="calendar-frame"
+            [attr.data-view]="view()"
+            [attr.tabindex]="bpm() && view() === 'year' ? 0 : null"
+            [attr.role]="bpm() && view() === 'year' ? 'region' : null"
+            [attr.aria-label]="
+              bpm() && view() === 'year'
+                ? 'Calendrier annuel, défilement horizontal sur petit écran'
+                : null
+            "
+          >
+            @if (view() === 'year') {
+              <div class="calendar-year-grid" (scroll)="repositionVisiblePeek()">
+                @for (yearMonth of months(); track yearMonth.key) {
+                  <section
+                    class="calendar-year-month"
+                    [class.is-open]="visibleYearDay()?.slice(0, 7) === yearMonth.key"
+                    [attr.aria-label]="monthName(yearMonth.key)"
+                    (mouseleave)="scheduleYearPeekClose()"
+                    (focusout)="clearYearDayFocus($event)"
+                  >
+                    <h3>{{ monthName(yearMonth.key) }}</h3>
+                    <div class="calendar-year-weekdays" aria-hidden="true">
+                      @for (weekday of weekdays; track $index) {
+                        <span>{{ weekday.slice(0, 1) }}</span>
                       }
-                    }
-                  </div>
-                  @if (visibleYearDay(); as openDay) {
-                    @if (openDay.startsWith(yearMonth.key)) {
-                      @let openEvents = byDay().get(openDay) ?? [];
-                      <div
-                        class="calendar-day-peek calendar-year-peek"
-                        [class.is-expanded]="expandedYearPeekDay() === openDay"
-                        role="region"
-                        [attr.aria-label]="'Repères du ' + date(openDay)"
-                        [attr.data-day]="openDay"
-                        [style.left.px]="yearPeekPosition().x"
-                        [style.top.px]="yearPeekPosition().top"
-                        [style.max-height.px]="yearPeekPosition().maxHeight"
-                        [style.min-height.px]="pinnedYearDay() === openDay ? yearPeekPosition().bridgeHeight : null"
-                        (pointerenter)="cancelYearPeekClose()"
-                        (pointerleave)="scheduleYearPeekClose(openDay)"
-                        (keydown.escape)="releasePeek()"
-                      >
-                        <ng-container *ngTemplateOutlet="peekBody; context: { $implicit: openDay, events: openEvents, expanded: expandedYearPeekDay() === openDay, year: true }" />
-                      </div>
-                    }
-                  }
-                  <div class="calendar-year-band" aria-live="polite">
-                    @if (visibleYearDay(); as openDay) {
-                      @if (openDay.startsWith(yearMonth.key)) {
-                        <strong>{{ date(openDay) }}</strong>
-                        <span>{{ (byDay().get(openDay) ?? []).length }} repères</span>
-                      }
-                    }
-                  </div>
-                </section>
-              }
-            </div>
-          } @else {
-            <p class="calendar-scroll-hint">Faites défiler la grille horizontalement pour voir les autres jours.</p>
-            <div
-              class="calendar-grid-scroll"
-              [class.is-week]="view() === 'week'"
-              role="region"
-              [attr.aria-label]="'Jours de ' + periodName() + ', défilement horizontal'"
-              tabindex="0"
-              (scroll)="repositionVisiblePeek()"
-            >
-              <div class="calendar-grid-content">
-                <div class="calendar-weekdays" aria-hidden="true">
-                  @for (weekday of weekdays; track $index) {
-                    <span>{{ view() === 'week' ? weekday : weekday.slice(0, 1) }}</span>
-                  }
-                </div>
-                <div class="calendar-grid" [class.is-week]="view() === 'week'">
-                  @for (day of days(); track day) {
-                    @let dayEvents = byDay().get(day) ?? [];
-                    @let shown = view() === 'week' ? dayEvents : dayEvents.slice(0, perCell());
-                    <section
-                      class="calendar-day"
-                      [attr.data-day]="day"
-                      [class.has-events]="dayEvents.length > 0"
-                      [class.has-attention]="hasAttention(dayEvents)"
-                      [class.has-progress]="hasProgress(dayEvents)"
-                      [class.is-lit]="isDayHighlighted(day)"
-                      [class.outside-month]="view() === 'month' && day.slice(0, 7) !== month()"
-                      [class.selected-day]="day === selectedDay()"
-                      [class.is-peek-pinned]="pinnedMonthDay() === day"
-                      [class.today]="day === today"
-                      (click)="toggleMonthPeekPin(day, $event)"
-                      (pointerenter)="enterMonthDay(day, $event)"
-                      (pointermove)="orientMonthPeek(day, $event)"
-                      (pointerleave)="leaveMonthDay(day)"
-                      (focusin)="focusMonthDay(day, $event)"
-                      (focusout)="clearMonthDayFocus($event)"
-                      (dragover)="allowDrop($event)"
-                      (drop)="drop($event, day)"
-                    >
-                      <div class="calendar-day-head">
-                        <button
-                          class="calendar-day-number"
-                          type="button"
-                          [attr.aria-label]="'Voir le ' + date(day) + (dayEvents.length ? ' · ' + dayEvents.length + ' repères' : '')"
-                          [attr.aria-pressed]="day === selectedDay()"
-                          [attr.aria-expanded]="day === visibleMonthDay() && dayEvents.length > 0"
-                          (click)="selectDay(day)"
-                          (keydown)="onDayKeydown($event, day)"
-                        >
-                          {{ day.slice(-2) }}
-                        </button>
-                        @if (dayAmount(dayEvents); as total) {
-                          <span class="calendar-day-total" [attr.data-sign]="total.sign">{{ total.text }}</span>
-                        }
-                        @if (dayEvents.length > shown.length) {
+                    </div>
+                    <div class="calendar-year-days">
+                      @for (day of yearMonth.days; track day) {
+                        @let dayEvents = byDay().get(day) ?? [];
+                        @if (day.startsWith(yearMonth.key) && dayEvents.length) {
                           <button
                             type="button"
-                            class="calendar-more calendar-day-more"
-                            [attr.aria-expanded]="expandedDay() === day"
-                            [attr.aria-label]="'Voir les ' + dayEvents.length + ' repères du ' + date(day)"
-                            (click)="toggleDayExpansion(day, $event)"
+                            class="calendar-year-day has-events"
+                            [attr.data-day]="day"
+                            [class.is-today]="day === today"
+                            [class.is-selected]="day === pinnedYearDay()"
+                            [class.has-highlighted-events]="isDayHighlighted(day)"
+                            [class.is-busy]="dayEvents.length >= 4"
+                            [class.is-heavy]="dayEvents.length >= 8"
+                            [class.has-attention]="hasAttention(dayEvents)"
+                            [class.has-progress]="hasProgress(dayEvents)"
+                            [style.--day-tone]="dominantTone(dayEvents)"
+                            [attr.aria-label]="yearDayLabel(day, dayEvents.length)"
+                            [attr.aria-expanded]="day === visibleYearDay()"
+                            (pointerenter)="enterYearDay(day, $event)"
+                            (pointermove)="orientYearPeek(day, $event)"
+                            (pointerleave)="leaveYearDay(day)"
+                            (focus)="
+                              cancelYearPeekClose();
+                              focusedYearDay.set(day);
+                              positionYearPeekOnFocus($event)
+                            "
+                            (click)="toggleYearDay(day, $event)"
+                            (keydown)="onDayKeydown($event, day)"
+                            (dragover)="allowDrop($event)"
+                            (drop)="drop($event, day)"
                           >
-                            +{{ dayEvents.length - shown.length }}
+                            <span class="calendar-year-number">
+                              {{ day.slice(-2) }}
+                              <span class="calendar-year-load" aria-hidden="true">{{
+                                dayEvents.length
+                              }}</span>
+                            </span>
                           </button>
+                        } @else if (day.startsWith(yearMonth.key)) {
+                          <span
+                            class="calendar-year-empty-day"
+                            [class.is-today]="day === today"
+                            (dragover)="allowDrop($event)"
+                            (drop)="drop($event, day)"
+                            ><span class="calendar-year-number">{{ day.slice(-2) }}</span></span
+                          >
+                        } @else {
+                          <span class="calendar-year-outside-day" aria-hidden="true"
+                            ><span class="calendar-year-number">{{ day.slice(-2) }}</span></span
+                          >
                         }
-                      </div>
-                      @for (event of shown; track event.key) {
-                        <button
-                          type="button"
-                          class="calendar-event"
-                          [attr.data-kind]="marker(event)"
-                          [attr.data-tone]="element(event)?.tone"
-                          [style.--event-tone]="tone(element(event)?.tone)"
-                          [attr.aria-pressed]="isPinned(event.key)"
-                          [class.completed]="event.done"
-                          [class.is-linked]="isHighlighted(event.key)"
-                          [class.is-pinned]="isPinned(event.key)"
-                          [class.is-movable]="!!event.reschedule"
-                          [attr.draggable]="!!event.reschedule && !busy()"
-                          (dragstart)="drag($event, event)"
-                          (dragend)="dragged = null"
-                          [title]="event.title + ' · ' + (element(event)?.label ?? '') + ' — clic : garder en évidence, double-clic : ouvrir'"
-                          (pointerenter)="hoverCalendarEvent(event.key)"
-                          (pointerleave)="hoveredEventKey.set(null)"
-                          (focus)="hoverCalendarEvent(event.key)"
-                          (blur)="hoveredEventKey.set(null)"
-                          (click)="toggleHighlight(event.key)"
-                          (dblclick)="open.emit(event)"
-                        >
-                          <span aria-hidden="true">{{ symbol(element(event)) }}</span>
-                          <span class="calendar-event-title">{{ event.title }}</span>
-                          @if (event.amountCents !== null) {
-                            <small class="calendar-amount" [attr.data-direction]="event.direction">{{ amount(event) }}</small>
-                          } @else {
-                            <small>{{ element(event)?.label }}</small>
-                          }
-                        </button>
                       }
-                      @if (dayEvents.length && visibleMonthDay() === day) {
+                    </div>
+                    @if (visibleYearDay(); as openDay) {
+                      @if (openDay.startsWith(yearMonth.key)) {
+                        @let openEvents = byDay().get(openDay) ?? [];
                         <div
-                          class="calendar-day-peek"
-                          [class.is-expanded]="expandedDay() === day"
+                          class="calendar-day-peek calendar-year-peek"
+                          [class.is-expanded]="expandedYearPeekDay() === openDay"
                           role="region"
-                          [attr.aria-label]="'Repères du ' + date(day)"
-                          (pointerenter)="cancelMonthPeekClose()"
-                          (pointerleave)="scheduleMonthPeekClose(day)"
+                          [attr.aria-label]="'Repères du ' + date(openDay)"
+                          [attr.data-day]="openDay"
+                          [style.left.px]="yearPeekPosition().x"
+                          [style.top.px]="yearPeekPosition().top"
+                          [style.max-height.px]="yearPeekPosition().maxHeight"
+                          [style.min-height.px]="
+                            pinnedYearDay() === openDay ? yearPeekPosition().bridgeHeight : null
+                          "
+                          (pointerenter)="cancelYearPeekClose()"
+                          (pointerleave)="scheduleYearPeekClose(openDay)"
                           (keydown.escape)="releasePeek()"
-                          [style.left.px]="monthPeekPosition().x"
-                          [style.top.px]="monthPeekPosition().top"
-                          [style.max-height.px]="monthPeekPosition().maxHeight"
-                          [style.min-height.px]="pinnedMonthDay() === day ? monthPeekPosition().bridgeHeight : null"
                         >
-                          <ng-container *ngTemplateOutlet="peekBody; context: { $implicit: day, events: dayEvents, expanded: expandedDay() === day, year: false }" />
+                          <ng-container
+                            *ngTemplateOutlet="
+                              peekBody;
+                              context: {
+                                $implicit: openDay,
+                                events: openEvents,
+                                expanded: expandedYearPeekDay() === openDay,
+                                year: true,
+                              }
+                            "
+                          />
                         </div>
                       }
-                    </section>
-                  }
+                    }
+                    <div class="calendar-year-band" aria-live="polite">
+                      @if (visibleYearDay(); as openDay) {
+                        @if (openDay.startsWith(yearMonth.key)) {
+                          <strong>{{ date(openDay) }}</strong>
+                          <span>{{ (byDay().get(openDay) ?? []).length }} repères</span>
+                        }
+                      }
+                    </div>
+                  </section>
+                }
+              </div>
+            } @else {
+              <p class="calendar-scroll-hint">
+                Faites défiler la grille horizontalement pour voir les autres jours.
+              </p>
+              <div
+                class="calendar-grid-scroll"
+                [class.is-week]="view() === 'week'"
+                role="region"
+                [attr.aria-label]="'Jours de ' + periodName() + ', défilement horizontal'"
+                tabindex="0"
+                (scroll)="repositionVisiblePeek()"
+              >
+                <div class="calendar-grid-content">
+                  <div class="calendar-weekdays" aria-hidden="true">
+                    @for (weekday of weekdays; track $index) {
+                      <span>{{ view() === 'week' ? weekday : weekday.slice(0, 1) }}</span>
+                    }
+                  </div>
+                  <div class="calendar-grid" [class.is-week]="view() === 'week'">
+                    @for (day of days(); track day) {
+                      @let dayEvents = byDay().get(day) ?? [];
+                      @let shown =
+                        view() === 'week' && !bpm() ? dayEvents : dayEvents.slice(0, perCell());
+                      <section
+                        class="calendar-day"
+                        [attr.data-day]="day"
+                        [class.has-events]="dayEvents.length > 0"
+                        [class.has-attention]="hasAttention(dayEvents)"
+                        [class.has-progress]="hasProgress(dayEvents)"
+                        [class.is-lit]="isDayHighlighted(day)"
+                        [class.outside-month]="view() === 'month' && day.slice(0, 7) !== month()"
+                        [class.selected-day]="day === selectedDay()"
+                        [class.is-peek-pinned]="pinnedMonthDay() === day"
+                        [class.today]="day === today"
+                        (click)="toggleMonthPeekPin(day, $event)"
+                        (pointerenter)="enterMonthDay(day, $event)"
+                        (pointermove)="orientMonthPeek(day, $event)"
+                        (pointerleave)="leaveMonthDay(day)"
+                        (focusin)="focusMonthDay(day, $event)"
+                        (focusout)="clearMonthDayFocus($event)"
+                        (dragover)="allowDrop($event)"
+                        (drop)="drop($event, day)"
+                      >
+                        <div class="calendar-day-head">
+                          <button
+                            class="calendar-day-number"
+                            type="button"
+                            [attr.aria-label]="
+                              'Voir le ' +
+                              date(day) +
+                              (dayEvents.length ? ' · ' + dayEvents.length + ' repères' : '')
+                            "
+                            [attr.aria-pressed]="day === selectedDay()"
+                            [attr.aria-expanded]="day === visibleMonthDay() && dayEvents.length > 0"
+                            (click)="selectDay(day)"
+                            (keydown)="onDayKeydown($event, day)"
+                          >
+                            {{ day.slice(-2) }}
+                          </button>
+                          @if (dayAmount(dayEvents); as total) {
+                            <span class="calendar-day-total" [attr.data-sign]="total.sign">{{
+                              total.text
+                            }}</span>
+                          }
+                          @if (dayEvents.length > shown.length) {
+                            <button
+                              type="button"
+                              class="calendar-more calendar-day-more"
+                              [attr.aria-expanded]="expandedDay() === day"
+                              [attr.aria-label]="
+                                'Voir les ' + dayEvents.length + ' repères du ' + date(day)
+                              "
+                              (click)="toggleDayExpansion(day, $event)"
+                            >
+                              +{{ dayEvents.length - shown.length }}
+                            </button>
+                          }
+                        </div>
+                        @for (event of shown; track event.key) {
+                          <button
+                            type="button"
+                            class="calendar-event"
+                            [attr.data-kind]="marker(event)"
+                            [attr.data-tone]="element(event)?.tone"
+                            [style.--event-tone]="tone(element(event)?.tone)"
+                            [attr.aria-pressed]="isPinned(event.key)"
+                            [class.completed]="event.done"
+                            [class.is-linked]="isHighlighted(event.key)"
+                            [class.is-pinned]="isPinned(event.key)"
+                            [class.is-movable]="!!event.reschedule"
+                            [attr.draggable]="!!event.reschedule && !busy()"
+                            (dragstart)="drag($event, event)"
+                            (dragend)="dragged = null"
+                            [title]="
+                              event.title +
+                              ' · ' +
+                              (element(event)?.label ?? '') +
+                              ' — clic : garder en évidence, double-clic : ouvrir'
+                            "
+                            (pointerenter)="hoverCalendarEvent(event.key)"
+                            (pointerleave)="hoveredEventKey.set(null)"
+                            (focus)="hoverCalendarEvent(event.key)"
+                            (blur)="hoveredEventKey.set(null)"
+                            (click)="toggleHighlight(event.key)"
+                            (dblclick)="open.emit(event)"
+                          >
+                            <span aria-hidden="true">{{ symbol(element(event)) }}</span>
+                            <span class="calendar-event-title">{{ event.title }}</span>
+                            @if (showField('amount') && event.amountCents !== null) {
+                              <small
+                                class="calendar-amount"
+                                [attr.data-direction]="event.direction"
+                                >{{ amount(event) }}</small
+                              >
+                            }
+                            @if (
+                              (bpm() && showField('type')) || (!bpm() && event.amountCents === null)
+                            ) {
+                              <small>{{ element(event)?.label }}</small>
+                            }
+                            @if (bpm() && showField('status') && event.statusLabel) {
+                              <small class="bpm-calendar-event-status">{{
+                                event.statusLabel
+                              }}</small>
+                            }
+                            @if (bpm() && showField('group') && event.groupLabel) {
+                              <small class="bpm-calendar-event-group">{{ event.groupLabel }}</small>
+                            }
+                          </button>
+                        }
+                        @if (dayEvents.length && visibleMonthDay() === day) {
+                          <div
+                            class="calendar-day-peek"
+                            [class.is-expanded]="expandedDay() === day"
+                            role="region"
+                            [attr.aria-label]="'Repères du ' + date(day)"
+                            (pointerenter)="cancelMonthPeekClose()"
+                            (pointerleave)="scheduleMonthPeekClose(day)"
+                            (keydown.escape)="releasePeek()"
+                            [style.left.px]="monthPeekPosition().x"
+                            [style.top.px]="monthPeekPosition().top"
+                            [style.max-height.px]="monthPeekPosition().maxHeight"
+                            [style.min-height.px]="
+                              pinnedMonthDay() === day ? monthPeekPosition().bridgeHeight : null
+                            "
+                          >
+                            <ng-container
+                              *ngTemplateOutlet="
+                                peekBody;
+                                context: {
+                                  $implicit: day,
+                                  events: dayEvents,
+                                  expanded: expandedDay() === day,
+                                  year: false,
+                                }
+                              "
+                            />
+                          </div>
+                        }
+                      </section>
+                    }
+                  </div>
                 </div>
               </div>
-            </div>
-          }
+            }
           </div>
           <p class="calendar-legend calendar-legend-inset">
             <span><i data-kind="start"></i> {{ markerText.start }}</span>
@@ -545,6 +966,8 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
 })
 export class CalendarComponent {
   readonly data = input<CalendarData | null>(null);
+  /** Personnalisation visuelle réservée au calendrier de l’application BPM. */
+  readonly bpm = input(false);
   readonly loading = input(false);
   readonly busy = input(false);
   readonly error = input<string | null>(null);
@@ -552,22 +975,29 @@ export class CalendarComponent {
   readonly periodChange = output<CalendarPeriod>();
   readonly open = output<CalendarEvent>();
   readonly reschedule = output<{ event: CalendarEvent; date: string }>();
+  readonly displayedEventsChange = output<CalendarEvent[]>();
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+  private readonly context = inject(RecetteContext);
+  private readonly params = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
 
   protected readonly today = localToday();
   protected readonly markerText = MARKER_LABEL;
   protected readonly weekdays = ['Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.', 'Dim.'];
   protected readonly valid = validDate;
 
-  private readonly requestedView = PARAM_VIEW[this.route.snapshot.queryParamMap.get('vue') ?? ''] ?? null;
+  private readonly requestedView =
+    PARAM_VIEW[this.route.snapshot.queryParamMap.get('vue') ?? ''] ?? null;
   private readonly requestedDay = this.route.snapshot.queryParamMap.get('jour');
   protected readonly view = signal<CalendarView>(this.requestedView ?? 'month');
-  protected readonly selectedDay = signal(validDate(this.requestedDay) ? this.requestedDay : this.today);
+  protected readonly selectedDay = signal(
+    validDate(this.requestedDay) ? this.requestedDay : this.today,
+  );
   /** Vue choisie par la personne (URL ou bouton) : la vue d'ouverture paramétrée ne s'applique plus. */
   private viewChosen = this.requestedView !== null;
   private initialized = false;
@@ -575,46 +1005,91 @@ export class CalendarComponent {
   protected readonly hidden = signal<ReadonlySet<string>>(new Set());
   protected readonly includeDone = signal(true);
   protected readonly group = signal('all');
+  protected readonly customizing = signal(false);
+  protected readonly dayFields = BPM_DAY_FIELDS;
+  private readonly preferences = signal<BpmCalendarPreferences | null>(null);
+  private preferenceProfile: string | null | undefined;
+  protected readonly visibleSourceCount = computed(
+    () => this.elements().filter((el) => !this.hidden().has(el.id)).length,
+  );
 
   protected readonly month = computed(() => this.selectedDay().slice(0, 7));
   protected readonly periodName = computed(() => periodLabel(this.selectedDay(), this.view()));
-  protected readonly monthButtonLabel = computed(() => new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(this.month() + '-01T12:00:00Z')));
-  protected readonly previousLabel = computed(() => ({ month: 'Mois précédent', year: 'Année précédente', week: 'Semaine précédente' })[this.view()]);
-  protected readonly nextLabel = computed(() => ({ month: 'Mois suivant', year: 'Année suivante', week: 'Semaine suivante' })[this.view()]);
-  protected readonly days = computed(() => (this.view() === 'week' ? weekDays(this.selectedDay()) : monthDays(this.month())));
+  protected readonly monthButtonLabel = computed(() =>
+    new Intl.DateTimeFormat('fr-FR', { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
+      new Date(this.month() + '-01T12:00:00Z'),
+    ),
+  );
+  protected readonly previousLabel = computed(
+    () =>
+      ({ month: 'Mois précédent', year: 'Année précédente', week: 'Semaine précédente' })[
+        this.view()
+      ],
+  );
+  protected readonly nextLabel = computed(
+    () =>
+      ({ month: 'Mois suivant', year: 'Année suivante', week: 'Semaine suivante' })[this.view()],
+  );
+  protected readonly days = computed(() =>
+    this.view() === 'week' ? weekDays(this.selectedDay()) : monthDays(this.month()),
+  );
   protected readonly months = computed(() => yearMonths(this.selectedDay()));
 
   protected readonly elements = computed(() => this.data()?.elements ?? []);
-  protected readonly indicators = computed(() => this.data()?.indicators ?? []);
+  protected readonly indicators = computed(() =>
+    (this.data()?.indicators ?? []).filter(
+      (indicator) => !this.bpm() || this.indicatorShown(indicator.key),
+    ),
+  );
   private readonly elementsById = computed(() => new Map(this.elements().map((el) => [el.id, el])));
-  protected readonly perCell = computed(() => this.data()?.display.perCell ?? 2);
+  protected readonly perCell = computed(
+    () => (this.bpm() ? this.preferences()?.perCell : null) ?? this.data()?.display.perCell ?? 2,
+  );
   protected readonly perPeek = computed(() => this.data()?.display.perPeek ?? 4);
   private readonly closeDelay = computed(() => this.data()?.display.peekCloseDelayMs ?? 260);
 
   /** Regroupements présents (projets, Budgets…), pour le filtre. */
   protected readonly groups = computed(() => {
     const out = new Map<string, string>();
-    for (const e of this.data()?.events ?? []) out.set(e.groupId ?? `__${e.groupLabel ?? ''}`, e.groupLabel ?? 'Sans regroupement');
-    return [...out].map(([key, label]) => ({ key, label })).sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+    for (const e of this.data()?.events ?? [])
+      out.set(e.groupId ?? `__${e.groupLabel ?? ''}`, e.groupLabel ?? 'Sans regroupement');
+    return [...out]
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
   });
   /** Repères affichés : éléments visibles, terminés selon le choix, regroupement choisi. */
   protected readonly events = computed(() => {
     const hidden = this.hidden();
     const g = this.group();
     return (this.data()?.events ?? []).filter(
-      (e) => !hidden.has(e.element) && (this.includeDone() || !e.done) && (g === 'all' || (e.groupId ?? `__${e.groupLabel ?? ''}`) === g),
+      (e) =>
+        !hidden.has(e.element) &&
+        (this.includeDone() || !e.done) &&
+        (g === 'all' || (e.groupId ?? `__${e.groupLabel ?? ''}`) === g),
     );
   });
-  protected readonly periodEvents = computed(() => this.events().filter((e) => inPeriod(e.date, this.selectedDay(), this.view())));
+  protected readonly periodEvents = computed(() =>
+    this.events().filter((e) => inPeriod(e.date, this.selectedDay(), this.view())),
+  );
   protected readonly byDay = computed(() => groupByDay(this.periodEvents()));
-  protected readonly periodDays = computed(() => [...this.byDay()].map(([day, events]) => ({ day, events })).sort((a, b) => a.day.localeCompare(b.day)));
+  protected readonly periodDays = computed(() =>
+    [...this.byDay()]
+      .map(([day, events]) => ({ day, events }))
+      .sort((a, b) => a.day.localeCompare(b.day)),
+  );
   /** Repères de la période par élément, tous éléments confondus (compteurs de la légende). */
   private readonly periodCounts = computed(() => {
     const counts = new Map<string, number>();
-    for (const e of this.data()?.events ?? []) if (inPeriod(e.date, this.selectedDay(), this.view())) counts.set(e.element, (counts.get(e.element) ?? 0) + 1);
+    for (const e of this.data()?.events ?? [])
+      if (inPeriod(e.date, this.selectedDay(), this.view()))
+        counts.set(e.element, (counts.get(e.element) ?? 0) + 1);
     return counts;
   });
-  protected readonly gridHint = computed(() => (this.elements().some((el) => el.reschedulable) ? 'Déplacez un repère pour replanifier sa date.' : 'Survolez un jour pour lire ses repères.'));
+  protected readonly gridHint = computed(() =>
+    this.elements().some((el) => el.reschedulable)
+      ? 'Déplacez un repère pour replanifier sa date.'
+      : 'Survolez un jour pour lire ses repères.',
+  );
 
   // ---------- mise en évidence ----------
   protected readonly hoveredEventKey = signal<string | null>(null);
@@ -631,8 +1106,15 @@ export class CalendarComponent {
   protected readonly hoveredMonthDay = signal<string | null>(null);
   protected readonly focusedMonthDay = signal<string | null>(null);
   protected readonly pinnedMonthDay = signal<string | null>(null);
-  protected readonly monthPeekPosition = signal<DayPeekPosition>({ x: 0, top: 0, maxHeight: 0, bridgeHeight: 0 });
-  protected readonly visibleMonthDay = computed(() => this.pinnedMonthDay() ?? this.hoveredMonthDay() ?? this.focusedMonthDay());
+  protected readonly monthPeekPosition = signal<DayPeekPosition>({
+    x: 0,
+    top: 0,
+    maxHeight: 0,
+    bridgeHeight: 0,
+  });
+  protected readonly visibleMonthDay = computed(
+    () => this.pinnedMonthDay() ?? this.hoveredMonthDay() ?? this.focusedMonthDay(),
+  );
   private monthPointerStart: { day: string; x: number; y: number } | null = null;
   private monthPeekSide: -1 | 1 = 1;
   private monthPeekSideLocked = false;
@@ -643,7 +1125,12 @@ export class CalendarComponent {
   protected readonly focusedYearDay = signal<string | null>(null);
   protected readonly pinnedYearDay = signal<string | null>(null);
   protected readonly expandedYearPeekDay = signal<string | null>(null);
-  protected readonly yearPeekPosition = signal<DayPeekPosition>({ x: 0, top: 0, maxHeight: 0, bridgeHeight: 0 });
+  protected readonly yearPeekPosition = signal<DayPeekPosition>({
+    x: 0,
+    top: 0,
+    maxHeight: 0,
+    bridgeHeight: 0,
+  });
   private yearPeekCloseTimer: ReturnType<typeof setTimeout> | null = null;
   private yearPointerStart: { day: string; x: number; y: number } | null = null;
   private yearPeekSide: -1 | 1 = 1;
@@ -674,8 +1161,28 @@ export class CalendarComponent {
       this.initialized = true;
       untracked(() => {
         this.hidden.set(new Set(data.elements.filter((el) => !el.visible).map((el) => el.id)));
-        if (!this.viewChosen && data.display.view !== this.view()) this.setView(data.display.view, { chosen: false });
+        if (!this.viewChosen && data.display.view !== this.view())
+          this.setView(data.display.view, { chosen: false });
       });
+    });
+    effect(() => {
+      const data = this.data(),
+        bpm = this.bpm(),
+        profile = this.context.userId();
+      if (!bpm || !data || this.preferenceProfile === profile) return;
+      this.preferenceProfile = profile;
+      untracked(() => {
+        const preferences = readDisplayPreferences(profile, data);
+        this.preferences.set(preferences);
+        this.hidden.set(
+          new Set(data.elements.filter((el) => !preferences.sources[el.id]).map((el) => el.id)),
+        );
+        this.includeDone.set(preferences.includeDone);
+        this.group.set('all');
+      });
+    });
+    effect(() => {
+      if (this.bpm()) this.displayedEventsChange.emit(this.events());
     });
     // Un lien vers un autre jour (`?jour=`) déplace la période affichée.
     effect(() => {
@@ -729,13 +1236,23 @@ export class CalendarComponent {
   }
   /** Total signé des flux du jour (montants avec un sens), affiché dans la case. */
   protected dayAmount(events: CalendarEvent[]): { text: string; sign: string } | null {
+    if (!this.showField('total')) return null;
     const flows = events.filter((e) => e.direction && e.amountCents !== null);
     if (!flows.length) return null;
-    const net = flows.reduce((s, e) => s + (e.direction === 'entree' ? 1 : -1) * (e.amountCents ?? 0), 0);
-    return { text: formatAmount(net, net < 0 ? 'sortie' : 'entree'), sign: net < 0 ? 'negative' : net > 0 ? 'positive' : 'zero' };
+    const net = flows.reduce(
+      (s, e) => s + (e.direction === 'entree' ? 1 : -1) * (e.amountCents ?? 0),
+      0,
+    );
+    return {
+      text: formatAmount(net, net < 0 ? 'sortie' : 'entree'),
+      sign: net < 0 ? 'negative' : net > 0 ? 'positive' : 'zero',
+    };
   }
   protected hasAttention(events: CalendarEvent[]) {
-    return events.filter((e) => !e.done && e.urgent === 'overdue').length >= 1 || events.filter((e) => !e.done).length >= 5;
+    return (
+      events.filter((e) => !e.done && e.urgent === 'overdue').length >= 1 ||
+      events.filter((e) => !e.done).length >= 5
+    );
   }
   protected hasProgress(events: CalendarEvent[]) {
     const done = events.filter((e) => e.done).length;
@@ -749,7 +1266,9 @@ export class CalendarComponent {
     return this.tone(top ? this.elementsById().get(top)?.tone : undefined);
   }
   protected yearDayLabel(day: string, count: number) {
-    const highlighted = (this.byDay().get(day) ?? []).filter((e) => this.isHighlighted(e.key)).length;
+    const highlighted = (this.byDay().get(day) ?? []).filter((e) =>
+      this.isHighlighted(e.key),
+    ).length;
     return `Voir les repères du ${this.date(day)} · ${count} ${count === 1 ? 'repère' : 'repères'}${highlighted ? ` · ${highlighted} mis en évidence` : ''}`;
   }
 
@@ -761,7 +1280,65 @@ export class CalendarComponent {
       else next.add(id);
       return next;
     });
+    if (this.bpm())
+      this.savePreferences({
+        sources: Object.fromEntries(
+          this.elements().map((el) => [el.id, !this.hidden().has(el.id)]),
+        ),
+      });
     this.releasePeek();
+  }
+
+  protected showField(field: BpmDayField) {
+    return !this.bpm() || (this.preferences()?.fields[field] ?? true);
+  }
+  protected indicatorShown(key: CalendarIndicatorKey) {
+    return this.preferences()?.indicators.includes(key) ?? true;
+  }
+  protected toggleField(field: BpmDayField) {
+    const current = this.preferences();
+    if (current)
+      this.savePreferences({ fields: { ...current.fields, [field]: !current.fields[field] } });
+  }
+  protected toggleIndicator(key: CalendarIndicatorKey) {
+    const current = this.preferences();
+    if (!current) return;
+    const keys = current.indicators.includes(key)
+      ? current.indicators.filter((value) => value !== key)
+      : [...current.indicators, key];
+    this.savePreferences({ indicators: keys });
+    this.releasePeek();
+  }
+  protected setDensity(perCell: number) {
+    if (Number.isInteger(perCell) && perCell >= 1 && perCell <= 6)
+      this.savePreferences({ perCell });
+  }
+  protected setIncludeDone(includeDone: boolean) {
+    this.includeDone.set(includeDone);
+    if (this.bpm()) this.savePreferences({ includeDone });
+  }
+  protected showAllSources() {
+    this.hidden.set(new Set());
+    this.savePreferences({
+      sources: Object.fromEntries(this.elements().map((el) => [el.id, true])),
+    });
+  }
+  protected resetDisplay() {
+    const data = this.data();
+    if (!data) return;
+    const defaults = displayDefaults(data);
+    this.hidden.set(new Set(data.elements.filter((el) => !el.visible).map((el) => el.id)));
+    this.includeDone.set(defaults.includeDone);
+    this.group.set('all');
+    this.savePreferences(defaults);
+    this.releasePeek();
+  }
+  private savePreferences(change: Partial<BpmCalendarPreferences>) {
+    const current = this.preferences();
+    if (!this.bpm() || !current) return;
+    const next = { ...current, ...change };
+    this.preferences.set(next);
+    writeDisplayPreferences(this.context.userId(), next);
   }
 
   // ---------- mise en évidence ----------
@@ -808,12 +1385,17 @@ export class CalendarComponent {
   /** Suit le repère survolé dans l'agenda, sans déplacer la page ni le focus. */
   protected hoverCalendarEvent(key: string) {
     this.hoveredEventKey.set(key);
+    // En BPM, le survol souligne le repère sans déplacer la liste en cours de lecture.
+    if (this.bpm()) return;
     const list = this.host.nativeElement.querySelector<HTMLElement>('.calendar-agenda-list');
-    const entry = Array.from(list?.querySelectorAll<HTMLElement>('[data-event-key]') ?? []).find((el) => el.dataset['eventKey'] === key);
+    const entry = Array.from(list?.querySelectorAll<HTMLElement>('[data-event-key]') ?? []).find(
+      (el) => el.dataset['eventKey'] === key,
+    );
     if (!list || !entry) return;
     const bounds = list.getBoundingClientRect();
     const rect = entry.getBoundingClientRect();
-    if (rect.top < bounds.top || rect.bottom > bounds.bottom) list.scrollTo({ top: list.scrollTop + rect.top - bounds.top - 8, behavior: 'auto' });
+    if (rect.top < bounds.top || rect.bottom > bounds.bottom)
+      list.scrollTo({ top: list.scrollTop + rect.top - bounds.top - 8, behavior: 'auto' });
   }
 
   // ---------- détail d'un indicateur ----------
@@ -826,7 +1408,10 @@ export class CalendarComponent {
     const margin = 12;
     const gap = 10;
     const width = Math.min(340, window.innerWidth - 2 * margin);
-    const left = rect.right + gap + width + margin <= window.innerWidth ? rect.right + gap : Math.max(margin, rect.left - gap - width);
+    const left =
+      rect.right + gap + width + margin <= window.innerWidth
+        ? rect.right + gap
+        : Math.max(margin, rect.left - gap - width);
     const top = Math.max(margin, Math.min(rect.top, window.innerHeight - 220));
     this.peekDetailsPosition.set({ left, top, maxHeight: window.innerHeight - top - margin });
     this.activePeekDay.set(day);
@@ -847,7 +1432,8 @@ export class CalendarComponent {
   protected toggleDayExpansion(day: string, event: MouseEvent) {
     event.stopPropagation();
     const target = event.currentTarget;
-    if (target instanceof HTMLElement) this.setGridDayPin(day, target.closest('.calendar-day') as HTMLElement, true);
+    if (target instanceof HTMLElement)
+      this.setGridDayPin(day, target.closest('.calendar-day') as HTMLElement, true);
     this.expandedDay.set(day);
   }
   protected enterMonthDay(day: string, event: PointerEvent) {
@@ -868,7 +1454,13 @@ export class CalendarComponent {
     this.positionMonthPeek(target, this.monthPeekSide);
   }
   protected orientMonthPeek(day: string, event: PointerEvent) {
-    if (this.pinnedMonthDay() || this.hoveredMonthDay() !== day || this.monthPointerStart?.day !== day || this.monthPeekSideLocked) return;
+    if (
+      this.pinnedMonthDay() ||
+      this.hoveredMonthDay() !== day ||
+      this.monthPointerStart?.day !== day ||
+      this.monthPeekSideLocked
+    )
+      return;
     if (event.target instanceof Element && event.target.closest('.calendar-day-peek')) {
       this.monthPeekSideLocked = true;
       return;
@@ -892,7 +1484,11 @@ export class CalendarComponent {
   protected toggleMonthPeekPin(day: string, event: MouseEvent) {
     if (!this.byDay().has(day)) return;
     const target = event.target;
-    if (!(target instanceof Element) || target.closest('.calendar-day-peek, .calendar-more, .calendar-event, .calendar-day-number')) return;
+    if (
+      !(target instanceof Element) ||
+      target.closest('.calendar-day-peek, .calendar-more, .calendar-event, .calendar-day-number')
+    )
+      return;
     if (event.currentTarget instanceof HTMLElement) this.setGridDayPin(day, event.currentTarget);
   }
   private setGridDayPin(day: string, target: HTMLElement | null, keep = false) {
@@ -935,7 +1531,12 @@ export class CalendarComponent {
   }
   protected clearMonthDayFocus(event: FocusEvent) {
     const current = event.currentTarget;
-    if (current instanceof Element && event.relatedTarget instanceof Node && current.contains(event.relatedTarget)) return;
+    if (
+      current instanceof Element &&
+      event.relatedTarget instanceof Node &&
+      current.contains(event.relatedTarget)
+    )
+      return;
     this.focusedMonthDay.set(null);
   }
   private positionMonthPeek(target: EventTarget | null, side: -1 | 1) {
@@ -983,7 +1584,8 @@ export class CalendarComponent {
     this.setYearPeekPosition(target);
   }
   protected orientYearPeek(day: string, event: PointerEvent) {
-    if (this.pinnedYearDay() || this.yearPointerStart?.day !== day || this.yearPeekSideLocked) return;
+    if (this.pinnedYearDay() || this.yearPointerStart?.day !== day || this.yearPeekSideLocked)
+      return;
     if (Math.abs(event.clientY - this.yearPointerStart.y) > 12) {
       this.yearPeekSideLocked = true;
       return;
@@ -1001,7 +1603,8 @@ export class CalendarComponent {
     if (this.hoveredYearDay() === day) this.scheduleYearPeekClose();
   }
   protected positionYearPeekOnFocus(event: FocusEvent) {
-    if (event.currentTarget instanceof HTMLElement && !this.pinnedYearDay()) this.setYearPeekPosition(event.currentTarget);
+    if (event.currentTarget instanceof HTMLElement && !this.pinnedYearDay())
+      this.setYearPeekPosition(event.currentTarget);
   }
   private setYearPeekPosition(target: HTMLElement) {
     if (window.innerWidth <= 900) {
@@ -1024,7 +1627,12 @@ export class CalendarComponent {
   }
   protected clearYearDayFocus(event: FocusEvent) {
     const current = event.currentTarget;
-    if (current instanceof Element && event.relatedTarget instanceof Node && current.contains(event.relatedTarget)) return;
+    if (
+      current instanceof Element &&
+      event.relatedTarget instanceof Node &&
+      current.contains(event.relatedTarget)
+    )
+      return;
     this.focusedYearDay.set(null);
     this.scheduleYearPeekClose();
   }
@@ -1041,8 +1649,14 @@ export class CalendarComponent {
     if (!day) return;
     const point = this.pointerPosition;
     const under = point ? document.elementFromPoint(point.x, point.y) : null;
-    if (under?.closest(`.calendar-year-day[data-day="${day}"], .calendar-year-peek[data-day="${day}"]`)) return;
-    if (this.pinnedYearDay() !== day && this.expandedYearPeekDay() === day) this.expandedYearPeekDay.set(null);
+    if (
+      under?.closest(
+        `.calendar-year-day[data-day="${day}"], .calendar-year-peek[data-day="${day}"]`,
+      )
+    )
+      return;
+    if (this.pinnedYearDay() !== day && this.expandedYearPeekDay() === day)
+      this.expandedYearPeekDay.set(null);
     if (this.hoveredYearDay() === day) this.hoveredYearDay.set(null);
     if (this.focusedYearDay() === day) this.focusedYearDay.set(null);
     this.yearPointerStart = null;
@@ -1057,7 +1671,9 @@ export class CalendarComponent {
   private safeTop(target: HTMLElement): number {
     let top = target.closest('.calendar-month-wrap')?.getBoundingClientRect().top ?? 12;
     const page = target.closest('.page') ?? document.body;
-    for (const el of Array.from(page.querySelectorAll<HTMLElement>('.page-head, [data-sticky-hero]'))) {
+    for (const el of Array.from(
+      page.querySelectorAll<HTMLElement>('.page-head, [data-sticky-hero]'),
+    )) {
       const position = getComputedStyle(el).position;
       if (position !== 'sticky' && position !== 'fixed') continue;
       // Un bandeau figé qui recouvre le haut de la grille repousse la zone permise sous lui.
@@ -1073,12 +1689,16 @@ export class CalendarComponent {
     this.closePeekDetails();
     const day = this.visibleMonthDay();
     if (day) {
-      const target = this.host.nativeElement.querySelector<HTMLElement>(`.calendar-grid .calendar-day[data-day="${day}"]`);
+      const target = this.host.nativeElement.querySelector<HTMLElement>(
+        `.calendar-grid .calendar-day[data-day="${day}"]`,
+      );
       if (target) this.positionMonthPeek(target, this.monthPeekSide);
     }
     const yearDay = this.visibleYearDay();
     if (yearDay) {
-      const target = this.host.nativeElement.querySelector<HTMLElement>(`.calendar-year-day[data-day="${yearDay}"]`);
+      const target = this.host.nativeElement.querySelector<HTMLElement>(
+        `.calendar-year-day[data-day="${yearDay}"]`,
+      );
       if (target) this.setYearPeekPosition(target);
     }
   }
@@ -1102,9 +1722,13 @@ export class CalendarComponent {
   protected focusCalendarGrid() {
     const day = this.selectedDay();
     const year = this.view() === 'year';
-    const exact = year ? `.calendar-year-day[data-day="${day}"]` : `.calendar-day[data-day="${day}"] .calendar-day-number`;
+    const exact = year
+      ? `.calendar-year-day[data-day="${day}"]`
+      : `.calendar-day[data-day="${day}"] .calendar-day-number`;
     const fallback = year ? '.calendar-year-day.has-events' : '.calendar-day-number';
-    const target = this.host.nativeElement.querySelector<HTMLElement>(exact) ?? this.host.nativeElement.querySelector<HTMLElement>(fallback);
+    const target =
+      this.host.nativeElement.querySelector<HTMLElement>(exact) ??
+      this.host.nativeElement.querySelector<HTMLElement>(fallback);
     (target ?? this.host.nativeElement.querySelector<HTMLElement>('.calendar-month-wrap'))?.focus();
   }
   protected onDayKeydown(event: KeyboardEvent, day: string) {
@@ -1113,19 +1737,25 @@ export class CalendarComponent {
       event.preventDefault();
       return;
     }
-    const step = ({ ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 } as Record<string, number>)[event.key];
+    const step = (
+      { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 } as Record<string, number>
+    )[event.key];
     if (!step) return;
     event.preventDefault();
     let next: string | undefined;
     if (this.view() === 'year') {
       const dates = [...this.byDay().keys()].sort();
       const threshold = shiftDate(day, step);
-      next = step > 0 ? dates.find((d) => d >= threshold) : dates.reverse().find((d) => d <= threshold);
+      next =
+        step > 0 ? dates.find((d) => d >= threshold) : dates.reverse().find((d) => d <= threshold);
     } else next = shiftDate(day, step);
     if (!next || !validDate(next)) return;
     this.selectDay(next);
     requestAnimationFrame(() => {
-      const selector = this.view() === 'year' ? `.calendar-year-day[data-day="${next}"]` : `.calendar-day[data-day="${next}"] .calendar-day-number`;
+      const selector =
+        this.view() === 'year'
+          ? `.calendar-year-day[data-day="${next}"]`
+          : `.calendar-day[data-day="${next}"] .calendar-day-number`;
       this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus();
     });
   }
@@ -1133,7 +1763,8 @@ export class CalendarComponent {
     if (!validDate(day)) return;
     const before = gridWindow(this.selectedDay(), this.view());
     if (this.view() === 'month' && day.slice(0, 7) !== this.month()) this.pinnedMonthDay.set(null);
-    if (this.view() === 'year' && day.slice(0, 4) !== this.selectedDay().slice(0, 4)) this.pinnedYearDay.set(null);
+    if (this.view() === 'year' && day.slice(0, 4) !== this.selectedDay().slice(0, 4))
+      this.pinnedYearDay.set(null);
     this.hoveredEventKey.set(null);
     this.selectedDay.set(day);
     const after = gridWindow(day, this.view());
@@ -1213,7 +1844,8 @@ export class CalendarComponent {
     event.preventDefault();
     const entry = this.dragged;
     this.dragged = null;
-    if (entry && !this.busy() && entry.date !== day) this.reschedule.emit({ event: entry, date: day });
+    if (entry && !this.busy() && entry.date !== day)
+      this.reschedule.emit({ event: entry, date: day });
   }
 
   /** Libellé complet d'un jour, pour les lecteurs d'écran. */

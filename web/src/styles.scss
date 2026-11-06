@@ -36,3 +36,6 @@
 @use 'socle';
 @use 'calendar-module';
 @use 'bpm-projects';
+
+// Identité applicative réservée aux parcours BPM.
+@use 'bpm-application';

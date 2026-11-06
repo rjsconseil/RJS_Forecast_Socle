@@ -43,7 +43,7 @@ const STORE = 'bpm-create-draft:';
   template: `
     <bpm-page
       kicker="Démarrer un projet"
-      title="Partir de zéro"
+      title="Démarrer un projet"
       lead="Configurez votre Budget du projet de vie ou créez un projet de la vie, puis confirmez en une seule fois."
       [context]="profile.data()?.budgetType?.context"
     >
@@ -93,7 +93,7 @@ const STORE = 'bpm-create-draft:';
                   @case (1) {
                     @if (profile.data(); as p) {
                       <dl class="bs-recap">
-                        <div><dt>User actif</dt><dd>{{ p.user.label }}</dd></div>
+                        <div><dt>Profil financier</dt><dd>{{ p.user.label }}</dd></div>
                         <div><dt>Type</dt><dd>{{ p.user.userTypeLabel ?? p.user.userType }}</dd></div>
                         <div><dt>Budget du projet de vie</dt><dd>{{ p.principal.project.title }}</dd></div>
                         <div><dt>Cycle</dt><dd>{{ p.principal.cycle.state === 'active' ? 'Mensuel, jour ' + p.principal.cycle.anchorDay : 'À configurer' }}</dd></div>
@@ -118,7 +118,7 @@ const STORE = 'bpm-create-draft:';
                         <dt>Lignes récurrentes</dt>
                         <dd>{{ existingCount() }} ligne(s) déjà enregistrée(s), reprises et modifiables à l'étape 3.</dd>
                         <dt>Suggestions</dt>
-                        <dd>{{ p.suggestions.length }} libellé(s) suggéré(s) d'après les centres standards, sans montant : {{ p.note }}</dd>
+                        <dd>{{ p.suggestions.length }} libellé(s) du catalogue commun, à compléter avec vos montants : {{ p.note }}</dd>
                         <dt>Stock initial</dt>
                         <dd>{{ p.principal.patrimoine.openingStockCents === null ? 'À renseigner' : (p.principal.patrimoine.openingStockCents | cents) }}</dd>
                         <dt>Objectifs</dt>
@@ -135,13 +135,13 @@ const STORE = 'bpm-create-draft:';
                         <input type="radio" name="mode" value="principal" [(ngModel)]="d.mode" />
                         <span class="bs-path-icon" aria-hidden="true">◎</span>
                         <strong>Configurer le Budget du projet de vie (principal)</strong>
-                        <span>Votre budget de vie existe déjà : vous complétez ses revenus, charges, Patrimoine, cycle et vision. Aucun second projet de vie n'est créé.</span>
+                        <span>Votre budget du projet de vie existe déjà : vous complétez ses revenus, charges, Patrimoine, cycle et vision. Aucun second projet de vie n'est créé.</span>
                       </label>
                       <label class="bs-path" [class.is-selected]="d.mode === 'branch'">
                         <input type="radio" name="mode" value="branch" [(ngModel)]="d.mode" />
                         <span class="bs-path-icon" aria-hidden="true">✦</span>
                         <strong>Créer un projet de la vie (branche)</strong>
-                        <span>Un nouveau projet avec son Budget standard, rattaché au Budget du projet de vie, et au moins une tâche. Il utilise votre Patrimoine unique existant.</span>
+                        <span>Un nouveau projet avec son budget et au moins une tâche, financé par le projet de vie. Il partage votre patrimoine existant.</span>
                       </label>
                     </div>
                     @if (err('mode')) {
@@ -206,7 +206,7 @@ const STORE = 'bpm-create-draft:';
                   @case (4) {
                     @if (profile.data(); as p) {
                       @if (d.mode === 'branch') {
-                        <p class="bs-note">Un projet de la vie n'ouvre pas de second stock : il utilise le Patrimoine unique de votre user, présenté ici en lecture seule.</p>
+                        <p class="bs-note">Ce projet utilise le patrimoine unique de votre profil financier. Les montants ci-dessous sont affichés pour référence.</p>
                         <dl class="bs-recap">
                           <div><dt>Stock initial</dt><dd class="num">{{ p.principal.patrimoine.openingStockCents === null ? 'À renseigner' : (p.principal.patrimoine.openingStockCents | signedCents) }}</dd></div>
                           <div><dt>Date du stock</dt><dd>{{ p.principal.patrimoine.openingDate | shortDate }}</dd></div>
@@ -246,7 +246,7 @@ const STORE = 'bpm-create-draft:';
                           <input [(ngModel)]="d.objective" inputmode="decimal" class="num" [attr.aria-invalid]="err('objective') ? 'true' : null" />
                           @if (err('objective')) { <span class="err">{{ err('objective') }}</span> }
                         </label>
-                        <p class="bs-fixed"><strong>Patrimoine unique du user</strong> · <span class="ids">{{ p.principal.patrimoine.id }}</span></p>
+                        <p class="bs-fixed"><strong>Patrimoine unique du profil financier</strong> · <span class="ids">{{ p.principal.patrimoine.id }}</span></p>
                       }
                     }
                   }
@@ -333,7 +333,7 @@ const STORE = 'bpm-create-draft:';
                       </fieldset>
                       @if (!d.visionLater) {
                         @if (d.mode === 'branch') {
-                          <p class="bs-note">La vision et les objectifs sont ceux de votre user : ils s'appliquent à l'ensemble, pas seulement à ce projet de la vie.</p>
+                          <p class="bs-note">La vision et les objectifs sont ceux de votre profil financier : ils s'appliquent à l'ensemble, pas seulement à ce projet de la vie.</p>
                         }
                         <div class="bs-vision">
                           <label class="bs-field">
@@ -370,7 +370,7 @@ const STORE = 'bpm-create-draft:';
                           <button type="button" class="btn btn-secondary" (click)="go(2)">Modifier</button>
                         </header>
                         <dl class="bs-recap">
-                          <div><dt>User</dt><dd>{{ p.user.label }} ({{ p.user.userTypeLabel ?? p.user.userType }})</dd></div>
+                          <div><dt>Profil financier</dt><dd>{{ p.user.label }} ({{ p.user.userTypeLabel ?? p.user.userType }})</dd></div>
                           <div><dt>Rôle</dt><dd>{{ d.mode === 'principal' ? 'Budget du projet de vie (principal)' : 'Projet de la vie (branche)' }}</dd></div>
                           <div class="bs-recap-wide"><dt>Nom</dt><dd>{{ d.mode === 'principal' ? d.principalName : d.branchName }}</dd></div>
                           @if (d.mode === 'branch') {
@@ -438,12 +438,12 @@ const STORE = 'bpm-create-draft:';
                       @if (payloadSummary(); as ps) {
                         <p class="bs-note">
                           À la confirmation :
-                          {{ d.mode === 'branch' ? 'création du projet de la vie, de son Budget standard et de ' + d.tasks.length + ' tâche(s) ; ' : '' }}
+                          {{ d.mode === 'branch' ? 'création du projet de la vie, de son budget et de ' + d.tasks.length + ' tâche(s) ; ' : '' }}
                           {{ ps.newEntries }} ligne(s) ajoutée(s), {{ ps.updatedEntries }} ligne(s) existante(s) mise(s) à jour{{ ps.other.length ? ', ' + ps.other.join(', ') : '' }}.
                           @if (ps.nothing) { <strong>Aucun changement à enregistrer.</strong> }
                         </p>
                       }
-                      <p class="bpm-help">Une seule commande, rejouable : un double clic ou une nouvelle tentative après une réponse perdue ne crée aucun doublon.</p>
+                      <p class="bpm-help">L’enregistrement confirme l’ensemble du récapitulatif. En cas de nouvelle tentative, vos éléments ne seront pas créés en double.</p>
                     }
                   }
                 }

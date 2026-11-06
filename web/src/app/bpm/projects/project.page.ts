@@ -175,7 +175,7 @@ export class BpmProjectPage {
           label: 'Entrées prévues du cycle',
           value: b.regime ? cents(b.allocationCents) : 'Cycle à configurer',
           tone: 'accent',
-          note: b.life?.period ? `Ressources du budget de vie · ${b.life.period.label}` : 'Ressources du budget de vie',
+          note: b.life?.period ? `Ressources du budget du projet de vie · ${b.life.period.label}` : 'Ressources du budget du projet de vie',
         },
         {
           id: 'paid',
@@ -503,14 +503,14 @@ export class BpmProjectPage {
       this.flow.set(null);
       await this.load();
       this.notice.set({
-        text: 'Dépassement refusé par le budget de vie : rien n’a été enregistré.',
+        text: 'Dépassement refusé par le budget du projet de vie : rien n’a été enregistré.',
         error: false,
       });
       return;
     }
     await this.run(
       f.retry,
-      `Dépassement autorisé par le budget de vie : ${f.label || 'l’écriture'} est enregistrée ; le projet passe en dépassement jusqu’à la facturation de fin de cycle.`,
+      `Dépassement autorisé par le budget du projet de vie : ${f.label || 'l’écriture'} est enregistrée ; le projet passe en dépassement jusqu’à la facturation de fin de cycle.`,
       f.label,
     );
   }
@@ -519,8 +519,8 @@ export class BpmProjectPage {
     return this.run(
       () => this.bpm.decideOverrun(o.id, decision, o.revision),
       decision === 'approve'
-        ? 'Dépassement autorisé par le budget de vie.'
-        : 'Demande refusée par le budget de vie.',
+        ? 'Dépassement autorisé par le budget du projet de vie.'
+        : 'Demande refusée par le budget du projet de vie.',
     );
   }
 
@@ -650,8 +650,8 @@ export class BpmProjectPage {
           expectedRevision: revision,
         }),
       t.task.status === 'done'
-        ? `Retour enregistré dans le budget de vie : « ${t.task.title} » est déjà terminée.`
-        : `Retour prévu : il sera enregistré dans le budget de vie quand « ${t.task.title} » sera terminée.`,
+        ? `Retour enregistré dans le budget du projet de vie : « ${t.task.title} » est déjà terminée.`
+        : `Retour prévu : il sera enregistré dans le budget du projet de vie quand « ${t.task.title} » sera terminée.`,
     );
     if (ok) this.returnEditor.set(null);
   }
@@ -701,14 +701,14 @@ export class BpmProjectPage {
     if (!t) return;
     return this.run(
       () => this.api.attachTask(t.task.id, this.projectId, t.task.revision),
-      `« ${t.task.title} » rattachée au projet (commande du noyau).`,
+      `« ${t.task.title} » rattachée au projet.`,
     );
   }
 
   protected detach(t: BpmTaskCard) {
     return this.run(
       () => this.api.detachTask(t.task.id, t.task.revision),
-      `« ${t.task.title} » détachée : elle reste dans le noyau, sans projet.`,
+      `« ${t.task.title} » détachée du projet. Elle reste disponible pour un autre rattachement.`,
     );
   }
 
@@ -739,7 +739,7 @@ export class BpmProjectPage {
         await action();
         this.settling.set(null);
       },
-      `Règlement de « ${c.label} » validé : il compte maintenant dans les dépenses du budget de vie.`,
+      `Règlement de « ${c.label} » validé : il compte maintenant dans les dépenses du budget du projet de vie.`,
       `le règlement de « ${c.label} »`,
     );
   }
@@ -747,7 +747,7 @@ export class BpmProjectPage {
   protected bill(budgetId?: string) {
     return this.run(
       () => this.bpm.billOverruns(budgetId),
-      'Dépassements facturés au budget de vie : le budget attribué les intègre. Relisez les contrôles de fin de cycle.',
+      'Dépassements facturés au budget du projet de vie : l’enveloppe budgétaire les intègre. Consultez les contrôles de fin de cycle.',
     );
   }
 
