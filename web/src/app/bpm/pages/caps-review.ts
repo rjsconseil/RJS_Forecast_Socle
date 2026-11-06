@@ -105,25 +105,36 @@ function facts(r: Row) {
 
 const pick = (d: CapsReview, ids: string[]) => ids.map((id) => d.charges[id]).filter(Boolean);
 
-function centerAlert(c: ReviewCenter): string | null {
-  if (c.over) return `${cents(overOf(c))} au-delà du plafond. Chaque nouvelle dépense de ce poste creuse l'écart, à compenser sur d'autres postes pour ne pas finir la période en déficit.`;
-  if (c.capCents !== null && healthOf(c) === 'watch') return `Plus que ${cents(c.marginCents ?? 0)} avant le plafond : vérifiez avant tout nouvel achat.`;
+/** Période terminée ou close : la revue devient un bilan (aucun « nouvel achat » à surveiller). */
+export const isPastReading = (d: Pick<CapsReview, 'totals'>) => d.totals?.reading === 'closed' || d.totals?.reading === 'ended';
+
+function centerAlert(c: ReviewCenter, past = false): string | null {
+  if (c.over)
+    return past
+      ? `La période s’est terminée ${cents(overOf(c))} au-delà du plafond de ce poste.`
+      : `${cents(overOf(c))} au-delà du plafond. Chaque nouvelle dépense de ce poste creuse l'écart, à compenser sur d'autres postes pour ne pas finir la période en déficit.`;
+  if (c.capCents !== null && healthOf(c) === 'watch')
+    return past ? `La période s’est terminée à ${cents(c.marginCents ?? 0)} du plafond.` : `Plus que ${cents(c.marginCents ?? 0)} avant le plafond : vérifiez avant tout nouvel achat.`;
   return null;
 }
 
-function categoryAlert(k: ReviewCategory, center: ReviewCenter | undefined): string | null {
+function categoryAlert(k: ReviewCategory, center: ReviewCenter | undefined, past = false): string | null {
   if (k.over) {
     const absorbed = center && center.capCents !== null && !center.over;
+    if (past)
+      return `La période s’est terminée ${cents(overOf(k))} au-delà du plafond de la catégorie${absorbed ? `, absorbés par le poste « ${center!.label} » resté dans son plafond` : ''}.`;
     return `${cents(overOf(k))} au-delà du plafond de la catégorie. ${
       absorbed ? `Le poste « ${center!.label} » reste dans son plafond : l'écart y est absorbé, au détriment de ses autres dépenses.` : 'Chaque nouvelle dépense creuse l’écart, à compenser ailleurs dans le budget.'
     }`;
   }
-  if (k.capCents !== null && healthOf(k) === 'watch') return `Plus que ${cents(k.marginCents ?? 0)} avant le plafond de la catégorie.`;
+  if (k.capCents !== null && healthOf(k) === 'watch')
+    return past ? `La période s’est terminée à ${cents(k.marginCents ?? 0)} du plafond de la catégorie.` : `Plus que ${cents(k.marginCents ?? 0)} avant le plafond de la catégorie.`;
   return null;
 }
 
 /** Cartes de la revue selon le regroupement choisi ; dépassements d'abord, puis par consommation. */
 export function reviewCards(d: CapsReview, mode: ReviewMode): CapCard[] {
+  const past = isPastReading(d);
   const centerOf = (ref: string) => d.centers.find((c) => c.ref === ref);
   const cards: CapCard[] = [];
   if (mode === 'center') {
@@ -140,7 +151,7 @@ export function reviewCards(d: CapsReview, mode: ReviewMode): CapCard[] {
         description: `Toutes les charges du poste sur la période, catégorisées ou non.`,
         facts: facts(c),
         gauge: gaugeOf(c),
-        alert: centerAlert(c),
+        alert: centerAlert(c, past),
         overCents: overOf(c),
         groups: [{ key: c.ref, label: null, note: null, health: null, overCents: overOf(c), charges }],
         chargeCount: charges.length,
@@ -160,7 +171,7 @@ export function reviewCards(d: CapsReview, mode: ReviewMode): CapCard[] {
         description: `Catégorie du poste « ${k.costCenterLabel} »${k.archived ? ' (retirée des choix, ses dépenses restent rangées)' : ''}.`,
         facts: facts(k),
         gauge: gaugeOf(k),
-        alert: categoryAlert(k, centerOf(k.costCenterRef)),
+        alert: categoryAlert(k, centerOf(k.costCenterRef), past),
         overCents: overOf(k),
         groups: [{ key: k.id, label: null, note: null, health: null, overCents: overOf(k), charges }],
         chargeCount: charges.length,
@@ -199,7 +210,7 @@ export function reviewCards(d: CapsReview, mode: ReviewMode): CapCard[] {
         description: cappedCats.length ? `${plural(cappedCats.length, 'catégorie plafonnée', 'catégories plafonnées')} dans ce poste, avec une limite indépendante.` : 'Aucune catégorie plafonnée dans ce poste.',
         facts: [...facts(c).slice(0, 3), { label: 'Catégories dépassées', value: overCats.length ? catAlerts.join(', ') : 'Aucune' }],
         gauge: gaugeOf(c),
-        alert: centerAlert(c) ?? (overCats.length ? categoryAlert(overCats[0], c) : null),
+        alert: centerAlert(c, past) ?? (overCats.length ? categoryAlert(overCats[0], c, past) : null),
         overCents: Math.max(overOf(c), ...overCats.map(overOf), 0),
         groups,
         chargeCount: all.length,

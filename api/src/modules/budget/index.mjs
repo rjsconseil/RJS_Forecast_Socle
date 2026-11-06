@@ -97,7 +97,7 @@ export function budgetLines(state, budgetIds, { from, to, by = 'planned' }) {
   const materialized = new Set();
   for (const o of Object.values(state.operations)) {
     if (o.recurrenceId) materialized.add(occurrenceKey(o.recurrenceId, o.occurrenceDate));
-    if (!ids.has(o.budgetId)) continue;
+    if (!ids.has(o.budgetId) || o.status === 'cancelled') continue;
     const d = by === 'planned' ? o.date : o.status === 'realized' ? o.realizedDate : null;
     if (d && d >= from && d <= to) out.push(lineOfOperation(o));
   }
@@ -119,6 +119,10 @@ export function budgetLines(state, budgetIds, { from, to, by = 'planned' }) {
  * Une ligne compte dans son centre ET dans sa catégorie : chaque niveau est lu pour lui-même.
  * @param realized lignes `by: 'realized'` de la période ; @param planned lignes `by: 'planned'` de la période.
  */
+/** Seuil d'approche d'un plafond [P] : à partir de 85 % engagés, le poste est « proche du plafond ». Seule source de la règle. */
+export const NEAR_CAP_USED_PCT = 85;
+export const isNearCap = (capCents, engagedCents) => capCents !== null && capCents > 0 && engagedCents <= capCents && (engagedCents / capCents) * 100 >= NEAR_CAP_USED_PCT;
+
 export function capReport({ centers, caps = {}, categories = [], realized, planned, withLines = false }) {
   const refOf = (l) => l.costCenterId ?? STD + l.standardCostCenter;
   const charges = (ls) => ls.filter((l) => l.direction === 'charge');
@@ -146,6 +150,7 @@ export function capReport({ centers, caps = {}, categories = [], realized, plann
       marginCents: cap === null ? null : cap - engagedCents,
       usedPct: cap ? Math.round((engagedCents / cap) * 1000) / 10 : null,
       over: cap !== null && engagedCents > cap,
+      near: isNearCap(cap, engagedCents),
       lineCount: charges(realized).filter(match).length + charges(planned).filter((l) => !l.settled && match(l)).length,
     };
   };
@@ -187,16 +192,19 @@ const sourceOf = (l, realized) => ({
  * Somme du Budget du contexte sur la période : réalisé par date réelle, prévu par date prévue,
  * restant = prévu non réglé (C04). Toutes passent par `budgetLines`.
  */
-function periodSum(ctx, socle, { direction, realized, remaining = false }) {
+function periodSum(ctx, socle, { direction, realized, remaining = false, advance = false }) {
   if (!ctx.budgetId) return { value: null, sources: [], note: 'Aucun Budget dans le contexte' };
   if (!ctx.period) return { value: null, sources: [], note: 'Aucune période : cycle à configurer' };
   const { start, end } = ctx.period;
-  const lines = budgetLines(ctx.state, [ctx.budgetId], { from: start, to: end, by: realized ? 'realized' : 'planned' }).filter((l) => l.direction === direction && (!remaining || !l.settled));
-  const cents = lines.reduce((s, l) => s + (realized ? l.realizedCents : l.plannedCents), 0);
+  // `advance` : prévu dans la période mais déjà réglé avant son début (compté dans le réalisé d'une période antérieure).
+  const lines = budgetLines(ctx.state, [ctx.budgetId], { from: start, to: end, by: realized ? 'realized' : 'planned' }).filter(
+    (l) => l.direction === direction && (!remaining || !l.settled) && (!advance || (l.settled && l.realizedDate < start)),
+  );
+  const cents = lines.reduce((s, l) => s + (realized || advance ? l.realizedCents : l.plannedCents), 0);
   return {
     value: cents / 100,
-    sources: lines.map((l) => sourceOf(l, realized)),
-    note: lines.length ? null : remaining ? 'Rien en attente sur la période' : `Aucune opération ${realized ? 'réalisée' : 'prévue'} sur la période`,
+    sources: lines.map((l) => sourceOf(l, realized || advance)),
+    note: lines.length ? null : advance ? 'Rien de réglé d’avance pour la période' : remaining ? 'Rien en attente sur la période' : `Aucune opération ${realized ? 'réalisée' : 'prévue'} sur la période`,
   };
 }
 
@@ -294,6 +302,8 @@ export default {
     { name: 'budget.revenusPrevus', label: 'Revenus prévus', unit: 'EUR', description: 'Somme des montants prévus des revenus (opérations et occurrences attendues) dont la date prévue est dans la période, réglés ou non.', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'income', realized: false }) },
     { name: 'budget.chargesPrevues', label: 'Charges prévues', unit: 'EUR', description: 'Somme des montants prévus des charges (opérations et occurrences attendues) dont la date prévue est dans la période, réglées ou non.', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'charge', realized: false }) },
     { name: 'budget.resteARecevoir', label: 'Revenus restant à recevoir', unit: 'EUR', description: 'Montants prévus des revenus non reçus (opérations et occurrences attendues) dont la date prévue est dans la période.', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'income', realized: false, remaining: true }) },
+    { name: 'budget.revenusAnticipes', label: 'Revenus reçus d’avance', unit: 'EUR', description: 'Revenus prévus dans la période mais reçus avant son début : ils comptent dans le réalisé de la période où ils ont été reçus.', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'income', realized: false, advance: true }) },
+    { name: 'budget.chargesAnticipees', label: 'Charges payées d’avance', unit: 'EUR', description: 'Charges prévues dans la période mais payées avant son début : elles comptent dans le réalisé de la période où elles ont été payées.', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'charge', realized: false, advance: true }) },
     { name: 'budget.resteAPayer', label: 'Dépenses restant à payer', unit: 'EUR', description: 'Montants prévus des dépenses non payées (opérations et occurrences attendues) dont la date prévue est dans la période.', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'charge', realized: false, remaining: true }) },
   ],
 
@@ -446,6 +456,7 @@ export default {
         parentBudgetName: b.parentBudgetId ? state.budgets[b.parentBudgetId]?.name ?? null : null,
         operationCount: ops.length,
         realizedCount: ops.filter((o) => o.status === 'realized').length,
+        cancelledCount: ops.filter((o) => o.status === 'cancelled').length,
       };
     }
 
@@ -571,6 +582,7 @@ export default {
         await om.command('updateOperation', ctx, input, (tx) => {
           const o = om.owned(tx.draft, 'operation', id, tx.userId);
           om.checkRevision(o, expectedRevisionOf(input));
+          if (o.status === 'cancelled') fail('FORBIDDEN_BY_RULE', 'Cette saisie est annulée : elle ne se modifie plus.', { operationId: id });
           const direction = 'direction' in input ? oneOf('direction', input.direction, DIRECTIONS) : o.direction;
           const patch = {
             direction,
@@ -603,6 +615,7 @@ export default {
           const o = om.owned(tx.draft, 'operation', id, tx.userId);
           om.checkRevision(o, expectedRevisionOf(input));
           if (o.status === 'realized') fail('ALREADY_SETTLED', 'Cette opération est déjà réglée.', { operationId: id, realizedDate: o.realizedDate });
+          if (o.status === 'cancelled') fail('FORBIDDEN_BY_RULE', 'Cette saisie est annulée : saisissez une nouvelle opération.', { operationId: id });
           const patch = {
             status: 'realized',
             realizedAmountCents: money('realizedAmount', input.realizedAmount ?? toEuros(o.amountCents), { positive: true }),
@@ -627,6 +640,24 @@ export default {
           if (o.status !== 'realized') fail('FORBIDDEN_BY_RULE', "Cette opération n'est pas réglée.", { operationId: id });
           guard(tx.draft, o, [o.realizedDate]);
           om.update(tx, o, { status: 'planned', realizedAmountCents: null, realizedDate: null });
+          return { operationId: id };
+        });
+        return { operation: operationView(socle.state, socle.state.operations[id]) };
+      },
+
+      /**
+       * Annule une saisie ponctuelle (doublon, erreur) : elle sort de toutes les sommes et de toutes les listes,
+       * mais reste dans la base, avec son état d'avant. Refusé dans une période close (même garde que toute écriture),
+       * et pour une occurrence récurrente, qui s'annule par son règlement (`cancelRealization`).
+       */
+      async cancelOperation(ctx, id, input = {}) {
+        await om.command('cancelOperation', ctx, input, (tx) => {
+          const o = om.owned(tx.draft, 'operation', id, tx.userId);
+          om.checkRevision(o, expectedRevisionOf(input));
+          if (o.status === 'cancelled') fail('FORBIDDEN_BY_RULE', 'Cette saisie est déjà annulée.', { operationId: id });
+          if (o.recurrenceId) fail('FORBIDDEN_BY_RULE', "Une occurrence récurrente ne s'annule pas : annulez son règlement, ou modifiez sa définition.", { operationId: id, recurrenceId: o.recurrenceId });
+          guard(tx.draft, o, [o.date, o.realizedDate].filter(Boolean));
+          om.update(tx, o, { status: 'cancelled', cancelledFrom: o.status, cancelReason: 'reason' in input ? note(input.reason) : null });
           return { operationId: id };
         });
         return { operation: operationView(socle.state, socle.state.operations[id]) };
@@ -935,6 +966,7 @@ export default {
       ['PUT', '/api/budget/operations/:id', ({ ctx, params, body }) => s.updateOperation(ctx, params.id, body)],
       ['POST', '/api/budget/operations/:id/realize', ({ ctx, params, body }) => s.realizeOperation(ctx, params.id, body)],
       ['POST', '/api/budget/operations/:id/cancel-realization', ({ ctx, params, body }) => s.cancelRealization(ctx, params.id, body)],
+      ['POST', '/api/budget/operations/:id/cancel', ({ ctx, params, body }) => s.cancelOperation(ctx, params.id, body)],
       ['GET', '/api/budget/recurrences', ({ ctx, query }) => s.recurrences(ctx, { budgetId: query.get('budgetId') || undefined })],
       ['POST', '/api/budget/recurrences', ({ ctx, body }) => s.createRecurrence(ctx, body)],
       ['PUT', '/api/budget/recurrences/:id', ({ ctx, params, body }) => s.updateRecurrence(ctx, params.id, body)],

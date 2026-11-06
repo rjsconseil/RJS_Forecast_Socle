@@ -17,6 +17,7 @@ import {
   recurrenceText,
   REVIEW_MODES,
   ReviewMode,
+  isPastReading,
   reviewCards,
   reviewSummary,
   statusText,
@@ -162,7 +163,7 @@ import {
               class="life-financial-stat life-available"
               [class.is-negative]="(d()?.totals?.expectedCents ?? 0) < 0"
             >
-              <dt>Solde prévu à la clôture</dt>
+              <dt>{{ closedReading() ? 'Résultat clôturé' : 'Solde prévu à la clôture' }}</dt>
               <dd>{{ expected() }}</dd>
               <span>{{ verdict() }}</span>
             </div>
@@ -170,7 +171,7 @@ import {
         </section>
 
         @if (d(); as d) {
-          @if (d.totals.toCompensateCents > 0) {
+          @if (d.totals.toCompensateCents > 0 && !past()) {
             <section class="caps-compensation" aria-label="Marges de compensation">
               <h2>Où réduire les dépenses pour compenser ?</h2>
               <p>
@@ -312,14 +313,16 @@ import {
                     [attr.aria-label]="'Commandes · ' + c.title"
                   >
                     <div class="bpm-actions bpm-project-row-actions">
-                      <button
-                        class="btn btn-primary"
-                        type="button"
-                        [disabled]="!budgets().length"
-                        (click)="openEntry(c)"
-                      >
-                        Saisir une charge ici
-                      </button>
+                      @if (!past()) {
+                        <button
+                          class="btn btn-primary"
+                          type="button"
+                          [disabled]="!budgets().length"
+                          (click)="openEntry(c)"
+                        >
+                          Saisir une charge ici
+                        </button>
+                      }
                       <button class="btn btn-secondary" type="button" (click)="configure(c)">
                         Modifier le plafond
                       </button>
@@ -844,8 +847,12 @@ export class BpmCapsPage {
     return total ? percentText((x.engagedCents / total) * 100, 0) : '—';
   };
 
+  /** Période terminée ou close : bilan, sans incitation à de nouvelles dépenses. */
+  protected past = computed(() => (this.d() ? isPastReading(this.d()!) : false));
+  protected closedReading = computed(() => this.d()?.totals.reading === 'closed');
   protected expected = computed(() => {
-    const v = this.d()?.totals.expectedCents;
+    const t = this.d()?.totals;
+    const v = t?.reading === 'closed' ? t.closedResultCents : t?.expectedCents;
     return v === null || v === undefined
       ? '—'
       : (v > 0 ? '+' : v < 0 ? '−' : '') + cents(Math.abs(v));
@@ -854,10 +861,14 @@ export class BpmCapsPage {
     const n = this.d()?.totals.overCount ?? 0;
     return n
       ? `${n} dépassement${n > 1 ? 's' : ''} : les charges concernées sont dépliées, les plus lourdes d’abord.`
-      : 'Aucun dépassement : chaque carte montre ce qu’il reste avant d’acheter.';
+      : this.past()
+        ? 'Aucun dépassement sur cette période.'
+        : 'Aucun dépassement : chaque carte montre ce qu’il reste avant d’acheter.';
   });
   protected verdict = computed(() => {
     const t = this.d()?.totals;
+    if (t?.reading === 'closed') return t.toCompensateCents ? 'Capitalisé malgré le dépassement des plafonds' : 'Capitalisé dans le patrimoine';
+    if (t?.reading === 'ended') return 'Période terminée, en attente de clôture';
     if (!t || t.expectedCents === null) return 'Si tout le prévu se réalise';
     if (t.expectedCents < 0)
       return t.toCompensateCents

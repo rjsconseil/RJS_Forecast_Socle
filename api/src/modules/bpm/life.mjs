@@ -7,18 +7,27 @@
 // Σ « à payer » des natures = « À payer » (`bpm.resteAPayer`).
 // L'usage de l'excédent capitalisé (placements, affectations) n'est pas géré ici : il relève d'un module à venir.
 import { monthlyAverageCents } from '../budget/recurrence.mjs';
+import { isNearCap } from '../budget/index.mjs';
 import { centerRefOf, essentialRefsOf, ESSENTIALS_PARAMETER, NATURE_LABEL, natureOf } from './natures.mjs';
 import { addDays, today } from './periods.mjs';
 
 const RESULT = 'bpm.resultatPeriode';
 const KEYS = [
   'bpm.revenus', 'bpm.charges', 'bpm.chargesProjets', RESULT, 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu',
+  'bpm.recuAvance', 'bpm.payeAvance', 'bpm.soldeAvecAvances', 'bpm.revenusPrevus',
   'bpm.tauxEpargne', 'bpm.consommationCharges', 'bpm.patrimoineConstitue', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif',
 ];
 const OPEN = ['late', 'due', 'pending'];
+const EURO = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
+const eur = (c) => EURO.format(c / 100);
+const signed = (c) => (c > 0 ? '+' : '') + eur(c);
 export const HEALTH_LABEL = { ok: 'En règle', watch: 'À surveiller', alert: 'À traiter', unknown: 'À renseigner' };
-/** Une marge de plafond sous ce seuil (part du plafond) met le volet « à surveiller » [P]. */
-const NEAR_CAP_PCT = 10;
+/**
+ * Un solde prévu sous le budget initial n'alerte qu'au-delà d'une tolérance [P] : 2 % des revenus prévus, 10 € au moins.
+ * Les petits écarts de réalisation (courses à 94 € au lieu de 85 €) ne changent pas l'état du cycle.
+ */
+const INITIAL_GAP_PCT = 2;
+const INITIAL_GAP_MIN_CENTS = 1000;
 export const SURPLUS_USE_NOTE = 'L’usage de l’excédent capitalisé (placements, affectations) relève d’un module à venir : cette page constate ce qui s’accumule et pilote ce qui l’alimente.';
 
 const cents = (v) => (v === null || v === undefined ? null : Math.round(v * 100));
@@ -110,6 +119,7 @@ export function createLife(socle, h, reads, projects) {
     const incomes = planned.filter((l) => l.direction === 'income');
     const lateIncome = open.filter((l) => inReading(l) && l.direction === 'income' && l.status === 'late');
     const closure = period ? closures.find((c) => c.periodKey === period.key) ?? null : null;
+    const unrealized = planned.filter((l) => !l.settled && l.status === 'unrealized');
     const toCloseCount = cs ? Math.max(0, cs.current.index - cs.firstOpen.index) : 0;
     const total = period ? days(period.start, period.end) + 1 : null;
     const elapsed = period ? Math.min(Math.max(days(period.start, now) + 1, 0), total) : null;
@@ -140,6 +150,18 @@ export function createLife(socle, h, reads, projects) {
             projectsPaidCents: f('bpm.chargesProjets'),
             incomeCount: incomes.length,
             receivedCount: incomes.filter((l) => l.settled).length,
+            // Reçu − prévu sur les entrées du cycle déjà reçues (facture payée en partie, salaire ajusté…).
+            incomeGapCents: sum(incomes.filter((l) => l.settled), (l) => (l.realizedCents ?? l.plannedCents) - l.plannedCents),
+            // Réglé d'avance : prévu dans ce cycle, réglé dans un cycle antérieur (déjà dans son résultat).
+            advanceReceivedCents: f('bpm.recuAvance'),
+            advanceReceivedCount: incomes.filter((l) => l.settled && l.realizedDate < period.start).length,
+            advancePaidCents: f('bpm.payeAvance'),
+            balancedCents: f('bpm.soldeAvecAvances'),
+            // Restées sans règlement à la clôture : hors du résultat capitalisé, un règlement tardif compte à sa date réelle.
+            unrealizedIncomeCents: sum(unrealized.filter((l) => l.direction === 'income'), (l) => l.plannedCents),
+            unrealizedIncomeCount: unrealized.filter((l) => l.direction === 'income').length,
+            unrealizedChargeCents: sum(unrealized.filter((l) => l.direction === 'charge'), (l) => l.plannedCents),
+            unrealizedChargeCount: unrealized.filter((l) => l.direction === 'charge').length,
             lateIncomeCents: sum(lateIncome, (l) => l.plannedCents),
             lateIncomeCount: lateIncome.length,
             nextIncome: (() => {
@@ -150,6 +172,24 @@ export function createLife(socle, h, reads, projects) {
           }
         : null,
     };
+    // Un solde négatif peut venir d'entrées de ce cycle reçues au cycle précédent : le dire plutôt qu'alerter à tort.
+    function advanceExplains(exp) {
+      const adv = f('bpm.recuAvance') ?? 0;
+      const balanced = f('bpm.soldeAvecAvances');
+      if (adv > 0 && balanced !== null && balanced >= 0)
+        return health('watch', `Solde prévu négatif car ${eur(adv)} de ce cycle ont été reçus d’avance au cycle précédent (déjà dans son résultat) : avances comprises, le cycle est à ${signed(balanced)}.`);
+      if (adv > 0) return health('alert', `Le solde prévu à la clôture est négatif, même en comptant les ${eur(adv)} reçus d’avance au cycle précédent : les charges prévues dépassent les entrées du cycle.`);
+      return health('alert', 'Le solde prévu à la clôture est négatif : les charges prévues dépassent les entrées du cycle.');
+    }
+    function unrealizedText(ls) {
+      const inc = ls.filter((l) => l.direction === 'income');
+      const chg = ls.filter((l) => l.direction === 'charge');
+      const parts = [
+        inc.length ? `${inc.length} entrée(s) jamais reçue(s) (${eur(sum(inc, (l) => l.plannedCents))})` : null,
+        chg.length ? `${chg.length} charge(s) jamais réglée(s) (${eur(sum(chg, (l) => l.plannedCents))})` : null,
+      ].filter(Boolean);
+      return `Cycle clôturé avec ${parts.join(' et ')} : hors de son résultat. Un règlement tardif comptera à sa date réelle, depuis « Échéances à traiter ».`;
+    }
     Object.assign(
       cycleBlock,
       !cs
@@ -157,15 +197,17 @@ export function createLife(socle, h, reads, projects) {
         : closure
           ? closure.resultCents < 0
             ? health('watch', 'Cycle clôturé avec un résultat négatif : il a réduit le patrimoine.')
-            : health('ok')
+            : unrealized.length
+              ? health('watch', unrealizedText(unrealized))
+              : health('ok')
           : expected !== null && expected < 0
-          ? health('alert', 'Le solde prévu à la clôture est négatif : les charges prévues dépassent les entrées du cycle.')
+          ? advanceExplains(expected)
           : lateIncome.length
             ? health('watch', `${lateIncome.length} entrée(s) attendue(s) en retard.`)
             : !isCurrent && period.status === 'ended'
               ? health('watch', 'Période terminée, pas encore clôturée : son résultat n’est pas encore capitalisé.')
-              : expected !== null && initial !== null && expected < initial
-                ? health('watch', 'Le solde prévu est en dessous du budget initial du cycle.')
+              : expected !== null && initial !== null && initial - expected > Math.max(INITIAL_GAP_MIN_CENTS, Math.round(((f('bpm.revenusPrevus') ?? 0) * INITIAL_GAP_PCT) / 100))
+                ? health('watch', `Le solde prévu est ${eur(initial - expected)} en dessous du budget initial du cycle.`)
                 : health('ok'),
     );
 
@@ -175,6 +217,8 @@ export function createLife(socle, h, reads, projects) {
     const bt = reads.budgetType(ctx);
     const directives = Object.fromEntries(reads.directives(ctx).items.map((i) => [i.key, i]));
     const totalPaid = f('bpm.charges');
+    // Plafonds de catégorie (même mesure que la revue des plafonds) : un dépassement de catégorie compte dans le volet de sa nature.
+    const capCategories = period ? reads.capsReview(ctx, { period: period.key }).categories.filter((k) => k.capCents !== null) : [];
 
     function natureBlock(n) {
       const isN = (l) => l.direction === 'charge' && natureOf(l, essentials) === n;
@@ -201,6 +245,7 @@ export function createLife(socle, h, reads, projects) {
             capCents,
             marginCents: capCents === null ? null : capCents - paidCents - toPayCents,
             over: capCents !== null && paidCents + toPayCents > capCents,
+            near: isNearCap(capCents, paidCents + toPayCents),
             lateCount: of(late).length,
             lineCount: of(plannedLines).length,
           };
@@ -209,8 +254,18 @@ export function createLife(socle, h, reads, projects) {
       const capped = rows.filter((r) => r.capCents !== null);
       const capCents = capped.length ? sum(capped, (r) => r.capCents) : null;
       const marginCents = capped.length ? sum(capped, (r) => r.marginCents) : null;
-      const overCount = capped.filter((r) => r.over).length;
-      const nearCap = capped.some((r) => !r.over && r.capCents > 0 && (r.marginCents / r.capCents) * 100 < NEAR_CAP_PCT);
+      const categories = capCategories
+        .filter((k) => essentials.has(k.costCenterRef) === (n === 'indispensable'))
+        .map((k) => ({ id: k.categoryId ?? k.id ?? null, label: k.label, ref: k.costCenterRef, capCents: k.capCents, engagedCents: k.engagedCents ?? null, marginCents: k.marginCents, over: !!k.over, near: !!k.near }));
+      // Une catégorie dépassée n'ajoute rien si son poste, plafonné, est déjà compté au-delà.
+      const overCenters = new Set(capped.filter((r) => r.over).map((r) => r.ref));
+      const overCategories = categories.filter((k) => k.over && !overCenters.has(k.ref));
+      const overCount = overCenters.size + overCategories.length;
+      const nearCap = capped.some((r) => r.near) || categories.some((k) => k.near && !k.over);
+      const overText = (kind) => {
+        const parts = [overCenters.size ? `${overCenters.size} poste(s) ${kind}` : null, overCategories.length ? `${overCategories.length} catégorie(s) (${overCategories.map((k) => k.label).join(', ')})` : null].filter(Boolean);
+        return `${parts.join(' et ')} au-delà de leur plafond${isCurrent ? '' : ' sur cette période'}.`;
+      };
       const paidCents = sum(paidLines, (l) => l.realizedCents);
       const plannedCents = sum(plannedLines, (l) => l.plannedCents);
       const next = openLines.filter((l) => ['due', 'pending'].includes(l.status)).sort((x, y) => x.plannedDate.localeCompare(y.plannedDate))[0] ?? null;
@@ -222,6 +277,9 @@ export function createLife(socle, h, reads, projects) {
         toPayCents: sum(openLines, (l) => l.plannedCents),
         plannedCents,
         consumedPct: pct(paidCents, plannedCents),
+        // Ce qui explique Prévu ≠ Réglé + Reste : montants réglés différents du prévu, règlements d'échéances d'autres cycles.
+        realizationGapCents: sum(plannedLines.filter((l) => l.settled), (l) => (l.realizedCents ?? l.plannedCents) - l.plannedCents),
+        otherCyclePaidCents: period ? sum(paidLines.filter((l) => l.plannedDate < period.start || l.plannedDate > period.end), (l) => l.realizedCents) : 0,
         shareOfPaidPct: pct(paidCents, totalPaid),
         lateCents: sum(late, (l) => l.plannedCents),
         lateCount: late.length,
@@ -231,6 +289,7 @@ export function createLife(socle, h, reads, projects) {
         capCents,
         marginCents,
         overCount,
+        categories,
         monthlyAverageCents: sum(bt.lines.filter((r) => r.direction === 'charge' && essentials.has(r.costCenterRef) === (n === 'indispensable')), (r) => monthlyAverageCents(r.amountCents, r.cadence)),
         next: next ? lineOf(next, essentials) : null,
         rows,
@@ -243,9 +302,9 @@ export function createLife(socle, h, reads, projects) {
           ...(late.length
             ? health('alert', `${late.length} charge(s) indispensable(s) en retard de paiement.`)
             : overCount
-              ? health('alert', `${overCount} poste(s) indispensable(s) au-delà de leur plafond.`)
+              ? health('alert', overText('indispensable(s)'))
               : due.length || nearCap
-                ? health('watch', due.length ? `${due.length} charge(s) indispensable(s) à régler aujourd’hui.` : 'Un poste indispensable approche de son plafond.')
+                ? health('watch', due.length ? `${due.length} charge(s) indispensable(s) à régler aujourd’hui.` : 'Un poste ou une catégorie indispensable approche de son plafond.')
                 : !plannedLines.length && !paidCents
                   ? health('unknown', 'Aucune charge indispensable prévue : complétez le budget type (loyer, courses, transport…).')
                   : health('ok')),
@@ -260,13 +319,13 @@ export function createLife(socle, h, reads, projects) {
         availableReason: available?.reason ?? null,
         weeklyCents: isCurrent ? directives.weekly?.valueCents ?? null : null,
         ...(overCount
-          ? health('alert', `${overCount} poste(s) courant(s) au-delà de leur plafond.`)
+          ? health('alert', overText('courant(s)'))
           : late.length
             ? health('watch', `${late.length} charge(s) courante(s) en retard.`)
             : available?.valueCents !== null && available?.valueCents !== undefined && available.valueCents < 0
               ? health('watch', 'Le disponible du cycle est négatif après l’épargne visée : réduire les dépenses courantes.')
               : nearCap
-                ? health('watch', 'Un poste courant approche de son plafond.')
+                ? health('watch', 'Un poste ou une catégorie courante approche de son plafond.')
                 : health('ok')),
       };
     }
@@ -391,7 +450,13 @@ export function createLife(socle, h, reads, projects) {
           : last && last.resultCents < 0
             ? health('watch', 'Le dernier cycle clôturé est négatif.')
             : !plan && v.savingsTargetCents === null
-              ? health('unknown', 'Aucun objectif d’excédent ni épargne visée : fixez-en un dans la vision.')
+              ? health(
+                  'unknown',
+                  rows.length
+                    // Sans objectif, les clôtures se lisent quand même : les dire avant d'inviter à fixer un repère.
+                    ? `${rows.length} cycle(s) clôturé(s), cumul ${signed(sum(results, (x) => x))}${results.some((x) => x < 0) ? `, dont ${results.filter((x) => x < 0).length} négatif(s)` : ''} : fixez un objectif d’excédent ou une épargne visée dans la vision pour les mesurer.`
+                    : 'Aucun objectif d’excédent ni épargne visée : fixez-en un dans la vision.',
+                )
               : health('ok')),
     };
 

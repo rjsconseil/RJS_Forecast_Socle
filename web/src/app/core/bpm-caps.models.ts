@@ -24,6 +24,8 @@ export interface CapMeasure {
   marginCents: number | null;
   usedPct: number | null;
   over: boolean;
+  /** Proche du plafond selon la règle du middleware Budget (85 % engagés). */
+  near?: boolean;
   lineCount: number;
 }
 
@@ -114,6 +116,10 @@ export interface CapsReview {
     /** Solde prévu à la clôture de la période (si tout le prévu se réalise). */
     expectedCents: number | null;
     initialCents: number | null;
+    /** État de la période lue : une période terminée ou close se lit comme un bilan. */
+    reading?: 'closed' | 'ended' | 'current' | 'future';
+    /** Résultat capitalisé à la clôture (période close). */
+    closedResultCents?: number | null;
   };
 }
 

@@ -172,7 +172,7 @@ export interface LineDetail {
   /** Projet de la vie qui porte l'échéance ; null pour le budget de vie. */
   project?: { budgetId: string; coreProjectId: string; name: string; funded: boolean; taskFundingRequired?: boolean; allocationDate: string | null; taskTitle: string | null; inclusion?: 'included' | 'before-allocation' | 'unfunded' | 'pending' | 'income' } | null;
   timing?: { plannedPeriod: LinePeriod | null; realizedPeriod: LinePeriod | null };
-  actions: { canSettle: boolean; canCancelSettlement: boolean; canEdit: boolean; settlementPolicy: string; editReason?: string | null };
+  actions: { canSettle: boolean; canCancelSettlement: boolean; canEdit: boolean; settlementPolicy: string; editReason?: string | null; canCancelEntry?: boolean };
 }
 
 export interface LinePeriod {
@@ -303,7 +303,11 @@ export interface BpmBudgetType {
 export interface BpmDue {
   context: BpmContextInfo;
   lines: RegisterLine[];
+  /** Solde net des seules échéances des périodes ouvertes. */
   totalCents: number;
+  /** Échéances restées sans règlement dans des périodes closes (hors solde net). */
+  unrealizedCount?: number;
+  unrealizedNetCents?: number;
 }
 
 export interface BpmEvents {

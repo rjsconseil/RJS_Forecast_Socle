@@ -1,0 +1,3424 @@
+{
+  "date": "2026-11-06",
+  "prefix": "RECETTE 30",
+  "profiles": [
+    {
+      "id": "usr_b5ddb32c-5775-4cd1-8276-e0965a41e788",
+      "case": "N06-V1",
+      "label": "RECETTE 30 · N06-V1 · Salarié + vacances · projet terminé en septembre, parts rendues",
+      "particularity": "Toutes les tâches sont terminées au cycle de septembre ; les parts non consommées reviennent à l'enveloppe, le projet de vie reste actif.",
+      "projects": [
+        {
+          "name": "Vacances",
+          "coreProjectId": "prj_493bf394-71c9-462b-b2fd-5fb1ecabb6eb",
+          "budgetId": "bud_f4abdd4c-1d85-4a49-8a7f-80b4a061db64",
+          "tasks": {
+            "train": "tsk_d4c99a7f-2231-4a09-bbd0-124a15144c81",
+            "gite": "tsk_eac9972f-7406-472e-8e5a-8576572de13a",
+            "activites": "tsk_74f42ff5-0004-4833-992a-be561a74a15c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_6eb3b14b-08a9-47d7-87cd-ee92de532d38",
+      "case": "N06-V2",
+      "label": "RECETTE 30 · N06-V2 · Salarié + vacances · dépassement autorisé puis facturé",
+      "particularity": "Le solde du gîte coûte 650 € au lieu de 450 € : un dépassement de 200 € est demandé, autorisé par le projet de vie, puis facturé en fin de cycle.",
+      "projects": [
+        {
+          "name": "Vacances",
+          "coreProjectId": "prj_1a5efa0f-8780-4e33-98a9-38c83c122197",
+          "budgetId": "bud_3d320575-aa21-4967-a404-a2fb0cdc2a12",
+          "tasks": {
+            "train": "tsk_6e4456f1-0e65-441e-9a4f-1f008ba300f6",
+            "gite": "tsk_11ab0623-323d-482b-b9ca-f63db5b9e1a1",
+            "activites": "tsk_977e3d76-2cd4-405d-922f-99d3c53deaef"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_3f9e2e0e-9d8f-4903-a092-2caa1be3266f",
+      "case": "N06-V3",
+      "label": "RECETTE 30 · N06-V3 · Salarié + vacances · excursion remboursée",
+      "particularity": "La sortie en bateau (90 €) est annulée par le prestataire et remboursée sur le projet dix jours plus tard.",
+      "projects": [
+        {
+          "name": "Vacances",
+          "coreProjectId": "prj_f7589eb5-9316-4849-979d-88790afcdb9b",
+          "budgetId": "bud_4875c8ef-0c77-4bdd-adf3-4a0b90246188",
+          "tasks": {
+            "train": "tsk_7869f34e-407f-4db2-bb52-0627ff2d6ec3",
+            "gite": "tsk_26f6561a-2a42-4bc1-b04f-39753e5ce70a",
+            "activites": "tsk_da87b64d-7491-4425-bd91-f8ab660b529f"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_555b08aa-0cef-406c-8417-4ce1e780e775",
+      "case": "N07-V1",
+      "label": "RECETTE 30 · N07-V1 · Couple + cuisine · part refusée puis réduite",
+      "particularity": "La demande de part de 900 € pour les meubles est refusée ; une demande réduite à 700 € est accordée.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_249490a2-9422-4eea-9e63-0d338d959282",
+          "budgetId": "bud_ac3996f0-e2f5-4ec8-9db9-cfc1b73a0424",
+          "tasks": {
+            "a": "tsk_331b4f0f-b14c-4b97-b9dc-a1287794b3fc",
+            "b": "tsk_67206e2a-1aed-4832-8567-b8c82a6ee24b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_5d68f1a0-2cfb-4664-9f83-e8abe0c85185",
+      "case": "N07-V2",
+      "label": "RECETTE 30 · N07-V2 · Couple + voiture · enveloppe attribuée en septembre seulement",
+      "particularity": "Le contrôle technique est payé en août avant toute enveloppe : il reste hors du budget de vie ; l'enveloppe arrive le 2 septembre.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_edca44da-43f3-4a44-ab57-17c04fa59909",
+          "budgetId": "bud_ba507566-4371-423e-9703-3e2a17cd35b2",
+          "tasks": {
+            "a": "tsk_1577411b-1392-4214-9517-7e04118250a7",
+            "b": "tsk_1daa59a9-e659-498e-8322-346989ccc01a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_91cf417f-baa3-4aba-81fc-86ad88003534",
+      "case": "N07-V3",
+      "label": "RECETTE 30 · N07-V3 · Couple + deux projets · l'un sans enveloppe",
+      "particularity": "Un second projet « Voyage » est créé sans enveloppe : le volet projets le signale jusqu'à la fin.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_2159ccba-097a-4c67-b90f-980b2bca5215",
+          "budgetId": "bud_1695ee8d-3aee-40a3-a999-31824851ff79",
+          "tasks": {
+            "a": "tsk_c416ea6c-206e-4697-b20e-4c577043a5a3",
+            "b": "tsk_3db8d19f-3e8f-465b-8d75-27bb25f44be0"
+          }
+        },
+        {
+          "name": "Voyage",
+          "coreProjectId": "prj_9c7e5d7d-27e9-49a2-abe0-3e22eaa21b6e",
+          "budgetId": "bud_c081d02b-0e0d-46ca-ad9e-7cb4371104af",
+          "tasks": {
+            "a": "tsk_22aae485-bff5-4e91-9be4-7764b2eaec07"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_189af3ab-9b60-4e6d-930c-a9bc6931f5b6",
+      "case": "N08-V1",
+      "label": "RECETTE 30 · N08-V1 · Famille + panneaux solaires · retour mensuel",
+      "particularity": "La pose terminée le 10 septembre déclenche un retour mensuel de 45 € (revente d'électricité) vers le budget de vie.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_9c7734ea-d7ac-4cb4-ab4a-aebc84cdcd51",
+          "budgetId": "bud_08b49f63-e182-416e-ab83-6ab00534ca3e",
+          "tasks": {
+            "a": "tsk_c7cb4ee7-bcc1-41ad-b7f6-a2963a07be97",
+            "b": "tsk_9b715d80-f8bb-4da7-9630-e1ec85a511dc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_44ccba55-4575-482a-b249-e0ebb959fa57",
+      "case": "N08-V2",
+      "label": "RECETTE 30 · N08-V2 · Famille + panneaux solaires · prime ponctuelle reçue",
+      "particularity": "La prime à l'installation (350 €) est un retour ponctuel : prévu à la fin de la pose, reçu trois jours plus tard.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_30d0ca12-a6df-470d-ba29-6ef878780508",
+          "budgetId": "bud_6b9fb895-cdb3-434f-8640-c2271db97ee1",
+          "tasks": {
+            "a": "tsk_938aca97-c3ba-4e18-8719-0e3b32f0832d",
+            "b": "tsk_e7b1816e-e9e2-4d82-917d-da6a38601756"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_955c1c37-5106-4599-b3d8-433f8bd0fbef",
+      "case": "N08-V3",
+      "label": "RECETTE 30 · N08-V3 · Famille + panneaux solaires · tâche rouverte",
+      "particularity": "La pose est rouverte pour une reprise puis terminée à nouveau : le retour n'est pas créé une seconde fois.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_7b554fda-4532-41a8-b4f9-f62f3f3916b3",
+          "budgetId": "bud_88ea4c30-2b1a-4e88-be8f-643ca6a97069",
+          "tasks": {
+            "a": "tsk_c82062ae-25e3-43cd-af1a-fa36153cbf3b",
+            "b": "tsk_cdf37fc0-973f-47f1-bd54-ec11aa6007b2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_1e395697-ea92-42ea-b9d6-9093e61cf910",
+      "case": "N09-V1",
+      "label": "RECETTE 30 · N09-V1 · Étudiant + permis · temps dépassé",
+      "particularity": "Le code et la conduite prennent 34 h pour 24 h prévues : les agrégats de temps du projet le montrent.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_7d1959bd-ddfa-4aaa-80d9-b6f0e9059027",
+          "budgetId": "bud_78d39fc5-47b4-4116-ba33-79a831920af0",
+          "tasks": {
+            "a": "tsk_9adfbdec-6979-43d2-b823-e3492bc08ad7",
+            "b": "tsk_34d5a2ef-0ecb-475d-9fee-16ae9cd051ab"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_85e7ce0d-6848-4caf-8894-03044d0866f9",
+      "case": "N09-V2",
+      "label": "RECETTE 30 · N09-V2 · Étudiant + permis · leçons mensuelles",
+      "particularity": "Les leçons sont une charge récurrente du projet (150 € par mois d'août à octobre).",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_1b4e4d0e-cca8-4122-a23a-d789c7d6a3cf",
+          "budgetId": "bud_f88a4c90-4627-41cf-a663-1b10cdfd772e",
+          "tasks": {
+            "a": "tsk_2f7cded9-c5e0-473a-aeb9-baea876e2ab6",
+            "b": "tsk_ec750b1b-78bc-48ae-a74b-0e37b6bc4106"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_0c5213f9-217f-45cd-a9d9-7a2161e25621",
+      "case": "N09-V3",
+      "label": "RECETTE 30 · N09-V3 · Étudiant + permis · estimations manquantes",
+      "particularity": "Une tâche n'a pas d'estimation de temps : le temps prévu reste partiel, jamais compté à zéro.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_378082d3-bfd5-4201-ae2e-f2f3e8c21a37",
+          "budgetId": "bud_d357f759-5288-4ad9-93d4-c0bad67cab5e",
+          "tasks": {
+            "a": "tsk_3565749b-ac07-482a-bd94-b37b68ded5c4",
+            "b": "tsk_ce42b7d3-862d-4c01-b9c0-57b589ba9b3e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_a697b33e-f8f5-40fb-b35e-9b704eba4b8f",
+      "case": "N10-V1",
+      "label": "RECETTE 30 · N10-V1 · Ménage + gros travaux · paiements concentrés",
+      "particularity": "Toutes les factures des travaux (2 300 €) tombent en septembre : le cycle clôture négatif.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_d1f6b0b1-6476-49f1-b751-6210163ca1e6",
+          "budgetId": "bud_bc321552-4b45-45ec-aacb-ffe30103a035",
+          "tasks": {
+            "a": "tsk_702d801d-e875-4dbb-801f-a3879430ccc3",
+            "b": "tsk_263635e7-39ec-48e4-840d-e120504be97f"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_a2a7f6ee-dd02-4f0d-b488-50b60942d559",
+      "case": "N10-V2",
+      "label": "RECETTE 30 · N10-V2 · Ménage + projet · une branche terminée, l'autre bloquée",
+      "particularity": "La première étape est terminée, la seconde passe « à prioriser » : le projet est « à reprendre ».",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_2b1df174-94a9-44b3-8aa3-f8d2068ef762",
+          "budgetId": "bud_a928ce7e-9120-4493-b96f-d4577ad2a14c",
+          "tasks": {
+            "a": "tsk_f56eab0f-b615-4170-878b-1574b9bf68a3",
+            "b": "tsk_3f226d23-f942-455c-9d36-ecea6e0d6df7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usr_976e57fa-5804-4e03-a462-eaa167d54f02",
+      "case": "N10-V3",
+      "label": "RECETTE 30 · N10-V3 · Ménage + projet · paiement antidaté dans une période close",
+      "particularity": "En novembre, une facture d'août est saisie à sa date : la période close la refuse.",
+      "projects": [
+        {
+          "name": "Projet",
+          "coreProjectId": "prj_0dee06b4-15ac-4264-b759-dcffee20943c",
+          "budgetId": "bud_47ee68a8-1795-49f0-8b27-0cdb56016d4f",
+          "tasks": {
+            "a": "tsk_d351b525-cf35-45fc-9483-829ced31b31c",
+            "b": "tsk_7ef0bf9e-2141-4991-a6d8-8ccaac6d184f"
+          }
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "N06-V1 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 163900,
+      "observed": 163900
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 28000,
+      "observed": 28000
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 66100,
+      "observed": 66100
+    },
+    {
+      "name": "N06-V1 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 66100,
+      "observed": 66100
+    },
+    {
+      "name": "N06-V1 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 666100,
+      "observed": 666100
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 223900,
+      "observed": 223900
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 102000,
+      "observed": 102000
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 6100,
+      "observed": 6100
+    },
+    {
+      "name": "N06-V1 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 6100,
+      "observed": 6100
+    },
+    {
+      "name": "N06-V1 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 672200,
+      "observed": 672200
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 124300,
+      "observed": 124300
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V1 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 105700,
+      "observed": 105700
+    },
+    {
+      "name": "N06-V1 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 105700,
+      "observed": 105700
+    },
+    {
+      "name": "N06-V1 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 777900,
+      "observed": 777900
+    },
+    {
+      "name": "N06-V1 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V1 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 93000,
+      "observed": 93000
+    },
+    {
+      "name": "N06-V1 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V1 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 137000,
+      "observed": 137000
+    },
+    {
+      "name": "N06-V1 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N06-V1 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N06-V1 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V1 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N06-V1 En cours · Solde prévu",
+      "ok": true,
+      "expected": 98000,
+      "observed": 98000
+    },
+    {
+      "name": "N06-V1 Projet Vacances · complétude",
+      "ok": true,
+      "expected": 100,
+      "observed": 100
+    },
+    {
+      "name": "N06-V1 Projet Vacances · temps consommé",
+      "ok": true,
+      "expected": 5.5,
+      "observed": 5.5
+    },
+    {
+      "name": "N06-V1 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N06-V1 Projet terminé (état dérivé des tâches)",
+      "ok": true,
+      "expected": [
+        "done",
+        100
+      ],
+      "observed": [
+        "done",
+        100
+      ]
+    },
+    {
+      "name": "N06-V1 Parts rendues : 20 € du train, 180 € des activités",
+      "ok": true,
+      "expected": [
+        2000,
+        18000
+      ],
+      "observed": [
+        2000,
+        18000
+      ]
+    },
+    {
+      "name": "N06-V1 Projet terminé : le reste de l'enveloppe est à rendre, pas à répartir",
+      "ok": true,
+      "expected": [
+        "info",
+        true
+      ],
+      "observed": [
+        "info",
+        true
+      ]
+    },
+    {
+      "name": "N06-V1 Enveloppe ramenée à 1 300 € : tout est réglé, rien ne reste",
+      "ok": true,
+      "expected": [
+        130000,
+        130000,
+        0
+      ],
+      "observed": [
+        130000,
+        130000,
+        0
+      ]
+    },
+    {
+      "name": "N06-V1 Plus aucun contrôle à revoir sur le projet",
+      "ok": true,
+      "expected": [],
+      "observed": []
+    },
+    {
+      "name": "N06-V1 Volet projets : rien à décider, en règle",
+      "ok": true,
+      "expected": [
+        "ok",
+        0
+      ],
+      "observed": [
+        "ok",
+        0
+      ]
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 163900,
+      "observed": 163900
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 28000,
+      "observed": 28000
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 66100,
+      "observed": 66100
+    },
+    {
+      "name": "N06-V2 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 66100,
+      "observed": 66100
+    },
+    {
+      "name": "N06-V2 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 666100,
+      "observed": 666100
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 231900,
+      "observed": 231900
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 110000,
+      "observed": 110000
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": -1900,
+      "observed": -1900
+    },
+    {
+      "name": "N06-V2 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": -1900,
+      "observed": -1900
+    },
+    {
+      "name": "N06-V2 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 664200,
+      "observed": 664200
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 136300,
+      "observed": 136300
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 12000,
+      "observed": 12000
+    },
+    {
+      "name": "N06-V2 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 93700,
+      "observed": 93700
+    },
+    {
+      "name": "N06-V2 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 93700,
+      "observed": 93700
+    },
+    {
+      "name": "N06-V2 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 757900,
+      "observed": 757900
+    },
+    {
+      "name": "N06-V2 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V2 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 93000,
+      "observed": 93000
+    },
+    {
+      "name": "N06-V2 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V2 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 137000,
+      "observed": 137000
+    },
+    {
+      "name": "N06-V2 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N06-V2 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N06-V2 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V2 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N06-V2 En cours · Solde prévu",
+      "ok": true,
+      "expected": 98000,
+      "observed": 98000
+    },
+    {
+      "name": "N06-V2 Projet Vacances · complétude",
+      "ok": true,
+      "expected": 67,
+      "observed": 67
+    },
+    {
+      "name": "N06-V2 Projet Vacances · temps consommé",
+      "ok": true,
+      "expected": 1.5,
+      "observed": 1.5
+    },
+    {
+      "name": "N06-V2 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N06-V2 Dépassement facturé",
+      "ok": true,
+      "expected": "billed",
+      "observed": "billed"
+    },
+    {
+      "name": "N06-V2 Enveloppe portée à 1 700 €",
+      "ok": true,
+      "expected": 170000,
+      "observed": 170000
+    },
+    {
+      "name": "N06-V2 Plus rien à facturer ni à décider",
+      "ok": true,
+      "expected": [
+        0,
+        0,
+        0
+      ],
+      "observed": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "N06-V2 Projet à finir (une tâche terminée, une en cours)",
+      "ok": true,
+      "expected": "toFinish",
+      "observed": "toFinish"
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 163900,
+      "observed": 163900
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 28000,
+      "observed": 28000
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 66100,
+      "observed": 66100
+    },
+    {
+      "name": "N06-V3 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 66100,
+      "observed": 66100
+    },
+    {
+      "name": "N06-V3 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 666100,
+      "observed": 666100
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 211900,
+      "observed": 211900
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 90000,
+      "observed": 90000
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 18100,
+      "observed": 18100
+    },
+    {
+      "name": "N06-V3 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 18100,
+      "observed": 18100
+    },
+    {
+      "name": "N06-V3 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 684200,
+      "observed": 684200
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 124300,
+      "observed": 124300
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V3 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 105700,
+      "observed": 105700
+    },
+    {
+      "name": "N06-V3 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 105700,
+      "observed": 105700
+    },
+    {
+      "name": "N06-V3 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 789900,
+      "observed": 789900
+    },
+    {
+      "name": "N06-V3 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N06-V3 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 93000,
+      "observed": 93000
+    },
+    {
+      "name": "N06-V3 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V3 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 137000,
+      "observed": 137000
+    },
+    {
+      "name": "N06-V3 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N06-V3 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N06-V3 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V3 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N06-V3 En cours · Solde prévu",
+      "ok": true,
+      "expected": 98000,
+      "observed": 98000
+    },
+    {
+      "name": "N06-V3 Projet Vacances · complétude",
+      "ok": true,
+      "expected": 67,
+      "observed": 67
+    },
+    {
+      "name": "N06-V3 Projet Vacances · temps consommé",
+      "ok": true,
+      "expected": 1.5,
+      "observed": 1.5
+    },
+    {
+      "name": "N06-V3 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N06-V3 Projet : réglé net 1 180 € (remboursement déduit)",
+      "ok": true,
+      "expected": 118000,
+      "observed": 118000
+    },
+    {
+      "name": "N06-V3 Activités : réglé net 0 €",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N06-V3 Octobre : les projets ne coûtent plus rien au budget de vie",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 129900,
+      "observed": 129900
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 290100,
+      "observed": 290100
+    },
+    {
+      "name": "N07-V1 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 290100,
+      "observed": 290100
+    },
+    {
+      "name": "N07-V1 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 890100,
+      "observed": 890100
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 189900,
+      "observed": 189900
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 68000,
+      "observed": 68000
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 230100,
+      "observed": 230100
+    },
+    {
+      "name": "N07-V1 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 230100,
+      "observed": 230100
+    },
+    {
+      "name": "N07-V1 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 1120200,
+      "observed": 1120200
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 168900,
+      "observed": 168900
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 47000,
+      "observed": 47000
+    },
+    {
+      "name": "N07-V1 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 251100,
+      "observed": 251100
+    },
+    {
+      "name": "N07-V1 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 251100,
+      "observed": 251100
+    },
+    {
+      "name": "N07-V1 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 1371300,
+      "observed": 1371300
+    },
+    {
+      "name": "N07-V1 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V1 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N07-V1 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V1 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 328800,
+      "observed": 328800
+    },
+    {
+      "name": "N07-V1 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N07-V1 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N07-V1 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V1 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N07-V1 En cours · Solde prévu",
+      "ok": true,
+      "expected": 289800,
+      "observed": 289800
+    },
+    {
+      "name": "N07-V1 Projet Projet · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V1 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V1 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N07-V1 Demandes : refusée puis accordée",
+      "ok": true,
+      "expected": [
+        "refused",
+        "approved"
+      ],
+      "observed": [
+        "refused",
+        "approved"
+      ]
+    },
+    {
+      "name": "N07-V1 Part des meubles : 700 €",
+      "ok": true,
+      "expected": 70000,
+      "observed": 70000
+    },
+    {
+      "name": "N07-V1 Enveloppe : 200 € encore à répartir",
+      "ok": true,
+      "expected": 20000,
+      "observed": 20000
+    },
+    {
+      "name": "N07-V2 2026-08-18 Saisir Contrôle technique",
+      "ok": false,
+      "expected": "Geste réalisable",
+      "observed": {
+        "code": "FORBIDDEN_BY_RULE",
+        "message": "Attribuez d’abord une enveloppe au projet « Entretien de la voiture » : ses dépenses se règlent sur les parts de ses tâches.",
+        "details": {
+          "field": "budgetId",
+          "budgetId": "bud_ba507566-4371-423e-9703-3e2a17cd35b2"
+        }
+      }
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 129900,
+      "observed": 129900
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 290100,
+      "observed": 290100
+    },
+    {
+      "name": "N07-V2 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 290100,
+      "observed": 290100
+    },
+    {
+      "name": "N07-V2 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 890100,
+      "observed": 890100
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 163900,
+      "observed": 163900
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 42000,
+      "observed": 42000
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 256100,
+      "observed": 256100
+    },
+    {
+      "name": "N07-V2 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 256100,
+      "observed": 256100
+    },
+    {
+      "name": "N07-V2 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 1146200,
+      "observed": 1146200
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V2 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 298100,
+      "observed": 298100
+    },
+    {
+      "name": "N07-V2 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 298100,
+      "observed": 298100
+    },
+    {
+      "name": "N07-V2 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 1444300,
+      "observed": 1444300
+    },
+    {
+      "name": "N07-V2 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V2 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N07-V2 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V2 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 328800,
+      "observed": 328800
+    },
+    {
+      "name": "N07-V2 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N07-V2 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N07-V2 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V2 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N07-V2 En cours · Solde prévu",
+      "ok": true,
+      "expected": 289800,
+      "observed": 289800
+    },
+    {
+      "name": "N07-V2 Projet Projet · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V2 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V2 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N07-V2 Réglé avant l'enveloppe : hors budget, mais visible",
+      "ok": false,
+      "expected": [
+        42000,
+        8500
+      ],
+      "observed": [
+        42000,
+        0
+      ]
+    },
+    {
+      "name": "N07-V2 Août : le projet ne coûte rien au budget de vie",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 145900,
+      "observed": 145900
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 16000,
+      "observed": 16000
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 274100,
+      "observed": 274100
+    },
+    {
+      "name": "N07-V3 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 274100,
+      "observed": 274100
+    },
+    {
+      "name": "N07-V3 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 874100,
+      "observed": 874100
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 298100,
+      "observed": 298100
+    },
+    {
+      "name": "N07-V3 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 298100,
+      "observed": 298100
+    },
+    {
+      "name": "N07-V3 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 1172200,
+      "observed": 1172200
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 298100,
+      "observed": 298100
+    },
+    {
+      "name": "N07-V3 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 298100,
+      "observed": 298100
+    },
+    {
+      "name": "N07-V3 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 1470300,
+      "observed": 1470300
+    },
+    {
+      "name": "N07-V3 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 420000,
+      "observed": 420000
+    },
+    {
+      "name": "N07-V3 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N07-V3 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 328800,
+      "observed": 328800
+    },
+    {
+      "name": "N07-V3 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N07-V3 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N07-V3 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N07-V3 En cours · Solde prévu",
+      "ok": true,
+      "expected": 289800,
+      "observed": 289800
+    },
+    {
+      "name": "N07-V3 Projet Projet · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 Projet Voyage · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 Projet Voyage · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N07-V3 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N07-V3 Volet projets : 2 projets, 1 sans enveloppe, à surveiller",
+      "ok": true,
+      "expected": [
+        2,
+        1,
+        "watch"
+      ],
+      "observed": [
+        2,
+        1,
+        "watch"
+      ]
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 129900,
+      "observed": 129900
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N08-V1 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N08-V1 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 700100,
+      "observed": 700100
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 234500,
+      "observed": 234500
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 396900,
+      "observed": 396900
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 275000,
+      "observed": 275000
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": -162400,
+      "observed": -162400
+    },
+    {
+      "name": "N08-V1 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": -162400,
+      "observed": -162400
+    },
+    {
+      "name": "N08-V1 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 537700,
+      "observed": 537700
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 234500,
+      "observed": 234500
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V1 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 112600,
+      "observed": 112600
+    },
+    {
+      "name": "N08-V1 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 112600,
+      "observed": 112600
+    },
+    {
+      "name": "N08-V1 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 650300,
+      "observed": 650300
+    },
+    {
+      "name": "N08-V1 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V1 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N08-V1 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V1 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N08-V1 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N08-V1 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N08-V1 En cours · À recevoir",
+      "ok": true,
+      "expected": 4500,
+      "observed": 4500
+    },
+    {
+      "name": "N08-V1 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N08-V1 En cours · Solde prévu",
+      "ok": true,
+      "expected": 104300,
+      "observed": 104300
+    },
+    {
+      "name": "N08-V1 Projet Projet · complétude",
+      "ok": true,
+      "expected": 100,
+      "observed": 100
+    },
+    {
+      "name": "N08-V1 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V1 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N08-V1 Retour créé en définition mensuelle",
+      "ok": true,
+      "expected": [
+        "recurrence",
+        "2026-09-10"
+      ],
+      "observed": [
+        "recurrence",
+        "2026-09-10"
+      ]
+    },
+    {
+      "name": "N08-V1 Projet terminé, projet de vie actif",
+      "ok": true,
+      "expected": "done",
+      "observed": "done"
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 129900,
+      "observed": 129900
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N08-V2 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N08-V2 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 700100,
+      "observed": 700100
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 265000,
+      "observed": 265000
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 266900,
+      "observed": 266900
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 145000,
+      "observed": 145000
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": -1900,
+      "observed": -1900
+    },
+    {
+      "name": "N08-V2 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": -1900,
+      "observed": -1900
+    },
+    {
+      "name": "N08-V2 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 698200,
+      "observed": 698200
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V2 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N08-V2 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N08-V2 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 806300,
+      "observed": 806300
+    },
+    {
+      "name": "N08-V2 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V2 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N08-V2 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V2 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N08-V2 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N08-V2 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N08-V2 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V2 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N08-V2 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N08-V2 Projet Projet · complétude",
+      "ok": true,
+      "expected": 50,
+      "observed": 50
+    },
+    {
+      "name": "N08-V2 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V2 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N08-V2 Prime prévue le 10, reçue le 13 septembre",
+      "ok": true,
+      "expected": [
+        "2026-09-10",
+        "2026-09-13"
+      ],
+      "observed": [
+        "2026-09-10",
+        "2026-09-13"
+      ]
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 129900,
+      "observed": 129900
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N08-V3 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N08-V3 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 700100,
+      "observed": 700100
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 265000,
+      "observed": 265000
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 266900,
+      "observed": 266900
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 145000,
+      "observed": 145000
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": -1900,
+      "observed": -1900
+    },
+    {
+      "name": "N08-V3 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": -1900,
+      "observed": -1900
+    },
+    {
+      "name": "N08-V3 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 698200,
+      "observed": 698200
+    },
+    {
+      "name": "N08-V3 Modifier un retour déjà enregistré est refusé",
+      "ok": true,
+      "expected": "FORBIDDEN_BY_RULE",
+      "observed": "FORBIDDEN_BY_RULE"
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V3 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N08-V3 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N08-V3 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 806300,
+      "observed": 806300
+    },
+    {
+      "name": "N08-V3 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N08-V3 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N08-V3 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V3 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N08-V3 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N08-V3 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N08-V3 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V3 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N08-V3 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N08-V3 Projet Projet · complétude",
+      "ok": true,
+      "expected": 50,
+      "observed": 50
+    },
+    {
+      "name": "N08-V3 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N08-V3 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N08-V3 Une seule prime dans le budget de vie",
+      "ok": true,
+      "expected": 1,
+      "observed": 1
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 159900,
+      "observed": 159900
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 30000,
+      "observed": 30000
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 70100,
+      "observed": 70100
+    },
+    {
+      "name": "N09-V1 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 70100,
+      "observed": 70100
+    },
+    {
+      "name": "N09-V1 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 670100,
+      "observed": 670100
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 181900,
+      "observed": 181900
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 60000,
+      "observed": 60000
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 48100,
+      "observed": 48100
+    },
+    {
+      "name": "N09-V1 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 48100,
+      "observed": 48100
+    },
+    {
+      "name": "N09-V1 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 718200,
+      "observed": 718200
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V1 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N09-V1 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N09-V1 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 826300,
+      "observed": 826300
+    },
+    {
+      "name": "N09-V1 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V1 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N09-V1 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V1 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N09-V1 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N09-V1 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N09-V1 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V1 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N09-V1 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N09-V1 Projet Projet · complétude",
+      "ok": true,
+      "expected": 50,
+      "observed": 50
+    },
+    {
+      "name": "N09-V1 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 34,
+      "observed": 34
+    },
+    {
+      "name": "N09-V1 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N09-V1 Temps : 34 h passées pour 24 h prévues, 142 %",
+      "ok": true,
+      "expected": [
+        34,
+        24,
+        false,
+        142
+      ],
+      "observed": [
+        34,
+        24,
+        false,
+        142
+      ]
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 144900,
+      "observed": 144900
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 15000,
+      "observed": 15000
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 85100,
+      "observed": 85100
+    },
+    {
+      "name": "N09-V2 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 85100,
+      "observed": 85100
+    },
+    {
+      "name": "N09-V2 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 685100,
+      "observed": 685100
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 136900,
+      "observed": 136900
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 15000,
+      "observed": 15000
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 93100,
+      "observed": 93100
+    },
+    {
+      "name": "N09-V2 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 93100,
+      "observed": 93100
+    },
+    {
+      "name": "N09-V2 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 778200,
+      "observed": 778200
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 136900,
+      "observed": 136900
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 15000,
+      "observed": 15000
+    },
+    {
+      "name": "N09-V2 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 93100,
+      "observed": 93100
+    },
+    {
+      "name": "N09-V2 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 93100,
+      "observed": 93100
+    },
+    {
+      "name": "N09-V2 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 871300,
+      "observed": 871300
+    },
+    {
+      "name": "N09-V2 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V2 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N09-V2 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V2 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N09-V2 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N09-V2 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N09-V2 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V2 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N09-V2 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N09-V2 Projet Projet · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V2 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V2 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N09-V2 Trois leçons réglées sur la tâche",
+      "ok": true,
+      "expected": 45000,
+      "observed": 45000
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 159900,
+      "observed": 159900
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 30000,
+      "observed": 30000
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 70100,
+      "observed": 70100
+    },
+    {
+      "name": "N09-V3 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 70100,
+      "observed": 70100
+    },
+    {
+      "name": "N09-V3 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 670100,
+      "observed": 670100
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N09-V3 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N09-V3 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 778200,
+      "observed": 778200
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V3 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N09-V3 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N09-V3 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 886300,
+      "observed": 886300
+    },
+    {
+      "name": "N09-V3 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N09-V3 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N09-V3 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V3 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N09-V3 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N09-V3 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N09-V3 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V3 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N09-V3 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N09-V3 Projet Projet · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N09-V3 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 13,
+      "observed": 13
+    },
+    {
+      "name": "N09-V3 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N09-V3 Temps prévu partiel : 10 h connues, 1 estimation manquante, pas de % trompeur",
+      "ok": true,
+      "expected": [
+        10,
+        13,
+        true,
+        1,
+        null
+      ],
+      "observed": [
+        10,
+        13,
+        true,
+        1,
+        null
+      ]
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 129900,
+      "observed": 129900
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N10-V1 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 100100,
+      "observed": 100100
+    },
+    {
+      "name": "N10-V1 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 700100,
+      "observed": 700100
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 351900,
+      "observed": 351900
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": -121900,
+      "observed": -121900
+    },
+    {
+      "name": "N10-V1 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": -121900,
+      "observed": -121900
+    },
+    {
+      "name": "N10-V1 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 578200,
+      "observed": 578200
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V1 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V1 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V1 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 686300,
+      "observed": 686300
+    },
+    {
+      "name": "N10-V1 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V1 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N10-V1 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V1 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N10-V1 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N10-V1 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N10-V1 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V1 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N10-V1 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N10-V1 Projet Projet · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V1 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V1 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N10-V1 Septembre clôturé négatif, signalé",
+      "ok": true,
+      "expected": [
+        true,
+        "watch"
+      ],
+      "observed": [
+        true,
+        "watch"
+      ]
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 151900,
+      "observed": 151900
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 22000,
+      "observed": 22000
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 78100,
+      "observed": 78100
+    },
+    {
+      "name": "N10-V2 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 78100,
+      "observed": 78100
+    },
+    {
+      "name": "N10-V2 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 678100,
+      "observed": 678100
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V2 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V2 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 786200,
+      "observed": 786200
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V2 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V2 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V2 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 894300,
+      "observed": 894300
+    },
+    {
+      "name": "N10-V2 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V2 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N10-V2 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V2 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N10-V2 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N10-V2 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N10-V2 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V2 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N10-V2 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N10-V2 Projet Projet · complétude",
+      "ok": true,
+      "expected": 50,
+      "observed": 50
+    },
+    {
+      "name": "N10-V2 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V2 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    },
+    {
+      "name": "N10-V2 Projet à reprendre (J1)",
+      "ok": true,
+      "expected": "toResume",
+      "observed": "toResume"
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-08 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-08 · Dépensé",
+      "ok": true,
+      "expected": 151900,
+      "observed": 151900
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-08 · dont projets",
+      "ok": true,
+      "expected": 22000,
+      "observed": 22000
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-08 · Reste réel",
+      "ok": true,
+      "expected": 78100,
+      "observed": 78100
+    },
+    {
+      "name": "N10-V3 Aperçu de clôture 2026-08",
+      "ok": true,
+      "expected": 78100,
+      "observed": 78100
+    },
+    {
+      "name": "N10-V3 Patrimoine après clôture 2026-08",
+      "ok": true,
+      "expected": 678100,
+      "observed": 678100
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-09 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-09 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-09 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-09 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V3 Aperçu de clôture 2026-09",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V3 Patrimoine après clôture 2026-09",
+      "ok": true,
+      "expected": 786200,
+      "observed": 786200
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-10 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-10 · Dépensé",
+      "ok": true,
+      "expected": 121900,
+      "observed": 121900
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-10 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V3 Avant clôture 2026-10 · Reste réel",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V3 Aperçu de clôture 2026-10",
+      "ok": true,
+      "expected": 108100,
+      "observed": 108100
+    },
+    {
+      "name": "N10-V3 Patrimoine après clôture 2026-10",
+      "ok": true,
+      "expected": 894300,
+      "observed": 894300
+    },
+    {
+      "name": "N10-V3 Facture datée dans une période close refusée",
+      "ok": true,
+      "expected": "PERIOD_CLOSED",
+      "observed": "PERIOD_CLOSED"
+    },
+    {
+      "name": "N10-V3 En cours 2026-11 · Reçu",
+      "ok": true,
+      "expected": 230000,
+      "observed": 230000
+    },
+    {
+      "name": "N10-V3 En cours 2026-11 · Dépensé",
+      "ok": true,
+      "expected": 91200,
+      "observed": 91200
+    },
+    {
+      "name": "N10-V3 En cours 2026-11 · dont projets",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V3 En cours 2026-11 · Reste réel",
+      "ok": true,
+      "expected": 138800,
+      "observed": 138800
+    },
+    {
+      "name": "N10-V3 Cycles du site",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "N10-V3 Trois clôtures",
+      "ok": true,
+      "expected": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ],
+      "observed": [
+        "2026-08",
+        "2026-09",
+        "2026-10"
+      ]
+    },
+    {
+      "name": "N10-V3 En cours · À recevoir",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V3 En cours · À payer",
+      "ok": true,
+      "expected": 39000,
+      "observed": 39000
+    },
+    {
+      "name": "N10-V3 En cours · Solde prévu",
+      "ok": true,
+      "expected": 99800,
+      "observed": 99800
+    },
+    {
+      "name": "N10-V3 Projet Projet · complétude",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V3 Projet Projet · temps consommé",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "N10-V3 Projet de vie toujours actif",
+      "ok": true,
+      "expected": "active",
+      "observed": "active"
+    }
+  ],
+  "notes": [],
+  "ok": false,
+  "integrity": {
+    "totals": {
+      "passed": 468,
+      "warning": 87,
+      "not-run": 1
+    },
+    "new": [
+      {
+        "module": "bpm",
+        "execution": "executed",
+        "ids": [
+          "bud_ac3996f0-e2f5-4ec8-9db9-cfc1b73a0424"
+        ],
+        "anomalies": [],
+        "rule": "PRJ-03",
+        "category": "pathway",
+        "description": "Projet Rénovation de la cuisine : contrôles de fin de cycle",
+        "expected": "budget = somme des parts ; charges des tâches planifiées et à jour",
+        "observed": "au moins un point à revoir",
+        "result": "warning"
+      }
+    ]
+  }
+}

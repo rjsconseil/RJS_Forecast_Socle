@@ -375,7 +375,12 @@
                   @if (d.checks.length) {
                     <ul class="bpm-checks" aria-label="Contrôles de fin de cycle">
                       @for (c of d.checks; track $index) {
-                        <li [attr.data-level]="c.level">{{ c.message }}</li>
+                        <li [attr.data-level]="c.level">
+                          {{ c.message }}
+                          @if (c.action?.kind === 'allocate') {
+                            <button type="button" class="btn btn-secondary small" [disabled]="busy()" (click)="applyCheck(b.budgetId, c.action!.amountCents, c.action!.label)">{{ c.action!.label }}</button>
+                          }
+                        </li>
                       }
                     </ul>
                   }
@@ -709,6 +714,11 @@
                   <button class="btn btn-secondary" [disabled]="busy()" (click)="addExpense(t.task.id)">
                     Ajouter une dépense
                   </button>
+                  @if (t.budget?.paidCents) {
+                    <button class="btn btn-secondary" [disabled]="busy()" (click)="addRefund(t.task.id)" title="Prestation annulée, avoir : le montant reçu se déduit du réglé de la tâche, du projet et du Dépensé du budget de vie.">
+                      Saisir un remboursement
+                    </button>
+                  }
                 </header>
                 @if (t.budget?.paidBeforeCents; as before) {
                   <p class="bpm-note">
@@ -1065,13 +1075,15 @@
           </div>
           @if (c.settled) {
             <div>
-              <dt>Réglé le {{ c.realizedDate | shortDate }}</dt>
-              <dd>{{ c.realizedCents | cents }}</dd>
+              <dt>{{ c.refund ? 'Reçu' : 'Réglé' }} le {{ c.realizedDate | shortDate }}</dt>
+              <dd>{{ c.refund ? '−' : '' }}{{ c.realizedCents | cents }}</dd>
             </div>
           }
         </dl>
         <small>{{ c.cadenceLabel }}</small>
-        @if (c.beforeAllocation) {
+        @if (c.refund) {
+          <p class="bpm-note">Remboursement reçu : déduit du réglé de la tâche, du projet et du Dépensé du budget de vie.</p>
+        } @else if (c.beforeAllocation) {
           <p class="bpm-note">La date réelle précède l’enveloppe : ce règlement reste hors du Dépensé du projet de vie.</p>
         } @else if (c.settled && !c.validated) {
           <p class="bpm-note">Projet sans enveloppe : ce règlement reste dans son historique, hors budget de vie.</p>
@@ -1123,7 +1135,7 @@
   <bpm-operation-editor
     [budgets]="[ref]"
     [line]="editingLine()"
-    [defaults]="{ budgetId: ref.id, direction: 'charge', taskId: expenseTaskId() }"
+    [defaults]="{ budgetId: ref.id, direction: expenseDirection(), taskId: expenseTaskId() }"
     [taskFundingRequired]="data()?.budget?.taskFundingRequired ?? false"
     (closed)="closeExpense()"
     (saved)="onSaved($event)"

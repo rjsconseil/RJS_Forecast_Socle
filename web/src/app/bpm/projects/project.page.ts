@@ -172,6 +172,8 @@ export class BpmProjectPage {
     return id ? (this.data()?.tasks ?? []).find((t) => t.task.id === id) ?? null : null;
   });
   protected expenseTaskId = signal<string | null>(null);
+  /** Sens de la saisie ouverte : dépense, ou remboursement reçu (déduit du réglé de la tâche et du projet). */
+  protected expenseDirection = signal<'charge' | 'income'>('charge');
   protected dragActive = signal(false);
   protected dropTarget = signal<TaskStatus | null>(null);
   private dragCancelled = false;
@@ -337,6 +339,13 @@ export class BpmProjectPage {
   protected addExpense(taskId: string | null) {
     this.editingLine.set(null);
     this.expenseTaskId.set(taskId);
+    this.expenseDirection.set('charge');
+    this.editorOpen.set(true);
+  }
+  protected addRefund(taskId: string) {
+    this.editingLine.set(null);
+    this.expenseTaskId.set(taskId);
+    this.expenseDirection.set('income');
     this.editorOpen.set(true);
   }
   protected openCharge(c: ProjectChargeLine) {
@@ -514,6 +523,7 @@ export class BpmProjectPage {
   }
 
   protected chargeState(c: ProjectChargeLine) {
+    if (c.refund) return c.validated ? 'Remboursement · déduit du projet de vie' : c.settled ? 'Remboursement · hors budget de vie' : 'Remboursement attendu';
     if (c.validated) return 'Réglée · remontée au projet de vie';
     if (c.beforeAllocation) return 'Réglée · avant l’enveloppe';
     if (c.settled) return 'Réglée · hors budget de vie';
@@ -640,6 +650,23 @@ export class BpmProjectPage {
 
   protected decide(o: ProjectOverrun, decision: 'approve' | 'refuse') {
     return this.run(() => this.funding.decide(o, decision), (r) => r.message);
+  }
+
+  /** Exécute le geste proposé par un contrôle : l'enveloppe ramenée à ce qui a servi (règle et refus côté API). */
+  protected async applyCheck(budgetId: string, amountCents: number, label: string) {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.notice.set(null);
+    try {
+      await this.bpm.allocate(budgetId, amountCents / 100, this.allocationRevision());
+      await this.load();
+      this.notice.set({ text: `${label} : enveloppe ramenée à ${cents(amountCents)}.`, error: false });
+    } catch (err) {
+      this.notice.set({ text: toApiError(err).message, error: true });
+      await this.load();
+    } finally {
+      this.busy.set(false);
+    }
   }
 
   protected async allocate(budgetId: string, revision: number) {

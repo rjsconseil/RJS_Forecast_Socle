@@ -249,11 +249,15 @@ export interface CycleCheck {
   level: 'ok' | 'info' | 'warning';
   taskId: string | null;
   message: string;
+  /** Geste proposé par le contrôle (ex. ramener l'enveloppe d'un projet terminé à ce qui a servi). */
+  action?: { kind: 'allocate'; amountCents: number; label: string };
 }
 
 export interface ProjectChargeLine extends Omit<RegisterLine, 'status' | 'statusLabel' | 'centerKnown'> {
   validated: boolean;
   beforeAllocation: boolean;
+  /** Remboursement reçu par le projet : il se déduit du réglé de sa tâche. */
+  refund?: boolean;
 }
 
 export interface BpmProjectDetail {

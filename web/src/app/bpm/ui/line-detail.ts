@@ -197,6 +197,17 @@ interface PendingOverrun {
           } @else if (v.line.settled) {
             <p class="bpm-help">Règlement compris dans une période close : il n'est plus annulable.</p>
           }
+          @if (v.actions.canCancelEntry && v.line.operationId) {
+            <div class="bpm-actions">
+              @if (confirmCancelEntry()) {
+                <p class="bpm-feedback is-warning" role="status">La saisie sortira de tous les calculs (doublon, erreur). Elle reste dans l’historique de la base.</p>
+                <button type="button" class="btn btn-danger" (click)="cancelEntry(v)" [disabled]="busy()">Confirmer l’annulation de la saisie</button>
+                <button type="button" class="btn btn-secondary" (click)="confirmCancelEntry.set(false)" [disabled]="busy()">Garder la saisie</button>
+              } @else {
+                <button type="button" class="btn btn-secondary" (click)="confirmCancelEntry.set(true)" [disabled]="busy()">Annuler cette saisie (doublon, erreur)</button>
+              }
+            </div>
+          }
 
           <section>
             <h3>Historique des règlements</h3>
@@ -429,6 +440,23 @@ export class BpmLineDetail {
   authorizeAndSettle() {
     const v = this.d();
     return v && this.settle(v, { notice: FUNDING_RESULTS.approved });
+  }
+
+  protected confirmCancelEntry = signal(false);
+
+  async cancelEntry(v: LineDetail) {
+    this.busy.set(true);
+    this.actionError.set(null);
+    try {
+      await this.bpm.cancelOperation(v.line.operationId!, v.line.revision ?? 0, 'Annulée depuis le détail de l’échéance');
+      this.refresh.bump();
+      this.closed.emit();
+    } catch (e) {
+      this.actionError.set(toApiError(e));
+    } finally {
+      this.busy.set(false);
+      this.confirmCancelEntry.set(false);
+    }
   }
 
   async cancel(v: LineDetail) {

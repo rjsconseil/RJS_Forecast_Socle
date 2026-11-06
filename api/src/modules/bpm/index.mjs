@@ -24,6 +24,9 @@ const METRICS = [
   { key: 'bpm.resteARecevoir', label: 'À recevoir', unit: 'EUR', group: 'Période', formula: 'budget.resteARecevoir', description: 'Revenus prévus dans la période et pas encore reçus.' },
   { key: 'bpm.resteAPayer', label: 'À payer', unit: 'EUR', group: 'Période', formula: 'budget.resteAPayer', description: 'Dépenses prévues dans la période et pas encore payées.' },
   { key: 'bpm.soldeAttendu', label: 'Solde prévu à la clôture', unit: 'EUR', group: 'Période', formula: 'bpm.resultatPeriode + bpm.resteARecevoir - bpm.resteAPayer', description: 'Net réalisé + revenus restant à recevoir − dépenses restant à payer (C04). Une échéance déjà réglée ne compte pas une seconde fois.' },
+  { key: 'bpm.recuAvance', label: 'Reçu d’avance', unit: 'EUR', group: 'Période', formula: 'budget.revenusAnticipes', description: 'Entrées prévues dans la période mais reçues avant son début : elles sont dans le résultat de la période où elles ont été reçues, pas dans le Reçu de celle-ci.' },
+  { key: 'bpm.payeAvance', label: 'Payé d’avance', unit: 'EUR', group: 'Période', formula: 'budget.chargesAnticipees', description: 'Charges prévues dans la période mais payées avant son début : elles sont dans le Dépensé de la période où elles ont été payées.' },
+  { key: 'bpm.soldeAvecAvances', label: 'Solde prévu, avances comprises', unit: 'EUR', group: 'Période', formula: 'bpm.soldeAttendu + bpm.recuAvance - bpm.payeAvance', description: 'Solde prévu à la clôture si les entrées et charges réglées d’avance avaient été réglées à leur date prévue : il mesure l’équilibre propre du cycle.' },
   { key: 'bpm.tauxEpargne', label: "Taux d'épargne", unit: '%', decimals: 1, group: 'Période', formula: 'pourcentage(bpm.resultatPeriode, bpm.revenus)', description: 'Part des revenus reçus conservée sur la période.' },
   // Budget initial : référence distincte du solde attendu
   { key: 'bpm.revenusPrevus', label: 'Revenus prévus (initial)', unit: 'EUR', group: 'Budget initial', formula: 'budget.revenusPrevus', description: 'Montants prévus des revenus datés dans la période, réglés ou non.' },
@@ -999,6 +1002,7 @@ export default {
       ['POST', '/api/bpm/recurrences/:id/settle', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.settleOccurrence(ctx, params.id, body))],
       ['PUT', '/api/bpm/operations/:id', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.updateOperation(ctx, params.id, body))],
       ['POST', '/api/bpm/operations/:id/cancel-realization', ({ ctx, params, body }) => budget.cancelRealization(ctx, params.id, body)],
+      ['POST', '/api/bpm/operations/:id/cancel', ({ ctx, params, body }) => budget.cancelOperation(ctx, params.id, body)],
       ['PUT', '/api/bpm/caps', ({ ctx, body }) => budget.setCaps(ctx, lifeBudgetId(ctx), body)],
       // Plafonds de dépenses : centres de coût et catégories personnalisées (jamais bloquants).
       ['GET', '/api/bpm/spending-caps', ({ ctx, query }) => s.reads.spendingCaps(ctx, Object.fromEntries(query))],

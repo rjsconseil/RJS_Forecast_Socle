@@ -4,13 +4,14 @@ import { cents } from '../../core/format';
 
 export type CapTone = 'none' | 'ok' | 'near' | 'over';
 
-/** Seuil d'approche du plafond (part engagée), en pourcentage. */
+/** Seuil d'approche du plafond (part engagée), repli quand l'API ne fournit pas `near` (même règle que le middleware Budget). */
 export const NEAR_CAP_PCT = 85;
 
-/** État d'un niveau (centre ou catégorie) : sans plafond, dans le plafond, proche, ou dépassé (rouge). */
-export function capTone(m: Pick<CapMeasure, 'capCents' | 'engagedCents' | 'over'>): CapTone {
+/** État d'un niveau (centre ou catégorie) : sans plafond, dans le plafond, proche, ou dépassé (rouge). La règle « proche » vient du middleware. */
+export function capTone(m: Pick<CapMeasure, 'capCents' | 'engagedCents' | 'over'> & { near?: boolean }): CapTone {
   if (m.capCents === null) return 'none';
   if (m.over) return 'over';
+  if (m.near !== undefined) return m.near ? 'near' : 'ok';
   return m.capCents > 0 && (m.engagedCents / m.capCents) * 100 >= NEAR_CAP_PCT ? 'near' : 'ok';
 }
 

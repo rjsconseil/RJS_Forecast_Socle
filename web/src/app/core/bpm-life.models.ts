@@ -58,8 +58,21 @@ export interface LifeCycle extends LifeHealthInfo {
     projectsPaidCents: number | null;
     incomeCount: number;
     receivedCount: number;
+    /** Prévu dans ce cycle, reçu ou payé dans un cycle antérieur (déjà dans son résultat). */
+    advanceReceivedCents: number | null;
+    advanceReceivedCount: number;
+    advancePaidCents: number | null;
+    /** Solde prévu si les avances avaient été réglées à leur date prévue. */
+    balancedCents: number | null;
+    /** Reçu − prévu sur les entrées déjà reçues du cycle. */
+    incomeGapCents?: number;
     lateIncomeCents: number;
     lateIncomeCount: number;
+    /** Lignes de la période restées sans règlement à sa clôture (hors résultat). */
+    unrealizedIncomeCents?: number;
+    unrealizedIncomeCount?: number;
+    unrealizedChargeCents?: number;
+    unrealizedChargeCount?: number;
     nextIncome: LifeLine | null;
     incomeLines: LifeLine[];
   } | null;
@@ -86,6 +99,10 @@ export interface LifeNature extends LifeHealthInfo {
   toPayCents: number;
   plannedCents: number;
   consumedPct: number | null;
+  /** Réglé − prévu sur les échéances du cycle déjà réglées. */
+  realizationGapCents?: number;
+  /** Réglé dans ce cycle pour des échéances prévues dans un autre cycle. */
+  otherCyclePaidCents?: number;
   shareOfPaidPct: number | null;
   lateCents: number;
   lateCount: number;
@@ -94,7 +111,10 @@ export interface LifeNature extends LifeHealthInfo {
   lineCount: number;
   capCents: number | null;
   marginCents: number | null;
+  /** Postes et catégories au-delà de leur plafond (une catégorie n'est pas recomptée si son poste l'est). */
   overCount: number;
+  /** Catégories plafonnées de cette nature, avec la même mesure que la revue des plafonds. */
+  categories?: LifeNatureCategory[];
   monthlyAverageCents: number;
   next: LifeLine | null;
   rows: LifeNatureRow[];
@@ -103,6 +123,17 @@ export interface LifeNature extends LifeHealthInfo {
   availableCents?: number | null;
   availableReason?: string | null;
   weeklyCents?: number | null;
+}
+
+export interface LifeNatureCategory {
+  id: string | null;
+  label: string;
+  ref: string;
+  capCents: number;
+  engagedCents: number | null;
+  marginCents: number;
+  over: boolean;
+  near: boolean;
 }
 
 export interface LifeProjectRow {

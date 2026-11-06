@@ -27,6 +27,8 @@ export interface VoletView {
   description: string;
   facts: { label: string; value: string; note?: string }[];
   gauge: LifeGauge;
+  /** Jauge sans objet (aucun projet…) : la carte reste courte au lieu d'afficher des zéros. */
+  hideGauge?: boolean;
   alert: string | null;
   disclosure: { label: string; summary: string };
   primary: VoletLink;
@@ -42,6 +44,20 @@ const count = (n: number, one: string, many = `${one}s`) => `${n} ${n > 1 ? many
 const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 const listOf = (labels: string[]) =>
   !labels.length ? 'aucun poste pour l’instant' : labels.length === 1 ? labels[0].toLowerCase() : `${labels.slice(0, -1).join(', ').toLowerCase()} et ${labels.at(-1)!.toLowerCase()}`;
+
+type CycleFlows = NonNullable<BpmLifeManagement['cycle']['flows']>;
+
+/** Légende du cycle : les avances (réglées au cycle précédent) sont nommées, sinon le solde paraît inexpliqué. */
+function cycleCaption(f: CycleFlows): string {
+  const parts = [`À recevoir ${cents(f.toReceiveCents)}`, `À payer ${cents(f.toPayCents)}`, `Budget initial ${signedCents(f.initialBudgetCents)}`];
+  if (f.advanceReceivedCents) parts.push(`Reçu d’avance ${cents(f.advanceReceivedCents)}`);
+  if (f.advancePaidCents) parts.push(`Payé d’avance ${cents(f.advancePaidCents)}`);
+  if (f.advanceReceivedCents || f.advancePaidCents) parts.push(`Avances comprises ${signedCents(f.balancedCents)}`);
+  if (f.incomeGapCents) parts.push(`Écart reçu / prévu ${signedCents(f.incomeGapCents)}`);
+  if (f.unrealizedIncomeCents) parts.push(`Jamais reçu ${cents(f.unrealizedIncomeCents)}`);
+  if (f.unrealizedChargeCents) parts.push(`Jamais réglé ${cents(f.unrealizedChargeCents)}`);
+  return parts.join(' · ');
+}
 
 function cycleVolet(d: BpmLifeManagement): VoletView {
   const c = d.cycle;
@@ -62,7 +78,12 @@ function cycleVolet(d: BpmLifeManagement): VoletView {
       {
         label: 'Entrées reçues',
         value: f ? `${f.receivedCount} / ${f.incomeCount}` : '—',
-        note: f?.nextIncome ? `Prochaine : ${shortDate(f.nextIncome.plannedDate)}` : f?.incomeCount ? 'Toutes reçues' : 'Aucune entrée prévue',
+        note: [
+          f?.nextIncome ? `Prochaine : ${shortDate(f.nextIncome.plannedDate)}` : f?.incomeCount ? 'Toutes reçues' : 'Aucune entrée prévue',
+          f?.advanceReceivedCount ? `dont ${count(f.advanceReceivedCount, 'reçue', 'reçues')} d’avance` : '',
+        ]
+          .filter(Boolean)
+          .join(' · '),
       },
       { label: 'Taux d’épargne', value: percentText(f?.savingsRatePct ?? null), note: 'Part des entrées conservée' },
     ],
@@ -78,7 +99,7 @@ function cycleVolet(d: BpmLifeManagement): VoletView {
         label: `${percentText(kept, 0)} conservé`,
         aria: kept === null ? 'Aucune entrée reçue' : `${percentText(kept, 0)} des entrées reçues restent après les dépenses`,
       },
-      caption: f ? `À recevoir ${cents(f.toReceiveCents)} · À payer ${cents(f.toPayCents)} · Budget initial ${signedCents(f.initialBudgetCents)}` : null,
+      caption: f ? cycleCaption(f) : null,
       band: c.days
         ? { label: 'Période écoulée', value: `${c.days.elapsed}`, unit: 'j', sub: `sur ${c.days.total} j`, percent: c.days.elapsedPct, percentLabel: percentText(c.days.elapsedPct, 0), tone: 'blue' }
         : { label: 'Période écoulée', value: '—', percent: null, percentLabel: 'À configurer', tone: 'unknown', note: 'Choisissez le jour d’ancrage du cycle dans les réglages.' },
@@ -97,9 +118,26 @@ function cycleVolet(d: BpmLifeManagement): VoletView {
     ],
     figures: [
       { label: 'À recevoir', value: cents(f?.toReceiveCents) },
-      { label: 'Entrées en retard', value: `${f?.lateIncomeCount ?? 0}`, pending: (f?.lateIncomeCount ?? 0) > 0 },
+      c.reading === 'closed'
+        ? { label: 'Jamais reçues', value: `${f?.unrealizedIncomeCount ?? 0}`, pending: (f?.unrealizedIncomeCount ?? 0) > 0 }
+        : { label: 'Entrées en retard', value: `${f?.lateIncomeCount ?? 0}`, pending: (f?.lateIncomeCount ?? 0) > 0 },
     ],
   };
+}
+
+/** Légende des charges : plafonds, puis ce qui explique que Prévu ≠ Réglé + Reste à payer. */
+function natureCaption(x: LifeNature): string {
+  const cats = x.categories ?? [];
+  const overCats = cats.filter((k) => k.over);
+  const parts = [
+    x.capCents === null
+      ? cats.length ? 'Aucun plafond par poste' : 'Aucun plafond'
+      : `Plafonds ${cents(x.capCents)} · marge ${signedCents(x.marginCents)}${x.overCount - overCats.length > 0 ? ` · ${count(x.overCount - overCats.length, 'poste dépassé', 'postes dépassés')}` : ''}`,
+  ];
+  if (cats.length) parts.push(`${count(cats.length, 'catégorie plafonnée', 'catégories plafonnées')}${overCats.length ? ` dont ${overCats.length} dépassée${overCats.length > 1 ? 's' : ''} (${overCats.map((k) => `${k.label} ${signedCents(k.marginCents)}`).join(', ')})` : ', toutes dans leur plafond'}`);
+  if (x.realizationGapCents) parts.push(`Écart réglé / prévu ${signedCents(x.realizationGapCents)}`);
+  if (x.otherCyclePaidCents) parts.push(`Dont ${cents(x.otherCyclePaidCents)} réglés pour un autre cycle`);
+  return parts.join(' · ');
 }
 
 function natureVolet(x: LifeNature): VoletView {
@@ -137,7 +175,7 @@ function natureVolet(x: LifeNature): VoletView {
         label: `${percentText(x.consumedPct, 0)} réglé`,
         aria: x.consumedPct === null ? 'Aucune charge prévue' : `${percentText(x.consumedPct, 0)} du prévu est réglé`,
       },
-      caption: x.capCents === null ? 'Aucun plafond par poste' : `Plafonds ${cents(x.capCents)} · marge ${signedCents(x.marginCents)}${x.overCount ? ` · ${count(x.overCount, 'poste dépassé', 'postes dépassés')}` : ''}`,
+      caption: natureCaption(x),
       band: essential
         ? { label: 'Échéances réglées', value: `${x.settledCount}`, sub: `sur ${x.lineCount}`, percent: settled, percentLabel: settled === null ? 'Aucune échéance' : percentText(settled, 0), tone: x.lateCount ? 'yellow' : 'green' }
         : { label: 'Part des dépenses du cycle', value: percentText(x.shareOfPaidPct, 0), sub: 'du dépensé total', percent: x.shareOfPaidPct, percentLabel: x.shareOfPaidPct === null ? 'Rien de dépensé' : percentText(x.shareOfPaidPct, 0), tone: 'blue' },
@@ -176,8 +214,10 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
     health: p.health,
     healthLabel: p.healthLabel,
     tag: `${p.fundedCount} / ${p.projectCount} financé${p.fundedCount > 1 ? 's' : ''}`,
-    description: 'Les enveloppes des autres projets : leurs dépenses validées entrent dans le cycle.',
-    facts: [
+    description: p.projectCount
+      ? 'Les enveloppes des autres projets : leurs dépenses validées entrent dans le cycle.'
+      : 'Aucun projet de la vie pour l’instant : un projet finance une envie par une enveloppe, ses dépenses validées entrent alors dans le cycle.',
+    facts: !p.projectCount ? [{ label: 'Projets de la vie', value: '0', note: 'Créer un projet pour lui attribuer une enveloppe' }] : [
       { label: 'Projets financés', value: `${p.fundedCount} / ${p.projectCount}`, note: p.unfundedCount ? `${p.unfundedCount} sans enveloppe` : p.projectCount ? 'Tous dotés d’une enveloppe' : 'Aucun projet' },
       { label: 'Réglé validé ce cycle', value: cents(p.periodPaidCents), note: 'Compté dans le Dépensé' },
       {
@@ -197,17 +237,22 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
       caption: p.approvedOverrunCents ? `Dont ${cents(p.approvedOverrunCents)} de dépassement autorisé · ${cents(p.availableCents)} à répartir entre les tâches` : `${cents(p.availableCents)} à répartir entre les tâches`,
       band: { label: 'Projets financés', value: `${p.fundedCount}`, sub: `sur ${p.projectCount}`, percent: funded, percentLabel: funded === null ? 'Aucun projet' : percentText(funded, 0), tone: p.unfundedCount ? 'yellow' : 'green' },
     },
+    hideGauge: !p.projectCount,
     alert: p.alert,
     disclosure: { label: 'Projets & décisions', summary: `${count(p.projectCount, 'projet')} · ${count(decisions, 'décision attendue', 'décisions attendues')}` },
     // Parcours le plus courant d'abord : décider ce qui attend, sinon piloter les projets.
-    primary: decisions > 0 ? { label: `Décider (${decisions})`, link: '/projet-de-vie', fragment: 'life-decisions' } : { label: 'Piloter les projets', link: '/app/gestion-projet' },
-    actions: [
+    primary: !p.projectCount
+      ? { label: 'Créer un projet de la vie', link: '/creer' }
+      : decisions > 0
+        ? { label: `Décider (${decisions})`, link: '/projet-de-vie', fragment: 'life-decisions' }
+        : { label: 'Piloter les projets', link: '/app/gestion-projet' },
+    actions: !p.projectCount ? [{ label: 'Gestion de projet', link: '/app/gestion-projet' }] : [
       decisions > 0 ? { label: 'Piloter les projets', link: '/app/gestion-projet' } : { label: 'Décisions & facturation', link: '/projet-de-vie', fragment: 'life-decisions' },
       { label: 'Dépenses des projets à régler', link: '/projet-de-vie', fragment: 'life-due' },
       { label: 'Tableau des projets', link: '/app/projets' },
       { label: 'Tâches des projets', link: '/app/taches' },
     ],
-    figures: [
+    figures: !p.projectCount ? [] : [
       { label: 'À facturer', value: cents(p.billableCents), pending: p.billable.length > 0 },
       { label: 'Décisions attendues', value: `${decisions}`, pending: decisions > 0 },
     ],
@@ -225,7 +270,7 @@ function resultsGauge(d: BpmLifeManagement): Omit<LifeGauge, 'band'> {
       first: { label: 'Objectif', value: cents(s.targetCents) },
       middle: { label: 'Cumulé', value: signedCents(s.cumulatedCents), kind: s.cumulatedCents >= 0 ? 'gain' : 'spend' },
       last: { label: 'Reste à dégager', value: cents(s.remainingCents) },
-      meter: { percent: s.progressPct, label: `${percentText(s.progressPct, 0)} atteint`, aria: `${percentText(s.progressPct, 0)} de l’objectif d’excédent atteint` },
+      meter: { percent: s.progressPct, label: `${percentText(s.progressPct, 0)} atteint`, aria: s.progressPct === null ? 'Objectif d’excédent à fixer' : `${percentText(s.progressPct, 0)} de l’objectif d’excédent atteint` },
       caption: `${cents(s.perPeriodCents)} par cycle, de ${s.startKey} à ${s.endKey} · ${s.onTrack ? 'en avance de' : 'en retard de'} ${cents(Math.abs(s.gapCents))} à date`,
     };
   }
@@ -305,6 +350,7 @@ function resultsVolet(d: BpmLifeManagement): VoletView {
 
 function patrimoineVolet(d: BpmLifeManagement): VoletView {
   const p = d.patrimoine;
+  const reached = p.objectiveCents !== null && p.stockCents !== null && p.progressPct !== null && p.progressPct >= 100;
   return {
     key: 'patrimoine',
     index: 6,
@@ -317,7 +363,7 @@ function patrimoineVolet(d: BpmLifeManagement): VoletView {
     facts: [
       { label: 'Stock d’ouverture', value: cents(p.openingStockCents), note: p.openingDate ? `au ${shortDate(p.openingDate)}` : 'Date à renseigner' },
       { label: 'Résultats capitalisés', value: signedCents(p.capitalizedCents), note: count(p.capitalizationCount, 'clôture') },
-      { label: 'Objectif de stock', value: cents(p.objectiveCents), note: p.objectiveCents === null ? 'À fixer' : `${percentText(p.progressPct, 0)} atteint` },
+      { label: 'Objectif de stock', value: cents(p.objectiveCents), note: p.objectiveCents === null ? 'À fixer' : p.progressPct === null ? 'Avancement à mesurer : stock inconnu' : `${percentText(p.progressPct, 0)} atteint` },
     ],
     gauge: {
       heading: 'Patrimoine accumulé',
@@ -326,11 +372,15 @@ function patrimoineVolet(d: BpmLifeManagement): VoletView {
       first: { label: 'Stock enregistré', value: cents(p.stockCents) },
       middle: { label: 'Effet du cycle', value: signedCents(p.effectCents), kind: (p.effectCents ?? 0) >= 0 ? 'gain' : 'spend' },
       last: { label: 'Estimation après le cycle', value: cents(p.afterCents) },
-      meter: { percent: p.progressPct, label: `${percentText(p.progressPct, 0)} de l’objectif`, aria: p.progressPct === null ? 'Objectif de stock à fixer' : `${percentText(p.progressPct, 0)} de l’objectif de stock` },
+      meter: { percent: p.progressPct, label: `${percentText(p.progressPct, 0)} de l’objectif`, aria: p.progressPct !== null ? `${percentText(p.progressPct, 0)} de l’objectif de stock` : p.objectiveCents !== null && p.stockCents === null ? 'Stock d’ouverture à renseigner' : 'Objectif de stock à fixer' },
       caption: p.expectedAfterCents !== null ? `Si tout le prévu se réalise : ${cents(p.expectedAfterCents)} à la clôture` : null,
       band:
         p.objectiveCents !== null
-          ? { label: 'Reste pour l’objectif', value: cents(p.remainingCents), sub: `objectif ${cents(p.objectiveCents)}`, percent: p.progressPct, percentLabel: percentText(p.progressPct, 0), tone: 'green' }
+          ? p.progressPct === null
+            ? { label: 'Reste pour l’objectif', value: cents(p.remainingCents), sub: `objectif ${cents(p.objectiveCents)}`, percent: null, percentLabel: 'À mesurer', tone: 'unknown', note: 'Renseignez le stock d’ouverture : l’avancement se mesure à partir du stock réel.' }
+            : reached
+              ? { label: 'Objectif atteint', value: signedCents(p.stockCents! - p.objectiveCents), sub: `au-delà de l’objectif de ${cents(p.objectiveCents)}`, percent: p.progressPct, percentLabel: percentText(p.progressPct, 0), tone: 'green', note: 'Le cap est franchi : fixez un nouveau cap ou un objectif daté pour la suite.' }
+              : { label: 'Reste pour l’objectif', value: cents(p.remainingCents), sub: `objectif ${cents(p.objectiveCents)}`, percent: p.progressPct, percentLabel: percentText(p.progressPct, 0), tone: 'green' }
           : { label: 'Objectif de stock', value: 'À fixer', percent: null, percentLabel: 'Sans objectif', tone: 'unknown', note: 'Fixez un cap dans « Objectifs du projet de vie », ci-dessous.' },
     },
     alert: p.alert,
@@ -343,7 +393,7 @@ function patrimoineVolet(d: BpmLifeManagement): VoletView {
       { label: 'Calendrier budgétaire', link: '/calendrier-budget' },
     ],
     figures: [
-      { label: 'Reste pour l’objectif', value: cents(p.remainingCents) },
+      reached ? { label: 'Au-delà de l’objectif', value: signedCents(p.stockCents! - p.objectiveCents!) } : { label: 'Reste pour l’objectif', value: cents(p.remainingCents) },
       { label: 'Capitalisations', value: `${p.capitalizationCount}` },
     ],
   };

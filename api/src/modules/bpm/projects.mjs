@@ -16,11 +16,11 @@ import { fail } from '../../socle/errors.mjs';
 import { money, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL } from '../budget/recurrence.mjs';
 import {
-  fmt, frDate, fundingFigures, inRegime, isValidatedCharge, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, sharesOf, standardOfProject, sum, taskFunding,
+  fmt, frDate, fundingFigures, inRegime, isValidatedCharge, isValidatedMove, projectMoveCents, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, sharesOf, standardOfProject, sum, taskFunding,
 } from '../budget/funding.mjs';
 import { addDays, periodByIndex, periodContaining, today } from './periods.mjs';
 
-export { inRegime, isValidatedCharge, OVERRUN_REASONS, OVERRUN_STATUS } from '../budget/funding.mjs';
+export { inRegime, isValidatedCharge, isValidatedRefund, isValidatedMove, projectMoveCents, OVERRUN_REASONS, OVERRUN_STATUS } from '../budget/funding.mjs';
 
 const compositionOf = (state, userId) => Object.values(state.bpmCompositions ?? {}).find((c) => c.userId === userId) ?? null;
 const cycleOf = (state, compositionId) => Object.values(state.cycleLinks ?? {}).find((c) => c.bpmCompositionId === compositionId) ?? null;
@@ -31,7 +31,7 @@ export function projectBudget(state, b, now = today()) {
   const comp = compositionOf(state, b.userId);
   const cycle = comp ? cycleOf(state, comp.id) : null;
   const period = cycle?.state === 'active' ? periodContaining(now, cycle.anchorDay) : null;
-  fig.periodPaidCents = period ? sum(Object.values(state.operations).filter((o) => isValidatedCharge(o, b) && o.realizedDate >= period.start && o.realizedDate <= period.end), (o) => o.realizedAmountCents) : null;
+  fig.periodPaidCents = period ? sum(Object.values(state.operations).filter((o) => isValidatedMove(o, b) && o.realizedDate >= period.start && o.realizedDate <= period.end), (o) => projectMoveCents(o, b)) : null;
   return fig;
 }
 
@@ -142,12 +142,29 @@ export function cycleChecks(state, b, fig = projectBudget(state, b)) {
   const cycle = comp ? cycleOf(state, comp.id) : null;
   if (cycle?.state === 'active') {
     const period = periodContaining(today(), cycle.anchorDay);
-    const charges = Object.values(state.operations).filter((o) => isValidatedCharge(o, b) && o.realizedDate >= period.start && o.realizedDate <= period.end);
+    const charges = Object.values(state.operations).filter((o) => isValidatedMove(o, b) && o.realizedDate >= period.start && o.realizedDate <= period.end);
     const unlinked = charges.filter((o) => !o.taskId || state.tasks[o.taskId]?.projectId !== b.coreProjectId);
-    out.push({ code: 'period-reconciliation', level: unlinked.length ? 'warning' : 'ok', taskId: null, message: `Cycle du ${frDate(period.start)} au ${frDate(period.end)} : ${fmt(sum(charges, (o) => o.realizedAmountCents))} remontés au budget du projet de vie ; ${unlinked.length ? `${fmt(sum(unlinked, (o) => o.realizedAmountCents))} sans tâche du projet, à rapprocher` : 'toutes les charges sont reliées aux tâches du projet'}.` });
+    out.push({ code: 'period-reconciliation', level: unlinked.length ? 'warning' : 'ok', taskId: null, message: `Cycle du ${frDate(period.start)} au ${frDate(period.end)} : ${fmt(sum(charges, (o) => projectMoveCents(o, b)))} remontés au budget du projet de vie (remboursements déduits) ; ${unlinked.length ? `${fmt(sum(unlinked, (o) => Math.abs(projectMoveCents(o, b))))} sans tâche du projet, à rapprocher` : 'toutes les charges sont reliées aux tâches du projet'}.` });
   }
+  // Projet terminé : l'enveloppe non dépensée n'a plus de tâche à financer ; l'ajuster la rend au budget de vie.
+  // Montant conseillé = plus petite enveloppe que allocate() accepte (réglé, parts, dépassements facturés).
+  const allDone = (() => {
+    const ts = Object.values(state.tasks).filter((t) => t.projectId === b.coreProjectId);
+    return ts.length > 0 && ts.every((t) => t.status === 'done');
+  })();
+  const keepCents = Math.max(fig.paidCents - fig.approvedOverrunCents, fig.sharesCents - fig.approvedOverrunCents, fig.billedOverrunCents ?? 0, 0);
+  const giveBackCents = Number.isInteger(b.allocationCents) ? b.allocationCents - keepCents : 0;
   out.push(
-    gap === 0
+    gap > 0 && allDone && fig.toPayCents === 0 && giveBackCents > 0
+      ? {
+          code: 'shares',
+          level: 'info',
+          taskId: null,
+          message: `Projet terminé : ${fmt(giveBackCents)} de l’enveloppe n’ont pas servi. Ramenez l’enveloppe à ${fmt(keepCents)} pour rendre ce reste au budget de vie.`,
+          // Geste proposé par la règle (mêmes limites que allocate) : la présentation n'a qu'à l'exécuter.
+          action: { kind: 'allocate', amountCents: keepCents, label: `Rendre ${fmt(giveBackCents)} au budget de vie` },
+        }
+      : gap === 0
       ? { code: 'shares', level: 'ok', taskId: null, message: `L’enveloppe du projet (${fmt(fig.ceilingCents)}) est entièrement répartie entre les parts de ses tâches.` }
       : { code: 'shares', level: 'warning', taskId: null, message: gap > 0 ? `${fmt(gap)} de l’enveloppe ne sont encore répartis sur aucune tâche (parts : ${fmt(fig.sharesCents)} sur ${fmt(fig.ceilingCents)}).` : `Les parts des tâches (${fmt(fig.sharesCents)}) dépassent l’enveloppe (${fmt(fig.ceilingCents)}) de ${fmt(-gap)}.` },
   );
@@ -227,9 +244,9 @@ export function lifeFunding(state, children, cs, { limit = 12 } = {}) {
     const b = state.budgets[c.budgetId];
     const byPeriod = Object.fromEntries(periods.map((p) => [p.key, 0]));
     for (const o of Object.values(state.operations)) {
-      if (!isValidatedCharge(o, b)) continue;
+      if (!isValidatedMove(o, b)) continue;
       const k = keyOf(o.realizedDate);
-      if (k) byPeriod[k] += o.realizedAmountCents;
+      if (k) byPeriod[k] += projectMoveCents(o, b);
     }
     const overruns = overrunsOf(state, c.budgetId)
       .filter((x) => x.status !== 'refused')
@@ -305,13 +322,13 @@ export const projectVariables = [
       const lines = [];
       for (const b of standards) {
         for (const o of Object.values(ctx.state.operations)) {
-          if (isValidatedCharge(o, b) && o.realizedDate >= start && o.realizedDate <= end) lines.push({ o, b });
+          if (isValidatedMove(o, b) && o.realizedDate >= start && o.realizedDate <= end) lines.push({ o, b });
         }
       }
       lines.sort((x, y) => x.o.realizedDate.localeCompare(y.o.realizedDate));
       return {
-        value: sum(lines, (l) => l.o.realizedAmountCents) / 100,
-        sources: lines.map(({ o, b }) => ({ id: o.id, kind: 'operation', label: `${o.label} · ${b.name}`, amount: o.realizedAmountCents / 100, date: o.realizedDate, status: 'realized' })),
+        value: sum(lines, (l) => projectMoveCents(l.o, l.b)) / 100,
+        sources: lines.map(({ o, b }) => ({ id: o.id, kind: 'operation', label: `${o.label} · ${b.name}${o.direction === 'income' ? ' (remboursement)' : ''}`, amount: projectMoveCents(o, b) / 100, date: o.realizedDate, status: 'realized' })),
         note: lines.length ? null : 'Aucune charge de projet validée dans la période',
       };
     },
@@ -511,11 +528,12 @@ export function createProjects(socle, h) {
     };
     if (b) {
       const lines = budgetModule().budgetLines(state, [b.id], { from: addDays(now, -365), to: addDays(now, 365), by: 'planned' });
+      // Les remboursements reçus figurent avec les dépenses de leur tâche : ils s'en déduisent (`refund`).
       out.charges = lines
-        .filter((l) => l.direction === 'charge')
+        .filter((l) => l.direction === 'charge' || (l.direction === 'income' && l.kind === 'operation'))
         .map((l) => {
           const v = budgetModule().lineView(state, l);
-          return { ...v, validated: l.settled && inRegime(b) && l.realizedDate >= b.allocationDate, beforeAllocation: l.settled && inRegime(b) && l.realizedDate < b.allocationDate };
+          return { ...v, refund: l.direction === 'income', validated: l.settled && inRegime(b) && l.realizedDate >= b.allocationDate, beforeAllocation: l.settled && inRegime(b) && l.realizedDate < b.allocationDate };
         });
     } else {
       // Charges propres du budget de vie sur le cycle en cours (les projets fils gardent les leurs).

@@ -106,12 +106,30 @@ export function createReads(socle, h) {
    * Charges des projets de la vie validées comme réglées (Budgets standards financés par le budget de vie, réglées
    * depuis l'attribution) : elles comptent dans les dépenses du budget de vie, jamais avant leur validation.
    */
+  // Un remboursement reçu par le projet se lit comme une charge négative, sur le poste de la dernière charge de sa tâche :
+  // les mêmes lignes donnent le Dépensé, les natures et les plafonds, sans écart avec `projets.chargesReglees`.
   const validatedProjectLines = (b, { from, to, by }) =>
     fundedStandardsOf(b.state, b.comp.budgetId).flatMap((sb) =>
       budget()
         .budgetLines(b.state, [sb.id], { from, to, by })
-        .filter((l) => l.kind === 'operation' && l.direction === 'charge' && l.settled && l.realizedDate >= sb.allocationDate),
+        .filter((l) => l.kind === 'operation' && l.settled && l.realizedDate >= sb.allocationDate)
+        .map((l) => (l.direction === 'income' ? refundLine(b.state, sb, l) : l)),
     );
+  function refundLine(state, sb, l) {
+    const charge = Object.values(state.operations)
+      .filter((o) => o.budgetId === sb.id && o.direction === 'charge' && o.status !== 'cancelled' && (!l.taskId || o.taskId === l.taskId) && o.date <= (l.realizedDate ?? l.plannedDate))
+      .sort((x, y) => y.date.localeCompare(x.date))[0];
+    return {
+      ...l,
+      direction: 'charge',
+      refund: true,
+      realizedCents: -l.realizedCents,
+      plannedCents: -l.plannedCents,
+      standardCostCenter: charge ? charge.standardCostCenter : 'divers',
+      costCenterId: charge ? charge.costCenterId : null,
+      categoryId: charge?.categoryId ?? null,
+    };
+  }
 
   /** Charge spéciale du budget de vie (budget attribué, dépassement facturé) : présentée, jamais totalisée. */
   const specialLine = (b, sp) => ({
@@ -333,6 +351,8 @@ export function createReads(socle, h) {
         canSettle: !view.settled && !(view.direction === 'charge' && pb?.taskFundingRequired && !Number.isInteger(pb.allocationCents)),
         canCancelSettlement: view.settled && !protectedClosure(view.realizedDate),
         canEdit,
+        // Doublon ou erreur de saisie : une opération ponctuelle s'annule tant que ses dates ne sont pas closes.
+        canCancelEntry: view.kind === 'operation' && !view.recurrenceId && !editClosure,
         editReason: canEdit ? null : `La période ${editClosure.periodLabel ?? editClosure.periodKey} est close : cette opération est conservée dans son historique.`,
         settlementPolicy: 'Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
       },
@@ -403,7 +423,7 @@ export function createReads(socle, h) {
   // ---------- plafonds de dépenses : centres de coût et catégories ----------
 
   /** Résumé d'un plafond pour les listes (registre) : plafond, engagé, marge, consommation, dépassement. */
-  const capBrief = (r) => ({ capCents: r.capCents, engagedCents: r.engagedCents, marginCents: r.marginCents, usedPct: r.usedPct, over: r.over });
+  const capBrief = (r) => ({ capCents: r.capCents, engagedCents: r.engagedCents, marginCents: r.marginCents, usedPct: r.usedPct, over: r.over, near: r.near });
   const capsBrief = (report) => ({
     centers: Object.fromEntries(report.centers.map((c) => [c.ref, capBrief(c)])),
     categories: Object.fromEntries(report.categories.map((k) => [k.id, { ...capBrief(k), label: k.label, costCenterRef: k.costCenterRef, archived: k.archived }])),
@@ -500,6 +520,9 @@ export function createReads(socle, h) {
         headroomCents: centers.filter((c) => c.capCents !== null && !c.over).reduce((t, c) => t + c.marginCents, 0),
         expectedCents: cents(figures['bpm.soldeAttendu'].value),
         initialCents: cents(figures['bpm.resultatPrevu'].value),
+        // Lecture d'une période terminée ou close : un bilan, plus un budget à piloter (messages au passé, aucun nouvel achat).
+        reading: b.period.status ?? 'current',
+        closedResultCents: b.period.closureId ? (b.state.closures[b.period.closureId]?.resultCents ?? null) : null,
       },
     };
   }
@@ -775,12 +798,23 @@ export function createReads(socle, h) {
   function due(ctx) {
     const b = base(ctx);
     const now = today();
-    const from = b.cs ? b.cs.firstOpen.start : addDays(now, -366);
+    // Les échéances non réglées des périodes closes (douze derniers mois) restent visibles, à part :
+    // elles ne comptent pas dans le solde net à traiter, qui ne porte que sur les périodes ouvertes.
+    const open = b.cs ? b.cs.firstOpen.start : addDays(now, -366);
+    const from = open < addDays(now, -366) ? open : addDays(now, -366);
     const lines = budget()
       .budgetLines(b.state, b.budgets.map((x) => x.id), { from: from < addDays(now, -730) ? addDays(now, -730) : from, to: now, by: 'planned' })
       .filter((l) => !l.settled)
       .map((l) => decorate(b, l));
-    return { context: contextOf(b, 'consolidated'), lines, totalCents: sum(lines, (l) => sign(l.direction) * l.plannedCents) };
+    const pending = lines.filter((l) => l.status !== 'unrealized');
+    const unrealized = lines.filter((l) => l.status === 'unrealized');
+    return {
+      context: contextOf(b, 'consolidated'),
+      lines,
+      totalCents: sum(pending, (l) => sign(l.direction) * l.plannedCents),
+      unrealizedCount: unrealized.length,
+      unrealizedNetCents: sum(unrealized, (l) => sign(l.direction) * l.plannedCents),
+    };
   }
 
   const visionOf = (comp) => ({ ...DEFAULT_VISION, ...(comp.vision ?? {}) });

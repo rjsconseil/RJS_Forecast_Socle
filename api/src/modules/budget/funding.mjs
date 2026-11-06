@@ -51,6 +51,14 @@ export function requestView(state, x) {
 
 /** Charge d'un projet validée comme réglée pour ses besoins, depuis l'attribution : comptée dans le budget de vie. */
 export const isValidatedCharge = (o, b) => inRegime(b) && o.budgetId === b.id && o.direction === 'charge' && o.status === 'realized' && o.realizedDate >= b.allocationDate;
+/**
+ * Remboursement d'un projet financé [P] : entrée reçue sur le budget du projet depuis l'attribution (prestation annulée,
+ * avoir…). Il se déduit des charges réglées du projet, de sa tâche et de ce que le projet coûte au budget de vie, à sa date réelle.
+ */
+export const isValidatedRefund = (o, b) => inRegime(b) && o.budgetId === b.id && o.direction === 'income' && o.status === 'realized' && o.realizedDate >= b.allocationDate;
+/** Mouvement validé d'un projet : charge réglée (+) ou remboursement reçu (−), en centimes ; 0 sinon. */
+export const projectMoveCents = (o, b) => (isValidatedCharge(o, b) ? o.realizedAmountCents : isValidatedRefund(o, b) ? -o.realizedAmountCents : 0);
+export const isValidatedMove = (o, b) => isValidatedCharge(o, b) || isValidatedRefund(o, b);
 
 /**
  * Charges du projet qui forment son engagé : réglées validées, prévues ponctuelles, occurrences attendues.
@@ -62,8 +70,9 @@ export function chargeItems(state, b, now) {
   const items = [];
   const materialized = new Set();
   for (const o of Object.values(state.operations)) {
-    if (o.budgetId !== b.id) continue;
+    if (o.budgetId !== b.id || o.status === 'cancelled') continue;
     if (o.recurrenceId) materialized.add(`${o.recurrenceId}@${o.occurrenceDate}`);
+    if (isValidatedRefund(o, b)) items.push({ taskId: o.taskId ?? null, cents: -o.realizedAmountCents, paid: true, refund: true });
     if (o.direction !== 'charge') continue;
     if (o.status === 'realized') {
       if (from && o.realizedDate < from) items.push({ taskId: o.taskId ?? null, cents: o.realizedAmountCents, paid: false, before: true });

@@ -230,9 +230,11 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                       }
                     </dl>
                   </div>
-                  <div class="bpm-project-row-budget">
-                    <bpm-life-gauge [gauge]="v.gauge" />
-                  </div>
+                  @if (!v.hideGauge) {
+                    <div class="bpm-project-row-budget">
+                      <bpm-life-gauge [gauge]="v.gauge" />
+                    </div>
+                  }
                   @if (v.alert) {
                     <p class="pm-project-alert" [attr.data-health]="v.health">{{ v.alert }}</p>
                   }
@@ -408,55 +410,70 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           @if (budgetTypeOpen()) { <bpm-act-budget-type [showCaps]="false" /> }
         </details>
 
-        <section class="bpm-section" id="life-funding" aria-labelledby="life-funding-title">
-          <header>
-            <h2 id="life-funding-title">Financement des projets de la vie</h2>
-            <span class="count-badge">{{ d.projects.projectCount }}</span>
-          </header>
-          <p class="bpm-note">
-            Le budget du projet de vie porte tous les projets de la vie qui lui sont rattachés et finance chacun par une enveloppe.
-            Pour chaque projet : son enveloppe, la période où elle a été attribuée, ses dépassements et ce qu’il a fait
-            remonter au budget du projet de vie à chaque cycle.
-          </p>
-          <bpm-life-funding [funding]="d.projects.funding" [highlight]="shownKey()" />
-        </section>
+        @if (d.projects.projectCount || d.projects.pendingRequests.length) {
+          <section class="bpm-section" id="life-funding" aria-labelledby="life-funding-title">
+            <header>
+              <h2 id="life-funding-title">Financement des projets de la vie</h2>
+              <span class="count-badge">{{ d.projects.projectCount }}</span>
+            </header>
+            <p class="bpm-note">
+              Le budget du projet de vie porte tous les projets de la vie qui lui sont rattachés et finance chacun par une enveloppe.
+              Pour chaque projet : son enveloppe, la période où elle a été attribuée, ses dépassements et ce qu’il a fait
+              remonter au budget du projet de vie à chaque cycle.
+            </p>
+            <bpm-life-funding [funding]="d.projects.funding" [highlight]="shownKey()" />
+          </section>
 
-        <section class="bpm-section" id="life-decisions" aria-labelledby="life-decisions-title">
-          <header>
-            <h2 id="life-decisions-title">Décisions attendues</h2>
-            <span class="count-badge">{{ d.projects.pendingRequests.length + d.projects.taskRequestCount }}</span>
-          </header>
-          <p class="bpm-note">
-            Ce que les projets demandent au projet de vie : autoriser un dépassement d’enveloppe (facturé en fin de cycle) et,
-            dans chaque projet, accorder les parts demandées par les tâches.
-          </p>
-          @for (o of d.projects.pendingRequests; track o.id) {
-            <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decideOverrun(o, $event)" />
-            <p class="bpm-note"><a [routerLink]="['/app/gestion-projet', o.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}">Ouvrir le projet « {{ o.budgetName }} » →</a></p>
-          } @empty {
-            <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
-          }
-          @if (d.projects.taskRequests?.length) {
-            <ul class="life-task-requests">
-              @for (r of d.projects.taskRequests; track r.id) {
-                <li>
-                  Part demandée pour « {{ r.taskTitle }} » ({{ r.budgetName }}) : {{ r.amountCents | cents }}
-                  @if (r.grantedCents) { <small>· {{ r.grantedCents | cents }} déjà accordés</small> }
-                  · <a [routerLink]="['/app/gestion-projet', r.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}" fragment="requests-title">Accorder ou refuser dans le projet →</a>
-                </li>
-              }
-            </ul>
-          }
-          @if (d.projects.billable.length) {
-            <div class="bpm-actions">
-              <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="bill()">
-                Facturer les dépassements au projet de vie ({{ d.projects.billableCents | cents }})
-              </button>
-            </div>
-          } @else if (d.projects.nextBillingDate) {
-            <p class="bpm-note">Prochaine facturation des dépassements autorisés : {{ d.projects.nextBillingDate | shortDate }}.</p>
-          }
-        </section>
+          <section class="bpm-section" id="life-decisions" aria-labelledby="life-decisions-title">
+            <header>
+              <h2 id="life-decisions-title">Décisions attendues</h2>
+              <span class="count-badge">{{ d.projects.pendingRequests.length + d.projects.taskRequestCount }}</span>
+            </header>
+            <p class="bpm-note">
+              Ce que les projets demandent au projet de vie : autoriser un dépassement d’enveloppe (facturé en fin de cycle) et,
+              dans chaque projet, accorder les parts demandées par les tâches.
+            </p>
+            @for (o of d.projects.pendingRequests; track o.id) {
+              <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decideOverrun(o, $event)" />
+              <p class="bpm-note"><a [routerLink]="['/app/gestion-projet', o.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}">Ouvrir le projet « {{ o.budgetName }} » →</a></p>
+            } @empty {
+              <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
+            }
+            @if (d.projects.taskRequests?.length) {
+              <ul class="life-task-requests">
+                @for (r of d.projects.taskRequests; track r.id) {
+                  <li>
+                    Part demandée pour « {{ r.taskTitle }} » ({{ r.budgetName }}) : {{ r.amountCents | cents }}
+                    @if (r.grantedCents) { <small>· {{ r.grantedCents | cents }} déjà accordés</small> }
+                    · <a [routerLink]="['/app/gestion-projet', r.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}" fragment="requests-title">Accorder ou refuser dans le projet →</a>
+                  </li>
+                }
+              </ul>
+            }
+            @if (d.projects.billable.length) {
+              <div class="bpm-actions">
+                <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="bill()">
+                  Facturer les dépassements au projet de vie ({{ d.projects.billableCents | cents }})
+                </button>
+              </div>
+            } @else if (d.projects.nextBillingDate) {
+              <p class="bpm-note">Prochaine facturation des dépassements autorisés : {{ d.projects.nextBillingDate | shortDate }}.</p>
+            }
+          </section>
+        } @else {
+          <!-- Sans projet de la vie : une seule section courte au lieu d'un tableau et d'une file de décisions vides. -->
+          <section class="bpm-section" id="life-funding" aria-labelledby="life-funding-title">
+            <header>
+              <h2 id="life-funding-title">Projets de la vie</h2>
+              <span class="count-badge">0</span>
+            </header>
+            <p class="bpm-note" id="life-decisions">
+              Aucun projet de la vie n’est rattaché : aucune enveloppe à suivre ni décision attendue. Un projet de la vie finance
+              une envie (voyage, travaux, formation…) par une enveloppe ; ses dépenses validées entrent alors dans le cycle.
+            </p>
+            <div class="bpm-actions"><a class="btn btn-primary" routerLink="/creer">Créer un projet de la vie</a></div>
+          </section>
+        }
 
         <section class="bpm-section" id="life-due" aria-labelledby="life-due-title">
           <header>

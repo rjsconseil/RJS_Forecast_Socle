@@ -150,6 +150,10 @@ export class BpmApi {
   cancelRealization(id: string, expectedRevision: number) {
     return this.post<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}/cancel-realization`, { expectedRevision });
   }
+  /** Annule une saisie ponctuelle (doublon, erreur) : elle sort des sommes, refusé dans une période close. */
+  cancelOperation(id: string, expectedRevision: number, reason?: string) {
+    return this.post<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}/cancel`, { expectedRevision, reason });
+  }
   updateRecurrence(id: string, body: Record<string, unknown> & { expectedRevision: number }) {
     return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number }; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
   }

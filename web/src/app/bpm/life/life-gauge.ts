@@ -10,6 +10,7 @@ export interface LifeGauge {
   first: { label: string; value: string };
   middle: { label: string; value: string; kind?: 'spend' | 'gain' | 'neutral' };
   last: { label: string; value: string };
+  /** `aria` décrit aussi la jauge vide : il s'affiche à la place du pourcentage (« Aucune entrée reçue »…). */
   meter: { percent: number | null; label: string; aria: string };
   caption: string | null;
   band: {
@@ -52,7 +53,7 @@ export interface LifeGauge {
           <span>{{ g.middle.label }}</span><strong>{{ g.middle.value }}</strong>
         </div>
         <div class="pm-budget-meter">
-          <span class="pm-budget-percent">{{ g.meter.percent === null ? 'À estimer' : g.meter.label }}</span>
+          <span class="pm-budget-percent">{{ g.meter.percent === null ? g.meter.aria : g.meter.label }}</span>
           <div
             class="pm-track pm-budget-track"
             role="progressbar"

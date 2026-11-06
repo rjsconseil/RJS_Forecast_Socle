@@ -168,4 +168,62 @@ describe('Gestion du projet de vie — volets', () => {
     const links: VoletLink[] = lifeVolets(lecture()).flatMap((x) => [x.link, x.primary, ...x.actions]);
     for (const l of links.filter((x) => x.link)) expect(declared(l.link!), l.link).toBe(true);
   });
+
+  it('nomme les entrées reçues d’avance : le solde du cycle s’explique', () => {
+    const d = lecture();
+    Object.assign(d.cycle.flows!, { receivedCents: 0, receivedCount: 1, incomeCount: 1, advanceReceivedCount: 1, advanceReceivedCents: 240000, advancePaidCents: 0, balancedCents: 91510 });
+    const [cycle] = lifeVolets(d);
+    expect(cycle.facts[1].note).toBe('Toutes reçues · dont 1 reçue d’avance');
+    expect(cycle.gauge.caption).toMatch(/Reçu d’avance 2\s400,00\s€ · Avances comprises \+915,10\s€$/);
+    expect(cycle.gauge.meter.percent).toBeNull();
+    expect(cycle.gauge.meter.aria).toBe('Aucune entrée reçue');
+  });
+
+  it('explique Prévu ≠ Réglé + Reste : écart de réalisation et règlements d’un autre cycle', () => {
+    const d = lecture();
+    Object.assign(d.natures.indispensable, { realizationGapCents: 900, otherCyclePaidCents: 115000 });
+    const essentials = lifeVolets(d).find((x) => x.key === 'indispensable')!;
+    expect(essentials.gauge.caption).toMatch(/Écart réglé \/ prévu \+9,00\s€ · Dont 1\s150,00\s€ réglés pour un autre cycle$/);
+  });
+
+  it('sans projet de la vie : carte courte, sans jauge de zéros, qui propose d’en créer un', () => {
+    const d = lecture();
+    Object.assign(d.projects, { projectCount: 0, fundedCount: 0, unfundedCount: 0, allocatedCents: 0, paidCents: 0, remainingCents: 0, taskRequestCount: 0 });
+    const projects = lifeVolets(d).find((x) => x.key === 'projets')!;
+    expect([projects.hideGauge, projects.primary.link, projects.figures.length, projects.facts.length]).toEqual([true, '/creer', 0, 1]);
+  });
+  it('compte les catégories plafonnées dépassées dans le volet de leur nature', () => {
+    const d = lecture();
+    Object.assign(d.natures.courante, {
+      overCount: 1,
+      categories: [
+        { id: 'k1', label: 'Cantine', ref: 'std:enfants', capCents: 10000, engagedCents: 11000, marginCents: -1000, over: true, near: false },
+        { id: 'k2', label: 'Activités sportives', ref: 'std:enfants', capCents: 8000, engagedCents: 6000, marginCents: 2000, over: false, near: false },
+      ],
+    });
+    const courante = lifeVolets(d).find((x) => x.key === 'courante')!;
+    expect(courante.gauge.caption).toMatch(/^Aucun plafond par poste · 2 catégories plafonnées dont 1 dépassée \(Cantine −10,00\s€\)$/);
+  });
+
+  it('cycle clôturé : nomme les entrées jamais reçues au lieu des retards', () => {
+    const d = lecture({ closed: true });
+    Object.assign(d.cycle.flows!, { unrealizedIncomeCount: 1, unrealizedIncomeCents: 14000, incomeGapCents: -100000 });
+    const [cycle] = lifeVolets(d);
+    expect(cycle.figures[1]).toEqual({ label: 'Jamais reçues', value: '1', pending: true });
+    expect(cycle.gauge.caption).toMatch(/Écart reçu \/ prévu −1\s000,00\s€ · Jamais reçu 140,00\s€$/);
+  });
+  it('stock d’ouverture inconnu : l’objectif fixé n’est ni « à fixer » ni « atteint »', () => {
+    const d = lecture();
+    Object.assign(d.patrimoine, { ...{ health: 'unknown', healthLabel: 'À renseigner' }, stockCents: null, afterCents: null, openingStockCents: null, openingDate: null, progressPct: null, remainingCents: null, objectiveCents: 1500000 });
+    const p = lifeVolets(d).find((x) => x.key === 'patrimoine')!;
+    expect([p.facts[2].note, p.gauge.meter.aria, p.gauge.band?.percentLabel]).toEqual(['Avancement à mesurer : stock inconnu', 'Stock d’ouverture à renseigner', 'À mesurer']);
+  });
+  it('objectif de stock franchi : dit de combien, au lieu d’un reste à 0 €', () => {
+    const d = lecture();
+    Object.assign(d.patrimoine, { stockCents: 3416900, objectiveCents: 3380000, progressPct: 101, remainingCents: 0 });
+    const p = lifeVolets(d).find((x) => x.key === 'patrimoine')!;
+    expect(p.gauge.band?.label).toBe('Objectif atteint');
+    expect(p.gauge.band?.value).toMatch(/^\+369,00\s€$/);
+    expect(p.figures[0].label).toBe('Au-delà de l’objectif');
+  });
 });
