@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { newRequestKey } from '../../core/api.service';
 import { BpmTaskCard, ProjectOverrun, TaskBudgetRequest } from '../../core/bpm-projects.models';
 import { CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
@@ -20,6 +21,7 @@ export interface TaskFundingSubmission {
   selector: 'bpm-managed-task',
   imports: [
     FormsModule,
+    RouterLink,
     CentsPipe,
     ShortDatePipe,
     BpmProjectMetricsComponent,
@@ -95,7 +97,7 @@ export interface TaskFundingSubmission {
           <button
             class="btn btn-primary"
             type="button"
-            [disabled]="busy() || !funded() || !!t.budget?.request"
+            [disabled]="busy() || !!t.budget?.request"
             [attr.aria-label]="'Demander un montant pour ' + t.task.title"
             [attr.aria-expanded]="requestOpen()"
             (click)="requestOpen.set(!requestOpen())"
@@ -127,7 +129,7 @@ export interface TaskFundingSubmission {
         </div>
         @if (!funded()) {
           <p class="bpm-note pm-task-warning">
-            Attribuez un budget au projet pour demander une part.
+            Préparez la demande, puis <a class="text-link" [routerLink]="['/app/gestion-projet', t.task.projectId]" fragment="enveloppe">attribuez l’enveloppe du projet</a> pour pouvoir l’accorder.
           </p>
         }
       </aside>

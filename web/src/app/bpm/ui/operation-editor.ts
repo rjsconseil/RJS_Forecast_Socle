@@ -40,6 +40,17 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
               <p><small>Rien n'a été enregistré ; votre saisie est conservée.</small></p>
             }
           </div>
+          @if (fundingIssue(); as f) {
+            <section class="fe-impact" aria-label="Financer et enregistrer le règlement">
+              <h3>Financer cette dépense ici</h3>
+              <p>Cette action accorde la part nécessaire à la tâche, autorise le dépassement indiqué et enregistre le paiement. Vérifiez le montant avant de confirmer.</p>
+              @if (f.overrunCents > 0) { <p class="bpm-error">Dépassement à autoriser : {{ f.overrunCents | cents }}.</p> }
+              <div class="bpm-actions">
+                <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save(true)">Accorder le nécessaire et enregistrer le paiement</button>
+                <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="realized.set(false); error.set(null)">Garder comme dépense prévue</button>
+              </div>
+            </section>
+          }
         }
         @if (scopeNote()) {
           <p class="bpm-missing" role="status">{{ scopeNote() }}</p>
@@ -311,6 +322,7 @@ export class BpmOperationEditor implements OnInit {
   private tasks = signal<{ id: string; title: string; projectId: string | null }[]>([]);
   protected busy = signal(false);
   protected error = signal<ApiError | null>(null);
+  private fundingRefusalSignature = signal<string | null>(null);
   protected scopeNote = signal<string | null>(null);
   protected capPreview = signal<CapPreview | null>(null);
   protected capPreviewError = signal<string | null>(null);
@@ -466,8 +478,33 @@ export class BpmOperationEditor implements OnInit {
     this.closed.emit();
   }
 
-  async save() {
+  /** La confirmation de financement ne vaut que pour la saisie refusée par le serveur. */
+  private draftSignature() {
+    return JSON.stringify({
+      input: this.input(),
+      amount: this.amount(),
+      realizedAmount: this.realizedAmount(),
+      ...(this.center() === '__new__' ? { newCenter: this.newCenter() } : {}),
+    });
+  }
+
+  protected fundingIssue = computed(() => {
+    const e = this.error();
+    if (this.editing() || !this.realized() || this.cadence() !== 'once' || this.fundingRefusalSignature() !== this.draftSignature()) return null;
+    const details = e?.body.details as { reason?: string; grantOverrunCents?: number; overrunCents?: number } | undefined;
+    return details?.reason === 'task-share' || e?.body.code === 'OVERRUN_AUTHORIZATION_REQUIRED'
+      ? { overrunCents: details?.grantOverrunCents ?? details?.overrunCents ?? 0 }
+      : null;
+  });
+
+  async save(fund = false) {
     if (this.busy()) return;
+    const authorizedSignature = fund ? this.fundingRefusalSignature() : null;
+    if (fund && !this.fundingIssue()) {
+      this.fundingRefusalSignature.set(null);
+      this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'La saisie a changé. Enregistrez à nouveau pour vérifier le financement nécessaire avant de le confirmer.' }));
+      return;
+    }
     if (this.taskFundingRequired() && this.direction() === 'charge' && !this.taskId()) {
       this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Choisissez la tâche qui porte cette dépense. Créez une tâche dans le projet si nécessaire.', details: { field: 'taskId' } }));
       return;
@@ -479,6 +516,8 @@ export class BpmOperationEditor implements OnInit {
     }
     this.busy.set(true);
     this.error.set(null);
+    this.fundingRefusalSignature.set(null);
+    let sentSignature: string | null = null;
     try {
       let centerRef = this.center();
       if (centerRef === '__new__') {
@@ -488,9 +527,15 @@ export class BpmOperationEditor implements OnInit {
         this.centers.set(await this.bpm.costCenters());
         this.center.set(centerRef);
       }
+      const submittedInput = { ...this.input(), costCenterRef: centerRef };
+      const submittedSignature = this.draftSignature();
+      const l = this.line();
+      if (fund && authorizedSignature !== submittedSignature) {
+        throw new ApiError(400, { code: 'VALIDATION', action: null, message: 'La saisie a changé. Enregistrez à nouveau pour vérifier le financement nécessaire avant de le confirmer.' });
+      }
       // Relecture juste avant l’écriture : ne jamais enregistrer silencieusement un dépassement.
-      if (this.direction() === 'charge') {
-        const input = { ...this.capInput(), costCenterRef: centerRef };
+      if (submittedInput.direction === 'charge') {
+        const input = { ...submittedInput, ...(l ? { replaceId: l.recurrenceId ?? l.operationId ?? l.id } : {}) };
         let signature: string | null = null;
         try {
           const cp = await this.bpm.previewCaps(input);
@@ -501,15 +546,21 @@ export class BpmOperationEditor implements OnInit {
           this.capPreviewError.set('Vérification des plafonds indisponible.');
           signature = JSON.stringify({ input, unavailable: true });
         }
+        if (this.draftSignature() !== submittedSignature) {
+          this.capPreview.set(null);
+          this.capPreviewError.set(null);
+          this.capConfirmation.set(null);
+          throw new ApiError(400, { code: 'VALIDATION', action: null, message: 'La saisie a changé pendant la vérification. Vérifiez les montants puis enregistrez à nouveau.' });
+        }
         if (signature && this.capConfirmation() !== signature) {
           this.capConfirmation.set(signature);
           return;
         }
       }
-      const l = this.line();
       let message: string;
       if (!l) {
-        const r = await this.bpm.createEntry({ ...this.input(), costCenterRef: centerRef, requestKey: this.requestKey });
+        sentSignature = submittedSignature;
+        const r = await this.bpm.createEntry({ ...submittedInput, requestKey: this.requestKey, ...(fund ? { fund: true } : {}) });
         message = withCapAlerts(r.recurrence ? `Opération récurrente « ${r.recurrence.label} » enregistrée (${r.recurrence.cadenceLabel}).` : `Opération « ${r.operation?.label} » enregistrée.`, r.capAlerts);
       } else if (l.recurrenceId) {
         const body = { expectedRevision: this.recurrenceRevision ?? 0, label: this.label().trim(), amount, costCenterRef: centerRef, note: this.note().trim() || null, endDate: this.endDate() || null, categoryId: this.categoryValue(), ...(this.cadence() !== this.original?.cadence ? { cadence: this.cadence() } : {}), ...(this.date() !== this.original?.firstDate ? { firstDate: this.date() } : {}), ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
@@ -523,6 +574,7 @@ export class BpmOperationEditor implements OnInit {
       this.refresh.bump();
       this.saved.emit(message);
     } catch (e) {
+      this.fundingRefusalSignature.set(sentSignature);
       this.error.set(toApiError(e));
     } finally {
       this.busy.set(false);

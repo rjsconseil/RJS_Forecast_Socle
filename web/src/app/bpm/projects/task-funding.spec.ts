@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { Api, ApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmProjectDetail, BpmTaskCard, TaskBudgetRequest } from '../../core/bpm-projects.models';
 import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
 import { BpmProjectPage } from './project.page';
+import { BpmTaskRequestsComponent } from './project-parts';
 
 const task = {
   task: {
@@ -42,6 +43,34 @@ const request = {
 } as TaskBudgetRequest;
 
 describe('clés des demandes de montant depuis une tâche dépliée', () => {
+  it('permet de préparer une demande sans enveloppe et guide vers son attribution', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const f = TestBed.createComponent(BpmManagedTaskComponent);
+    f.componentRef.setInput('task', task);
+    f.componentRef.setInput('funded', false);
+    f.detectChanges();
+    const root: HTMLElement = f.nativeElement;
+    const ask = root.querySelector<HTMLButtonElement>('[aria-label="Demander un montant pour Comparer les devis"]')!;
+    expect(ask.disabled).toBe(false);
+    expect(root.querySelector('a')?.getAttribute('href')).toBe('/app/gestion-projet/prj_1#enveloppe');
+    ask.click();
+    f.detectChanges();
+    expect(root.querySelector('input[name="amount"]')).toBeTruthy();
+  });
+
+  it('explique pourquoi une demande préparée sans enveloppe ne peut pas encore être accordée', () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    const f = TestBed.createComponent(BpmTaskRequestsComponent);
+    f.componentRef.setInput('requests', [{ ...request, coreProjectId: 'prj_1', budgetName: 'Cuisine', taskTitle: 'Comparer les devis' }]);
+    f.componentRef.setInput('funded', false);
+    f.detectChanges();
+    const root: HTMLElement = f.nativeElement;
+    const grant = [...root.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes('Accorder'))!;
+    expect(grant.disabled).toBe(true);
+    expect(root.textContent).toContain('Attribuez d’abord une enveloppe');
+    expect([...root.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes('Refuser'))?.disabled).toBe(false);
+  });
+
   it('renouvelle la clé dès la confirmation du POST, même avant la relecture du projet', () => {
     const f = TestBed.createComponent(BpmManagedTaskComponent);
     f.componentRef.setInput('task', task);

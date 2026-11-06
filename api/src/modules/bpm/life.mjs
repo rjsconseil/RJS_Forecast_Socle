@@ -276,6 +276,9 @@ export function createLife(socle, h, reads, projects) {
 
     // ---------- volet 4 : projets de la vie financés ----------
     const ov = projects.overview(ctx);
+    // Les décisions et enveloppes sont pilotées aujourd'hui ; le réglé de chaque projet,
+    // comme le total du volet, doit suivre la période consultée dans cette page.
+    const projectPaidLines = period ? reads.validatedProjectLines(b, { from: period.start, to: period.end, by: 'realized' }) : [];
     const list = ov.projects.map((p) => ({
       budgetId: p.budget.budgetId,
       coreProjectId: p.budget.coreProjectId,
@@ -286,7 +289,7 @@ export function createLife(socle, h, reads, projects) {
       allocationCents: p.budget.allocationCents,
       paidCents: p.budget.paidCents,
       remainingCents: p.budget.remainingCents,
-      periodPaidCents: p.budget.periodPaidCents,
+      periodPaidCents: period ? sum(projectPaidLines.filter((l) => l.budgetId === p.budget.budgetId), (l) => l.realizedCents) : null,
       state: p.budget.state,
       pendingOverrun: !!p.budget.pendingOverrun,
     }));

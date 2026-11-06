@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { LifeFundingRow } from '../../core/bpm-projects.models';
-import { fundingMarks } from './life-funding';
+import { LifeFunding, LifeFundingRow } from '../../core/bpm-projects.models';
+import { fundingMarks, fundingPeriodWindow } from './life-funding';
 
 const row = (o: Partial<LifeFundingRow> = {}): LifeFundingRow => ({
   budgetId: 'bud_1', coreProjectId: 'prj_1', name: 'Voyage', regime: true, state: 'ok',
@@ -20,5 +20,18 @@ describe('Financement des projets de la vie', () => {
     expect(fundingMarks(r, '2026-10').overruns).toHaveLength(1);
     expect(fundingMarks(r, '2026-10').overruns[0].amount).toMatch(/^50,00\s€$/);
     expect(fundingMarks(r, '2026-11').overruns).toHaveLength(0);
+  });
+
+  it('garde la période historique consultée dans la fenêtre sans déformer la chronologie', () => {
+    const periods: LifeFunding['periods'] = Array.from({ length: 11 }, (_, i) => ({
+      key: `2026-${String(i + 1).padStart(2, '0')}`, label: `Période ${i + 1}`, start: '', end: '', status: 'ended',
+    }));
+    expect(fundingPeriodWindow(periods, '2026-02').map((p) => p.key)).toEqual(['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06']);
+    expect(fundingPeriodWindow(periods, '2026-05').map((p) => p.key)).toEqual(['2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08']);
+    expect(fundingPeriodWindow(periods, '2026-11')).toEqual(periods.slice(-6));
+    expect(fundingPeriodWindow(periods, null)).toEqual(periods.slice(-6));
+    expect(fundingPeriodWindow(periods, 'inconnue')).toEqual(periods.slice(-6));
+    expect(fundingPeriodWindow(periods, '2026-02', true)).toBe(periods);
+    expect(fundingPeriodWindow([], null)).toEqual([]);
   });
 });

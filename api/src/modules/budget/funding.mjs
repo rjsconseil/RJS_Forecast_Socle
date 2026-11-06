@@ -258,6 +258,9 @@ export const fundingExtensions = {
     const b = state.budgets[budgetId];
     const previous = operationId ? state.operations[operationId] : null;
     const previousPaid = previous && isValidatedCharge(previous, b) ? previous.realizedAmountCents : 0;
+    // Une dépense réellement réglée avant la première attribution reste dans l'historique du projet,
+    // hors enveloppe et hors parts. La date de saisie ne doit pas la faire financer rétroactivement.
+    if (inRegime(b) && realizedDate < b.allocationDate) return;
     if (direction === 'charge' && b?.taskFundingRequired) {
       if (!inRegime(b)) fail('FORBIDDEN_BY_RULE', `Attribuez d’abord une enveloppe au projet « ${b.name} » : ses dépenses se règlent sur les parts de ses tâches.`, { field: 'budgetId', budgetId });
       if (!taskId || state.tasks[taskId]?.projectId !== b.coreProjectId) fail('FORBIDDEN_BY_RULE', `Reliez cette dépense à une tâche du projet « ${b.name} » avant de la régler : chaque règlement consomme la part d’une tâche.`, { field: 'taskId', budgetId });
@@ -514,6 +517,9 @@ export function createFunding(socle, { lifeBudgetOf }) {
       const returns = { ...returnsOf(b) };
       const current = returns[taskId] ?? null;
       const cents = money('amount', input.amount, { nullable: true, positive: input.amount !== null && input.amount !== undefined && input.amount !== '' });
+      // Conserver la trace d'un retour déclenché : la retirer permettrait de créer un second revenu
+      // en reconfigurant la même tâche, y compris après une simple réouverture.
+      if (current?.entryId) fail('FORBIDDEN_BY_RULE', 'Ce retour est déjà enregistré dans le budget de vie : modifiez ou annulez le revenu depuis les entrées du budget de vie. Sa trace reste liée à la tâche pour éviter de le créer une seconde fois.', { field: 'amount', entryId: current.entryId });
       if (cents === null) {
         if (!current) {
           tx.unchanged = true;
@@ -523,7 +529,6 @@ export function createFunding(socle, { lifeBudgetOf }) {
         om.update(tx, b, { taskReturns: returns });
         return { budgetId };
       }
-      if (current?.entryId) fail('FORBIDDEN_BY_RULE', 'Ce retour est déjà enregistré dans le budget de vie : modifiez-le depuis les entrées du budget de vie.', { field: 'amount', entryId: current.entryId });
       const ret = {
         label: text('label', input.label, { max: 200 }) || `Retour · ${t.title}`,
         amountCents: cents,

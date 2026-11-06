@@ -19,8 +19,8 @@
         <span class="project-back-links">
           <a class="text-link project-back" routerLink="/app/gestion-projet">← Gestion de projet</a>
           @if (d.role === 'standard') {
-            <a class="text-link project-back" routerLink="/projet-de-vie" fragment="life-funding" title="Enveloppes et dépenses remontées au projet de vie">Projet de vie · financement →</a>
-            <a class="text-link project-back" routerLink="/projet-de-vie" fragment="life-due" title="Dépenses des projets et du projet de vie à régler">Échéances à régler →</a>
+            <a class="text-link project-back" routerLink="/projet-de-vie" [queryParams]="lifePeriod() ? { period: lifePeriod() } : {}" fragment="life-funding" title="Enveloppes et dépenses remontées au projet de vie">Projet de vie · financement →</a>
+            <a class="text-link project-back" routerLink="/projet-de-vie" [queryParams]="lifePeriod() ? { period: lifePeriod() } : {}" fragment="life-due" title="Dépenses des projets et du projet de vie à régler">Échéances à régler →</a>
           }
         </span>
         <p class="eyebrow">
@@ -155,6 +155,10 @@
     }
     @if (d.role === 'standard' && d.budget; as b) {
       <div class="project-layout">
+        <p class="bpm-note project-reading-scope">
+          Enveloppe, parts et règlements cumulés sur toute la durée du projet.
+          Le suivi du cycle actuel correspond à {{ d.context.period?.label ?? 'un cycle à configurer' }}.
+        </p>
         <section class="project-cockpit" aria-label="Chiffres clés et suivi du projet">
           <div class="cockpit-body">
             <div class="life-summary project-summary-band">
@@ -228,7 +232,8 @@
                   Ce montant finance le projet. Chaque tâche demande ensuite sa part.
                   @if (d.budget && !d.budget.regime && d.budget.paidCents) {
                     Les {{ d.budget.paidCents | cents }} déjà réglés restent dans l’historique du projet, hors
-                    enveloppe : seuls les règlements validés à partir d’aujourd’hui la consomment.
+                    enveloppe : seule une date réelle à partir de la date d’attribution la consomme,
+                    même si le règlement est saisi plus tard.
                   }
                 </p>
                 @if (allocationError()) {
@@ -270,7 +275,7 @@
                       <dd>{{ b.approvedOverrunCents | cents }}</dd>
                     </div>
                     <div>
-                      <dt>Réglé dans le cycle</dt>
+                      <dt>Remonté au projet de vie ce cycle</dt>
                       <dd>{{ b.periodPaidCents | cents }}</dd>
                     </div>
                     <div>
@@ -279,8 +284,9 @@
                     </div>
                   </dl>
                   <p class="bpm-note">
-                    Seuls les règlements validés sont remontés au budget du projet de vie. L’enveloppe ne
-                    constitue pas une dépense immédiate.
+                    L’enveloppe et les parts portent sur toute la durée du projet. Le montant de ce cycle
+                    suit la date réelle des règlements, même quand leur date prévue appartient à un autre cycle.
+                    Attribuer une enveloppe ne constitue pas une dépense immédiate.
                   </p>
                   @if (b.paidBeforeAllocationCents) {
                     <p class="bpm-note">
@@ -631,7 +637,7 @@
               <section id="task-panel-funding" class="task-panel-section">
                 <h3>Part de la tâche</h3>
                 @if (tb?.request; as r) {
-                  <bpm-task-requests [requests]="[r]" [busy]="busy()" (decide)="decideRequest($event)" />
+                  <bpm-task-requests [requests]="[r]" [busy]="busy()" [funded]="b.regime" (decide)="decideRequest($event)" />
                 } @else if (fundingTask() === t.task.id) {
                   <form
                     class="task-funding-box"
@@ -647,8 +653,12 @@
                       >Motif (facultatif)<input name="note" maxlength="1000" placeholder="Devis, achat…"
                     /></label>
                     <p>
-                      Le total remplace la part actuelle. Il reste {{ b.availableCents | cents }} à répartir
-                      entre les tâches du projet.
+                      Le total remplace la part actuelle.
+                      @if (b.regime) {
+                        Il reste {{ b.availableCents | cents }} à répartir entre les tâches du projet.
+                      } @else {
+                        Cette demande peut être préparée avant l’attribution de l’enveloppe.
+                      }
                     </p>
                     <div class="bpm-actions">
                       <button class="btn btn-primary" [disabled]="busy()">Envoyer la demande</button>
@@ -661,6 +671,12 @@
                   <button class="btn btn-secondary" [disabled]="busy()" (click)="fundingTask.set(t.task.id)">
                     Demander un montant
                   </button>
+                }
+                @if (!b.regime) {
+                  <p class="bpm-note">
+                    Vous pouvez préparer une demande. Attribuez une enveloppe au projet avant de l’accorder.
+                    <button class="text-link" [disabled]="busy()" (click)="closeTaskPanel(); editAllocation()">Attribuer l’enveloppe</button>
+                  </p>
                 }
                 @for (o of taskOverruns(t.task.id); track o.id) {
                   <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
@@ -1035,8 +1051,8 @@
     @for (c of charges; track c.id) {
       <article class="task-charge">
         <div class="task-charge-heading">
-          <strong>{{ c.label }}</strong
-          ><span
+          <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)" [attr.aria-label]="'Ouvrir la dépense ' + c.label">{{ c.label }}</button>
+          <span
             class="bpm-charge-state"
             [attr.data-state]="c.validated ? 'validated' : 'planned'"
             >{{ chargeState(c) }}</span
@@ -1055,6 +1071,14 @@
           }
         </dl>
         <small>{{ c.cadenceLabel }}</small>
+        @if (c.beforeAllocation) {
+          <p class="bpm-note">La date réelle précède l’enveloppe : ce règlement reste hors du Dépensé du projet de vie.</p>
+        } @else if (c.settled && !c.validated) {
+          <p class="bpm-note">Projet sans enveloppe : ce règlement reste dans son historique, hors budget de vie.</p>
+        } @else if (!c.settled) {
+          <p class="bpm-note">La date réelle du paiement déterminera sa période. La date prévue sera conservée.</p>
+        }
+        <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)">Détail et modification</button>
         @if (!c.settled) {
           @if (settling() === c.id) {
             <form (submit)="$event.preventDefault(); settle(c, $any($event.target).elements)">
@@ -1098,11 +1122,15 @@
 @if (editorOpen() && budgetRef(); as ref) {
   <bpm-operation-editor
     [budgets]="[ref]"
+    [line]="editingLine()"
     [defaults]="{ budgetId: ref.id, direction: 'charge', taskId: expenseTaskId() }"
     [taskFundingRequired]="data()?.budget?.taskFundingRequired ?? false"
-    (closed)="editorOpen.set(false)"
+    (closed)="closeExpense()"
     (saved)="onSaved($event)"
   />
+}
+@if (lineId(); as id) {
+  <bpm-line-detail [lineId]="id" (closed)="closeCharge()" (edit)="editCharge($event)" />
 }
 @if (projectEditor() && data(); as d) {
   <bpm-project-editor

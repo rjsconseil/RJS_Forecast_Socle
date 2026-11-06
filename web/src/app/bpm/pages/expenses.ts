@@ -1,10 +1,12 @@
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { Api } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { CHARGE_NATURE_LABEL, ChargeNature, Direction, EntryInput, LineStatus, RegisterLine, RegisterQuery } from '../../core/bpm-models';
 import { cents, CentsPipe, ShortDatePipe, shortDate } from '../../core/format';
 import { BpmCapGauge, BpmLineDetail, bpmLoader, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmState, overCapsOf } from '../ui';
+import { settlementOutsideWindow } from './period-presentation';
 
 const STATUS_LABEL: Record<LineStatus, string> = { late: 'En retard', due: 'Du jour', pending: 'À venir', settled: 'Réglé', unrealized: 'Non réalisé' };
 const GROUP_LABEL: Record<string, string> = { center: 'Par poste', category: 'Par catégorie', nature: 'Par nature', project: 'Par projet', date: 'Par date prévue' };
@@ -21,7 +23,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
  */
 @Component({
   selector: 'bpm-page-expenses',
-  imports: [RouterLink, BpmPageFrame, BpmState, BpmLineDetail, BpmOperationEditor, BpmCapGauge, CentsPipe, ShortDatePipe],
+  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmLineDetail, BpmOperationEditor, BpmCapGauge, CentsPipe, ShortDatePipe],
   providers: [BpmPageContext],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-expenses.page.scss', './bpm-money-page.scss'],
   template: `
@@ -35,7 +37,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
       (periodChange)="ctx.setQuery({ period: $event })"
     >
       <a actions class="bpm-link" routerLink="/tableau-de-bord" [queryParams]="ctx.carry()">← Tableau de bord</a>
-      <a actions class="bpm-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
+      <a actions class="bpm-link" routerLink="/projet-de-vie" [queryParams]="ctx.carry()">Gestion du projet de vie →</a>
       <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="ctx.carry()">Plafonds et catégories →</a>
       <button actions type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Ajouter une entrée' : direction() === 'all' ? 'Saisir un flux' : 'Ajouter une charge' }}</button>
 
@@ -48,8 +50,15 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
         <section class="expense-filters" data-ui-pattern="panel" role="search" aria-label="Rechercher et affiner la liste">
           <label class="expense-search">
             {{ direction() === 'income' ? 'Afficher les entrées' : direction() === 'all' ? 'Afficher les échéances' : 'Afficher les dépenses' }}
-            <select name="expense-grouping" (change)="setGroup($any($event.target).value)">
-              @for (g of groupKeys; track g) { <option [value]="g" [selected]="groupBy() === g">{{ groupLabel[g] }}</option> }
+            <select name="expense-grouping" [ngModel]="groupBy()" (ngModelChange)="setGroup($event)">
+              @for (g of groupKeys; track g) { <option [value]="g">{{ g === 'date' && dateBasis() === 'realized' ? 'Par date de règlement' : groupLabel[g] }}</option> }
+            </select>
+          </label>
+          <label class="expense-search">
+            Lire les montants selon
+            <select name="expense-date-basis" [ngModel]="dateBasis()" (ngModelChange)="setDateBasis($event)">
+              <option value="planned">Les dates prévues</option>
+              <option value="realized">Les dates de règlement</option>
             </select>
           </label>
           <label class="expense-search">
@@ -72,7 +81,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
             <div class="expense-filter-fields">
               <label>
                 Projet
-                <select name="expense-budget" [value]="budgetSel()" (change)="setBudget($any($event.target).value)">
+                <select name="expense-budget" [ngModel]="budgetSel()" (ngModelChange)="setBudget($event)">
                   <option value="">Budget du projet de vie (principal)</option>
                   <option value="__all__">Tous les projets (chaque Budget une fois)</option>
                   @for (b of budgets(); track b.id) {
@@ -82,21 +91,21 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
               </label>
               <label>
                 État
-                <select name="expense-status" [value]="ctx.q('status')()" (change)="ctx.setQuery({ status: $any($event.target).value })">
+                <select name="expense-status" [ngModel]="ctx.q('status')()" (ngModelChange)="ctx.setQuery({ status: $event })">
                   <option value="">Tout afficher</option>
                   @for (s of statuses; track s) { <option [value]="s">{{ statusLabel[s] }}</option> }
                 </select>
               </label>
               <label>
                 Nature de charge
-                <select name="expense-nature" [value]="ctx.q('nature')()" (change)="setNature($any($event.target).value)">
+                <select name="expense-nature" [ngModel]="ctx.q('nature')()" (ngModelChange)="setNature($event)">
                   <option value="">Tout afficher</option>
                   @for (n of natures; track n) { <option [value]="n">{{ natureLabel[n] }}</option> }
                 </select>
               </label>
               <label>
                 Poste
-                <select name="expense-center" [value]="ctx.q('center')()" (change)="ctx.setQuery({ center: $any($event.target).value })">
+                <select name="expense-center" [ngModel]="ctx.q('center')()" (ngModelChange)="ctx.setQuery({ center: $event })">
                   <option value="">Tout afficher</option>
                   <option value="__none__">Poste à préciser</option>
                   @for (c of centerOptions(); track c.ref) { <option [value]="c.ref">{{ c.label }}{{ c.standard ? '' : ' (personnel)' }}</option> }
@@ -104,7 +113,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
               </label>
               <label>
                 Catégorie de dépense
-                <select name="expense-category" [value]="ctx.q('category')()" (change)="setCategory($any($event.target).value)" [disabled]="direction() === 'income'">
+                <select name="expense-category" [ngModel]="ctx.q('category')()" (ngModelChange)="setCategory($event)" [disabled]="direction() === 'income'">
                   <option value="">{{ direction() === 'income' ? 'Réservé aux dépenses' : 'Tout afficher' }}</option>
                   <option value="__none__">Sans catégorie</option>
                   @for (k of categoryOptions(); track k.id) { <option [value]="k.id">{{ k.label }} · {{ k.costCenterLabel }}{{ k.archived ? ' (retirée)' : '' }}</option> }
@@ -112,13 +121,13 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
               </label>
               <label>
                 Tâche du projet
-                <select name="expense-task" [value]="ctx.q('taskId')()" (change)="ctx.setQuery({ taskId: $any($event.target).value })" [disabled]="!taskOptions().length">
+                <select name="expense-task" [ngModel]="ctx.q('taskId')()" (ngModelChange)="ctx.setQuery({ taskId: $event })" [disabled]="!taskOptions().length">
                   <option value="">{{ taskOptions().length ? 'Tout afficher' : 'Aucune tâche de projet budgétisé' }}</option>
                   @for (t of taskOptions(); track t.id) { <option [value]="t.id">{{ t.title }}</option> }
                 </select>
               </label>
               <label>
-                Du (date prévue)
+                Du ({{ dateBasis() === 'realized' ? 'règlement' : 'prévision' }})
                 <input type="date" name="expense-from" [value]="ctx.q('from')()" (change)="setWindow('from', $any($event.target).value)" />
               </label>
               <label>
@@ -147,7 +156,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
           <section class="expense-overview" data-bpm-frame="metrics" aria-labelledby="expense-overview-title">
             <header>
               <div>
-                <span class="expense-overview-kicker">La période en un regard</span>
+                <span class="expense-overview-kicker">{{ dateBasis() === 'realized' ? 'Règlements sélectionnés par date réelle' : 'Échéances sélectionnées par date prévue' }}</span>
                 <h2 id="expense-overview-title">{{ direction() === 'income' ? 'Où en sont vos entrées ?' : direction() === 'all' ? 'Où en sont vos échéances ?' : 'Où en sont vos dépenses ?' }}</h2>
               </div>
               <span class="expense-overview-count">{{ r.totals.lineCount }} échéance(s) affichée(s) sur {{ r.totals.unfilteredCount }}</span>
@@ -161,6 +170,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
                 <strong class="expense-overview-value">{{ r.totals.paidCents | cents }}</strong>
                 <p>{{ notes().paid }}</p>
               </article>
+              @if (dateBasis() === 'planned') {
               <article class="expense-overview-card" data-status="pending">
                 <div class="expense-overview-label">
                   <h3>{{ labels().toPay }}</h3>
@@ -177,9 +187,14 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
                 <strong class="expense-overview-value">{{ r.totals.unrealizedCents | cents }}</strong>
                 <p>{{ notes().unrealized }}</p>
               </article>
+              }
             </div>
             <p class="expense-overview-note">
-              Montants selon les dates prévues et les filtres sélectionnés ({{ r.totals.lineCount }} ligne(s) sur {{ r.totals.unfilteredCount }}, du {{ r.window.from | shortDate }} au {{ r.window.to | shortDate }} inclus). Les échéances non réalisées ne sont pas comptées dans le {{ labels().paid.toLowerCase() }}.
+              {{ r.selection }} {{ r.totals.lineCount }} ligne(s) sur {{ r.totals.unfilteredCount }}, du {{ r.window.from | shortDate }} au {{ r.window.to | shortDate }} inclus.
+              @if (dateBasis() === 'planned') { Les règlements affichés peuvent avoir eu lieu dans une autre période : le tableau de bord les compte à leur date réelle. }
+              @if (r.context.scope === 'principal') {
+                <span>Pour les projets de la vie, seuls les règlements validés depuis l’attribution de leur enveloppe remontent ici. Leurs dépenses encore prévues restent à piloter dans chaque projet.</span>
+              }
               @if (direction() === 'all') {
                 <span class="chip warn">Entrées et charges additionnées sans signe : choisissez un sens pour un total lisible.</span>
               }
@@ -201,7 +216,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
         <details class="bm-calculation">
           <summary>Date prévue ou date réelle ?</summary>
           <div class="record-details">
-            <p>La liste sélectionne les échéances par leur <strong>date prévue</strong>. Le réalisé des synthèses (tableau de bord, solde) suit la <strong>date réelle</strong> de règlement : une charge prévue le 31 octobre et payée le 2 novembre figure ici en octobre et dans le réalisé de novembre.</p>
+            <p>Choisissez <strong>Les dates prévues</strong> pour préparer vos échéances, ou <strong>Les dates de règlement</strong> pour retrouver les montants réalisés du tableau de bord. Une charge prévue le 31 octobre et payée le 2 novembre figure en octobre dans la lecture des prévisions et en novembre dans celle des règlements.</p>
             @if (reg.data(); as r) { <p class="bpm-help">{{ r.selection }}</p> }
           </div>
         </details>
@@ -231,10 +246,10 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
         <header class="expense-list-heading" id="expense-list">
           <div>
             <h2>{{ listTitle() }}</h2>
-            <p>{{ groupBy() === 'date' ? 'Dans l’ordre des dates prévues.' : 'Du montant le plus élevé au plus faible.' }}</p>
+            <p>{{ groupBy() === 'date' ? (dateBasis() === 'realized' ? 'Dans l’ordre des dates de règlement.' : 'Dans l’ordre des dates prévues.') : 'Du montant le plus élevé au plus faible.' }}</p>
           </div>
-          @if (reg.data(); as r) { <strong>{{ r.totals.lineCount }} échéance(s) affichée(s) · prévu {{ r.totals.plannedCents | cents }}</strong> }
-          <p class="expense-list-help">Les totaux suivent vos filtres et les dates prévues. Ouvrez une échéance pour voir son détail et, si permis, la pointer ou la modifier.</p>
+          @if (reg.data(); as r) { <strong>{{ r.totals.lineCount }} {{ dateBasis() === 'realized' ? 'règlement(s)' : 'échéance(s)' }} affiché(s) · {{ dateBasis() === 'realized' ? 'réglé' : 'prévu' }} {{ (dateBasis() === 'realized' ? r.totals.paidCents : r.totals.plannedCents) | cents }}</strong> }
+          <p class="expense-list-help">Les totaux suivent vos filtres et les dates {{ dateBasis() === 'realized' ? 'réelles de règlement' : 'prévues' }}. Ouvrez une ligne pour voir son détail et les actions disponibles.</p>
         </header>
         <bpm-state [loading]="reg.loading() && !reg.data()" [error]="reg.error()" (retry)="reg.reload()" [empty]="!!reg.data() && !reg.data()!.lines.length" [emptyText]="emptyText()">
           @if (reg.data()?.totals?.unfilteredCount) {
@@ -249,7 +264,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
               <header class="expense-center-heading" data-ui-pattern="section-heading">
                 <div>
                   <h2 [id]="'expenses-' + $index">
-                    @if (groupBy() === 'center' && g.key && !isNoneGroup(g.key) && g.key !== 'projects') {
+                    @if (groupBy() === 'center' && g.key && !isNoneGroup(g.key) && g.key !== 'projects' && r.context.scope === 'principal' && !customWindow()) {
                       <a [routerLink]="['/argent/postes', g.key]" [queryParams]="centerQuery()" [attr.aria-label]="'Détail du poste ' + g.label">{{ g.label }}</a>
                     } @else {
                       {{ groupBy() === 'date' ? (g.label | shortDate) : g.label }}
@@ -264,12 +279,12 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
                   @if (g.specialCents && !g.plannedCents) {
                     <small>Charges spéciales · non comptées</small><strong>{{ g.specialCents | cents }}</strong>
                   } @else {
-                    <small>Total des échéances</small><strong>{{ g.plannedCents | cents }}</strong>
+                    <small>{{ dateBasis() === 'realized' ? 'Total réglé' : 'Total des échéances' }}</small><strong>{{ (dateBasis() === 'realized' ? g.paidCents : g.plannedCents) | cents }}</strong>
                   }
                 </div>
                 <p class="expense-center-breakdown">
                   <span>{{ labels().paid }} <strong>{{ g.paidCents | cents }}</strong></span>
-                  <span class="expense-pending-total">{{ labels().toPay }} <strong>{{ g.toPayCents | cents }}</strong></span>
+                  @if (dateBasis() === 'planned') { <span class="expense-pending-total">{{ labels().toPay }} <strong>{{ g.toPayCents | cents }}</strong></span> }
                   @if (groupUnrealized(g.lineIds); as u) {
                     <span>Non réalisé <strong>{{ u | cents }}</strong></span>
                   }
@@ -279,10 +294,12 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
                 @if (byId().get(id); as l) {
                   <article class="expense-row" [attr.data-selected]="isSelected(l) || null" [attr.data-status]="rowStatus(l)" data-ui-pattern="panel">
                     <!-- Charge spéciale d'un projet de la vie : elle s'ouvre sur la fiche du projet, pas sur un détail d'échéance. -->
-                    <a class="expense-charge-summary" [routerLink]="l.special && l.project ? ['/app/projets', l.project.coreProjectId] : []" [queryParams]="l.special ? null : lineQuery(l)" [queryParamsHandling]="l.special ? '' : 'merge'" [attr.aria-label]="(l.special ? 'Ouvrir le projet : ' : 'Ouvrir le détail : ') + l.label + ', ' + date(l.plannedDate)">
+                    <a class="expense-charge-summary" [routerLink]="l.special && l.project ? ['/app/projets', l.project.coreProjectId] : []" [queryParams]="l.special ? null : lineQuery(l)" [queryParamsHandling]="l.special ? '' : 'merge'" [attr.aria-label]="(l.special ? 'Ouvrir le projet : ' : 'Ouvrir le détail : ') + l.label + ', ' + date(dateBasis() === 'realized' ? l.realizedDate : l.plannedDate)">
                       <span class="expense-date">
-                        <small>Date prévue</small>{{ l.plannedDate | shortDate }}
-                        @if (l.realizedDate && l.realizedDate !== l.plannedDate) { <small>{{ l.direction === 'income' ? 'Date de réception' : 'Date de paiement' }} · {{ l.realizedDate | shortDate }}</small> }
+                        <small>{{ dateBasis() === 'realized' ? 'Date de règlement' : 'Date prévue' }}</small>{{ (dateBasis() === 'realized' ? l.realizedDate : l.plannedDate) | shortDate }}
+                        @if (dateBasis() === 'realized' && l.realizedDate !== l.plannedDate) { <small>Prévue le {{ l.plannedDate | shortDate }}</small> }
+                        @if (dateBasis() === 'planned' && l.realizedDate && l.realizedDate !== l.plannedDate) { <small>{{ l.direction === 'income' ? 'Date de réception' : 'Date de paiement' }} · {{ l.realizedDate | shortDate }}</small> }
+                        @if (outsideWindow(l)) { <small class="chip">Réglé hors de cette période</small> }
                       </span>
                       <span class="expense-main">
                         <strong>{{ l.label }}</strong>
@@ -350,6 +367,10 @@ export class BpmExpensesPage {
   protected date = shortDate;
 
   // ---------- paramètres d'URL ----------
+  protected dateBasis = computed<'planned' | 'realized'>(() => this.ctx.q('dateBasis')() === 'realized' ? 'realized' : 'planned');
+  protected setDateBasis(value: string) {
+    this.ctx.setQuery({ dateBasis: value === 'realized' ? value : null, status: null });
+  }
 
   /** Sens : absent = charges (défaut), `income`, `all`. */
   protected direction = computed<'charge' | 'income' | 'all'>(() => {
@@ -383,6 +404,7 @@ export class BpmExpensesPage {
     const windowOk = this.customWindow() && !this.windowError();
     return {
       period: this.ctx.period(),
+      dateBasis: this.dateBasis(),
       q: get('q'),
       direction: dir === 'all' ? '' : dir,
       status: get('status') as LineStatus | undefined,
@@ -435,14 +457,17 @@ export class BpmExpensesPage {
     const d = this.direction();
     return d === 'income' ? { paid: 'Reçu', toPay: 'À recevoir' } : d === 'all' ? { paid: 'Réglé', toPay: 'À régler' } : { paid: 'Payé', toPay: 'À payer' };
   });
+  protected outsideWindow = (line: RegisterLine) => settlementOutsideWindow(line, this.reg.data()?.window);
 
   /** Phrase du bandeau (source : « Vos charges, payées et à venir. »), selon le sens lu. */
   protected lead = computed(() => {
     const d = this.direction();
+    if (this.dateBasis() === 'realized') return 'Vos règlements, classés selon leur date réelle.';
     return d === 'income' ? 'Vos entrées, reçues et à venir.' : d === 'all' ? 'Vos entrées et charges, réglées et à venir.' : 'Vos charges, payées et à venir.';
   });
   protected notes = computed(() => {
     const d = this.direction();
+    if (this.dateBasis() === 'realized') return { paid: 'Montants réellement réglés dans la fenêtre lue, quelle que soit leur date prévue.', toPay: '', unrealized: '' };
     if (d === 'income') return { paid: 'Montants reçus des entrées prévues sur cette période.', toPay: 'Entrées prévues, pas encore reçues.', unrealized: 'Entrées restées sans réception à la clôture.' };
     if (d === 'all') return { paid: 'Règlements des échéances prévues sur cette période.', toPay: 'Échéances prévues, sans règlement enregistré.', unrealized: 'Échéances restées sans règlement à la clôture.' };
     return { paid: 'Règlements des charges prévues sur cette période.', toPay: 'Charges prévues, sans paiement enregistré.', unrealized: 'Charges restées sans paiement à la clôture.' };
@@ -451,7 +476,7 @@ export class BpmExpensesPage {
     const g = this.groupBy();
     if (g === 'project') return 'Par projet';
     if (g === 'nature') return 'Par nature : indispensables, courantes et projets';
-    if (g === 'date') return 'Par date prévue';
+    if (g === 'date') return this.dateBasis() === 'realized' ? 'Par date de règlement' : 'Par date prévue';
     if (g === 'category') return 'Dépenses par catégorie';
     const d = this.direction();
     return d === 'income' ? 'Entrées par poste' : d === 'all' ? 'Échéances par poste' : 'Dépenses par poste';
@@ -494,6 +519,7 @@ export class BpmExpensesPage {
   protected emptyText = computed(() => {
     const r = this.reg.data();
     if (r && r.totals.unfilteredCount > 0) return `Aucune ligne ne correspond aux filtres (${r.totals.unfilteredCount} ligne(s) dans la fenêtre).`;
+    if (this.dateBasis() === 'realized') return 'Aucun règlement enregistré à une date réelle comprise dans cette fenêtre.';
     return this.direction() === 'income' ? 'Aucune entrée prévue dans cette fenêtre. Les zéros affichés sont connus.' : 'Aucune charge prévue dans cette fenêtre. Les zéros affichés sont connus.';
   });
 
@@ -521,14 +547,17 @@ export class BpmExpensesPage {
     const l = d.line;
     const q = this.query();
     const out: string[] = [];
-    if (l.plannedDate < r.window.from || l.plannedDate > r.window.to) out.push(`sa date prévue est hors de la fenêtre lue (${shortDate(r.window.from)} – ${shortDate(r.window.to)}) ;`);
+    const selectedDate = this.dateBasis() === 'realized' ? l.realizedDate : l.plannedDate;
+    if (!selectedDate) out.push('aucun règlement n’est enregistré : passez en lecture par dates prévues pour retrouver cette échéance ;');
+    else if (selectedDate < r.window.from || selectedDate > r.window.to) out.push(`sa date ${this.dateBasis() === 'realized' ? 'réelle' : 'prévue'} est hors de la fenêtre lue (${shortDate(r.window.from)} – ${shortDate(r.window.to)}) ;`);
     if (q.direction && l.direction !== q.direction) out.push(`le sens affiché est « ${q.direction === 'income' ? 'Entrées' : 'Charges'} » ;`);
     if (q.status && l.status !== q.status) out.push(`le filtre d'état est « ${STATUS_LABEL[q.status as LineStatus]} » ;`);
     if (q.nature && l.nature !== q.nature) out.push(l.nature ? `sa nature est « ${CHARGE_NATURE_LABEL[l.nature]} », le filtre lit « ${CHARGE_NATURE_LABEL[q.nature]} » ;` : 'le filtre de nature ne retient que des charges ;');
     if (q.center && (q.center === '__none__' ? l.centerKnown : l.costCenterRef !== q.center)) out.push('le filtre de centre l’exclut ;');
     if (q.category && (q.category === NO_CATEGORY ? !!l.categoryId : l.categoryId !== q.category)) out.push('le filtre de catégorie l’exclut ;');
     if (q.taskId && l.taskId !== q.taskId) out.push('le filtre de tâche l’exclut ;');
-    if (q.budgetId ? l.budgetId !== q.budgetId : q.scope !== 'consolidated' && l.budgetRole !== 'life') out.push('elle appartient à un autre Budget que celui lu ;');
+    if (q.budgetId && l.budgetId !== q.budgetId) out.push('elle appartient à un autre budget que celui sélectionné ;');
+    else if (!q.budgetId && q.scope !== 'consolidated' && l.budgetRole !== 'life') out.push('elle appartient à un projet de la vie : seuls ses règlements validés depuis l’attribution de son enveloppe sont repris dans le budget principal ;');
     if (q.q) out.push(`la recherche « ${q.q} » est active ;`);
     return out;
   });
@@ -599,7 +628,7 @@ export class BpmExpensesPage {
   }
   /** Lecture libre centrée sur la date prévue de la ligne demandée (sans changer le cycle). */
   protected showDate(d: string) {
-    this.ctx.setQuery({ ...Object.fromEntries(REFINE_KEYS.map((k) => [k, null])), q: null, direction: 'all', from: d, to: d });
+    this.ctx.setQuery({ ...Object.fromEntries(REFINE_KEYS.map((k) => [k, null])), q: null, direction: 'all', dateBasis: null, from: d, to: d });
   }
 
   // ---------- détail et éditeur ----------

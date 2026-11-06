@@ -196,7 +196,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
             <li>
               <span class="life-relation-kind">Projets de la vie</span>
               {{ d.projects.projectCount }} rattaché{{ d.projects.projectCount > 1 ? 's' : '' }} · {{ d.projects.fundedCount }} financé{{ d.projects.fundedCount > 1 ? 's' : '' }}
-              <a href="#life-funding-title">par une enveloppe</a>
+              <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-funding-title">par une enveloppe</a>
             </li>
           </ul>
           <div class="bpm-management-grid">
@@ -320,7 +320,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                             <tbody>
                               @for (p of d.projects.projects; track p.budgetId) {
                                 <tr [attr.data-state]="p.state">
-                                  <th><a [routerLink]="['/app/gestion-projet', p.coreProjectId]">{{ p.name }}</a>@if (p.pendingOverrun) { <small class="life-flag">Décision attendue</small> }</th>
+                                  <th><a [routerLink]="['/app/gestion-projet', p.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}">{{ p.name }}</a>@if (p.pendingOverrun) { <small class="life-flag">Décision attendue</small> }</th>
                                   <td>{{ p.statusLabel ?? '—' }}</td>
                                   <td>{{ p.regime ? (p.allocationCents | cents) : 'À attribuer' }}</td>
                                   <td>{{ p.paidCents | cents }}</td>
@@ -432,7 +432,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           </p>
           @for (o of d.projects.pendingRequests; track o.id) {
             <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decideOverrun(o, $event)" />
-            <p class="bpm-note"><a [routerLink]="['/app/gestion-projet', o.coreProjectId]">Ouvrir le projet « {{ o.budgetName }} » →</a></p>
+            <p class="bpm-note"><a [routerLink]="['/app/gestion-projet', o.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}">Ouvrir le projet « {{ o.budgetName }} » →</a></p>
           } @empty {
             <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
           }
@@ -442,7 +442,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                 <li>
                   Part demandée pour « {{ r.taskTitle }} » ({{ r.budgetName }}) : {{ r.amountCents | cents }}
                   @if (r.grantedCents) { <small>· {{ r.grantedCents | cents }} déjà accordés</small> }
-                  · <a [routerLink]="['/app/gestion-projet', r.coreProjectId]" fragment="requests-title">Accorder ou refuser dans le projet →</a>
+                  · <a [routerLink]="['/app/gestion-projet', r.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}" fragment="requests-title">Accorder ou refuser dans le projet →</a>
                 </li>
               }
             </ul>
@@ -609,7 +609,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                 @if (nature) {
                   <td>
                     @if (l.project; as p) {
-                      <a class="text-link" [routerLink]="['/app/gestion-projet', p.coreProjectId]" [title]="'Ouvrir le projet ' + p.name">Projet · {{ p.name }}</a>
+                      <a class="text-link" [routerLink]="['/app/gestion-projet', p.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}" [title]="'Ouvrir le projet ' + p.name">Projet · {{ p.name }}</a>
                       @if (p.taskTitle) { <small class="life-line-task">{{ p.taskTitle }}</small> }
                       @if (!p.funded) { <small class="life-line-task">Sans budget attribué · hors budget de vie</small> }
                     } @else {

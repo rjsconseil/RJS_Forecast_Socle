@@ -206,15 +206,20 @@ export class BpmProjectMetricsComponent {
     const ratio = this.budgetRatio();
     return ratio === null ? 'unknown' : ratio >= 50 ? 'green' : ratio >= 20 ? 'orange' : 'red';
   });
-  protected budgetLabel = computed(
-    () =>
-      ({
+  protected budgetLabel = computed(() => {
+    const budget = this.displayBudget();
+    if (!budget.regime) return 'Budget à définir';
+    if (budget.ceilingCents === 0) return this.task() ? 'Part de 0 €' : 'Enveloppe de 0 €';
+    const remaining = budget.remainingCents;
+    if (remaining !== null && remaining < 0) return this.task() ? 'Estimation au-delà de la part' : 'Enveloppe dépassée';
+    if (remaining === 0) return this.task() ? 'Part estimée consommée' : 'Enveloppe épuisée';
+    return ({
         unknown: this.displayBudget().regime ? 'Consommation à estimer' : 'Budget à définir',
         green: 'Budget disponible',
         orange: 'Budget à surveiller',
         red: 'Budget presque épuisé',
-      })[this.budgetTone()],
-  );
+      })[this.budgetTone()];
+  });
   private timeRatio = computed(() => {
     const t = this.displayTime();
     return t.spentToPlannedPercent === null

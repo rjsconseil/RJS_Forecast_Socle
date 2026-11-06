@@ -1,0 +1,708 @@
+{
+  "date": "2026-11-06",
+  "profiles": [
+    {
+      "id": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
+      "label": "RECETTE BPM · 01 Dates et cycles · 2026-11-06",
+      "projects": [
+        {
+          "id": "prj_0f35f717-42d7-40c9-9985-d84eb856b9ba",
+          "budgetId": "bud_f8ad4380-e27b-4af5-9579-4fb05d73f0f7",
+          "title": "D01 · Achat nominal et écart de prix",
+          "tasks": [
+            "tsk_2524f60c-b365-45fd-b72a-69ab6385c030",
+            "tsk_56de692e-cb6a-412c-98b8-9fe5364b0e47",
+            "tsk_c6f9dd20-5c9a-4a7a-a4f5-69d0e09a856a"
+          ]
+        },
+        {
+          "id": "prj_0f01786b-e529-47d8-8dbc-27b393db10f4",
+          "budgetId": "bud_06010c37-586a-4567-9aaa-5dcad2520a28",
+          "title": "D02 · Février payé en novembre",
+          "tasks": [
+            "tsk_932a6dd8-64fd-49a2-a3f3-d7854adc115f",
+            "tsk_456e0d10-104f-48db-a6cc-85cde4fec20d",
+            "tsk_590e601a-91dc-4cbf-82a3-ceaf58fd7d0b"
+          ]
+        },
+        {
+          "id": "prj_1de6787c-8460-437c-8310-00cc2cefc251",
+          "budgetId": "bud_24656c37-3249-4864-8916-b83d4512fa2d",
+          "title": "D03 · Novembre payé en octobre",
+          "tasks": [
+            "tsk_303484ce-9647-4a68-8ed8-53852dcfa666",
+            "tsk_cf69a004-de39-472b-97d8-8befba994d3a",
+            "tsk_00491a3f-7f08-49e7-b4c1-66239f63147b"
+          ]
+        },
+        {
+          "id": "prj_97ccbfbf-656c-4fb1-a4eb-e80b49e3ee71",
+          "budgetId": "bud_5f6f68ad-f8ac-4103-a2d6-8bd3b2c905e7",
+          "title": "D04 · Septembre réglé en novembre",
+          "tasks": [
+            "tsk_2317d4b2-109b-4f7f-8f2a-ea76fbf19d79",
+            "tsk_8168262d-a2e6-47c9-bd2b-a6b69eb43089",
+            "tsk_d650044d-84de-4c9d-9a71-2ab358f66e79"
+          ]
+        },
+        {
+          "id": "prj_78ed08b1-d98f-44dd-831b-205ca604f5de",
+          "budgetId": "bud_93551c40-de0a-46ef-b8e3-d10d0bbd4098",
+          "title": "D05 · Historique avant attribution",
+          "tasks": [
+            "tsk_1e190b20-600b-49fb-a234-c3064aa74954",
+            "tsk_126de419-0ea6-4648-828e-d3db094e77a8",
+            "tsk_674e0ab8-b1c0-4309-8ca4-83585d62a822"
+          ]
+        },
+        {
+          "id": "prj_783a870f-0794-4b07-aaf6-cb74ebfdbaa4",
+          "budgetId": "bud_656d8a3d-d608-4e8b-9201-c01fc419f972",
+          "title": "D05 bis · Projet noyau historique adopté",
+          "tasks": [
+            "tsk_0fe24a42-048b-4198-961a-ddc5c8f73109"
+          ]
+        },
+        {
+          "id": "prj_7ad51d8f-4662-4ecd-b839-8ee66067e8d4",
+          "budgetId": "bud_b146ac1f-1785-44ab-8d0b-92024318b299",
+          "title": "D06 · Paiement antérieur à l’enveloppe",
+          "tasks": [
+            "tsk_21ab0440-d676-462f-a8f1-2c59f804ef59",
+            "tsk_d6adda9f-3ae0-4a65-b1bc-7a63f53973c7",
+            "tsk_175137be-420b-412e-85dc-1f4935725b30"
+          ]
+        },
+        {
+          "id": "prj_f15802c8-ec02-43a9-8323-88a7efebaf3c",
+          "budgetId": "bud_09c14bfa-0793-4b46-a9e3-3b23c19f0a7a",
+          "title": "D07 · Prévision avancée au cycle courant",
+          "tasks": [
+            "tsk_28461bfd-5ad7-43bd-b795-3410740b83b4",
+            "tsk_f8a61212-7f41-4e26-974f-3fa94382da35",
+            "tsk_211fe3c7-116a-4ad7-a950-9058b070f223"
+          ]
+        },
+        {
+          "id": "prj_e9433244-a1b8-41e7-9ff3-db1999ad7e17",
+          "budgetId": "bud_9b088b5a-6a70-4b39-b038-fe069671a5e8",
+          "title": "D08 · Revenu du projet et retour distinct",
+          "tasks": [
+            "tsk_84165876-a901-4b26-9f44-4caf5dcc198e",
+            "tsk_657e058a-2d7f-41f6-bef7-b60a071bb872",
+            "tsk_a5aa0ec9-f5bb-4e2e-97b5-3431e5028dea"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
+      "label": "RECETTE BPM · 02 Enveloppes et décisions · 2026-11-06",
+      "projects": [
+        {
+          "id": "prj_2709702b-f8eb-47e9-a6d7-1f2eb7d7e799",
+          "budgetId": "bud_528c5d8a-0bcc-40b0-97bb-51b353fbbd15",
+          "title": "F01 · Préparer avant financement",
+          "tasks": [
+            "tsk_c847c7ca-f7b9-4e00-acad-408fdefdcd9d",
+            "tsk_e1f59def-0f1b-458e-9cde-4e13773f83e3",
+            "tsk_ed5db019-2599-4449-a8f0-65e41748214f"
+          ]
+        },
+        {
+          "id": "prj_b9db9a07-f6ce-40f1-99c2-9ed75475a5d2",
+          "budgetId": "bud_ddf98869-38f1-4ecf-bba4-4df1e8a4fe01",
+          "title": "F02 · Accord du projet de vie attendu",
+          "tasks": [
+            "tsk_c87bdec0-ee14-4961-bdf2-d04276b2ff61",
+            "tsk_4cb117c5-9fe7-496b-874e-252db021f182",
+            "tsk_08515d99-663c-424a-91d4-66a788fc8149"
+          ]
+        },
+        {
+          "id": "prj_4205f91d-f647-4b20-9382-724214f2233d",
+          "budgetId": "bud_996dd83d-3104-441a-897f-8de4b8c95f5e",
+          "title": "F03 · Refus et demande révisée",
+          "tasks": [
+            "tsk_19fc7e0c-8bd9-4910-b20a-5cd68b46de28",
+            "tsk_22f1d758-d9f7-4519-86ae-5943e1ebd9a1",
+            "tsk_34e55e67-20d0-4a24-acb5-18458351de16"
+          ]
+        },
+        {
+          "id": "prj_d773e730-3630-4f66-9dc5-3e4f8a1a90c0",
+          "budgetId": "bud_6a9254ba-05ff-402f-8d7d-85d1f7303707",
+          "title": "F04 · Autoriser et régler sans double charge",
+          "tasks": [
+            "tsk_61588aea-478e-4246-9788-f281d768004c",
+            "tsk_28558027-949d-427e-8f55-0c7e33fde886",
+            "tsk_8f0a643d-f55e-4905-b3c3-a6b319beaaab"
+          ]
+        },
+        {
+          "id": "prj_5f70c9b0-7c20-4750-8876-60d28ee99c62",
+          "budgetId": "bud_6c4c1b59-4af6-446e-84ff-2ac9095be3cd",
+          "title": "F05 · Limite au centime et facturation",
+          "tasks": [
+            "tsk_e7640c7c-3514-46a8-96d9-3723f1be3cef",
+            "tsk_3296f5f2-49df-4aaf-b671-a0058a875e8b",
+            "tsk_db4f0b83-c5af-474a-8b33-6a7880719b77"
+          ]
+        },
+        {
+          "id": "prj_0b014776-4457-46a3-b8af-6857343406ff",
+          "budgetId": "bud_e193e250-88fb-4c56-8b87-98f39a277893",
+          "title": "F06 · Réductions protégées et paiement annulé",
+          "tasks": [
+            "tsk_04e80292-f5fc-4bc6-a0ba-a828c53992d1",
+            "tsk_18eb777a-5504-4471-8f61-2b08dc0557a0",
+            "tsk_bf21794c-9741-43f6-9511-61a15f58f82b"
+          ]
+        },
+        {
+          "id": "prj_aab68c4b-8d50-473b-af3b-632d49853b9a",
+          "budgetId": "bud_52ec8c14-907c-462a-8ef2-91e6bb3700da",
+          "title": "F07 · Terminer, rendre et rouvrir",
+          "tasks": [
+            "tsk_1960edfd-c680-4c83-b676-0f64fb087884",
+            "tsk_b6018c55-9fe3-4d17-991f-084b6e1adb68",
+            "tsk_2cbb3e43-9b9f-44f0-882c-d7c112cb48c4"
+          ]
+        },
+        {
+          "id": "prj_776f0227-44da-4da9-b02e-bc14c2e2b3cd",
+          "budgetId": "bud_347ecb09-6ab3-4349-a271-f424c601501c",
+          "title": "F08 · Rattachement et liens financiers",
+          "tasks": [
+            "tsk_5af3a996-a38b-4c1a-a5b9-055bb082f7f9",
+            "tsk_4f2213dc-3814-46d1-9c1a-c4723f84c606",
+            "tsk_c593aef0-df5f-4e87-8966-7c0d135e5a1e"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usr_99ca455d-50fd-470d-bdf5-798a888bdb74",
+      "label": "RECETTE BPM · 03 Ancrage au 15 et clôtures · 2026-11-06",
+      "projects": [
+        {
+          "id": "prj_c7c06b7d-8a66-44a6-a75a-387ad36f1ffe",
+          "budgetId": "bud_bf3c7efc-ff53-4c3b-888e-5fbb32a1b45b",
+          "title": "C01 · Frontière du 14 et du 15",
+          "tasks": [
+            "tsk_27d640d8-0911-48dd-a19e-bd84eeee99ea",
+            "tsk_548b5ff2-e208-4544-85ac-16e098376ed4",
+            "tsk_c0722651-8fdf-44f5-b5aa-17f5dd7c06c4"
+          ]
+        },
+        {
+          "id": "prj_fdc2ff73-e3b3-472c-8d70-1d544cb76b08",
+          "budgetId": "bud_e8498523-ef67-4938-8805-ca4e6ded3001",
+          "title": "C02 · Mensuel au 31, fin de mois courte",
+          "tasks": [
+            "tsk_f9efa78f-5614-4ee9-93c0-47cf39589a87",
+            "tsk_fd5caffc-aaac-4145-a930-72b7dcf081fb",
+            "tsk_4b3ca439-b524-459b-a432-049ce219f7dd"
+          ]
+        },
+        {
+          "id": "prj_5b59afa8-5888-4fd5-9485-9c0ffac9f4f3",
+          "budgetId": "bud_c08021b7-cb34-425b-bbf4-310b7bc8bc69",
+          "title": "C03 · Retour récurrent sans doublon",
+          "tasks": [
+            "tsk_fb44e4ca-7bf0-4f78-b0d0-8f614025291d",
+            "tsk_344ad60b-d2db-461e-91d1-aba5acb42886",
+            "tsk_89f998bf-979d-4716-8321-e01b7fa2f75f"
+          ]
+        },
+        {
+          "id": "prj_ed88bb7c-8be7-4d39-806c-c8b2020cd2ce",
+          "budgetId": "bud_b78dc86c-3676-48c7-a816-c3cf61fdd32f",
+          "title": "C04 · Clôture conservée et règlement tardif",
+          "tasks": [
+            "tsk_22e69241-b584-4363-9ccd-93173c3e60da",
+            "tsk_3d8b2306-de29-4f94-a334-827b971c6968",
+            "tsk_1a1482cc-30f8-49e5-a3a9-b1eb70116aab"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usr_b6cde508-7cfa-4d45-8d10-efbd5c6e3c8c",
+      "label": "RECETTE BPM · 04 Démarrage sans cycle · 2026-11-06",
+      "projects": [
+        {
+          "id": "prj_68859aff-a808-4e9c-b3b9-e5c35f5af4aa",
+          "budgetId": "bud_b1057884-909a-4a74-b76e-9d1485611e78",
+          "title": "S01 · Préparer un projet sans cycle",
+          "tasks": [
+            "tsk_c9bdbce3-0df7-442e-920c-b461a592885d",
+            "tsk_b6c6e6c6-846b-4d6f-9e3e-af05a20c5b29",
+            "tsk_27c85b21-cdc6-4a09-a1a8-cd42978312b7"
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "D01 Réglé réel, prévu conservé",
+      "ok": true,
+      "expected": [
+        9500,
+        10000
+      ],
+      "observed": [
+        9500,
+        10000
+      ]
+    },
+    {
+      "name": "D02 Cycles distincts explicités",
+      "ok": true,
+      "expected": [
+        "2027-02",
+        "2026-11",
+        "included"
+      ],
+      "observed": [
+        "2027-02",
+        "2026-11",
+        "included"
+      ]
+    },
+    {
+      "name": "D02 Le poste explique le paiement anticipé",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "D03 Cumul et cycle courant distincts",
+      "ok": true,
+      "expected": [
+        8000,
+        0
+      ],
+      "observed": [
+        8000,
+        0
+      ]
+    },
+    {
+      "name": "D03 Projet dans la période historique du parent",
+      "ok": true,
+      "expected": 8000,
+      "observed": 8000
+    },
+    {
+      "name": "D04 Paiement courant",
+      "ok": true,
+      "expected": 6000,
+      "observed": 6000
+    },
+    {
+      "name": "D05 Historique conservé, aucun financement rétroactif",
+      "ok": true,
+      "expected": [
+        7000,
+        3000
+      ],
+      "observed": [
+        7000,
+        3000
+      ]
+    },
+    {
+      "name": "D06 Hors enveloppe, pas de part créée",
+      "ok": true,
+      "expected": [
+        0,
+        4000,
+        0
+      ],
+      "observed": [
+        0,
+        4000,
+        0
+      ]
+    },
+    {
+      "name": "D06 Fiche explique exclusion",
+      "ok": true,
+      "expected": "before-allocation",
+      "observed": "before-allocation"
+    },
+    {
+      "name": "D07 Replanifier ne dépense rien",
+      "ok": true,
+      "expected": 0,
+      "observed": 0
+    },
+    {
+      "name": "D07 Une réalisation future indique son refus",
+      "ok": true,
+      "expected": "FUTURE_REALIZATION",
+      "observed": "FUTURE_REALIZATION"
+    },
+    {
+      "name": "D08 Entrée du projet distinguée du parent",
+      "ok": true,
+      "expected": "income",
+      "observed": "income"
+    },
+    {
+      "name": "D08 Revenus par date réelle",
+      "ok": true,
+      "expected": true,
+      "observed": true
+    },
+    {
+      "name": "F01 Demande conservée sans enveloppe",
+      "ok": true,
+      "expected": "pending",
+      "observed": "pending"
+    },
+    {
+      "name": "F01 Validation avant enveloppe expliquée",
+      "ok": true,
+      "expected": "FORBIDDEN_BY_RULE",
+      "observed": "FORBIDDEN_BY_RULE"
+    },
+    {
+      "name": "F02 Le parent reçoit seulement le manque",
+      "ok": true,
+      "expected": [
+        "awaiting-life",
+        5000
+      ],
+      "observed": [
+        "awaiting-life",
+        5000
+      ]
+    },
+    {
+      "name": "F03 Refus sans part fantôme",
+      "ok": true,
+      "expected": [
+        "refused",
+        0
+      ],
+      "observed": [
+        "refused",
+        0
+      ]
+    },
+    {
+      "name": "F04 Autorisation sans double charge",
+      "ok": true,
+      "expected": [
+        14000,
+        15000,
+        5000
+      ],
+      "observed": [
+        14000,
+        15000,
+        5000
+      ]
+    },
+    {
+      "name": "F05 Un centime facturé une seule fois",
+      "ok": true,
+      "expected": [
+        10001,
+        1,
+        10001
+      ],
+      "observed": [
+        10001,
+        1,
+        10001
+      ]
+    },
+    {
+      "name": "F05 Rien à facturer une seconde fois",
+      "ok": true,
+      "expected": "FORBIDDEN_BY_RULE",
+      "observed": "FORBIDDEN_BY_RULE"
+    },
+    {
+      "name": "F05 Rejouer la facturation ne double rien",
+      "ok": true,
+      "expected": 10001,
+      "observed": 10001
+    },
+    {
+      "name": "F06 Part sous réglé refusée",
+      "ok": true,
+      "expected": "FORBIDDEN_BY_RULE",
+      "observed": "FORBIDDEN_BY_RULE"
+    },
+    {
+      "name": "F06 Enveloppe sous parts refusée",
+      "ok": true,
+      "expected": "FORBIDDEN_BY_RULE",
+      "observed": "FORBIDDEN_BY_RULE"
+    },
+    {
+      "name": "F06 Annuler rend le paiement prévu",
+      "ok": true,
+      "expected": [
+        0,
+        10000
+      ],
+      "observed": [
+        0,
+        10000
+      ]
+    },
+    {
+      "name": "F07 Retour créé prévu, sans faux encaissement",
+      "ok": true,
+      "expected": "planned",
+      "observed": "planned"
+    },
+    {
+      "name": "F07 Trace du retour déjà créé protégée",
+      "ok": true,
+      "expected": "FORBIDDEN_BY_RULE",
+      "observed": "FORBIDDEN_BY_RULE"
+    },
+    {
+      "name": "F07 Aucun doublon lors de la réouverture",
+      "ok": true,
+      "expected": 1,
+      "observed": 1
+    },
+    {
+      "name": "F07 Part inutilisée rendue",
+      "ok": true,
+      "expected": 6000,
+      "observed": 6000
+    },
+    {
+      "name": "F08 Rattachement direct à bonne destination",
+      "ok": true,
+      "expected": "prj_776f0227-44da-4da9-b02e-bc14c2e2b3cd",
+      "observed": "prj_776f0227-44da-4da9-b02e-bc14c2e2b3cd"
+    },
+    {
+      "name": "F08 Tâche financée non détachable silencieusement",
+      "ok": true,
+      "expected": "FORBIDDEN_BY_RULE",
+      "observed": "FORBIDDEN_BY_RULE"
+    },
+    {
+      "name": "F09 Centre et catégorie tous deux dépassés",
+      "ok": true,
+      "expected": [
+        true,
+        true
+      ],
+      "observed": [
+        true,
+        true
+      ]
+    },
+    {
+      "name": "C01 Le 14 et le 15 ne partagent pas le même cycle",
+      "ok": true,
+      "expected": [
+        1400,
+        1500
+      ],
+      "observed": [
+        1400,
+        1500
+      ]
+    },
+    {
+      "name": "C02 Septembre se termine au 30",
+      "ok": true,
+      "expected": [
+        "2026-09-30"
+      ],
+      "observed": [
+        "2026-09-30"
+      ]
+    },
+    {
+      "name": "C02 Paiement tardif dans cycle octobre au 15",
+      "ok": true,
+      "expected": 3000,
+      "observed": 3000
+    },
+    {
+      "name": "C02 Occurrence déjà réglée non doublée",
+      "ok": true,
+      "expected": "ALREADY_SETTLED",
+      "observed": "ALREADY_SETTLED"
+    },
+    {
+      "name": "C03 Une seule définition de retour",
+      "ok": true,
+      "expected": 1,
+      "observed": 1
+    },
+    {
+      "name": "C04 Chiffre de clôture inchangé",
+      "ok": true,
+      "expected": 14,
+      "observed": 14
+    },
+    {
+      "name": "C04 Antidater dans période close refusé clairement",
+      "ok": true,
+      "expected": "PERIOD_CLOSED",
+      "observed": "PERIOD_CLOSED"
+    },
+    {
+      "name": "S01 Budget inconnu distinct de zéro",
+      "ok": true,
+      "expected": null,
+      "observed": null
+    }
+  ],
+  "events": [
+    {
+      "name": "D01 Parcours nominal, prix réellement payé différent du prévu",
+      "status": "played"
+    },
+    {
+      "name": "D02 Prévu dans trois cycles, réglé dès maintenant",
+      "status": "played"
+    },
+    {
+      "name": "D03 Prévu maintenant, règlement antérieur ouvert",
+      "status": "played"
+    },
+    {
+      "name": "D04 Prévu autrefois, payé tardivement",
+      "status": "played"
+    },
+    {
+      "name": "D05 Dépenses avant enveloppe puis attribution",
+      "status": "played"
+    },
+    {
+      "name": "D06 Règlement antidaté avant enveloppe",
+      "status": "played"
+    },
+    {
+      "name": "D07 Une réalisation future indique son refus",
+      "status": "refused-as-expected",
+      "code": "FUTURE_REALIZATION",
+      "message": "Date de réalisation dans le futur (2027-01-15) : une opération ne peut être réglée qu'à une date passée ou aujourd'hui."
+    },
+    {
+      "name": "D07 Replanifier une prévision sans payer",
+      "status": "played"
+    },
+    {
+      "name": "D08 Revenus à dates croisées",
+      "status": "played"
+    },
+    {
+      "name": "F01 Validation avant enveloppe expliquée",
+      "status": "refused-as-expected",
+      "code": "FORBIDDEN_BY_RULE",
+      "message": "Attribuez d’abord une enveloppe au projet : les parts des tâches s’y répartissent."
+    },
+    {
+      "name": "F01 Demande préparée avant enveloppe",
+      "status": "played"
+    },
+    {
+      "name": "F02 Demande dépassant enveloppe en attente du projet de vie",
+      "status": "played"
+    },
+    {
+      "name": "F03 Dépassement refusé puis nouvelle demande",
+      "status": "played"
+    },
+    {
+      "name": "F04 Dépassement autorisé et règlement",
+      "status": "played"
+    },
+    {
+      "name": "F05 Rien à facturer une seconde fois",
+      "status": "refused-as-expected",
+      "code": "FORBIDDEN_BY_RULE",
+      "message": "Aucun dépassement autorisé à facturer."
+    },
+    {
+      "name": "F05 Dépassement exactement un centime, déjà facturé",
+      "status": "played"
+    },
+    {
+      "name": "F06 Part sous réglé refusée",
+      "status": "refused-as-expected",
+      "code": "FORBIDDEN_BY_RULE",
+      "message": "La part ne peut pas être inférieure aux dépenses déjà réglées de la tâche."
+    },
+    {
+      "name": "F06 Enveloppe sous parts refusée",
+      "status": "refused-as-expected",
+      "code": "FORBIDDEN_BY_RULE",
+      "message": "Les parts des tâches (100,00 €) dépassent 59,99 € : réduisez d’abord des parts, ou gardez une enveloppe d’au moins 100,00 €."
+    },
+    {
+      "name": "F06 Baisse de part, baisse enveloppe et annulation",
+      "status": "played"
+    },
+    {
+      "name": "F07 Trace du retour déjà créé protégée",
+      "status": "refused-as-expected",
+      "code": "FORBIDDEN_BY_RULE",
+      "message": "Ce retour est déjà enregistré dans le budget de vie : modifiez ou annulez le revenu depuis les entrées du budget de vie. Sa trace reste liée à la tâche pour éviter de le créer une seconde fois."
+    },
+    {
+      "name": "F07 Retour ponctuel, réouverture et reste à libérer",
+      "status": "played"
+    },
+    {
+      "name": "F08 Tâche financée non détachable silencieusement",
+      "status": "refused-as-expected",
+      "code": "FORBIDDEN_BY_RULE",
+      "message": "« 1. Préparer et demander » porte des données de l’enveloppe du projet « F08 · Rattachement et liens financiers » (une part de budget) : retirez-les avant de changer la tâche de projet."
+    },
+    {
+      "name": "F08 Rattacher tâche libre et protéger liens financiers",
+      "status": "played"
+    },
+    {
+      "name": "F09 Plafonds indépendants et catégorie",
+      "status": "played"
+    },
+    {
+      "name": "C01 Paiements aux deux côtés du jour d’ancrage",
+      "status": "played"
+    },
+    {
+      "name": "C02 Occurrence déjà réglée non doublée",
+      "status": "refused-as-expected",
+      "code": "ALREADY_SETTLED",
+      "message": "Cette occurrence est déjà réglée."
+    },
+    {
+      "name": "C02 Mensuel au 31, occurrence courte et règlement tardif",
+      "status": "played"
+    },
+    {
+      "name": "C03 Retour récurrent puis tâche réouverte",
+      "status": "played"
+    },
+    {
+      "name": "C04 Antidater dans période close refusé clairement",
+      "status": "refused-as-expected",
+      "code": "PERIOD_CLOSED",
+      "message": "La période 15 août → 14 sept. 2026 est close : dépense du projet « C04 · Clôture conservée et règlement tardif » refusée (2026-09-01). Datez-la dans la période en cours."
+    },
+    {
+      "name": "C04 Clôture protégée puis règlement d’une ancienne échéance",
+      "status": "played"
+    }
+  ],
+  "ok": true
+}

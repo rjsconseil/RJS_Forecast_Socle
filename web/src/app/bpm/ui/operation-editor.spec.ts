@@ -44,6 +44,25 @@ describe('éditeur d’opération partagé', () => {
     await new Promise(r => setTimeout(r, 0));
   }
 
+  async function openProjectExpense() {
+    const f = await open();
+    f.componentRef.setInput('budgets', [{ ...budgets[0], id: 'bud_project', coreProjectId: 'prj_project', role: 'standard' }, ...budgets]);
+    const ed = f.componentInstance as any;
+    ed.budgetId.set('bud_project');
+    ed.tasks.set([
+      { id: 'tsk_project', projectId: 'prj_project', title: 'Acheter' },
+      { id: 'tsk_other', projectId: 'prj_project', title: 'Livrer' },
+    ]);
+    ed.taskId.set('tsk_project'); ed.label.set('Achat UI'); ed.amount.set('90');
+    ed.date.set('2026-11-06'); ed.realized.set(true); ed.realizedDate.set('2026-11-06');
+    f.detectChanges();
+    return { f, ed };
+  }
+
+  function refuseFunding() {
+    http.expectOne('/api/bpm/operations').flush({ error: { code: 'FORBIDDEN_BY_RULE', message: 'Part à accorder', details: { reason: 'task-share', budgetId: 'bud_project', taskId: 'tsk_project', neededCents: 9000, grantOverrunCents: 1000 } } }, { status: 409, statusText: 'Conflict' });
+  }
+
   it('rejoue la même clé de commande après une erreur, sans perdre le brouillon', async () => {
     const f = await open();
     const ed = f.componentInstance as unknown as { label: { set(v: string): void }; amount: { set(v: string): void }; date: { set(v: string): void }; save(): Promise<void> };
@@ -70,6 +89,104 @@ describe('éditeur d’opération partagé', () => {
     await second;
     expect(refresh.version()).toBe(before + 1);
     http.match(() => true); // aperçus éventuels
+  });
+
+  it('propose de financer et payer ensemble après un refus de part, avec la même clé de commande', async () => {
+    const f = await open();
+    f.componentRef.setInput('budgets', [{ ...budgets[0], id: 'bud_project', coreProjectId: 'prj_project', role: 'standard' }]);
+    const ed = f.componentInstance as any;
+    ed.budgetId.set('bud_project');
+    ed.tasks.set([{ id: 'tsk_project', projectId: 'prj_project', title: 'Acheter' }]);
+    ed.taskId.set('tsk_project'); ed.label.set('Achat UI'); ed.amount.set('90');
+    ed.date.set('2026-11-06'); ed.realized.set(true); ed.realizedDate.set('2026-11-06');
+    f.detectChanges();
+    const first = ed.save();
+    await verifyCaps();
+    const req1 = http.expectOne('/api/bpm/operations');
+    expect(req1.request.body.fund).toBeUndefined();
+    req1.flush({ error: { code: 'FORBIDDEN_BY_RULE', message: 'Part à accorder', details: { reason: 'task-share', budgetId: 'bud_project', taskId: 'tsk_project', neededCents: 9000, grantOverrunCents: 1000 } } }, { status: 409, statusText: 'Conflict' });
+    await first; f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('Financer cette dépense ici');
+    expect(f.nativeElement.textContent).toContain('Dépassement à autoriser');
+    const second = ed.save(true);
+    await verifyCaps();
+    const req2 = http.expectOne('/api/bpm/operations');
+    expect(req2.request.body).toMatchObject({ fund: true, requestKey: req1.request.body.requestKey, amount: 90, taskId: 'tsk_project', status: 'realized' });
+    req2.flush({ operation: { label: 'Achat UI' } });
+    await second;
+    http.match(() => true); f.destroy();
+  });
+
+  it.each([
+    ['amount', '900'],
+    ['realizedAmount', '900'],
+    ['date', '2026-12-06'],
+    ['realizedDate', '2026-12-06'],
+    ['budgetId', 'bud_life'],
+    ['taskId', 'tsk_other'],
+    ['center', 'std:loisirs'],
+    ['categoryId', 'cat_assur'],
+  ])('invalide le financement proposé si le champ %s change', async (field, value) => {
+    const { f, ed } = await openProjectExpense();
+    const first = ed.save();
+    await verifyCaps();
+    refuseFunding();
+    await first;
+    f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('Financer cette dépense ici');
+
+    ed[field].set(value);
+    f.detectChanges();
+    expect(f.nativeElement.textContent).not.toContain('Financer cette dépense ici');
+    await ed.save(true);
+    http.expectNone('/api/bpm/operations');
+    f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('Enregistrez à nouveau pour vérifier le financement nécessaire');
+    http.match(() => true); f.destroy();
+  });
+
+  it('n’autorise pas un autre montant si la saisie change pendant l’aperçu de confirmation', async () => {
+    const { f, ed } = await openProjectExpense();
+    const first = ed.save();
+    await verifyCaps();
+    refuseFunding();
+    await first;
+
+    const confirming = ed.save(true);
+    const preview = http.expectOne('/api/bpm/caps/preview');
+    expect(preview.request.body.amount).toBe(90);
+    ed.amount.set('900');
+    preview.flush(capPreview);
+    await confirming;
+    http.expectNone('/api/bpm/operations');
+    f.detectChanges();
+    expect(f.nativeElement.textContent).toContain('La saisie a changé pendant la vérification');
+    expect(f.nativeElement.textContent).not.toContain('Financer cette dépense ici');
+
+    const retry = ed.save();
+    await verifyCaps();
+    const request = http.expectOne('/api/bpm/operations');
+    expect(request.request.body).toMatchObject({ amount: 900, taskId: 'tsk_project' });
+    expect(request.request.body.fund).toBeUndefined();
+    request.flush({ error: { code: 'OVERRUN_AUTHORIZATION_REQUIRED', message: 'Nouveau dépassement à confirmer', details: { overrunCents: 82000 } } }, { status: 409, statusText: 'Conflict' });
+    await retry;
+    f.detectChanges();
+    expect(ed.fundingIssue()).toEqual({ overrunCents: 82000 });
+    http.match(() => true); f.destroy();
+  });
+
+  it('n’associe pas un refus tardif à une saisie modifiée pendant l’enregistrement', async () => {
+    const { f, ed } = await openProjectExpense();
+    const first = ed.save();
+    await verifyCaps();
+    ed.amount.set('900');
+    refuseFunding();
+    await first;
+    f.detectChanges();
+    expect(f.nativeElement.textContent).not.toContain('Financer cette dépense ici');
+    await ed.save(true);
+    http.expectNone('/api/bpm/operations');
+    http.match(() => true); f.destroy();
   });
 
   it('refuse un montant invalide sans appel d’écriture', async () => {

@@ -12,7 +12,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
-import { BpmBudgetRef } from '../../core/bpm-models';
+import { BpmBudgetRef, RegisterLine } from '../../core/bpm-models';
 import {
   BpmProjectDetail,
   BpmTaskCard,
@@ -26,6 +26,7 @@ import { COLUMNS, TASK_STATUS_LABEL, TaskStatus } from '../../core/models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
 import { FUNDING, FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from '../ui/project-funding';
 import { BpmOperationEditor } from '../ui/operation-editor';
+import { BpmLineDetail } from '../ui/line-detail';
 import { BpmOverflowDirective } from '../ui/overflow';
 import { ModalComponent } from '../../shared/modal.component';
 import { BpmLifeFundingComponent } from '../life/life-funding';
@@ -99,6 +100,7 @@ interface OverrunFlow {
     BpmBudgetStateComponent,
     BpmOverrunRequestComponent,
     BpmOperationEditor,
+    BpmLineDetail,
     BpmTaskRequestsComponent,
     BpmLifeFundingComponent,
     BpmProjectEditor,
@@ -137,6 +139,8 @@ export class BpmProjectPage {
   protected returnEditor = signal<string | null>(null);
   protected settling = signal<string | null>(null);
   protected editorOpen = signal(false);
+  protected editingLine = signal<RegisterLine | null>(null);
+  protected lineId = signal<string | null>(null);
   protected projectEditor = signal(false);
   protected taskEditor = signal(false);
   protected editingTask = signal<BpmTaskCard | null>(null);
@@ -154,6 +158,8 @@ export class BpmProjectPage {
   private requestKeys = new Map<string, string>();
   private projectId = '';
   protected descriptionExpanded = signal(false);
+  /** Contexte de retour uniquement : la fiche du projet reste lue sur toute sa durée. */
+  protected lifePeriod = signal<string | null>(null);
   protected allocationEditing = signal(false);
   protected allocationRevision = signal(0);
   protected allocationError = signal<string | null>(null);
@@ -329,8 +335,25 @@ export class BpmProjectPage {
     this.taskEditor.set(true);
   }
   protected addExpense(taskId: string | null) {
+    this.editingLine.set(null);
     this.expenseTaskId.set(taskId);
     this.editorOpen.set(true);
+  }
+  protected openCharge(c: ProjectChargeLine) {
+    this.lineId.set(c.id);
+  }
+  protected async closeCharge() {
+    this.lineId.set(null);
+    await this.load();
+  }
+  protected editCharge(line: RegisterLine) {
+    this.lineId.set(null);
+    this.editingLine.set(line);
+    this.editorOpen.set(true);
+  }
+  protected closeExpense() {
+    this.editorOpen.set(false);
+    this.editingLine.set(null);
   }
   protected editAllocation() {
     const b = this.data()?.budget;
@@ -400,6 +423,10 @@ export class BpmProjectPage {
   );
 
   constructor() {
+    this.route.queryParamMap?.pipe(takeUntilDestroyed()).subscribe((p) => {
+      const key = p.get('lifePeriod') ?? p.get('period');
+      this.lifePeriod.set(key && /^\d{4}-\d{2}$/.test(key) ? key : null);
+    });
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((p) => {
       this.projectId = p.get('id') ?? '';
       this.data.set(null);
@@ -410,6 +437,8 @@ export class BpmProjectPage {
       this.closeTask();
       this.projectEditor.set(false);
       this.editorOpen.set(false);
+      this.editingLine.set(null);
+      this.lineId.set(null);
       this.fundingTask.set(null);
       this.openTaskId.set(null);
       this.query.set('');
@@ -457,6 +486,7 @@ export class BpmProjectPage {
     this.pendingSection = null;
     // Raccourci depuis le projet de vie : #enveloppe ouvre directement l'attribution du budget du projet.
     if (section === 'enveloppe') {
+      this.closeTaskPanel();
       if (this.data()?.role === 'standard' && !this.allocationEditing()) this.editAllocation();
       return;
     }
@@ -484,10 +514,23 @@ export class BpmProjectPage {
   }
 
   protected chargeState(c: ProjectChargeLine) {
-    if (c.validated) return 'Réglée · validée';
-    if (c.beforeAllocation) return 'Réglée avant l’attribution';
-    if (c.settled) return 'Réglée';
-    return c.kind === 'occurrence' ? 'Échéance attendue' : 'À valider';
+    if (c.validated) return 'Réglée · remontée au projet de vie';
+    if (c.beforeAllocation) return 'Réglée · avant l’enveloppe';
+    if (c.settled) return 'Réglée · hors budget de vie';
+    return c.kind === 'occurrence' ? 'Échéance à régler' : 'À régler';
+  }
+
+  /** La lecture du middleware fait foi, y compris pour un règlement antidaté. */
+  protected settlementResult(c: ProjectChargeLine) {
+    const read = this.data()?.charges.find((line) => line.id === c.id);
+    const saved = `Règlement de « ${c.label} » enregistré.`;
+    if (read?.validated)
+      return `${saved} Il est remonté au budget du projet de vie à sa date réelle, le ${displayDate(read.realizedDate!)}.`;
+    if (read?.beforeAllocation)
+      return `${saved} Sa date réelle précède l’attribution de l’enveloppe : il reste dans l’historique du projet, hors budget de vie.`;
+    if (read?.settled)
+      return `${saved} Ce projet n’a pas d’enveloppe : le règlement reste hors budget de vie.`;
+    return `${saved} Le projet a été actualisé ; sa date réelle détermine la période du règlement.`;
   }
 
   protected defaultDate(c: ProjectChargeLine) {
@@ -814,7 +857,7 @@ export class BpmProjectPage {
         await action(fund);
         this.settling.set(null);
       },
-      `Règlement de « ${c.label} » validé : il compte maintenant dans les dépenses du budget du projet de vie.`,
+      () => this.settlementResult(c),
       `le règlement de « ${c.label} »`,
     );
   }
@@ -827,7 +870,7 @@ export class BpmProjectPage {
   }
 
   protected async onSaved(message: string) {
-    this.editorOpen.set(false);
+    this.closeExpense();
     await this.load();
     this.notice.set({ text: message, error: false });
   }

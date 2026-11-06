@@ -8,7 +8,7 @@ import { date, money, oneOf } from '../../socle/validation.mjs';
 import { CADENCES, PER_YEAR, monthlyAverageCents, occurrenceDates, parseOccurrenceKey } from '../budget/recurrence.mjs';
 import { addDays, today, periodContaining } from './periods.mjs';
 import { GOAL_TYPES, project } from './projection.mjs';
-import { fundedStandardsOf, specialProjectLines } from './projects.mjs';
+import { fundedStandardsOf, isValidatedCharge, specialProjectLines } from './projects.mjs';
 import { essentialRefsOf, NATURES, NATURE_LABEL, natureOf } from './natures.mjs';
 
 const RESULT = 'bpm.resultatPeriode';
@@ -180,13 +180,15 @@ export function createReads(socle, h) {
   function register(ctx, q = {}) {
     const b = base(ctx, { periodKey: q.period });
     const win = windowOf(b, q);
-    const all = budget().budgetLines(b.state, budgetIdsOf(b, q), { from: win.from, to: win.to, by: 'planned' }).map((l) => decorate(b, l));
+    const dateBasis = oneOf('dateBasis', q.dateBasis, ['planned', 'realized'], 'planned');
+    const all = budget().budgetLines(b.state, budgetIdsOf(b, q), { from: win.from, to: win.to, by: dateBasis }).map((l) => decorate(b, l));
     // Budget du projet de vie : ses charges de projet validées comptent ; ses charges spéciales sont présentées à part.
     if (!q.budgetId && q.scope !== 'consolidated') {
-      for (const l of validatedProjectLines(b, { from: win.from, to: win.to, by: 'planned' })) all.push({ ...decorate(b, l), projectCharge: true });
-      for (const sp of specialProjectLines(b.state, b.comp.budgetId, win)) all.push(specialLine(b, sp));
-      all.sort((x, y) => x.plannedDate.localeCompare(y.plannedDate) || x.label.localeCompare(y.label));
+      for (const l of validatedProjectLines(b, { from: win.from, to: win.to, by: dateBasis })) all.push({ ...decorate(b, l), projectCharge: true });
+      if (dateBasis === 'planned') for (const sp of specialProjectLines(b.state, b.comp.budgetId, win)) all.push(specialLine(b, sp));
     }
+    const selectedDate = (line) => dateBasis === 'realized' ? line.realizedDate : line.plannedDate;
+    all.sort((x, y) => selectedDate(x).localeCompare(selectedDate(y)) || x.label.localeCompare(y.label));
     // Nature d'une charge (indispensable, courante, projet) : paramètre `bpm.chargesIndispensables` [P].
     const essentials = essentialRefsOf(socle, b.state);
     for (const l of all) l.nature = natureOf(l, essentials);
@@ -208,7 +210,7 @@ export function createReads(socle, h) {
       category: (l) => (l.categoryId ? [l.categoryId, l.categoryLabel ?? 'Catégorie retirée'] : [NO_CATEGORY, 'Sans catégorie']),
       project: (l) => [l.budgetId, l.budgetRole === 'life' ? 'Budget du projet de vie' : l.budgetName],
       nature: (l) => (l.nature ? [l.nature, NATURE_LABEL[l.nature]] : ['entrees', 'Entrées']),
-      date: (l) => [l.plannedDate, l.plannedDate],
+      date: (l) => [selectedDate(l), selectedDate(l)],
       none: () => ['all', 'Toutes les lignes'],
     }[groupBy];
     const groups = new Map();
@@ -235,8 +237,11 @@ export function createReads(socle, h) {
     return {
       context: contextOf(b, q.budgetId ? 'budget' : q.scope === 'consolidated' ? 'consolidated' : 'principal'),
       window: win,
-      selection: 'Les lignes sont sélectionnées par leur date prévue ; le réalisé des synthèses suit la date réelle de règlement.',
-      filters: { q: q.q ?? null, direction: q.direction ?? null, nature, status: q.status ?? null, center: q.center ?? null, category: q.category ?? null, taskId: q.taskId ?? null, budgetId: q.budgetId ?? null, groupBy },
+      dateBasis,
+      selection: dateBasis === 'realized'
+        ? 'Les règlements sont sélectionnés par leur date réelle, comme les montants reçu et dépensé du tableau de bord. Les dates prévues restent visibles pour expliquer les décalages.'
+        : 'Les lignes sont sélectionnées par leur date prévue ; le réalisé des synthèses suit la date réelle de règlement.',
+      filters: { q: q.q ?? null, direction: q.direction ?? null, nature, status: q.status ?? null, center: q.center ?? null, category: q.category ?? null, taskId: q.taskId ?? null, budgetId: q.budgetId ?? null, groupBy, dateBasis },
       totals: {
         followsFilters: true,
         paidCents: sum(counted.filter((l) => l.settled), (l) => l.realizedCents),
@@ -274,7 +279,9 @@ export function createReads(socle, h) {
     const pb = state.budgets[view.budgetId];
     if (pb?.role !== 'standard') return null;
     const funded = Number.isInteger(pb.allocationCents) && typeof pb.allocationDate === 'string';
-    return { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, allocationDate: funded ? pb.allocationDate : null, taskTitle: view.taskId ? state.tasks[view.taskId]?.title ?? null : null };
+    const operation = view.operationId ? state.operations[view.operationId] : null;
+    const inclusion = view.direction === 'income' ? 'income' : !funded ? 'unfunded' : !view.settled ? 'pending' : operation && isValidatedCharge(operation, pb) ? 'included' : 'before-allocation';
+    return { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, taskFundingRequired: !!pb.taskFundingRequired, allocationDate: funded ? pb.allocationDate : null, taskTitle: view.taskId ? state.tasks[view.taskId]?.title ?? null : null, inclusion };
   }
 
   function lineDetail(ctx, lineId, { periodKey } = {}) {
@@ -302,6 +309,18 @@ export function createReads(socle, h) {
       : view.settled
         ? [{ operationId: view.operationId, occurrenceDate: null, plannedCents: view.plannedCents, realizedCents: view.realizedCents, realizedDate: view.realizedDate, outsidePeriod: !b.period || view.realizedDate < b.period.start || view.realizedDate > b.period.end }]
         : [];
+    // Même portée que la garde d'écriture BPM : le budget de vie, ou les dates depuis
+    // l'attribution d'un projet financé. Un règlement antérieur reste hors de cette enveloppe.
+    const pb = state.budgets[view.budgetId];
+    const protectedClosure = (ymd) => ymd && (view.budgetId === b.comp.budgetId || Number.isInteger(pb?.allocationCents) && pb?.allocationDate && ymd >= pb.allocationDate) ? closedPeriodOf(state, b.cycle, ymd) : null;
+    const editClosure = protectedClosure(view.plannedDate) ?? protectedClosure(view.realizedDate);
+    const canEdit = view.kind === 'occurrence' || !editClosure;
+    const timingPeriod = (ymd) => {
+      if (!ymd || b.cycle?.state !== 'active') return null;
+      const p = periodContaining(ymd, b.cycle.anchorDay);
+      const status = closedPeriodOf(state, b.cycle, ymd) ? 'closed' : p.end < today() ? 'ended' : p.start > today() ? 'future' : 'current';
+      return { key: p.key, label: p.label, start: p.start, end: p.end, status };
+    };
     return {
       context: contextOf(b),
       line: view,
@@ -309,11 +328,13 @@ export function createReads(socle, h) {
       settlements,
       ids: { lineId, operationId: view.operationId, recurrenceId: view.recurrenceId, budgetId: view.budgetId, taskId: view.taskId },
       project: projectOfLine(state, view),
+      timing: { plannedPeriod: timingPeriod(view.plannedDate), realizedPeriod: timingPeriod(view.realizedDate) },
       actions: {
-        canSettle: !view.settled,
-        canCancelSettlement: view.settled && !closedPeriodOf(state, b.cycle, view.realizedDate),
-        canEdit: !closedPeriodOf(state, b.cycle, view.plannedDate) || view.kind === 'occurrence',
-        settlementPolicy: 'Règlement manuel [P] ; une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
+        canSettle: !view.settled && !(view.direction === 'charge' && pb?.taskFundingRequired && !Number.isInteger(pb.allocationCents)),
+        canCancelSettlement: view.settled && !protectedClosure(view.realizedDate),
+        canEdit,
+        editReason: canEdit ? null : `La période ${editClosure.periodLabel ?? editClosure.periodKey} est close : cette opération est conservée dans son historique.`,
+        settlementPolicy: 'Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
       },
     };
   }
@@ -338,7 +359,7 @@ export function createReads(socle, h) {
     const baseCents = direction === 'income' ? receivedCents : baseKind === 'received' ? receivedCents : spentCents;
     const rows = [...centers, ...extra].map((c) => {
       const paidCents = sum(realized.filter((l) => l.direction === direction && refOf(l) === c.ref), (l) => l.realizedCents);
-      const remainingCents = sum(planned.filter((l) => l.direction === direction && refOf(l) === c.ref && !l.settled), (l) => l.plannedCents);
+      const remainingCents = sum(planned.filter((l) => l.direction === direction && refOf(l) === c.ref && !l.settled && statusOf(b.state, b.cycle, l) !== 'unrealized'), (l) => l.plannedCents);
       const capCents = direction === 'charge' ? caps[c.ref] ?? null : null;
       return {
         ref: c.ref,
@@ -389,11 +410,15 @@ export function createReads(socle, h) {
     overCount: report.overCount,
   });
 
+  // Une échéance non réglée d'une période close reste dans l'historique, mais n'est
+  // plus un engagement à payer. Même sélection que les postes et les flux de période.
+  const capPlannedLines = (b, lines) => lines.filter((l) => statusOf(b.state, b.cycle, l) !== 'unrealized');
+
   /** Plafonds de la période lue : même périmètre que les centres (budget de vie + charges de projet validées). */
   function capsRead(b, { withLines = false } = {}) {
     const { start, end } = b.period;
     const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'realized' }), ...validatedProjectLines(b, { from: start, to: end, by: 'realized' })];
-    const planned = budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'planned' });
+    const planned = capPlannedLines(b, budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'planned' }));
     const life = b.state.budgets[b.comp.budgetId];
     return budget().capReport({
       centers: budget().costCentersOf(b.state, b.userId),
@@ -555,7 +580,7 @@ export function createReads(socle, h) {
       const candidate = l => recurring ? l.recurrenceId === item.id : l.operationId === item.id;
       const keep = l => !candidate(l);
       const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'realized' }), ...validatedProjectLines(b, { ...window, by: 'realized' }).filter(keep), ...budget().budgetLines(state, [budgetId], { ...window, by: 'realized' }).filter(candidate)];
-      const planned = [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'planned' }), ...budget().budgetLines(state, [budgetId], { ...window, by: 'planned' }).filter(candidate)];
+      const planned = capPlannedLines({ ...b, state }, [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'planned' }), ...budget().budgetLines(state, [budgetId], { ...window, by: 'planned' }).filter(candidate)]);
       after = budget().capReport({ centers: budget().costCentersOf(state, b.userId), categories: budget().categoriesOf(state, b.userId, { archived: true }), caps: state.budgets[b.comp.budgetId].capsCents ?? {}, realized, planned });
     }
     const relevant = r => ({
@@ -567,6 +592,37 @@ export function createReads(socle, h) {
       note: budgetId !== b.comp.budgetId ? 'Impact estimé après validation de la charge du projet.' : null };
   }
 
+  /** Flux d'une période : réalisé à sa date réelle, échéances non réglées à leur date prévue.
+   * Le registre garde sa sélection par date prévue ; ces listes expliquent les chiffres des postes et revenus.
+   */
+  function periodFlow(b, { direction, center } = {}) {
+    const { start, end } = b.period;
+    const keep = (l) => (!direction || l.direction === direction) && (!center || (l.costCenterId ?? `std:${l.standardCostCenter}`) === center);
+    const paid = budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'realized' }).map((l) => decorate(b, l));
+    paid.push(...validatedProjectLines(b, { from: start, to: end, by: 'realized' }).map((l) => ({ ...decorate(b, l), projectCharge: true })));
+    const unsettled = budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'planned' }).filter((l) => !l.settled).map((l) => decorate(b, l));
+    const settledLines = paid.filter(keep);
+    const pendingLines = unsettled.filter((l) => keep(l) && l.status !== 'unrealized');
+    const unrealizedLines = unsettled.filter((l) => keep(l) && l.status === 'unrealized');
+    const lines = [...settledLines, ...pendingLines, ...unrealizedLines].sort((a, z) => (a.realizedDate ?? a.plannedDate).localeCompare(z.realizedDate ?? z.plannedDate) || a.label.localeCompare(z.label));
+    const essentials = essentialRefsOf(socle, b.state);
+    for (const l of lines) l.nature = natureOf(l, essentials);
+    return {
+      lines, settledLines, pendingLines, unrealizedLines,
+      selection: 'Les règlements suivent leur date réelle dans la période ; les échéances encore attendues suivent leur date prévue. Les échéances non réalisées d’une période close sont présentées séparément.',
+      totals: {
+        followsFilters: true,
+        paidCents: sum(settledLines, (l) => l.realizedCents),
+        toPayCents: sum(pendingLines, (l) => l.plannedCents),
+        unrealizedCents: sum(unrealizedLines, (l) => l.plannedCents),
+        plannedCents: sum(lines, (l) => l.plannedCents),
+        specialCents: 0,
+        lineCount: lines.length,
+        unfilteredCount: lines.length,
+      },
+    };
+  }
+
   function centerDetail(ctx, ref, q = {}) {
     const b = base(ctx, { periodKey: q.period });
     const c = budget().costCentersOf(b.state, b.userId).find((x) => x.ref === ref || x.ref === `std:${ref}`);
@@ -574,7 +630,7 @@ export function createReads(socle, h) {
     const read = centers(ctx, { period: q.period, direction: c.direction, all: 'true' });
     const row = read.rows.find((x) => x.ref === c.ref);
     // Périmètre du budget de vie, avec ses charges de projet validées (mêmes lignes que le dépensé du poste).
-    const reg = register(ctx, { period: q.period, center: c.ref, groupBy: 'date' });
+    const flow = periodFlow(b, { center: c.ref });
     // Plafonds du poste : celui du centre et ceux de ses catégories, lus indépendamment (jamais bloquants).
     const report = c.direction === 'charge' ? capsRead(b) : null;
     const life = b.state.budgets[b.comp.budgetId];
@@ -582,8 +638,7 @@ export function createReads(socle, h) {
       context: read.context,
       center: { ...c, ...row },
       basis: read.basis,
-      lines: reg.lines,
-      totals: reg.totals,
+      ...flow,
       cap: report?.centers.find((x) => x.ref === c.ref) ?? null,
       categories: report ? report.categories.filter((k) => k.costCenterRef === c.ref && (!k.archived || k.lineCount)) : [],
       lifeBudget: { budgetId: life.id, revision: life.revision },
@@ -591,14 +646,15 @@ export function createReads(socle, h) {
   }
 
   function incomes(ctx, q = {}) {
+    const b = base(ctx, { periodKey: q.period });
     const read = centers(ctx, { period: q.period, direction: 'income' });
-    const reg = register(ctx, { period: q.period, direction: 'income', groupBy: 'center' });
+    const flow = periodFlow(b, { direction: 'income' });
     return {
       context: read.context,
       receivedCents: read.basis.receivedCents,
-      expectedCents: sum(reg.lines.filter((l) => !l.settled && l.status !== 'unrealized'), (l) => l.plannedCents),
+      expectedCents: sum(flow.pendingLines, (l) => l.plannedCents),
       sources: read.rows.map((r) => ({ ref: r.ref, label: r.label, receivedCents: r.paidCents, expectedCents: r.remainingCents, sharePct: r.sharePct })),
-      lines: reg.lines,
+      ...flow,
     };
   }
 

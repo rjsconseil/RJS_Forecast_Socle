@@ -11,6 +11,7 @@
     "seed": "node api/scripts/seed.mjs",
     "seed:plafonds": "node api/scripts/seed-plafonds.mjs",
     "seed:projets": "node api/scripts/seed-projets.mjs",
+    "seed:bpm-functional": "node api/scripts/seed-bpm-functional.mjs",
     "import:rjs-forecast": "node api/scripts/import-rjs-forecast.mjs",
     "test": "node --test 'api/test/*.test.mjs'",
     "e2e:projets": "node e2e/projets.e2e.mjs",

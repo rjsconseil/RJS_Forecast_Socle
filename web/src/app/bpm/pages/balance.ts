@@ -66,7 +66,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
               <caption class="visually-hidden">Du reçu au solde prévu à la clôture</caption>
               <tbody>
                 <tr><th scope="row"><span aria-hidden="true">+</span> Entrées reçues (date de règlement dans la période)</th><td><a routerLink="/argent/entrees" [queryParams]="carry()">{{ plus(v.receivedCents) }}</a></td></tr>
-                <tr><th scope="row"><span aria-hidden="true">−</span> Sorties payées (date de règlement dans la période)</th><td><a routerLink="/depenses" [queryParams]="carry()">{{ minus(v.paidCents) }}</a></td></tr>
+                <tr><th scope="row"><span aria-hidden="true">−</span> Sorties payées (date de règlement dans la période)</th><td><a routerLink="/depenses" [queryParams]="paidQuery()">{{ minus(v.paidCents) }}</a></td></tr>
                 <tr class="is-total"><th scope="row"><span aria-hidden="true">=</span> Reste de la période (net réalisé)</th><td>{{ v.netCents === null ? 'Inconnu' : (v.netCents | signedCents) }}</td></tr>
                 <tr><th scope="row"><span aria-hidden="true">+</span> Encore à recevoir (échéances non réglées)</th><td>{{ plus(v.toReceiveCents) }}</td></tr>
                 <tr><th scope="row"><span aria-hidden="true">−</span> Encore à payer (échéances non réglées)</th><td>{{ minus(v.toPayCents) }}</td></tr>
@@ -169,6 +169,7 @@ export class BpmBalancePage {
   private initialParam = this.ctx.q('initial');
   private currentParam = this.ctx.q('current');
   protected carry = computed(() => this.ctx.carry() as Record<string, string>);
+  protected paidQuery = computed(() => ({ ...this.carry(), dateBasis: 'realized', status: 'settled' }));
 
   protected loader = bpmLoader(
     () => ({ period: this.period(), initial: this.initialParam() || undefined, current: this.currentParam() || undefined }),
@@ -194,7 +195,7 @@ export class BpmBalancePage {
     const tone = (c: number | null) => (c === null ? null : c < 0 ? 'danger' : 'success');
     return [
       { id: 'in', label: 'Entrées reçues', value: money(v.receivedCents), tone: v.receivedCents === null ? null : 'success', note: (this.why('bpm.revenus') ?? 'Entrées réglées dans la période.') + rec, link: '/argent/entrees', query },
-      { id: 'out', label: 'Sorties payées', value: money(v.paidCents), tone: v.paidCents === null ? null : 'danger', note: (this.why('bpm.charges') ?? 'Charges réglées dans la période.') + rec, link: '/depenses', query },
+      { id: 'out', label: 'Sorties payées', value: money(v.paidCents), tone: v.paidCents === null ? null : 'danger', note: (this.why('bpm.charges') ?? 'Charges réglées dans la période.') + rec, link: '/depenses', query: this.paidQuery() },
       { id: 'rest', label: 'Reste de la période', value: sgn(v.netCents), tone: tone(v.netCents), emphasis: true, note: (this.why('bpm.resultatPeriode') ?? 'Reçu − payé, à date de règlement.') + rec },
       {
         id: 'expected',

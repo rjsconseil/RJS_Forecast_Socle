@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { BUDGET_STATE_LABEL, ProjectBudget, ProjectBudgetState, ProjectOverrun, TaskBudgetRequest } from '../../core/bpm-projects.models';
 import { CentsPipe, ShortDatePipe } from '../../core/format';
+import { RouterLink } from '@angular/router';
 import { FUNDING, FUNDING_ACTIONS } from '../ui/project-funding';
 
 /** Part d'un montant dans le budget du projet, bornée à 100 % pour la jauge. */
@@ -114,7 +115,7 @@ export class BpmOverrunRequestComponent {
 /** Demandes persistantes : le montant demandé est la nouvelle part totale de la tâche, pas un supplément. */
 @Component({
   selector: 'bpm-task-requests',
-  imports: [CentsPipe, ShortDatePipe],
+  imports: [CentsPipe, ShortDatePipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bpm-request-list">
@@ -122,7 +123,7 @@ export class BpmOverrunRequestComponent {
         <article class="bpm-request" [attr.data-status]="r.status" [attr.aria-label]="'Demande de ' + r.taskTitle">
           <div>
             <h3>{{ r.taskTitle }}</h3>
-            <p class="bpm-note">{{ r.budgetName }} · demandé le {{ r.requestedAt | shortDate }}</p>
+            <p class="bpm-note"><a class="text-link" [routerLink]="['/app/gestion-projet', r.coreProjectId]" fragment="requests-title">{{ r.budgetName }} →</a> · demandé le {{ r.requestedAt | shortDate }}</p>
             @if (r.note) { <p>{{ r.note }}</p> }
           </div>
           <dl><div><dt>Montant total demandé</dt><dd>{{ r.amountCents | cents }}</dd></div><div><dt>{{ L.share }}</dt><dd>{{ r.grantedCents | cents }}</dd></div></dl>
@@ -130,12 +131,16 @@ export class BpmOverrunRequestComponent {
             <p class="bpm-note" role="status">{{ r.statusLabel }}</p>
             @if (r.status === 'pending') {
               <div class="bpm-actions">
-                <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'approve' })">{{ act.grantShare(r.amountCents, r.taskTitle) }}</button>
+                <button class="btn btn-primary" type="button" [disabled]="busy() || !funded()" (click)="decide.emit({ request: r, decision: 'approve' })">{{ act.grantShare(r.amountCents, r.taskTitle) }}</button>
                 <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'refuse' })">{{ act.refuseRequest }}</button>
                 <button class="text-link" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'cancel' })">Annuler la demande</button>
               </div>
+              @if (!funded()) {
+                <p class="bpm-note">Demande préparée. Attribuez d’abord une enveloppe au projet pour accorder cette part.</p>
+              }
             } @else if (r.status === 'awaiting-life') {
-              <p class="bpm-note">La part dépasse l’enveloppe : le dépassement attend l’accord du projet de vie (« Décisions attendues »). La part sera accordée dès son autorisation.</p>
+              <p class="bpm-note">La part dépasse l’enveloppe : le dépassement attend l’accord du projet de vie (« Décisions attendues »). L’autorisation accorde la part si les autres parts n’ont pas changé ; sinon la demande revient au projet pour être réexaminée.</p>
+              <a class="text-link" routerLink="/projet-de-vie" fragment="life-decisions">Voir les décisions attendues →</a>
               <button class="text-link" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'cancel' })">Annuler la demande</button>
             }
           </div>
@@ -149,5 +154,6 @@ export class BpmTaskRequestsComponent {
   protected readonly act = FUNDING_ACTIONS;
   readonly requests = input.required<TaskBudgetRequest[]>();
   readonly busy = input(false);
+  readonly funded = input(true);
   readonly decide = output<{ request: TaskBudgetRequest; decision: 'approve' | 'refuse' | 'cancel' }>();
 }

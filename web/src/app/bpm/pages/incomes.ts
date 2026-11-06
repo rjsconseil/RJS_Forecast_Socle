@@ -91,7 +91,8 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
           }
 
           <section class="bm-statement" aria-labelledby="bmd-entries-title" data-ui-pattern="panel">
-            <h2 id="bmd-entries-title">Chaque montant de la période <span class="bmd-count">({{ received().length }})</span></h2>
+            <h2 id="bmd-entries-title">Reçus dans la période <span class="bmd-count">({{ received().length }})</span></h2>
+            <p class="bpm-help">{{ v.selection }}</p>
             @if (!received().length) {
               <p class="bm-empty">Aucun montant réel sur cette période.</p>
             } @else {
@@ -191,10 +192,9 @@ export class BpmIncomesPage {
   protected problem = computed(() => setupProblem(this.loader.error()));
   protected budgets = computed(() => this.d()?.context.budgets ?? []);
 
-  private lines = computed(() => [...(this.d()?.lines ?? [])].sort((a, b) => a.plannedDate.localeCompare(b.plannedDate)));
-  protected received = computed(() => this.lines().filter((l) => l.settled));
-  protected pending = computed(() => this.lines().filter((l) => !l.settled && l.status !== 'unrealized'));
-  protected unrealized = computed(() => this.lines().filter((l) => l.status === 'unrealized'));
+  protected received = computed(() => [...(this.d()?.settledLines ?? [])].sort((a, b) => (a.realizedDate ?? '').localeCompare(b.realizedDate ?? '') || a.label.localeCompare(b.label)));
+  protected pending = computed(() => this.d()?.pendingLines ?? []);
+  protected unrealized = computed(() => this.d()?.unrealizedLines ?? []);
 
   /** Phrase du bandeau (source `lead-entrees`) : le reçu et le nombre de montants réels. */
   protected lead = computed(() => {
@@ -210,7 +210,7 @@ export class BpmIncomesPage {
     return [
       { id: 'total', label: 'Reçu', value: cents(v.receivedCents), tone: 'success', emphasis: true, note: `Entrées réglées dans la période ; ${cents(v.receivedCents + v.expectedCents)} si toutes les échéances sont reçues.` },
       { id: 'planned', label: 'Encore attendu', value: cents(v.expectedCents), note: 'Échéances d’entrée non encore reçues.' },
-      { id: 'count', label: 'Montants', value: String(this.received().length), note: `${v.lines.length} ligne(s) prévue(s) dans la période.` },
+      { id: 'count', label: 'Réceptions', value: String(this.received().length), note: 'Réceptions dont la date réelle appartient à la période.' },
     ];
   });
 
@@ -222,7 +222,7 @@ export class BpmIncomesPage {
   );
 
   protected openSource(ref: string) {
-    this.router.navigate(['/argent/postes', ref], { queryParams: this.carry() });
+    this.router.navigate(['/argent/postes', ref], { queryParams: { ...this.carry(), from: 'entrees' } });
   }
   protected openLine(id: string) {
     this.ctx.setQuery({ ligne: id });

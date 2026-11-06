@@ -1,4 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
+import { settlementOutsideWindow } from './period-presentation';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -205,7 +206,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                 <summary class="bm-period-heading" data-ui-pattern="section-heading">
                   <span class="bm-section-mark" aria-hidden="true">↑</span>
                   <div>
-                    <h3>Entrées de la période</h3>
+                    <h3>Entrées prévues dans la période</h3>
                     <p>{{ !s.context.period ? 'Cycle à configurer' : register.data() ? incomeLines().length + ' entrée(s) · Budget du projet de vie' : 'Lecture en cours…' }}</p>
                   </div>
                   @if (register.data()) {
@@ -219,7 +220,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                   } @else {
                     <bpm-state [loading]="register.loading() && !register.data()" [error]="register.error()" (retry)="register.reload()" [lines]="2" />
                     @if (register.data()) {
-                      <p class="bpm-help">Entrées par poste, du plus gros au plus petit, puis par jour prévu, avec le montant réellement reçu.</p>
+                      <p class="bpm-help">Cette liste suit les dates prévues. Les règlements peuvent avoir eu lieu dans une autre période ; le chiffre « Reçu » du tableau de bord suit leur date réelle.</p>
                       @for (g of incomeGroups(); track g.key) {
                         <ng-container *ngTemplateOutlet="flowGroup; context: { $implicit: g, income: true }" />
                       } @empty {
@@ -234,7 +235,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                 <summary class="bm-period-heading" data-ui-pattern="section-heading">
                   <span class="bm-section-mark" aria-hidden="true">↓</span>
                   <div>
-                    <h3>Charges de la période</h3>
+                    <h3>Charges prévues dans la période</h3>
                     <p>{{ !s.context.period ? 'Cycle à configurer' : register.data() ? chargeLines().length + ' charge(s) · Budget du projet de vie' : 'Lecture en cours…' }}</p>
                   </div>
                   @if (register.data()) {
@@ -247,7 +248,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                     <p class="bm-empty">Aucune période tant que le cycle n'est pas configuré.</p>
                   } @else {
                     @if (register.data()) {
-                      <p class="bpm-help">Les postes les plus lourds d’abord. Ouvrez un poste, puis une charge pour voir son détail.</p>
+                      <p class="bpm-help">Cette liste suit les dates prévues, tandis que le chiffre « Dépensé » suit les dates réelles de paiement. Ouvrez une charge pour son détail. Les projets de la vie y contribuent seulement par leurs règlements validés depuis l’attribution de leur enveloppe.</p>
                       @for (g of chargeGroups(); track g.key) {
                         <ng-container *ngTemplateOutlet="flowGroup; context: { $implicit: g, income: false }" />
                       } @empty {
@@ -488,6 +489,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                 <span class="expense-date">
                   <small>Date prévue</small>{{ l.plannedDate | shortDate }}
                   @if (l.realizedDate && l.realizedDate !== l.plannedDate) { <small>{{ income ? 'Réception réelle' : 'Date de paiement' }} · {{ l.realizedDate | shortDate }}</small> }
+                  @if (outsideWindow(l)) { <small class="chip">Réglé hors de cette période</small> }
                 </span>
                 <span class="expense-main">
                   <strong>{{ l.label }}</strong>
@@ -651,7 +653,7 @@ export class BpmDashboard {
         ],
         note: (this.reason('bpm.charges') ?? 'Payé sur la période.') + recorded,
         link: '/depenses',
-        query,
+        query: { ...query, dateBasis: 'realized', status: 'settled' },
       },
       {
         id: 'rest',
@@ -776,6 +778,7 @@ export class BpmDashboard {
   protected amountOf(l: RegisterLine) {
     return l.settled && l.realizedCents !== null ? l.realizedCents : l.plannedCents;
   }
+  protected outsideWindow = (line: RegisterLine) => settlementOutsideWindow(line, this.register.data()?.window);
   private total = (lines: RegisterLine[]) => lines.reduce((sum, l) => sum + this.amountOf(l), 0);
   protected incomeTotal = computed(() => this.total(this.incomeLines()));
   protected chargeTotal = computed(() => this.total(this.chargeLines()));

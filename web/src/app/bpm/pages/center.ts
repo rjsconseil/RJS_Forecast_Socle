@@ -13,6 +13,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
   'tableau-de-bord': { label: 'Tableau de bord', link: '/tableau-de-bord', back: 'Retour au tableau de bord' },
   piloter: { label: 'Graphiques et chiffres', link: '/piloter', back: 'Retour aux graphiques et chiffres' },
   depenses: { label: 'Dépenses de la période', link: '/depenses', back: 'Retour aux dépenses de la période' },
+  entrees: { label: 'Détail des entrées', link: '/argent/entrees', back: 'Retour au détail des entrées' },
 };
 
 /**
@@ -57,6 +58,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
             <span class="chip">{{ d.center.standard ? 'Poste standard' : 'Poste personnel' }}</span>
             {{ d.basis.label }}
           </p>
+          <p class="bpm-help">{{ d.selection }}</p>
 
           @if (!isIncome()) {
             <section class="bm-statement bmd-caps" aria-labelledby="bmd-cap-title" data-ui-pattern="panel" data-bpm-frame="chart">
@@ -108,7 +110,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
           }
 
           <section class="bm-statement" aria-labelledby="bmd-entries-title" data-ui-pattern="panel">
-            <h2 id="bmd-entries-title">Chaque montant de la période <span class="bmd-count">({{ settled().length }})</span></h2>
+            <h2 id="bmd-entries-title">{{ isIncome() ? 'Reçus dans la période' : 'Paiements de la période' }} <span class="bmd-count">({{ settled().length }})</span></h2>
             @if (!settled().length) {
               <p class="bm-empty">
                 Aucun montant réel sur cette période.
@@ -142,9 +144,8 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
             <section class="bm-statement" aria-labelledby="bmd-pending-title" data-ui-pattern="panel">
               <h2 id="bmd-pending-title">{{ isIncome() ? 'Encore attendu' : 'Encore prévu' }} d’ici la fin de la période <span class="bmd-count">({{ open().length }})</span></h2>
               <p class="bpm-help">
-                {{ d.totals.lineCount }} ligne(s) · prévu {{ d.totals.plannedCents | cents }}
-                @if (d.totals.unrealizedCents) { · non réalisé {{ d.totals.unrealizedCents | cents }} }
-                — échéances du Budget du projet de vie sélectionnées par date prévue.
+                {{ open().length }} échéance(s) · restant prévu {{ d.center.remainingCents | cents }}.
+                Ces échéances suivent leur date prévue ; les règlements ci-dessus suivent leur date réelle.
               </p>
               <ul class="bmd-rest-lines">
                 @for (l of open(); track l.id) {
@@ -163,6 +164,18 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
                       <a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Voir le détail : ' + l.label">Voir le détail</a>
                     </span>
                   </li>
+                }
+              </ul>
+            </section>
+          }
+
+          @if (unrealized().length) {
+            <section class="bm-statement" aria-labelledby="bmd-unrealized-title" data-ui-pattern="panel">
+              <h2 id="bmd-unrealized-title">Non réalisées à la clôture <span class="bmd-count">({{ unrealized().length }})</span></h2>
+              <p class="bpm-help">Ces échéances ne sont pas incluses dans le restant prévu de la période clôturée. Ouvrez leur détail pour consulter les actions encore disponibles.</p>
+              <ul class="bmd-rest-lines">
+                @for (l of unrealized(); track l.id) {
+                  <li><span>{{ l.plannedDate | shortDate }} · {{ l.label }}<small>{{ l.statusLabel }}</small></span><span class="bmd-pending-end">{{ l.plannedCents | cents }}<a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Voir le détail : ' + l.label">Voir le détail</a></span></li>
                 }
               </ul>
             </section>
@@ -226,9 +239,9 @@ export class BpmCenterPage {
     if (!c) return 'Détail du poste';
     return c.direction === 'income' ? `La source ${c.label}` : `Le poste ${c.label}`;
   });
-  private lines = computed(() => [...(this.read.data()?.lines ?? [])].sort((a, b) => a.plannedDate.localeCompare(b.plannedDate)));
-  protected settled = computed(() => this.lines().filter((l) => l.settled));
-  protected open = computed(() => this.lines().filter((l) => !l.settled));
+  protected settled = computed(() => [...(this.read.data()?.settledLines ?? [])].sort((a, b) => (a.realizedDate ?? '').localeCompare(b.realizedDate ?? '') || a.label.localeCompare(b.label)));
+  protected open = computed(() => this.read.data()?.pendingLines ?? []);
+  protected unrealized = computed(() => this.read.data()?.unrealizedLines ?? []);
   /** Phrase du bandeau (source `lead-poste`) : le réglé et le nombre de montants réels. */
   protected lead = computed(() => {
     const c = this.read.data()?.center;
@@ -306,7 +319,7 @@ export class BpmCenterPage {
     const tiles: MetricTile[] = [
       { id: 'total', label: income ? 'Reçu' : 'Payé', value: cents(c.paidCents), tone: income ? 'success' : null, emphasis: true, note: 'Selon la date réelle de règlement dans la période.' },
       { id: 'planned', label: income ? 'Encore attendu' : 'Encore prévu', value: cents(c.remainingCents), note: 'Échéances de la période non réglées.' },
-      { id: 'count', label: 'Montants', value: String(this.settled().length), note: `${d.lines.length} ligne(s) prévue(s) dans la période.` },
+      { id: 'count', label: income ? 'Réceptions' : 'Paiements', value: String(this.settled().length), note: 'Règlements dont la date réelle appartient à la période.' },
     ];
     const basisText = income ? 'Part des entrées reçues' : d.basis.kind === 'received' ? 'Sur 100 € reçus dans la période' : 'Sur 100 € dépensés dans la période';
     tiles.push({

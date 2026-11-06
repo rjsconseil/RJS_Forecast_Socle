@@ -7,6 +7,7 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { BpmProjectDetail, BpmTaskCard } from '../../core/bpm-projects.models';
 import { BpmProjectPage } from './project.page';
 import { BpmTaskEditor } from './project-editors';
+import { BpmProjectMetricsComponent } from './project-metrics';
 
 const task = (id: string, title: string, status = 'todo') =>
   ({
@@ -90,7 +91,7 @@ async function setup(render = false) {
       provideRouter([]),
       { provide: Api, useValue: api },
       { provide: BpmApi, useValue: bpm },
-      { provide: ActivatedRoute, useValue: { paramMap: params, fragment: of(null) } },
+      { provide: ActivatedRoute, useValue: { paramMap: params, fragment: of(null), queryParamMap: of(convertToParamMap({ lifePeriod: '2026-09' })) } },
     ],
   });
   if (!render) TestBed.overrideComponent(BpmProjectPage, { set: { template: '' } });
@@ -348,6 +349,57 @@ describe('cockpit du projet', () => {
     expect(page.editingTask()).toBeNull();
     expect(page.query()).toBe('');
   });
+
+  it.each([
+    { label: 'avant l’enveloppe', regime: true, validated: false, beforeAllocation: true, expected: 'Sa date réelle précède l’attribution' },
+    { label: 'sans enveloppe', regime: false, validated: false, beforeAllocation: false, expected: 'Ce projet n’a pas d’enveloppe' },
+    { label: 'sur l’enveloppe', regime: true, validated: true, beforeAllocation: false, expected: 'remonté au budget du projet de vie à sa date réelle' },
+  ])('explique le règlement $label à partir de la lecture du middleware, sans changer la date prévue', async ({ regime, validated, beforeAllocation, expected }) => {
+    const { page, bpm, state } = await setup();
+    state.budget!.regime = regime;
+    const charge = { id: 'op_date', operationId: 'op_date', kind: 'operation', taskId: 'tsk_1', label: 'Devis avancé', plannedDate: '2027-02-05', plannedCents: 4000, revision: 2, settled: false } as any;
+    state.charges = [charge];
+    const realizeOperation = vi.fn(async () => {
+      state.charges = [{ ...charge, settled: true, realizedDate: '2026-11-05', realizedCents: 4500, validated, beforeAllocation }];
+    });
+    Object.assign(bpm, { realizeOperation });
+    const form = document.createElement('form');
+    form.innerHTML = '<input name="date" value="2026-11-05"><input name="amount" value="45">';
+    await page.settle(charge, form.elements);
+    expect(realizeOperation).toHaveBeenCalledExactlyOnceWith('op_date', { expectedRevision: 2, realizedDate: '2026-11-05', realizedAmount: 45, fund: undefined });
+    expect(state.charges[0].plannedDate).toBe('2027-02-05');
+    expect(page.notice().text).toContain(expected);
+    if (!validated) expect(page.notice().text).not.toContain('Il est remonté');
+  });
+
+  it('permet de retrouver et modifier une dépense depuis sa tâche tout en conservant la tâche ouverte', async () => {
+    const { page, state, bpm } = await setup();
+    const line = { id: 'op_1', taskId: 'tsk_1', plannedDate: '2027-02-05' } as any;
+    page.showTask(state.tasks[0], 'charges');
+    page.openCharge(line);
+    expect(page.lineId()).toBe('op_1');
+    page.editCharge(line);
+    expect(page.lineId()).toBeNull();
+    expect(page.editingLine()).toBe(line);
+    expect(page.editorOpen()).toBe(true);
+    expect(page.openTaskId()).toBe('tsk_1');
+    const reads = bpm.projectDetail.mock.calls.length;
+    await page.onSaved('Date prévue modifiée.');
+    expect(page.editorOpen()).toBe(false);
+    expect(page.editingLine()).toBeNull();
+    expect(page.openTaskId()).toBe('tsk_1');
+    expect(bpm.projectDetail.mock.calls.length).toBeGreaterThan(reads);
+  });
+
+  it('conserve la période du projet de vie pour le retour sans présenter la fiche projet comme historique', async () => {
+    const { fixture, page } = await setup(true);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const back = [...root.querySelectorAll<HTMLAnchorElement>('a')].find((a) => a.textContent?.includes('Projet de vie · financement'))!;
+    expect(back.getAttribute('href')).toBe('/projet-de-vie?period=2026-09#life-funding');
+    expect(root.querySelector('.project-reading-scope')?.textContent).toContain('toute la durée du projet');
+    expect(page.lifePeriod()).toBe('2026-09');
+  });
 });
 
 describe('création depuis un projet', () => {
@@ -370,5 +422,34 @@ describe('création depuis un projet', () => {
     expect(createTask).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Nouvelle tâche', projectId: 'prj_1' }),
     );
+  });
+});
+
+describe('repères budgétaires du projet et estimation de la tâche', () => {
+  it.each([
+    { remaining: -100, label: 'Enveloppe dépassée', tone: 'red' },
+    { remaining: 0, label: 'Enveloppe épuisée', tone: 'red' },
+    { remaining: 1999, label: 'Budget presque épuisé', tone: 'red' },
+    { remaining: 2000, label: 'Budget à surveiller', tone: 'orange' },
+    { remaining: 5000, label: 'Budget disponible', tone: 'green' },
+    { remaining: null, label: 'Consommation à estimer', tone: 'unknown' },
+  ])('nomme correctement un reste de $remaining centimes', ({ remaining, label, tone }) => {
+    const f = TestBed.createComponent(BpmProjectMetricsComponent);
+    f.componentRef.setInput('budget', { ...detail().budget, regime: true, ceilingCents: 10000, remainingCents: remaining });
+    f.detectChanges();
+    const root: HTMLElement = f.nativeElement;
+    expect(root.querySelector('.pm-signal')?.textContent).toContain(label);
+    expect(root.querySelector('.pm-budget')?.getAttribute('data-tone')).toBe(tone);
+  });
+
+  it('distingue un dépassement estimé selon le temps des règlements réellement payés', () => {
+    const f = TestBed.createComponent(BpmProjectMetricsComponent);
+    const t = task('tsk_1', 'Finir');
+    f.componentRef.setInput('task', { ...t, budget: { ...t.budget, shareCents: 10000, paidCents: 1000, timeConsumedCents: 12000, timeRemainingCents: -2000, timeConsumptionPercent: 120 } });
+    f.detectChanges();
+    const root: HTMLElement = f.nativeElement;
+    expect(root.querySelector('.pm-signal')?.textContent).toContain('Estimation au-delà de la part');
+    expect(root.textContent).toContain('Estimation au prorata du temps saisi');
+    expect(root.querySelector('.pm-metric-caption')?.textContent).not.toContain('Réglé sur l’enveloppe');
   });
 });

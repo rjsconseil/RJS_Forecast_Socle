@@ -97,6 +97,7 @@ export interface RegisterLine {
 }
 
 export interface RegisterQuery {
+  dateBasis?: 'planned' | 'realized';
   period?: string;
   from?: string;
   to?: string;
@@ -122,6 +123,7 @@ export const CHARGE_NATURE_LABEL: Record<ChargeNature, string> = {
 };
 
 export interface BpmRegister {
+  dateBasis?: 'planned' | 'realized';
   context: BpmContextInfo;
   window: { from: string; to: string; kind: 'period' | 'custom' };
   selection: string;
@@ -168,8 +170,17 @@ export interface LineDetail {
   settlements: { operationId: string; occurrenceDate: string | null; plannedCents: number; realizedCents: number; realizedDate: string; outsidePeriod: boolean }[];
   ids: { lineId: string; operationId: string | null; recurrenceId: string | null; budgetId: string; taskId: string | null };
   /** Projet de la vie qui porte l'échéance ; null pour le budget de vie. */
-  project?: { budgetId: string; coreProjectId: string; name: string; funded: boolean; allocationDate: string | null; taskTitle: string | null } | null;
-  actions: { canSettle: boolean; canCancelSettlement: boolean; canEdit: boolean; settlementPolicy: string };
+  project?: { budgetId: string; coreProjectId: string; name: string; funded: boolean; taskFundingRequired?: boolean; allocationDate: string | null; taskTitle: string | null; inclusion?: 'included' | 'before-allocation' | 'unfunded' | 'pending' | 'income' } | null;
+  timing?: { plannedPeriod: LinePeriod | null; realizedPeriod: LinePeriod | null };
+  actions: { canSettle: boolean; canCancelSettlement: boolean; canEdit: boolean; settlementPolicy: string; editReason?: string | null };
+}
+
+export interface LinePeriod {
+  key: string;
+  label: string;
+  start: string;
+  end: string;
+  status: 'closed' | 'ended' | 'current' | 'future';
 }
 
 export interface CenterRow {
@@ -196,6 +207,11 @@ export interface BpmCenterDetail {
   center: CenterRow & { direction: Direction; directionLabel: string };
   basis: BpmCenters['basis'];
   lines: RegisterLine[];
+  /** Paiements par date réelle ; échéances ouvertes/non réalisées par date prévue. */
+  settledLines: RegisterLine[];
+  pendingLines: RegisterLine[];
+  unrealizedLines: RegisterLine[];
+  selection: string;
   totals: BpmRegister['totals'];
   /** Plafond du centre sur la période (charges seulement) et catégories rangées dans ce centre. */
   cap: CenterCapRow | null;
@@ -209,6 +225,10 @@ export interface BpmIncomes {
   expectedCents: number;
   sources: { ref: string; label: string; receivedCents: number; expectedCents: number; sharePct: number | null }[];
   lines: RegisterLine[];
+  settledLines: RegisterLine[];
+  pendingLines: RegisterLine[];
+  unrealizedLines: RegisterLine[];
+  selection: string;
 }
 
 export interface Reconciliation {
@@ -405,6 +425,8 @@ export interface LifeGoal {
 
 /** Saisie de l'éditeur partagé (euros en nombre à la frontière ; l'API convertit en centimes). */
 export interface EntryInput {
+  /** Règlement financé atomiquement par le middleware Budget après décision explicite. */
+  fund?: boolean;
   requestKey?: string;
   budgetId?: string;
   direction: Direction;

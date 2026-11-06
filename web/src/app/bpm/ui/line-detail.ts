@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
@@ -75,7 +76,7 @@ interface PendingOverrun {
                     attend déjà votre décision : décidez-la d’abord, puis revenez régler cette dépense.
                   </p>
                   <div class="bpm-actions">
-                    <a class="btn btn-primary" routerLink="/projet-de-vie" fragment="life-decisions" (click)="closed.emit()">Voir les décisions attendues</a>
+                    <a class="btn btn-primary" routerLink="/projet-de-vie" fragment="life-decisions" (click)="followLink()">Voir les décisions attendues</a>
                     <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="actionError.set(null)">Garder la dépense prévue</button>
                   </div>
                 }
@@ -136,8 +137,10 @@ interface PendingOverrun {
               }
               <div><dt>Tâche</dt><dd>{{ v.line.taskTitle ?? '—' }}</dd></div>
               <div><dt>Date prévue</dt><dd>{{ date(v.line.plannedDate) }}</dd></div>
+              @if (v.timing?.plannedPeriod; as p) { <div><dt>Cycle prévu</dt><dd>{{ p.label }}</dd></div> }
               <div><dt>Montant prévu</dt><dd class="num">{{ c(v.line.plannedCents) }}</dd></div>
               <div><dt>Date réelle</dt><dd>{{ v.line.realizedDate ? date(v.line.realizedDate) : '—' }}</dd></div>
+              @if (v.timing?.realizedPeriod; as p) { <div><dt>Cycle du règlement</dt><dd>{{ p.label }}</dd></div> }
               <div><dt>Montant réel</dt><dd class="num">{{ v.line.realizedCents === null ? '—' : c(v.line.realizedCents) }}</dd></div>
               <div><dt>Différence (réel − prévu)</dt><dd class="num">{{ v.line.differenceCents === null ? '—' : s(v.line.differenceCents) }}</dd></div>
             </dl>
@@ -158,11 +161,18 @@ interface PendingOverrun {
           }
 
           @if (v.project; as p) {
-            <p class="bld-project">
-              Dépense du projet <a [routerLink]="['/app/gestion-projet', p.coreProjectId]" (click)="closed.emit()">{{ p.name }}</a>
+            <section class="bld-project">
+              <p>{{ v.line.direction === 'income' ? 'Entrée' : 'Dépense' }} du projet <a [routerLink]="['/app/gestion-projet', p.coreProjectId]" [queryParams]="{ period: v.timing?.realizedPeriod?.key ?? period() }" (click)="followLink()">{{ p.name }}</a>
               @if (p.taskTitle) { · tâche « {{ p.taskTitle }} » }
-              · {{ p.funded ? 'enveloppe attribuée le ' + date(p.allocationDate!) : 'sans budget attribué (hors budget de vie)' }}
-            </p>
+              · {{ p.funded ? 'enveloppe attribuée le ' + date(p.allocationDate!) : 'sans enveloppe attribuée' }}</p>
+              <p class="bpm-help">{{ inclusionText(v) }}</p>
+              @if (!p.funded && p.taskFundingRequired && v.line.direction === 'charge') {
+                <a class="btn btn-primary" [routerLink]="['/app/gestion-projet', p.coreProjectId]" fragment="enveloppe" (click)="followLink()">Attribuer une enveloppe au projet</a>
+              }
+              @if (p.inclusion === 'included') {
+                <a class="btn btn-secondary" routerLink="/projet-de-vie" [queryParams]="{ period: v.timing?.realizedPeriod?.key ?? period() }" fragment="life-funding-title" (click)="followLink()">Voir la prise en charge du projet de vie</a>
+              }
+            </section>
           }
           @if (v.actions.canSettle) {
             <section>
@@ -176,7 +186,7 @@ interface PendingOverrun {
               }
               <p class="bpm-help">{{ v.actions.settlementPolicy }}</p>
               <div class="bpm-actions">
-                <button type="button" class="btn btn-primary" (click)="settle(v)" [disabled]="busy()">{{ settleConfirmation() ? 'Confirmer le paiement malgré l’alerte' : v.line.direction === 'income' ? 'Reçu' : 'Payé' }}</button>
+                <button type="button" class="btn btn-primary" (click)="settle(v)" [disabled]="busy()">{{ settleConfirmation() ? 'Confirmer le règlement malgré l’alerte' : v.line.direction === 'income' ? 'Reçu' : 'Payé' }}</button>
               </div>
             </section>
           }
@@ -229,7 +239,7 @@ interface PendingOverrun {
             @if (v.actions.canEdit) {
               <button type="button" class="btn btn-primary" (click)="edit.emit(v.line)">Modifier</button>
             } @else {
-              <p class="bpm-help">Opération d'une période close : modification financière protégée.</p>
+              <p class="bpm-help">{{ v.actions.editReason ?? 'Opération d’une période close : modification financière protégée.' }}</p>
             }
           }
           <button type="button" class="btn btn-secondary" (click)="closed.emit()">Fermer</button>
@@ -240,6 +250,16 @@ interface PendingOverrun {
 })
 export class BpmLineDetail {
   private bpm = inject(BpmApi);
+  private router = inject(Router);
+  private followingLink = false;
+  constructor() {
+    // La fermeture du registre retire sa sélection dans l'URL. Elle doit attendre
+    // la destination du lien, sinon elle annule la navigation vers le projet.
+    this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
+      if (this.followingLink && event instanceof NavigationEnd) this.closed.emit();
+    });
+  }
+  protected followLink() { this.followingLink = true; }
   private refresh = inject(BpmRefresh);
   readonly lineId = input.required<string>();
   readonly period = input<string | undefined>(undefined);
@@ -254,6 +274,10 @@ export class BpmLineDetail {
   protected busy = signal(false);
   protected message = signal<string | null>(null);
   protected actionError = signal<ApiError | null>(null);
+  private refusedFor = signal<string | null>(null);
+  private settlementSignature() {
+    return JSON.stringify({ lineId: this.lineId(), date: this.realDate(), amount: this.realAmount() });
+  }
   protected realDate = signal(new Date().toISOString().slice(0, 10));
 
   /** Avertissements avant règlement : cas acceptés mais rarement voulus (hors enveloppe, année probablement erronée). */
@@ -262,7 +286,7 @@ export class BpmLineDetail {
     const out: string[] = [];
     if (!d || v.line.direction !== 'charge') return out;
     const p = v.project;
-    if (p && !p.funded) out.push(`« ${p.name} » n’a pas encore d’enveloppe : ce règlement restera dans l’historique du projet, hors budget de vie.`);
+    if (p && !p.funded && !p.taskFundingRequired) out.push(`« ${p.name} » n’a pas encore d’enveloppe : ce règlement restera dans l’historique du projet, hors budget de vie.`);
     else if (p?.allocationDate && d < p.allocationDate)
       out.push(`Date antérieure à l’attribution de l’enveloppe (${this.date(p.allocationDate)}) : ce règlement restera dans l’historique du projet, hors enveloppe et hors budget de vie.`);
     const gap = (Date.parse(v.line.plannedDate) - Date.parse(d)) / 86400000;
@@ -276,9 +300,23 @@ export class BpmLineDetail {
   protected c = cents;
   protected s = signedCents;
   protected date = shortDate;
+  protected inclusionText(v: LineDetail): string {
+    switch (v.project?.inclusion) {
+      case 'included': return 'Ce règlement est compris dans le Dépensé du projet de vie à sa date réelle, une seule fois.';
+      case 'before-allocation': return 'Ce règlement précède l’attribution : il reste dans l’historique du projet, hors enveloppe et hors Dépensé du projet de vie.';
+      case 'unfunded': return v.project?.taskFundingRequired ? 'Attribuez une enveloppe à ce projet avant de régler ses dépenses. Vous pouvez préparer les échéances et les demandes des tâches dès maintenant.' : 'Ce projet n’a pas d’enveloppe. Ses règlements restent dans son historique ; attribuer une enveloppe ne reprend pas les paiements antérieurs.';
+      case 'income': return 'Cette entrée appartient au budget du projet. Elle ne devient pas automatiquement une entrée du projet de vie ; les retours au projet de vie se pilotent depuis la tâche.';
+      case 'pending': return 'Cette dépense est prévue dans le projet. Elle remontera au Dépensé du projet de vie lors de son règlement, selon sa date réelle et l’attribution de l’enveloppe.';
+      default: return '';
+    }
+  }
 
   /** Règle l'échéance. `fund` : la part et le dépassement nécessaires sont accordés par le middleware dans la même écriture. */
   async settle(v: LineDetail, fund?: { notice: string }) {
+    if (this.busy()) return;
+    const signatureAtStart = this.settlementSignature();
+    // Une autorisation proposée pour un montant ne vaut jamais pour une autre saisie.
+    const fundCurrent = !!fund && this.refusedFor() === signatureAtStart;
     const amount = this.realAmount() ? parseAmount(this.realAmount()) : undefined;
     if (amount === 'invalid' || (typeof amount === 'number' && amount <= 0)) {
       this.actionError.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Montant réel positif attendu.' }));
@@ -298,12 +336,14 @@ export class BpmLineDetail {
             ? { recurrenceId: v.line.recurrenceId, occurrenceDate: v.line.occurrenceDate }
             : { replaceId: v.line.operationId ?? v.line.id }),
         };
-        let signature: string | null = null;
+        const warnings = this.settleWarnings(v);
+        let signature: string | null = warnings.length ? JSON.stringify({ input, warnings }) : null;
+        if (warnings.length) this.message.set(warnings.join(' ') + ' Confirmez ce règlement si ces dates sont voulues.');
         try {
           const preview = await this.bpm.previewCaps(input);
           if (preview.alerts.length) {
-            signature = JSON.stringify({ input, alerts: preview.alerts });
-            this.message.set(`Attention avant paiement (${preview.period.label}) : ${preview.alerts.map(capAlertText).join(' ; ')}. Le paiement reste autorisé.`);
+            signature = JSON.stringify({ input, warnings, alerts: preview.alerts });
+            this.message.set(`${warnings.join(' ')} Attention avant paiement (${preview.period.label}) : ${preview.alerts.map(capAlertText).join(' ; ')}. Le paiement reste autorisé.`);
           }
         } catch {
           signature = JSON.stringify({ input, unavailable: true });
@@ -314,18 +354,23 @@ export class BpmLineDetail {
           return;
         }
       }
+      if (signatureAtStart !== this.settlementSignature()) {
+        this.message.set('La saisie a changé pendant la vérification. Vérifiez la date et le montant, puis relancez le règlement.');
+        return;
+      }
       const r =
         v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate
-          ? await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body, fund: !!fund })
-          : await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body, fund: !!fund });
+          ? await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body, fund: fundCurrent })
+          : await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body, fund: fundCurrent });
       // Un plafond dépassé est signalé, jamais bloquant : le règlement est enregistré.
       const done = v.line.direction === 'income' ? 'Entrée marquée reçue.' : 'Charge marquée payée.';
-      this.message.set(withCapAlerts(fund ? `${fund.notice} ${done}` : done, r.capAlerts));
+      this.message.set(withCapAlerts(fundCurrent ? `${fund!.notice} ${done}` : done, r.capAlerts));
       this.settleConfirmation.set(null);
       this.settleKey = newRequestKey('settle');
       this.refresh.bump();
     } catch (e) {
       this.actionError.set(toApiError(e));
+      this.refusedFor.set(signatureAtStart);
     } finally {
       this.busy.set(false);
     }
@@ -333,6 +378,7 @@ export class BpmLineDetail {
 
   /** Refus « dépassement à autoriser » : le budget de vie peut l'accorder ici et enchaîner le règlement. */
   protected overrun = computed(() => {
+    if (this.refusedFor() !== this.settlementSignature()) return null;
     const e = this.actionError();
     if (e?.body.code !== 'OVERRUN_AUTHORIZATION_REQUIRED') return null;
     const x = e.body.details as unknown as { budgetId: string; taskId: string | null; overrunCents: number };
@@ -345,6 +391,7 @@ export class BpmLineDetail {
 
   /** Refus « part de tâche insuffisante » (projet en mode strict) : la part peut être portée au montant nécessaire ici. */
   protected shareGap = computed(() => {
+    if (this.refusedFor() !== this.settlementSignature()) return null;
     const e = this.actionError();
     const x = e?.body.details as unknown as ShareGap | undefined;
     return x?.reason === 'task-share' && x.budgetId && x.taskId ? x : null;
