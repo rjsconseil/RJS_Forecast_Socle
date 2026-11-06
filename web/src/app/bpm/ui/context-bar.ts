@@ -19,7 +19,7 @@ import { BpmContextInfo } from '../../core/bpm-models';
           >
           @if (!scopeOnly()) {
             <span class="bctx-scope"
-              ><small>Utilisateur</small><strong>{{ c.user.label }}</strong></span
+              ><small>Profil financier</small><strong>{{ c.user.label }}</strong></span
             >
           }
         }

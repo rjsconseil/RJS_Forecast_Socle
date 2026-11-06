@@ -345,3 +345,58 @@ La matrice de recette « exigence → page/service → preuve → statut » est 
 Les comportements provisoires sont marqués **[P]** dans le code et rendus administrables ou réversibles :
 flux monétaires père/enfants (C05, non calculés, contrôle `not-run`), réalisation automatique (C06), cycle
 mensuel et clôture explicite (C07), centres standards (C08), formule du stock (C09), objectif informatif (C10).
+
+### Plafonds par centre et catégorie
+
+La page **Ma vision budgétaire → Plafonds et catégories** (`/plafonds`) regroupe le paramétrage
+et la revue des charges de la période. Les deux plafonds sont indépendants : une catégorie
+peut dépasser alors que son centre reste dans son plafond, et inversement. L’engagé est la
+somme du payé et du prévu non encore réglé. Les catégories sont stockées dans le middleware
+Budget et utilisables pour les opérations ponctuelles comme pour les récurrences.
+
+Avant la création, la modification ou le paiement d’une charge, un aperçu sans écriture
+signale les dépassements. L’utilisateur peut toujours confirmer malgré l’alerte. Pour une
+récurrence, l’aperçu porte sur la période actuelle ou sa première période si elle commence
+plus tard ; les règlements existants restent inchangés. Les dates utilisent les bornes du
+cycle de l’utilisateur. La revue détaille les charges contributrices, les marges des autres
+centres et le solde prévu : une marge sous un plafond n’est pas de l’argent disponible.
+
+**Jeu de démonstration persistant**, API démarrée : `npm run seed:plafonds`.
+Sélectionner **TEST PLAFONDS · Dépassements**, puis `/plafonds`. Le jeu ajoute un utilisateur
+sans réinitialiser le site ni modifier les autres utilisateurs. Une nouvelle exécution
+conserve le jeu déjà présent et les modifications qui lui auraient été apportées.
+
+| Cas de la période de génération | Engagé | Plafond | Résultat |
+| --- | ---: | ---: | --- |
+| Centre Alimentation | 430 € | 400 € | +30 € |
+| Catégorie Courses du quotidien | 270 € | 250 € | +20 € |
+| Catégorie Cinéma, centre Loisirs encore dans son plafond | 60 € | 40 € | +20 € |
+| Centre Transport, catégorie Carburant encore dans son plafond | 170 € | 150 € | +20 € |
+| Catégorie Cadeaux, centre Divers sans plafond | 65 € | 50 € | +15 € |
+
+Le jeu comprend 11 charges (dont deux récurrences), 7 catégories, 400 € de marge sur les
+centres non dépassés, 65 € à compenser sans double comptage et un solde prévu de −35 €.
+Les données sont conservées dans `api/data/store.json` ; la sauvegarde complète du site doit
+inclure ce fichier. Les tests automatisés utilisent des stockages temporaires distincts.
+
+### Présentation et navigation du module BPM
+
+Les grandes sections utilisent chacune leur couleur, avec des boutons, bandeaux et formulaires
+cohérents. **Ma vision budgétaire** propose trois pages dans sa navigation : **Tableau de bord**,
+**Gestion du projet de vie** et **Plafonds et catégories**. Les détails des dépenses restent accessibles
+depuis les montants et les liens contextuels.
+
+La gestion du projet de vie réunit les objectifs d’épargne et d’excédent, le cap patrimonial,
+les objectifs datés et la projection, ainsi que le budget type dans des panneaux repliables.
+La page des plafonds distingue trois espaces : **Suivi et pilotage**, **Définir les plafonds** et
+**Créer les catégories**. Chaque plafond se règle indépendamment après sélection du poste ou de la catégorie.
+
+Le **Calendrier BPM** (`/calendrier-budget`) permet de personnaliser les sources, les informations
+des événements, la densité des cases et les indicateurs de journée. Ces préférences sont mémorisées
+par profil dans le navigateur, sans modifier les données financières. Sur ordinateur, les vues
+mensuelle et annuelle partagent un cadre carré ; le panneau d’événements prend la même hauteur et
+défile indépendamment. Les commandes principales sont regroupées à droite avec des boutons de 48 px.
+Sur petit écran, le panneau passe sous le calendrier et la grille peut défiler horizontalement.
+
+Les fichiers JSON de `api/data/` et les sources JSON importées sont versionnés avec le site.
+Les verrous temporaires, les dépendances, les fichiers de compilation et `.DS_Store` restent exclus.

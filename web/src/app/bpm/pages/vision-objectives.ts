@@ -105,7 +105,7 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
       <header data-ui-pattern="section-heading">
         <span class="objectives-eyebrow">Sur toute votre vie</span>
         <h2 id="wealth-objectives-title">Cap patrimonial</h2>
-        <p>Objectif de stock du Patrimoine unique. Atteindre le cap ne ferme ni le user ni son projet de vie.</p>
+        <p>Objectif de stock du Patrimoine unique. Atteindre le cap ne ferme ni le profil financier ni son projet de vie.</p>
       </header>
       <bpm-state [loading]="summary().loading() && !summary().data()" [error]="summary().error()" (retry)="summary().reload()" />
       @if (summary().data()) {
@@ -155,7 +155,11 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
           [detail]="stock() === null ? 'Stock à renseigner.' : objective() === null ? 'Objectif de stock non défini.' : 'Estimation après la période : ' + signed(stockAfter()) + '.'"
         />
       }
-      <p class="bpm-help">L’objectif de stock se règle à l’étape Patrimoine de <a routerLink="/creer">Partir de zéro</a>.</p>
+      @if (inlineWealthEditor()) {
+        <ng-content select="[wealthEditor]" />
+      } @else {
+        <p class="bpm-help">L’objectif de patrimoine se règle à l’étape Patrimoine de <a routerLink="/creer">Démarrer un projet</a>.</p>
+      }
     </section>
   `,
 })
@@ -169,6 +173,8 @@ export class BpmVisionObjectives {
   /** Apport par période de la projection, déjà rédigé par la page. */
   readonly contribution = input.required<string>();
   readonly saved = output<string>();
+  /** Permet au cockpit du projet de vie de régler le cap sans quitter la page. */
+  readonly inlineWealthEditor = input(false);
 
   protected vision = computed<Vision | null>(() => this.profile().data()?.principal.vision ?? null);
   protected surplus = computed(() => this.directives().data()?.surplus ?? null);

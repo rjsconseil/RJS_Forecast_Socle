@@ -56,7 +56,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
             [disabled]="!data()"
             (click)="cycleOpen.set(true)"
           >
-            Suivi & cycle
+            Suivi et cycle
             @if (data()?.life?.pendingRequests?.length) {
               <span class="life-alert-count">{{ data()!.life.pendingRequests.length }}</span>
             }
@@ -237,7 +237,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                       ><strong>{{
                         expandedProjects().has(p.project.id)
                           ? 'Masquer les tâches'
-                          : 'Tâches & détails'
+                          : 'Tâches et détails'
                       }}</strong
                       ><span
                         >{{ p.view.time.taskCount }} tâche(s)
@@ -470,7 +470,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                         <h4>Les tâches du projet</h4>
                         <p class="bpm-note">
                           Consommation estimée selon le temps saisi · Seuls les règlements validés
-                          sont facturés au budget de vie.
+                          sont facturés au budget du projet de vie.
                         </p>
                       </div>
                       <button
@@ -568,7 +568,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
           <rjs-modal
             [open]="cycleOpen()"
             [headed]="true"
-            title="Suivi du budget de vie & fin de cycle"
+            title="Suivi du projet de vie et fin de cycle"
             [busy]="busy()"
             (closed)="cycleOpen.set(false)"
           >

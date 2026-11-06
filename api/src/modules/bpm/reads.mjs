@@ -6,7 +6,7 @@
 import { fail } from '../../socle/errors.mjs';
 import { date, money, oneOf } from '../../socle/validation.mjs';
 import { CADENCES, PER_YEAR, monthlyAverageCents, occurrenceDates, parseOccurrenceKey } from '../budget/recurrence.mjs';
-import { addDays, today } from './periods.mjs';
+import { addDays, today, periodContaining } from './periods.mjs';
 import { GOAL_TYPES, project } from './projection.mjs';
 import { fundedStandardsOf, specialProjectLines } from './projects.mjs';
 import { essentialRefsOf, NATURES, NATURE_LABEL, natureOf } from './natures.mjs';
@@ -486,16 +486,76 @@ export function createReads(socle, h) {
 
   /**
    * Alertes de plafond touchées par une dépense, dans la période de sa date (lecture après écriture).
-   * Une date hors des périodes lisibles du cycle ne donne aucune alerte.
+   * Les périodes futures sont calculées directement ; aucune limite de pagination historique.
    */
   function capAlertsFor(ctx, { date: d, costCenterRef, categoryId, direction }) {
     if (direction !== 'charge' || !d) return [];
-    const b0 = base(ctx);
-    if (!b0.cs) return [];
-    const key = b0.cs.page({ limit: 400 }).periods.find((p) => d >= p.start && d <= p.end)?.key;
-    if (!key) return [];
-    const report = capsRead(base(ctx, { periodKey: key }));
+    const b = base(ctx);
+    if (!b.cs) return [];
+    const period = periodContaining(d, b.cycle.anchorDay);
+    if (period.index < b.cs.first.index) return [];
+    const report = capsRead({ ...b, period });
     return report.alerts.filter((a) => (a.level === 'center' && a.ref === costCenterRef) || (a.level === 'category' && a.id === categoryId));
+  }
+
+  /** Simulation en mémoire : mêmes lignes Budget et mêmes plafonds, aucune écriture ni ID créé. */
+  function previewCaps(ctx, input = {}) {
+    const b = base(ctx);
+    if (!b.cs) fail('FORBIDDEN_BY_RULE', 'Configurez le cycle avant de consulter les plafonds.');
+    const direction = oneOf('direction', input.direction, ['income', 'charge']);
+    const cadence = oneOf('cadence', input.cadence, ['once', ...CADENCES], 'once');
+    const recurring = cadence !== 'once';
+    const kind = recurring ? 'recurrence' : 'operation';
+    const original = input.replaceId ? om.owned(b.state, kind, input.replaceId, b.userId) : null;
+    const recurrence = input.settle && input.recurrenceId ? om.owned(b.state, 'recurrence', input.recurrenceId, b.userId) : null;
+    const budgetId = original?.budgetId ?? recurrence?.budgetId ?? input.budgetId ?? b.comp.budgetId;
+    om.owned(b.state, 'budget', budgetId, b.userId);
+    const category = input.categoryId ? om.owned(b.state, 'chargeCategory', input.categoryId, b.userId) : null;
+    const ref = input.costCenterRef ?? category?.costCenterRef ?? 'std:divers';
+    const amountCents = money('amount', input.amount, { positive: true });
+    const d = date(recurring ? 'firstDate' : 'date', recurring ? input.firstDate : input.date, { required: true });
+    const item = {
+      ...recurrence, ...original, id: original?.id ?? '__preview__', userId: b.userId, budgetId,
+      direction, label: input.label || 'Aperçu', amountCents,
+      costCenterId: ref.startsWith('std:') ? null : ref,
+      standardCostCenter: ref.startsWith('std:') ? ref.slice(4) : null,
+      categoryId: category?.id ?? null,
+    };
+    if (recurring) Object.assign(item, { cadence, firstDate: d, endDate: date('endDate', input.endDate) });
+    else Object.assign(item, {
+      date: d, status: original?.status ?? input.status ?? 'planned',
+      realizedDate: original?.realizedDate ?? (input.status === 'realized' ? date('realizedDate', input.realizedDate ?? d, { required: true }) : null),
+      realizedAmountCents: original?.realizedAmountCents ?? (input.status === 'realized' ? money('realizedAmount', input.realizedAmount ?? input.amount, { positive: true }) : null),
+    });
+    if (input.settle) {
+      item.status = 'realized';
+      item.realizedDate = date('realizedDate', input.realizedDate ?? d, { required: true });
+      item.realizedAmountCents = money('realizedAmount', input.realizedAmount ?? input.amount, { positive: true });
+      if (recurrence) Object.assign(item, { recurrenceId: recurrence.id, occurrenceDate: date('occurrenceDate', input.occurrenceDate, { required: true }) });
+    }
+    // Une définition récurrente passée est évaluée sur la période actuelle ; une saisie future sur sa première période.
+    const effectiveDate = recurring ? (d > b.cs.current.start ? d : b.cs.current.start) : item.realizedDate ?? d;
+    const period = periodContaining(effectiveDate, b.cycle.anchorDay);
+    const table = recurring ? 'recurrences' : 'operations';
+    const state = { ...b.state, [table]: { ...b.state[table], [item.id]: item } };
+    const before = capsRead({ ...b, period });
+    let after = capsRead({ ...b, state, period });
+    // Pour un projet, anticiper la charge avant sa validation dans le budget de vie.
+    if (budgetId !== b.comp.budgetId) {
+      const window = { from: period.start, to: period.end };
+      const candidate = l => recurring ? l.recurrenceId === item.id : l.operationId === item.id;
+      const keep = l => !candidate(l);
+      const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'realized' }), ...validatedProjectLines(b, { ...window, by: 'realized' }).filter(keep), ...budget().budgetLines(state, [budgetId], { ...window, by: 'realized' }).filter(candidate)];
+      const planned = [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'planned' }), ...budget().budgetLines(state, [budgetId], { ...window, by: 'planned' }).filter(candidate)];
+      after = budget().capReport({ centers: budget().costCentersOf(state, b.userId), categories: budget().categoriesOf(state, b.userId, { archived: true }), caps: state.budgets[b.comp.budgetId].capsCents ?? {}, realized, planned });
+    }
+    const relevant = r => ({
+      center: r.centers.find(c => c.ref === ref) ?? null,
+      category: r.categories.find(c => c.id === category?.id) ?? null,
+    });
+    return { mutation: false, period, before: relevant(before), after: relevant(after),
+      alerts: direction === 'charge' ? after.alerts.filter(a => a.level === 'center' ? a.ref === ref : a.id === category?.id) : [],
+      note: budgetId !== b.comp.budgetId ? 'Impact estimé après validation de la charge du projet.' : null };
   }
 
   function centerDetail(ctx, ref, q = {}) {
@@ -817,7 +877,7 @@ export function createReads(socle, h) {
   }
 
   return {
-    summary, register, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, incomes, balance, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
+    summary, register, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, previewCaps, incomes, balance, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
     // Outils partagés avec la gestion du projet de vie (`life.mjs`) : même contexte, mêmes états, mêmes lignes.
     base, contextOf, decorate, validatedProjectLines,
   };

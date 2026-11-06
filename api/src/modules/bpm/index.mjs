@@ -993,6 +993,7 @@ export default {
       ['GET', '/api/bpm/directives', ({ ctx }) => s.reads.directives(ctx)],
       ['GET', '/api/bpm/projection', ({ ctx, query }) => s.reads.projection(ctx, Object.fromEntries(query))],
       ['GET', '/api/bpm/life-management', ({ ctx, query }) => s.life.lifeManagement(ctx, { periodKey: query.get('period') || undefined })],
+      ['POST', '/api/bpm/caps/preview', ({ ctx, body }) => s.reads.previewCaps(ctx, body)],
       ['POST', '/api/bpm/operations/preview', ({ ctx, body }) => s.reads.previewEntry(ctx, body)],
       ['PUT', '/api/bpm/vision', ({ ctx, body }) => s.updateVision(ctx, body)],
       ['GET', '/api/bpm/goals', ({ ctx }) => s.goals(ctx)],

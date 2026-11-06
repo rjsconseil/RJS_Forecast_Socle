@@ -19,9 +19,9 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
   template: `
     <bpm-page
       pageClass="bc-page"
-      kicker="Ma vision budgétaire"
-      title="Réglages"
-      lead="Votre cycle budgétaire, le point de départ de votre patrimoine et vos centres de coût."
+      kicker="Mes projets de la vie"
+      title="Cycle et réglages"
+      lead="Réglez votre cycle budgétaire, le montant initial de votre patrimoine et vos postes."
       [context]="summary.data()?.context"
     >
       <a actions class="app-hero-action" routerLink="/admin/calculs">Voir les formules →</a>
@@ -78,7 +78,7 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
             </p>
           }
           @if (!d.cycle) {
-            <p class="bc-alert" role="alert">Aucune liaison de cycle pour ce user.</p>
+            <p class="bc-alert" role="alert">Aucune liaison de cycle pour ce profil financier.</p>
           } @else {
             @if (closures().length) {
               <p class="bc-note bc-note-danger" role="note">
@@ -237,13 +237,13 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
         <!-- 4. Centres de coût -->
         <section class="bc-centers" data-ui-pattern="panel" aria-labelledby="bc-centers-title">
           <p class="bc-kicker">Budget</p>
-          <h2 id="bc-centers-title" class="bc-section-title" data-ui-pattern="section-heading">Centres de coût</h2>
-          <p class="bc-note">Les centres standards sont proposés à tous et administrés dans l'<a routerLink="/admin">Administration</a> (paramètre « budget.centresStandards ») ; vos centres personnels ne concernent que vous.</p>
+          <h2 id="bc-centers-title" class="bc-section-title" data-ui-pattern="section-heading">Postes et sources de revenus</h2>
+          <p class="bc-note">Le catalogue commun est géré dans l’<a routerLink="/admin">Administration</a>. Vos postes personnels appartiennent uniquement à votre profil financier.</p>
           <div class="bc-table-wrap">
             <table class="bc-table">
               <thead>
                 <tr>
-                  <th scope="col">Centre</th>
+                  <th scope="col">Poste ou source</th>
                   <th scope="col">Sens</th>
                   <th scope="col">Origine</th>
                 </tr>
@@ -267,12 +267,12 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
             </table>
           </div>
           @if (!personalCenters().length) {
-            <p class="bc-note">Aucun centre personnel.</p>
+            <p class="bc-note">Aucun poste personnel.</p>
           }
-          <form class="bc-form" (submit)="$event.preventDefault(); addCenter()" novalidate aria-label="Ajouter un centre personnel">
+          <form class="bc-form" (submit)="$event.preventDefault(); addCenter()" novalidate aria-label="Ajouter un poste personnel">
             <div class="bc-controls">
               <label>
-                <span>Nouveau centre</span>
+                <span>Nouveau poste ou source</span>
                 <input maxlength="120" autocomplete="off" placeholder="Ex. Animaux" [value]="ccLabel()" (input)="ccLabel.set($any($event.target).value)" />
               </label>
               <label>
@@ -293,7 +293,7 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
         <!-- 5. Calculs -->
         <p class="bc-note">Les formules de tous les chiffres sont paramétrables dans l'Administration. Chaque chiffre affiché indique sa formule, sa révision et les opérations ou objets dont il provient.</p>
         <div class="bc-actions">
-          <a class="btn btn-primary" routerLink="/depenses">Ouvrir les opérations</a>
+          <a class="btn btn-primary" routerLink="/depenses">Voir les dépenses</a>
           <button type="button" class="btn btn-secondary" (click)="load()" [disabled]="loading()">Actualiser</button>
         </div>
       } @else if (loading()) {

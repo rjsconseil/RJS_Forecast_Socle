@@ -175,14 +175,14 @@ describe('cockpit du projet', () => {
     await page.saveShare('bud_1', state.tasks[0], '600', 7);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
-    const flow = root.querySelector('[aria-label="Autorisation du budget de vie"]');
+    const flow = root.querySelector('[aria-label="Autorisation du budget du projet de vie"]');
     expect(flow?.textContent).toContain('Il manque 100 €');
     expect(flow?.querySelector('button')?.textContent).toContain('Demander l’autorisation');
     flow?.querySelector('button')?.click();
     await fixture.whenStable();
     fixture.detectChanges();
     expect(
-      root.querySelector('[aria-label="Autorisation du budget de vie"] bpm-overrun-request'),
+      root.querySelector('[aria-label="Autorisation du budget du projet de vie"] bpm-overrun-request'),
     ).toBeTruthy();
     await page.decideFlow('approve');
     expect(setTaskShare).toHaveBeenCalledTimes(2);

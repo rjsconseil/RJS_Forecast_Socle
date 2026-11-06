@@ -1,3 +1,4 @@
+import { CapPreview } from './bpm-caps.models';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
@@ -124,6 +125,10 @@ export class BpmApi {
   }
 
   // ---------- aperçu (aucune mutation) ----------
+
+  previewCaps(input: Partial<EntryInput> & { replaceId?: string; settle?: boolean; recurrenceId?: string; occurrenceDate?: string }) {
+    return this.post<CapPreview>('/api/bpm/caps/preview', input);
+  }
 
   previewEntry(input: Partial<EntryInput>) {
     return this.post<EntryPreview>('/api/bpm/operations/preview', input);

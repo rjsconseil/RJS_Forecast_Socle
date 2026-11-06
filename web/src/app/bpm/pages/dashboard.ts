@@ -57,8 +57,10 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
       (periodChange)="goPeriod($event)"
     >
       <button actions type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée ou une charge</button>
-      <a actions class="bpm-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
-      <a actions class="bpm-link" routerLink="/depenses" [queryParams]="carry()">Dépenses de la période →</a>
+      <a actions class="bpm-link" routerLink="/projet-de-vie" [queryParams]="carry()">Gestion du projet de vie →</a>
+      <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="carry()">Plafonds et catégories →</a>
+      <a actions class="bpm-link" routerLink="/projet-de-vie" fragment="life-objectives">Mes objectifs →</a>
+      <a actions class="bpm-link" routerLink="/depenses" [queryParams]="carry()">Détail des dépenses →</a>
 
       <div class="bpm-money bpm-money-body" data-tone="budget">
         @if (notice()) {
@@ -74,7 +76,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
           @if (!s.context.period) {
             <p class="bpm-missing" role="note">
               <strong>Cycle à configurer.</strong> Les chiffres d'une période (reçu, dépensé, reste) sont inconnus tant que le cycle du Budget du projet de vie n'a pas de date de début : ils ne valent pas zéro.
-              <a class="bm-action-link" routerLink="/creer">Configurer le cycle dans Partir de zéro →</a>
+              <a class="bm-action-link" routerLink="/creer">Configurer le cycle →</a>
             </p>
           }
           @if (summary.error()) {
@@ -356,7 +358,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                     @if (lps.length) {
                       <ol class="bm-lines">
                         @for (lp of lps; track lp.budgetId; let i = $index) {
-                          <li><a class="bm-line" [attr.data-index]="i % 8" [routerLink]="['/projects', lp.coreProjectId]">
+                          <li><a class="bm-line" [attr.data-index]="i % 8" [routerLink]="['/app/gestion-projet', lp.coreProjectId]">
                             <span class="bm-line-sign" aria-hidden="true">◇</span>
                             <span class="bm-line-main"><strong>{{ lp.name }}</strong><small>{{ lp.view.statusLabel }} · {{ lp.view.time.taskCount }} tâche(s) d'un projet budgétisé</small></span>
                             <span class="bm-line-amount">{{ lp.view.completionPercent }} %</span>

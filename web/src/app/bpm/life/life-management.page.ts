@@ -2,7 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Params, RouterLink } from '@angular/router';
-import { Api, newRequestKey, toApiError } from '../../core/api.service';
+import { Api, newRequestKey, RecetteContext, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmLifeManagement, LifeHealth, LifeLine } from '../../core/bpm-life.models';
 import { CHARGE_NATURE_LABEL, ChargeNature, EntryInput, RegisterLine } from '../../core/bpm-models';
@@ -11,10 +11,13 @@ import { cents, CentsPipe, percentText, ShortDatePipe, SignedCentsPipe } from '.
 import { ModalComponent } from '../../shared/modal.component';
 import { PeriodNavigationComponent } from '../../shared/period-navigation.component';
 import { BpmOverrunRequestComponent } from '../projects/project-parts';
-import { BpmLineDetail, BpmOperationEditor } from '../ui';
+import { BpmLineDetail, BpmOperationEditor, BpmRefresh } from '../ui';
+import { BpmActBudgetType } from '../pages/act-budget-type';
 import { shiftPeriod } from '../ui/page-context';
+import { BpmFragmentNavigation } from '../ui/fragment-navigation';
 import { BpmLifeFundingComponent } from './life-funding';
 import { BpmLifeGaugeComponent } from './life-gauge';
+import { BpmLifeObjectives } from './life-objectives';
 import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './life-volets';
 
 /**
@@ -27,9 +30,9 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
 @Component({
   selector: 'app-bpm-life-management',
   styleUrls: ['../projects/projects.page.scss', './life-management.page.scss'],
-  imports: [RouterLink, NgTemplateOutlet, CentsPipe, SignedCentsPipe, ShortDatePipe, ModalComponent, PeriodNavigationComponent, BpmOverrunRequestComponent, BpmLineDetail, BpmOperationEditor, BpmLifeGaugeComponent, BpmLifeFundingComponent],
+  imports: [RouterLink, NgTemplateOutlet, CentsPipe, SignedCentsPipe, ShortDatePipe, ModalComponent, PeriodNavigationComponent, BpmOverrunRequestComponent, BpmLineDetail, BpmOperationEditor, BpmLifeGaugeComponent, BpmLifeFundingComponent, BpmActBudgetType, BpmLifeObjectives, BpmFragmentNavigation],
   template: `
-    <div class="page page-wide bpm-projects bpm-project-page bpm-management bpm-life-management">
+    <div class="page page-wide bpm-projects bpm-project-page bpm-management bpm-life-management" bpmFragmentNavigation [bpmFragmentReady]="!!data()">
       <header class="life-projects-banner" data-ui-pattern="heading" data-sticky-hero>
         <div class="life-banner-copy">
           <p class="eyebrow">Budget/Patrimoine · Ma vision budgétaire</p>
@@ -43,7 +46,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
         <div class="life-header-actions">
           <a class="btn btn-secondary" routerLink="/app/reglages">Réglages du cycle</a>
           <button class="btn btn-secondary" type="button" [disabled]="!data()" (click)="followOpen.set(true)">
-            Suivi & clôture
+            Suivi et clôture
             @if (pending()) {
               <span class="life-alert-count">{{ pending() }}</span>
             }
@@ -100,6 +103,12 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           <button class="btn btn-primary life-create" type="button" [disabled]="!budgets().length" (click)="openEntry()">
             <span aria-hidden="true">+</span> Saisir une entrée ou une charge
           </button>
+          <nav class="life-local-navigation" aria-label="Accès directs au pilotage">
+            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-objectives">Objectifs et avenir</a>
+            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-budget-type">Budget type</a>
+            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-due">Échéances à régler</a>
+            <a routerLink="/plafonds" [queryParams]="period() ? { period: period() } : {}">Plafonds et catégories</a>
+          </nav>
         </div>
       </header>
 
@@ -181,7 +190,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           </header>
           <!-- Projet non standard : unique, rattaché au patrimoine, il porte et finance les projets de la vie. -->
           <ul class="life-relations" aria-label="Rattachements du projet de vie">
-            <li><span class="life-relation-kind">Projet non standard</span> unique pour {{ d.context.user.label }}</li>
+            <li><span class="life-relation-kind">Projet de vie</span> unique pour {{ d.context.user.label }}</li>
             <li><span class="life-relation-kind">Patrimoine</span> {{ d.patrimoine.stockCents | cents }} enregistrés</li>
             <li>
               <span class="life-relation-kind">Projets de la vie</span>
@@ -391,20 +400,27 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           </div>
         </section>
 
+        <bpm-life-objectives />
+
+        <details class="life-budget-type-disclosure" id="life-budget-type" [open]="budgetTypeOpen()" (toggle)="budgetTypeOpen.set($any($event.target).open)">
+          <summary><strong>Budget type et dépenses récurrentes</strong><span>Préparer les entrées et charges des prochaines périodes</span></summary>
+          @if (budgetTypeOpen()) { <bpm-act-budget-type [showCaps]="false" /> }
+        </details>
+
         <section class="bpm-section" id="life-funding" aria-labelledby="life-funding-title">
           <header>
             <h2 id="life-funding-title">Financement des projets de la vie</h2>
             <span class="count-badge">{{ d.projects.projectCount }}</span>
           </header>
           <p class="bpm-note">
-            Le budget de vie porte tous les projets de la vie qui lui sont rattachés et finance chacun par une enveloppe.
+            Le budget du projet de vie porte tous les projets de la vie qui lui sont rattachés et finance chacun par une enveloppe.
             Pour chaque projet : son enveloppe, la période où elle a été attribuée, ses dépassements et ce qu’il a fait
-            remonter au budget de vie à chaque cycle.
+            remonter au budget du projet de vie à chaque cycle.
           </p>
           <bpm-life-funding [funding]="d.projects.funding" [highlight]="shownKey()" />
         </section>
 
-        <section class="bpm-section" aria-labelledby="life-due-title">
+        <section class="bpm-section" id="life-due" aria-labelledby="life-due-title">
           <header>
             <h2 id="life-due-title">Échéances à régler</h2>
             <span class="count-badge">{{ d.dueSoon.lines.length }}</span>
@@ -417,12 +433,12 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
         </section>
 
         <p class="bpm-note life-essentials-note">
-          Charges indispensables : {{ d.essentials.labels.join(', ') || 'aucun poste' }}. Les autres charges du budget de vie sont
-          courantes. Cette répartition est un paramètre administrable ([P] {{ d.essentials.parameter }}).
+          Charges indispensables : {{ d.essentials.labels.join(', ') || 'aucun poste' }}. Les autres charges du budget du projet de vie sont
+          courantes. Cette répartition peut être ajustée dans les paramètres de l’application.
         </p>
 
         @if (followOpen()) {
-          <rjs-modal [open]="followOpen()" [headed]="true" title="Suivi & clôture du projet de vie" [busy]="busy()" (closed)="followOpen.set(false)">
+          <rjs-modal [open]="followOpen()" [headed]="true" title="Suivi et clôture du projet de vie" [busy]="busy()" (closed)="followOpen.set(false)">
             <p>{{ d.context.user.label }} · {{ d.lifeProject.title }} · {{ d.cycle.period?.label ?? 'Cycle à configurer' }}</p>
             <dl class="bpm-kpis">
               <div>
@@ -515,8 +531,8 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
             <nav class="bpm-actions" aria-label="Vues complémentaires">
               <a class="text-link" [routerLink]="['/app/projets', d.lifeProject.coreProjectId]">Fiche du projet de vie ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord">Tableau de bord ↗</a>
-              <a class="text-link" routerLink="/piloter" fragment="bp-history-title">Historique des cycles ↗</a>
-              <a class="text-link" routerLink="/vision" fragment="objectifs-budgetaires">Objectif d’excédent ↗</a>
+              <a class="text-link" routerLink="/tableau-de-bord" fragment="bm-history" (click)="followOpen.set(false)">Historique des cycles ↗</a>
+              <a class="text-link" routerLink="/projet-de-vie" fragment="objectifs-budgetaires" (click)="followOpen.set(false)">Objectif d’excédent ↗</a>
             </nav>
             <div class="bpm-actions">
               <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="followOpen.set(false)">Fermer</button>
@@ -598,6 +614,10 @@ export class BpmLifeManagementPage {
   private bpm = inject(BpmApi);
   private api = inject(Api);
   private route = inject(ActivatedRoute);
+  private refresh = inject(BpmRefresh);
+  private context = inject(RecetteContext);
+  private fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
+  protected budgetTypeOpen = signal(false);
   private sequence = 0;
   /** Période consultée (`?period=AAAA-MM`) ; absente = période en cours. */
   private periodKey = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
@@ -642,7 +662,12 @@ export class BpmLifeManagementPage {
   /** Mêmes volets pour la période choisie : chaque changement de période relit la page. */
   private reader = effect(() => {
     this.period();
+    this.refresh.version();
+    this.context.userId();
     untracked(() => this.load());
+  });
+  private openSection = effect(() => {
+    if (this.fragment() === 'life-budget-type') this.budgetTypeOpen.set(true);
   });
 
   protected reading = computed(() => this.data()?.cycle.reading ?? null);

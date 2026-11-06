@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
@@ -57,7 +57,7 @@ const toCents = (raw: string) => {
       <header class="bm-head">
         <div>
           <h2 id="bm-month-title">Budget type</h2>
-          <p>Revenus et charges récurrents du Budget du projet de vie, totaux moyens et plafonds.</p>
+          <p>Revenus et charges récurrents du budget du projet de vie, avec leurs totaux moyens.</p>
           @if (bt.data(); as d) {
             <p class="bpm-help">{{ d.label }}. Totaux enregistrés : ils se mettent à jour après l'enregistrement.</p>
           }
@@ -150,8 +150,9 @@ const toCents = (raw: string) => {
           <p class="bpm-help">Chaque ligne existante est mise à jour en gardant son identité (pas de recréation). La portée porte sur les occurrences encore attendues ; les règlements déjà enregistrés ne changent pas. Le rythme et la première date sont figés dès qu'une occurrence est réglée. Pour une fin, une note ou un centre, ouvrez la ligne depuis le registre.</p>
         </div>
 
+        @if (showCaps()) {
         <details class="bpm-limited">
-          <summary>Plafonds par centre (facultatifs, par période)</summary>
+          <summary>Plafonds par poste (facultatifs, par période)</summary>
           <div class="bm-form">
             @if (capsError(); as e) { <p class="bpm-error" role="alert">{{ e.message }} Saisie conservée.</p> }
             @if (capsMessage()) { <p class="bm-saved" role="status">{{ capsMessage() }}</p> }
@@ -167,12 +168,13 @@ const toCents = (raw: string) => {
               </div>
             </fieldset>
             <p class="bpm-help">Un champ vide retire le plafond. Les plafonds s'appliquent au Budget du projet de vie ; la marge = plafond − payé − restant prévu. Un dépassement est signalé en rouge, jamais bloquant.</p>
-            <p class="bpm-help">Plafonds plus fins, par catégorie de dépense rangée dans un centre : <a routerLink="/plafonds">Plafonds &amp; catégories →</a></p>
+            <p class="bpm-help">Pour définir des plafonds indépendants par poste et par catégorie : <a routerLink="/plafonds">Plafonds et catégories →</a></p>
             <div class="bpm-actions">
               <button type="button" class="btn btn-secondary" (click)="saveCaps()" [disabled]="capsBusy() || !capsDirty()">{{ capsBusy() ? 'Enregistrement…' : 'Enregistrer les plafonds' }}</button>
             </div>
           </div>
         </details>
+        }
       }
     </section>
   `,
@@ -191,6 +193,7 @@ const toCents = (raw: string) => {
   `,
 })
 export class BpmActBudgetType {
+  readonly showCaps = input(true);
   private bpm = inject(BpmApi);
   private refresh = inject(BpmRefresh);
 

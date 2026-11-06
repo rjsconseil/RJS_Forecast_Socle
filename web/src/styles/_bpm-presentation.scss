@@ -368,3 +368,136 @@
     overflow-x: auto;
   }
 }
+
+/* Socle v0.4 : présentation propre à BPM. Aucun sélecteur hors des pages BPM.
+   Titre → contexte → actions → chiffres → détail. La couleur accompagne toujours un libellé. */
+.app-shell main :is(.bpm-reading, .bpm-projects) {
+  --bpm-banner-bg: var(--bpm-section-deep, #153e70);
+  --bpm-banner-border: color-mix(in srgb, var(--bpm-banner-bg) 75%, white);
+  --bpm-frame-radius: 14px;
+  font-variant-numeric: tabular-nums;
+
+  :is(.bpm-page-banner, .life-projects-banner) {
+    --heading-surface: var(--bpm-banner-bg);
+    --heading-ink: #fff;
+    --heading-muted: #c2d8f1;
+    --period-nav-accent: color-mix(in srgb, var(--bpm-banner-bg) 80%, white);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    align-content: start;
+    gap: 14px 24px;
+    min-height: 0;
+    padding: 22px 24px 18px;
+    border: 1px solid var(--bpm-banner-border);
+    border-radius: 16px;
+    background: var(--bpm-banner-bg);
+    color: #fff;
+    box-shadow: 0 4px 14px #1233580d;
+  }
+  .bpm-banner-copy, .life-banner-copy {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+  }
+  :is(.bpm-page-banner, .life-projects-banner) :is(h1, h1.display) {
+    max-width: none;
+    margin: 4px 0 8px;
+    font-family: var(--font-ui, 'Inter', sans-serif);
+    font-size: clamp(25px, 2.4vw, 34px);
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: -.025em;
+    color: #fff;
+    overflow-wrap: anywhere;
+  }
+  :is(.bpm-page-banner, .life-projects-banner) .eyebrow {
+    max-width: none;
+    margin: 0;
+    color: #c2d8f1;
+    font-size: 11px;
+    letter-spacing: .08em;
+    font-weight: 650;
+  }
+  :is(.bpm-banner-intro, .life-banner-copy .page-intro) {
+    max-width: 74ch;
+    margin: 0;
+    color: #e2ecf8;
+    font-size: 15px;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+  .bpm-banner-period {
+    display: grid;
+    align-self: center;
+    gap: 4px;
+    min-width: 180px;
+    font-size: 12px;
+    strong { font-size: 20px; }
+  }
+  .bpm-banner-context {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    color: #c2d8f1;
+    font-size: 12px;
+    line-height: 1.5;
+    strong { color: #fff; font-weight: 600; }
+  }
+  :is(.bpm-banner-actions, .bpm-banner-tools, .life-banner-tools) {
+    grid-column: 1 / -1;
+    min-width: 0;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 0 0;
+    border: 0;
+    border-top: 1px solid #ffffff30;
+  }
+  .bpm-banner-actions { display: flex; flex-wrap: wrap; align-items: center; }
+  .bpm-banner-actions > :is(div, span)[actions] { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  :is(.bpm-banner-actions, .bpm-banner-tools):empty { display: none; }
+  :is(.bpm-banner-actions, .life-header-actions, .life-banner-tools) :is(.btn, .app-hero-action, .bpm-link) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 13px;
+    border: 1px solid #ffffff60;
+    border-radius: 8px;
+    background: #ffffff0c;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.3;
+    box-shadow: none;
+  }
+  :is(.bpm-page-banner, .life-projects-banner) .btn-primary { background: #fff; color: var(--bpm-banner-bg); border-color: #fff; }
+  :is(.bpm-page-banner, .life-projects-banner) label { color: #e2ecf8; }
+  :is(.bpm-page-banner, .life-projects-banner) :is(a, button, input, select):focus-visible { outline: 3px solid #8cd3ff; outline-offset: 3px; }
+  .bpm-banner-back { display: inline-block; margin-bottom: 10px; font-size: 13px; color: #e2ecf8; }
+  .life-header-actions { grid-column: 2; grid-row: 1; max-width: 360px; justify-content: flex-end; }
+  &.bpm-tasks-page .life-banner-tools { grid-template-columns: minmax(180px, 1fr) minmax(240px, 2fr); }
+  .life-summary { background: var(--raised-surface); border-color: var(--line); border-radius: 14px; }
+  :is(.bpm-section, .caps-settings, [data-bpm-frame]) > header h2 { font-size: 21px; line-height: 1.3; }
+  :is(.bpm-section, .caps-settings) > header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; }
+  :is(.bpm-table, .caps-charges) th { font-weight: 650; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  &.bpm-reading { display: grid; gap: 24px; }
+
+  @media (max-width: 900px) {
+    :is(.bpm-page-banner, .life-projects-banner) { gap: 12px 18px; padding: 18px; }
+    .life-header-actions { max-width: 250px; }
+  }
+  @media (max-width: 640px) {
+    :is(.bpm-page-banner, .life-projects-banner) { grid-template-columns: minmax(0, 1fr); padding: 16px; border-radius: 12px; }
+    :is(.bpm-banner-copy, .life-banner-copy, .life-header-actions, .bpm-banner-period) { grid-column: 1; grid-row: auto; max-width: none; }
+    .life-header-actions { justify-content: flex-start; }
+    &.bpm-tasks-page .life-banner-tools { grid-template-columns: minmax(0, 1fr); }
+    :is(.bpm-banner-intro, .life-banner-copy .page-intro) { font-size: 14px; }
+    .bpm-banner-actions > * { flex: 1 1 auto; }
+  }
+}

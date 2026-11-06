@@ -102,7 +102,7 @@ function firstOfNextMonth() {
                 <ul class="bp-dir-list">
                   <li>Charge récurrente <strong>mensuelle</strong> « Épargne supplémentaire » du Budget du projet de vie.</li>
                   <li>Montant <strong>{{ extraCents() | cents }}</strong> par occurrence, première date le {{ firstDateText }}, sans fin.</li>
-                  <li>Centre à choisir dans l'éditeur (un centre personnel « Épargne » peut y être créé) ; note rappelant la simulation.</li>
+                  <li>Choisissez le poste dans le formulaire. Vous pouvez créer un poste personnel « Épargne » et conserver la note de simulation.</li>
                 </ul>
                 @if (p.hypotheses.cadence !== 'monthly') {
                   <p class="bpm-missing">L'apport de projection est par {{ cadenceText() }} : la charge proposée est mensuelle, vérifiez le montant avant d'enregistrer.</p>

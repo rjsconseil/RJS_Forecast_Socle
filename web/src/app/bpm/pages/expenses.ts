@@ -36,7 +36,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
     >
       <a actions class="bpm-link" routerLink="/tableau-de-bord" [queryParams]="ctx.carry()">← Tableau de bord</a>
       <a actions class="bpm-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
-      <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="ctx.carry()">Plafonds & catégories →</a>
+      <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="ctx.carry()">Plafonds et catégories →</a>
       <button actions type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Ajouter une entrée' : direction() === 'all' ? 'Saisir un flux' : 'Ajouter une charge' }}</button>
 
       <div class="bpm-money bpm-money-body expense-register-page" data-tone="budget">
@@ -105,7 +105,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
               <label>
                 Catégorie de dépense
                 <select name="expense-category" [value]="ctx.q('category')()" (change)="setCategory($any($event.target).value)" [disabled]="direction() === 'income'">
-                  <option value="">{{ direction() === 'income' ? 'Les catégories classent les charges' : 'Tout afficher' }}</option>
+                  <option value="">{{ direction() === 'income' ? 'Réservé aux dépenses' : 'Tout afficher' }}</option>
                   <option value="__none__">Sans catégorie</option>
                   @for (k of categoryOptions(); track k.id) { <option [value]="k.id">{{ k.label }} · {{ k.costCenterLabel }}{{ k.archived ? ' (retirée)' : '' }}</option> }
                 </select>

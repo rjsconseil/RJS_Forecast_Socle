@@ -76,7 +76,7 @@ export function scrollToAnchor(target: () => string | null = () => null) {
           <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bp-sim-title">Simuler une épargne</a>
         </nav>
 
-        <!-- La période en bref : le détail des graphes reste dans Graphiques & chiffres. -->
+        <!-- La période en bref : le détail des graphes reste dans Graphiques et chiffres. -->
         <section class="fp-overview is-compact" aria-labelledby="fp-title">
           <div class="fp-summary" data-bpm-frame="metrics">
             <div class="fp-compact-heading">
@@ -136,9 +136,9 @@ export function scrollToAnchor(target: () => string | null = () => null) {
             <div class="bp-levers">
               <a class="btn btn-secondary" routerLink="/depenses" [queryParams]="ctx.carry()">Toutes les opérations du budget →</a>
               <a class="btn btn-secondary" routerLink="/app/reglages">Clôture et cycle budgétaire →</a>
-              <a class="btn btn-secondary" routerLink="/vision">Objectifs &amp; avenir →</a>
+              <a class="btn btn-secondary" routerLink="/vision">Objectifs et avenir →</a>
             </div>
-            <p class="bpm-help">Les chiffres de synthèse restent dans le <a routerLink="/tableau-de-bord">Tableau de bord</a> et les graphes dans <a routerLink="/piloter">Graphiques &amp; chiffres</a>.</p>
+            <p class="bpm-help">Les chiffres de synthèse restent dans le <a routerLink="/tableau-de-bord">Tableau de bord</a> et les graphes dans <a routerLink="/piloter">Graphiques et chiffres</a>.</p>
           </section>
         </section>
       </div>

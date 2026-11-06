@@ -1,7 +1,7 @@
 {
   "schemaVersion": "socle-store/0.5",
-  "revision": 339,
-  "updatedAt": "2026-11-05T17:14:26.992Z",
+  "revision": 372,
+  "updatedAt": "2026-11-05T20:22:16.202Z",
   "journal": [
     {
       "at": "2026-11-05T12:09:25.130Z",
@@ -5283,6 +5283,374 @@
         "cat_a20176c8-95ee-4a55-ad0a-4b2629f90cae"
       ],
       "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:18.016Z",
+      "command": "createUser",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+      "created": [
+        "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+        "prj_384ff101-0ff1-41af-9feb-42231ba371b7",
+        "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+        "pat_509cc3df-1dc4-4bca-99aa-578fb6e8e757",
+        "bpm_ba324bae-4dcc-4970-9e96-6e45b24ff61c",
+        "cyc_e0f57a12-df06-404b-997f-73b86a837e67"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:38.680Z",
+      "command": "setCaps",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_6c57d470-85e7-44e2-8820-107035e8a50d"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:38.846Z",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-4fb0dc24-07b3-49c9-bd2e-df579ade3783",
+      "created": [
+        "cat_169cbb43-01d4-494e-8f81-d893d9582346"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:38.941Z",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-551fd76e-a373-4dd4-b2ba-cf845eedd0c7",
+      "created": [
+        "cat_6685fffa-625f-4ce3-9e49-a9d6fa45a394"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.035Z",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-9e612fe3-cdb0-4f32-ac86-18c6ae68bf81",
+      "created": [
+        "cat_2949035d-588d-42cd-ab9d-2e9419018b5f"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.145Z",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-e8a4631f-9539-4047-8544-4605fd9364ce",
+      "created": [
+        "cat_c5276abd-03cf-4a56-bf61-3f1f022dda21"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.290Z",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-f7eaafc4-22fb-42a5-b0d7-8457591c6c07",
+      "created": [
+        "cat_5830cb27-784e-49dd-905b-269b86d2bac5"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.397Z",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-29fe068e-d72a-42a0-822f-a471e8150bcb",
+      "created": [
+        "cat_10ef4f08-a18c-45ce-bcc7-512f1a3df764"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.479Z",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-7fc24713-2001-48ed-a5a1-4b128a189646",
+      "created": [
+        "cat_433adeca-4228-4d5f-a737-4844f428ce86"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.560Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-1d386003-83b0-43cf-83ab-602a405b83c0",
+      "created": [
+        "op_55be890b-f1e7-49bf-84cb-276f543c2e60"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.647Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-c8155a80-1e78-47d6-9007-20c7abf8e999",
+      "created": [
+        "op_7cf709c4-f1d8-4951-8e7e-d78eca00f5f1"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.733Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-4702d976-abfc-4330-8702-1e46561b44d9",
+      "created": [
+        "op_6190e1fa-3c6c-4457-bb28-385309d63030"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.813Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-900d09b7-06c6-4e10-873d-1d320b8b705d",
+      "created": [
+        "op_ecf16d9a-f6a9-4baf-b9ca-7b813abb665c"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.894Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-f29cfd51-3c2e-47aa-b681-fc79fea4649c",
+      "created": [
+        "op_6f6fd862-b04f-4b46-a4d5-e6a89d7c8f5a"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:39.975Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-164a38c6-f763-4d16-844e-14f90e4bf208",
+      "created": [
+        "op_bca0af2d-948d-46e3-afd7-0325d3bc5c15"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:40.063Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-a14dd30f-d38a-4027-82f7-9c8bd7595cc5",
+      "created": [
+        "op_5f1e8348-2210-4e10-870c-ff7c3e748554"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:40.152Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-854a5d91-f399-489e-b45d-22187f179d76",
+      "created": [
+        "op_8ea151ee-3496-4f41-b8e2-781f07d80db7"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:40.226Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-2ed5321b-a8aa-4711-b0bb-e68832f8cb26",
+      "created": [
+        "op_d88aa2a0-3c30-40e4-8ce2-ddcae968b485"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:40.327Z",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-4bc993e3-3447-43ff-89d4-20a881dace58",
+      "created": [
+        "op_4b3da959-28a6-4642-939d-d732e47508dd"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:40.456Z",
+      "command": "createRecurrence",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-bdab3a58-b723-482c-96c9-4328c2a7eff9",
+      "created": [
+        "rec_15a60ab9-304f-41d6-8ec5-8b9c7b67802b"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T18:08:40.565Z",
+      "command": "createRecurrence",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "requestKey": "seed-plafonds-c674d4fe-79e7-4c70-a497-d08e26d36fec",
+      "created": [
+        "rec_8126e7b5-b2e3-41bc-982a-b3ee3fa18d9c"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:06:00.069Z",
+      "command": "setCaps",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_942de379-478b-4075-b26a-c42a4a6a3a3e"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:06:22.293Z",
+      "command": "setCaps",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_942de379-478b-4075-b26a-c42a4a6a3a3e"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:07:56.766Z",
+      "command": "createChargeCategory",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": "category-a6184954-0089-461c-9c1a-eeda1c209158",
+      "created": [
+        "cat_d986700f-f00e-4ef7-a6ab-48ff4747f94c"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:18:47.308Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_80e72d2f-267e-4d73-8dee-c29da865f7c4"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:18:57.722Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_80e72d2f-267e-4d73-8dee-c29da865f7c4"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:19:35.853Z",
+      "command": "changeTaskStatus",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_1fe1eeba-7510-4e4c-ad81-5d34f9dfdf31"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:20:21.593Z",
+      "command": "updateTask",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_06e13424-058f-46d2-ad35-922cf1ac2582"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:20:48.351Z",
+      "command": "updateTask",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_06e13424-058f-46d2-ad35-922cf1ac2582"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:21:05.461Z",
+      "command": "updateTask",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_82cced17-cfec-4ee3-b414-3ca7c04e7a5d"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:21:19.045Z",
+      "command": "updateTask",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_82cced17-cfec-4ee3-b414-3ca7c04e7a5d"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:21:48.505Z",
+      "command": "updateTask",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_1fe1eeba-7510-4e4c-ad81-5d34f9dfdf31"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-05T20:22:16.202Z",
+      "command": "updateTask",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_1fe1eeba-7510-4e4c-ad81-5d34f9dfdf31"
+      ],
+      "outcome": "committed"
     }
   ],
   "migrations": [],
@@ -5905,6 +6273,22 @@
       },
       "label": "TEST PROJETS · Famille Laurent",
       "userType": "famille",
+      "fictitious": true
+    },
+    "usr_2abc3182-dd88-4455-9bbc-61957a294f49": {
+      "id": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "kind": "user",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:18.016Z",
+      "updatedAt": "2026-11-05T18:08:18.016Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+        "at": "2026-11-05T18:08:18.016Z"
+      },
+      "label": "TEST PLAFONDS · Dépassements",
+      "userType": "individuel",
       "fictitious": true
     }
   },
@@ -8294,6 +8678,24 @@
       "priority": "medium",
       "startDate": null,
       "dueDate": null
+    },
+    "prj_384ff101-0ff1-41af-9feb-42231ba371b7": {
+      "id": "prj_384ff101-0ff1-41af-9feb-42231ba371b7",
+      "kind": "coreProject",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:18.016Z",
+      "updatedAt": "2026-11-05T18:08:18.016Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+        "at": "2026-11-05T18:08:18.016Z"
+      },
+      "title": "Projet de vie",
+      "description": "Racine noyau commune au Budget « Projet de vie » et au Patrimoine.",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
     }
   },
   "tasks": {
@@ -8301,34 +8703,34 @@
       "id": "tsk_1fe1eeba-7510-4e4c-ad81-5d34f9dfdf31",
       "kind": "task",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 3,
+      "revision": 6,
       "createdAt": "2026-11-05T12:09:26.255Z",
-      "updatedAt": "2026-11-05T12:09:26.345Z",
+      "updatedAt": "2026-11-05T20:22:16.202Z",
       "provenance": {
         "command": "createLifeProject",
         "requestKey": "seed-japon-ad8baf61-67df-4f7d-960c-3783c2a97420",
         "at": "2026-11-05T12:09:26.255Z"
       },
-      "title": "Réserver les vols",
+      "title": "Réserver les vols'",
       "description": "",
-      "status": "done",
+      "status": "blocked",
       "plannedHours": 3,
-      "spentHours": 3.5,
+      "spentHours": 1,
       "startDate": null,
       "dueDate": null,
       "projectId": "prj_a9c6f98d-2a4c-41c6-9884-10de0fc5934c",
       "lastChange": {
-        "command": "setTaskTime",
-        "at": "2026-11-05T12:09:26.345Z"
+        "command": "updateTask",
+        "at": "2026-11-05T20:22:16.202Z"
       }
     },
     "tsk_06e13424-058f-46d2-ad35-922cf1ac2582": {
       "id": "tsk_06e13424-058f-46d2-ad35-922cf1ac2582",
       "kind": "task",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 3,
+      "revision": 5,
       "createdAt": "2026-11-05T12:09:26.255Z",
-      "updatedAt": "2026-11-05T12:09:26.406Z",
+      "updatedAt": "2026-11-05T20:20:48.351Z",
       "provenance": {
         "command": "createLifeProject",
         "requestKey": "seed-japon-ad8baf61-67df-4f7d-960c-3783c2a97420",
@@ -8338,22 +8740,22 @@
       "description": "",
       "status": "doing",
       "plannedHours": 5,
-      "spentHours": 2,
+      "spentHours": 4,
       "startDate": null,
       "dueDate": null,
       "projectId": "prj_a9c6f98d-2a4c-41c6-9884-10de0fc5934c",
       "lastChange": {
-        "command": "setTaskTime",
-        "at": "2026-11-05T12:09:26.406Z"
+        "command": "updateTask",
+        "at": "2026-11-05T20:20:48.351Z"
       }
     },
     "tsk_82cced17-cfec-4ee3-b414-3ca7c04e7a5d": {
       "id": "tsk_82cced17-cfec-4ee3-b414-3ca7c04e7a5d",
       "kind": "task",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 3,
       "createdAt": "2026-11-05T12:09:26.255Z",
-      "updatedAt": "2026-11-05T12:09:26.255Z",
+      "updatedAt": "2026-11-05T20:21:19.045Z",
       "provenance": {
         "command": "createLifeProject",
         "requestKey": "seed-japon-ad8baf61-67df-4f7d-960c-3783c2a97420",
@@ -8362,11 +8764,15 @@
       "title": "Demander le visa",
       "description": "",
       "status": "todo",
-      "plannedHours": null,
-      "spentHours": 0,
+      "plannedHours": 10,
+      "spentHours": 1,
       "startDate": null,
       "dueDate": null,
-      "projectId": "prj_a9c6f98d-2a4c-41c6-9884-10de0fc5934c"
+      "projectId": "prj_a9c6f98d-2a4c-41c6-9884-10de0fc5934c",
+      "lastChange": {
+        "command": "updateTask",
+        "at": "2026-11-05T20:21:19.045Z"
+      }
     },
     "tsk_f717490a-f3e0-4966-a679-06cff116e08c": {
       "id": "tsk_f717490a-f3e0-4966-a679-06cff116e08c",
@@ -11103,9 +11509,9 @@
       "id": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
       "kind": "budget",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 3,
       "createdAt": "2026-11-05T12:09:25.130Z",
-      "updatedAt": "2026-11-05T12:09:25.130Z",
+      "updatedAt": "2026-11-05T20:06:22.293Z",
       "provenance": {
         "command": "createUser",
         "requestKey": "seed-camille-fe7a1b55-1025-4fac-9eb0-994f4e14f444",
@@ -11115,15 +11521,22 @@
       "name": "Projet de vie",
       "coreProjectId": "prj_682c9fc8-7011-4115-8f31-cd8f33b74efe",
       "parentBudgetId": null,
-      "capsCents": {}
+      "capsCents": {
+        "std:logement": 100000,
+        "std:alimentation": 50000
+      },
+      "lastChange": {
+        "command": "setCaps",
+        "at": "2026-11-05T20:06:22.293Z"
+      }
     },
     "bud_80e72d2f-267e-4d73-8dee-c29da865f7c4": {
       "id": "bud_80e72d2f-267e-4d73-8dee-c29da865f7c4",
       "kind": "budget",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 3,
       "createdAt": "2026-11-05T12:09:26.255Z",
-      "updatedAt": "2026-11-05T12:09:26.255Z",
+      "updatedAt": "2026-11-05T20:18:57.722Z",
       "provenance": {
         "command": "createLifeProject",
         "requestKey": "seed-japon-ad8baf61-67df-4f7d-960c-3783c2a97420",
@@ -11133,7 +11546,15 @@
       "name": "Voyage au Japon",
       "coreProjectId": "prj_a9c6f98d-2a4c-41c6-9884-10de0fc5934c",
       "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
-      "capsCents": {}
+      "capsCents": {},
+      "allocationCents": 65000,
+      "allocationDate": "2026-11-05",
+      "taskSharesCents": {},
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-05T20:18:57.722Z"
+      }
     },
     "bud_95510eae-dc86-4a9b-b40a-a8d9edaaaf27": {
       "id": "bud_95510eae-dc86-4a9b-b40a-a8d9edaaaf27",
@@ -13031,6 +13452,34 @@
       "lastChange": {
         "command": "setTaskShare",
         "at": "2026-11-05T12:10:07.380Z"
+      }
+    },
+    "bud_6c57d470-85e7-44e2-8820-107035e8a50d": {
+      "id": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "kind": "budget",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 2,
+      "createdAt": "2026-11-05T18:08:18.016Z",
+      "updatedAt": "2026-11-05T18:08:38.680Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+        "at": "2026-11-05T18:08:18.016Z"
+      },
+      "role": "life",
+      "name": "Projet de vie",
+      "coreProjectId": "prj_384ff101-0ff1-41af-9feb-42231ba371b7",
+      "parentBudgetId": null,
+      "capsCents": {
+        "std:alimentation": 40000,
+        "std:loisirs": 20000,
+        "std:transport": 15000,
+        "std:sante": 12000,
+        "std:logement": 90000
+      },
+      "lastChange": {
+        "command": "setCaps",
+        "at": "2026-11-05T18:08:38.680Z"
       }
     }
   },
@@ -42813,6 +43262,286 @@
       "taskId": "tsk_ad4fd4d5-40ce-4bc8-b4f4-676ab2c7682f",
       "standardCostCenter": "enfants",
       "costCenterId": null
+    },
+    "op_55be890b-f1e7-49bf-84cb-276f543c2e60": {
+      "id": "op_55be890b-f1e7-49bf-84cb-276f543c2e60",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.560Z",
+      "updatedAt": "2026-11-05T18:08:39.560Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-1d386003-83b0-43cf-83ab-602a405b83c0",
+        "at": "2026-11-05T18:08:39.560Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "income",
+      "label": "Revenu mensuel de démonstration",
+      "amountCents": 145000,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 145000,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "salaires",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_7cf709c4-f1d8-4951-8e7e-d78eca00f5f1": {
+      "id": "op_7cf709c4-f1d8-4951-8e7e-d78eca00f5f1",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.647Z",
+      "updatedAt": "2026-11-05T18:08:39.647Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-c8155a80-1e78-47d6-9007-20c7abf8e999",
+        "at": "2026-11-05T18:08:39.647Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Courses — supermarché",
+      "amountCents": 18000,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 18000,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": "cat_169cbb43-01d4-494e-8f81-d893d9582346"
+    },
+    "op_6190e1fa-3c6c-4457-bb28-385309d63030": {
+      "id": "op_6190e1fa-3c6c-4457-bb28-385309d63030",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.733Z",
+      "updatedAt": "2026-11-05T18:08:39.733Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-4702d976-abfc-4330-8702-1e46561b44d9",
+        "at": "2026-11-05T18:08:39.733Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Courses — marché et produits frais",
+      "amountCents": 9000,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 9000,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": "cat_169cbb43-01d4-494e-8f81-d893d9582346"
+    },
+    "op_ecf16d9a-f6a9-4baf-b9ca-7b813abb665c": {
+      "id": "op_ecf16d9a-f6a9-4baf-b9ca-7b813abb665c",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.813Z",
+      "updatedAt": "2026-11-05T18:08:39.813Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-900d09b7-06c6-4e10-873d-1d320b8b705d",
+        "at": "2026-11-05T18:08:39.813Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Restaurants — repas du mois",
+      "amountCents": 11000,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 11000,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": "cat_6685fffa-625f-4ce3-9e49-a9d6fa45a394"
+    },
+    "op_6f6fd862-b04f-4b46-a4d5-e6a89d7c8f5a": {
+      "id": "op_6f6fd862-b04f-4b46-a4d5-e6a89d7c8f5a",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.894Z",
+      "updatedAt": "2026-11-05T18:08:39.894Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-f29cfd51-3c2e-47aa-b681-fc79fea4649c",
+        "at": "2026-11-05T18:08:39.894Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Courses complémentaires prévues",
+      "amountCents": 5000,
+      "date": "2026-11-30",
+      "status": "planned",
+      "realizedAmountCents": null,
+      "realizedDate": null,
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_bca0af2d-948d-46e3-afd7-0325d3bc5c15": {
+      "id": "op_bca0af2d-948d-46e3-afd7-0325d3bc5c15",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.975Z",
+      "updatedAt": "2026-11-05T18:08:39.975Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-164a38c6-f763-4d16-844e-14f90e4bf208",
+        "at": "2026-11-05T18:08:39.975Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Cinéma — sorties du mois",
+      "amountCents": 6000,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 6000,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": "cat_2949035d-588d-42cd-ab9d-2e9419018b5f"
+    },
+    "op_5f1e8348-2210-4e10-870c-ff7c3e748554": {
+      "id": "op_5f1e8348-2210-4e10-870c-ff7c3e748554",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:40.063Z",
+      "updatedAt": "2026-11-05T18:08:40.063Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-a14dd30f-d38a-4027-82f7-9c8bd7595cc5",
+        "at": "2026-11-05T18:08:40.063Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Carburant — premier plein",
+      "amountCents": 9000,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 9000,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "transport",
+      "costCenterId": null,
+      "categoryId": "cat_5830cb27-784e-49dd-905b-269b86d2bac5"
+    },
+    "op_8ea151ee-3496-4f41-b8e2-781f07d80db7": {
+      "id": "op_8ea151ee-3496-4f41-b8e2-781f07d80db7",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:40.152Z",
+      "updatedAt": "2026-11-05T18:08:40.152Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-854a5d91-f399-489e-b45d-22187f179d76",
+        "at": "2026-11-05T18:08:40.152Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Carburant — prochain plein",
+      "amountCents": 8000,
+      "date": "2026-11-30",
+      "status": "planned",
+      "realizedAmountCents": null,
+      "realizedDate": null,
+      "standardCostCenter": "transport",
+      "costCenterId": null,
+      "categoryId": "cat_5830cb27-784e-49dd-905b-269b86d2bac5"
+    },
+    "op_d88aa2a0-3c30-40e4-8ce2-ddcae968b485": {
+      "id": "op_d88aa2a0-3c30-40e4-8ce2-ddcae968b485",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:40.226Z",
+      "updatedAt": "2026-11-05T18:08:40.226Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-2ed5321b-a8aa-4711-b0bb-e68832f8cb26",
+        "at": "2026-11-05T18:08:40.226Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Pharmacie — achats prévus",
+      "amountCents": 4500,
+      "date": "2026-11-30",
+      "status": "planned",
+      "realizedAmountCents": null,
+      "realizedDate": null,
+      "standardCostCenter": "sante",
+      "costCenterId": null,
+      "categoryId": "cat_10ef4f08-a18c-45ce-bcc7-512f1a3df764"
+    },
+    "op_4b3da959-28a6-4642-939d-d732e47508dd": {
+      "id": "op_4b3da959-28a6-4642-939d-d732e47508dd",
+      "kind": "operation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:40.327Z",
+      "updatedAt": "2026-11-05T18:08:40.327Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "seed-plafonds-4bc993e3-3447-43ff-89d4-20a881dace58",
+        "at": "2026-11-05T18:08:40.327Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Donnée de démonstration persistante — revue des plafonds.",
+      "taskId": null,
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Cadeau d’anniversaire",
+      "amountCents": 6500,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 6500,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "divers",
+      "costCenterId": null,
+      "categoryId": "cat_433adeca-4228-4d5f-a737-4844f428ce86"
     }
   },
   "recurrences": {
@@ -50263,6 +50992,56 @@
       "taskId": "tsk_ad4fd4d5-40ce-4bc8-b4f4-676ab2c7682f",
       "standardCostCenter": "enfants",
       "costCenterId": null
+    },
+    "rec_15a60ab9-304f-41d6-8ec5-8b9c7b67802b": {
+      "id": "rec_15a60ab9-304f-41d6-8ec5-8b9c7b67802b",
+      "kind": "recurrence",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:40.456Z",
+      "updatedAt": "2026-11-05T18:08:40.456Z",
+      "provenance": {
+        "command": "createRecurrence",
+        "requestKey": "seed-plafonds-bdab3a58-b723-482c-96c9-4328c2a7eff9",
+        "at": "2026-11-05T18:08:40.456Z"
+      },
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Abonnement vidéo mensuel",
+      "amountCents": 1500,
+      "cadence": "monthly",
+      "firstDate": "2026-09-01",
+      "endDate": null,
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "loisirs",
+      "costCenterId": null,
+      "categoryId": "cat_c5276abd-03cf-4a56-bf61-3f1f022dda21"
+    },
+    "rec_8126e7b5-b2e3-41bc-982a-b3ee3fa18d9c": {
+      "id": "rec_8126e7b5-b2e3-41bc-982a-b3ee3fa18d9c",
+      "kind": "recurrence",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:40.565Z",
+      "updatedAt": "2026-11-05T18:08:40.565Z",
+      "provenance": {
+        "command": "createRecurrence",
+        "requestKey": "seed-plafonds-c674d4fe-79e7-4c70-a497-d08e26d36fec",
+        "at": "2026-11-05T18:08:40.565Z"
+      },
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "direction": "charge",
+      "label": "Loyer mensuel",
+      "amountCents": 70000,
+      "cadence": "monthly",
+      "firstDate": "2026-09-01",
+      "endDate": null,
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "logement",
+      "costCenterId": null,
+      "categoryId": null
     }
   },
   "patrimoines": {
@@ -50920,6 +51699,25 @@
       "openingStockCents": 2000000,
       "openingDate": "2026-05-01",
       "objectiveCents": 6000000
+    },
+    "pat_509cc3df-1dc4-4bca-99aa-578fb6e8e757": {
+      "id": "pat_509cc3df-1dc4-4bca-99aa-578fb6e8e757",
+      "kind": "patrimoine",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:18.016Z",
+      "updatedAt": "2026-11-05T18:08:18.016Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+        "at": "2026-11-05T18:08:18.016Z"
+      },
+      "label": "Patrimoine",
+      "coreProjectId": "prj_384ff101-0ff1-41af-9feb-42231ba371b7",
+      "principalBudgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "openingStockCents": 200000,
+      "openingDate": "2026-11-05",
+      "objectiveCents": 500000
     }
   },
   "capitalizations": {
@@ -52393,6 +53191,24 @@
       "patrimoineId": "pat_fe7bf248-2535-41d3-8e06-9dbb167410db",
       "coreProjectId": "prj_8f2eddd5-11ea-4a91-a5f2-7d9bf6fbada0",
       "vision": null
+    },
+    "bpm_ba324bae-4dcc-4970-9e96-6e45b24ff61c": {
+      "id": "bpm_ba324bae-4dcc-4970-9e96-6e45b24ff61c",
+      "kind": "bpmComposition",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:18.016Z",
+      "updatedAt": "2026-11-05T18:08:18.016Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+        "at": "2026-11-05T18:08:18.016Z"
+      },
+      "label": "BPM de TEST PLAFONDS · Dépassements",
+      "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+      "patrimoineId": "pat_509cc3df-1dc4-4bca-99aa-578fb6e8e757",
+      "coreProjectId": "prj_384ff101-0ff1-41af-9feb-42231ba371b7",
+      "vision": null
     }
   },
   "cycleLinks": {
@@ -53020,6 +53836,24 @@
       "frequency": "monthly",
       "anchorDay": 1,
       "startDate": "2026-05-01",
+      "state": "active"
+    },
+    "cyc_e0f57a12-df06-404b-997f-73b86a837e67": {
+      "id": "cyc_e0f57a12-df06-404b-997f-73b86a837e67",
+      "kind": "cycleLink",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:18.016Z",
+      "updatedAt": "2026-11-05T18:08:18.016Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+        "at": "2026-11-05T18:08:18.016Z"
+      },
+      "bpmCompositionId": "bpm_ba324bae-4dcc-4970-9e96-6e45b24ff61c",
+      "frequency": "monthly",
+      "anchorDay": 1,
+      "startDate": "2026-09-01",
       "state": "active"
     }
   },
@@ -138219,6 +139053,388 @@
         "categoryId": "cat_a20176c8-95ee-4a55-ad0a-4b2629f90cae"
       },
       "completedAt": "2026-11-05T17:12:14.170Z"
+    },
+    "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9": {
+      "requestKey": "seed-plafonds-b6f16363-6dfe-4396-90d0-317c2c001db9",
+      "command": "createUser",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "8fcfab93d07e8e5cdee4b9ac8fed54fc9b52e17edbbc1487e013a033c1842537",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "user",
+          "id": "usr_2abc3182-dd88-4455-9bbc-61957a294f49"
+        },
+        {
+          "kind": "coreProject",
+          "id": "prj_384ff101-0ff1-41af-9feb-42231ba371b7"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_6c57d470-85e7-44e2-8820-107035e8a50d"
+        },
+        {
+          "kind": "patrimoine",
+          "id": "pat_509cc3df-1dc4-4bca-99aa-578fb6e8e757"
+        },
+        {
+          "kind": "bpmComposition",
+          "id": "bpm_ba324bae-4dcc-4970-9e96-6e45b24ff61c"
+        },
+        {
+          "kind": "cycleLink",
+          "id": "cyc_e0f57a12-df06-404b-997f-73b86a837e67"
+        }
+      ],
+      "result": {
+        "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+        "coreProjectId": "prj_384ff101-0ff1-41af-9feb-42231ba371b7",
+        "budgetId": "bud_6c57d470-85e7-44e2-8820-107035e8a50d",
+        "patrimoineId": "pat_509cc3df-1dc4-4bca-99aa-578fb6e8e757",
+        "bpmCompositionId": "bpm_ba324bae-4dcc-4970-9e96-6e45b24ff61c",
+        "cycleLinkId": "cyc_e0f57a12-df06-404b-997f-73b86a837e67"
+      },
+      "completedAt": "2026-11-05T18:08:18.016Z"
+    },
+    "seed-plafonds-4fb0dc24-07b3-49c9-bd2e-df579ade3783": {
+      "requestKey": "seed-plafonds-4fb0dc24-07b3-49c9-bd2e-df579ade3783",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "66d61edb63b5ff402c46ffd713691aaa90b5d630fcad5ac9a064c1155754f91b",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_169cbb43-01d4-494e-8f81-d893d9582346"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_169cbb43-01d4-494e-8f81-d893d9582346"
+      },
+      "completedAt": "2026-11-05T18:08:38.846Z"
+    },
+    "seed-plafonds-551fd76e-a373-4dd4-b2ba-cf845eedd0c7": {
+      "requestKey": "seed-plafonds-551fd76e-a373-4dd4-b2ba-cf845eedd0c7",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "2eefdc41ffdea1c5d5106a12f5900216668f2fb74cf854e6993ea41d097fa876",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_6685fffa-625f-4ce3-9e49-a9d6fa45a394"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_6685fffa-625f-4ce3-9e49-a9d6fa45a394"
+      },
+      "completedAt": "2026-11-05T18:08:38.941Z"
+    },
+    "seed-plafonds-9e612fe3-cdb0-4f32-ac86-18c6ae68bf81": {
+      "requestKey": "seed-plafonds-9e612fe3-cdb0-4f32-ac86-18c6ae68bf81",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "bb1350d3b7933d45a953a91aba317ca94d4a7d8eb7949685cc0148dafd9b134e",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_2949035d-588d-42cd-ab9d-2e9419018b5f"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_2949035d-588d-42cd-ab9d-2e9419018b5f"
+      },
+      "completedAt": "2026-11-05T18:08:39.035Z"
+    },
+    "seed-plafonds-e8a4631f-9539-4047-8544-4605fd9364ce": {
+      "requestKey": "seed-plafonds-e8a4631f-9539-4047-8544-4605fd9364ce",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "894b00d4534066873b005b2daed044f82e757e686e17fcbc4d93fd590062dcc8",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_c5276abd-03cf-4a56-bf61-3f1f022dda21"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_c5276abd-03cf-4a56-bf61-3f1f022dda21"
+      },
+      "completedAt": "2026-11-05T18:08:39.145Z"
+    },
+    "seed-plafonds-f7eaafc4-22fb-42a5-b0d7-8457591c6c07": {
+      "requestKey": "seed-plafonds-f7eaafc4-22fb-42a5-b0d7-8457591c6c07",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "fde1d858ed9819de5d3e3e6a4bfd217eaa70626cc122253ffa86f2bfd22f4d40",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_5830cb27-784e-49dd-905b-269b86d2bac5"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_5830cb27-784e-49dd-905b-269b86d2bac5"
+      },
+      "completedAt": "2026-11-05T18:08:39.290Z"
+    },
+    "seed-plafonds-29fe068e-d72a-42a0-822f-a471e8150bcb": {
+      "requestKey": "seed-plafonds-29fe068e-d72a-42a0-822f-a471e8150bcb",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "12c5551197dd6f90557913f29918a7fee2bdfefde3ec513336ed68e2b596461d",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_10ef4f08-a18c-45ce-bcc7-512f1a3df764"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_10ef4f08-a18c-45ce-bcc7-512f1a3df764"
+      },
+      "completedAt": "2026-11-05T18:08:39.397Z"
+    },
+    "seed-plafonds-7fc24713-2001-48ed-a5a1-4b128a189646": {
+      "requestKey": "seed-plafonds-7fc24713-2001-48ed-a5a1-4b128a189646",
+      "command": "createChargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "9d2c4898d844b43e134920684aa40594f10d45a1458406b9c553b2eb07e8d3fb",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_433adeca-4228-4d5f-a737-4844f428ce86"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_433adeca-4228-4d5f-a737-4844f428ce86"
+      },
+      "completedAt": "2026-11-05T18:08:39.479Z"
+    },
+    "seed-plafonds-1d386003-83b0-43cf-83ab-602a405b83c0": {
+      "requestKey": "seed-plafonds-1d386003-83b0-43cf-83ab-602a405b83c0",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "f4ab24201b7d09063f4673920ff37999bf261bb3f5fe5bc51e34d6b2433766ff",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_55be890b-f1e7-49bf-84cb-276f543c2e60"
+        }
+      ],
+      "result": {
+        "operationId": "op_55be890b-f1e7-49bf-84cb-276f543c2e60"
+      },
+      "completedAt": "2026-11-05T18:08:39.560Z"
+    },
+    "seed-plafonds-c8155a80-1e78-47d6-9007-20c7abf8e999": {
+      "requestKey": "seed-plafonds-c8155a80-1e78-47d6-9007-20c7abf8e999",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "58bdb644ee4f4e58c4e31970c3bb29c960e230a1d409883c7a60a6babc0c08f3",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_7cf709c4-f1d8-4951-8e7e-d78eca00f5f1"
+        }
+      ],
+      "result": {
+        "operationId": "op_7cf709c4-f1d8-4951-8e7e-d78eca00f5f1"
+      },
+      "completedAt": "2026-11-05T18:08:39.647Z"
+    },
+    "seed-plafonds-4702d976-abfc-4330-8702-1e46561b44d9": {
+      "requestKey": "seed-plafonds-4702d976-abfc-4330-8702-1e46561b44d9",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "b09cd0e243fa23f9162e46a28b8a1929471711fa6d39ed0f8a4d69ec9c0a191b",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_6190e1fa-3c6c-4457-bb28-385309d63030"
+        }
+      ],
+      "result": {
+        "operationId": "op_6190e1fa-3c6c-4457-bb28-385309d63030"
+      },
+      "completedAt": "2026-11-05T18:08:39.733Z"
+    },
+    "seed-plafonds-900d09b7-06c6-4e10-873d-1d320b8b705d": {
+      "requestKey": "seed-plafonds-900d09b7-06c6-4e10-873d-1d320b8b705d",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "958e0dd85f8838dcc5396b31adde7afe119bca06817543d52a9c776c1c77d7d8",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_ecf16d9a-f6a9-4baf-b9ca-7b813abb665c"
+        }
+      ],
+      "result": {
+        "operationId": "op_ecf16d9a-f6a9-4baf-b9ca-7b813abb665c"
+      },
+      "completedAt": "2026-11-05T18:08:39.813Z"
+    },
+    "seed-plafonds-f29cfd51-3c2e-47aa-b681-fc79fea4649c": {
+      "requestKey": "seed-plafonds-f29cfd51-3c2e-47aa-b681-fc79fea4649c",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "a7d621b2ce591ac2420b919d868e1797b419a68f887992fe29d5bb45946831ca",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_6f6fd862-b04f-4b46-a4d5-e6a89d7c8f5a"
+        }
+      ],
+      "result": {
+        "operationId": "op_6f6fd862-b04f-4b46-a4d5-e6a89d7c8f5a"
+      },
+      "completedAt": "2026-11-05T18:08:39.894Z"
+    },
+    "seed-plafonds-164a38c6-f763-4d16-844e-14f90e4bf208": {
+      "requestKey": "seed-plafonds-164a38c6-f763-4d16-844e-14f90e4bf208",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "7d9a2ecd2d69c8f8d4235ca644b2bf104b2d8717e02489e17d8b7658a73cb85c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_bca0af2d-948d-46e3-afd7-0325d3bc5c15"
+        }
+      ],
+      "result": {
+        "operationId": "op_bca0af2d-948d-46e3-afd7-0325d3bc5c15"
+      },
+      "completedAt": "2026-11-05T18:08:39.975Z"
+    },
+    "seed-plafonds-a14dd30f-d38a-4027-82f7-9c8bd7595cc5": {
+      "requestKey": "seed-plafonds-a14dd30f-d38a-4027-82f7-9c8bd7595cc5",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "ff20914fb330b8193a70f6abe665bfe5b17b4d60d51493db8d052f85be123323",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_5f1e8348-2210-4e10-870c-ff7c3e748554"
+        }
+      ],
+      "result": {
+        "operationId": "op_5f1e8348-2210-4e10-870c-ff7c3e748554"
+      },
+      "completedAt": "2026-11-05T18:08:40.063Z"
+    },
+    "seed-plafonds-854a5d91-f399-489e-b45d-22187f179d76": {
+      "requestKey": "seed-plafonds-854a5d91-f399-489e-b45d-22187f179d76",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "69e8015b4f5eb6011bc6d2e3d5635f75c22d56af744b7312db58fa55191a95f7",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_8ea151ee-3496-4f41-b8e2-781f07d80db7"
+        }
+      ],
+      "result": {
+        "operationId": "op_8ea151ee-3496-4f41-b8e2-781f07d80db7"
+      },
+      "completedAt": "2026-11-05T18:08:40.152Z"
+    },
+    "seed-plafonds-2ed5321b-a8aa-4711-b0bb-e68832f8cb26": {
+      "requestKey": "seed-plafonds-2ed5321b-a8aa-4711-b0bb-e68832f8cb26",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "0d370d2aa96445525c6adc93f2b03ff23bac9320ae5d672e345c7376ebfc3f49",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_d88aa2a0-3c30-40e4-8ce2-ddcae968b485"
+        }
+      ],
+      "result": {
+        "operationId": "op_d88aa2a0-3c30-40e4-8ce2-ddcae968b485"
+      },
+      "completedAt": "2026-11-05T18:08:40.226Z"
+    },
+    "seed-plafonds-4bc993e3-3447-43ff-89d4-20a881dace58": {
+      "requestKey": "seed-plafonds-4bc993e3-3447-43ff-89d4-20a881dace58",
+      "command": "createOperation",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "bac52f43ec99666840ad58e842ad0ec82e671916dcb3cede26bde866ee04cc15",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_4b3da959-28a6-4642-939d-d732e47508dd"
+        }
+      ],
+      "result": {
+        "operationId": "op_4b3da959-28a6-4642-939d-d732e47508dd"
+      },
+      "completedAt": "2026-11-05T18:08:40.327Z"
+    },
+    "seed-plafonds-bdab3a58-b723-482c-96c9-4328c2a7eff9": {
+      "requestKey": "seed-plafonds-bdab3a58-b723-482c-96c9-4328c2a7eff9",
+      "command": "createRecurrence",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "f6d80f9fb87a8c4b3fb123f05ef42d18edbf6b1c33670d29269cd5ce008043e6",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "recurrence",
+          "id": "rec_15a60ab9-304f-41d6-8ec5-8b9c7b67802b"
+        }
+      ],
+      "result": {
+        "recurrenceId": "rec_15a60ab9-304f-41d6-8ec5-8b9c7b67802b"
+      },
+      "completedAt": "2026-11-05T18:08:40.456Z"
+    },
+    "seed-plafonds-c674d4fe-79e7-4c70-a497-d08e26d36fec": {
+      "requestKey": "seed-plafonds-c674d4fe-79e7-4c70-a497-d08e26d36fec",
+      "command": "createRecurrence",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "fingerprint": "59e2b32195377080845944666ee41bfc235e81182f226cc32416b15317cfe3c0",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "recurrence",
+          "id": "rec_8126e7b5-b2e3-41bc-982a-b3ee3fa18d9c"
+        }
+      ],
+      "result": {
+        "recurrenceId": "rec_8126e7b5-b2e3-41bc-982a-b3ee3fa18d9c"
+      },
+      "completedAt": "2026-11-05T18:08:40.565Z"
+    },
+    "category-a6184954-0089-461c-9c1a-eeda1c209158": {
+      "requestKey": "category-a6184954-0089-461c-9c1a-eeda1c209158",
+      "command": "createChargeCategory",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "fingerprint": "7315087da3c8f359df315cb544266ce07b2fa3f28f591ac878d5fb43e5b9b921",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_d986700f-f00e-4ef7-a6ab-48ff4747f94c"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_d986700f-f00e-4ef7-a6ab-48ff4747f94c"
+      },
+      "completedAt": "2026-11-05T20:07:56.766Z"
     }
   },
   "parameters": {
@@ -138343,6 +139559,142 @@
         "command": "updateChargeCategory",
         "at": "2026-11-05T17:14:26.992Z"
       }
+    },
+    "cat_169cbb43-01d4-494e-8f81-d893d9582346": {
+      "id": "cat_169cbb43-01d4-494e-8f81-d893d9582346",
+      "kind": "chargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:38.846Z",
+      "updatedAt": "2026-11-05T18:08:38.846Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "seed-plafonds-4fb0dc24-07b3-49c9-bd2e-df579ade3783",
+        "at": "2026-11-05T18:08:38.846Z"
+      },
+      "label": "Courses du quotidien",
+      "costCenterRef": "std:alimentation",
+      "capCents": 25000,
+      "archived": false
+    },
+    "cat_6685fffa-625f-4ce3-9e49-a9d6fa45a394": {
+      "id": "cat_6685fffa-625f-4ce3-9e49-a9d6fa45a394",
+      "kind": "chargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:38.941Z",
+      "updatedAt": "2026-11-05T18:08:38.941Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "seed-plafonds-551fd76e-a373-4dd4-b2ba-cf845eedd0c7",
+        "at": "2026-11-05T18:08:38.941Z"
+      },
+      "label": "Restaurants",
+      "costCenterRef": "std:alimentation",
+      "capCents": 15000,
+      "archived": false
+    },
+    "cat_2949035d-588d-42cd-ab9d-2e9419018b5f": {
+      "id": "cat_2949035d-588d-42cd-ab9d-2e9419018b5f",
+      "kind": "chargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.035Z",
+      "updatedAt": "2026-11-05T18:08:39.035Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "seed-plafonds-9e612fe3-cdb0-4f32-ac86-18c6ae68bf81",
+        "at": "2026-11-05T18:08:39.035Z"
+      },
+      "label": "Cinéma",
+      "costCenterRef": "std:loisirs",
+      "capCents": 4000,
+      "archived": false
+    },
+    "cat_c5276abd-03cf-4a56-bf61-3f1f022dda21": {
+      "id": "cat_c5276abd-03cf-4a56-bf61-3f1f022dda21",
+      "kind": "chargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.145Z",
+      "updatedAt": "2026-11-05T18:08:39.145Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "seed-plafonds-e8a4631f-9539-4047-8544-4605fd9364ce",
+        "at": "2026-11-05T18:08:39.145Z"
+      },
+      "label": "Abonnements",
+      "costCenterRef": "std:loisirs",
+      "capCents": 1600,
+      "archived": false
+    },
+    "cat_5830cb27-784e-49dd-905b-269b86d2bac5": {
+      "id": "cat_5830cb27-784e-49dd-905b-269b86d2bac5",
+      "kind": "chargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.290Z",
+      "updatedAt": "2026-11-05T18:08:39.290Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "seed-plafonds-f7eaafc4-22fb-42a5-b0d7-8457591c6c07",
+        "at": "2026-11-05T18:08:39.290Z"
+      },
+      "label": "Carburant",
+      "costCenterRef": "std:transport",
+      "capCents": 20000,
+      "archived": false
+    },
+    "cat_10ef4f08-a18c-45ce-bcc7-512f1a3df764": {
+      "id": "cat_10ef4f08-a18c-45ce-bcc7-512f1a3df764",
+      "kind": "chargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.397Z",
+      "updatedAt": "2026-11-05T18:08:39.397Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "seed-plafonds-29fe068e-d72a-42a0-822f-a471e8150bcb",
+        "at": "2026-11-05T18:08:39.397Z"
+      },
+      "label": "Pharmacie",
+      "costCenterRef": "std:sante",
+      "capCents": 8000,
+      "archived": false
+    },
+    "cat_433adeca-4228-4d5f-a737-4844f428ce86": {
+      "id": "cat_433adeca-4228-4d5f-a737-4844f428ce86",
+      "kind": "chargeCategory",
+      "userId": "usr_2abc3182-dd88-4455-9bbc-61957a294f49",
+      "revision": 1,
+      "createdAt": "2026-11-05T18:08:39.479Z",
+      "updatedAt": "2026-11-05T18:08:39.479Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "seed-plafonds-7fc24713-2001-48ed-a5a1-4b128a189646",
+        "at": "2026-11-05T18:08:39.479Z"
+      },
+      "label": "Cadeaux",
+      "costCenterRef": "std:divers",
+      "capCents": 5000,
+      "archived": false
+    },
+    "cat_d986700f-f00e-4ef7-a6ab-48ff4747f94c": {
+      "id": "cat_d986700f-f00e-4ef7-a6ab-48ff4747f94c",
+      "kind": "chargeCategory",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 1,
+      "createdAt": "2026-11-05T20:07:56.766Z",
+      "updatedAt": "2026-11-05T20:07:56.766Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "category-a6184954-0089-461c-9c1a-eeda1c209158",
+        "at": "2026-11-05T20:07:56.766Z"
+      },
+      "label": "IA",
+      "costCenterRef": "std:divers",
+      "capCents": 10000,
+      "archived": false
     }
   }
 }

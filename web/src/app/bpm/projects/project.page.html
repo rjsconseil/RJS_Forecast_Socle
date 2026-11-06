@@ -20,8 +20,8 @@
         <p class="eyebrow">
           {{
             d.role === 'life'
-              ? 'Projet de vie · racine du budget de vie'
-              : 'Projet standard du budget de vie'
+              ? 'Projet de vie · budget principal'
+              : 'Projet de la vie · rattaché au projet de vie'
           }}
         </p>
         <h1 class="display">{{ d.project.project.title }}</h1>
@@ -240,7 +240,7 @@
             }
             <div class="cockpit-details">
               <details class="cockpit-disclosure">
-                <summary>Ventilation & cycle actuel</summary>
+                <summary>Ventilation et cycle actuel</summary>
                 <div class="cockpit-disclosure-body">
                   <dl class="cockpit-facts">
                     <div>
@@ -269,13 +269,13 @@
                     </div>
                   </dl>
                   <p class="bpm-note">
-                    Seuls les règlements validés sont remontés au budget de vie. L’enveloppe ne
+                    Seuls les règlements validés sont remontés au budget du projet de vie. L’enveloppe ne
                     constitue pas une dépense immédiate.
                   </p>
                   @if (b.paidBeforeAllocationCents) {
                     <p class="bpm-note">
                       {{ b.paidBeforeAllocationCents | cents }} réglés avant l’attribution, hors
-                      budget de vie.
+                      budget du projet de vie.
                     </p>
                   }
                 </div>
@@ -286,7 +286,7 @@
                   id="project-overrun-flow"
                   tabindex="-1"
                   aria-live="polite"
-                  aria-label="Autorisation du budget de vie"
+                  aria-label="Autorisation du budget du projet de vie"
                 >
                   <p><strong>Budget du projet dépassé</strong> · {{ f.label }}</p>
                   <p>{{ f.message }}</p>
@@ -327,12 +327,12 @@
               }
               <!-- ---------- dépassements et fin de cycle ---------- -->
               <details class="cockpit-disclosure" id="cycle-title">
-                <summary>Contrôles & fin de cycle</summary>
+                <summary>Contrôles et fin de cycle</summary>
                 <div class="cockpit-disclosure-body">
                   <header>
                     <h3>Dépassements et fin de cycle</h3>
                     <p>
-                      À la fin du cycle, les dépassements autorisés sont facturés au budget de vie,
+                      À la fin du cycle, les dépassements autorisés sont facturés au budget du projet de vie,
                       puis le budget du projet est revalidé.
                     </p>
                   </header>
@@ -382,7 +382,7 @@
                           [disabled]="busy()"
                           (click)="bill(b.budgetId)"
                         >
-                          Facturer au budget de vie (fin de cycle)
+                          Facturer au budget du projet de vie (fin de cycle)
                         </button>
                       </div>
                     }
@@ -654,7 +654,7 @@
                       }
                       <details class="task-detail">
                         <summary>
-                          Budget & opérations <span>{{ taskCharges(t.task.id).length }}</span>
+                          Budget et opérations <span>{{ taskCharges(t.task.id).length }}</span>
                         </summary>
                         <div class="task-detail-body">
                           @if (b.regime) {
@@ -702,7 +702,7 @@
                             />
                           </section>
                           <section>
-                            <h5>Retour au budget de vie</h5>
+                            <h5>Retour au budget du projet de vie</h5>
                             @if (tb?.return; as r) {
                               <span
                                 >{{ r.amountCents | cents }} · {{ cadenceLabel(r.cadence) }} ·
@@ -809,18 +809,18 @@
     @if (d.role === 'life' && d.life; as l) {
       <!-- Variante non standard : même cockpit qu'un projet standard, lu sur les ressources du cycle en cours. -->
       @if (d.budget; as b) {
-        <section class="project-cockpit life-project-cockpit" aria-label="Chiffres clés du budget de vie">
+        <section class="project-cockpit life-project-cockpit" aria-label="Chiffres clés du budget du projet de vie">
           <div class="cockpit-body">
             <div class="life-summary project-summary-band">
               <section class="cockpit-progress" aria-labelledby="life-identity-title">
                 <div class="cockpit-section-heading">
-                  <h2 id="life-identity-title">Projet non standard</h2>
+                  <h2 id="life-identity-title">Projet de vie</h2>
                   <strong>{{ b.life?.period?.label ?? 'Cycle à configurer' }}</strong>
                 </div>
                 <dl class="cockpit-facts">
                   <div>
                     <dt>Projet de vie</dt>
-                    <dd>Unique · racine du budget de vie</dd>
+                    <dd>Projet principal unique</dd>
                   </div>
                   <div>
                     <dt>Patrimoine</dt>
@@ -833,7 +833,7 @@
                 </dl>
                 <a class="text-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
               </section>
-              <dl class="life-financial-stats" aria-label="Chiffres essentiels du budget de vie">
+              <dl class="life-financial-stats" aria-label="Chiffres essentiels du budget du projet de vie">
                 @for (tile of budgetTiles(); track tile.id) {
                   <div class="life-financial-stat" [attr.data-tone]="tile.tone">
                     <dt>{{ tile.label }}</dt>
@@ -845,7 +845,7 @@
             </div>
             <div class="cockpit-details">
               <details class="cockpit-disclosure">
-                <summary>Ventilation vers les projets & cycle actuel</summary>
+                <summary>Ventilation vers les projets et cycle actuel</summary>
                 <div class="cockpit-disclosure-body">
                   <dl class="cockpit-facts">
                     <div>
@@ -869,12 +869,12 @@
                       <dd>{{ b.approvedOverrunCents | cents }}</dd>
                     </div>
                     <div>
-                      <dt>Charges propres du budget de vie</dt>
+                      <dt>Charges directes du projet de vie</dt>
                       <dd>{{ b.unsharedChargesCents | cents }}</dd>
                     </div>
                   </dl>
                   <p class="bpm-note">
-                    Le budget de vie ne reçoit pas d’enveloppe : ses ressources sont les entrées du cycle. Il attribue une
+                    Le budget du projet de vie ne reçoit pas d’enveloppe : ses ressources sont les entrées du cycle. Il attribue une
                     enveloppe à chacun de ses projets, décide de leurs dépassements et les facture en fin de cycle.
                   </p>
                 </div>
@@ -886,17 +886,17 @@
                 <div class="bpm-overrun">
                   <p>
                     <strong>Fin de cycle :</strong> {{ l.billableCents | cents }} de dépassement(s)
-                    autorisé(s) à facturer au budget de vie.
+                    autorisé(s) à facturer au budget du projet de vie.
                   </p>
                   <div class="bpm-actions">
                     <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="bill()">
-                      Facturer au budget de vie
+                      Facturer au budget du projet de vie
                     </button>
                   </div>
                 </div>
               }
               <details class="cockpit-disclosure">
-                <summary>Contrôles & fin de cycle ({{ d.overruns.length }} dépassement{{ d.overruns.length > 1 ? 's' : '' }})</summary>
+                <summary>Contrôles et fin de cycle ({{ d.overruns.length }} dépassement{{ d.overruns.length > 1 ? 's' : '' }})</summary>
                 <div class="cockpit-disclosure-body">
                   @if (d.overruns.length) {
                     <div class="bpm-table-wrap">
@@ -943,15 +943,15 @@
         <header>
           <h2 id="life-title">Financement des projets de la vie</h2>
           <p>
-            Le budget de vie porte tous les projets de la vie qui lui sont rattachés : enveloppe de chacun, cycle où
+            Le budget du projet de vie porte tous les projets de la vie qui lui sont rattachés : enveloppe de chacun, cycle où
             elle a été attribuée et montants remontés période par période.
           </p>
         </header>
         <bpm-life-funding [funding]="d.budget?.life?.funding ?? null" [highlight]="d.context.period?.key ?? null" />
         @if (d.tasks.length) {
           <p class="bpm-note">
-            {{ d.tasks.length }} tâche(s) reliée(s) directement à la racine du projet de vie, hors
-            parcours : rattachez-les à un projet standard depuis le tableau des tâches.
+            {{ d.tasks.length }} tâche(s) rattachée(s) directement au projet de vie.
+            Vous pouvez les rattacher à un projet de la vie depuis le tableau des tâches.
           </p>
         }
       </section>

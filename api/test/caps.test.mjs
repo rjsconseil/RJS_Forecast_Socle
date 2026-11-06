@@ -215,3 +215,97 @@ test('revue des plafonds : les charges en cause, leur récurrence et leur antér
   assert.equal(review.totals.overCount, 2);
   assert.equal(typeof review.totals.expectedCents, 'number');
 });
+
+test('aperçu plafonds : alerte avant écriture, deux niveaux indépendants et aucune mutation', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  await setCenterCaps(socle, ctx, { 'std:loisirs': 100 });
+  const k = await category(socle, ctx, { label: 'Cinéma', costCenterRef: 'std:loisirs', cap: 30 });
+  await operation(socle, ctx, { direction: 'charge', amount: 25, date: TODAY, categoryId: k.id, costCenterRef: 'std:loisirs' });
+  const input = { direction: 'charge', amount: 10, date: TODAY, categoryId: k.id, costCenterRef: 'std:loisirs' };
+  const snapshot = JSON.stringify(socle.state);
+  const p = socle.modules.bpm.reads.previewCaps(ctx, input);
+  assert.equal(p.before.category.engagedCents, 2500);
+  assert.equal(p.after.category.engagedCents, 3500);
+  assert.equal(p.after.center.marginCents, 6500);
+  assert.deepEqual(p.alerts.map(a => a.level), ['category']);
+  assert.equal(JSON.stringify(socle.state), snapshot);
+  const saved = await route(socle, 'POST', '/api/bpm/operations')({ ctx, body: { ...input, label: 'Séance', requestKey: key('op') } });
+  assert.deepEqual(saved.capAlerts, p.alerts);
+});
+
+test('aperçu plafonds : remplacement sans double comptage et récurrence sans modifier les règlements', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  await setCenterCaps(socle, ctx, { 'std:loisirs': 100 });
+  const op = (await operation(socle, ctx, { direction: 'charge', amount: 80, date: '2026-11-20', status: 'planned', costCenterRef: 'std:loisirs' })).operation;
+  const p = socle.modules.bpm.reads.previewCaps(ctx, { replaceId: op.id, direction: 'charge', amount: 90, date: '2026-11-20', costCenterRef: 'std:loisirs' });
+  assert.equal(p.after.center.engagedCents, 9000);
+  assert.equal(p.alerts.length, 0);
+  const rec = (await B(socle).createRecurrence(ctx, { requestKey: key('rec'), direction: 'charge', label: 'Hebdomadaire', amount: 10, cadence: 'weekly', firstDate: '2026-11-02', costCenterRef: 'std:loisirs' })).recurrence;
+  await B(socle).settleOccurrence(ctx, rec.id, { requestKey: key('settle'), occurrenceDate: '2026-11-02', realizedDate: TODAY, realizedAmount: 10 });
+  const input = { replaceId: rec.id, direction: 'charge', amount: 20, cadence: 'weekly', firstDate: '2026-11-02', costCenterRef: 'std:loisirs' };
+  const rp = socle.modules.bpm.reads.previewCaps(ctx, input);
+  assert.equal(rp.after.center.paidCents, 1000);
+  assert.equal(rp.after.center.toPayCents, 16000); // 80 ponctuels + quatre échéances de 20
+  await B(socle).updateRecurrence(ctx, rec.id, { requestKey: key('edit'), expectedRevision: rec.revision, amount: 20 });
+  assert.equal(caps(socle, ctx).centers.find(c => c.ref === 'std:loisirs').engagedCents, rp.after.center.engagedCents);
+});
+
+test('aperçu plafonds : période de la dépense, futur et cycle décalé', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle, { anchorDay: 15 });
+  await setCenterCaps(socle, ctx, { 'std:loisirs': 50 });
+  await operation(socle, ctx, { direction: 'charge', amount: 40, date: '2026-10-20', costCenterRef: 'std:loisirs' });
+  const preview = amount => socle.modules.bpm.reads.previewCaps(ctx, { direction: 'charge', amount, date: '2026-11-10', costCenterRef: 'std:loisirs' });
+  assert.equal(preview(20).period.key, '2026-10');
+  assert.equal(preview(20).alerts[0].overCents, 1000);
+  assert.equal(preview(10).alerts.length, 0); // égalité autorisée
+  const future = socle.modules.bpm.reads.previewCaps(ctx, { direction: 'charge', amount: 60, date: '2027-01-16', costCenterRef: 'std:loisirs' });
+  assert.equal(future.period.key, '2027-01');
+  assert.equal(future.after.center.engagedCents, 6000);
+  const income = socle.modules.bpm.reads.previewCaps(ctx, { direction: 'income', amount: 60, date: '2026-11-10', costCenterRef: 'std:salaires' });
+  assert.equal(income.alerts.length, 0);
+});
+
+test('revue plafonds : chaque charge contribue une seule fois, compensation sans double compter les catégories', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  await setCenterCaps(socle, ctx, { 'std:loisirs': 100, 'std:sante': 50 });
+  const k = await category(socle, ctx, { label: 'Cinéma', costCenterRef: 'std:loisirs', cap: 30 });
+  await operation(socle, ctx, { direction: 'charge', amount: 120, date: TODAY, categoryId: k.id, costCenterRef: 'std:loisirs' });
+  const review = socle.modules.bpm.reads.capsReview(ctx);
+  assert.equal(review.totals.overCount, 2);
+  assert.equal(review.totals.toCompensateCents, 2000);
+  assert.equal(review.totals.headroomCents, 5000);
+  for (const row of [...review.centers, ...review.categories]) {
+    assert.equal(new Set(row.chargeIds).size, row.chargeIds.length);
+    assert.equal(row.chargeIds.reduce((s, id) => s + review.charges[id].engagedCents, 0), row.engagedCents);
+  }
+});
+
+test('aperçu paiement : remplace le prévu par le réel, occurrence comprise, sans doubler la charge', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  await setCenterCaps(socle, ctx, { 'std:loisirs': 30 });
+  const rec = (await B(socle).createRecurrence(ctx, { requestKey: key('rec'), direction: 'charge', label: 'Cinéma', amount: 20, cadence: 'monthly', firstDate: '2026-11-02', costCenterRef: 'std:loisirs' })).recurrence;
+  const input = { direction: 'charge', amount: 20, date: '2026-11-02', costCenterRef: 'std:loisirs', settle: true, recurrenceId: rec.id, occurrenceDate: '2026-11-02', realizedDate: TODAY, realizedAmount: 35 };
+  const snapshot = JSON.stringify(socle.state);
+  const p = socle.modules.bpm.reads.previewCaps(ctx, input);
+  assert.equal(p.after.center.paidCents, 3500);
+  assert.equal(p.after.center.toPayCents, 0);
+  assert.equal(p.alerts[0].overCents, 500);
+  assert.equal(JSON.stringify(socle.state), snapshot);
+  const saved = await B(socle).settleOccurrence(ctx, rec.id, { requestKey: key('settle'), occurrenceDate: input.occurrenceDate, realizedDate: TODAY, realizedAmount: 35 });
+  assert.equal(caps(socle, ctx).centers.find(c => c.ref === 'std:loisirs').engagedCents, p.after.center.engagedCents);
+  assert.ok(saved.operation.id);
+});
+
+test('aperçu : refuse de lire un budget ou une opération appartenant à un autre user', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  const other = await camille(socle, { label: 'Autre' });
+  const op = (await operation(socle, other.ctx, { direction: 'charge', amount: 20, date: TODAY })).operation;
+  assert.throws(() => socle.modules.bpm.reads.previewCaps(ctx, { direction: 'charge', amount: 20, date: TODAY, replaceId: op.id }));
+  assert.throws(() => socle.modules.bpm.reads.previewCaps(ctx, { direction: 'charge', amount: 20, date: TODAY, budgetId: op.budgetId }));
+});

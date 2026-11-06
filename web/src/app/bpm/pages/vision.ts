@@ -35,7 +35,7 @@ const DEFAULT_TYPES: GoalTypeOption[] = [
   imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmSeriesChart, BpmGoalCoverage, BpmGoalEditor, BpmVisionObjectives, MetricTilesComponent, ModalComponent, SignedCentsPipe, PercentPipe, ShortDatePipe, CentsPipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss'],
   template: `
-    <bpm-page title="Objectifs & avenir" lead="Votre épargne, votre patrimoine, vos objectifs." pageClass="bpm-vision" [context]="summary.data()?.context">
+    <bpm-page title="Objectifs et avenir" lead="Votre épargne, votre patrimoine, vos objectifs." pageClass="bpm-vision" [context]="summary.data()?.context">
       <ng-container actions>
         <button type="button" class="app-hero-action" (click)="openGoal(null)">＋ Ajouter un objectif</button>
         <a class="bpm-link" [routerLink]="[]" queryParamsHandling="preserve" fragment="hypotheses" (click)="openHyp()">Hypothèses →</a>
@@ -97,7 +97,7 @@ const DEFAULT_TYPES: GoalTypeOption[] = [
             } @else if (pr.status === 'unknown') {
               <p class="bpm-missing" role="note">
                 <strong>Stock initial : À renseigner.</strong> {{ pr.reason ?? 'Aucune projection fiable sans valeur de départ.' }}
-                <a class="btn btn-secondary" routerLink="/creer">Renseigner le stock (Partir de zéro)</a>
+                <a class="btn btn-secondary" routerLink="/creer">Renseigner mon patrimoine initial</a>
               </p>
             }
 

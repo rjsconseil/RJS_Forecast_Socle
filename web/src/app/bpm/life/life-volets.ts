@@ -147,8 +147,8 @@ function natureVolet(x: LifeNature): VoletView {
     actions: [
       { label: essential ? 'Saisir une charge' : 'Saisir une dépense', action: 'entry-charge' },
       { label: 'Échéances en retard', link: '/depenses', queryParams: { nature: x.key, status: 'late' } },
-      { label: 'Plafonds par poste', link: '/piloter/agir', fragment: 'budget-type' },
-      essential ? { label: 'Échéances à traiter', link: '/piloter/agir', fragment: 'bp-pending-title' } : { label: 'Directives de la période', link: '/piloter/agir', fragment: 'bp-dir-title' },
+      { label: 'Plafonds et catégories', link: '/plafonds' },
+      essential ? { label: 'Échéances à traiter', link: '/projet-de-vie', fragment: 'life-due' } : { label: 'Régler les objectifs', link: '/projet-de-vie', fragment: 'objectifs-budgetaires' },
     ],
     figures: essential
       ? [
@@ -236,7 +236,7 @@ function resultsGauge(d: BpmLifeManagement): Omit<LifeGauge, 'band'> {
       middle: { label: 'Cumul des résultats', value: signedCents(r.totalCents), kind: r.totalCents >= 0 ? 'gain' : 'spend' },
       last: { label: 'Moyenne par cycle', value: signedCents(r.averageCents) },
       meter: { percent: met, label: `${percentText(met, 0)} à l’objectif`, aria: met === null ? 'Aucun cycle clôturé' : `${percentText(met, 0)} des cycles atteignent l’épargne visée` },
-      caption: 'Un objectif d’excédent sur plusieurs cycles se fixe dans la vision.',
+      caption: 'Un objectif d’excédent sur plusieurs cycles se fixe dans « Objectifs du projet de vie ».',
     };
   }
   const positive = ratio(r.positiveCount, r.count);
@@ -247,7 +247,7 @@ function resultsGauge(d: BpmLifeManagement): Omit<LifeGauge, 'band'> {
     middle: { label: 'Meilleur cycle', value: signedCents(r.best?.resultCents ?? null), kind: 'gain' },
     last: { label: 'Moins bon cycle', value: signedCents(r.worst?.resultCents ?? null) },
     meter: { percent: positive, label: `${percentText(positive, 0)} positifs`, aria: positive === null ? 'Aucun cycle clôturé' : `${percentText(positive, 0)} des cycles clôturés sont positifs` },
-    caption: 'Fixez un objectif d’excédent dans la vision pour mesurer chaque cycle.',
+    caption: 'Fixez un objectif d’excédent ci-dessous pour mesurer chaque cycle.',
   };
 }
 
@@ -256,12 +256,12 @@ function resultsVolet(d: BpmLifeManagement): VoletView {
   const cur = r.current;
   const reached = cur && cur.targetCents ? ratio(cur.expectedCents, cur.targetCents) : null;
   const closable = !!r.closing?.possible && !!r.firstOpen;
-  const history: VoletLink = { label: 'Historique des cycles', link: '/piloter', fragment: 'bp-history-title' };
+  const history: VoletLink = { label: 'Historique des cycles', link: '/tableau-de-bord', fragment: 'bm-history' };
   return {
     key: 'resultats',
     index: 5,
     title: r.label,
-    link: { label: 'Historique des cycles', link: '/piloter', fragment: 'bp-history-title' },
+    link: { label: 'Historique des cycles', link: '/tableau-de-bord', fragment: 'bm-history' },
     health: r.health,
     healthLabel: r.healthLabel,
     tag: count(r.count, 'cycle clôturé', 'cycles clôturés'),
@@ -289,10 +289,10 @@ function resultsVolet(d: BpmLifeManagement): VoletView {
     disclosure: { label: 'Résultats cycle par cycle', summary: `${count(r.count, 'clôture')} · cumul ${signedCents(r.totalCents)}` },
     primary: closable ? { label: `Clôturer ${r.firstOpen!.label}`, action: 'close' } : history,
     actions: [
-      { label: 'Objectif d’excédent', link: '/vision', fragment: 'objectifs-budgetaires' },
+      { label: 'Objectif d’excédent', link: '/projet-de-vie', fragment: 'objectifs-budgetaires' },
       closable ? history : { label: 'Suivi & clôture', action: 'follow' },
-      { label: 'Objectif de la période', link: '/piloter/agir', fragment: 'bp-target-title' },
-      { label: 'Simuler une épargne', link: '/piloter/agir', fragment: 'bp-sim-title' },
+      { label: 'Épargne visée', link: '/projet-de-vie', fragment: 'objectifs-budgetaires' },
+      { label: 'Projection du patrimoine', link: '/projet-de-vie', fragment: 'life-projection' },
     ],
     figures: [
       { label: 'À clôturer', value: `${r.toCloseCount}`, pending: r.toCloseCount > 0 },
@@ -307,7 +307,7 @@ function patrimoineVolet(d: BpmLifeManagement): VoletView {
     key: 'patrimoine',
     index: 6,
     title: p.label,
-    link: { label: 'Cap patrimonial', link: '/vision', fragment: 'cap-patrimonial' },
+    link: { label: 'Cap patrimonial', link: '/projet-de-vie', fragment: 'cap-patrimonial' },
     health: p.health,
     healthLabel: p.healthLabel,
     tag: 'Patrimoine unique',
@@ -329,16 +329,16 @@ function patrimoineVolet(d: BpmLifeManagement): VoletView {
       band:
         p.objectiveCents !== null
           ? { label: 'Reste pour l’objectif', value: cents(p.remainingCents), sub: `objectif ${cents(p.objectiveCents)}`, percent: p.progressPct, percentLabel: percentText(p.progressPct, 0), tone: 'green' }
-          : { label: 'Objectif de stock', value: 'À fixer', percent: null, percentLabel: 'Sans objectif', tone: 'unknown', note: 'Fixez un cap patrimonial dans « Objectifs et avenir ».' },
+          : { label: 'Objectif de stock', value: 'À fixer', percent: null, percentLabel: 'Sans objectif', tone: 'unknown', note: 'Fixez un cap dans « Objectifs du projet de vie », ci-dessous.' },
     },
     alert: p.alert,
     disclosure: { label: 'Accumulation & capitalisations', summary: `${count(p.capitalizationCount, 'capitalisation')} · stock ${cents(p.stockCents)}` },
-    primary: { label: 'Cap patrimonial', link: '/vision', fragment: 'cap-patrimonial' },
+    primary: { label: 'Cap patrimonial', link: '/projet-de-vie', fragment: 'cap-patrimonial' },
     actions: [
-      { label: 'Projection & avenir', link: '/vision', fragment: 'bv-chart-title' },
-      { label: 'Objectifs de vie', link: '/vision', fragment: 'bv-goals-title' },
-      { label: 'Soldes versés', link: '/piloter', fragment: 'bp-history-title' },
-      { label: 'Calendrier du patrimoine', link: '/patrimoine/calendrier' },
+      { label: 'Projection & avenir', link: '/projet-de-vie', fragment: 'life-projection' },
+      { label: 'Objectifs de vie', link: '/projet-de-vie', fragment: 'life-dated-goals' },
+      { label: 'Soldes versés', link: '/tableau-de-bord', fragment: 'bm-history' },
+      { label: 'Calendrier budgétaire', link: '/calendrier-budget' },
     ],
     figures: [
       { label: 'Reste pour l’objectif', value: cents(p.remainingCents) },
