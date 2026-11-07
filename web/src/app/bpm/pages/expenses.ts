@@ -31,7 +31,6 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
     <bpm-page
       [title]="workspace()?.title ?? (direction() === 'income' ? 'Entrées de la période' : direction() === 'all' ? 'Entrées et dépenses' : 'Dépenses de la période')"
       pageClass="bpm-money expense-register-page"
-      [back]="workspace() ? { label: 'Retour au tableau de bord', link: workspace()!.parent, query: queryCarry() } : { label: 'Gestion du projet de vie', link: '/projet-de-vie', query: ctx.carry() }"
       [lead]="workspace()?.lead ?? lead()" [focus]="pageFocus()" [result]="message() ? { message: message()!, tone: 'success' } : null" toolsLabel="Saisir, pointer et retrouver"
       [context]="reg.data()?.context"
       [periodKey]="ctx.period()"
@@ -39,9 +38,9 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
       (periodChange)="ctx.setQuery({ period: $event })"
     >
       @if (nextLine(); as line) {
-        <button primary type="button" class="app-hero-action" (click)="reviewNext()">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : 'Ouvrir la prochaine échéance' }} · {{ line.label }}</button>
+        <button primary type="button" class="app-hero-action" (click)="reviewNext()">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : direction() === 'income' ? 'Ouvrir la prochaine entrée' : direction() === 'all' ? 'Ouvrir la prochaine échéance' : 'Ouvrir la prochaine dépense' }} · {{ line.label }}</button>
       }
-      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Ajouter une entrée' : direction() === 'all' ? 'Saisir un flux' : 'Ajouter une charge' }}</button>
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Saisir une entrée' : direction() === 'all' ? 'Saisir une entrée ou une dépense' : 'Saisir une dépense' }}</button>
       @if (activeRefine().length || search()) {
         <button actions type="button" class="btn btn-secondary" (click)="clearAll()">Effacer les filtres et la recherche</button>
       }
@@ -305,7 +304,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
                 @if (byId().get(id); as l) {
                   <article class="expense-row" [attr.data-selected]="isSelected(l) || null" [attr.data-status]="rowStatus(l)" data-ui-pattern="panel">
                     <!-- Charge spéciale d'un projet de la vie : elle s'ouvre sur la fiche du projet, pas sur un détail d'échéance. -->
-                    <a class="expense-charge-summary" [routerLink]="l.special && l.project ? ['/app/projets', l.project.coreProjectId] : []" [queryParams]="l.special ? null : lineQuery(l)" [queryParamsHandling]="l.special ? '' : 'merge'" [attr.aria-label]="(l.special ? 'Ouvrir le projet : ' : 'Ouvrir le détail : ') + l.label + ', ' + date(dateBasis() === 'realized' ? l.realizedDate : l.plannedDate)">
+                    <a class="expense-charge-summary" [routerLink]="l.special && l.project ? ['/app/gestion-projet', l.project.coreProjectId] : []" [queryParams]="l.special ? null : lineQuery(l)" [queryParamsHandling]="l.special ? '' : 'merge'" [attr.aria-label]="(l.special ? 'Ouvrir le projet : ' : 'Ouvrir le détail : ') + l.label + ', ' + date(dateBasis() === 'realized' ? l.realizedDate : l.plannedDate)">
                       <span class="expense-date">
                         <small>{{ dateBasis() === 'realized' ? 'Date de règlement' : 'Date prévue' }}</small>{{ (dateBasis() === 'realized' ? l.realizedDate : l.plannedDate) | shortDate }}
                         @if (dateBasis() === 'realized' && l.realizedDate !== l.plannedDate) { <small>Prévue le {{ l.plannedDate | shortDate }}</small> }

@@ -1,5 +1,7 @@
 import { BpmNavigation, BpmNavigationComponent } from './bpm/ui/navigation';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, Directive, effect, ElementRef, HostListener, inject, OnInit, signal, viewChild } from '@angular/core';
+import { visitLabel } from './bpm/ui/navigation-model';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, Directive, effect, ElementRef, HostListener, inject, OnInit, signal, untracked, viewChild } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -8,11 +10,13 @@ import { AccountChipComponent } from './shared/account-chip.component';
 import { StickyPageHeroDirective } from './shared/sticky-page-hero.directive';
 import { SectionPageMenu } from './shared/section-page-menu.component';
 import { workspaceContextQuery } from './shared/page-workspace';
+import { PageObjectLabels } from './shared/plan-context';
 import {
   hasPageMenu,
   hasSectionHome,
   locate,
   menuPages,
+  planContext,
   PLAN_OVERVIEW_TONE,
   PLAN_ZONES,
   PlanSection,
@@ -159,7 +163,7 @@ export class ResponsiveNavigationDirective {
                       ><span class="nav-icon" aria-hidden="true">⌂</span><span>Accueil de la section</span></a
                     >
                   }
-                  <rjs-section-page-menu [section]="section" [url]="url()" />
+                  <rjs-section-page-menu [section]="section" [url]="url()" [objectLabel]="objectLabel()" />
                 </nav>
               }
             }
@@ -297,6 +301,7 @@ export class App implements OnInit {
   protected ctx = inject(RecetteContext);
   private directory = inject(UserDirectory);
   private router = inject(Router);
+  private readonly title = inject(Title);
   protected users = this.directory.users;
   protected ready = signal(false);
   protected error = signal<string | null>(null);
@@ -332,30 +337,16 @@ export class App implements OnInit {
     const { section, page } = this.location();
     return page?.overview || !section ? PLAN_OVERVIEW_TONE : section.tone;
   });
-  protected breadcrumb = computed(() => {
-    const { kind, zone, section, page, subpage, detailLabel } = this.location();
-    const crumbs: { label: string; link?: string; query?: Record<string, string> | null }[] = [];
-    if (!zone) {
-      if (kind === 'none') crumbs.push({ label: 'Page hors du plan' });
-      if (kind === 'unknown') crumbs.push({ label: 'Destination introuvable' });
-      return crumbs;
-    }
-    crumbs.push({ label: zone.label, link: kind === 'zone' ? undefined : zoneHomeLink(zone) });
-    if (kind !== 'zone' && section) {
-      const entry = sectionEntry(zone, section);
-      const last = kind === 'section' || (!hasPageMenu(section) && !!page && !subpage && !detailLabel);
-      crumbs.push({ label: section.label, link: last ? undefined : entry.link, query: last ? null : entry.query });
-    }
-    if (kind !== 'zone' && page && section && hasPageMenu(section)) {
-      const parent = !!subpage || !!detailLabel;
-      if (page.label !== section.label || !parent) crumbs.push({ label: page.label, link: parent ? page.link : undefined, query: parent ? workspaceContextQuery(this.url(), page.link) : null });
-      else if (parent && crumbs.length) crumbs[crumbs.length - 1].query = workspaceContextQuery(this.url(), page.link);
-    }
-    if (subpage) crumbs.push({ label: subpage.label });
-    if (detailLabel) crumbs.push({ label: detailLabel });
-    if (kind === 'unknown') crumbs.push({ label: 'Destination introuvable' });
-    return crumbs;
-  });
+  private readonly objectLabels = inject(PageObjectLabels);
+  /** Le nom de l'objet ouvert (fiche projet) quand la page l'a publié. */
+  protected readonly objectLabel = computed(() => this.objectLabels.labelFor(this.url()));
+  /** Le fil d'Ariane suit le plan : zone, section, page, fiche, sous-page ; la lecture (période, filtres) suit les liens. */
+  protected breadcrumb = computed(() =>
+    planContext(this.url(), this.objectLabel()).crumbs.map((crumb) => ({
+      ...crumb,
+      query: crumb.link ? workspaceContextQuery(this.url(), crumb.link.startsWith('/zones/') ? '' : crumb.link) : null,
+    })),
+  );
   protected activeUser = computed(() => this.users().find((u) => u.id === this.ctx.userId()) ?? null);
   protected activeInitial = computed(() => this.activeUser()?.label.trim()[0]?.toUpperCase() ?? '·');
   /** Accueil, accueils de zone (hors BPM), utilisateurs, administration et Object Management restent consultables sans user. */
@@ -371,6 +362,13 @@ export class App implements OnInit {
     effect(() => {
       this.url();
       this.navigation()?.close();
+    });
+    // Une fiche ou un poste ouvert donne son nom à l'onglet du navigateur, comme au fil d'Ariane et au parcours.
+    // L'effet passe après le titre de la route, posé à la fin de la navigation.
+    effect(() => {
+      const url = this.url();
+      const name = this.objectLabel();
+      if (name) untracked(() => this.title.setTitle(`${visitLabel(url, name)} — RJS Forecast`));
     });
   }
 

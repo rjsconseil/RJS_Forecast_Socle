@@ -139,7 +139,7 @@ describe('page dédiée Objectifs et avenir', () => {
     expect(harness.routeNativeElement!.textContent).toContain('Votre saisie est conservée');
   });
   it('crée et modifie un objectif avec l’éditeur partagé', async () => {
-    await click('+ Ajouter un objectif daté');
+    await click('＋ Créer un objectif daté');
     await fill('label', 'Voyage');
     await fill('target', '2500');
     await fill('date', '2028-06-01');
@@ -208,18 +208,21 @@ describe('page dédiée Objectifs et avenir', () => {
     expect(element('.life-goal-list').textContent).toContain('Études');
   });
   it('conserve un réglage non enregistré en changeant d’espace', async () => {
-    await harness.navigateByUrl('/vision?view=reperes');
+    // Réglages et suivi sont deux adresses : la saisie passe de l’une à l’autre par les brouillons de l’utilisateur.
+    TestBed.inject(RecetteContext).select('vision-workspace-test', { remember: false });
+    await settle();
+    await harness.navigateByUrl('/vision/reperes');
     await settle();
     await fill('wealthTarget', '48000');
-    await harness.navigateByUrl('/vision?view=suivi');
+    await harness.navigateByUrl('/vision');
     await settle();
-    await harness.navigateByUrl('/vision?view=reperes');
+    await harness.navigateByUrl('/vision/reperes');
     await settle();
     expect(element<HTMLInputElement>('input[name="wealthTarget"]').value).toBe('48000');
     expect(api.updateBpmPatrimoine).not.toHaveBeenCalled();
   });
   it('ouvre le scénario depuis le bandeau et réutilise la saisie sans formulaire concurrent', async () => {
-    await harness.navigateByUrl('/vision?view=suivi&q=etudes');
+    await harness.navigateByUrl('/vision?q=etudes');
     await settle();
     await click('Calculer la couverture des objectifs');
     expect(TestBed.inject(Router).url).toContain('reglage=projection');
@@ -237,7 +240,7 @@ describe('page dédiée Objectifs et avenir', () => {
   });
 
   it('enregistre un repère saisi depuis le bandeau sans toucher à l’autre', async () => {
-    await harness.navigateByUrl('/vision?view=reperes');
+    await harness.navigateByUrl('/vision/reperes');
     await settle();
     await fill('wealthTarget', '49000');
     expect(element('.bpm-toolbar-focus').textContent).toContain('repère non enregistré');
@@ -268,10 +271,13 @@ describe('page dédiée Objectifs et avenir', () => {
   });
 
   it('priorise une saisie conservée et affiche son résultat dans le bandeau', async () => {
-    await harness.navigateByUrl('/vision?view=reperes');
+    // Réglages et suivi sont deux adresses : la saisie passe de l’une à l’autre par les brouillons de l’utilisateur.
+    TestBed.inject(RecetteContext).select('vision-workspace-test', { remember: false });
+    await settle();
+    await harness.navigateByUrl('/vision/reperes');
     await settle();
     await fill('wealthTarget', '51000');
-    await harness.navigateByUrl('/vision?view=suivi');
+    await harness.navigateByUrl('/vision');
     await settle();
     expect(element('.bpm-toolbar-primary').textContent).toContain('Enregistrer le cap saisi');
     expect(element('.page-toolbar-scope').textContent).toContain('Cap patrimonial');

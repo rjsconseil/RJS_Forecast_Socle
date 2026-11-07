@@ -2,6 +2,40 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { RouterLink } from '@angular/router';
 import { ApiError } from '../../core/api.service';
 
+/** Refus de l'API « Cycle à configurer » (règle sur la période), distinct d'une panne : réessayer ne changerait rien. */
+export function isCycleRefusal(e: ApiError | null | undefined): boolean {
+  return !!e && e.body.code === 'FORBIDDEN_BY_RULE' && e.body.details?.['field'] === 'period';
+}
+
+/**
+ * Les deux chemins pour sortir de « Cycle à configurer », partout les mêmes :
+ * l'assistant du projet de vie (cycle, patrimoine, budget type en une fois, il complète un budget existant),
+ * ou le seul réglage du cycle pour qui veut aller vite.
+ */
+@Component({
+  selector: 'bpm-cycle-setup',
+  imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrl: './bpm-ui.scss',
+  template: `
+    @if (buttons()) {
+      <span class="bpm-actions bpm-cycle-setup">
+        <a class="btn btn-primary" routerLink="/creer/projet-de-vie">Démarrer mon projet de vie</a>
+        <a class="btn btn-secondary" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
+      </span>
+    } @else {
+      <span class="bpm-cycle-setup">
+        <a class="bm-action-link" routerLink="/creer/projet-de-vie">Démarrer mon projet de vie →</a>
+        <span aria-hidden="true"> · </span>
+        <a class="bm-action-link" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
+      </span>
+    }
+  `,
+})
+export class BpmCycleSetup {
+  readonly buttons = input(false);
+}
+
 /**
  * États d'une lecture, dans le vocabulaire des pages BPM de la référence (`bpm-pages.scss`, `bpm-money.scss`) :
  * lecture en cours (`.bpm-help` + `role="status"`), erreur avec nouvelle tentative (`.bpm-error` + `role="alert"`),
@@ -9,7 +43,7 @@ import { ApiError } from '../../core/api.service';
  */
 @Component({
   selector: 'bpm-state',
-  imports: [RouterLink],
+  imports: [BpmCycleSetup],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './bpm-ui.scss',
   template: `
@@ -21,9 +55,7 @@ import { ApiError } from '../../core/api.service';
             <strong>Cycle à configurer.</strong> Les chiffres d'une période sont inconnus tant que le cycle du Budget du projet
             de vie n'a pas de date de début : ils ne valent pas zéro.
           </p>
-          <div class="bpm-actions">
-            <a class="btn btn-primary" routerLink="/app/reglages">Configurer le cycle</a>
-          </div>
+          <bpm-cycle-setup [buttons]="true" />
         </div>
       } @else {
       <div class="bpm-error bpm-state-error" role="alert">
@@ -59,8 +91,5 @@ export class BpmState {
   readonly lines = input(3);
   readonly retry = output<void>();
   protected rows = () => Array.from({ length: this.lines() }, (_, i) => i);
-  /** Refus de l'API « Cycle à configurer » (règle sur la période), distinct d'une panne. */
-  protected isCycleToConfigure(e: ApiError) {
-    return e.body.code === 'FORBIDDEN_BY_RULE' && e.body.details?.['field'] === 'period';
-  }
+  protected isCycleToConfigure = isCycleRefusal;
 }

@@ -9,7 +9,7 @@ describe('routes BPM', () => {
   const find = (path: string) => routes.find((r) => r.path === path);
 
   it('déclare chaque destination de la section Ma vision budgétaire et Démarrer un projet', () => {
-    for (const path of ['creer', 'tableau-de-bord', 'projet-de-vie', 'depenses', 'plafonds', 'piloter', 'piloter/agir', 'vision', 'argent/entrees', 'argent/postes/:poste', 'argent/reste', 'utilisateurs', 'app/gestion-projet', 'app/gestion-projet/:id']) {
+    for (const path of ['creer', 'tableau-de-bord', 'projet-de-vie', 'depenses/registre', 'plafonds', 'piloter', 'piloter/agir', 'vision', 'tableau-de-bord/entrees', 'argent/postes/:poste', 'tableau-de-bord/rapprochement', 'utilisateurs', 'app/gestion-projet', 'app/gestion-projet/:id']) {
       const r = find(path);
       expect(r, path).toBeTruthy();
       expect(r!.loadComponent, path).toBeTypeOf('function');
@@ -55,6 +55,29 @@ describe('routes BPM', () => {
 
   it('garde le socle, Object Management et l’Administration distincts de l’espace métier', () => {
     for (const path of ['projects', 'tasks', 'socle/budget', 'socle/patrimoine', 'object-management', 'admin']) expect(find(path), path).toBeTruthy();
+  });
+
+  it('donne une seule adresse à chaque écran et y conduit les anciennes en gardant la lecture', async () => {
+    @Component({ template: '' })
+    class Blank {}
+    const kept = ['depenses', 'argent/entrees', 'argent/reste', 'app/projets/:id'].map((path) => find(path)!);
+    for (const route of kept) expect(route.loadComponent, route.path).toBeUndefined();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([
+        ...kept,
+        ...['depenses/registre', 'tableau-de-bord/entrees', 'tableau-de-bord/rapprochement', 'app/gestion-projet/:id'].map((path) => ({ path, component: Blank })),
+      ])],
+    });
+    const router = TestBed.inject(Router);
+    for (const [from, to] of [
+      ['/depenses?period=2026-10&direction=income', '/depenses/registre?period=2026-10&direction=income'],
+      ['/argent/entrees?period=2026-09', '/tableau-de-bord/entrees?period=2026-09'],
+      ['/argent/reste?period=2026-09#ecart', '/tableau-de-bord/rapprochement?period=2026-09#ecart'],
+      ['/app/projets/prj_42?task=tsk_1', '/app/gestion-projet/prj_42?task=tsk_1'],
+    ]) {
+      await router.navigateByUrl(from);
+      expect(router.url, from).toBe(to);
+    }
   });
 
   it('conserve les paramètres d’un ancien lien redirigé', async () => {

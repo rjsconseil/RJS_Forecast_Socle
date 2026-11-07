@@ -9,7 +9,7 @@ import { BpmLineDetail, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus
 import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
 
 /**
- * Détail des entrées (/argent/entrees), sur la page dédiée source `bpm-money-detail` : total reçu,
+ * Détail des entrées (/tableau-de-bord/entrees), sur la page dédiée source `bpm-money-detail` : total reçu,
  * encore attendu, ventilation par source, opérations reçues et échéances attendues. Une ligne ouvre
  * le détail partagé (pointage « Reçu » quand il est permis, modification par l'éditeur BPM).
  */
@@ -20,9 +20,7 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
-      kicker="Tableau de bord"
       [title]="workspace()?.title ?? 'Détail des entrées'"
-      [back]="{ label: 'Retour au tableau de bord', link: workspace()?.parent ?? '/tableau-de-bord', query: carry() }"
       pageClass="bpm-money bpm-money-detail"
       [lead]="workspace()?.lead ?? lead()" [focus]="pageFocus()" [result]="notice() ? { message: notice()!, tone: 'success' } : null" toolsLabel="Recevoir et vérifier les entrées"
       [context]="d()?.context"
@@ -31,8 +29,8 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
       (periodChange)="ctx.setQuery({ period: $event })"
     >
       @if (nextLine(); as line) { <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">Vérifier la réception · {{ line.label }}</button> }
-      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée</button>
-      @if (unrealized().length) { <a actions class="bpm-link" routerLink="/depenses" [queryParams]="unrealizedQuery()">Revoir {{ unrealized().length }} entrée(s) non réalisée(s)</a> }
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir une entrée</button>
+      @if (unrealized().length) { <a actions class="bpm-link" routerLink="/depenses/registre" [queryParams]="unrealizedQuery()">Revoir {{ unrealized().length }} entrée(s) non réalisée(s)</a> }
 
       <div class="bpm-money bpm-money-body bpm-money-detail" data-tone="budget">
         @if (problem(); as p) {
@@ -238,7 +236,7 @@ export class BpmIncomesPage {
     this.ctx.setQuery({ ligne: id });
   }
   protected closeLine() {
-    this.ctx.setQuery({ ligne: null });
+    this.ctx.setQuery({ ligne: null }, { replace: true });
   }
 
   // ---------- éditeur partagé (entrée par défaut) ----------

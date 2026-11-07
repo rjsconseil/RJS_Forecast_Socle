@@ -181,7 +181,7 @@ export class BpmDashboardCap {
       @if (stock() === null) {
         <p class="wealth-unavailable">
           <strong>Stock enregistré : À renseigner.</strong> {{ stockReason() ?? 'Le stock initial du Patrimoine n’est pas connu.' }}
-          <a routerLink="/creer">Renseigner le stock →</a>
+          <a routerLink="/app/reglages/patrimoine">Renseigner le stock →</a>
         </p>
       }
       <div class="wealth-overview">
@@ -249,7 +249,7 @@ export class BpmDashboardCap {
           @if (formula()) {
             <p>Formule : <code>{{ formula() }}</code></p>
           }
-          <a routerLink="/argent/reste" [queryParams]="carry()">Effet de la période →</a>
+          <a routerLink="/tableau-de-bord/rapprochement" [queryParams]="carry()">Effet de la période →</a>
         </div>
       </details>
     </section>

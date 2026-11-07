@@ -35,7 +35,6 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
     <div class="page page-wide bpm-projects bpm-project-page bpm-management bpm-life-management" bpmFragmentNavigation [bpmFragmentReady]="!!data()">
       <bpm-page-banner
         title="Gestion du projet de vie"
-        kicker="Ma vision budgétaire"
         lead="Pilotez votre cycle, réglez l’essentiel à temps et décidez de ce que vos projets peuvent recevoir."
         [context]="data()?.context"
         [periodNav]="true"
@@ -52,11 +51,11 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
         @if (workspace()?.key === 'life-budget') {
           <ng-container actions>
           <button actions class="btn btn-secondary" type="button" [disabled]="!budgetType()?.ready() || budgetType()?.saving()" (click)="budgetType()?.addRecurring('income')">＋ Entrée récurrente</button>
-          @if (budgetType()?.pendingChanges()) { <button actions class="btn btn-secondary" type="button" [disabled]="budgetType()?.saving()" (click)="budgetType()?.addRecurring('charge')">＋ Charge récurrente</button> }
+          @if (budgetType()?.pendingChanges()) { <button actions class="btn btn-secondary" type="button" [disabled]="budgetType()?.saving()" (click)="budgetType()?.addRecurring('charge')">＋ Dépense récurrente</button> }
           <a actions class="bpm-link" routerLink="/depenses/registre" queryParamsHandling="preserve">Vérifier les échéances générées →</a>
           </ng-container>
         } @else {
-          <button actions class="btn btn-secondary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une entrée ou une charge</button>
+          <button actions class="btn btn-secondary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une entrée ou une dépense</button>
         }
         @if (!workspace() && priorityKind() !== 'budget') {
           <button actions class="btn btn-secondary" type="button" [disabled]="!data()" (click)="budgetTypeOpen.set(true)">Budget type</button>
@@ -91,7 +90,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           @if (capOverCount()) {
             <a class="btn btn-secondary" routerLink="/plafonds" [queryParams]="{ period: period(), show: 'over' }">Traiter {{ capOverCount() }} dépassement(s)</a>
           } @else if (data() && data()!.results.savingsTargetCents === null) {
-            <a class="btn btn-secondary" routerLink="/vision" [queryParams]="{ view: 'reperes' }" fragment="epargne">Fixer mon épargne visée</a>
+            <a class="btn btn-secondary" routerLink="/vision/reperes" fragment="epargne">Fixer mon épargne visée</a>
           } @else if (nextUnfunded(); as project) {
             <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', project.coreProjectId]">Préparer les projets sans enveloppe</a>
           }
@@ -466,7 +465,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
               Aucun projet de la vie n’est rattaché : aucune enveloppe à suivre ni décision attendue. Un projet de la vie finance
               une envie (voyage, travaux, formation…) par une enveloppe ; ses dépenses validées entrent alors dans le cycle.
             </p>
-            <div class="bpm-actions"><a class="btn btn-primary" routerLink="/creer">Créer un projet de la vie</a></div>
+            <div class="bpm-actions"><a class="btn btn-primary" routerLink="/creer/projet-de-la-vie">Créer un projet de la vie</a></div>
           </section>
         }
 
@@ -587,7 +586,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
               <a routerLink="/projet-de-vie" fragment="life-decisions" (click)="followOpen.set(false)">Décisions attendues</a>.
             </p>
             <nav class="bpm-actions" aria-label="Vues complémentaires">
-              <a class="text-link" [routerLink]="['/app/projets', d.lifeProject.coreProjectId]">Fiche du projet de vie ↗</a>
+              <a class="text-link" [routerLink]="['/app/gestion-projet', d.lifeProject.coreProjectId]">Fiche du projet de vie ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord">Tableau de bord ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord" fragment="bm-history" (click)="followOpen.set(false)">Historique des cycles ↗</a>
               <a class="text-link" routerLink="/vision" fragment="objectifs-budgetaires" (click)="followOpen.set(false)">Objectif d’excédent ↗</a>
@@ -666,7 +665,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
       </div>
     </ng-template>
 
-    <bpm-entry-flow [budgets]="budgets()" [defaults]="entryDefaults()" (saved)="saved($event)" /> @if (lineId() && !ctx.q('entry')()) {
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="entryDefaults()" [clearOnClose]="['entryDirection']" (saved)="saved($event)" /> @if (lineId() && !ctx.q('entry')()) {
       <bpm-line-detail [lineId]="lineId()!" (closed)="closeLine()" (edit)="editLine($event)" />
     }
   `,
@@ -713,7 +712,7 @@ export class BpmLifeManagementPage {
   protected expanded = bpmQueryState('expanded', new Set<string>(), { parse: raw => new Set(raw.split(',').filter(Boolean)), format: ids => [...ids].join(','), replace: true });
   protected followOpen = signal(false);
   protected dueChoice = signal('');
-  protected lineId = bpmQueryState<string | null>('ligne', null);
+  protected lineId = bpmQueryState<string | null>('ligne', null, { overlay: true });
   protected entryDefaults = computed<Partial<EntryInput>>(() => ({ direction: this.ctx.query().get('entryDirection') === 'income' ? 'income' : 'charge' }));
   private closeKey = newRequestKey();
 
@@ -783,7 +782,7 @@ export class BpmLifeManagementPage {
     return { title: d.cycle.reading === 'closed' ? 'Bilan de la période clôturée' : 'Aucune échéance urgente ni décision en attente', detail: 'Profitez de ce point pour vérifier le budget type et préparer la prochaine période.', tone: 'success' };
   });
   protected priorityLabel = computed(() => this.workspace()?.key === 'life-budget'
-    ? this.budgetType()?.pendingChanges() ? `Enregistrer le budget type · ${this.budgetType()!.pendingChanges()} modification(s)` : '＋ Ajouter une charge récurrente'
+    ? this.budgetType()?.pendingChanges() ? `Enregistrer le budget type · ${this.budgetType()!.pendingChanges()} modification(s)` : '＋ Ajouter une dépense récurrente'
     : this.workspace()?.key === 'life-closing'
       ? this.data()?.results.closing?.possible && this.data()?.results.closing?.preview ? `Clôturer ${this.data()!.results.closing!.preview!.periodLabel}` : 'Actualiser la clôture'
       : this.priorityKind() === 'due' ? `Examiner et régler · ${this.priorityDue()?.label ?? 'échéance'}` : this.priorityKind() === 'follow' ? 'Ouvrir les suites à donner' : 'Revoir mon budget type');
@@ -845,7 +844,8 @@ export class BpmLifeManagementPage {
       this.data.set(data);
       this.error.set('');
       // Volets à traiter ouverts d'emblée au premier chargement : le détail montre quoi faire.
-      if (!this.expanded().size && sequence === 1) this.expanded.set(new Set(data.pilot.volets.filter((v) => v.health === 'alert').map((v) => v.key)));
+      // Seule la vue principale montre les volets : une sous-page ne réécrit pas son adresse pour eux.
+      if (!this.workspace() && !this.expanded().size && sequence === 1) this.expanded.set(new Set(data.pilot.volets.filter((v) => v.health === 'alert').map((v) => v.key)));
       if (this.dueChoice() && !data.dueSoon.lines.some((l) => l.id === this.dueChoice())) this.dueChoice.set('');
     } catch (err) {
       if (sequence === this.sequence) this.error.set(toApiError(err).message);

@@ -7,11 +7,11 @@ import { EntryInput, RegisterLine } from '../../core/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents, SignedCentsPipe } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { BpmDrafts } from '../ui/drafts';
-import { BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, BpmState, bpmLoader } from '../ui';
+import { BpmCycleSetup, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, BpmState, bpmLoader } from '../ui';
 import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
 
 /**
- * Détail du solde (/argent/reste), sur la page dédiée source `bpm-money-detail` : chiffres clés
+ * Détail du solde (/tableau-de-bord/rapprochement), sur la page dédiée source `bpm-money-detail` : chiffres clés
  * (reçu, payé, net réalisé, solde prévu à la clôture), décomposition des montants, effet patrimonial
  * et vérification avec le compte. Le rapprochement (soldes saisis gardés dans l'URL) calcule l'écart
  * et propose une saisie relue, jamais une création automatique.
@@ -19,13 +19,11 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
 @Component({
   selector: 'bpm-page-balance',
   providers: [BpmPageContext],
-  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmEntryFlow, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
+  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmCycleSetup, BpmEntryFlow, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
-      kicker="Tableau de bord"
       [title]="workspace()?.title ?? 'Solde de la période'"
-      [back]="{ label: 'Retour au tableau de bord', link: workspace()?.parent ?? '/tableau-de-bord', query: carry() }"
       pageClass="bpm-money bpm-money-detail"
       [lead]="workspace()?.lead ?? 'Comparer le budget et votre compte, puis expliquer les écarts.'" [focus]="pageFocus()" [result]="notice() ? { message: notice()!, tone: 'success' } : null" toolsLabel="Rapprocher avec mon compte"
       [context]="b()?.context"
@@ -36,9 +34,9 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
       @if (b()?.reconciliation?.gapCents; as gap) {
         <button primary type="button" class="app-hero-action" (click)="fillGap(gap)">Préparer l’opération d’écart · {{ abs(gap) | cents }}</button>
       }
-      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée ou une charge</button>
-      @if (b()?.toReceiveCents) { <a actions class="bpm-link" routerLink="/argent/entrees" [queryParams]="carry()">Vérifier les {{ b()!.toReceiveCents | cents }} à recevoir →</a> }
-      @if (b()?.toPayCents) { <a actions class="bpm-link" routerLink="/depenses" [queryParams]="carry()">Revoir les charges de la période →</a> }
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir une entrée ou une dépense</button>
+      @if (b()?.toReceiveCents) { <a actions class="bpm-link" routerLink="/tableau-de-bord/entrees" [queryParams]="carry()">Vérifier les {{ b()!.toReceiveCents | cents }} à recevoir →</a> }
+      @if (b()?.toPayCents) { <a actions class="bpm-link" routerLink="/depenses/registre" [queryParams]="carry()">Revoir les charges de la période →</a> }
       <form tools class="bpm-toolbar-search" (ngSubmit)="reconcile()" novalidate>
         <label>Solde initial du compte (€)<input name="initial" inputmode="decimal" [(ngModel)]="initial" [attr.aria-invalid]="recError() === 'initial' ? 'true' : null" /></label>
         <label>Solde actuel du compte (€)<input name="current" inputmode="decimal" [(ngModel)]="current" [attr.aria-invalid]="recError() === 'current' ? 'true' : null" /></label>
@@ -67,7 +65,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
             <p class="bmd-message" data-state="danger" role="alert">{{ e.message }} Les chiffres affichés sont ceux de la dernière lecture réussie.</p>
           }
           @if (!v.context.period) {
-            <p class="bmd-note-banner" role="note">Cycle à configurer : le solde de période est inconnu. <a routerLink="/creer">Configurer le cycle</a></p>
+            <p class="bmd-note-banner" role="note">Cycle à configurer : le solde de période est inconnu. <bpm-cycle-setup /></p>
           } @else if (v.closed) {
             <p class="bmd-note-banner">Période clôturée : les montants ne changent plus. Chiffres enregistrés à la clôture, non recalculés.</p>
           } @else if (v.closingDate) {
@@ -80,8 +78,8 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
             <table class="bmd-rest">
               <caption class="visually-hidden">Du reçu au solde prévu à la clôture</caption>
               <tbody>
-                <tr><th scope="row"><span aria-hidden="true">+</span> Entrées reçues (date de règlement dans la période)</th><td><a routerLink="/argent/entrees" [queryParams]="carry()">{{ plus(v.receivedCents) }}</a></td></tr>
-                <tr><th scope="row"><span aria-hidden="true">−</span> Sorties payées (date de règlement dans la période)</th><td><a routerLink="/depenses" [queryParams]="paidQuery()">{{ minus(v.paidCents) }}</a></td></tr>
+                <tr><th scope="row"><span aria-hidden="true">+</span> Entrées reçues (date de règlement dans la période)</th><td><a routerLink="/tableau-de-bord/entrees" [queryParams]="carry()">{{ plus(v.receivedCents) }}</a></td></tr>
+                <tr><th scope="row"><span aria-hidden="true">−</span> Sorties payées (date de règlement dans la période)</th><td><a routerLink="/depenses/registre" [queryParams]="paidQuery()">{{ minus(v.paidCents) }}</a></td></tr>
                 <tr class="is-total"><th scope="row"><span aria-hidden="true">=</span> Reste de la période (net réalisé)</th><td>{{ v.netCents === null ? 'Inconnu' : (v.netCents | signedCents) }}</td></tr>
                 <tr><th scope="row"><span aria-hidden="true">+</span> Encore à recevoir (échéances non réglées)</th><td>{{ plus(v.toReceiveCents) }}</td></tr>
                 <tr><th scope="row"><span aria-hidden="true">−</span> Encore à payer (échéances non réglées)</th><td>{{ minus(v.toPayCents) }}</td></tr>
@@ -116,7 +114,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
               <li><span>Date de clôture</span><span>{{ v.closingDate ? (v.closingDate | shortDate) : 'Inconnue' }}</span></li>
             </ul>
             @if (v.patrimoine.stockCents === null) {
-              <p class="bmd-message" data-state="warning">Stock initial à renseigner : <a routerLink="/creer">compléter le Patrimoine</a>. Aucune estimation n'est calculée à partir d'un faux zéro.</p>
+              <p class="bmd-message" data-state="warning">Stock initial à renseigner : <a routerLink="/app/reglages/patrimoine">compléter le Patrimoine</a>. Aucune estimation n'est calculée à partir d'un faux zéro.</p>
             }
             <p class="bpm-help">À la clôture, le résultat signé de la période est capitalisé une seule fois dans le Patrimoine, même s'il est nul ou négatif. <a routerLink="/tableau-de-bord" [queryParams]="carry()" fragment="bm-wealth">Patrimoine au tableau de bord →</a></p>
           </section>
@@ -196,8 +194,8 @@ export class BpmBalancePage {
     const rec = v.closed ? ' Chiffre enregistré à la clôture.' : '';
     const tone = (c: number | null) => (c === null ? null : c < 0 ? 'danger' : 'success');
     return [
-      { id: 'in', label: 'Entrées reçues', value: money(v.receivedCents), tone: v.receivedCents === null ? null : 'success', note: (this.why('bpm.revenus') ?? 'Entrées réglées dans la période.') + rec, link: '/argent/entrees', query },
-      { id: 'out', label: 'Sorties payées', value: money(v.paidCents), tone: v.paidCents === null ? null : 'danger', note: (this.why('bpm.charges') ?? 'Charges réglées dans la période.') + rec, link: '/depenses', query: this.paidQuery() },
+      { id: 'in', label: 'Entrées reçues', value: money(v.receivedCents), tone: v.receivedCents === null ? null : 'success', note: (this.why('bpm.revenus') ?? 'Entrées réglées dans la période.') + rec, link: '/tableau-de-bord/entrees', query },
+      { id: 'out', label: 'Sorties payées', value: money(v.paidCents), tone: v.paidCents === null ? null : 'danger', note: (this.why('bpm.charges') ?? 'Charges réglées dans la période.') + rec, link: '/depenses/registre', query: this.paidQuery() },
       { id: 'rest', label: 'Reste de la période', value: sgn(v.netCents), tone: tone(v.netCents), emphasis: true, note: (this.why('bpm.resultatPeriode') ?? 'Reçu − payé, à date de règlement.') + rec },
       {
         id: 'expected',

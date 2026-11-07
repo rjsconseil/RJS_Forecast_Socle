@@ -9,6 +9,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppHeroComponent } from '../shared/app-hero.component';
 import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPlanContext } from '../shared/plan-context';
 import { FormsModule } from '@angular/forms';
 import { BpmPageBanner, BpmPageFocus } from '../bpm/ui';
 import { CalendarSpaceComponent } from './calendar-space.component';
@@ -111,8 +112,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
       <div class="calendar-360-top">
         @if (isBpm) {
           <bpm-page-banner
-            [title]="page.title + ' ' + page.emphasis"
-            kicker="Calendrier"
+            [title]="planLabel() ?? page.title + ' ' + page.emphasis"
             [lead]="page.intro"
             [focus]="focus()"
             [scope]="readingScope()"
@@ -492,6 +492,9 @@ export class CalendarPage {
   private readonly router = inject(Router);
   protected readonly page = this.route.snapshot.data as CalendarPageData;
   protected readonly isBpm = this.page.calendar === 'budgetPatrimoine';
+  /** Le titre suit le menu : la page porte le nom sous lequel on l'a choisie. */
+  private readonly plan = injectPlanContext();
+  protected readonly planLabel = computed(() => this.plan().label);
   protected readonly displayedEvents = signal<CalendarEvent[] | null>(null);
   protected readonly data = signal<CalendarData | null>(null);
   protected readonly period = signal<CalendarPeriod | null>(null);

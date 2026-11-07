@@ -5,6 +5,8 @@ export interface WorkspaceDestination extends PageWorkspace {
   path: string;
   label: string;
   existing?: boolean;
+  /** Libellé court de l'onglet quand le bandeau rappelle déjà l'objet ouvert. */
+  tabLabel?: string;
   loadComponent?: Route['loadComponent'];
 }
 const view = (path: string, parent: string, key: string, label: string, lead: string,
@@ -32,8 +34,8 @@ export const PAGE_WORKSPACES: WorkspaceDestination[] = [
   view('app/gestion-projet/decisions', '/app/gestion-projet', 'project-decisions', 'Décider les financements', 'Relisez les demandes de part et les autorisations de dépassement avant de décider.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
   view('app/taches/nouvelle', '/app/taches', 'task-create', 'Créer une tâche', 'Préparez une tâche et choisissez son projet maintenant ou plus tard.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
   view('app/taches/rattacher', '/app/taches', 'task-attach', 'Rattacher des tâches', 'Choisissez une tâche disponible et le projet auquel elle doit contribuer.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
-  view('app/gestion-projet/:id/budget', '/app/gestion-projet', 'project-budget', 'Budget de ce projet', 'Attribuez l’enveloppe, répartissez les parts et examinez les décisions de ce projet.', () => import('../bpm/projects/project.page').then(m => m.BpmProjectPage)),
-  view('app/gestion-projet/:id/taches', '/app/gestion-projet', 'project-tasks', 'Tâches de ce projet', 'Préparez et faites avancer les tâches du projet courant.', () => import('../bpm/projects/project.page').then(m => m.BpmProjectPage)),
+  { ...view('app/gestion-projet/:id/budget', '/app/gestion-projet', 'project-budget', 'Budget du projet', 'Attribuez l’enveloppe, répartissez les parts et examinez les décisions de ce projet.', () => import('../bpm/projects/project.page').then(m => m.BpmProjectPage)), tabLabel: 'Budget et décisions' },
+  { ...view('app/gestion-projet/:id/taches', '/app/gestion-projet', 'project-tasks', 'Tâches du projet', 'Préparez et faites avancer les tâches de ce projet.', () => import('../bpm/projects/project.page').then(m => m.BpmProjectPage)), tabLabel: 'Tâches' },
   view('app/reglages/cycle', '/app/reglages', 'settings-cycle', 'Régler le cycle', 'Consultez l’ancrage du cycle, ses bornes et les clôtures enregistrées.', () => import('../bpm/settings').then(m => m.BpmSettings)),
   view('app/reglages/patrimoine', '/app/reglages', 'settings-wealth', 'Point de départ du patrimoine', 'Renseignez le stock initial et sa date pour fiabiliser les lectures patrimoniales.', () => import('../bpm/settings').then(m => m.BpmSettings)),
   view('app/reglages/postes', '/app/reglages', 'settings-centers', 'Postes et sources de revenus', 'Retrouvez les postes disponibles et ajoutez un poste personnel.', () => import('../bpm/settings').then(m => m.BpmSettings)),

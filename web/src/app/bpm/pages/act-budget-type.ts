@@ -133,7 +133,7 @@ const toCents = (raw: string) => {
                     </div>
                   }
                 </div>
-                <button type="button" class="bm-add" (click)="addLine(dir)">+ {{ dir === 'income' ? 'Entrée récurrente' : 'Charge récurrente' }}</button>
+                <button type="button" class="bm-add" (click)="addLine(dir)">＋ {{ dir === 'income' ? 'Entrée récurrente' : 'Dépense récurrente' }}</button>
               </fieldset>
             }
           }
@@ -141,7 +141,7 @@ const toCents = (raw: string) => {
           <div class="bpm-actions">
             @for (dir of directions; track dir) {
               @if (!rowsOf(dir).length && !newsOf(dir).length) {
-                <button type="button" class="bm-add" (click)="addLine(dir)">+ {{ dir === 'income' ? 'Entrée récurrente' : 'Charge récurrente' }}</button>
+                <button type="button" class="bm-add" (click)="addLine(dir)">＋ {{ dir === 'income' ? 'Entrée récurrente' : 'Dépense récurrente' }}</button>
               }
             }
             <span class="spacer"></span>

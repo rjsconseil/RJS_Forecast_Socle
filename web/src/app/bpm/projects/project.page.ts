@@ -1,4 +1,6 @@
 import { injectPageWorkspace } from '../../shared/page-workspace';
+import { PageObjectLabels } from '../../shared/plan-context';
+import { projectLink } from '../../shared/site-plan';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
 import { BpmPageBanner, BpmPageFocus } from '../ui';
@@ -134,6 +136,7 @@ export class BpmProjectPage {
   private router = inject(Router);
   private injector = inject(Injector);
   private document = inject(DOCUMENT);
+  private objectLabels = inject(PageObjectLabels);
   private pendingSection: string | null = null;
   private loadSequence = 0;
   protected columns = COLUMNS;
@@ -162,7 +165,7 @@ export class BpmProjectPage {
   protected allocation = signal('');
   protected returnEditor = signal<string | null>(null);
   protected settling = signal<string | null>(null);
-  protected entryId = bpmQueryState('entry', '');
+  protected entryId = bpmQueryState('entry', '', { overlay: true });
   protected editorOpen = computed(() => !!this.entryId());
   protected lineId = signal<string | null>(null);
   protected projectEditor = signal(false);
@@ -310,14 +313,14 @@ export class BpmProjectPage {
   protected query = bpmQueryState('q', '', { replace: true });
   protected fundingTask = signal<string | null>(null);
   /** Tâche ouverte dans sa fenêtre : la carte du tableau garde une taille fixe. */
-  protected openTaskId = bpmQueryState<string | null>('task', null);
+  protected openTaskId = bpmQueryState<string | null>('task', null, { overlay: true });
   protected openTask = computed(() => {
     const id = this.openTaskId();
     return id ? ((this.data()?.tasks ?? []).find((t) => t.task.id === id) ?? null) : null;
   });
-  protected expenseTaskId = bpmQueryState<string | null>('expenseTask', null);
+  protected expenseTaskId = bpmQueryState<string | null>('expenseTask', null, { overlay: true });
   /** Sens de la saisie ouverte : dépense, ou remboursement reçu (déduit du réglé de la tâche et du projet). */
-  protected expenseDirection = bpmQueryState<'charge' | 'income'>('expenseDirection', 'charge');
+  protected expenseDirection = bpmQueryState<'charge' | 'income'>('expenseDirection', 'charge', { overlay: true });
   protected dragActive = signal(false);
   protected dropTarget = signal<TaskStatus | null>(null);
   private dragCancelled = false;
@@ -583,7 +586,10 @@ export class BpmProjectPage {
     this.lineId.set(null);
     this.entryId.set(line.id);
   }
+  /** Refermer la saisie rend la fenêtre de la tâche telle qu'elle était : son contexte de saisie quitte l'adresse. */
   protected closeExpense() {
+    this.expenseTaskId.set(null);
+    this.expenseDirection.set('charge');
     this.entryId.set('');
   }
   protected editAllocation() {
@@ -697,6 +703,9 @@ export class BpmProjectPage {
       const d = await this.bpm.projectDetail(this.projectId);
       if (sequence !== this.loadSequence) return;
       this.data.set(d);
+      // Le cadre (fil d'Ariane, menu, parcours) nomme la fiche ouverte par son titre ; sans titre, il garde « Fiche du projet ».
+      const title = d.project?.project?.title;
+      if (title) this.objectLabels.set(projectLink(this.projectId), title);
       for (const request of d.requests ?? []) {
         if (request.status !== 'pending' && request.status !== 'awaiting-life') continue;
         for (const signature of this.requestKeys.keys()) {

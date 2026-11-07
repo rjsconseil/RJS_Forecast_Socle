@@ -65,7 +65,6 @@ const STORE = 'bpm-create-draft:';
   ],
   template: `
     <bpm-page
-      kicker="Démarrer un projet"
       title="Démarrer un projet"
       lead="Configurez votre Budget du projet de vie ou créez un projet de la vie, puis confirmez en une seule fois."
       [context]="profile.data()?.budgetType?.context"
@@ -576,7 +575,7 @@ const STORE = 'bpm-create-draft:';
                         </label>
                         <p class="bs-fixed">
                           <strong>Patrimoine unique du profil financier</strong> ·
-                          <span class="ids">{{ p.principal.patrimoine.id }}</span>
+                          {{ p.user.label }} : un seul patrimoine réunit votre stock et vos objectifs.
                         </p>
                       }
                     }
@@ -1702,10 +1701,16 @@ export class BpmCreatePage {
   protected askCancel() {
     this.confirmCancel.set(true);
   }
+  /** Un brouillon confirmé ou abandonné n'a plus d'étapes où revenir : elles quittent le parcours. */
+  private closeWizard() {
+    this.navigation.completeFlow((url) => /^\/creer(?:[/?#]|$)/.test(url));
+  }
+
   protected cancel() {
     const d = this.draft();
     if (d) this.forget(d.userId);
     this.draft.set(null);
+    this.closeWizard();
     this.router.navigate(['/tableau-de-bord'], {
       state: { bpmNotice: 'Brouillon abandonné : rien n’a été enregistré.' },
     });
@@ -1714,6 +1719,7 @@ export class BpmCreatePage {
     const d = this.draft();
     if (d) this.forget(d.userId);
     this.refresh.bump();
+    this.closeWizard();
     this.router.navigate(['/tableau-de-bord']);
   }
 
@@ -1742,6 +1748,7 @@ export class BpmCreatePage {
         : r.mode === 'branch'
           ? `Projet de la vie « ${d.branchName.trim()} » créé avec ${r.taskIds?.length ?? 0} tâche(s).`
           : `Budget du projet de vie configuré : ${created} élément(s) créé(s), ${new Set(r.updated).size} mis à jour.`;
+      this.closeWizard();
       await this.router.navigate(
         r.mode === 'branch' && r.coreProjectId
           ? ['/app/gestion-projet', r.coreProjectId]

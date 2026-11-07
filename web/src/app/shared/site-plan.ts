@@ -26,6 +26,12 @@ export interface PlanPage {
   space?: string;
   /** La phase du parcours que la page représente, affichée sur l'accueil de section. */
   step?: string;
+  /** Nom de la vue principale quand la page a des sous-pages : premier onglet du bandeau. */
+  mainLabel?: string;
+  /** Profondeur dans le menu latéral (sous-page d'une fiche ouverte). */
+  depth?: number;
+  /** Libellé de l'onglet d'une vue de fiche, quand le bandeau nomme déjà l'objet ouvert. */
+  tabLabel?: string;
   description: string;
   result: string;
 }
@@ -137,7 +143,7 @@ export const PLAN_ZONES: PlanZone[] = [
         home: 'direct',
         module: 'bpm',
         space: 'bpm-creer',
-        pages: [{ id: 'creer', label: 'Démarrer un projet', link: '/creer', symbol: '＋', tone: 'nav-blue', description: 'Créer un projet Budget/Patrimoine à partir de zéro.', result: 'Un projet relié, prêt à entrer dans le cycle.' }],
+        pages: [{ id: 'creer', label: 'Démarrer un projet', mainLabel: 'Choisir le parcours', link: '/creer', symbol: '＋', tone: 'nav-blue', description: 'Créer un projet Budget/Patrimoine à partir de zéro.', result: 'Un projet relié, prêt à entrer dans le cycle.' }],
       },
       {
         id: 'vision',
@@ -151,13 +157,12 @@ export const PLAN_ZONES: PlanZone[] = [
         module: 'bpm',
         space: 'bpm-parcours',
         pages: [
-          { id: 'tableau-de-bord', label: 'Tableau de bord', link: '/tableau-de-bord', symbol: '◎', tone: 'nav-blue', description: 'Reçu, dépensé, reste et impact patrimonial : les entrées, charges et projets de votre période, avec le détail de chaque flux.', result: 'Lire votre budget et son impact sur votre patrimoine, puis agir depuis chaque montant.' },
-          { id: 'projet-de-vie', label: 'Gestion du projet de vie', link: '/projet-de-vie', symbol: '◫', tone: 'nav-indigo', description: 'Le projet unique qui englobe tous les autres : cycle en cours, charges indispensables et courantes, projets financés, résultats des cycles, objectif d’excédent et patrimoine.', result: 'Piloter d’un coup d’œil tout le budget du projet de vie et agir sur chaque volet.' },
-          { id: 'depenses', hidden: true, label: 'Dépenses de la période', link: '/depenses', symbol: '≡', tone: 'nav-ocean', description: 'Toutes les dépenses effectuées ou attendues, par projet budgétaire, poste et tâche.', result: 'Comprendre chaque dépense et retrouver sa fiche complète.' },
-          { id: 'plafonds', label: 'Plafonds et catégories', link: '/plafonds', symbol: '⌈', tone: 'nav-cobalt', description: 'Suivre les marges et les dépassements, définir les plafonds des postes et organiser les catégories de dépenses.', result: 'Voir ce qui dépasse, au niveau du centre et de la catégorie, sans jamais bloquer une dépense.' },
+          { id: 'tableau-de-bord', label: 'Tableau de bord', mainLabel: 'Vue de la période', link: '/tableau-de-bord', symbol: '◎', tone: 'nav-blue', description: 'Reçu, dépensé, reste et impact patrimonial : les entrées, charges et projets de votre période, avec le détail de chaque flux.', result: 'Lire votre budget et son impact sur votre patrimoine, puis agir depuis chaque montant.' },
+          { id: 'projet-de-vie', label: 'Gestion du projet de vie', mainLabel: 'Pilotage du cycle', link: '/projet-de-vie', symbol: '◫', tone: 'nav-indigo', description: 'Le projet unique qui englobe tous les autres : cycle en cours, charges indispensables et courantes, projets financés, résultats des cycles, objectif d’excédent et patrimoine.', result: 'Piloter d’un coup d’œil tout le budget du projet de vie et agir sur chaque volet.' },
+          { id: 'plafonds', label: 'Plafonds et catégories', mainLabel: 'Suivi des plafonds', link: '/plafonds', symbol: '⌈', tone: 'nav-cobalt', description: 'Suivre les marges et les dépassements, définir les plafonds des postes et organiser les catégories de dépenses.', result: 'Voir ce qui dépasse, au niveau du centre et de la catégorie, sans jamais bloquer une dépense.' },
           { id: 'piloter', hidden: true, label: 'Graphiques et chiffres', link: '/piloter', symbol: '◎', tone: 'nav-cobalt', exact: true, description: 'Le bilan de la période : chiffres, graphiques, réel face au prévu, postes et clôtures.', result: 'Comprendre le bilan chiffré de la période.' },
-          { id: 'agir', hidden: true, label: 'Ce qu’il faut faire', link: '/piloter/agir', symbol: '→', tone: 'nav-indigo', description: 'Les actions utiles de la période, classées par priorité.', result: 'Savoir quoi faire maintenant sur votre budget.' },
-          { id: 'vision', label: 'Objectifs et avenir', link: '/vision', symbol: '✦', tone: 'nav-iris', description: 'Vos objectifs et la projection des prochaines périodes.', result: 'Préparer l’avenir à partir des seules données saisies.' },
+          { id: 'agir', hidden: true, label: 'Échéances à traiter', link: '/piloter/agir', symbol: '→', tone: 'nav-indigo', description: 'Les actions utiles de la période, classées par priorité.', result: 'Savoir quoi faire maintenant sur votre budget.' },
+          { id: 'vision', label: 'Objectifs et avenir', mainLabel: 'Mes objectifs datés', link: '/vision', symbol: '✦', tone: 'nav-iris', description: 'Vos objectifs et la projection des prochaines périodes.', result: 'Préparer l’avenir à partir des seules données saisies.' },
         ],
       },
       {
@@ -172,10 +177,10 @@ export const PLAN_ZONES: PlanZone[] = [
         module: 'bpm',
         space: 'bpm-parcours',
         pages: [
-          { id: 'projets', label: 'Projets de la vie', link: '/app/projets', symbol: '▤', tone: 'nav-teal', description: 'Le projet de vie et ses projets de la vie par statut, avec le budget que le budget du projet de vie attribue à chacun.', result: 'Financer chaque projet, ventiler son budget sur ses tâches et suivre ses dépassements.' },
-          { id: 'gestion-projet', label: 'Gestion de projet', link: '/app/gestion-projet', symbol: '◫', tone: 'nav-teal', description: 'Créer un projet de la vie et ses tâches, attribuer son budget et piloter les demandes de montant.', result: 'Des projets financés, des tâches dotées de leur montant et un consommé suivi jusqu’au budget du projet de vie.' },
-          { id: 'taches', label: 'Tâches des projets', link: '/app/taches', symbol: '☑', tone: 'nav-petrol', description: 'Les tâches des projets de la vie par statut, avec leur part de budget ; glisser une tâche change son état et celui de son projet.', result: 'Faire avancer les tâches et les rattacher aux projets, comme dans le noyau.' },
-          { id: 'reglages', label: 'Cycle et réglages', link: '/app/reglages', symbol: '↻', tone: 'nav-blue', description: 'Le cycle budgétaire, le patrimoine, les périodes closes, les centres de coûts et les calculs.', result: 'Un cycle et des réglages explicites.' },
+          { id: 'projets', label: 'Projets de la vie', mainLabel: 'Projets par statut', link: '/app/projets', symbol: '▤', tone: 'nav-teal', description: 'Le projet de vie et ses projets de la vie par statut, avec le budget que le budget du projet de vie attribue à chacun.', result: 'Financer chaque projet, ventiler son budget sur ses tâches et suivre ses dépassements.' },
+          { id: 'gestion-projet', label: 'Gestion de projet', mainLabel: 'Parcours des projets', link: '/app/gestion-projet', symbol: '◫', tone: 'nav-teal', description: 'Créer un projet de la vie et ses tâches, attribuer son budget et piloter les demandes de montant.', result: 'Des projets financés, des tâches dotées de leur montant et un consommé suivi jusqu’au budget du projet de vie.' },
+          { id: 'taches', label: 'Tâches des projets', mainLabel: 'Tableau des tâches', link: '/app/taches', symbol: '☑', tone: 'nav-petrol', description: 'Les tâches des projets de la vie par statut, avec leur part de budget ; glisser une tâche change son état et celui de son projet.', result: 'Faire avancer les tâches et les rattacher aux projets, comme dans le noyau.' },
+          { id: 'reglages', label: 'Cycle et réglages', mainLabel: 'Tous les réglages', link: '/app/reglages', symbol: '↻', tone: 'nav-blue', description: 'Le cycle budgétaire, le patrimoine, les périodes closes, les centres de coûts et les calculs.', result: 'Un cycle et des réglages explicites.' },
         ],
       },
       {
@@ -189,7 +194,7 @@ export const PLAN_ZONES: PlanZone[] = [
         home: 'direct',
         module: 'calendar',
         space: 'budget-calendar',
-        pages: [{ id: 'calendrier-budget', label: 'Calendrier Budget/Patrimoine', link: '/calendrier-budget', symbol: '▦', tone: 'nav-cyan', step: 'Situer', description: 'Revenus, dépenses, fins de période et versements au patrimoine, en semaine, mois ou année.', result: 'Voir quand l’argent entre, sort et rejoint le patrimoine.' }],
+        pages: [{ id: 'calendrier-budget', label: 'Calendrier Budget/Patrimoine', mainLabel: 'Calendrier', link: '/calendrier-budget', symbol: '▦', tone: 'nav-cyan', step: 'Situer', description: 'Revenus, dépenses, fins de période et versements au patrimoine, en semaine, mois ou année.', result: 'Voir quand l’argent entre, sort et rejoint le patrimoine.' }],
       },
     ],
   },
@@ -450,9 +455,7 @@ export function portalBands(zones: readonly PlanZone[], bands: readonly PlanBand
 
 /** Pages supplémentaires (détails) rattachées à une section pour le fil d'Ariane et le menu. */
 const DETAILS: { re: RegExp; zone: string; section: string; label: string }[] = [
-  { re: /^\/argent\/entrees/, zone: 'bpm', section: 'vision', label: 'Détail des entrées' },
-  { re: /^\/argent\/postes\//, zone: 'bpm', section: 'vision', label: 'Détail d’un centre' },
-  { re: /^\/argent\/reste/, zone: 'bpm', section: 'vision', label: 'Détail du solde' },
+  { re: /^\/argent\/postes\//, zone: 'bpm', section: 'vision', label: 'Détail d’un poste' },
   { re: /^\/projects\/new/, zone: 'noyau', section: 'projets', label: 'Nouveau projet' },
   { re: /^\/projects\/[^/]+\/edit/, zone: 'noyau', section: 'projets', label: 'Modifier le projet' },
   { re: /^\/projects\/[^/]+/, zone: 'noyau', section: 'projets', label: 'Détail du projet' },
@@ -462,6 +465,12 @@ const DETAILS: { re: RegExp; zone: string; section: string; label: string }[] = 
 ];
 
 export type PlanLocationKind = 'portal' | 'zone' | 'section' | 'page' | 'subpage' | 'detail' | 'unknown' | 'none';
+/** Objet ouvert dans une page (fiche) : ses sous-pages deviennent les onglets du bandeau. */
+export interface PlanObject {
+  kind: 'project';
+  id: string;
+  link: string;
+}
 export interface PlanLocation {
   kind: PlanLocationKind;
   zone: PlanZone | null;
@@ -469,12 +478,28 @@ export interface PlanLocation {
   page: PlanPage | null;
   detailLabel: string | null;
   subpage: PlanPage | null;
+  object?: PlanObject | null;
 }
 
-const at = (kind: PlanLocationKind, zone: PlanZone | null = null, section: PlanSection | null = null, page: PlanPage | null = null, detailLabel: string | null = null, subpage: PlanPage | null = null): PlanLocation => ({ kind, zone, section, page, detailLabel, subpage });
+const at = (kind: PlanLocationKind, zone: PlanZone | null = null, section: PlanSection | null = null, page: PlanPage | null = null, detailLabel: string | null = null, subpage: PlanPage | null = null, object: PlanObject | null = null): PlanLocation => ({ kind, zone, section, page, detailLabel, subpage, object });
 const matches = (page: PlanPage, path: string) => (page.exact ? path === page.link : path === page.link || path.startsWith(page.link + '/'));
 
-/** Situe une adresse dans le plan : portail, accueil de zone ou de section, page (ou détail rattaché). */
+/** Adresse canonique d'une fiche projet BPM ; `/app/projets/<id>` y est redirigée. */
+export const PROJECT_HOME = '/app/gestion-projet';
+const PROJECT_PATH = /^\/app\/(?:gestion-projet|projets)\/(prj_[^/?#]+)(?:\/|$)/;
+export const projectLink = (id: string) => `${PROJECT_HOME}/${id}`;
+/** Le nom court d'une fiche quand son titre n'est pas encore connu. */
+export const OBJECT_FALLBACK = 'Fiche du projet';
+
+function pageOf(link: string): { zone: PlanZone; section: PlanSection; page: PlanPage } | null {
+  for (const zone of PLAN_ZONES) for (const section of zone.sections) {
+    const page = section.pages.find(entry => entry.link === link);
+    if (page) return { zone, section, page };
+  }
+  return null;
+}
+
+/** Situe une adresse dans le plan : portail, accueil de zone ou de section, page, sous-page, fiche ou détail rattaché. */
 export function locate(url: string): PlanLocation {
   const path = url.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
   if (path === '/') return at('portal');
@@ -489,15 +514,19 @@ export function locate(url: string): PlanLocation {
     const section = zone.sections.find((entry) => entry.id === parts[2]) ?? null;
     return section ? at('section', zone, section) : at('unknown', zone);
   }
+  const projectId = PROJECT_PATH.exec(path)?.[1];
+  const object: PlanObject | null = projectId ? { kind: 'project', id: projectId, link: projectLink(projectId) } : null;
   const specialized = matchWorkspace(path);
   if (specialized) {
-    for (const zone of PLAN_ZONES) for (const section of zone.sections) {
-      const page = section.pages.find(page => page.link === specialized.workspace.parent);
-      if (page) return at('subpage', zone, section, page, null, {
-        id: specialized.workspace.key, link: path, label: specialized.workspace.label,
-        symbol: '↳', tone: page.tone, description: specialized.workspace.lead, result: specialized.workspace.lead,
-      });
-    }
+    const owner = pageOf(specialized.workspace.parent);
+    if (owner) return at('subpage', owner.zone, owner.section, owner.page, null, {
+      id: specialized.workspace.key, link: path, label: specialized.workspace.label, tabLabel: specialized.workspace.tabLabel,
+      symbol: '↳', tone: owner.page.tone, description: specialized.workspace.lead, result: specialized.workspace.lead,
+    }, object);
+  }
+  if (object) {
+    const owner = pageOf(PROJECT_HOME)!;
+    return at('detail', owner.zone, owner.section, owner.page, OBJECT_FALLBACK, null, object);
   }
   const detail = DETAILS.find((d) => d.re.test(path));
   if (detail) {
@@ -515,16 +544,86 @@ export function locate(url: string): PlanLocation {
   return best ? at('page', best.zone, best.section, best.page) : at('none');
 }
 
-/** Le dernier niveau partage l'identité de son parent ; un projet ouvert ajoute ses propres espaces. */
-export function pageChildren(page: PlanPage, url = ''): PlanPage[] {
-  const path = url.split(/[?#]/)[0];
-  const projectId = /^\/app\/(?:gestion-projet|projets)\/(prj_[^/]+)(?:\/|$)/.exec(path)?.[1];
-  const children = PAGE_WORKSPACES.filter(view => view.parent === page.link)
-    .filter(view => !view.path.includes(':id') || !!projectId)
-    .map(view => ({ id: view.key, label: view.label, link: `/${view.path.replace(':id', projectId ?? '')}`,
-      symbol: '↳', tone: page.tone, description: view.lead, result: view.lead }));
+/** Les sous-pages d'une page ; une fiche ouverte ajoute son nœud et ses propres sous-pages. */
+export function pageChildren(page: PlanPage, url = '', objectLabel: string | null = null): PlanPage[] {
+  const path = url.split(/[?#]/)[0].replace(/\/+$/, '');
   const current = locate(url);
-  if (current.kind === 'detail' && current.page?.link === page.link && current.detailLabel)
-    children.push({ id: 'current-detail', label: current.detailLabel, link: path, symbol: '↳', tone: page.tone, description: '', result: '' });
+  const object = current.page?.link === page.link ? current.object ?? null : null;
+  const child = (view: (typeof PAGE_WORKSPACES)[number], depth = 1): PlanPage => ({
+    id: view.key, label: view.label, link: `/${view.path.replace(':id', object?.id ?? '')}`,
+    symbol: '↳', tone: page.tone, description: view.lead, result: view.lead, depth,
+  });
+  const views = PAGE_WORKSPACES.filter(view => view.parent === page.link);
+  const children = views.filter(view => !view.path.includes(':id')).map(view => child(view));
+  if (object) {
+    children.push({ id: 'object', label: objectLabel || OBJECT_FALLBACK, link: object.link, symbol: '◆', tone: page.tone, description: 'La fiche ouverte : sa vue principale.', result: '', depth: 1 });
+    children.push(...views.filter(view => view.path.includes(':id')).map(view => child(view, 2)));
+  }
+  if (current.kind === 'detail' && !current.object && current.page?.link === page.link && current.detailLabel)
+    children.push({ id: 'current-detail', label: objectLabel || current.detailLabel, link: path, symbol: '↳', tone: page.tone, description: '', result: '', depth: 1 });
   return children;
+}
+
+export interface PlanCrumb { label: string; link?: string }
+export interface PlanTab { id: string; label: string; link: string; current: boolean }
+/**
+ * Le contexte d'une adresse, lu par tout le cadre : surtitre et titre du bandeau, lien vers le
+ * niveau supérieur, onglets des sous-pages et fil d'Ariane. Une seule règle pour toutes les pages.
+ */
+export interface PlanContext {
+  location: PlanLocation;
+  /** « Section · Page » : où l'on est, sans répéter le titre. */
+  eyebrow: string | null;
+  /** Le nom de la destination courante tel que le menu l'affiche. */
+  label: string | null;
+  /** Le niveau supérieur (page principale ou fiche) ; null sur une page de menu. */
+  up: { label: string; link: string } | null;
+  /** Vue principale et sous-pages de la page, ou de la fiche ouverte. */
+  tabs: PlanTab[];
+  crumbs: PlanCrumb[];
+}
+
+export function planContext(url: string, objectLabel: string | null = null): PlanContext {
+  const location = locate(url);
+  const path = url.split(/[?#]/)[0].replace(/\/+$/, '') || '/';
+  const { kind, zone, section, page, subpage, detailLabel, object } = location;
+  const objectName = objectLabel || OBJECT_FALLBACK;
+  const crumbs: PlanCrumb[] = [];
+  if (!zone) {
+    if (kind === 'none') crumbs.push({ label: 'Page hors du plan' });
+    if (kind === 'unknown') crumbs.push({ label: 'Destination introuvable' });
+    return { location, eyebrow: null, label: crumbs[0]?.label ?? null, up: null, tabs: [], crumbs };
+  }
+  crumbs.push({ label: zone.label, link: zoneHomeLink(zone) });
+  if (kind !== 'zone' && section) crumbs.push({ label: section.label, link: sectionEntry(zone, section).link });
+  // Une page qui porte le nom de sa section ne se répète pas dans le fil.
+  if (kind !== 'zone' && page && section && page.label !== section.label && !page.zoneOverview) crumbs.push({ label: page.label, link: page.link });
+  if (object) crumbs.push({ label: objectName, link: object.link });
+  if (subpage) crumbs.push({ label: object ? subpage.label : subpage.label, link: path });
+  else if (detailLabel && !object) crumbs.push({ label: objectLabel || detailLabel, link: path });
+  if (kind === 'unknown') crumbs.push({ label: 'Destination introuvable' });
+  // Le dernier maillon est la page courante : il n'est pas un lien.
+  delete crumbs[crumbs.length - 1].link;
+
+  const label = object && !subpage ? objectName : subpage?.label ?? ((detailLabel && (objectLabel || detailLabel)) || null) ?? page?.label ?? section?.label ?? zone.label;
+  const inPage = kind === 'page' || kind === 'subpage' || kind === 'detail';
+  const eyebrow = !section || kind === 'zone' || section.id === 'ensemble' ? zone.label
+    : inPage && page && page.label !== section.label && (kind !== 'page') ? `${section.label} · ${page.label}`
+      : section.label;
+  const up = object
+    ? subpage ? { label: objectName, link: object.link } : page ? { label: page.label, link: page.link } : null
+    : (kind === 'subpage' || kind === 'detail') && page ? { label: page.label, link: page.link } : null;
+
+  let tabs: PlanTab[] = [];
+  if (object && page) {
+    const views = PAGE_WORKSPACES.filter(view => view.parent === page.link && view.path.includes(':id'));
+    tabs = [{ id: 'object', label: 'Vue d’ensemble', link: object.link },
+      ...views.map(view => ({ id: view.key, label: view.tabLabel ?? view.label, link: `/${view.path.replace(':id', object.id)}` }))]
+      .map(tab => ({ ...tab, current: tab.link === path }));
+  } else if (page && (kind === 'page' || kind === 'subpage')) {
+    const children = pageChildren(page, url).filter(entry => entry.id !== 'current-detail' && entry.id !== 'object' && (entry.depth ?? 1) === 1);
+    if (children.length) tabs = [{ id: 'main', label: page.mainLabel ?? 'Vue principale', link: page.link }, ...children.map(entry => ({ id: entry.id, label: entry.label, link: entry.link }))]
+      .map(tab => ({ ...tab, current: tab.link === path }));
+  }
+  return { location, eyebrow, label, up, tabs, crumbs };
 }

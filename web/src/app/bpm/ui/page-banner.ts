@@ -12,6 +12,8 @@ import { BpmToolbar } from './toolbar';
 import { BpmPageFocus, BpmPageResult } from './page-focus';
 import { PageHeroDirective } from '../../shared/page-hero.directive';
 import { injectPageWorkspace, injectWorkspaceReturn } from '../../shared/page-workspace';
+import { injectCurrentUrl, injectPlanContext } from '../../shared/plan-context';
+import { PageTabs } from '../../shared/page-tabs.component';
 let heroId = 0;
 
 /** Libellés de la navigation de période de la référence (`bpm-period-nav.component.ts`). */
@@ -33,7 +35,7 @@ const PERIOD_NAV = {
 @Component({
   selector: 'bpm-page-banner',
   hostDirectives: [PageHeroDirective],
-  imports: [BpmHeading, PeriodNavigationComponent, BpmToolbar],
+  imports: [BpmHeading, PeriodNavigationComponent, BpmToolbar, PageTabs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'bpm-page-banner',
@@ -45,12 +47,13 @@ const PERIOD_NAV = {
   },
   template: `
     <bpm-heading
-      [back]="parent() ?? back()"
-      [kicker]="kicker()"
-      [title]="workspace()?.title ?? title()"
-      [lead]="workspace()?.lead ?? lead()"
+      [back]="back() ?? parent()"
+      [kicker]="kicker() || plan().eyebrow || ''"
+      [title]="displayTitle()"
+      [lead]="displayLead()"
       [headingId]="headingId"
     />
+    <rjs-page-tabs [tabs]="plan().tabs" [url]="url()" [label]="'Vues de « ' + (plan().location.page?.label ?? title()) + ' »'" />
     @if (period(); as p) {
       <div class="bpm-banner-period">
         @if (periodNav()) {
@@ -93,7 +96,7 @@ const PERIOD_NAV = {
     }
     <bpm-toolbar
       [focus]="focus()"
-      [label]="toolsLabel()"
+      [label]="effectiveToolsLabel()"
       [compact]="compact()"
       [scope]="effectiveScope()"
       [result]="result()"
@@ -119,11 +122,27 @@ const PERIOD_NAV = {
 export class BpmPageBanner {
   protected readonly workspace = injectPageWorkspace();
   protected readonly parent = injectWorkspaceReturn();
+  /** Le plan du site situe la page : surtitre, niveau supérieur et onglets sont les mêmes partout. */
+  protected readonly plan = injectPlanContext();
+  protected readonly url = injectCurrentUrl();
   private route = inject(ActivatedRoute);
   readonly title = input.required<string>();
   readonly lead = input.required<string>();
-  /** Section du site affichée en surtitre du bandeau. */
-  readonly kicker = input('Ma vision budgétaire');
+  /** Surtitre imposé ; par défaut « Section · Page » lu dans le plan du site. */
+  readonly kicker = input('');
+  /** Une fiche ouverte garde son nom en titre ; ses sous-pages sont des onglets. */
+  protected readonly displayTitle = computed(() =>
+    this.plan().location.object ? this.title() : (this.workspace()?.title ?? this.title()),
+  );
+  protected readonly displayLead = computed(() => this.workspace()?.lead ?? this.lead());
+  /** Les outils portent le nom de la vue où l'on est : une sous-page ne reprend pas l'intitulé de sa page. */
+  protected readonly effectiveToolsLabel = computed(() => {
+    const plan = this.plan();
+    const own = this.toolsLabel();
+    const generic = !own || own === 'Outils de la page' || own === 'Outils de cette étape';
+    if (plan.location.kind === 'subpage' && !plan.location.object) return `Outils · ${plan.label}`;
+    return generic && plan.label ? `Outils · ${plan.label}` : own;
+  });
   /** Ambiance du bandeau ; les pages BPM de la référence lisent en `lagoon`. */
   readonly tone = input<HeroTone>('lagoon');
   /** Classes de page de la référence (ex. `bpm-money`, `bpm-vision`, `bpm-start`). */
@@ -132,7 +151,8 @@ export class BpmPageBanner {
   /** Clé explicitement demandée dans l'URL (null = période courante). */
   readonly periodKey = input<string | undefined>(undefined);
   readonly periodNav = input(false);
-  readonly back = input<{ label: string; link: string; query?: Record<string, string> } | null>(
+  /** Niveau supérieur imposé (ex. l'origine d'un détail) ; par défaut la page parente du plan. */
+  readonly back = input<{ label: string; link: string; query?: Record<string, string>; direct?: boolean } | null>(
     null,
   );
   /** Conservé pour compatibilité : la navigation de période passe désormais par des liens d'URL. */

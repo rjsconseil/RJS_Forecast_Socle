@@ -113,8 +113,8 @@ function cycleVolet(d: BpmLifeManagement): VoletView {
     actions: [
       { label: 'Saisir une entrée', action: 'entry-income' },
       { label: 'Budget & réel', link: '/piloter', fragment: 'bp-groupe-chiffres' },
-      { label: 'Détail du solde', link: '/argent/reste' },
-      { label: 'Réglages du cycle', link: '/app/reglages' },
+      { label: 'Détail du solde', link: '/tableau-de-bord/rapprochement' },
+      { label: 'Réglages du cycle', link: '/app/reglages/cycle' },
     ],
     figures: [
       { label: 'À recevoir', value: cents(f?.toReceiveCents) },
@@ -148,7 +148,7 @@ function natureVolet(x: LifeNature): VoletView {
     key: x.key,
     index: essential ? 2 : 3,
     title: x.label,
-    link: { label: x.label, link: '/depenses', queryParams: { nature: x.key } },
+    link: { label: x.label, link: '/depenses/registre', queryParams: { nature: x.key } },
     health: x.health,
     healthLabel: x.healthLabel,
     tag: count(x.centers.length, 'poste'),
@@ -183,12 +183,12 @@ function natureVolet(x: LifeNature): VoletView {
     },
     alert: x.alert,
     disclosure: { label: 'Postes & échéances', summary: `${capitalize(listOf(x.centers.map((c) => c.label)))} · ${count(x.lineCount, 'échéance')} dans le cycle` },
-    primary: { label: essential ? 'Voir les charges indispensables' : 'Voir les charges courantes', link: '/depenses', queryParams: { nature: x.key } },
+    primary: { label: essential ? 'Voir les charges indispensables' : 'Voir les charges courantes', link: '/depenses/registre', queryParams: { nature: x.key } },
     actions: [
       { label: essential ? 'Saisir une charge' : 'Saisir une dépense', action: 'entry-charge' },
-      { label: 'Échéances en retard', link: '/depenses', queryParams: { nature: x.key, status: 'late' } },
+      { label: 'Échéances en retard', link: '/depenses/registre', queryParams: { nature: x.key, status: 'late' } },
       { label: 'Plafonds et catégories', link: '/plafonds' },
-      essential ? { label: 'Échéances à traiter', link: '/projet-de-vie', fragment: 'life-due' } : { label: 'Régler les objectifs', link: '/vision', fragment: 'objectifs-budgetaires' },
+      essential ? { label: 'Échéances à traiter', link: '/piloter/agir' } : { label: 'Régler les objectifs', link: '/vision/reperes', fragment: 'objectifs-budgetaires' },
     ],
     figures: essential
       ? [
@@ -243,7 +243,7 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
     disclosure: { label: 'Projets & décisions', summary: `${count(p.projectCount, 'projet')} · ${count(decisions, 'décision attendue', 'décisions attendues')}` },
     // Parcours le plus courant d'abord : décider ce qui attend, sinon piloter les projets.
     primary: !p.projectCount
-      ? { label: 'Créer un projet de la vie', link: '/creer' }
+      ? { label: 'Créer un projet de la vie', link: '/creer/projet-de-la-vie' }
       : decisions > 0
         ? { label: `Décider (${decisions})`, link: '/projet-de-vie', fragment: 'life-decisions' }
         : { label: 'Piloter les projets', link: '/app/gestion-projet' },
@@ -337,10 +337,10 @@ function resultsVolet(d: BpmLifeManagement): VoletView {
     disclosure: { label: 'Résultats cycle par cycle', summary: `${count(r.count, 'clôture')} · cumul ${signedCents(r.totalCents)}` },
     primary: closable ? { label: `Clôturer ${r.firstOpen!.label}`, action: 'close' } : history,
     actions: [
-      { label: 'Objectif d’excédent', link: '/vision', fragment: 'objectifs-budgetaires' },
+      { label: 'Objectif d’excédent', link: '/vision/reperes', fragment: 'objectifs-budgetaires' },
       closable ? history : { label: 'Suivi & clôture', action: 'follow' },
-      { label: 'Épargne visée', link: '/vision', fragment: 'epargne' },
-      { label: 'Projection du patrimoine', link: '/vision', fragment: 'life-projection' },
+      { label: 'Épargne visée', link: '/vision/reperes', fragment: 'epargne' },
+      { label: 'Projection du patrimoine', link: '/vision/projection' },
     ],
     figures: [
       { label: 'À clôturer', value: `${r.toCloseCount}`, pending: r.toCloseCount > 0 },
@@ -356,7 +356,7 @@ function patrimoineVolet(d: BpmLifeManagement): VoletView {
     key: 'patrimoine',
     index: 6,
     title: p.label,
-    link: { label: 'Cap patrimonial', link: '/vision', fragment: 'cap-patrimonial' },
+    link: { label: 'Cap patrimonial', link: '/vision/reperes', fragment: 'cap-patrimonial' },
     health: p.health,
     healthLabel: p.healthLabel,
     tag: 'Patrimoine unique',
@@ -386,9 +386,9 @@ function patrimoineVolet(d: BpmLifeManagement): VoletView {
     },
     alert: p.alert,
     disclosure: { label: 'Accumulation & capitalisations', summary: `${count(p.capitalizationCount, 'capitalisation')} · stock ${cents(p.stockCents)}` },
-    primary: { label: 'Cap patrimonial', link: '/vision', fragment: 'cap-patrimonial' },
+    primary: { label: 'Cap patrimonial', link: '/vision/reperes', fragment: 'cap-patrimonial' },
     actions: [
-      { label: 'Projection & avenir', link: '/vision', fragment: 'life-projection' },
+      { label: 'Projection & avenir', link: '/vision/projection' },
       { label: 'Objectifs de vie', link: '/vision', fragment: 'life-dated-goals' },
       { label: 'Soldes versés', link: '/tableau-de-bord', fragment: 'bm-history' },
       { label: 'Calendrier budgétaire', link: '/calendrier-budget' },

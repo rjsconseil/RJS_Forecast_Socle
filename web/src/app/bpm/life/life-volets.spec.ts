@@ -125,8 +125,8 @@ describe('Gestion du projet de vie — volets', () => {
 
   it('ouvre les dépenses filtrées par nature depuis les volets des charges', () => {
     const [, essentials, current] = lifeVolets(lecture());
-    expect(essentials.primary).toMatchObject({ link: '/depenses', queryParams: { nature: 'indispensable' } });
-    expect(current.primary).toMatchObject({ link: '/depenses', queryParams: { nature: 'courante' } });
+    expect(essentials.primary).toMatchObject({ link: '/depenses/registre', queryParams: { nature: 'indispensable' } });
+    expect(current.primary).toMatchObject({ link: '/depenses/registre', queryParams: { nature: 'courante' } });
     expect(essentials.actions.find((a) => a.label === 'Échéances en retard')?.queryParams).toEqual({ nature: 'indispensable', status: 'late' });
   });
 
@@ -190,7 +190,7 @@ describe('Gestion du projet de vie — volets', () => {
     const d = lecture();
     Object.assign(d.projects, { projectCount: 0, fundedCount: 0, unfundedCount: 0, allocatedCents: 0, paidCents: 0, remainingCents: 0, taskRequestCount: 0 });
     const projects = lifeVolets(d).find((x) => x.key === 'projets')!;
-    expect([projects.hideGauge, projects.primary.link, projects.figures.length, projects.facts.length]).toEqual([true, '/creer', 0, 1]);
+    expect([projects.hideGauge, projects.primary.link, projects.figures.length, projects.facts.length]).toEqual([true, '/creer/projet-de-la-vie', 0, 1]);
   });
   it('compte les catégories plafonnées dépassées dans le volet de leur nature', () => {
     const d = lecture();

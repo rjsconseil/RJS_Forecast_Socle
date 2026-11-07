@@ -22,14 +22,13 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
   template: `
     <bpm-page
       pageClass="bc-page"
-      kicker="Mes projets de la vie"
       title="Cycle et réglages"
       lead="Réglez votre cycle budgétaire, le montant initial de votre patrimoine et vos postes."
       [context]="summary.data()?.context"
       [focus]="focus()"
       [scope]="workspace() ? 'Profil actif · ' + workspace()!.title : 'Profil actif · cycle, patrimoine et postes'"
       [result]="result()"
-      toolsLabel="Réglages en cours"
+      toolsLabel="Régler le cycle et le patrimoine"
     >
       <ng-container primary>
         @if (activeCycleDirty()) {
@@ -114,36 +113,10 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
           </button>
         }
         @if (!workspace()) {
-        <a
-          class="btn btn-secondary"
-          [routerLink]="[]"
-          fragment="bc-cycle-title"
-          queryParamsHandling="preserve"
-          >Cycle budgétaire</a
-        >
-        <a
-          class="btn btn-secondary"
-          [routerLink]="[]"
-          fragment="bc-wealth-title"
-          queryParamsHandling="preserve"
-          >Stock d’ouverture</a
-        >
+        <!-- Les vues Cycle, Patrimoine et Postes sont les onglets du bandeau ; seul l'historique se rejoint ici. -->
         @if (closures().length) {
-          <a
-            class="btn btn-secondary"
-            [routerLink]="[]"
-            fragment="bc-history-title"
-            queryParamsHandling="preserve"
-            >{{ closures().length }} clôture(s) réalisées</a
-          >
+          <a class="btn btn-secondary" [routerLink]="[]" fragment="bc-history-title" queryParamsHandling="preserve">{{ closures().length }} clôture(s) réalisée(s)</a>
         }
-        <a
-          class="btn btn-secondary"
-          [routerLink]="[]"
-          fragment="bc-centers-title"
-          queryParamsHandling="preserve"
-          >Postes et revenus</a
-        >
         } @else if (workspace()?.key === 'settings-cycle') {
           <a class="btn btn-secondary" routerLink="/projet-de-vie/cloture" queryParamsHandling="preserve">Examiner les cycles à clôturer</a>
           @if (closures().length) { <a class="btn btn-secondary" [routerLink]="[]" fragment="bc-history-title" queryParamsHandling="preserve">{{ closures().length }} clôture(s) enregistrée(s)</a> }
@@ -603,7 +576,7 @@ const amountInput = (n: number | null) => (n === null ? '' : String(n).replace('
           affiché indique sa formule, sa révision et les opérations ou objets dont il provient.
         </p>
         <div class="bc-actions">
-          <a class="btn btn-primary" routerLink="/depenses">Voir les dépenses</a>
+          <a class="btn btn-primary" routerLink="/depenses/registre">Voir les dépenses</a>
           <button type="button" class="btn btn-secondary" (click)="load()" [disabled]="loading()">
             Actualiser
           </button>

@@ -9,6 +9,11 @@ export function bpmQueryState<T = string>(
     parse?: (value: string) => T;
     format?: (value: T) => string;
     replace?: boolean;
+    /**
+     * Le paramètre ouvre une saisie par-dessus la page (éditeur, décision) : l'ouvrir ajoute une étape
+     * au parcours, la refermer rend la page sans en ajouter une, pour que « Retour » ne la rouvre pas.
+     */
+    overlay?: boolean;
     context?: BpmPageContext;
   } = {},
 ): Signal<T> & { set(value: T): void; update(change: (value: T) => T): void; sync(): void } {
@@ -21,7 +26,7 @@ export function bpmQueryState<T = string>(
     value.set(next);
     void context.setQuery(
       { [name]: next === fallback ? null : options.format ? options.format(next) : String(next) },
-      { replace: options.replace },
+      { replace: options.replace || (options.overlay && next === fallback) },
     );
   };
   return Object.assign(value.asReadonly(), {

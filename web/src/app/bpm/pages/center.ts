@@ -1,6 +1,7 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { Component, computed, effect, inject, linkedSignal, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { PageObjectLabels } from '../../shared/plan-context';
 import { toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { EntryInput, RegisterLine } from '../../core/bpm-models';
@@ -8,12 +9,14 @@ import { cents, CentsPipe, percentText, ShortDatePipe } from '../../core/format'
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { BpmCapChart, BpmCapGauge, BpmLineDetail, bpmLoader, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmState, capEuroText, capInput, CapRow, newRequestKey } from '../ui';
 
-/** Page d'où l'on vient (`?from=`) : surtitre du bandeau et lien de retour. */
-const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
-  'tableau-de-bord': { label: 'Tableau de bord', link: '/tableau-de-bord', back: 'Retour au tableau de bord' },
-  piloter: { label: 'Graphiques et chiffres', link: '/piloter', back: 'Retour aux graphiques et chiffres' },
-  depenses: { label: 'Dépenses de la période', link: '/depenses', back: 'Retour aux dépenses de la période' },
-  entrees: { label: 'Détail des entrées', link: '/argent/entrees', back: 'Retour au détail des entrées' },
+/** Page d'où l'on vient (`?from=`) : le lien du bandeau remonte vers elle, nommée comme dans le menu. */
+const ORIGINS: Record<string, { label: string; link: string }> = {
+  'tableau-de-bord': { label: 'Tableau de bord', link: '/tableau-de-bord' },
+  piloter: { label: 'Graphiques et chiffres', link: '/piloter' },
+  depenses: { label: 'Registre des flux', link: '/depenses/registre' },
+  entrees: { label: 'Entrées de la période', link: '/tableau-de-bord/entrees' },
+  'projet-de-vie': { label: 'Gestion du projet de vie', link: '/projet-de-vie' },
+  plafonds: { label: 'Plafonds et catégories', link: '/plafonds' },
 };
 
 /**
@@ -29,8 +32,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
-      [kicker]="origin().label"
-      [back]="{ label: origin().back, link: origin().link, query: ctx.carry() }"
+      [back]="{ label: origin().label, link: origin().link, query: ctx.carry(), direct: true }"
       [title]="title()"
       pageClass="bpm-money bpm-money-detail"
       [lead]="lead()" [focus]="pageFocus()" [result]="capNotice() ? { message: capNotice()!.text, tone: capNotice()!.error ? 'danger' : 'success' } : message() ? { message: message()!, tone: 'success' } : null" toolsLabel="Piloter ce poste"
@@ -40,7 +42,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
       (periodChange)="ctx.setQuery({ period: $event })"
     >
       @if (nextLine(); as line) { <button primary type="button" class="app-hero-action" (click)="reviewNext()">Vérifier {{ isIncome() ? 'la réception' : 'le règlement' }} · {{ line.label }}</button> }
-      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!read.data()">＋ {{ isIncome() ? 'Ajouter une entrée à ce poste' : 'Ajouter une charge à ce poste' }}</button>
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!read.data()">＋ {{ isIncome() ? 'Saisir une entrée dans ce poste' : 'Saisir une dépense dans ce poste' }}</button>
       @if (!isIncome() && read.data()) {
         <form tools class="bpm-toolbar-search" (ngSubmit)="saveCap()" aria-label="Plafond du poste">
           <label>Plafond de ce poste, par période (€)<input name="cap" inputmode="decimal" [(ngModel)]="capDraft" placeholder="Sans plafond" [disabled]="capBusy()" /></label>
@@ -86,7 +88,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
                   @for (k of d.categories; track k.id) {
                     <li>
                       <span class="bmd-cat-name">
-                        <a [routerLink]="'/depenses'" [queryParams]="categoryQuery(k.id)" [attr.aria-label]="'Dépenses de la catégorie ' + k.label">{{ k.label }}</a>
+                        <a [routerLink]="'/depenses/registre'" [queryParams]="categoryQuery(k.id)" [attr.aria-label]="'Dépenses de la catégorie ' + k.label">{{ k.label }}</a>
                         <small>{{ k.engagedCents | cents }} engagés · {{ k.lineCount }} dépense(s){{ k.archived ? ' · retirée' : '' }}</small>
                       </span>
                       <bpm-cap-gauge [measure]="k" />
@@ -182,7 +184,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
             <summary><h2 id="bmd-precise-title">Préciser le poste ou la note d'une opération</h2></summary>
             <div class="bpm-disclosure-body">
               <p class="bpm-help">Ouvrez une ligne puis « Modifier » : l'éditeur partagé permet de changer le poste ou la note. Pour une opération récurrente, la modification porte sur la définition ; l'éditeur annonce sa portée (occurrences encore attendues) et les règlements déjà enregistrés gardent leurs dates et montants. Les opérations d'une période close restent protégées.</p>
-              <p class="bpm-help">Les opérations sans poste se retrouvent dans les dépenses de la période avec le filtre <a routerLink="/depenses" [queryParams]="noneQuery()">Poste à préciser</a>.</p>
+              <p class="bpm-help">Les opérations sans poste se retrouvent dans les dépenses de la période avec le filtre <a routerLink="/depenses/registre" [queryParams]="noneQuery()">Poste à préciser</a>.</p>
             </div>
           </details>
         }
@@ -226,6 +228,18 @@ export class BpmCenterPage {
     () => ({ ref: this.ref(), period: this.ctx.period() }),
     (k) => this.bpm.center(k.ref, k.period),
   );
+
+  /** Le cadre (fil d'Ariane, menu, historique) nomme le poste ouvert au lieu de « Détail d’un poste ». */
+  private readonly framed = (() => {
+    const labels = inject(PageObjectLabels);
+    const router = inject(Router);
+    effect(() => {
+      const c = this.read.data()?.center;
+      const ref = this.ref();
+      if (!ref) return;
+      labels.set(router.createUrlTree(['/argent/postes', ref]).toString(), c ? (c.direction === 'income' ? `Source ${c.label}` : `Poste ${c.label}`) : null);
+    });
+  })();
 
   protected isIncome = computed(() => this.read.data()?.center.direction === 'income');
   /** Titre source « Le poste {name} » ; une source d'entrées garde son nom de source. */

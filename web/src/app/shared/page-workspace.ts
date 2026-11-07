@@ -1,6 +1,8 @@
 import { computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { injectCurrentUrl, injectPlanContext } from './plan-context';
+import { locate } from './site-plan';
 import { of } from 'rxjs';
 
 /** Une vue spécialisée décrit son intention ; les modules conservent leurs lectures et commandes. */
@@ -29,20 +31,19 @@ export function workspaceContextQuery(url: string, parent = ''): Record<string, 
   return Object.fromEntries([...query.entries()].filter(([key]) => keys.has(key)));
 }
 
-/** Le retour hiérarchique reste stable même après un accès direct ou un rechargement. */
+/**
+ * Le lien du bandeau vers le niveau supérieur (page principale ou fiche ouverte), nommé comme dans
+ * le menu. Il suit le plan du site : stable après un accès direct ou un rechargement.
+ */
 export function injectWorkspaceReturn() {
+  const plan = injectPlanContext();
+  const url = injectCurrentUrl();
   const workspace = injectPageWorkspace();
-  const route = inject(ActivatedRoute);
-  const router = inject(Router);
-  const params = toSignal(route.paramMap ?? of(route.snapshot?.paramMap), { initialValue: route.snapshot?.paramMap });
-  const query = toSignal(route.queryParams ?? of(route.snapshot?.queryParams ?? {}), { initialValue: route.snapshot?.queryParams ?? {} });
   return computed(() => {
-    const current = workspace();
-    query();
-    if (!current) return null;
-    const id = params()?.get('id');
-    const parent = current.key.startsWith('project-') && ['project-budget', 'project-tasks'].includes(current.key) && id
-      ? `/app/gestion-projet/${encodeURIComponent(id)}` : current.parent;
-    return { link: parent, query: workspaceContextQuery(router.url, current.parent), label: 'Retour à la page principale', direct: true };
+    // Hors du plan (adresse de démonstration), la vue spécialisée déclare encore sa page parente.
+    const parent = workspace()?.parent;
+    const up = plan().up ?? (parent ? { link: parent, label: locate(parent).page?.label ?? 'Page principale' } : null);
+    if (!up) return null;
+    return { link: up.link, query: workspaceContextQuery(url(), up.link), label: up.label, direct: true };
   });
 }

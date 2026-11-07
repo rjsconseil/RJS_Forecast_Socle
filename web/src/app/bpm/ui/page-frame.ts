@@ -49,7 +49,7 @@ import { BpmFragmentNavigation } from './fragment-navigation';
 export class BpmPageFrame {
   readonly title = input.required<string>();
   readonly lead = input.required<string>();
-  readonly kicker = input('Ma vision budgétaire');
+  readonly kicker = input('');
   readonly tone = input<HeroTone>('lagoon');
   readonly pageClass = input('');
   readonly context = input<BpmContextInfo | null | undefined>(null);

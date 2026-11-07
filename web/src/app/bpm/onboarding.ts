@@ -533,7 +533,16 @@ export class BpmOnboarding implements OnInit {
       this.requestKey = newRequestKey();
       await this.directory.refresh().catch(() => undefined);
       this.ctx.select(r.userId);
-      await this.router.navigate(['/app']);
+      // Le tableau de bord propose ensuite l'étape suivante ; la confirmation dit ce qui reste à faire.
+      // Le cycle est actif dès que le jour d'ancrage est donné (début aujourd'hui par défaut, règle du middleware).
+      const cycleReady = anchorDay !== null;
+      await this.router.navigate(['/app'], {
+        state: {
+          bpmNotice: cycleReady
+            ? `Utilisateur « ${label} » créé.`
+            : `Utilisateur « ${label} » créé. Démarrez son projet de vie pour régler le cycle et le budget.`,
+        },
+      });
     } catch (err) {
       const e = toApiError(err);
       const field = e.body.details?.field as Field | undefined;

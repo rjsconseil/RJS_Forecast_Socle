@@ -9,7 +9,7 @@ import { CenterRow, EntryInput, Recurrence, RegisterLine } from '../../core/bpm-
 import { cents, CentsPipe, euros, figureValue, percentText, ShortDatePipe, signedCents, SignedCentsPipe } from '../../core/format';
 import { ClosingPreview } from '../../core/models';
 import { MetricDetail, MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmLineDetail, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmRefresh, BpmState, bpmLoader, newRequestKey, overCapsOf } from '../ui';
+import { BpmCycleSetup, BpmLineDetail, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, isCycleRefusal, nextOpenLine, BpmRefresh, BpmState, bpmLoader, newRequestKey, overCapsOf } from '../ui';
 import { BpmDashboardHistory } from './dashboard-history';
 import { BpmDashboardWealth, BpmSetupNeeded, setupProblem } from './dashboard-parts';
 
@@ -45,7 +45,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
 @Component({
   selector: 'bpm-page-dashboard',
   providers: [BpmPageContext],
-  imports: [NgTemplateOutlet, RouterLink, BpmPageFrame, BpmState, BpmLineDetail, BpmEntryFlow, BpmDashboardWealth, BpmDashboardHistory, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
+  imports: [NgTemplateOutlet, RouterLink, BpmPageFrame, BpmState, BpmCycleSetup, BpmLineDetail, BpmEntryFlow, BpmDashboardWealth, BpmDashboardHistory, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-expenses.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
@@ -58,13 +58,18 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
       [periodNav]="true"
       (periodChange)="goPeriod($event)"
     >
-      @if (nextLine(); as line) {
+      @if (noCycle()) {
+        <a actions class="btn btn-secondary" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
+      }
+      @if (noCycle()) {
+        <a primary class="app-hero-action" routerLink="/creer/projet-de-vie">Démarrer mon projet de vie</a>
+      } @else if (nextLine(); as line) {
         <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : 'Préparer la prochaine échéance' }} · {{ line.label }}</button>
       }
       @if (!summary.data()?.closed) {
         <ng-container actions>
-        <button type="button" class="btn btn-secondary" (click)="openCreate('income')" [disabled]="!budgets().length">＋ Entrée</button>
-        <button type="button" class="btn btn-secondary" (click)="openCreate('charge')" [disabled]="!budgets().length">＋ Charge</button>
+        <button type="button" class="btn btn-secondary" (click)="openCreate('income')" [disabled]="!budgets().length">＋ Saisir une entrée</button>
+        <button type="button" class="btn btn-secondary" (click)="openCreate('charge')" [disabled]="!budgets().length">＋ Saisir une dépense</button>
         </ng-container>
       }
       @if (dash.data()?.closing?.possible) {
@@ -80,7 +85,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
         @if (incomeLines().length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-period-income">{{ incomeLines().length }} entrée(s)</a> }
         @if (chargeLines().length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-period-expenses">{{ chargeLines().length }} charge(s)</a> }
         @if (lifeProjects.data()?.length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-projects">{{ lifeProjects.data()!.length }} projet(s) financé(s)</a> }
-        <a routerLink="/argent/reste" [queryParams]="carry()" fragment="verifier">Rapprocher avec mon compte</a>
+        <a routerLink="/tableau-de-bord/rapprochement" [queryParams]="carry()" fragment="verifier">Rapprocher avec mon compte</a>
         @if (summary.data()?.closed) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-history">Comparer les périodes closes</a> }
       </nav>
 
@@ -98,7 +103,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
           @if (!s.context.period) {
             <p class="bpm-missing" role="note">
               <strong>Cycle à configurer.</strong> Les chiffres d'une période (reçu, dépensé, reste) sont inconnus tant que le cycle du Budget du projet de vie n'a pas de date de début : ils ne valent pas zéro.
-              <a class="bm-action-link" routerLink="/creer">Configurer le cycle →</a>
+              <bpm-cycle-setup />
             </p>
           }
           @if (summary.error()) {
@@ -136,7 +141,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                   <div><dt>= Reste</dt><dd>{{ known('bpm.resultatPeriode', true) }}</dd></div>
                   <div><dt>Solde prévu à la clôture</dt><dd>{{ known('bpm.soldeAttendu', true) }}</dd></div>
                 </dl>
-                <a class="bpm-link" routerLink="/argent/reste" [queryParams]="carry()">Voir le détail du solde →</a>
+                <a class="bpm-link" routerLink="/tableau-de-bord/rapprochement" [queryParams]="carry()">Voir le détail du solde →</a>
               </div>
             </details>
             @if (s.closed && s.comparison.length) {
@@ -319,7 +324,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                           </header>
                           <ol class="bm-lines">
                             <li>
-                              <a class="bm-line" data-nature="entrees" routerLink="/argent/entrees" [queryParams]="carry()">
+                              <a class="bm-line" data-nature="entrees" routerLink="/tableau-de-bord/entrees" [queryParams]="carry()">
                                 <span class="bm-line-sign" aria-hidden="true">↑</span>
                                 <span class="bm-line-main"><strong>Entrées reçues</strong><small>{{ incomeReminder() }}</small></span>
                                 <span class="bm-line-amount">{{ c.basis.receivedCents | cents }}</span>
@@ -343,7 +348,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                               </li>
                             }
                             <li>
-                              <a class="bm-line bm-line-total" data-nature="reste" id="bm-remaining" [attr.data-sign]="(periodEffect() ?? 0) < 0 ? 'negative' : 'positive'" routerLink="/argent/reste" [queryParams]="carry()">
+                              <a class="bm-line bm-line-total" data-nature="reste" id="bm-remaining" [attr.data-sign]="(periodEffect() ?? 0) < 0 ? 'negative' : 'positive'" routerLink="/tableau-de-bord/rapprochement" [queryParams]="carry()">
                                 <span class="bm-line-sign" aria-hidden="true">=</span>
                                 <span class="bm-line-main"><strong>{{ restLabel() }}</strong><small>{{ restReminder() }}</small></span>
                                 <span class="bm-line-amount">{{ periodEffect() === null ? 'Inconnu' : (periodEffect() | signedCents) }}</span>
@@ -389,7 +394,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                         }
                       </ol>
                     } @else {
-                      <p class="bm-projects-help">Aucun autre projet rattaché à votre projet de vie : un voyage, un équipement, une formation… <a class="bm-action-link" routerLink="/creer">Créer un projet de la vie →</a></p>
+                      <p class="bm-projects-help">Aucun autre projet rattaché à votre projet de vie : un voyage, un équipement, une formation… <a class="bm-action-link" routerLink="/creer/projet-de-la-vie">Créer un projet de la vie →</a></p>
                     }
                   }
                 </div>
@@ -409,8 +414,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
               <bpm-state [error]="dash.error()" (retry)="dash.reload()" />
             } @else if (dash.data(); as d) {
               @if (d.cycle?.state === 'to_configure' || !d.period) {
-                <p class="bpm-help">Cycle à configurer : aucune période ne peut être close.</p>
-                <a class="bm-action-link" routerLink="/creer">Configurer le cycle →</a>
+                <p class="bpm-help">Cycle à configurer : aucune période ne peut être close. <bpm-cycle-setup /></p>
               } @else if (d.closure; as c) {
                 <p>{{ c.periodLabel }} a été close le <strong>{{ c.createdAt.slice(0, 10) | shortDate }}</strong>.</p>
                 <dl class="record-facts">
@@ -576,12 +580,15 @@ export class BpmDashboard {
   /** Plafonds dépassés de la période, lus avec le registre (aucune lecture de plus). */
   protected overCaps = computed(() => overCapsOf(this.register.data()?.caps, (ref) => this.centers.data()?.rows.find((r) => r.ref === ref)?.label));
 
+  /** Sans cycle, aucune période n'existe : la seule étape utile est de démarrer le projet de vie. */
+  protected noCycle = computed(() => !!this.summary.data() && !this.summary.data()!.context.period);
   protected nextLine = computed(() => this.summary.data()?.closed ? null : nextOpenLine(this.register.data()?.lines ?? []));
   protected pageFocus = computed<BpmPageFocus | null>(() => {
     const summary = this.summary.data();
     if (!summary) return null;
-    if (this.summary.error() || this.register.error()) return { title: 'Lecture à actualiser', detail: 'Les dernières données connues restent affichées. Vérifiez la connexion avant de décider.', tone: 'warning' };
-    if (!summary.context.period) return { title: 'Configurer le cycle pour commencer', detail: 'La période et son solde seront disponibles après le démarrage du projet de vie.', tone: 'info' };
+    // Sans cycle, les lectures de période sont refusées par règle : ce n'est pas une panne à signaler.
+    if (!summary.context.period) return { title: 'Démarrez votre projet de vie pour commencer', detail: 'L’assistant règle le cycle, le patrimoine et le budget type ; la période et son solde s’afficheront ensuite. Vous pouvez aussi régler seulement le cycle.', tone: 'info' };
+    if ([this.summary.error(), this.register.error()].some((e) => e && !isCycleRefusal(e))) return { title: 'Lecture à actualiser', detail: 'Les dernières données connues restent affichées. Vérifiez la connexion avant de décider.', tone: 'warning' };
     if (summary.closed) return { title: 'Période clôturée · résultat enregistré', detail: 'Comparez son résultat ou reprenez le suivi de la période en cours.', tone: 'success' };
     const line = this.nextLine();
     if (line) return { title: line.status === 'late' ? 'Une échéance en retard à vérifier' : line.status === 'due' ? 'Une échéance arrive aujourd’hui' : 'Anticiper la prochaine échéance', detail: `${line.label} · ${cents(line.plannedCents)} · ${line.plannedDate}. Ouvrez-la pour relire et pointer son règlement.`, tone: line.status === 'late' ? 'warning' : 'info' };
@@ -674,7 +681,7 @@ export class BpmDashboard {
           { label: 'Total de la période', value: money(sum(received, toReceive)) },
         ],
         note: (this.reason('bpm.revenus') ?? 'Reçu sur la période.') + recorded,
-        link: '/argent/entrees',
+        link: '/tableau-de-bord/entrees',
         query,
       },
       {
@@ -689,7 +696,7 @@ export class BpmDashboard {
           { label: 'Total de la période', value: money(sum(spent, toPay)) },
         ],
         note: (this.reason('bpm.charges') ?? 'Payé sur la période.') + recorded,
-        link: '/depenses',
+        link: '/depenses/registre',
         query: { ...query, dateBasis: 'realized', status: 'settled' },
       },
       {
@@ -707,10 +714,10 @@ export class BpmDashboard {
         ],
         actions: [
           { label: 'Voir le calcul', link: '/tableau-de-bord', fragment: 'bm-calculation', query },
-          { label: 'Voir les charges', link: '/depenses', query },
+          { label: 'Voir les charges', link: '/depenses/registre', query },
         ],
         note: (this.reason('bpm.resultatPeriode') ?? this.reason('bpm.soldeAttendu') ?? restNote ?? '') + recorded,
-        link: '/argent/reste',
+        link: '/tableau-de-bord/rapprochement',
         query,
       },
     ];
@@ -911,8 +918,12 @@ export class BpmDashboard {
   // ---------- navigation, détail et éditeur ----------
 
   protected editorDefaults = signal<Partial<EntryInput>>({});
-  /** Message laissé par l'assistant « Partir de zéro » (état de navigation `bpmNotice`). */
-  protected notice = signal<string | null>((history.state as { bpmNotice?: string } | null)?.bpmNotice ?? null);
+  /**
+   * Résultat d'une action faite sur cette page (saisie enregistrée…). Le message laissé par une autre page
+   * (état de navigation `bpmNotice`, assistant de démarrage, création d'utilisateur) est affiché une seule fois,
+   * par la barre de parcours.
+   */
+  protected notice = signal<string | null>(null);
 
   constructor() {
     // Changement de période : l'étape de confirmation de clôture repart de zéro.
@@ -939,7 +950,7 @@ export class BpmDashboard {
     this.ctx.setQuery({ ligne: id });
   }
   protected closeLine() {
-    this.ctx.setQuery({ ligne: null });
+    this.ctx.setQuery({ ligne: null }, { replace: true });
   }
   protected openCreate(direction?: 'income' | 'charge') {
     this.editorDefaults.set(direction ? { direction } : {});

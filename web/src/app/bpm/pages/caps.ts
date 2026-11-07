@@ -1,5 +1,6 @@
+import { redirectLegacyView } from '../ui/legacy-view';
 import { injectPageWorkspace } from '../../shared/page-workspace';
-import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, Injector, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -52,7 +53,6 @@ import {
     <bpm-page
       [title]="workspace()?.title ?? 'Plafonds et catégories'"
       [lead]="workspace()?.lead ?? 'Suivez vos dépenses, définissez vos limites et organisez vos catégories.'"
-      [back]="workspace() ? { label: 'Retour au suivi des plafonds', link: workspace()!.parent, query: carry() } : null"
       pageClass="bpm-projects bpm-management bpm-life-management bpm-caps-page"
       [context]="d()?.context"
       [periodNav]="true"
@@ -63,7 +63,7 @@ import {
     >
       <button primary class="btn btn-primary" type="button" [disabled]="!d() || busy() || (primaryKind() === 'entry' && !budgets().length)" (click)="runPrimary()">{{ primaryLabel() }}</button>
       @if (primaryKind() !== 'entry') {
-        <button actions class="btn btn-secondary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une charge</button>
+        <button actions class="btn btn-secondary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une dépense</button>
       }
       @if (view() === 'plafonds' && primaryKind() === 'save') {
         <button actions class="btn btn-secondary" type="button" [disabled]="busy()" (click)="openCapEditor()">Relire le plafond choisi</button>
@@ -77,25 +77,7 @@ import {
         <a actions class="bpm-link" routerLink="/plafonds/reglages" [queryParams]="carry()">Définir les plafonds →</a>
       }
       <div tools class="bpm-caps-toolbar-tools">
-      @if (!workspace()) {
-      <nav class="caps-workspaces" aria-label="Espaces des plafonds et catégories">
-        @for (tab of tabs; track tab.key; let i = $index) {
-          <a
-            [routerLink]="[]"
-            [queryParams]="{ view: tab.key }"
-            queryParamsHandling="merge"
-            [fragment]="undefined"
-            [attr.aria-current]="view() === tab.key ? 'page' : null"
-          >
-            <span class="caps-workspace-number">0{{ i + 1 }}</span
-            ><span
-              ><strong>{{ tab.label }}</strong
-              ><small>{{ tab.note }}</small></span
-            >
-          </a>
-        }
-      </nav>
-      }
+
         @if (view() === 'plafonds') {
           <div class="bpm-toolbar-search">
             <label>Plafond à régler<select [ngModel]="quickTarget()" (ngModelChange)="chooseTarget($event)">
@@ -105,11 +87,8 @@ import {
           </div>
         }
         @if (view() === 'categories') {
+          <!-- Le poste se choisit dans le formulaire « Nouvelle catégorie », juste dessous : pas de second sélecteur ici. -->
           <div class="bpm-toolbar-search">
-            <label>Poste de la prochaine catégorie<select [ngModel]="newCenter()" (ngModelChange)="newCenter.set($event)">
-              <option value="">Choisir un poste…</option>
-              @for (center of d()?.centers ?? []; track center.ref) { <option [value]="center.ref">{{ center.label }}</option> }
-            </select></label>
             <span>{{ activeCategories().length }} catégorie(s) active(s). La création prépare aussi le réglage du plafond.</span>
           </div>
         }
@@ -273,9 +252,8 @@ import {
                   </p>
                   <a
                     class="btn btn-primary"
-                    [routerLink]="[]"
-                    [queryParams]="{ view: 'plafonds' }"
-                    queryParamsHandling="merge"
+                    routerLink="/plafonds/reglages"
+                    [queryParams]="carry()"
                     >Régler les plafonds</a
                   >
                 }
@@ -356,7 +334,7 @@ import {
                           [disabled]="!budgets().length"
                           (click)="openEntry(c)"
                         >
-                          Saisir une charge ici
+                          ＋ Saisir une dépense ici
                         </button>
                       }
                       <button class="btn btn-secondary" type="button" (click)="configure(c)">
@@ -500,7 +478,7 @@ import {
           <section class="caps-settings" aria-labelledby="caps-settings-title">
             <header>
               <div>
-                <p class="caps-step">02 · Paramétrage</p>
+                <p class="caps-step">Paramétrage</p>
                 <h2 id="caps-settings-title">Définir les plafonds</h2>
               </div>
               <p>Une limite par période du cycle budgétaire. Les dépenses restent autorisées.</p>
@@ -653,9 +631,8 @@ import {
                 </footer>
                 @if (!activeCategories().length) {
                   <a
-                    [routerLink]="[]"
-                    [queryParams]="{ view: 'categories' }"
-                    queryParamsHandling="merge"
+                    routerLink="/plafonds/categories"
+                    [queryParams]="carry()"
                     >Créer votre première catégorie →</a
                   >
                 }
@@ -671,7 +648,7 @@ import {
           <section class="caps-settings" aria-labelledby="caps-categories-title">
             <header>
               <div>
-                <p class="caps-step">03 · Organisation</p>
+                <p class="caps-step">Organisation</p>
                 <h2 id="caps-categories-title">Créer et organiser les catégories</h2>
               </div>
               <p>Chaque catégorie appartient à un poste de dépenses.</p>
@@ -853,6 +830,24 @@ export class BpmCapsPage {
   protected carry = computed(() => Object.fromEntries(this.ctx.query().keys.filter(key => key !== 'view').map(key => [key, this.ctx.query().get(key)!])));
   private sequence = 0;
   private initialTarget = this.route.snapshot.queryParamMap.get('target');
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private injector = inject(Injector);
+  /**
+   * Arrivée avec une cible (« Définir le plafond » d'une catégorie, d'une carte) : le montant de
+   * cette cible est amené à l'écran et prêt à la saisie, sans avoir à le chercher plus bas.
+   */
+  private focusTarget(key: string) {
+    if (this.view() !== 'plafonds') return;
+    const name = key.startsWith('category:') ? 'categoryCap' : 'centerCap';
+    afterNextRender(
+      () => {
+        const field = this.host.nativeElement.querySelector<HTMLInputElement>(`.caps-settings input[name="${name}"]`);
+        field?.scrollIntoView({ block: 'center' });
+        field?.focus({ preventScroll: true });
+      },
+      { injector: this.injector },
+    );
+  }
   private query = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
@@ -875,6 +870,7 @@ export class BpmCapsPage {
           : 'suivi';
   });
   protected period = computed(() => this.query().get('period') || undefined);
+  private readonly legacyView = redirectLegacyView(() => this.view() ?? 'suivi', 'suivi', { plafonds: '/plafonds/reglages', categories: '/plafonds/categories' }, () => !!this.workspace());
 
   protected d = signal<CapsReview | null>(null);
   protected loading = signal(false);
@@ -913,7 +909,8 @@ export class BpmCapsPage {
   });
   protected reviewOverruns() {
     this.choice.set(new Map(this.urgentCards().map(card => [card.key, true])));
-    void this.ctx.setQuery({ view: 'suivi', mode: 'both', show: 'over' });
+    if (this.workspace()) void this.router.navigate(['/plafonds'], { queryParams: { ...this.carry(), mode: 'both', show: 'over' } });
+    else void this.ctx.setQuery({ mode: 'both', show: 'over' });
   }
   protected quickEditor = signal<'center' | 'category' | 'create' | null>(null);
   protected quickTarget = signal('');
@@ -963,11 +960,11 @@ export class BpmCapsPage {
       case 'rename': return 'Enregistrer le nom saisi';
       case 'save': return this.pendingCap() === 'category' ? 'Enregistrer la catégorie modifiée' : 'Enregistrer le poste modifié';
       case 'create': return `Créer « ${this.newLabel().trim()} » et préparer son plafond`;
-      case 'category': return '＋ Préparer une catégorie';
+      case 'category': return '＋ Créer une catégorie';
       case 'cap': return this.d()?.totals.cappedCount ? 'Régler le plafond choisi' : 'Définir mon premier plafond';
       case 'charge': return !this.past() && this.urgentCharge()?.engagedAs === 'toPay' ? 'Revoir une charge avant paiement' : 'Examiner une charge du dépassement';
       case 'overruns': return 'Afficher les dépassements des autres regroupements';
-      default: return '＋ Saisir une charge';
+      default: return '＋ Saisir une dépense';
     }
   });
   protected runPrimary() {
@@ -1090,6 +1087,7 @@ export class BpmCapsPage {
       this.catalog.set(catalog);
       if (this.initialTarget && this.capTargets().some(target => target.key === this.initialTarget)) {
         if (this.quickTarget() !== this.initialTarget) this.chooseTarget(this.initialTarget);
+        this.focusTarget(this.initialTarget);
         this.initialTarget = null;
       }
       if (!this.quickTarget() && data.centers.length) this.chooseTarget(`center:${data.centers[0].ref}`);
@@ -1107,7 +1105,7 @@ export class BpmCapsPage {
 
   // ---------- saisie et détail d'une charge ----------
 
-  protected lineId = bpmQueryState<string | null>('ligne', null);
+  protected lineId = bpmQueryState<string | null>('ligne', null, { overlay: true });
   protected entryDefaults = signal<Partial<EntryInput>>({ direction: 'charge' });
 
   protected openEntry(c?: CapCard) {

@@ -1,6 +1,11 @@
-import { ResolveFn, Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
 import { planTitle } from './shared/site-plan';
 import { PAGE_WORKSPACES } from './shared/page-workspaces';
+
+/** Une seule adresse par écran : les anciennes adresses y mènent en gardant la période et les filtres. */
+const canonical = (target: (params: Record<string, string>) => string[]): RedirectFunction => ({ params, queryParams, fragment }) =>
+  inject(Router).createUrlTree(target(params as Record<string, string>), { queryParams, fragment: fragment ?? undefined });
 
 /** Titre des accueils génériques du plan : « Section · Zone · RJS Forecast ». */
 const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.get('zone'), route.paramMap.get('section'));
@@ -19,17 +24,17 @@ const mainRoutes: Routes = [
 
   // ---------- Application BPM : Ma vision budgétaire ----------
   { path: 'tableau-de-bord', title: 'Tableau de bord — RJS Forecast', loadComponent: () => import('./bpm/pages/dashboard').then((m) => m.BpmDashboard) },
-  { path: 'depenses', title: 'Dépenses de la période — RJS Forecast', loadComponent: () => import('./bpm/pages/expenses').then((m) => m.BpmExpensesPage) },
+  { path: 'depenses', pathMatch: 'full', redirectTo: canonical(() => ['/depenses/registre']) },
   { path: 'plafonds', title: 'Plafonds et catégories — RJS Forecast', loadComponent: () => import('./bpm/pages/caps').then((m) => m.BpmCapsPage) },
   { path: 'piloter', title: 'Graphiques et chiffres — RJS Forecast', loadComponent: () => import('./bpm/pages/pilot').then((m) => m.BpmPilotPage) },
-  { path: 'piloter/agir', title: "Ce qu'il faut faire — RJS Forecast", loadComponent: () => import('./bpm/pages/act').then((m) => m.BpmActPage) },
+  { path: 'piloter/agir', title: 'Échéances à traiter — RJS Forecast', loadComponent: () => import('./bpm/pages/act').then((m) => m.BpmActPage) },
   { path: 'projet-de-vie', title: 'Gestion du projet de vie — RJS Forecast', loadComponent: () => import('./bpm/life/life-management.page').then((m) => m.BpmLifeManagementPage) },
   { path: 'vision', title: 'Objectifs et avenir — RJS Forecast', loadComponent: () => import('./bpm/objectives/objectives.page').then((m) => m.BpmObjectivesPage) },
 
-  // ---------- Sous-pages de détail (atteintes depuis les chiffres, graphes et listes) ----------
-  { path: 'argent/entrees', title: 'Détail des entrées — RJS Forecast', loadComponent: () => import('./bpm/pages/incomes').then((m) => m.BpmIncomesPage) },
-  { path: 'argent/postes/:poste', title: 'Détail du centre — RJS Forecast', loadComponent: () => import('./bpm/pages/center').then((m) => m.BpmCenterPage) },
-  { path: 'argent/reste', title: 'Détail du solde — RJS Forecast', loadComponent: () => import('./bpm/pages/balance').then((m) => m.BpmBalancePage) },
+  // ---------- Détails (atteints depuis les chiffres, graphes et listes) ----------
+  { path: 'argent/entrees', redirectTo: canonical(() => ['/tableau-de-bord/entrees']) },
+  { path: 'argent/postes/:poste', title: 'Détail du poste — RJS Forecast', loadComponent: () => import('./bpm/pages/center').then((m) => m.BpmCenterPage) },
+  { path: 'argent/reste', redirectTo: canonical(() => ['/tableau-de-bord/rapprochement']) },
 
   // ---------- Utilisateurs (distinct de l'Administration) ----------
   { path: 'utilisateurs', title: 'Utilisateurs — RJS Forecast', loadComponent: () => import('./bpm/onboarding').then((m) => m.BpmOnboarding) },
@@ -40,9 +45,10 @@ const mainRoutes: Routes = [
   { path: 'app/bienvenue', redirectTo: 'utilisateurs' },
   // Projets et tâches du budget de vie : tableaux par statut réimplémentés depuis le noyau, enrichis du budget des projets.
   { path: 'app/gestion-projet', title: 'Gestion de projet — RJS Forecast', loadComponent: () => import('./bpm/projects/management.page').then((m) => m.BpmProjectManagementPage) },
-  { path: 'app/gestion-projet/:id', title: 'Piloter un projet de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
+  { path: 'app/gestion-projet/:id', title: 'Fiche du projet — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
   { path: 'app/projets', title: 'Projets de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/projects.page').then((m) => m.BpmProjectsPage) },
-  { path: 'app/projets/:id', title: 'Projet de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
+  // La fiche d'un projet a une seule adresse, sous la gestion de projet.
+  { path: 'app/projets/:id', redirectTo: canonical((p) => ['/app/gestion-projet', p['id']]) },
   { path: 'app/taches', title: 'Tâches des projets — RJS Forecast', loadComponent: () => import('./bpm/projects/tasks.page').then((m) => m.BpmTasksPage) },
   { path: 'app/reglages', title: 'Cycle et réglages — RJS Forecast', loadComponent: () => import('./bpm/settings').then((m) => m.BpmSettings) },
 

@@ -150,8 +150,8 @@ describe('lecture des dates des flux dans BPM', () => {
       providers: [
         provideRouter([
           { path: 'argent/postes/:poste', component: BpmCenterPage },
-          { path: 'argent/entrees', component: BpmIncomesPage },
-          { path: 'depenses', component: BpmExpensesPage },
+          { path: 'tableau-de-bord/entrees', component: BpmIncomesPage },
+          { path: 'depenses/registre', component: BpmExpensesPage },
         ]),
         { provide: BpmApi, useValue: api },
         { provide: Api, useValue: { tasks: vi.fn().mockResolvedValue([]) } },
@@ -194,9 +194,9 @@ describe('lecture des dates des flux dans BPM', () => {
     );
     await settle();
     const back = [...harness.routeNativeElement!.querySelectorAll('a')].find((a) =>
-      a.textContent!.includes('Retour au détail des entrées'),
+      a.textContent!.includes('Entrées de la période'),
     )!;
-    expect(back.getAttribute('href')).toBe('/argent/entrees?period=2026-10');
+    expect(back.getAttribute('href')).toBe('/tableau-de-bord/entrees?period=2026-10');
   });
   it('conserve le plafond saisi dans le bandeau après une relecture sans changement serveur', async () => {
     const page = await harness.navigateByUrl('/argent/postes/std:loisirs', BpmCenterPage);
@@ -211,7 +211,7 @@ describe('lecture des dates des flux dans BPM', () => {
     expect((harness.routeNativeElement!.querySelector('bpm-page-banner button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
   });
   it('les entrées affichent les montants réellement reçus et un compteur cohérent', async () => {
-    await harness.navigateByUrl('/argent/entrees?period=2026-11', BpmIncomesPage);
+    await harness.navigateByUrl('/tableau-de-bord/entrees?period=2026-11', BpmIncomesPage);
     await settle();
     const received = section('bmd-entries-title').textContent!;
     expect(received).toContain(delayed.label);
@@ -221,20 +221,20 @@ describe('lecture des dates des flux dans BPM', () => {
     expect(section('bmd-pending-title').textContent).toContain(pending.label);
   });
   it('le registre garde la date prévue et signale un paiement fait dans une autre période', async () => {
-    await harness.navigateByUrl('/depenses?period=2026-11', BpmExpensesPage);
+    await harness.navigateByUrl('/depenses/registre?period=2026-11', BpmExpensesPage);
     await settle();
     expect(text()).toContain(historical.label);
     expect(text()).toContain('Réglé hors de cette période');
     expect(text()).toContain('le tableau de bord les compte à leur date réelle');
-    const back = [...harness.routeNativeElement!.querySelectorAll('a')].find((a) =>
-      a.textContent!.includes('Gestion du projet de vie'),
-    )!;
-    expect(back.getAttribute('href')).toBe('/projet-de-vie?period=2026-11');
+    // Le registre est une sous-page du tableau de bord : le bandeau y remonte, période comprise.
+    const back = harness.routeNativeElement!.querySelector('.bpm-banner-back') as HTMLAnchorElement;
+    expect(back.textContent).toContain('Tableau de bord');
+    expect(back.getAttribute('href')).toBe('/tableau-de-bord?period=2026-11');
   });
   it('ne fait pas quitter silencieusement le périmètre d’un projet par un lien de poste global', async () => {
     const response = await api['register']();
     api['register'].mockResolvedValue({ ...response, context: { ...context, scope: 'budget' } });
-    await harness.navigateByUrl('/depenses?period=2026-11&budgetId=bud_project', BpmExpensesPage);
+    await harness.navigateByUrl('/depenses/registre?period=2026-11&budgetId=bud_project', BpmExpensesPage);
     await settle();
     expect(harness.routeNativeElement!.querySelector('.expense-group h2 a')).toBeNull();
     expect(harness.routeNativeElement!.querySelector('.expense-charge-summary')).not.toBeNull();
@@ -248,7 +248,7 @@ describe('lecture des dates des flux dans BPM', () => {
       groups: [{ ...response.groups[0], lineIds: [advanced.id] }],
     });
     await harness.navigateByUrl(
-      '/depenses?period=2026-11&dateBasis=realized&status=settled',
+      '/depenses/registre?period=2026-11&dateBasis=realized&status=settled',
       BpmExpensesPage,
     );
     await settle();

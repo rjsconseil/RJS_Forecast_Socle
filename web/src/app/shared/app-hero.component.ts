@@ -9,6 +9,8 @@ import { RouterLink } from '@angular/router';
 import { PageHeroDirective } from './page-hero.directive';
 import { PageFocus, PageResult, PageToolbar } from './page-toolbar.component';
 import { injectPageWorkspace, injectWorkspaceReturn } from './page-workspace';
+import { injectCurrentUrl, injectPlanContext } from './plan-context';
+import { PageTabs } from './page-tabs.component';
 
 export interface HeroChip {
   label: string;
@@ -30,7 +32,7 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
  */
 @Component({
   selector: 'rjs-app-hero',
-  imports: [RouterLink, PageToolbar],
+  imports: [RouterLink, PageToolbar, PageTabs],
   hostDirectives: [PageHeroDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Les classes app-hero-* sont propres au bandeau : globales, elles habillent aussi les commandes projetées.
@@ -39,7 +41,7 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
   template: `
     <section class="app-hero" [attr.data-hero]="tone()" [attr.aria-labelledby]="headingId()">
       @if (parent(); as back) {
-        <a class="app-hero-parent" [routerLink]="back.link" [queryParams]="back.query">← {{ back.label }}</a>
+        <a class="app-hero-parent" [routerLink]="back.link" [queryParams]="back.query" [attr.aria-label]="'Remonter à : ' + back.label"><span aria-hidden="true">↑</span> {{ back.label }}</a>
       }
       <div class="app-hero-heading">
         @if (workspace()?.lead || lead()) {
@@ -54,6 +56,7 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
           <p class="app-hero-kicker">{{ kicker() }}</p>
         </div>
       </div>
+      <rjs-page-tabs class="app-hero-tabs" [tabs]="plan().tabs" [url]="url()" />
       <div class="app-hero-guide"><ng-content select="[heroGuide]" /></div>
       <div class="app-hero-visual"><ng-content /></div>
       <div class="app-hero-bottom">
@@ -112,6 +115,8 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
 export class AppHeroComponent {
   protected readonly workspace = injectPageWorkspace();
   protected readonly parent = injectWorkspaceReturn();
+  protected readonly plan = injectPlanContext();
+  protected readonly url = injectCurrentUrl();
   protected readonly hero = inject(PageHeroDirective);
   readonly kicker = input.required<string>();
   readonly title = input.required<string>();

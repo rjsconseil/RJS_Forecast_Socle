@@ -1,3 +1,4 @@
+import { redirectLegacyView } from '../ui/legacy-view';
 import { injectPageWorkspace } from '../../shared/page-workspace';
 import { NgTemplateOutlet } from '@angular/common';
 import { BpmPageContext } from '../ui/page-context';
@@ -53,6 +54,7 @@ export class BpmObjectivesPage {
   private fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
   private params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   protected view = computed(() => this.workspace()?.key === 'vision-projection' ? 'projection' : this.workspace()?.key === 'vision-landmarks' ? 'reperes' : objectivesView(this.params().get('view'), this.fragment()));
+  private readonly legacyView = redirectLegacyView(() => this.view(), 'suivi', { reperes: '/vision/reperes', projection: '/vision/projection' }, () => !!this.workspace());
   protected tabs = [
     { key: 'suivi', label: 'Mes objectifs datés', note: 'Suivre et ajuster' },
     { key: 'reperes', label: 'Épargne et patrimoine', note: 'Fixer mes repères' },
@@ -145,9 +147,9 @@ export class BpmObjectivesPage {
   protected openSetting(setting: 'savings' | 'wealth' | 'projection') {
     if (setting !== 'projection') this.settingChoice.set(setting);
     const view = setting === 'projection' ? 'projection' : 'reperes';
-    if (this.workspace() && this.view() !== view) {
-      void this.router.navigate([setting === 'projection' ? '/vision/projection' : '/vision/reperes'], { queryParams: { ...this.carry(), reglage: setting } });
-    } else void this.ctx.setQuery({ view, reglage: setting });
+    // Chaque réglage vit dans sa sous-page : on l'y ouvre, ou on l'ouvre sur place si l'on y est déjà.
+    if (this.workspace() && this.view() === view) void this.ctx.setQuery({ reglage: setting });
+    else void this.router.navigate([view === 'projection' ? '/vision/projection' : '/vision/reperes'], { queryParams: { ...this.carry(), reglage: setting } });
   }
   protected closeSetting() { void this.ctx.setQuery({ reglage: null }, { replace: true }); }
   protected reviewAttention() {
@@ -155,7 +157,7 @@ export class BpmObjectivesPage {
       void this.router.navigate(['/vision'], { queryParams: { ...this.carry(), status: 'all', q: null, type: 'all', sort: 'date', goal: this.priorityGoal()?.goal.id ?? null } });
       return;
     }
-    void this.ctx.setQuery({ view: 'suivi', status: 'all', q: null, type: 'all', sort: 'date' });
+    void this.ctx.setQuery({ status: 'all', q: null, type: 'all', sort: 'date' });
     if (this.priorityGoal()) this.editGoal(this.priorityGoal()!.goal);
   }
   private lastWrite = signal<'savings' | 'wealth' | 'projection' | 'remove' | null>(null);
@@ -185,7 +187,7 @@ export class BpmObjectivesPage {
       case 'projection': return this.view() === 'projection' ? 'Ajuster les hypothèses' : 'Calculer la couverture des objectifs';
       case 'setting': return this.settingChoice() === 'wealth' ? 'Régler mon cap patrimonial' : 'Régler mon épargne visée';
       case 'reset': return 'Afficher tous les objectifs';
-      default: return '+ Ajouter un objectif daté';
+      default: return '＋ Créer un objectif daté';
     }
   });
   protected runPrimary() {

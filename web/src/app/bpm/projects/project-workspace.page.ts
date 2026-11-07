@@ -19,7 +19,6 @@ import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-
     <div class="page page-wide bpm-projects bpm-project-page bpm-specialized-projects">
       <bpm-page-banner
         class="life-projects-banner"
-        kicker="Mes projets de la vie"
         [title]="workspace()?.title || 'Préparer les projets'"
         [lead]="workspace()?.lead || ''"
         [focus]="workspaceFocus()"
@@ -54,7 +53,7 @@ import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-
       </bpm-page-banner>
 
       @if (key() === 'project-create') {
-        <bpm-project-editor [inline]="true" (closed)="back()" (saved)="created($event.projectId)" />
+        <bpm-project-editor [inline]="true" (closed)="back()" (saved)="projectCreated($event)" />
       } @else if (error()) {
         <div class="empty-state" role="alert"><h2>Étape indisponible</h2><p>{{ error() }}</p><button type="button" class="btn btn-secondary" (click)="load()">Réessayer</button></div>
       } @else if (!data()) {
@@ -166,8 +165,19 @@ export class BpmProjectWorkspacePage extends BpmProjectManagementPage {
     if (this.key() === 'project-decisions') return { title: this.decisionCount() ? `${this.decisionCount()} décision(s) à prendre` : 'Toutes les demandes ont été traitées.', detail: 'Les parts des tâches et les autorisations de dépassement restent deux décisions distinctes.', tone: this.decisionCount() ? 'warning' : 'success' };
     return { title: this.unfundedCount() ? `${this.unfundedCount()} projet(s) attendent une enveloppe.` : 'Les projets disposent de leur enveloppe.', detail: 'Réglez ici les montants, puis répartissez-les dans les tâches du projet.', tone: this.unfundedCount() ? 'warning' : 'success' };
   });
+  /** « Annuler » revient d'où l'on vient (la page parente à défaut), sans ajouter d'étape au parcours. */
   protected back() {
-    this.workspaceRouter.navigate([this.workspace()?.parent || (this.key().startsWith('task-') ? '/app/taches' : '/app/gestion-projet')], { queryParamsHandling: 'preserve' });
+    this.navigation.back(this.workspace()?.parent || (this.key().startsWith('task-') ? '/app/taches' : '/app/gestion-projet'));
+  }
+  /**
+   * Le formulaire de création est consommé : il quitte le parcours, la fiche du nouveau projet s'ouvre
+   * avec la confirmation, et « Retour » ramène à la page d'où la création a été lancée.
+   */
+  protected projectCreated(project: { projectId: string; title: string }) {
+    this.navigation.completeFlow((url) => /^\/app\/gestion-projet\/nouveau(?:[?#]|$)/.test(url));
+    void this.workspaceRouter.navigate(['/app/gestion-projet', project.projectId], {
+      state: { bpmNotice: `Projet « ${project.title} » créé.` },
+    });
   }
   protected assignTask(taskId: string) {
     const projectId = this.validDestination();

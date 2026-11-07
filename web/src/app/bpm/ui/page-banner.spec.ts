@@ -44,15 +44,22 @@ describe('bandeau commun et coordination', () => {
   it('présente l’intention spécialisée et retourne au projet parent sans reprendre une commande ouverte', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter([
       { path: 'app/gestion-projet/:id/budget', component: Host, data: { workspace: {
-        key: 'project-budget', parent: '/app/gestion-projet', title: 'Budget de ce projet', lead: 'Attribuez les moyens.'
+        key: 'project-budget', parent: '/app/gestion-projet', title: 'Budget du projet', lead: 'Attribuez les moyens.'
       } } },
     ])] });
     const h = await RouterTestingHarness.create('/app/gestion-projet/prj_42/budget?period=2026-10&q=travaux&entry=new&editTask=tsk_42');
     const banner = h.routeNativeElement!.querySelector('bpm-page-banner')!;
-    expect(banner.querySelector('h1')?.textContent).toBe('Budget de ce projet');
+    // Une fiche garde son nom en titre ; la sous-page est l'onglet courant.
+    expect(banner.querySelector('h1')?.textContent).toBe('Test du cadre');
     expect(banner.querySelector('.page-intro')?.textContent).toBe('Attribuez les moyens.');
+    expect(banner.querySelector('.eyebrow')?.textContent).toBe('Mes projets de la vie · Gestion de projet');
     const back = banner.querySelector('.bpm-banner-back') as HTMLAnchorElement;
     expect(back.getAttribute('href')).toBe('/app/gestion-projet/prj_42?period=2026-10&q=travaux');
+    expect(back.textContent).toContain('Fiche du projet');
+    const tabs = [...banner.querySelectorAll('.page-tab')] as HTMLAnchorElement[];
+    expect(tabs.map(t => t.textContent?.trim())).toEqual(['Vue d’ensemble', 'Budget et décisions', 'Tâches']);
+    expect(banner.querySelector('.page-tab[aria-current="page"]')?.textContent).toContain('Budget et décisions');
+    expect(tabs[2].getAttribute('href')).toBe('/app/gestion-projet/prj_42/taches?period=2026-10&q=travaux');
   });
   it('projette actions et outils une seule fois et garde les saisies lors du repli', async () => {
     TestBed.configureTestingModule({

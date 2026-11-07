@@ -1,6 +1,7 @@
-import { BpmPageBanner, BpmPageFocus } from '../ui';
+import { BpmCycleSetup, BpmPageBanner, BpmPageFocus } from '../ui';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
+import { BpmNavigation } from '../ui/navigation';
 import {
   afterNextRender,
   Component,
@@ -38,6 +39,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
   styleUrl: './projects.page.scss',
   imports: [
     BpmPageBanner,
+    BpmCycleSetup,
     ModalComponent,
     BpmProjectOverviewSummaryComponent,
     RouterLink,
@@ -54,7 +56,6 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
     <div class="page page-wide bpm-projects bpm-project-page bpm-management">
       <bpm-page-banner
         class="life-projects-banner"
-        kicker="Mes projets de la vie"
         title="Gestion de projet"
         lead="Préparez vos projets, attribuez leur enveloppe et arbitrez les demandes des tâches. Le bandeau vous propose la prochaine étape selon leur situation."
         [focus]="pageFocus()"
@@ -70,14 +71,14 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
           } @else if (unfundedCount()) {
             <button type="button" class="btn btn-primary" (click)="showUnfunded()">Attribuer {{ unfundedCount() }} enveloppe(s)</button>
           } @else if (visibleProjects().length === 1) {
-            <button type="button" class="btn btn-primary" (click)="openTask(visibleProjects()[0].project.id)">+ Créer une tâche dans le projet affiché</button>
+            <button type="button" class="btn btn-primary" (click)="openTask(visibleProjects()[0].project.id)">＋ Créer une tâche dans le projet affiché</button>
           } @else {
-            <button type="button" class="btn btn-primary" [disabled]="!data()" (click)="openProject()">+ Créer un projet de la vie</button>
+            <button type="button" class="btn btn-primary" [disabled]="!data()" (click)="openProject()">＋ Créer un projet de la vie</button>
           }
         </div>
         <div actions>
           @if (hasManagementFollowup()) {
-            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openProject()">+ Créer un projet de la vie</button>
+            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openProject()">＋ Créer un projet de la vie</button>
           }
           @if (visibleProjects().length !== 1) {
             <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openTask()">Créer une tâche</button>
@@ -388,7 +389,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                       [disabled]="busy()"
                       (click)="openTask(p.project.id)"
                     >
-                      Ajouter une tâche
+                      ＋ Créer une tâche
                     </button>
                     <button
                       class="btn btn-secondary"
@@ -593,7 +594,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                         [disabled]="busy()"
                         (click)="openTask(p.project.id)"
                       >
-                        + Ajouter une tâche
+                        ＋ Créer une tâche
                       </button>
                     </header>
                     <ol class="pm-task-list">
@@ -705,7 +706,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
             @if (d.context.cycleState === 'to_configure') {
               <p class="bpm-note">
                 Configurez le cycle pour dater les remontées et la facturation de fin de cycle.
-                <a routerLink="/app/reglages">Configurer le cycle</a>
+                <bpm-cycle-setup />
               </p>
             }
             @if (notice(); as n) {
@@ -758,7 +759,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
             <nav class="bpm-actions" aria-label="Vues complémentaires">
               <a
                 class="text-link"
-                [routerLink]="['/app/projets', d.context.lifeBudget.coreProjectId]"
+                [routerLink]="['/app/gestion-projet', d.context.lifeBudget.coreProjectId]"
                 >Voir le projet de vie ↗</a
               >
               <a class="text-link" routerLink="/projet-de-vie">Gestion du projet de vie ↗</a>
@@ -850,7 +851,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
       <bpm-project-editor
         [project]="editingProject()"
         (closed)="projectEditor.set('')"
-        (saved)="created($event.projectId)"
+        (saved)="created($event)"
       />
     }
     @if (taskEditor() && (taskEditor() === 'new' || editingTask())) {
@@ -871,6 +872,7 @@ export class BpmProjectManagementPage implements OnInit {
   protected readonly L = FUNDING;
   private api = inject(Api);
   private router = inject(Router);
+  protected navigation = inject(BpmNavigation);
   private sequence = 0;
   private document = inject(DOCUMENT);
   private injector = inject(Injector);
@@ -888,8 +890,8 @@ export class BpmProjectManagementPage implements OnInit {
     const notice = this.notice();
     return notice ? { message: notice.text, tone: notice.error ? 'danger' as const : 'success' as const } : null;
   });
-  protected projectEditor = bpmQueryState('editProject', '');
-  protected taskEditor = bpmQueryState('editTask', '');
+  protected projectEditor = bpmQueryState('editProject', '', { overlay: true });
+  protected taskEditor = bpmQueryState('editTask', '', { overlay: true });
   protected editingTask = computed(
     () => this.tasks()?.tasks.find((t) => t.task.id === this.taskEditor()) ?? null,
   );
@@ -897,7 +899,7 @@ export class BpmProjectManagementPage implements OnInit {
   protected filter = bpmQueryState('filter', 'all');
   protected candidate = signal('');
   protected cycleOpen = signal(false);
-  protected decisions = bpmQueryState('decisions', '');
+  protected decisions = bpmQueryState('decisions', '', { overlay: true });
   protected unfundedCount = computed(
     () => (this.data()?.projects ?? []).filter((p) => !p.budget?.regime).length,
   );
@@ -1054,13 +1056,18 @@ export class BpmProjectManagementPage implements OnInit {
     this.taskProjectId.set(projectId);
     this.taskEditor.set('new');
   }
-  protected created(projectId: string) {
-    const edited = !!this.editingProject();
-    this.projectEditor.set('');
-    if (edited) {
+  protected created(project: { projectId: string; title: string }) {
+    if (this.editingProject()) {
+      this.projectEditor.set('');
       this.load();
       this.notice.set({ text: 'Projet enregistré.', error: false });
-    } else this.router.navigate(['/app/gestion-projet', projectId]);
+      return;
+    }
+    // La saisie de création est consommée : elle quitte le parcours avant d'ouvrir la fiche du projet.
+    this.navigation.completeFlow((url) => new URL(url, 'http://local').searchParams.get('editProject') === 'new');
+    void this.router.navigate(['/app/gestion-projet', project.projectId], {
+      state: { bpmNotice: `Projet « ${project.title} » créé.` },
+    });
   }
   protected closeTask() {
     this.taskEditor.set('');

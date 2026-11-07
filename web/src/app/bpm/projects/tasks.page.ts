@@ -49,7 +49,6 @@ import {
     <div class="page page-wide landing-page section-home bpm-projects bpm-tasks-page">
       <bpm-page-banner
         class="life-projects-banner"
-        kicker="Mes projets de la vie"
         title="Tâches des projets"
         lead="Faites avancer vos projets en traitant leurs tâches. Filtrez les blocages, modifiez une tâche ou rattachez une tâche préparée séparément."
         [focus]="pageFocus()"
@@ -65,12 +64,12 @@ import {
               <button type="button" class="btn btn-primary" (click)="openEditor(next.task)">{{ next.kind === 'blocked' ? 'Revoir une tâche bloquée' : next.kind === 'late' ? 'Revoir une tâche en retard' : 'Poursuivre la tâche' }} · {{ next.task.task.title }}</button>
             }
           } @else {
-            <button type="button" class="btn btn-primary" [disabled]="!data()" (click)="openEditor()">+ Créer une tâche</button>
+            <button type="button" class="btn btn-primary" [disabled]="!data()" (click)="openEditor()">＋ Créer une tâche</button>
           }
         </div>
         <div actions>
           @if (nextTask()) {
-            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openEditor()">+ Créer une tâche</button>
+            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openEditor()">＋ Créer une tâche</button>
           }
           @if (selectedProjectId()) {
             <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', selectedProjectId()]">Piloter ce projet</a>
@@ -253,7 +252,7 @@ import {
                         >
                         <a
                           class="task-title-link"
-                          [routerLink]="['/app/projets', t.task.projectId]"
+                          [routerLink]="['/app/gestion-projet', t.task.projectId]"
                           [attr.title]="t.task.title"
                           >{{ t.task.title }}</a
                         >
@@ -287,7 +286,7 @@ import {
                       <div class="task-card-meta">
                         <a
                           class="task-card-badge"
-                          [routerLink]="['/app/projets', t.task.projectId]"
+                          [routerLink]="['/app/gestion-projet', t.task.projectId]"
                           [attr.title]="'Projet ' + t.projectTitle"
                           >{{ t.projectTitle }} ↗</a
                         >
@@ -446,7 +445,7 @@ export class BpmTasksPage implements OnInit {
       this.standardProjects().find((p) => p.projectId === this.selectedProjectId())?.projectId ??
       '',
   );
-  protected taskEditor = bpmQueryState('editTask', '');
+  protected taskEditor = bpmQueryState('editTask', '', { overlay: true });
   protected taskProject = bpmQueryState('taskProject', '');
   protected taskProjectOptions = computed(() =>
     (this.data()?.projects ?? []).map((p) => ({ projectId: p.projectId, title: p.title })),

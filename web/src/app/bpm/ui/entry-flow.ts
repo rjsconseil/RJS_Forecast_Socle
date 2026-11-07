@@ -40,6 +40,8 @@ export class BpmEntryFlow {
   readonly budgets = input.required<BpmBudgetRef[]>();
   readonly defaults = input<Partial<EntryInput>>({});
   readonly taskFundingRequired = input(false);
+  /** Paramètres d'adresse qui accompagnent la saisie (tâche, sens…) : ils partent avec elle. */
+  readonly clearOnClose = input<string[]>([]);
   readonly saved = output<string>();
   protected id = computed(() => this.ctx.query().get('entry'));
   protected line = bpmLoader(
@@ -50,7 +52,8 @@ export class BpmEntryFlow {
     this.id() !== 'new' && this.line.data()?.line.id === this.id() && this.budgets().some(b => b.id === this.line.data()?.line.budgetId) ? this.line.data()!.line : null,
   );
   protected close() {
-    return this.ctx.setQuery({ entry: null }, { replace: true });
+    const extra = Object.fromEntries(this.clearOnClose().map((name) => [name, null]));
+    return this.ctx.setQuery({ ...extra, entry: null }, { replace: true });
   }
   protected async complete(message: string) {
     await this.close();

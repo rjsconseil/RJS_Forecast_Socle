@@ -18,15 +18,17 @@ export interface BpmBackTarget {
   template: `
     @if (back(); as b) {
       @if (b.direct) {
-        <a class="bpm-banner-back" [routerLink]="b.link" [queryParams]="b.query ?? {}">← {{ b.label }}</a>
+        <a class="bpm-banner-back" [routerLink]="b.link" [queryParams]="b.query ?? {}" [attr.aria-label]="'Remonter à : ' + b.label"><span aria-hidden="true">↑</span> {{ b.label }}</a>
       } @else {
         <a class="bpm-banner-back" bpmBack [routerLink]="b.link" [queryParams]="b.query ?? {}">← {{ b.label }}</a>
       }
     }
-    <p class="eyebrow">Budget/Patrimoine · {{ kicker() }}</p>
+    @if (kicker()) {
+      <p class="eyebrow">{{ kicker() }}</p>
+    }
     <h1 class="display" [id]="headingId()">{{ title() }}</h1>
     <p class="bpm-banner-intro page-intro">{{ lead() }}</p>
-  `,
+`,
   styles: `
     :host {
       display: block;
@@ -48,7 +50,8 @@ export interface BpmBackTarget {
 })
 export class BpmHeading {
   readonly title = input.required<string>();
-  readonly kicker = input('Ma vision budgétaire');
+  /** Surtitre « Section · Page », lu dans le plan du site par le bandeau. */
+  readonly kicker = input('');
   readonly lead = input.required<string>();
   readonly headingId = input<string | undefined>();
   readonly back = input<BpmBackTarget | null>(null);

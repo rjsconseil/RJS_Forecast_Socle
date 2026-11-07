@@ -121,18 +121,18 @@ export function scrollToAnchor(target: () => string | null = () => null) {
         <button
           type="button"
           class="btn btn-secondary"
-          (click)="openCreate({ direction: 'charge' })"
+          (click)="openCreate({ direction: 'income' })"
           [disabled]="!budgets().length"
         >
-          ＋ Dépense
+          ＋ Saisir une entrée
         </button>
         <button
           type="button"
           class="btn btn-secondary"
-          (click)="openCreate({ direction: 'income' })"
+          (click)="openCreate({ direction: 'charge' })"
           [disabled]="!budgets().length"
         >
-          ＋ Entrée
+          ＋ Saisir une dépense
         </button>
         @if (message()) {
           <button type="button" class="btn btn-secondary" (click)="message.set(null)">
@@ -251,7 +251,7 @@ export function scrollToAnchor(target: () => string | null = () => null) {
           <section class="bv-card" aria-labelledby="bp-levers-title" data-ui-pattern="panel">
             <h2 id="bp-levers-title">Ajuster votre budget</h2>
             <div class="bp-levers">
-              <a class="btn btn-secondary" routerLink="/depenses" [queryParams]="ctx.carry()"
+              <a class="btn btn-secondary" routerLink="/depenses/registre" [queryParams]="ctx.carry()"
                 >Toutes les opérations du budget →</a
               >
               <a class="btn btn-secondary" routerLink="/app/reglages"

@@ -12,14 +12,8 @@
     @let d = data()!;
     <bpm-page-banner
       class="life-projects-banner project-detail-banner"
-      [kicker]="
-        d.role === 'life'
-          ? 'Mes projets de la vie · projet de vie'
-          : 'Mes projets de la vie · fiche projet'
-      "
       [title]="d.project.project.title"
       [lead]="projectLead()"
-      [back]="{ label: 'Revenir au parcours', link: '/app/gestion-projet' }"
       [focus]="pageFocus()"
       [scope]="toolbarScope()"
       [result]="toolbarResult()"
@@ -37,7 +31,7 @@
       <div actions>
         @if (d.role === 'standard' && d.budget; as b) {
           @if (d.tasks.length) {
-            <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="createTask()">+ Créer une tâche</button>
+            <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="createTask()">＋ Créer une tâche</button>
           }
           <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="projectEditor.set(true)">Modifier le projet</button>
           @if (workspaceKey() === 'project-tasks') {
@@ -1418,6 +1412,7 @@
     [budgets]="[ref]"
     [defaults]="{ budgetId: ref.id, direction: expenseDirection(), taskId: expenseTaskId() }"
     [taskFundingRequired]="data()?.budget?.taskFundingRequired ?? false"
+    [clearOnClose]="['expenseTask', 'expenseDirection']"
     (saved)="onSaved($event)"
   />
 }

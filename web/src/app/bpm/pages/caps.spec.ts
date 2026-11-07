@@ -104,8 +104,10 @@ describe('les trois espaces des plafonds BPM', () => {
     [...dom().querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.trim() === label)!.click();
     await settle();
   }
+  // Chaque vue a sa propre adresse : le suivi sur la page, les réglages et les catégories en sous-pages.
+  const VIEW_ROUTES: Record<string, string> = { suivi: '/plafonds', plafonds: '/plafonds/reglages', categories: '/plafonds/categories' };
   async function open(view = 'plafonds') {
-    const page = await harness.navigateByUrl(`/plafonds?view=${view}`, BpmCapsPage);
+    const page = await harness.navigateByUrl(VIEW_ROUTES[view], BpmCapsPage);
     await settle();
     return page;
   }
@@ -276,7 +278,7 @@ describe('les trois espaces des plafonds BPM', () => {
   });
 
   it('retire les anciennes données d’édition si le chargement de la nouvelle période échoue', async () => {
-    await harness.navigateByUrl('/plafonds?period=2026-10&view=plafonds', BpmCapsPage);
+    await harness.navigateByUrl('/plafonds/reglages?period=2026-10', BpmCapsPage);
     await settle();
     await select('centerRef', 'std:loisirs');
     await select('categoryId', 'cat_cine');
@@ -284,7 +286,7 @@ describe('les trois espaces des plafonds BPM', () => {
     expect(control<HTMLInputElement>('input[name="categoryCap"]').value).toBe('40');
     api.capsReview.mockRejectedValueOnce(new Error('Impossible de charger la période de novembre'));
 
-    await harness.navigateByUrl('/plafonds?period=2026-11&view=plafonds', BpmCapsPage);
+    await harness.navigateByUrl('/plafonds/reglages?period=2026-11', BpmCapsPage);
     await vi.waitFor(async () => {
       await settle();
       expect(control('[role="alert"]').textContent).toContain(
@@ -299,31 +301,32 @@ describe('les trois espaces des plafonds BPM', () => {
     expect(api.updateCategory).not.toHaveBeenCalled();
   });
 
-  it('préserve la période en passant du suivi au paramétrage', async () => {
-    await harness.navigateByUrl('/plafonds?period=2026-10&view=suivi', BpmCapsPage);
+  it('préserve la période en passant du suivi au paramétrage par les onglets du bandeau', async () => {
+    await harness.navigateByUrl('/plafonds?period=2026-10', BpmCapsPage);
     await settle();
-    control<HTMLAnchorElement>('.caps-workspaces a:nth-child(2)').click();
+    expect(control('.page-tab[aria-current="page"]').textContent).toContain('Suivi des plafonds');
+    [...dom().querySelectorAll<HTMLAnchorElement>('.page-tab')].find(tab => tab.textContent?.includes('Définir les plafonds'))!.click();
     await settle();
-    expect(TestBed.inject(Router).url).toContain('period=2026-10');
-    expect(TestBed.inject(Router).url).toContain('view=plafonds');
-    expect(control('.caps-workspaces [aria-current="page"]').textContent).toContain(
-      'Définir les plafonds',
-    );
+    expect(TestBed.inject(Router).url).toBe('/plafonds/reglages?period=2026-10');
+    expect(control('.page-tab[aria-current="page"]').textContent).toContain('Définir les plafonds');
   });
 
-  it('garde les anciens liens de réglages et retire leur fragment en changeant d’espace', async () => {
-    await harness.navigateByUrl('/plafonds?period=2026-10#reglages-categories', BpmCapsPage);
-    await settle();
-    expect(control('.caps-workspaces [aria-current="page"]').textContent).toContain(
-      'Créer les catégories',
-    );
+  it('conduit les anciens liens de réglages vers leur sous-page en gardant la période', async () => {
+    await harness.navigateByUrl('/plafonds?period=2026-10#reglages-categories');
+    await vi.waitFor(async () => {
+      await settle();
+      expect(TestBed.inject(Router).url).toBe('/plafonds/categories?period=2026-10#reglages-categories');
+    });
+    expect(control('.page-tab[aria-current="page"]').textContent).toContain('Organiser les catégories');
     expect(control('form[aria-label="Créer une catégorie"]')).toBeTruthy();
-    control<HTMLAnchorElement>('.caps-workspaces a:first-child').click();
+    [...dom().querySelectorAll<HTMLAnchorElement>('.page-tab')].find(tab => tab.textContent?.includes('Suivi des plafonds'))!.click();
     await settle();
-    expect(TestBed.inject(Router).url).toBe('/plafonds?period=2026-10&view=suivi');
-    expect(control('.caps-workspaces [aria-current="page"]').textContent).toContain(
-      'Suivi et pilotage',
-    );
+    expect(TestBed.inject(Router).url).toBe('/plafonds?period=2026-10');
+    await harness.navigateByUrl('/plafonds?period=2026-10&view=plafonds');
+    await vi.waitFor(async () => {
+      await settle();
+      expect(TestBed.inject(Router).url).toBe('/plafonds/reglages?period=2026-10');
+    });
   });
   it('reprend le plafond choisi dans un panneau depuis le bandeau et conserve une saisie refusée', async () => {
     await open();
@@ -396,7 +399,7 @@ describe('les trois espaces des plafonds BPM', () => {
   });
 
   it('isole les catégories sur leur route puis rejoint le réglage du plafond choisi', async () => {
-    await harness.navigateByUrl('/plafonds/categories?view=suivi&period=2026-10');
+    await harness.navigateByUrl('/plafonds/categories?period=2026-10');
     await settle();
     expect(dom().querySelector('.caps-workspaces')).toBeNull();
     expect(dom().querySelector('.caps-review')).toBeNull();

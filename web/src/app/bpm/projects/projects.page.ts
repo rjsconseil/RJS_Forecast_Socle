@@ -46,7 +46,6 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
     <div class="page page-wide landing-page section-home bpm-projects">
       <bpm-page-banner
         class="life-projects-banner"
-        kicker="Mes projets de la vie"
         title="Projets de la vie"
         lead="Votre projet de vie finance vos projets de la vie. Repérez les projets à préparer, financer ou poursuivre, puis agissez sur leur budget et leurs tâches."
         [focus]="pageFocus()"
@@ -63,13 +62,13 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
             } @else if (unfundedCount()) {
               <a class="btn btn-primary" routerLink="/app/gestion-projet" [queryParams]="{ filter: 'unfunded' }">Attribuer {{ unfundedCount() }} enveloppe(s)</a>
             } @else {
-              <a class="btn btn-primary" routerLink="/app/gestion-projet" [queryParams]="{ editProject: 'new' }">+ Créer un projet</a>
+              <a class="btn btn-primary" routerLink="/app/gestion-projet/nouveau">＋ Créer un projet de la vie</a>
             }
           } @else { <button type="button" class="btn btn-primary" disabled>Chargement des projets…</button> }
         </div>
         <div actions>
           @if (hasPriorityAction()) {
-            <a class="btn btn-secondary life-create" routerLink="/app/gestion-projet" [queryParams]="{ editProject: 'new' }">+ Créer un projet</a>
+            <a class="btn btn-secondary life-create" routerLink="/app/gestion-projet/nouveau">＋ Créer un projet de la vie</a>
           }
           @if (data(); as d) {
             @if (!d.life.pendingRequests.length && !d.life.billable.length) {
@@ -303,7 +302,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
                       <h4>
                         <a
                           class="task-title-link"
-                          [routerLink]="['/app/projets', p.project.id]"
+                          [routerLink]="['/app/gestion-projet', p.project.id]"
                           [attr.title]="p.project.title"
                           >{{ p.project.title }}</a
                         >

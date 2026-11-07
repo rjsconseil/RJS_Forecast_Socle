@@ -159,7 +159,7 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
       @if (inlineWealthEditor()) {
         <ng-content select="[wealthEditor]" />
       } @else {
-        <p class="bpm-help">L’objectif de patrimoine se règle à l’étape Patrimoine de <a routerLink="/creer">Démarrer un projet</a>.</p>
+        <p class="bpm-help">L’objectif de patrimoine se règle avec le stock initial, dans <a routerLink="/app/reglages/patrimoine">Point de départ du patrimoine</a>.</p>
       }
     </section>
   `,

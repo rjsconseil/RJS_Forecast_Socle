@@ -1,10 +1,9 @@
-<bpm-page [title]="workspace()?.title ?? 'Objectifs et avenir'"
-  [back]="workspace() ? { label: 'Retour aux objectifs et à l’avenir', link: workspace()!.parent, query: carry() } : null" pageClass="bpm-objectives-workspace"
+<bpm-page [title]="workspace()?.title ?? 'Objectifs et avenir'" pageClass="bpm-objectives-workspace"
   [lead]="workspace()?.lead ?? 'Donnez une date et un montant à vos envies, suivez votre effort d’épargne et préparez votre patrimoine.'"
   [context]="summary.data()?.context" [focus]="pageFocus()" [scope]="pageScope()" [result]="pageResult()" toolsLabel="Préparer mes objectifs et mon avenir">
   <button primary class="btn btn-primary" type="button" [disabled]="!profile.data() || commandBusy()" (click)="runPrimary()">{{ primaryLabel() }}</button>
   @if (primaryKind() !== 'create') {
-    <button actions class="btn btn-secondary" type="button" [disabled]="!profile.data()" (click)="editGoal(null)">+ Ajouter un objectif daté</button>
+    <button actions class="btn btn-secondary" type="button" [disabled]="!profile.data()" (click)="editGoal(null)">＋ Créer un objectif daté</button>
   }
   @if (view() === 'suivi' && primaryKind() !== 'projection' && goals.data()?.length && !coverageAvailable()) {
     <button actions class="btn btn-secondary" type="button" [disabled]="!profile.data()" (click)="openSetting('projection')">Calculer la couverture des objectifs</button>
@@ -16,16 +15,7 @@
     <a actions class="bpm-link" routerLink="/vision/projection" [queryParams]="carry()">Mesurer l’effet dans la projection →</a>
   }
   <div tools class="objectives-toolbar">
-    @if (!workspace()) {
-    <nav class="objectives-tabs" aria-label="Espaces des objectifs">
-      @for (tab of tabs; track tab.key; let i = $index) {
-        <a [routerLink]="[]" [queryParams]="{view: tab.key}" queryParamsHandling="merge" [fragment]="undefined"
-          [attr.aria-current]="view() === tab.key ? 'page' : null">
-          <span class="tab-number">0{{ i + 1 }}</span><span><strong>{{ tab.label }}</strong><small>{{ tab.note }}</small></span>
-        </a>
-      }
-    </nav>
-    }
+
     @if (view() === 'reperes') {
       <div class="objectives-context-command">
         <label>Repère à préparer<select [ngModel]="settingChoice()" (ngModelChange)="settingChoice.set($event)">
@@ -75,7 +65,7 @@
       <bpm-state [error]="projection.error()" (retry)="projection.reload()" />
       @if (projection.data()?.status !== 'estimate' && !projection.loading() && !projection.error()) {
         <p class="objectives-callout" role="status"><strong>La couverture reste à calculer.</strong> {{ projection.data()?.reason ?? 'Complétez les hypothèses de votre projection.' }}
-          <a [routerLink]="[]" [queryParams]="{view: 'projection'}">Compléter la projection →</a></p>
+          <a routerLink="/vision/projection" [queryParams]="carry()">Compléter la projection →</a></p>
       }
       <ul class="life-goal-list">
         @for (g of filteredGoals(); track g.goal.id) {
@@ -104,7 +94,7 @@
           @if (goals.data() && !goals.error()) { <li class="objectives-empty"><h3>{{ hasFilters() ? 'Aucun objectif ne correspond' : 'Quel est votre prochain objectif ?' }}</h3>
             <p>{{ hasFilters() ? 'Élargissez la recherche ou changez les filtres.' : 'Un achat, les études, la retraite ou une réserve de sécurité : donnez un montant et une date à ce que vous préparez.' }}</p>
             @if (hasFilters()) { <button class="btn btn-secondary" type="button" (click)="resetFilters()">Afficher tous les objectifs</button> }
-            @else { <button class="btn btn-primary" type="button" (click)="editGoal(null)">+ Ajouter un objectif daté</button> }</li> }
+            @else { <button class="btn btn-primary" type="button" (click)="editGoal(null)">＋ Créer un objectif daté</button> }</li> }
         }
       </ul>
       <aside class="objectives-handoff"><div><strong>Prêt à passer à l’action ?</strong><p>Un objectif prépare une intention. Créez un projet de la vie pour organiser ses tâches et attribuer une enveloppe réelle.</p></div><a class="btn btn-secondary" routerLink="/app/gestion-projet">Gérer mes projets →</a></aside>

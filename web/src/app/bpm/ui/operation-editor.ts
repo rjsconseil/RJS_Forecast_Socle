@@ -169,7 +169,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
               </label>
               @if (fieldErr('categoryId')) { <small class="fe-field-error">{{ fieldErr('categoryId') }}</small> }
               <small>{{ categoryOptions().length ? 'Son plafond est suivi indépendamment et ne bloque jamais la dépense.' : 'Aucune catégorie dans ce poste.' }}</small>
-              <a class="btn btn-secondary" routerLink="/plafonds" [queryParams]="{view: 'categories'}">Gérer les catégories</a>
+              <a class="btn btn-secondary" routerLink="/plafonds/categories">Gérer les catégories</a>
             </div>
           }
           @if (center() === '__new__') {
@@ -338,7 +338,7 @@ export class BpmOperationEditor implements OnInit {
 
   protected editing = computed(() => !!this.line());
   protected isRecurrence = computed(() => !!this.line()?.recurrenceId);
-  protected heading = computed(() => (this.editing() ? (this.isRecurrence() ? 'Modifier l’opération récurrente' : 'Modifier l’opération') : 'Ajouter une entrée ou une charge'));
+  protected heading = computed(() => (this.editing() ? (this.isRecurrence() ? 'Modifier l’opération récurrente' : 'Modifier l’opération') : 'Saisir une entrée ou une dépense'));
   protected centerOptions = computed(() => this.centers().filter((c) => c.direction === this.direction()));
   /** Catégories actives du centre choisi ; la catégorie actuelle d'une ligne reste proposée même retirée. */
   protected categoryOptions = computed(() => this.categories().filter((k) => k.costCenterRef === this.center() && (!k.archived || k.id === this.line()?.categoryId)));

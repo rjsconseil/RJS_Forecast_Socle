@@ -131,7 +131,7 @@ interface AnalysisPoint {
           routerLink="/piloter/agir"
           [queryParams]="ctx.carry()"
           fragment="saisie-des-flux"
-          >＋ Saisir un flux</a
+          >＋ Saisir une entrée ou une dépense</a
         >
       }
       @if (analysisPoint()) {
@@ -351,7 +351,7 @@ interface AnalysisPoint {
                     <strong class="num">{{ initialBudget() | signedCents }}</strong
                     >.
                   }
-                  <a [routerLink]="'/argent/reste'" [queryParams]="ctx.carry()"
+                  <a [routerLink]="'/tableau-de-bord/rapprochement'" [queryParams]="ctx.carry()"
                     >Détail du solde →</a
                   >
                 </p>
@@ -632,7 +632,7 @@ interface AnalysisPoint {
                           >{{ r.label || 'Sans poste' }} <span aria-hidden="true">→</span></a
                         >
                         <strong
-                          ><a routerLink="/depenses" [queryParams]="expenseCenterQuery(r.ref)">{{
+                          ><a routerLink="/depenses/registre" [queryParams]="expenseCenterQuery(r.ref)">{{
                             r.paidCents | cents
                           }}</a>
                           @if (r.remainingCents) {
@@ -695,7 +695,7 @@ interface AnalysisPoint {
                         <li>
                           <a
                             class="bp-drill-name"
-                            routerLink="/argent/entrees"
+                            routerLink="/tableau-de-bord/entrees"
                             [queryParams]="ctx.carry()"
                             title="Voir le détail des entrées"
                             >{{ s.label }} <span aria-hidden="true">→</span></a
@@ -1117,7 +1117,7 @@ export class BpmPilotPage {
         title: 'Solde prévu déficitaire',
         detail: `${signedCents(expected)} attendus en fin de période. Examinez les entrées restantes et les charges à payer.`,
         action: 'Comprendre le déficit prévu',
-        link: ['/argent/reste'],
+        link: ['/tableau-de-bord/rapprochement'],
         tone: 'danger',
       });
     if (summary.closed && result !== null && result < 0)
@@ -1126,7 +1126,7 @@ export class BpmPilotPage {
         title: 'Résultat clos déficitaire',
         detail: `${signedCents(result)} ont été versés au patrimoine pour cette période close.`,
         action: 'Examiner le résultat enregistré',
-        link: ['/argent/reste'],
+        link: ['/tableau-de-bord/rapprochement'],
         tone: 'warning',
       });
     for (const row of (this.centers.data()?.rows ?? [])
@@ -1167,7 +1167,7 @@ export class BpmPilotPage {
             .filter(Boolean)
             .join(' · ') || 'Consultez les sources du solde pour compléter les données manquantes.',
         action: 'Examiner les sources du solde',
-        link: ['/argent/reste'],
+        link: ['/tableau-de-bord/rapprochement'],
         tone: 'info',
       });
     return points;
@@ -1286,7 +1286,7 @@ export class BpmPilotPage {
       unit: 'Période lue (' + (s.context.period?.label ?? '—') + ')',
       source,
       reason: f[key]?.unavailableReason ?? null,
-      link: '/argent/reste',
+      link: '/tableau-de-bord/rapprochement',
       query: this.carryQuery(),
     });
     const fromDirective = (
@@ -1334,7 +1334,7 @@ export class BpmPilotPage {
             ? null
             : 'Aucun plafond par centre renseigné'
           : 'Centres non lus',
-        link: '/depenses',
+        link: '/depenses/registre',
         query: this.carryQuery(),
       },
       fromDirective('available', 'Disponible', 'Période courante', true),

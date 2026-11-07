@@ -8,6 +8,11 @@ import { workspaceContextQuery } from './page-workspace';
   selector: 'rjs-section-page-menu',
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .section-subpages li.is-object > a { font-weight: 650; }
+    .section-subpages li.is-nested > a { padding-left: 1.6em; font-size: 0.94em; }
+    .section-subpages li.is-nested > a::before { content: '↳ '; opacity: 0.6; }
+  `,
   template: `
     @for (group of groups(); track group.page.id) {
       <div class="section-page-group">
@@ -28,7 +33,7 @@ import { workspaceContextQuery } from './page-workspace';
         @if (group.children.length && opened(group.page)) {
           <ul class="section-subpages" [id]="'subpages-' + section().id + '-' + group.page.id">
             @for (child of group.children; track child.link) {
-              <li><a [routerLink]="child.link" [queryParams]="query(group.page)" [attr.title]="child.description"
+              <li [class.is-object]="child.id === 'object'" [class.is-nested]="(child.depth ?? 1) > 1"><a [routerLink]="child.link" [queryParams]="query(group.page)" [attr.title]="child.description || null"
                 [class.active]="exact(child.link)" [attr.aria-current]="exact(child.link) ? 'page' : null">{{ child.label }}</a></li>
             }
           </ul>
@@ -40,9 +45,11 @@ import { workspaceContextQuery } from './page-workspace';
 export class SectionPageMenu {
   readonly section = input.required<PlanSection>();
   readonly url = input.required<string>();
+  /** Le nom de la fiche ouverte, publié par sa page. */
+  readonly objectLabel = input<string | null>(null);
   private readonly expanded = signal<Record<string, boolean>>({});
   private readonly location = computed(() => locate(this.url()));
-  protected readonly groups = computed(() => menuPages(this.section()).map(page => ({ page, children: pageChildren(page, this.url()) })));
+  protected readonly groups = computed(() => menuPages(this.section()).map(page => ({ page, children: pageChildren(page, this.url(), this.objectLabel()) })));
   protected exact(link: string) { return (this.url().split(/[?#]/)[0].replace(/\/+$/, '') || '/') === link; }
   protected isParent(page: PlanPage) { return this.location().page?.link === page.link; }
   protected opened(page: PlanPage) { return this.expanded()[page.link] ?? this.isParent(page); }

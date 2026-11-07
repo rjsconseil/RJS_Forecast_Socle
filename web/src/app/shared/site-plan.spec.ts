@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasPageMenu, hasSectionHome, locate, menuPages, pageChildren, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink } from './site-plan';
+import { hasPageMenu, hasSectionHome, locate, menuPages, pageChildren, planContext, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink } from './site-plan';
 import { PAGE_WORKSPACES } from './page-workspaces';
 
 describe('plan du site', () => {
@@ -39,9 +39,7 @@ describe('plan du site', () => {
   it('expose les objectifs comme quatrième page de Ma vision budgétaire', () => {
     const section = planZone('bpm')!.sections.find((s) => s.id === 'vision')!;
     expect(menuPages(section).map((p) => p.id)).toEqual(['tableau-de-bord', 'projet-de-vie', 'plafonds', 'vision']);
-    for (const link of ['/depenses']) {
-      expect(locate(link)).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { hidden: true } });
-    }
+    expect(locate('/depenses/registre')).toMatchObject({ kind: 'subpage', page: { id: 'tableau-de-bord' }, subpage: { id: 'register' } });
   });
 
   it('rattache chaque vue spécialisée à une page principale visible du même plan', () => {
@@ -76,5 +74,53 @@ describe('plan du site', () => {
     expect(planTitle('administration', 'parametres')).toBe('Administration · Administration du site · RJS Forecast');
     expect(planTitle('noyau')).toBe('Noyau transverse · RJS Forecast');
     expect(planTitle('x')).toBe('Destination introuvable · RJS Forecast');
+  });
+
+  it('donne à chaque adresse le même contexte : surtitre, niveau supérieur, onglets et fil', () => {
+    const page = planContext('/plafonds?period=2026-10');
+    expect(page.eyebrow).toBe('Ma vision budgétaire');
+    expect(page.up).toBeNull();
+    expect(page.tabs.map(t => [t.label, t.current])).toEqual([['Suivi des plafonds', true], ['Définir les plafonds', false], ['Organiser les catégories', false]]);
+    expect(page.crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Ma vision budgétaire', 'Plafonds et catégories']);
+    expect(page.crumbs.at(-1)!.link).toBeUndefined();
+
+    const sub = planContext('/plafonds/categories');
+    expect(sub.eyebrow).toBe('Ma vision budgétaire · Plafonds et catégories');
+    expect(sub.up).toEqual({ label: 'Plafonds et catégories', link: '/plafonds' });
+    expect(sub.tabs.find(t => t.current)?.label).toBe('Organiser les catégories');
+    expect(sub.label).toBe('Organiser les catégories');
+  });
+
+  it('ne répète pas une page qui porte le nom de sa section', () => {
+    expect(planContext('/creer').crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Démarrer un projet']);
+    expect(planContext('/creer/projet-de-vie').crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Démarrer un projet', 'Créer le projet de vie']);
+    expect(planContext('/creer/projet-de-vie').eyebrow).toBe('Démarrer un projet');
+  });
+
+  it('nomme la fiche ouverte et range ses sous-pages en onglets', () => {
+    const fiche = planContext('/app/gestion-projet/prj_42?period=2026-10', 'Cuisine');
+    expect(fiche.location.object).toEqual({ kind: 'project', id: 'prj_42', link: '/app/gestion-projet/prj_42' });
+    expect(fiche.crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Mes projets de la vie', 'Gestion de projet', 'Cuisine']);
+    expect(fiche.up).toEqual({ label: 'Gestion de projet', link: '/app/gestion-projet' });
+    expect(fiche.tabs.map(t => [t.label, t.current])).toEqual([['Vue d’ensemble', true], ['Budget et décisions', false], ['Tâches', false]]);
+
+    const budget = planContext('/app/gestion-projet/prj_42/budget', 'Cuisine');
+    expect(budget.up).toEqual({ label: 'Cuisine', link: '/app/gestion-projet/prj_42' });
+    expect(budget.crumbs.map(c => c.label).slice(-2)).toEqual(['Cuisine', 'Budget du projet']);
+    expect(budget.eyebrow).toBe('Mes projets de la vie · Gestion de projet');
+    expect(planContext('/app/gestion-projet/prj_42/budget').up?.label).toBe('Fiche du projet');
+
+    const menu = pageChildren(locate('/app/gestion-projet').page!, '/app/gestion-projet/prj_42/taches', 'Cuisine');
+    expect(menu.map(c => [c.label, c.depth])).toEqual([
+      ['Créer un projet de la vie', 1], ['Attribuer les enveloppes', 1], ['Décider les financements', 1],
+      ['Cuisine', 1], ['Budget du projet', 2], ['Tâches du projet', 2],
+    ]);
+  });
+
+  it('rattache un détail à sa page et donne le chemin de retour', () => {
+    const detail = planContext('/argent/postes/std%3Aloisirs');
+    expect(detail.up).toEqual({ label: 'Tableau de bord', link: '/tableau-de-bord' });
+    expect(detail.tabs).toEqual([]);
+    expect(detail.crumbs.at(-1)!.label).toBe('Détail d’un poste');
   });
 });
