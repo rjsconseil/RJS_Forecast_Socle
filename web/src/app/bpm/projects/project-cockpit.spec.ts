@@ -72,9 +72,10 @@ const detail = () =>
     context: { period: null },
   }) as unknown as BpmProjectDetail;
 
-async function setup(render = false, workspaceKey?: string) {
+async function setup(render = false, workspaceKey?: string, initialQuery: Record<string, string> = {}) {
   const state = detail();
   const params = new BehaviorSubject(convertToParamMap({ id: 'prj_1' }));
+  const query = new BehaviorSubject(convertToParamMap({ lifePeriod: '2026-09', ...initialQuery }));
   const bpm = {
     projectDetail: vi.fn(async () => state),
     allocate: vi.fn(async (_id: string, amount: number, _revision: number) => {
@@ -98,7 +99,7 @@ async function setup(render = false, workspaceKey?: string) {
           paramMap: params,
           fragment: of(null),
           queryParams: of({ lifePeriod: '2026-09' }),
-          queryParamMap: of(convertToParamMap({ lifePeriod: '2026-09' })),
+          queryParamMap: query,
         },
       },
     ],
@@ -108,10 +109,28 @@ async function setup(render = false, workspaceKey?: string) {
   // Exercise user commands through the component; rendering is covered separately below.
   const page = fixture.componentInstance as any;
   await page.load();
-  return { fixture, page, bpm, api, state, params };
+  return { fixture, page, bpm, api, state, params, query };
 }
 
 describe('cockpit du projet', () => {
+  it('reprend la bonne tâche depuis un lien direct et suit les retours de l’historique', async () => {
+    const { fixture, page, query } = await setup(true, undefined, { editTask: 'tsk_2' });
+    fixture.detectChanges();
+    expect(page.editingTask()?.task.title).toBe('Commander les matériaux');
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Modifier la tâche"]')).toBeTruthy();
+    query.next(convertToParamMap({ lifePeriod: '2026-09' })); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('bpm-task-editor')).toBeNull();
+    query.next(convertToParamMap({ lifePeriod: '2026-09', editTask: 'new' })); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Créer une tâche"]')).toBeTruthy();
+    expect(page.editingTask()).toBeNull();
+  });
+
+  it('reprend aussi la modification du projet après un rechargement', async () => {
+    const { fixture } = await setup(true, undefined, { editProject: 'prj_1' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Modifier le projet de la vie"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('button[aria-label="Fermer la fenêtre"]')).toBeTruthy();
+  });
   it('consacre la vue budget aux finances et la vue tâches au travail du même projet', async () => {
     const budget = await setup(true, 'project-budget');
     budget.fixture.detectChanges();
@@ -472,8 +491,7 @@ describe('cockpit du projet', () => {
   it('réinitialise les formulaires quand le projet affiché change', async () => {
     const { page, params } = await setup();
     page.editAllocation();
-    page.editingTask.set(task('tsk_1', 'Ancienne tâche'));
-    page.taskEditor.set(true);
+    page.editTask(task('tsk_1', 'Ancienne tâche'));
     page.query.set('ancien');
     params.next(convertToParamMap({ id: 'prj_2' }));
     expect(page.allocationEditing()).toBe(false);

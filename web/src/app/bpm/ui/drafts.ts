@@ -5,6 +5,7 @@ export interface DraftHandle {
   restored: boolean;
   save(): void;
   clear(): void;
+  detach(): void;
 }
 
 /** Brouillons de présentation par utilisateur : aucune écriture métier, aucun mélange de profils. */
@@ -46,9 +47,9 @@ export class BpmDrafts {
     restore: (value: T) => void,
     destroy: DestroyRef,
   ): DraftHandle {
-    if (destroy.destroyed) return { restored: false, save() {}, clear() {} };
+    if (destroy.destroyed) return { restored: false, save() {}, clear() {}, detach() {} };
     const owner = this.user();
-    if (!owner) return { restored: false, save() {}, clear() {} };
+    if (!owner) return { restored: false, save() {}, clear() {}, detach() {} };
     const key = `bpm-form:${owner ?? 'anonymous'}:${scope}`;
     let active = true;
     let stored = this.memory.get(key) as T | undefined;
@@ -79,6 +80,7 @@ export class BpmDrafts {
           /* mémoire seule */
         }
       },
+      detach: () => { handle.save(); active = false; },
     };
     destroy.onDestroy(() => handle.save());
     return handle;

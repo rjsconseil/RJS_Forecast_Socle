@@ -8,11 +8,11 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { BpmTaskCard } from '../../core/bpm-projects.models';
 import { CoreProject, COLUMNS, Priority, TaskStatus } from '../../core/models';
 import { parseAmount } from '../../core/format';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 
 @Component({
   selector: 'bpm-project-editor',
-  imports: [BpmFormActions, FormsModule, ModalComponent, NgTemplateOutlet],
+  imports: [BpmFormActions, FormsModule, BpmModal, NgTemplateOutlet],
   template: `
     <ng-template #editorForm>
       <form
@@ -84,15 +84,15 @@ import { ModalComponent } from '../../shared/modal.component';
         <ng-container *ngTemplateOutlet="editorForm" />
       </section>
     } @else {
-      <rjs-modal
+      <bpm-modal
         [open]="true"
         [headed]="true"
         [title]="project() ? 'Modifier le projet de la vie' : 'Créer un projet de la vie'"
         [busy]="busy()"
-        (closed)="cancel()"
+        (closed)="closed.emit()"
       >
         <ng-container *ngTemplateOutlet="editorForm" />
-      </rjs-modal>
+      </bpm-modal>
     }
   `,
 })
@@ -177,7 +177,7 @@ export interface TaskProjectOption {
 
 @Component({
   selector: 'bpm-task-editor',
-  imports: [BpmFormActions, FormsModule, ModalComponent, NgTemplateOutlet],
+  imports: [BpmFormActions, FormsModule, BpmModal, NgTemplateOutlet],
   template: `
     <ng-template #editorForm>
       <form
@@ -276,15 +276,15 @@ export interface TaskProjectOption {
         <ng-container *ngTemplateOutlet="editorForm" />
       </section>
     } @else {
-      <rjs-modal
+      <bpm-modal
         [open]="true"
         [headed]="true"
         [title]="task() ? 'Modifier la tâche' : 'Créer une tâche'"
         [busy]="busy()"
-        (closed)="cancel()"
+        (closed)="closed.emit()"
       >
         <ng-container *ngTemplateOutlet="editorForm" />
-      </rjs-modal>
+      </bpm-modal>
     }
   `,
 })

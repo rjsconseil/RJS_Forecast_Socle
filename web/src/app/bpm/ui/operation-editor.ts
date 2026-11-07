@@ -8,7 +8,7 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { BpmBudgetRef, Cadence, Direction, EntryInput, EntryPreview, RegisterLine } from '../../core/bpm-models';
 import { CapPreview, ChargeCategory } from '../../core/bpm-caps.models';
 import { CentsPipe, parseAmount, signedCents } from '../../core/format';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from './modal';
 import { capAlertText, withCapAlerts } from './caps';
 import { BpmRefresh, newRequestKey } from './page-context';
 
@@ -27,10 +27,10 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
  */
 @Component({
   selector: 'bpm-operation-editor',
-  imports: [BpmFormActions, FormsModule, RouterLink, CentsPipe, ModalComponent],
+  imports: [BpmFormActions, FormsModule, RouterLink, CentsPipe, BpmModal],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss', '../ref-styles/bpm-flow-editor.component.scss', './operation-editor.scss'],
   template: `
-    <rjs-modal [open]="true" [headed]="true" [title]="heading()" [busy]="busy()" (closed)="close()">
+    <bpm-modal [open]="true" [headed]="true" [title]="heading()" [busy]="busy()" (closed)="close()">
       <form class="fe-form" data-bpm-frame="form" (ngSubmit)="save()" (input)="draft?.save()" (change)="draft?.save()" novalidate>
         @if (draft?.restored) { <p class="bpm-help" role="status">Votre brouillon a été repris.</p> }
         <p class="bpm-help">Une date, un montant, un poste. Voyez l’effet avant d’enregistrer.</p>
@@ -276,7 +276,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
           [label]="capConfirmation() ? (capPreviewError() ? 'Enregistrer sans vérification' : 'Enregistrer malgré le dépassement') : editing() ? 'Enregistrer les modifications' : 'Enregistrer'"
           (cancel)="close()" />
       </form>
-    </rjs-modal>
+    </bpm-modal>
   `,
 })
 export class BpmOperationEditor implements OnInit {

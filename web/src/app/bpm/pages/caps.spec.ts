@@ -377,6 +377,8 @@ describe('les trois espaces des plafonds BPM', () => {
       totals: { ...review.totals, overCount: 1 },
     });
     await open('suivi');
+    expect(control('.bpm-toolbar-focus').textContent).toContain('catégorie dépassé');
+    expect(control('.bpm-toolbar-focus').textContent).not.toContain('0,00');
     await click('Revoir une charge avant paiement');
     expect(TestBed.inject(Router).url).toContain('ligne=still_planned');
     expect(api.line).toHaveBeenCalledWith('still_planned', undefined);

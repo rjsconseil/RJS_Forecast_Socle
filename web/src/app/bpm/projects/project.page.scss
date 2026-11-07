@@ -706,11 +706,15 @@
 .task-panel .task-charge small {
   grid-column: 1;
 }
-.task-panel .task-charge > .text-link {
+.task-panel .task-charge > .task-charge-actions {
   grid-column: 3;
   grid-row: 1 / span 2;
-  font-size: 12px;
+  display: grid;
+  gap: 8px;
+  max-width: 145px;
+  button { min-height: 36px; white-space: normal; text-align: left; line-height: 1.4; font-size: 12px; }
 }
+.task-charge > .bpm-note { grid-column: 2 / -1; margin: 0; }
 .task-panel .task-charge form {
   grid-column: 1 / -1;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -722,7 +726,7 @@
     gap: 8px;
   }
   .task-panel .task-charge-heading,
-  .task-panel .task-charge > .text-link {
+  .task-panel .task-charge > .task-charge-actions {
     grid-column: 1;
     grid-row: auto;
     justify-self: start;
@@ -731,4 +735,5 @@
     grid-column: 1 / -1;
     grid-row: auto;
   }
+  .task-panel .task-charge > .bpm-note { grid-column: 1; }
 }

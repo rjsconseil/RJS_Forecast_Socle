@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/start.mjs",
+    "start:production": "node scripts/start.mjs --production",
     "api": "J1_ENABLE_RECETTE_RESET=1 node api/src/server.mjs",
     "web": "npm --prefix web start",
     "seed": "node api/scripts/seed.mjs",
@@ -15,6 +16,7 @@
     "import:rjs-forecast": "node api/scripts/import-rjs-forecast.mjs",
     "test": "node --test 'api/test/*.test.mjs'",
     "e2e:projets": "node e2e/projets.e2e.mjs",
+    "e2e:bpm": "node e2e/bpm-navigation.e2e.mjs",
     "build": "npm --prefix web run build"
   },
   "engines": {

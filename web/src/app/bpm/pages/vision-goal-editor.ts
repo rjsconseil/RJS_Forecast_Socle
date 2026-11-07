@@ -6,7 +6,7 @@ import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { GoalType, LifeGoal } from '../../core/bpm-models';
 import { parseAmount } from '../../core/format';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 import { BpmRefresh, newRequestKey } from '../ui';
 import { GOAL_SYMBOL } from './vision-charts';
 
@@ -23,10 +23,10 @@ export interface GoalTypeOption {
  */
 @Component({
   selector: 'bpm-goal-editor',
-  imports: [BpmFormActions, FormsModule, ModalComponent],
+  imports: [BpmFormActions, FormsModule, BpmModal],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss'],
   template: `
-    <rjs-modal [headed]="true" [open]="true" [title]="heading()" [busy]="busy()" (closed)="cancel()">
+    <bpm-modal [headed]="true" [open]="true" [title]="heading()" [busy]="busy()" (closed)="closed.emit()">
       <form class="bv-form" (ngSubmit)="save()" (input)="draft?.save()" (change)="draft?.save()" novalidate>
         @if (draft?.restored) { <p class="bpm-help" role="status">Votre brouillon a été repris.</p> }
         <div class="bv-kinds" role="radiogroup" aria-label="Type d’objectif">
@@ -70,7 +70,7 @@ export interface GoalTypeOption {
         }
         <bpm-form-actions [busy]="busy()" [label]="goal() ? 'Enregistrer les modifications' : 'Ajouter l’objectif'" (cancel)="cancel()" />
       </form>
-    </rjs-modal>
+    </bpm-modal>
   `,
 })
 export class BpmGoalEditor implements OnInit {

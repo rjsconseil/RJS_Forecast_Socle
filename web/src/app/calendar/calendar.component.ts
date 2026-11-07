@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  afterNextRender,
   Component,
   DestroyRef,
   ElementRef,
@@ -7,6 +8,7 @@ import {
   computed,
   effect,
   inject,
+  Injector,
   input,
   output,
   signal,
@@ -476,7 +478,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                     name="newDate"
                     type="date"
                     required
-                    [(ngModel)]="plannedDate"
+                    [ngModel]="plannedDate" (ngModelChange)="changePlanDate($event)"
                 /></label>
                 <button
                   class="btn btn-primary"
@@ -485,7 +487,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                 >
                   Enregistrer la date
                 </button>
-                <button class="text-link" type="button" (click)="planning.set(null)">
+                <button class="text-link" type="button" [disabled]="busy()" (click)="finishPlan()">
                   Annuler
                 </button>
               </form>
@@ -997,6 +999,7 @@ export class CalendarComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+  private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
   private readonly context = inject(RecetteContext);
   private readonly params = toSignal(this.route.queryParamMap, {
@@ -1167,6 +1170,17 @@ export class CalendarComponent {
   protected dragged: CalendarEvent | null = null;
 
   constructor() {
+    effect(() => {
+      const params = this.params();
+      const data = this.data();
+      const key = params.get('calPlan');
+      untracked(() => {
+        if (!key) { this.planning.set(null); return; }
+        const event = data?.events.find(event => event.key === key);
+        if (event) this.planning.set(event);
+        if (params.has('calDate')) this.plannedDate = params.get('calDate')!;
+      });
+    });
     this.destroyRef.onDestroy(() => {
       this.cancelYearPeekClose();
       this.cancelMonthPeekClose();
@@ -1916,12 +1930,26 @@ export class CalendarComponent {
   protected plan(event: CalendarEvent) {
     this.planning.set(event);
     this.plannedDate = event.date;
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { calPlan: event.key, calDate: event.date }, queryParamsHandling: 'merge' });
+    afterNextRender(() => {
+      const field = this.host.nativeElement.querySelector<HTMLInputElement>('.calendar-plan input');
+      field?.closest('form')?.scrollIntoView?.({ block: 'center' });
+      field?.focus({ preventScroll: true });
+    }, { injector: this.injector });
+  }
+  protected changePlanDate(date: string) {
+    this.plannedDate = date;
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { calDate: date }, queryParamsHandling: 'merge', replaceUrl: true });
+  }
+  /** La saisie quitte le parcours après la réussite, ou sur annulation explicite. */
+  finishPlan() {
+    this.planning.set(null);
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { calPlan: null, calDate: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
   protected savePlan() {
     const event = this.planning();
-    if (!event || !validDate(this.plannedDate) || this.plannedDate === event.date) return;
+    if (this.busy() || !event || !validDate(this.plannedDate) || this.plannedDate === event.date) return;
     this.reschedule.emit({ event, date: this.plannedDate });
-    this.planning.set(null);
   }
   protected drag(event: DragEvent, entry: CalendarEvent) {
     if (!entry.reschedule || this.busy()) {

@@ -12,7 +12,7 @@ import { Api, RecetteContext, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { Cadence, LifeGoal, Vision } from '../../core/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, SignedCentsPipe } from '../../core/format';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 import { BpmGoalEditor } from '../pages/vision-goal-editor';
 import { BpmVisionObjectives, euroText, num } from '../pages/vision-objectives';
 import { BpmPageFocus, BpmPageResult, BpmPageFrame, BpmRefresh, BpmSeriesChart, BpmState, ChartSeries, bpmLoader } from '../ui';
@@ -36,7 +36,7 @@ const CADENCES = { weekly: 'semaine', monthly: 'mois', yearly: 'an' };
     BpmGoalEditor,
     BpmSeriesChart,
     BpmState,
-    ModalComponent,
+    BpmModal,
   ],
   styleUrl: './objectives.page.scss',
   templateUrl: './objectives.page.html',

@@ -22,6 +22,7 @@ import {
     @if (headed()) {
       <header class="modal-head">
         <h2>{{ title() }}</h2>
+        <button type="button" class="modal-close" [disabled]="busy()" (click)="closed.emit()" aria-label="Fermer la fenêtre" title="Fermer la fenêtre">×</button>
       </header>
     }
     <ng-content />

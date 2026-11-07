@@ -9,7 +9,7 @@ import { BpmLifeManagement, LifeHealth, LifeLine } from '../../core/bpm-life.mod
 import { CHARGE_NATURE_LABEL, ChargeNature, EntryInput, RegisterLine } from '../../core/bpm-models';
 import { ProjectOverrun } from '../../core/bpm-projects.models';
 import { cents, CentsPipe, percentText, ShortDatePipe, SignedCentsPipe } from '../../core/format';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 import { BpmOverrunRequestComponent } from '../projects/project-parts';
 import { BpmPageBanner, BpmPageFocus, BpmPageResult, BpmPageContext, BpmEntryFlow, bpmQueryState, BpmLineDetail, BpmRefresh, FUNDING, ProjectFunding } from '../ui';
 import { BpmActBudgetType } from '../pages/act-budget-type';
@@ -30,7 +30,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
   selector: 'app-bpm-life-management',
   providers: [BpmPageContext],
   styleUrls: ['../projects/projects.page.scss', './life-management.page.scss'],
-  imports: [BpmEntryFlow, BpmPageBanner, RouterLink, NgTemplateOutlet, CentsPipe, SignedCentsPipe, ShortDatePipe, ModalComponent, BpmOverrunRequestComponent, BpmLineDetail, BpmLifeGaugeComponent, BpmLifeFundingComponent, BpmActBudgetType, BpmFragmentNavigation],
+  imports: [BpmEntryFlow, BpmPageBanner, RouterLink, NgTemplateOutlet, CentsPipe, SignedCentsPipe, ShortDatePipe, BpmModal, BpmOverrunRequestComponent, BpmLineDetail, BpmLifeGaugeComponent, BpmLifeFundingComponent, BpmActBudgetType, BpmFragmentNavigation],
   template: `
     <div class="page page-wide bpm-projects bpm-project-page bpm-management bpm-life-management" bpmFragmentNavigation [bpmFragmentReady]="!!data()">
       <bpm-page-banner
@@ -399,10 +399,10 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           <p>Préparez les entrées et charges des prochaines périodes. Le panneau reste accessible depuis le bandeau.</p>
           <button class="btn btn-secondary" type="button" (click)="budgetTypeOpen.set(true)">Ouvrir le budget type</button>
         </section>
-        <rjs-modal [open]="budgetTypeOpen()" [headed]="true" [wide]="true" title="Préparer mon budget type" (closed)="budgetTypeOpen.set(false)">
+        <bpm-modal [open]="budgetTypeOpen()" [headed]="true" [wide]="true" title="Préparer mon budget type" (closed)="budgetTypeOpen.set(false)">
           @if (budgetTypeLoaded()) { <bpm-act-budget-type [showCaps]="false" /> }
           <button class="btn btn-secondary" type="button" (click)="budgetTypeOpen.set(false)">Fermer et conserver la saisie</button>
-        </rjs-modal>
+        </bpm-modal>
 
         @if (d.projects.projectCount || d.projects.pendingRequests.length) {
           <section class="bpm-section" id="life-funding" aria-labelledby="life-funding-title">
@@ -488,9 +488,9 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
         </p>
 
         @if (followOpen()) {
-          <rjs-modal [open]="followOpen()" [headed]="true" title="Suivi et clôture du projet de vie" [busy]="busy()" (closed)="followOpen.set(false)">
+          <bpm-modal [open]="followOpen()" [headed]="true" title="Suivi et clôture du projet de vie" [busy]="busy()" (closed)="followOpen.set(false)">
             <ng-container *ngTemplateOutlet="followContent; context: { $implicit: d }" />
-          </rjs-modal>
+          </bpm-modal>
         }
         } @else if (workspace()?.key === 'life-budget') {
           <bpm-act-budget-type [showCaps]="false" />

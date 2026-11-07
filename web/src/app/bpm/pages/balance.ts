@@ -232,7 +232,7 @@ export class BpmBalancePage {
     if (typeof i !== 'number') return this.recError.set('initial');
     if (typeof c !== 'number') return this.recError.set('current');
     this.recError.set(null);
-    this.ctx.setQuery({ initial: String(i), current: String(c) });
+    this.ctx.setQuery({ initial: String(i), current: String(c) }, { replace: true });
   }
   constructor() {
     inject(BpmDrafts).fields(`reconciliation:${this.period() ?? 'current'}`, this, ['initial', 'current'], inject(DestroyRef));
@@ -240,7 +240,7 @@ export class BpmBalancePage {
 
   protected clearReconciliation() {
     this.recError.set(null);
-    this.ctx.setQuery({ initial: null, current: null });
+    this.ctx.setQuery({ initial: null, current: null }, { replace: true });
   }
 
   // ---------- éditeur partagé ----------

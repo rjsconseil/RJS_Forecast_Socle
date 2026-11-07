@@ -1,501 +1,8 @@
 {
   "schemaVersion": "socle-store/0.6",
-  "revision": 2430,
-  "updatedAt": "2026-11-07T17:20:01.178Z",
+  "revision": 2472,
+  "updatedAt": "2026-11-07T18:36:23.696Z",
   "journal": [
-    {
-      "at": "2026-11-06T10:07:44.109Z",
-      "command": "setTaskShare",
-      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
-      "requestKey": null,
-      "created": [],
-      "updated": [
-        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T10:35:11.430Z",
-      "command": "settleOccurrence",
-      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
-      "requestKey": "web-d43aca5b-c9cc-44ca-83c9-0e972df9dc4f",
-      "created": [
-        "op_ad7f5918-a93d-4f1b-b7b4-da75ea5b339d"
-      ],
-      "updated": [
-        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T10:36:25.916Z",
-      "command": "settleOccurrence",
-      "userId": "usr_0133224e-efdf-4c3f-a285-d9b10d0f6d3c",
-      "requestKey": "settle-56dfcc3f-5f0f-4a68-8295-8b7dbacb61dc",
-      "created": [
-        "op_a5ddd0ec-3eb7-4118-aa76-7911739e58af"
-      ],
-      "updated": [
-        "bud_fd8e632b-f5c9-4226-b8d2-51d1e508cc7b"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T10:41:53.436Z",
-      "command": "allocateProjectBudget",
-      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "requestKey": null,
-      "created": [],
-      "updated": [
-        "bud_95510eae-dc86-4a9b-b40a-a8d9edaaaf27"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:36.839Z",
-      "command": "createUser",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-7b7996bf-4969-4aec-83b7-1236135c78f5",
-      "created": [
-        "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-        "prj_251cb6cd-19a0-4970-b29a-facaf613f355",
-        "bud_74dc79fa-36b4-4bf1-9b02-45ea21e732cf",
-        "pat_7184add5-5f89-4af6-8af0-296a934aacb9",
-        "bpm_521a3100-4c2f-46c8-b3bc-29bc50715d7c",
-        "cyc_c8b4591c-bea3-4929-8bec-6ee751764d93"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:36.933Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-602884d3-7ec3-4976-b1f6-d6849c30e894",
-      "created": [
-        "op_bac9e868-7e5c-4a82-9421-fff60cc5edea"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.031Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-28724ca8-c759-4b1b-a942-2718e749c394",
-      "created": [
-        "op_59d49132-23ee-4dc4-8d64-f9a7e008e43f"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.108Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-8b01cc77-9d3b-4ca0-bd47-c49501afdbc8",
-      "created": [
-        "op_b75bdde5-ed83-4c72-8c12-f51cb885f3cf"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.181Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-0d6e6af8-1362-4e7c-8257-6fdd4c10a340",
-      "created": [
-        "op_aed7ab8a-c4ee-4f4e-bf71-1d2b70dbbab0"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.266Z",
-      "command": "createRecurrence",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-878e32f3-e025-4a34-a4e7-622506d5ec3b",
-      "created": [
-        "rec_fa7917b0-33de-4f03-a5dc-e9aac5d78db5"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.341Z",
-      "command": "createBpmProject",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-7bf888b0-434f-47b3-962a-83f706ef2a7b",
-      "created": [
-        "prj_0f35f717-42d7-40c9-9985-d84eb856b9ba",
-        "bud_f8ad4380-e27b-4af5-9579-4fb05d73f0f7"
-      ],
-      "updated": [
-        "bud_f8ad4380-e27b-4af5-9579-4fb05d73f0f7"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.421Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-158d62c4-25f3-4a2e-9496-5c7e0f6dace6",
-      "created": [
-        "tsk_2524f60c-b365-45fd-b72a-69ab6385c030"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.509Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-5478bc3a-b671-430e-859d-8f5c5227e1cd",
-      "created": [
-        "tsk_56de692e-cb6a-412c-98b8-9fe5364b0e47"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.626Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-455d40f5-9ee9-4b61-8253-9ef879205485",
-      "created": [
-        "tsk_c6f9dd20-5c9a-4a7a-a4f5-69d0e09a856a"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.695Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-0c301d1b-80b0-4dd4-bfd0-48f5ac40cd85",
-      "created": [
-        "op_82f78e0d-2e20-4d5e-8ff4-b878f73e2800"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.769Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-4f6678de-0547-4580-845a-1bf157d695b7",
-      "created": [
-        "op_49cdd5c4-8df9-43be-9fd2-c06e1e89b931"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.835Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-6206a4fe-1ab2-4ff7-8de0-88c5ca2ce1c8",
-      "created": [
-        "op_1243f457-eb5a-4915-98cf-b5a6d007b133"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:37.926Z",
-      "command": "realizeOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": null,
-      "created": [],
-      "updated": [
-        "bud_f8ad4380-e27b-4af5-9579-4fb05d73f0f7",
-        "op_1243f457-eb5a-4915-98cf-b5a6d007b133"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.047Z",
-      "command": "createBpmProject",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-e1de76ad-0ae3-4695-8f3d-7e870682c9a5",
-      "created": [
-        "prj_0f01786b-e529-47d8-8dbc-27b393db10f4",
-        "bud_06010c37-586a-4567-9aaa-5dcad2520a28"
-      ],
-      "updated": [
-        "bud_06010c37-586a-4567-9aaa-5dcad2520a28"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.125Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-e5823cbf-0b3c-433a-8ddb-43b9e87be867",
-      "created": [
-        "tsk_932a6dd8-64fd-49a2-a3f3-d7854adc115f"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.216Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-9fca0391-f5a6-43db-8451-e5ee5b1b2499",
-      "created": [
-        "tsk_456e0d10-104f-48db-a6cc-85cde4fec20d"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.354Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-12750d70-dbfb-4b55-bea2-c7a24e4e70b6",
-      "created": [
-        "tsk_590e601a-91dc-4cbf-82a3-ceaf58fd7d0b"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.466Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-ae5e1b22-e9b7-462c-a53b-dec660195d94",
-      "created": [
-        "op_7a5a7b1f-dc54-4e69-b587-6c7f0b420ac3"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.566Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-cf7819f5-8d3b-4058-99f8-99553062890d",
-      "created": [
-        "op_78afab71-e053-4017-9584-3afe81013e7d"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.666Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-dd938769-343f-4c0b-87c0-340173f36ea1",
-      "created": [
-        "op_379fb3ec-f9db-4aaf-834a-035e1743a483"
-      ],
-      "updated": [
-        "bud_06010c37-586a-4567-9aaa-5dcad2520a28"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.750Z",
-      "command": "createBpmProject",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-1b8223ec-3a84-4723-9883-c92b70ec584e",
-      "created": [
-        "prj_1de6787c-8460-437c-8310-00cc2cefc251",
-        "bud_24656c37-3249-4864-8916-b83d4512fa2d"
-      ],
-      "updated": [
-        "bud_24656c37-3249-4864-8916-b83d4512fa2d"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.827Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-77361894-5bd1-43bd-bc94-14260c95dd9a",
-      "created": [
-        "tsk_303484ce-9647-4a68-8ed8-53852dcfa666"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.909Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-bdc2cab8-0b07-43b3-9c0c-f466b52e8974",
-      "created": [
-        "tsk_cf69a004-de39-472b-97d8-8befba994d3a"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:38.992Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-4da92203-16ef-4b28-9bc9-c375cad29dbc",
-      "created": [
-        "tsk_00491a3f-7f08-49e7-b4c1-66239f63147b"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.084Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-a18fb8bf-e6a1-451f-bfbb-ef4087ec6235",
-      "created": [
-        "op_3dc2065a-d3e2-4153-abe8-9cc1d8e241ea"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.156Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-e2df0747-fe25-4b34-84c5-c682ef1a3700",
-      "created": [
-        "op_fe53e96e-0de1-40bd-899d-a89eead30269"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.235Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-223c207a-ca7a-4bb4-9192-8d4c87e66110",
-      "created": [
-        "op_7ff4bd31-8862-4083-a8e4-185b4278f2c6"
-      ],
-      "updated": [
-        "bud_24656c37-3249-4864-8916-b83d4512fa2d"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.392Z",
-      "command": "createBpmProject",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-3cbafc36-0cd9-46fc-9a88-448435503f08",
-      "created": [
-        "prj_97ccbfbf-656c-4fb1-a4eb-e80b49e3ee71",
-        "bud_5f6f68ad-f8ac-4103-a2d6-8bd3b2c905e7"
-      ],
-      "updated": [
-        "bud_5f6f68ad-f8ac-4103-a2d6-8bd3b2c905e7"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.486Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-a87235ce-4369-46bd-b1ad-e8d9c36a18f6",
-      "created": [
-        "tsk_2317d4b2-109b-4f7f-8f2a-ea76fbf19d79"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.595Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-d2c2507e-87dd-44ef-b885-c96aaeb4837c",
-      "created": [
-        "tsk_8168262d-a2e6-47c9-bd2b-a6b69eb43089"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.673Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-5d898604-9258-45c5-9ce2-378a9f50bf61",
-      "created": [
-        "tsk_d650044d-84de-4c9d-9a71-2ab358f66e79"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.745Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-42b76d73-2d9b-43fc-8d83-f38d974fbd48",
-      "created": [
-        "op_0b2bf87a-6a20-4b2c-a71d-aaaddf150526"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.818Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-2d3c70d5-8095-4668-9b81-d1cfa05d935e",
-      "created": [
-        "op_36ff31ae-a888-458c-a559-b8ee42a255f1"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.886Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-15111792-ca67-4247-98d3-6343074a0edf",
-      "created": [
-        "op_0a778eb5-86f9-4a5c-b673-cc90f1f14fa5"
-      ],
-      "updated": [
-        "bud_5f6f68ad-f8ac-4103-a2d6-8bd3b2c905e7"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:39.969Z",
-      "command": "createBpmProject",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-b2e7f72f-d193-4d6d-8aa9-63a5ab3b2b8b",
-      "created": [
-        "prj_78ed08b1-d98f-44dd-831b-205ca604f5de",
-        "bud_93551c40-de0a-46ef-b8e3-d10d0bbd4098"
-      ],
-      "updated": [
-        "bud_93551c40-de0a-46ef-b8e3-d10d0bbd4098"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:40.076Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-38c447b8-331d-45a2-bd6a-541181ea1b41",
-      "created": [
-        "tsk_1e190b20-600b-49fb-a234-c3064aa74954"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:40.165Z",
-      "command": "createBpmTask",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-6d28b9d1-d2e1-48f6-8bdb-67ba1d8b9b75",
-      "created": [
-        "tsk_126de419-0ea6-4648-828e-d3db094e77a8"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
     {
       "at": "2026-11-06T11:50:40.243Z",
       "command": "createBpmTask",
@@ -22642,6 +22149,498 @@
         "cat_0b2a9e44-609f-47b4-bd46-95671da983a3"
       ],
       "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T17:54:00.995Z",
+      "command": "createUser",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+      "created": [
+        "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+        "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+        "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+        "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+        "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94",
+        "cyc_4457ea5a-1c8b-4d97-a646-91eb7e4d88ed"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T17:56:45.278Z",
+      "command": "setupProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "setup-a4a9aace-923a-453a-a98e-3bd4526a0671",
+      "created": [
+        "rec_7930d110-6b34-44ad-9bb9-e2c973d604f2",
+        "rec_5fed93d6-4f57-4a6c-9513-8d5bcf98507d",
+        "rec_610037fa-d5a2-4384-99e5-728064221350",
+        "rec_0337e7f2-02e4-4d91-ad4a-2710dd6148ef"
+      ],
+      "updated": [
+        "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+        "cyc_4457ea5a-1c8b-4d97-a646-91eb7e4d88ed",
+        "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+        "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+        "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T17:57:43.803Z",
+      "command": "createChargeCategory",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "category-f5c21b36-b906-41a7-9ea1-9b078dff3432",
+      "created": [
+        "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T17:57:54.182Z",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "entry-d46accb1-b42d-4fb2-9eaa-477a9bf6b148",
+      "created": [
+        "op_7a47a373-0b05-402e-a993-fdd14a8c85bb"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:01:23.370Z",
+      "command": "createBpmProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-fabca630-6142-48f1-8fa3-80077c25962f",
+      "created": [
+        "prj_95575a34-be82-4719-abf8-053902177331",
+        "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c"
+      ],
+      "updated": [
+        "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:04:00.223Z",
+      "command": "createBpmTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-0503f9d5-ff71-49f6-967d-8200ac00b0f3",
+      "created": [
+        "tsk_858d3e70-58de-4c18-b970-d52411fddcde"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:04:18.400Z",
+      "command": "createBpmTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-d821fc42-bd8e-47e7-9485-f86c4c4996c4",
+      "created": [
+        "tsk_fdc67588-be59-476f-b49c-46a8ba767466"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:05:56.895Z",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-6a94ffd7-ab36-4a85-becb-3001bdc452a9",
+      "created": [
+        "dmt_f3d6efc6-ba14-4cde-9bd3-5b10b36933aa"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:06:20.465Z",
+      "command": "decideTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+        "dmt_f3d6efc6-ba14-4cde-9bd3-5b10b36933aa"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:06:54.742Z",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-2eb3954f-48c5-45fc-9db8-9b772adaf8a7",
+      "created": [
+        "dmt_02b65204-037e-4f1b-bd9c-c5951ba32f4a"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:06:56.783Z",
+      "command": "decideTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "dmt_02b65204-037e-4f1b-bd9c-c5951ba32f4a"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:07:00.844Z",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-0dd7c5e0-dbb0-4faa-893a-9165955ee5b1",
+      "created": [
+        "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:07:16.023Z",
+      "command": "decideTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [
+        "ovr_44f70225-df1d-4346-9d59-58cf10473a67"
+      ],
+      "updated": [
+        "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:07:38.382Z",
+      "command": "decideProjectOverrun",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "ovr_44f70225-df1d-4346-9d59-58cf10473a67",
+        "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+        "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:07:45.794Z",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "entry-96bd2601-8fc9-4a74-b5dc-08447a055cfc",
+      "created": [
+        "op_192ff48b-fd0c-443b-aff3-cff15de27e35"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:10:26.226Z",
+      "command": "realizeOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_192ff48b-fd0c-443b-aff3-cff15de27e35"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:10:28.190Z",
+      "command": "cancelRealization",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_192ff48b-fd0c-443b-aff3-cff15de27e35"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:10:30.273Z",
+      "command": "realizeOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_192ff48b-fd0c-443b-aff3-cff15de27e35"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:10:57.653Z",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "entry-0a6af1fe-3c4f-41ac-bb1b-61ce59b1c294",
+      "created": [
+        "op_a1fbea54-f9b8-4b68-a065-1fe32d308eaf"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:11:20.788Z",
+      "command": "setTaskReturn",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:11:24.889Z",
+      "command": "updateTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [
+        "op_23f80a80-255f-413c-a889-5910b33efea3"
+      ],
+      "updated": [
+        "tsk_fdc67588-be59-476f-b49c-46a8ba767466",
+        "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:11:52.235Z",
+      "command": "createBpmTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-a84d4ba5-e550-45e6-a426-f51e9d9ce8d6",
+      "created": [
+        "tsk_228f4b01-b4c2-48bf-a880-5c09d4314577"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:12:08.264Z",
+      "command": "attachTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_228f4b01-b4c2-48bf-a880-5c09d4314577"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:12:56.716Z",
+      "command": "setupProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "setup-a17923dd-04d5-4fa7-a6aa-9c20b28021f0",
+      "created": [
+        "prj_ac09755e-f4b2-4c2c-ad9f-5066436f07df",
+        "bud_cc8254be-e970-4eb4-84ab-18a7f298f958",
+        "tsk_181f3774-0387-46c8-8ab3-0e9a22c07c4c"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:13:09.134Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_cc8254be-e970-4eb4-84ab-18a7f298f958"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:13:29.665Z",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "settle-c035f5af-30f6-4f10-904c-8293822a75e0",
+      "created": [
+        "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:14:08.737Z",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "settle-30569399-cbc1-4ab5-92a0-ae59a3005cc5",
+      "created": [
+        "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:14:16.078Z",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "settle-2478f605-4c83-448d-afac-7553591f340e",
+      "created": [
+        "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:14:23.413Z",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "settle-f7b7586a-199e-4ab5-b83e-ceccbc97db06",
+      "created": [
+        "op_23127db5-1985-4744-8f30-068cd2c8f87d"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:15:33.018Z",
+      "command": "closePeriod",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-c1cd1ef7-56fa-4dee-99ff-c881eafb9513",
+      "created": [
+        "clo_11c218f6-f22d-4399-a748-1fd49510134d",
+        "cap_18fa9213-a42a-41ee-837f-24fa1eafcd5f"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:16:01.827Z",
+      "command": "createGoal",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "goal-ee74cb2a-c9b8-4e6a-8712-5ab2f66c89f7",
+      "created": [
+        "obj_37727422-7346-4a40-9cc0-fd84367e60c7"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:16:33.777Z",
+      "command": "updateVision",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+        "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:17:07.117Z",
+      "command": "updateVision",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+        "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:18:17.315Z",
+      "command": "setCaps",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_0587ced0-886f-42f8-834f-61b0f48e117c"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:18:18.027Z",
+      "command": "updateChargeCategory",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:18:54.428Z",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "entry-4cd847be-7ffc-4ae8-a1ad-d3a8eb869e3e",
+      "created": [
+        "op_1f353930-063a-4372-a24e-1beb1c304c4c"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:21:52.823Z",
+      "command": "addCustomCostCenter",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-e3d818aa-b27b-4b08-9a0c-87a3faeb1251",
+      "created": [
+        "cc_365df9b3-543b-41d2-953b-6a94d14b251f"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:22:09.159Z",
+      "command": "updatePatrimoine",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:24:17.498Z",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": "web-163cfd70-2d47-494d-83c2-54b1afd35583",
+      "created": [
+        "dmt_9ebf472e-8e4a-45bf-9420-ed3ee70c4f4b"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:30:32.387Z",
+      "command": "updateOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_23f80a80-255f-413c-a889-5910b33efea3"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:33:17.344Z",
+      "command": "changeTaskStatus",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "tsk_858d3e70-58de-4c18-b970-d52411fddcde"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-07T18:36:23.695Z",
+      "command": "updateOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "op_23f80a80-255f-413c-a889-5910b33efea3"
+      ],
+      "outcome": "committed"
     }
   ],
   "migrations": [
@@ -23985,6 +23984,22 @@
       },
       "label": "PARCOURS BPM · Hugo Mercier · 2026-11-07",
       "userType": "famille",
+      "fictitious": true
+    },
+    "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e": {
+      "id": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "kind": "user",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T17:54:00.995Z",
+      "updatedAt": "2026-11-07T17:54:00.995Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+        "at": "2026-11-07T17:54:00.995Z"
+      },
+      "label": "Recette parcours BPM · 7 novembre 2026",
+      "userType": "individuel",
       "fictitious": true
     }
   },
@@ -27926,6 +27941,64 @@
       "priority": "high",
       "startDate": "2027-07-10",
       "dueDate": "2027-07-24"
+    },
+    "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273": {
+      "id": "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+      "kind": "coreProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T17:54:00.995Z",
+      "updatedAt": "2026-11-07T17:56:45.278Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+        "at": "2026-11-07T17:54:00.995Z"
+      },
+      "title": "Foyer de recette · parcours complets",
+      "description": "Racine noyau commune au Budget « Projet de vie » et au Patrimoine.",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null,
+      "lastChange": {
+        "command": "setupProject",
+        "at": "2026-11-07T17:56:45.278Z"
+      }
+    },
+    "prj_95575a34-be82-4719-abf8-053902177331": {
+      "id": "prj_95575a34-be82-4719-abf8-053902177331",
+      "kind": "coreProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:01:23.370Z",
+      "updatedAt": "2026-11-07T18:01:23.370Z",
+      "provenance": {
+        "command": "createBpmProject",
+        "requestKey": "web-fabca630-6142-48f1-8fa3-80077c25962f",
+        "at": "2026-11-07T18:01:23.370Z"
+      },
+      "title": "Rénover le bureau · recette BPM",
+      "description": "Préparer les tâches, attribuer les parts, décider et suivre les paiements.",
+      "priority": "medium",
+      "startDate": "2026-11-07",
+      "dueDate": "2026-11-30"
+    },
+    "prj_ac09755e-f4b2-4c2c-ad9f-5066436f07df": {
+      "id": "prj_ac09755e-f4b2-4c2c-ad9f-5066436f07df",
+      "kind": "coreProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:12:56.716Z",
+      "updatedAt": "2026-11-07T18:12:56.716Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-a17923dd-04d5-4fa7-a6aa-9c20b28021f0",
+        "at": "2026-11-07T18:12:56.716Z"
+      },
+      "title": "Voyage d’été · recette BPM",
+      "description": "",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
     }
   },
   "tasks": {
@@ -33205,6 +33278,102 @@
       "startDate": "2026-12-15",
       "dueDate": "2027-01-31",
       "projectId": "prj_eb5ce0b4-9aa7-4f3b-8d6b-2cd7f63d7905"
+    },
+    "tsk_858d3e70-58de-4c18-b970-d52411fddcde": {
+      "id": "tsk_858d3e70-58de-4c18-b970-d52411fddcde",
+      "kind": "task",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T18:04:00.223Z",
+      "updatedAt": "2026-11-07T18:33:17.344Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "web-0503f9d5-ff71-49f6-967d-8200ac00b0f3",
+        "at": "2026-11-07T18:04:00.223Z"
+      },
+      "title": "Préparer les murs · recette",
+      "description": "",
+      "status": "doing",
+      "plannedHours": 3,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": "2026-11-15",
+      "projectId": "prj_95575a34-be82-4719-abf8-053902177331",
+      "lastChange": {
+        "command": "changeTaskStatus",
+        "at": "2026-11-07T18:33:17.344Z"
+      }
+    },
+    "tsk_fdc67588-be59-476f-b49c-46a8ba767466": {
+      "id": "tsk_fdc67588-be59-476f-b49c-46a8ba767466",
+      "kind": "task",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T18:04:18.400Z",
+      "updatedAt": "2026-11-07T18:11:24.889Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "web-d821fc42-bd8e-47e7-9485-f86c4c4996c4",
+        "at": "2026-11-07T18:04:18.400Z"
+      },
+      "title": "Acheter la peinture · recette",
+      "description": "",
+      "status": "done",
+      "plannedHours": 2,
+      "spentHours": 2,
+      "startDate": null,
+      "dueDate": "2026-11-20",
+      "projectId": "prj_95575a34-be82-4719-abf8-053902177331",
+      "lastChange": {
+        "command": "updateTask",
+        "at": "2026-11-07T18:11:24.889Z"
+      }
+    },
+    "tsk_228f4b01-b4c2-48bf-a880-5c09d4314577": {
+      "id": "tsk_228f4b01-b4c2-48bf-a880-5c09d4314577",
+      "kind": "task",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T18:11:52.235Z",
+      "updatedAt": "2026-11-07T18:12:08.264Z",
+      "provenance": {
+        "command": "createBpmTask",
+        "requestKey": "web-a84d4ba5-e550-45e6-a426-f51e9d9ce8d6",
+        "at": "2026-11-07T18:11:52.235Z"
+      },
+      "title": "Commander une étagère · recette",
+      "description": "",
+      "status": "todo",
+      "plannedHours": 1,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_95575a34-be82-4719-abf8-053902177331",
+      "lastChange": {
+        "command": "attachTask",
+        "at": "2026-11-07T18:12:08.264Z"
+      }
+    },
+    "tsk_181f3774-0387-46c8-8ab3-0e9a22c07c4c": {
+      "id": "tsk_181f3774-0387-46c8-8ab3-0e9a22c07c4c",
+      "kind": "task",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:12:56.716Z",
+      "updatedAt": "2026-11-07T18:12:56.716Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-a17923dd-04d5-4fa7-a6aa-9c20b28021f0",
+        "at": "2026-11-07T18:12:56.716Z"
+      },
+      "title": "Réserver le train · recette",
+      "description": "",
+      "status": "todo",
+      "plannedHours": 2,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_ac09755e-f4b2-4c2c-ad9f-5066436f07df"
     }
   },
   "budgets": {
@@ -37637,6 +37806,99 @@
         "command": "decideTaskBudget",
         "at": "2026-11-07T17:02:55.082Z"
       }
+    },
+    "bud_0587ced0-886f-42f8-834f-61b0f48e117c": {
+      "id": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "kind": "budget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 4,
+      "createdAt": "2026-11-07T17:54:00.995Z",
+      "updatedAt": "2026-11-07T18:18:17.315Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+        "at": "2026-11-07T17:54:00.995Z"
+      },
+      "role": "life",
+      "name": "Projet de vie",
+      "coreProjectId": "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+      "parentBudgetId": null,
+      "capsCents": {
+        "std:alimentation": 60000
+      },
+      "objectives": {
+        "savingsTargetCents": 110000,
+        "surplus": null
+      },
+      "lastChange": {
+        "command": "setCaps",
+        "at": "2026-11-07T18:18:17.315Z"
+      }
+    },
+    "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c": {
+      "id": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "kind": "budget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 6,
+      "createdAt": "2026-11-07T18:01:23.370Z",
+      "updatedAt": "2026-11-07T18:11:24.889Z",
+      "provenance": {
+        "command": "createBpmProject",
+        "requestKey": "web-fabca630-6142-48f1-8fa3-80077c25962f",
+        "at": "2026-11-07T18:01:23.370Z"
+      },
+      "role": "standard",
+      "name": "Rénover le bureau · recette BPM",
+      "coreProjectId": "prj_95575a34-be82-4719-abf8-053902177331",
+      "parentBudgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "capsCents": {},
+      "taskFundingRequired": true,
+      "taskSharesCents": {
+        "tsk_858d3e70-58de-4c18-b970-d52411fddcde": 12000,
+        "tsk_fdc67588-be59-476f-b49c-46a8ba767466": 18000
+      },
+      "taskReturns": {
+        "tsk_fdc67588-be59-476f-b49c-46a8ba767466": {
+          "label": "Retour · Acheter la peinture · recette",
+          "amountCents": 3000,
+          "cadence": "once",
+          "entryId": "op_23f80a80-255f-413c-a889-5910b33efea3",
+          "entryKind": "operation",
+          "triggeredAt": "2026-11-07"
+        }
+      },
+      "allocationCents": 25000,
+      "allocationDate": "2026-11-07",
+      "lastChange": {
+        "command": "updateTask",
+        "at": "2026-11-07T18:11:24.889Z"
+      }
+    },
+    "bud_cc8254be-e970-4eb4-84ab-18a7f298f958": {
+      "id": "bud_cc8254be-e970-4eb4-84ab-18a7f298f958",
+      "kind": "budget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T18:12:56.716Z",
+      "updatedAt": "2026-11-07T18:13:09.134Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-a17923dd-04d5-4fa7-a6aa-9c20b28021f0",
+        "at": "2026-11-07T18:12:56.716Z"
+      },
+      "role": "standard",
+      "name": "Voyage d’été · recette BPM",
+      "coreProjectId": "prj_ac09755e-f4b2-4c2c-ad9f-5066436f07df",
+      "parentBudgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "capsCents": {},
+      "allocationCents": 80000,
+      "allocationDate": "2026-11-07",
+      "taskSharesCents": {},
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-07T18:13:09.134Z"
+      }
     }
   },
   "costCenters": {
@@ -40694,6 +40956,21 @@
         "source": "rjs-forecast",
         "id": "CC-14FB22AFD2"
       }
+    },
+    "cc_365df9b3-543b-41d2-953b-6a94d14b251f": {
+      "id": "cc_365df9b3-543b-41d2-953b-6a94d14b251f",
+      "kind": "costCenter",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:21:52.823Z",
+      "updatedAt": "2026-11-07T18:21:52.823Z",
+      "provenance": {
+        "command": "addCustomCostCenter",
+        "requestKey": "web-e3d818aa-b27b-4b08-9a0c-87a3faeb1251",
+        "at": "2026-11-07T18:21:52.823Z"
+      },
+      "label": "Atelier et bricolage · recette BPM",
+      "direction": "charge"
     }
   },
   "operations": {
@@ -105684,6 +105961,266 @@
       "standardCostCenter": "logement",
       "costCenterId": null,
       "categoryId": null
+    },
+    "op_7a47a373-0b05-402e-a993-fdd14a8c85bb": {
+      "id": "op_7a47a373-0b05-402e-a993-fdd14a8c85bb",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T17:57:54.182Z",
+      "updatedAt": "2026-11-07T17:57:54.182Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "entry-d46accb1-b42d-4fb2-9eaa-477a9bf6b148",
+        "at": "2026-11-07T17:57:54.182Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": null,
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Courses du marché · parcours BPM",
+      "amountCents": 6340,
+      "date": "2026-11-05",
+      "status": "realized",
+      "realizedAmountCents": 6340,
+      "realizedDate": "2026-11-05",
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09"
+    },
+    "op_192ff48b-fd0c-443b-aff3-cff15de27e35": {
+      "id": "op_192ff48b-fd0c-443b-aff3-cff15de27e35",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 4,
+      "createdAt": "2026-11-07T18:07:45.794Z",
+      "updatedAt": "2026-11-07T18:10:30.273Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "entry-96bd2601-8fc9-4a74-b5dc-08447a055cfc",
+        "at": "2026-11-07T18:07:45.794Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_fdc67588-be59-476f-b49c-46a8ba767466",
+      "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "direction": "charge",
+      "label": "Peinture du bureau · recette",
+      "amountCents": 17000,
+      "date": "2026-11-07",
+      "status": "realized",
+      "realizedAmountCents": 16500,
+      "realizedDate": "2026-11-07",
+      "standardCostCenter": "divers",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "realizeOperation",
+        "at": "2026-11-07T18:10:30.273Z"
+      }
+    },
+    "op_a1fbea54-f9b8-4b68-a065-1fe32d308eaf": {
+      "id": "op_a1fbea54-f9b8-4b68-a065-1fe32d308eaf",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:10:57.653Z",
+      "updatedAt": "2026-11-07T18:10:57.653Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "entry-0a6af1fe-3c4f-41ac-bb1b-61ce59b1c294",
+        "at": "2026-11-07T18:10:57.653Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": "tsk_fdc67588-be59-476f-b49c-46a8ba767466",
+      "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "direction": "income",
+      "label": "Avoir peinture · recette BPM",
+      "amountCents": 2000,
+      "date": "2026-11-07",
+      "status": "realized",
+      "realizedAmountCents": 2000,
+      "realizedDate": "2026-11-07",
+      "standardCostCenter": "salaires",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_23f80a80-255f-413c-a889-5910b33efea3": {
+      "id": "op_23f80a80-255f-413c-a889-5910b33efea3",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 3,
+      "createdAt": "2026-11-07T18:11:24.889Z",
+      "updatedAt": "2026-11-07T18:36:23.695Z",
+      "provenance": {
+        "command": "updateTask",
+        "requestKey": null,
+        "at": "2026-11-07T18:11:24.889Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": "Retour du projet « Rénover le bureau · recette BPM » à la complétion de « Acheter la peinture · recette ».",
+      "taskId": null,
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "income",
+      "label": "Retour · Acheter la peinture · recette",
+      "amountCents": 3000,
+      "date": "2026-11-10",
+      "status": "planned",
+      "realizedAmountCents": null,
+      "realizedDate": null,
+      "standardCostCenter": "autresRevenus",
+      "costCenterId": null,
+      "categoryId": null,
+      "lastChange": {
+        "command": "updateOperation",
+        "at": "2026-11-07T18:36:23.695Z"
+      }
+    },
+    "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5": {
+      "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:13:29.665Z",
+      "updatedAt": "2026-11-07T18:13:29.665Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "settle-c035f5af-30f6-4f10-904c-8293822a75e0",
+        "at": "2026-11-07T18:13:29.665Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "income",
+      "label": "Salaire mensuel de recette",
+      "amountCents": 320000,
+      "date": "2026-10-01",
+      "status": "realized",
+      "realizedAmountCents": 320000,
+      "realizedDate": "2026-10-01",
+      "recurrenceId": "rec_7930d110-6b34-44ad-9bb9-e2c973d604f2",
+      "occurrenceDate": "2026-10-01",
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "salaires",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa": {
+      "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:14:08.737Z",
+      "updatedAt": "2026-11-07T18:14:08.737Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "settle-30569399-cbc1-4ab5-92a0-ae59a3005cc5",
+        "at": "2026-11-07T18:14:08.737Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Alimentation",
+      "amountCents": 45000,
+      "date": "2026-10-01",
+      "status": "realized",
+      "realizedAmountCents": 45000,
+      "realizedDate": "2026-10-02",
+      "recurrenceId": "rec_610037fa-d5a2-4384-99e5-728064221350",
+      "occurrenceDate": "2026-10-01",
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb": {
+      "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:14:16.078Z",
+      "updatedAt": "2026-11-07T18:14:16.078Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "settle-2478f605-4c83-448d-afac-7553591f340e",
+        "at": "2026-11-07T18:14:16.078Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Logement",
+      "amountCents": 95000,
+      "date": "2026-10-01",
+      "status": "realized",
+      "realizedAmountCents": 95000,
+      "realizedDate": "2026-10-02",
+      "recurrenceId": "rec_5fed93d6-4f57-4a6c-9513-8d5bcf98507d",
+      "occurrenceDate": "2026-10-01",
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "logement",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_23127db5-1985-4744-8f30-068cd2c8f87d": {
+      "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:14:23.413Z",
+      "updatedAt": "2026-11-07T18:14:23.413Z",
+      "provenance": {
+        "command": "settleOccurrence",
+        "requestKey": "settle-f7b7586a-199e-4ab5-b83e-ceccbc97db06",
+        "at": "2026-11-07T18:14:23.413Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Transport",
+      "amountCents": 12000,
+      "date": "2026-10-01",
+      "status": "realized",
+      "realizedAmountCents": 12000,
+      "realizedDate": "2026-10-02",
+      "recurrenceId": "rec_0337e7f2-02e4-4d91-ad4a-2710dd6148ef",
+      "occurrenceDate": "2026-10-01",
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "transport",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "op_1f353930-063a-4372-a24e-1beb1c304c4c": {
+      "id": "op_1f353930-063a-4372-a24e-1beb1c304c4c",
+      "kind": "operation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:18:54.428Z",
+      "updatedAt": "2026-11-07T18:18:54.428Z",
+      "provenance": {
+        "command": "createOperation",
+        "requestKey": "entry-4cd847be-7ffc-4ae8-a1ad-d3a8eb869e3e",
+        "at": "2026-11-07T18:18:54.428Z"
+      },
+      "recurrenceId": null,
+      "occurrenceDate": null,
+      "note": null,
+      "taskId": null,
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Fruits complémentaires · recette BPM",
+      "amountCents": 2000,
+      "date": "2026-11-07",
+      "status": "realized",
+      "realizedAmountCents": 2000,
+      "realizedDate": "2026-11-07",
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09"
     }
   },
   "recurrences": {
@@ -119288,6 +119825,106 @@
       "standardCostCenter": "divers",
       "costCenterId": null,
       "categoryId": null
+    },
+    "rec_7930d110-6b34-44ad-9bb9-e2c973d604f2": {
+      "id": "rec_7930d110-6b34-44ad-9bb9-e2c973d604f2",
+      "kind": "recurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T17:56:45.278Z",
+      "updatedAt": "2026-11-07T17:56:45.278Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-a4a9aace-923a-453a-a98e-3bd4526a0671",
+        "at": "2026-11-07T17:56:45.278Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "income",
+      "label": "Salaire mensuel de recette",
+      "amountCents": 320000,
+      "cadence": "monthly",
+      "firstDate": "2026-10-01",
+      "endDate": null,
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "salaires",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "rec_5fed93d6-4f57-4a6c-9513-8d5bcf98507d": {
+      "id": "rec_5fed93d6-4f57-4a6c-9513-8d5bcf98507d",
+      "kind": "recurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T17:56:45.278Z",
+      "updatedAt": "2026-11-07T17:56:45.278Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-a4a9aace-923a-453a-a98e-3bd4526a0671",
+        "at": "2026-11-07T17:56:45.278Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Logement",
+      "amountCents": 95000,
+      "cadence": "monthly",
+      "firstDate": "2026-10-01",
+      "endDate": null,
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "logement",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "rec_610037fa-d5a2-4384-99e5-728064221350": {
+      "id": "rec_610037fa-d5a2-4384-99e5-728064221350",
+      "kind": "recurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T17:56:45.278Z",
+      "updatedAt": "2026-11-07T17:56:45.278Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-a4a9aace-923a-453a-a98e-3bd4526a0671",
+        "at": "2026-11-07T17:56:45.278Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Alimentation",
+      "amountCents": 45000,
+      "cadence": "monthly",
+      "firstDate": "2026-10-01",
+      "endDate": null,
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "alimentation",
+      "costCenterId": null,
+      "categoryId": null
+    },
+    "rec_0337e7f2-02e4-4d91-ad4a-2710dd6148ef": {
+      "id": "rec_0337e7f2-02e4-4d91-ad4a-2710dd6148ef",
+      "kind": "recurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T17:56:45.278Z",
+      "updatedAt": "2026-11-07T17:56:45.278Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-a4a9aace-923a-453a-a98e-3bd4526a0671",
+        "at": "2026-11-07T17:56:45.278Z"
+      },
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "direction": "charge",
+      "label": "Transport",
+      "amountCents": 12000,
+      "cadence": "monthly",
+      "firstDate": "2026-10-01",
+      "endDate": null,
+      "note": null,
+      "taskId": null,
+      "standardCostCenter": "transport",
+      "costCenterId": null,
+      "categoryId": null
     }
   },
   "patrimoines": {
@@ -121064,6 +121701,37 @@
         "inflationSource": "Hypothèse par défaut modifiable",
         "contributionCents": null,
         "contributionCadence": "monthly"
+      }
+    },
+    "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5": {
+      "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+      "kind": "patrimoine",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 4,
+      "createdAt": "2026-11-07T17:54:00.995Z",
+      "updatedAt": "2026-11-07T18:22:09.159Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+        "at": "2026-11-07T17:54:00.995Z"
+      },
+      "label": "Patrimoine",
+      "coreProjectId": "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+      "principalBudgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "openingStockCents": 1000000,
+      "openingDate": "2026-10-01",
+      "objectiveCents": 2700000,
+      "projectionSettings": {
+        "horizonYears": 15,
+        "annualReturnPct": 4,
+        "inflationPct": 2,
+        "inflationSource": "Hypothèse de recette",
+        "contributionCents": 90000,
+        "contributionCadence": "monthly"
+      },
+      "lastChange": {
+        "command": "updatePatrimoine",
+        "at": "2026-11-07T18:22:09.159Z"
       }
     }
   },
@@ -123608,6 +124276,27 @@
         "kind": "closure",
         "id": "clo_7264aecb-8d98-4722-b120-6208cdf6ecf7"
       }
+    },
+    "cap_18fa9213-a42a-41ee-837f-24fa1eafcd5f": {
+      "id": "cap_18fa9213-a42a-41ee-837f-24fa1eafcd5f",
+      "kind": "capitalization",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:15:33.018Z",
+      "updatedAt": "2026-11-07T18:15:33.018Z",
+      "provenance": {
+        "command": "closePeriod",
+        "requestKey": "web-c1cd1ef7-56fa-4dee-99ff-c881eafb9513",
+        "at": "2026-11-07T18:15:33.018Z"
+      },
+      "patrimoineId": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+      "amountCents": 168000,
+      "date": "2026-10-31",
+      "label": "Résultat Octobre 2026",
+      "source": {
+        "kind": "closure",
+        "id": "clo_11c218f6-f22d-4399-a748-1fd49510134d"
+      }
     }
   },
   "bpmCompositions": {
@@ -125155,6 +125844,27 @@
         "command": "setupProject",
         "at": "2026-11-07T16:51:25.038Z"
       }
+    },
+    "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94": {
+      "id": "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94",
+      "kind": "bpmComposition",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 4,
+      "createdAt": "2026-11-07T17:54:00.995Z",
+      "updatedAt": "2026-11-07T18:17:07.117Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+        "at": "2026-11-07T17:54:00.995Z"
+      },
+      "label": "BPM de Recette parcours BPM · 7 novembre 2026",
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "patrimoineId": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+      "coreProjectId": "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+      "lastChange": {
+        "command": "updateVision",
+        "at": "2026-11-07T18:17:07.117Z"
+      }
     }
   },
   "cycleLinks": {
@@ -126510,6 +127220,28 @@
       "lastChange": {
         "command": "setupProject",
         "at": "2026-11-07T16:51:25.038Z"
+      }
+    },
+    "cyc_4457ea5a-1c8b-4d97-a646-91eb7e4d88ed": {
+      "id": "cyc_4457ea5a-1c8b-4d97-a646-91eb7e4d88ed",
+      "kind": "cycleLink",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T17:54:00.995Z",
+      "updatedAt": "2026-11-07T17:56:45.278Z",
+      "provenance": {
+        "command": "createUser",
+        "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+        "at": "2026-11-07T17:54:00.995Z"
+      },
+      "bpmCompositionId": "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94",
+      "frequency": "monthly",
+      "anchorDay": 1,
+      "startDate": "2026-10-01",
+      "state": "active",
+      "lastChange": {
+        "command": "setupProject",
+        "at": "2026-11-07T17:56:45.278Z"
       }
     }
   },
@@ -504735,6 +505467,2542 @@
         "op_af5cca8d-e12a-4b9a-9b06-dae54debc079",
         "op_895ec72b-6ac7-430b-90a6-ed0c24fbf7bb"
       ]
+    },
+    "clo_11c218f6-f22d-4399-a748-1fd49510134d": {
+      "id": "clo_11c218f6-f22d-4399-a748-1fd49510134d",
+      "kind": "closure",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:15:33.018Z",
+      "updatedAt": "2026-11-07T18:15:33.018Z",
+      "provenance": {
+        "command": "closePeriod",
+        "requestKey": "web-c1cd1ef7-56fa-4dee-99ff-c881eafb9513",
+        "at": "2026-11-07T18:15:33.018Z"
+      },
+      "cycleLinkId": "cyc_4457ea5a-1c8b-4d97-a646-91eb7e4d88ed",
+      "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+      "patrimoineId": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+      "capitalizationId": "cap_18fa9213-a42a-41ee-837f-24fa1eafcd5f",
+      "periodKey": "2026-10",
+      "periodLabel": "Octobre 2026",
+      "periodStart": "2026-10-01",
+      "periodEnd": "2026-10-31",
+      "resultCents": 168000,
+      "budgetBalanceAfterCents": 0,
+      "calculation": {
+        "metric": "bpm.resultatPeriode",
+        "formula": "bpm.revenus - bpm.charges",
+        "parameter": {
+          "key": "metric.bpm.resultatPeriode",
+          "revision": 0,
+          "origin": "défaut du code",
+          "updatedAt": null,
+          "isDefault": true
+        },
+        "explanation": "3 200 − 1 520 = 1 680",
+        "inputs": [
+          {
+            "name": "bpm.revenus",
+            "label": "Reçu",
+            "value": 3200
+          },
+          {
+            "name": "bpm.charges",
+            "label": "Dépensé",
+            "value": 1520
+          }
+        ]
+      },
+      "figures": {
+        "bpm.revenus": {
+          "key": "bpm.revenus",
+          "label": "Reçu",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Revenus effectivement reçus, datés dans la période (date réelle).",
+          "module": "bpm",
+          "value": 3200,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.revenusRealises",
+          "parameter": {
+            "key": "metric.bpm.revenus",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "3 200 = 3 200",
+          "inputs": [
+            {
+              "name": "budget.revenusRealises",
+              "type": "variable",
+              "label": "Revenus réalisés",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+              "value": 3200,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                  "kind": "operation",
+                  "label": "Salaire mensuel de recette",
+                  "amount": 3200,
+                  "date": "2026-10-01",
+                  "status": "realized"
+                }
+              ]
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.charges": {
+          "key": "bpm.charges",
+          "label": "Dépensé",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Dépenses effectivement payées, datées dans la période (date réelle) : celles du budget de vie et les charges des projets de la vie validées comme réglées (charges spéciales, jamais comptées avant validation).",
+          "module": "bpm",
+          "value": 1520,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.chargesRealisees + projets.chargesReglees",
+          "parameter": {
+            "key": "metric.bpm.charges",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "1 520 + 0 = 1 520",
+          "inputs": [
+            {
+              "name": "budget.chargesRealisees",
+              "type": "variable",
+              "label": "Charges réalisées",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+              "value": 1520,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                  "kind": "operation",
+                  "label": "Alimentation",
+                  "amount": 450,
+                  "date": "2026-10-02",
+                  "status": "realized"
+                },
+                {
+                  "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                  "kind": "operation",
+                  "label": "Logement",
+                  "amount": 950,
+                  "date": "2026-10-02",
+                  "status": "realized"
+                },
+                {
+                  "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                  "kind": "operation",
+                  "label": "Transport",
+                  "amount": 120,
+                  "date": "2026-10-02",
+                  "status": "realized"
+                }
+              ]
+            },
+            {
+              "name": "projets.chargesReglees",
+              "type": "variable",
+              "label": "Charges des projets validées",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+              "value": 0,
+              "status": "ok",
+              "note": "Aucune charge de projet validée dans la période",
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.chargesProjets": {
+          "key": "bpm.chargesProjets",
+          "label": "Projets de la vie · réglé validé",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Charges des projets de la vie validées comme réglées pour leurs besoins, datées dans la période (date réelle). Elles font partie du Dépensé.",
+          "module": "bpm",
+          "value": 0,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "projets.chargesReglees",
+          "parameter": {
+            "key": "metric.bpm.chargesProjets",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "0 = 0",
+          "inputs": [
+            {
+              "name": "projets.chargesReglees",
+              "type": "variable",
+              "label": "Charges des projets validées",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+              "value": 0,
+              "status": "ok",
+              "note": "Aucune charge de projet validée dans la période",
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.resultatPeriode": {
+          "key": "bpm.resultatPeriode",
+          "label": "Reste réel",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Net réalisé = reçu − payé. Résultat signé capitalisé dans le Patrimoine à la clôture.",
+          "module": "bpm",
+          "value": 1680,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "bpm.revenus - bpm.charges",
+          "parameter": {
+            "key": "metric.bpm.resultatPeriode",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "3 200 − 1 520 = 1 680",
+          "inputs": [
+            {
+              "name": "bpm.revenus",
+              "type": "metric",
+              "label": "Reçu",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 3200,
+              "status": "ok",
+              "formula": "budget.revenusRealises",
+              "explanation": "3 200 = 3 200",
+              "parameter": {
+                "key": "metric.bpm.revenus",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.revenusRealises",
+                  "type": "variable",
+                  "label": "Revenus réalisés",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+                  "value": 3200,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                      "kind": "operation",
+                      "label": "Salaire mensuel de recette",
+                      "amount": 3200,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    }
+                  ]
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.charges",
+              "type": "metric",
+              "label": "Dépensé",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1520,
+              "status": "ok",
+              "formula": "budget.chargesRealisees + projets.chargesReglees",
+              "explanation": "1 520 + 0 = 1 520",
+              "parameter": {
+                "key": "metric.bpm.charges",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.chargesRealisees",
+                  "type": "variable",
+                  "label": "Charges réalisées",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+                  "value": 1520,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                      "kind": "operation",
+                      "label": "Alimentation",
+                      "amount": 450,
+                      "date": "2026-10-02",
+                      "status": "realized"
+                    },
+                    {
+                      "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                      "kind": "operation",
+                      "label": "Logement",
+                      "amount": 950,
+                      "date": "2026-10-02",
+                      "status": "realized"
+                    },
+                    {
+                      "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                      "kind": "operation",
+                      "label": "Transport",
+                      "amount": 120,
+                      "date": "2026-10-02",
+                      "status": "realized"
+                    }
+                  ]
+                },
+                {
+                  "name": "projets.chargesReglees",
+                  "type": "variable",
+                  "label": "Charges des projets validées",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Aucune charge de projet validée dans la période",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.resteARecevoir": {
+          "key": "bpm.resteARecevoir",
+          "label": "À recevoir",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Revenus prévus dans la période et pas encore reçus.",
+          "module": "bpm",
+          "value": 0,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.resteARecevoir",
+          "parameter": {
+            "key": "metric.bpm.resteARecevoir",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "0 = 0",
+          "inputs": [
+            {
+              "name": "budget.resteARecevoir",
+              "type": "variable",
+              "label": "Revenus restant à recevoir",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Montants prévus des revenus non reçus (opérations et occurrences attendues) dont la date prévue est dans la période.",
+              "value": 0,
+              "status": "ok",
+              "note": "Rien en attente sur la période",
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.resteAPayer": {
+          "key": "bpm.resteAPayer",
+          "label": "À payer",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Dépenses prévues dans la période et pas encore payées.",
+          "module": "bpm",
+          "value": 0,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.resteAPayer",
+          "parameter": {
+            "key": "metric.bpm.resteAPayer",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "0 = 0",
+          "inputs": [
+            {
+              "name": "budget.resteAPayer",
+              "type": "variable",
+              "label": "Dépenses restant à payer",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Montants prévus des dépenses non payées (opérations et occurrences attendues) dont la date prévue est dans la période.",
+              "value": 0,
+              "status": "ok",
+              "note": "Rien en attente sur la période",
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.soldeAttendu": {
+          "key": "bpm.soldeAttendu",
+          "label": "Solde prévu à la clôture",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Net réalisé + revenus restant à recevoir − dépenses restant à payer (C04). Une échéance déjà réglée ne compte pas une seconde fois.",
+          "module": "bpm",
+          "value": 1680,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "bpm.resultatPeriode + bpm.resteARecevoir - bpm.resteAPayer",
+          "parameter": {
+            "key": "metric.bpm.soldeAttendu",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "(1 680 + 0) − 0 = 1 680",
+          "inputs": [
+            {
+              "name": "bpm.resultatPeriode",
+              "type": "metric",
+              "label": "Reste réel",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1680,
+              "status": "ok",
+              "formula": "bpm.revenus - bpm.charges",
+              "explanation": "3 200 − 1 520 = 1 680",
+              "parameter": {
+                "key": "metric.bpm.resultatPeriode",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "bpm.revenus",
+                  "type": "metric",
+                  "label": "Reçu",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 3200,
+                  "status": "ok",
+                  "formula": "budget.revenusRealises",
+                  "explanation": "3 200 = 3 200",
+                  "parameter": {
+                    "key": "metric.bpm.revenus",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.revenusRealises",
+                      "type": "variable",
+                      "label": "Revenus réalisés",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+                      "value": 3200,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                          "kind": "operation",
+                          "label": "Salaire mensuel de recette",
+                          "amount": 3200,
+                          "date": "2026-10-01",
+                          "status": "realized"
+                        }
+                      ]
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.charges",
+                  "type": "metric",
+                  "label": "Dépensé",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 1520,
+                  "status": "ok",
+                  "formula": "budget.chargesRealisees + projets.chargesReglees",
+                  "explanation": "1 520 + 0 = 1 520",
+                  "parameter": {
+                    "key": "metric.bpm.charges",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.chargesRealisees",
+                      "type": "variable",
+                      "label": "Charges réalisées",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+                      "value": 1520,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                          "kind": "operation",
+                          "label": "Alimentation",
+                          "amount": 450,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                          "kind": "operation",
+                          "label": "Logement",
+                          "amount": 950,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                          "kind": "operation",
+                          "label": "Transport",
+                          "amount": 120,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "projets.chargesReglees",
+                      "type": "variable",
+                      "label": "Charges des projets validées",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+                      "value": 0,
+                      "status": "ok",
+                      "note": "Aucune charge de projet validée dans la période",
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.resteARecevoir",
+              "type": "metric",
+              "label": "À recevoir",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 0,
+              "status": "ok",
+              "formula": "budget.resteARecevoir",
+              "explanation": "0 = 0",
+              "parameter": {
+                "key": "metric.bpm.resteARecevoir",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.resteARecevoir",
+                  "type": "variable",
+                  "label": "Revenus restant à recevoir",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Montants prévus des revenus non reçus (opérations et occurrences attendues) dont la date prévue est dans la période.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Rien en attente sur la période",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.resteAPayer",
+              "type": "metric",
+              "label": "À payer",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 0,
+              "status": "ok",
+              "formula": "budget.resteAPayer",
+              "explanation": "0 = 0",
+              "parameter": {
+                "key": "metric.bpm.resteAPayer",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.resteAPayer",
+                  "type": "variable",
+                  "label": "Dépenses restant à payer",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Montants prévus des dépenses non payées (opérations et occurrences attendues) dont la date prévue est dans la période.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Rien en attente sur la période",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.recuAvance": {
+          "key": "bpm.recuAvance",
+          "label": "Reçu d’avance",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Entrées prévues dans la période mais reçues avant son début : elles sont dans le résultat de la période où elles ont été reçues, pas dans le Reçu de celle-ci.",
+          "module": "bpm",
+          "value": 0,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.revenusAnticipes",
+          "parameter": {
+            "key": "metric.bpm.recuAvance",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "0 = 0",
+          "inputs": [
+            {
+              "name": "budget.revenusAnticipes",
+              "type": "variable",
+              "label": "Revenus reçus d’avance",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Revenus prévus dans la période mais reçus avant son début : ils comptent dans le réalisé de la période où ils ont été reçus.",
+              "value": 0,
+              "status": "ok",
+              "note": "Rien de réglé d’avance pour la période",
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.payeAvance": {
+          "key": "bpm.payeAvance",
+          "label": "Payé d’avance",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Charges prévues dans la période mais payées avant son début : elles sont dans le Dépensé de la période où elles ont été payées.",
+          "module": "bpm",
+          "value": 0,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.chargesAnticipees",
+          "parameter": {
+            "key": "metric.bpm.payeAvance",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "0 = 0",
+          "inputs": [
+            {
+              "name": "budget.chargesAnticipees",
+              "type": "variable",
+              "label": "Charges payées d’avance",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Charges prévues dans la période mais payées avant son début : elles comptent dans le réalisé de la période où elles ont été payées.",
+              "value": 0,
+              "status": "ok",
+              "note": "Rien de réglé d’avance pour la période",
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.soldeAvecAvances": {
+          "key": "bpm.soldeAvecAvances",
+          "label": "Solde prévu, avances comprises",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Solde prévu à la clôture si les entrées et charges réglées d’avance avaient été réglées à leur date prévue : il mesure l’équilibre propre du cycle.",
+          "module": "bpm",
+          "value": 1680,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "bpm.soldeAttendu + bpm.recuAvance - bpm.payeAvance",
+          "parameter": {
+            "key": "metric.bpm.soldeAvecAvances",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "(1 680 + 0) − 0 = 1 680",
+          "inputs": [
+            {
+              "name": "bpm.soldeAttendu",
+              "type": "metric",
+              "label": "Solde prévu à la clôture",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1680,
+              "status": "ok",
+              "formula": "bpm.resultatPeriode + bpm.resteARecevoir - bpm.resteAPayer",
+              "explanation": "(1 680 + 0) − 0 = 1 680",
+              "parameter": {
+                "key": "metric.bpm.soldeAttendu",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "bpm.resultatPeriode",
+                  "type": "metric",
+                  "label": "Reste réel",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 1680,
+                  "status": "ok",
+                  "formula": "bpm.revenus - bpm.charges",
+                  "explanation": "3 200 − 1 520 = 1 680",
+                  "parameter": {
+                    "key": "metric.bpm.resultatPeriode",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "bpm.revenus",
+                      "type": "metric",
+                      "label": "Reçu",
+                      "unit": "EUR",
+                      "module": "bpm",
+                      "value": 3200,
+                      "status": "ok",
+                      "formula": "budget.revenusRealises",
+                      "explanation": "3 200 = 3 200",
+                      "parameter": {
+                        "key": "metric.bpm.revenus",
+                        "revision": 0,
+                        "origin": "défaut du code",
+                        "updatedAt": null,
+                        "isDefault": true
+                      },
+                      "inputs": [
+                        {
+                          "name": "budget.revenusRealises",
+                          "type": "variable",
+                          "label": "Revenus réalisés",
+                          "unit": "EUR",
+                          "module": "budget",
+                          "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+                          "value": 3200,
+                          "status": "ok",
+                          "note": null,
+                          "sources": [
+                            {
+                              "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                              "kind": "operation",
+                              "label": "Salaire mensuel de recette",
+                              "amount": 3200,
+                              "date": "2026-10-01",
+                              "status": "realized"
+                            }
+                          ]
+                        }
+                      ],
+                      "sources": []
+                    },
+                    {
+                      "name": "bpm.charges",
+                      "type": "metric",
+                      "label": "Dépensé",
+                      "unit": "EUR",
+                      "module": "bpm",
+                      "value": 1520,
+                      "status": "ok",
+                      "formula": "budget.chargesRealisees + projets.chargesReglees",
+                      "explanation": "1 520 + 0 = 1 520",
+                      "parameter": {
+                        "key": "metric.bpm.charges",
+                        "revision": 0,
+                        "origin": "défaut du code",
+                        "updatedAt": null,
+                        "isDefault": true
+                      },
+                      "inputs": [
+                        {
+                          "name": "budget.chargesRealisees",
+                          "type": "variable",
+                          "label": "Charges réalisées",
+                          "unit": "EUR",
+                          "module": "budget",
+                          "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+                          "value": 1520,
+                          "status": "ok",
+                          "note": null,
+                          "sources": [
+                            {
+                              "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                              "kind": "operation",
+                              "label": "Alimentation",
+                              "amount": 450,
+                              "date": "2026-10-02",
+                              "status": "realized"
+                            },
+                            {
+                              "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                              "kind": "operation",
+                              "label": "Logement",
+                              "amount": 950,
+                              "date": "2026-10-02",
+                              "status": "realized"
+                            },
+                            {
+                              "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                              "kind": "operation",
+                              "label": "Transport",
+                              "amount": 120,
+                              "date": "2026-10-02",
+                              "status": "realized"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "projets.chargesReglees",
+                          "type": "variable",
+                          "label": "Charges des projets validées",
+                          "unit": "EUR",
+                          "module": "budget",
+                          "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+                          "value": 0,
+                          "status": "ok",
+                          "note": "Aucune charge de projet validée dans la période",
+                          "sources": []
+                        }
+                      ],
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.resteARecevoir",
+                  "type": "metric",
+                  "label": "À recevoir",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 0,
+                  "status": "ok",
+                  "formula": "budget.resteARecevoir",
+                  "explanation": "0 = 0",
+                  "parameter": {
+                    "key": "metric.bpm.resteARecevoir",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.resteARecevoir",
+                      "type": "variable",
+                      "label": "Revenus restant à recevoir",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Montants prévus des revenus non reçus (opérations et occurrences attendues) dont la date prévue est dans la période.",
+                      "value": 0,
+                      "status": "ok",
+                      "note": "Rien en attente sur la période",
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.resteAPayer",
+                  "type": "metric",
+                  "label": "À payer",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 0,
+                  "status": "ok",
+                  "formula": "budget.resteAPayer",
+                  "explanation": "0 = 0",
+                  "parameter": {
+                    "key": "metric.bpm.resteAPayer",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.resteAPayer",
+                      "type": "variable",
+                      "label": "Dépenses restant à payer",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Montants prévus des dépenses non payées (opérations et occurrences attendues) dont la date prévue est dans la période.",
+                      "value": 0,
+                      "status": "ok",
+                      "note": "Rien en attente sur la période",
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.recuAvance",
+              "type": "metric",
+              "label": "Reçu d’avance",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 0,
+              "status": "ok",
+              "formula": "budget.revenusAnticipes",
+              "explanation": "0 = 0",
+              "parameter": {
+                "key": "metric.bpm.recuAvance",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.revenusAnticipes",
+                  "type": "variable",
+                  "label": "Revenus reçus d’avance",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Revenus prévus dans la période mais reçus avant son début : ils comptent dans le réalisé de la période où ils ont été reçus.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Rien de réglé d’avance pour la période",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.payeAvance",
+              "type": "metric",
+              "label": "Payé d’avance",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 0,
+              "status": "ok",
+              "formula": "budget.chargesAnticipees",
+              "explanation": "0 = 0",
+              "parameter": {
+                "key": "metric.bpm.payeAvance",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.chargesAnticipees",
+                  "type": "variable",
+                  "label": "Charges payées d’avance",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Charges prévues dans la période mais payées avant son début : elles comptent dans le réalisé de la période où elles ont été payées.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Rien de réglé d’avance pour la période",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.tauxEpargne": {
+          "key": "bpm.tauxEpargne",
+          "label": "Taux d'épargne",
+          "unit": "%",
+          "decimals": 1,
+          "description": "Part des revenus reçus conservée sur la période.",
+          "module": "bpm",
+          "value": 52.5,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "pourcentage(bpm.resultatPeriode, bpm.revenus)",
+          "parameter": {
+            "key": "metric.bpm.tauxEpargne",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "pourcentage(1 680, 3 200) = 52,5",
+          "inputs": [
+            {
+              "name": "bpm.resultatPeriode",
+              "type": "metric",
+              "label": "Reste réel",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1680,
+              "status": "ok",
+              "formula": "bpm.revenus - bpm.charges",
+              "explanation": "3 200 − 1 520 = 1 680",
+              "parameter": {
+                "key": "metric.bpm.resultatPeriode",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "bpm.revenus",
+                  "type": "metric",
+                  "label": "Reçu",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 3200,
+                  "status": "ok",
+                  "formula": "budget.revenusRealises",
+                  "explanation": "3 200 = 3 200",
+                  "parameter": {
+                    "key": "metric.bpm.revenus",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.revenusRealises",
+                      "type": "variable",
+                      "label": "Revenus réalisés",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+                      "value": 3200,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                          "kind": "operation",
+                          "label": "Salaire mensuel de recette",
+                          "amount": 3200,
+                          "date": "2026-10-01",
+                          "status": "realized"
+                        }
+                      ]
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.charges",
+                  "type": "metric",
+                  "label": "Dépensé",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 1520,
+                  "status": "ok",
+                  "formula": "budget.chargesRealisees + projets.chargesReglees",
+                  "explanation": "1 520 + 0 = 1 520",
+                  "parameter": {
+                    "key": "metric.bpm.charges",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.chargesRealisees",
+                      "type": "variable",
+                      "label": "Charges réalisées",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+                      "value": 1520,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                          "kind": "operation",
+                          "label": "Alimentation",
+                          "amount": 450,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                          "kind": "operation",
+                          "label": "Logement",
+                          "amount": 950,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                          "kind": "operation",
+                          "label": "Transport",
+                          "amount": 120,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "projets.chargesReglees",
+                      "type": "variable",
+                      "label": "Charges des projets validées",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+                      "value": 0,
+                      "status": "ok",
+                      "note": "Aucune charge de projet validée dans la période",
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.revenus",
+              "type": "metric",
+              "label": "Reçu",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 3200,
+              "status": "ok",
+              "formula": "budget.revenusRealises",
+              "explanation": "3 200 = 3 200",
+              "parameter": {
+                "key": "metric.bpm.revenus",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.revenusRealises",
+                  "type": "variable",
+                  "label": "Revenus réalisés",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+                  "value": 3200,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                      "kind": "operation",
+                      "label": "Salaire mensuel de recette",
+                      "amount": 3200,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    }
+                  ]
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.revenusPrevus": {
+          "key": "bpm.revenusPrevus",
+          "label": "Revenus prévus (initial)",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Montants prévus des revenus datés dans la période, réglés ou non.",
+          "module": "bpm",
+          "value": 3200,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.revenusPrevus",
+          "parameter": {
+            "key": "metric.bpm.revenusPrevus",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "3 200 = 3 200",
+          "inputs": [
+            {
+              "name": "budget.revenusPrevus",
+              "type": "variable",
+              "label": "Revenus prévus",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Somme des montants prévus des revenus (opérations et occurrences attendues) dont la date prévue est dans la période, réglés ou non.",
+              "value": 3200,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                  "kind": "operation",
+                  "label": "Salaire mensuel de recette",
+                  "amount": 3200,
+                  "date": "2026-10-01",
+                  "status": "realized"
+                }
+              ]
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.chargesPrevues": {
+          "key": "bpm.chargesPrevues",
+          "label": "Charges prévues (initial)",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Montants prévus des charges datées dans la période, réglées ou non.",
+          "module": "bpm",
+          "value": 1520,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "budget.chargesPrevues",
+          "parameter": {
+            "key": "metric.bpm.chargesPrevues",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "1 520 = 1 520",
+          "inputs": [
+            {
+              "name": "budget.chargesPrevues",
+              "type": "variable",
+              "label": "Charges prévues",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Somme des montants prévus des charges (opérations et occurrences attendues) dont la date prévue est dans la période, réglées ou non.",
+              "value": 1520,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                  "kind": "operation",
+                  "label": "Alimentation",
+                  "amount": 450,
+                  "date": "2026-10-01",
+                  "status": "realized"
+                },
+                {
+                  "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                  "kind": "operation",
+                  "label": "Logement",
+                  "amount": 950,
+                  "date": "2026-10-01",
+                  "status": "realized"
+                },
+                {
+                  "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                  "kind": "operation",
+                  "label": "Transport",
+                  "amount": 120,
+                  "date": "2026-10-01",
+                  "status": "realized"
+                }
+              ]
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.resultatPrevu": {
+          "key": "bpm.resultatPrevu",
+          "label": "Budget initial",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Solde du budget prévisionnel initial (montants prévus). Référence, distincte du solde attendu.",
+          "module": "bpm",
+          "value": 1680,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "bpm.revenusPrevus - bpm.chargesPrevues",
+          "parameter": {
+            "key": "metric.bpm.resultatPrevu",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "3 200 − 1 520 = 1 680",
+          "inputs": [
+            {
+              "name": "bpm.revenusPrevus",
+              "type": "metric",
+              "label": "Revenus prévus (initial)",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 3200,
+              "status": "ok",
+              "formula": "budget.revenusPrevus",
+              "explanation": "3 200 = 3 200",
+              "parameter": {
+                "key": "metric.bpm.revenusPrevus",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.revenusPrevus",
+                  "type": "variable",
+                  "label": "Revenus prévus",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Somme des montants prévus des revenus (opérations et occurrences attendues) dont la date prévue est dans la période, réglés ou non.",
+                  "value": 3200,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                      "kind": "operation",
+                      "label": "Salaire mensuel de recette",
+                      "amount": 3200,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    }
+                  ]
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.chargesPrevues",
+              "type": "metric",
+              "label": "Charges prévues (initial)",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1520,
+              "status": "ok",
+              "formula": "budget.chargesPrevues",
+              "explanation": "1 520 = 1 520",
+              "parameter": {
+                "key": "metric.bpm.chargesPrevues",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.chargesPrevues",
+                  "type": "variable",
+                  "label": "Charges prévues",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Somme des montants prévus des charges (opérations et occurrences attendues) dont la date prévue est dans la période, réglées ou non.",
+                  "value": 1520,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                      "kind": "operation",
+                      "label": "Alimentation",
+                      "amount": 450,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    },
+                    {
+                      "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                      "kind": "operation",
+                      "label": "Logement",
+                      "amount": 950,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    },
+                    {
+                      "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                      "kind": "operation",
+                      "label": "Transport",
+                      "amount": 120,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    }
+                  ]
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.ecartResultat": {
+          "key": "bpm.ecartResultat",
+          "label": "Écart au budget initial",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Solde attendu moins budget initial.",
+          "module": "bpm",
+          "value": 0,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "bpm.soldeAttendu - bpm.resultatPrevu",
+          "parameter": {
+            "key": "metric.bpm.ecartResultat",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "1 680 − 1 680 = 0",
+          "inputs": [
+            {
+              "name": "bpm.soldeAttendu",
+              "type": "metric",
+              "label": "Solde prévu à la clôture",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1680,
+              "status": "ok",
+              "formula": "bpm.resultatPeriode + bpm.resteARecevoir - bpm.resteAPayer",
+              "explanation": "(1 680 + 0) − 0 = 1 680",
+              "parameter": {
+                "key": "metric.bpm.soldeAttendu",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "bpm.resultatPeriode",
+                  "type": "metric",
+                  "label": "Reste réel",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 1680,
+                  "status": "ok",
+                  "formula": "bpm.revenus - bpm.charges",
+                  "explanation": "3 200 − 1 520 = 1 680",
+                  "parameter": {
+                    "key": "metric.bpm.resultatPeriode",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "bpm.revenus",
+                      "type": "metric",
+                      "label": "Reçu",
+                      "unit": "EUR",
+                      "module": "bpm",
+                      "value": 3200,
+                      "status": "ok",
+                      "formula": "budget.revenusRealises",
+                      "explanation": "3 200 = 3 200",
+                      "parameter": {
+                        "key": "metric.bpm.revenus",
+                        "revision": 0,
+                        "origin": "défaut du code",
+                        "updatedAt": null,
+                        "isDefault": true
+                      },
+                      "inputs": [
+                        {
+                          "name": "budget.revenusRealises",
+                          "type": "variable",
+                          "label": "Revenus réalisés",
+                          "unit": "EUR",
+                          "module": "budget",
+                          "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+                          "value": 3200,
+                          "status": "ok",
+                          "note": null,
+                          "sources": [
+                            {
+                              "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                              "kind": "operation",
+                              "label": "Salaire mensuel de recette",
+                              "amount": 3200,
+                              "date": "2026-10-01",
+                              "status": "realized"
+                            }
+                          ]
+                        }
+                      ],
+                      "sources": []
+                    },
+                    {
+                      "name": "bpm.charges",
+                      "type": "metric",
+                      "label": "Dépensé",
+                      "unit": "EUR",
+                      "module": "bpm",
+                      "value": 1520,
+                      "status": "ok",
+                      "formula": "budget.chargesRealisees + projets.chargesReglees",
+                      "explanation": "1 520 + 0 = 1 520",
+                      "parameter": {
+                        "key": "metric.bpm.charges",
+                        "revision": 0,
+                        "origin": "défaut du code",
+                        "updatedAt": null,
+                        "isDefault": true
+                      },
+                      "inputs": [
+                        {
+                          "name": "budget.chargesRealisees",
+                          "type": "variable",
+                          "label": "Charges réalisées",
+                          "unit": "EUR",
+                          "module": "budget",
+                          "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+                          "value": 1520,
+                          "status": "ok",
+                          "note": null,
+                          "sources": [
+                            {
+                              "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                              "kind": "operation",
+                              "label": "Alimentation",
+                              "amount": 450,
+                              "date": "2026-10-02",
+                              "status": "realized"
+                            },
+                            {
+                              "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                              "kind": "operation",
+                              "label": "Logement",
+                              "amount": 950,
+                              "date": "2026-10-02",
+                              "status": "realized"
+                            },
+                            {
+                              "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                              "kind": "operation",
+                              "label": "Transport",
+                              "amount": 120,
+                              "date": "2026-10-02",
+                              "status": "realized"
+                            }
+                          ]
+                        },
+                        {
+                          "name": "projets.chargesReglees",
+                          "type": "variable",
+                          "label": "Charges des projets validées",
+                          "unit": "EUR",
+                          "module": "budget",
+                          "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+                          "value": 0,
+                          "status": "ok",
+                          "note": "Aucune charge de projet validée dans la période",
+                          "sources": []
+                        }
+                      ],
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.resteARecevoir",
+                  "type": "metric",
+                  "label": "À recevoir",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 0,
+                  "status": "ok",
+                  "formula": "budget.resteARecevoir",
+                  "explanation": "0 = 0",
+                  "parameter": {
+                    "key": "metric.bpm.resteARecevoir",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.resteARecevoir",
+                      "type": "variable",
+                      "label": "Revenus restant à recevoir",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Montants prévus des revenus non reçus (opérations et occurrences attendues) dont la date prévue est dans la période.",
+                      "value": 0,
+                      "status": "ok",
+                      "note": "Rien en attente sur la période",
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.resteAPayer",
+                  "type": "metric",
+                  "label": "À payer",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 0,
+                  "status": "ok",
+                  "formula": "budget.resteAPayer",
+                  "explanation": "0 = 0",
+                  "parameter": {
+                    "key": "metric.bpm.resteAPayer",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.resteAPayer",
+                      "type": "variable",
+                      "label": "Dépenses restant à payer",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Montants prévus des dépenses non payées (opérations et occurrences attendues) dont la date prévue est dans la période.",
+                      "value": 0,
+                      "status": "ok",
+                      "note": "Rien en attente sur la période",
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.resultatPrevu",
+              "type": "metric",
+              "label": "Budget initial",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1680,
+              "status": "ok",
+              "formula": "bpm.revenusPrevus - bpm.chargesPrevues",
+              "explanation": "3 200 − 1 520 = 1 680",
+              "parameter": {
+                "key": "metric.bpm.resultatPrevu",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "bpm.revenusPrevus",
+                  "type": "metric",
+                  "label": "Revenus prévus (initial)",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 3200,
+                  "status": "ok",
+                  "formula": "budget.revenusPrevus",
+                  "explanation": "3 200 = 3 200",
+                  "parameter": {
+                    "key": "metric.bpm.revenusPrevus",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.revenusPrevus",
+                      "type": "variable",
+                      "label": "Revenus prévus",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des montants prévus des revenus (opérations et occurrences attendues) dont la date prévue est dans la période, réglés ou non.",
+                      "value": 3200,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                          "kind": "operation",
+                          "label": "Salaire mensuel de recette",
+                          "amount": 3200,
+                          "date": "2026-10-01",
+                          "status": "realized"
+                        }
+                      ]
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.chargesPrevues",
+                  "type": "metric",
+                  "label": "Charges prévues (initial)",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 1520,
+                  "status": "ok",
+                  "formula": "budget.chargesPrevues",
+                  "explanation": "1 520 = 1 520",
+                  "parameter": {
+                    "key": "metric.bpm.chargesPrevues",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.chargesPrevues",
+                      "type": "variable",
+                      "label": "Charges prévues",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des montants prévus des charges (opérations et occurrences attendues) dont la date prévue est dans la période, réglées ou non.",
+                      "value": 1520,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                          "kind": "operation",
+                          "label": "Alimentation",
+                          "amount": 450,
+                          "date": "2026-10-01",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                          "kind": "operation",
+                          "label": "Logement",
+                          "amount": 950,
+                          "date": "2026-10-01",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                          "kind": "operation",
+                          "label": "Transport",
+                          "amount": 120,
+                          "date": "2026-10-01",
+                          "status": "realized"
+                        }
+                      ]
+                    }
+                  ],
+                  "sources": []
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.consommationCharges": {
+          "key": "bpm.consommationCharges",
+          "label": "Charges consommées",
+          "unit": "%",
+          "decimals": 0,
+          "description": "Dépenses payées du budget de vie rapportées à ses charges prévues (les charges des projets, comptées à leur validation, n’ont pas de prévu dans le budget de vie).",
+          "module": "bpm",
+          "value": 100,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "pourcentage(budget.chargesRealisees, bpm.chargesPrevues)",
+          "parameter": {
+            "key": "metric.bpm.consommationCharges",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "pourcentage(1 520, 1 520) = 100",
+          "inputs": [
+            {
+              "name": "budget.chargesRealisees",
+              "type": "variable",
+              "label": "Charges réalisées",
+              "unit": "EUR",
+              "module": "budget",
+              "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+              "value": 1520,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                  "kind": "operation",
+                  "label": "Alimentation",
+                  "amount": 450,
+                  "date": "2026-10-02",
+                  "status": "realized"
+                },
+                {
+                  "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                  "kind": "operation",
+                  "label": "Logement",
+                  "amount": 950,
+                  "date": "2026-10-02",
+                  "status": "realized"
+                },
+                {
+                  "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                  "kind": "operation",
+                  "label": "Transport",
+                  "amount": 120,
+                  "date": "2026-10-02",
+                  "status": "realized"
+                }
+              ]
+            },
+            {
+              "name": "bpm.chargesPrevues",
+              "type": "metric",
+              "label": "Charges prévues (initial)",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1520,
+              "status": "ok",
+              "formula": "budget.chargesPrevues",
+              "explanation": "1 520 = 1 520",
+              "parameter": {
+                "key": "metric.bpm.chargesPrevues",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "budget.chargesPrevues",
+                  "type": "variable",
+                  "label": "Charges prévues",
+                  "unit": "EUR",
+                  "module": "budget",
+                  "description": "Somme des montants prévus des charges (opérations et occurrences attendues) dont la date prévue est dans la période, réglées ou non.",
+                  "value": 1520,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                      "kind": "operation",
+                      "label": "Alimentation",
+                      "amount": 450,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    },
+                    {
+                      "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                      "kind": "operation",
+                      "label": "Logement",
+                      "amount": 950,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    },
+                    {
+                      "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                      "kind": "operation",
+                      "label": "Transport",
+                      "amount": 120,
+                      "date": "2026-10-01",
+                      "status": "realized"
+                    }
+                  ]
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.patrimoineConstitue": {
+          "key": "bpm.patrimoineConstitue",
+          "label": "Stock enregistré",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Stock d'ouverture et résultats capitalisés avant le début de la période (C09 [P]). La période lue n'y est pas encore incluse.",
+          "module": "bpm",
+          "value": 10000,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "patrimoine.stockOuverture + patrimoine.resultatsCapitalises",
+          "parameter": {
+            "key": "metric.bpm.patrimoineConstitue",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "10 000 + 0 = 10 000",
+          "inputs": [
+            {
+              "name": "patrimoine.stockOuverture",
+              "type": "variable",
+              "label": "Stock d'ouverture",
+              "unit": "EUR",
+              "module": "patrimoine",
+              "description": "Stock du Patrimoine à la date d'ouverture, saisi à la création ou plus tard. Inconnu tant qu'il n'est pas renseigné.",
+              "value": 10000,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+                  "kind": "patrimoine",
+                  "label": "Stock d'ouverture",
+                  "amount": 10000,
+                  "date": "2026-10-01"
+                }
+              ]
+            },
+            {
+              "name": "patrimoine.resultatsCapitalises",
+              "type": "variable",
+              "label": "Résultats capitalisés",
+              "unit": "EUR",
+              "module": "patrimoine",
+              "description": "Somme des résultats de périodes closes transférés au Patrimoine (capitalisations), à la date du jour.",
+              "value": 0,
+              "status": "ok",
+              "note": "Aucune période close",
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.patrimoineFinPeriode": {
+          "key": "bpm.patrimoineFinPeriode",
+          "label": "Estimation après la période",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Stock enregistré + effet signé de la période (une seule fois).",
+          "module": "bpm",
+          "value": 11680,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "bpm.patrimoineConstitue + bpm.resultatPeriode",
+          "parameter": {
+            "key": "metric.bpm.patrimoineFinPeriode",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "10 000 + 1 680 = 11 680",
+          "inputs": [
+            {
+              "name": "bpm.patrimoineConstitue",
+              "type": "metric",
+              "label": "Stock enregistré",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 10000,
+              "status": "ok",
+              "formula": "patrimoine.stockOuverture + patrimoine.resultatsCapitalises",
+              "explanation": "10 000 + 0 = 10 000",
+              "parameter": {
+                "key": "metric.bpm.patrimoineConstitue",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "patrimoine.stockOuverture",
+                  "type": "variable",
+                  "label": "Stock d'ouverture",
+                  "unit": "EUR",
+                  "module": "patrimoine",
+                  "description": "Stock du Patrimoine à la date d'ouverture, saisi à la création ou plus tard. Inconnu tant qu'il n'est pas renseigné.",
+                  "value": 10000,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+                      "kind": "patrimoine",
+                      "label": "Stock d'ouverture",
+                      "amount": 10000,
+                      "date": "2026-10-01"
+                    }
+                  ]
+                },
+                {
+                  "name": "patrimoine.resultatsCapitalises",
+                  "type": "variable",
+                  "label": "Résultats capitalisés",
+                  "unit": "EUR",
+                  "module": "patrimoine",
+                  "description": "Somme des résultats de périodes closes transférés au Patrimoine (capitalisations), à la date du jour.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Aucune période close",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "bpm.resultatPeriode",
+              "type": "metric",
+              "label": "Reste réel",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 1680,
+              "status": "ok",
+              "formula": "bpm.revenus - bpm.charges",
+              "explanation": "3 200 − 1 520 = 1 680",
+              "parameter": {
+                "key": "metric.bpm.resultatPeriode",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "bpm.revenus",
+                  "type": "metric",
+                  "label": "Reçu",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 3200,
+                  "status": "ok",
+                  "formula": "budget.revenusRealises",
+                  "explanation": "3 200 = 3 200",
+                  "parameter": {
+                    "key": "metric.bpm.revenus",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.revenusRealises",
+                      "type": "variable",
+                      "label": "Revenus réalisés",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».",
+                      "value": 3200,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+                          "kind": "operation",
+                          "label": "Salaire mensuel de recette",
+                          "amount": 3200,
+                          "date": "2026-10-01",
+                          "status": "realized"
+                        }
+                      ]
+                    }
+                  ],
+                  "sources": []
+                },
+                {
+                  "name": "bpm.charges",
+                  "type": "metric",
+                  "label": "Dépensé",
+                  "unit": "EUR",
+                  "module": "bpm",
+                  "value": 1520,
+                  "status": "ok",
+                  "formula": "budget.chargesRealisees + projets.chargesReglees",
+                  "explanation": "1 520 + 0 = 1 520",
+                  "parameter": {
+                    "key": "metric.bpm.charges",
+                    "revision": 0,
+                    "origin": "défaut du code",
+                    "updatedAt": null,
+                    "isDefault": true
+                  },
+                  "inputs": [
+                    {
+                      "name": "budget.chargesRealisees",
+                      "type": "variable",
+                      "label": "Charges réalisées",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Somme des charges réalisées datées dans la période, Budget « Projet de vie ».",
+                      "value": 1520,
+                      "status": "ok",
+                      "note": null,
+                      "sources": [
+                        {
+                          "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+                          "kind": "operation",
+                          "label": "Alimentation",
+                          "amount": 450,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+                          "kind": "operation",
+                          "label": "Logement",
+                          "amount": 950,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        },
+                        {
+                          "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d",
+                          "kind": "operation",
+                          "label": "Transport",
+                          "amount": 120,
+                          "date": "2026-10-02",
+                          "status": "realized"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "projets.chargesReglees",
+                      "type": "variable",
+                      "label": "Charges des projets validées",
+                      "unit": "EUR",
+                      "module": "budget",
+                      "description": "Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.",
+                      "value": 0,
+                      "status": "ok",
+                      "note": "Aucune charge de projet validée dans la période",
+                      "sources": []
+                    }
+                  ],
+                  "sources": []
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.progressionObjectif": {
+          "key": "bpm.progressionObjectif",
+          "label": "Atteinte de l'objectif",
+          "unit": "%",
+          "decimals": 0,
+          "description": "Stock enregistré rapporté à l’objectif de stock (C10 [P]).",
+          "module": "bpm",
+          "value": 40,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "pourcentage(bpm.patrimoineConstitue, patrimoine.objectif)",
+          "parameter": {
+            "key": "metric.bpm.progressionObjectif",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "pourcentage(10 000, 25 000) = 40",
+          "inputs": [
+            {
+              "name": "bpm.patrimoineConstitue",
+              "type": "metric",
+              "label": "Stock enregistré",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 10000,
+              "status": "ok",
+              "formula": "patrimoine.stockOuverture + patrimoine.resultatsCapitalises",
+              "explanation": "10 000 + 0 = 10 000",
+              "parameter": {
+                "key": "metric.bpm.patrimoineConstitue",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "patrimoine.stockOuverture",
+                  "type": "variable",
+                  "label": "Stock d'ouverture",
+                  "unit": "EUR",
+                  "module": "patrimoine",
+                  "description": "Stock du Patrimoine à la date d'ouverture, saisi à la création ou plus tard. Inconnu tant qu'il n'est pas renseigné.",
+                  "value": 10000,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+                      "kind": "patrimoine",
+                      "label": "Stock d'ouverture",
+                      "amount": 10000,
+                      "date": "2026-10-01"
+                    }
+                  ]
+                },
+                {
+                  "name": "patrimoine.resultatsCapitalises",
+                  "type": "variable",
+                  "label": "Résultats capitalisés",
+                  "unit": "EUR",
+                  "module": "patrimoine",
+                  "description": "Somme des résultats de périodes closes transférés au Patrimoine (capitalisations), à la date du jour.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Aucune période close",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            },
+            {
+              "name": "patrimoine.objectif",
+              "type": "variable",
+              "label": "Objectif de patrimoine",
+              "unit": "EUR",
+              "module": "patrimoine",
+              "description": "[P] Montant visé (C10 : information seule, aucune règle ne s’y attache).",
+              "value": 25000,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+                  "kind": "patrimoine",
+                  "label": "Objectif",
+                  "amount": 25000,
+                  "date": null
+                }
+              ]
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        },
+        "bpm.resteObjectif": {
+          "key": "bpm.resteObjectif",
+          "label": "Reste pour l'objectif",
+          "unit": "EUR",
+          "decimals": 2,
+          "description": "Montant restant à constituer pour atteindre l'objectif de stock.",
+          "module": "bpm",
+          "value": 15000,
+          "status": "ok",
+          "unavailableReason": null,
+          "formula": "max(patrimoine.objectif - bpm.patrimoineConstitue, 0)",
+          "parameter": {
+            "key": "metric.bpm.resteObjectif",
+            "revision": 0,
+            "origin": "défaut du code",
+            "updatedAt": null,
+            "isDefault": true
+          },
+          "explanation": "max((25 000 − 10 000), 0) = 15 000",
+          "inputs": [
+            {
+              "name": "patrimoine.objectif",
+              "type": "variable",
+              "label": "Objectif de patrimoine",
+              "unit": "EUR",
+              "module": "patrimoine",
+              "description": "[P] Montant visé (C10 : information seule, aucune règle ne s’y attache).",
+              "value": 25000,
+              "status": "ok",
+              "note": null,
+              "sources": [
+                {
+                  "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+                  "kind": "patrimoine",
+                  "label": "Objectif",
+                  "amount": 25000,
+                  "date": null
+                }
+              ]
+            },
+            {
+              "name": "bpm.patrimoineConstitue",
+              "type": "metric",
+              "label": "Stock enregistré",
+              "unit": "EUR",
+              "module": "bpm",
+              "value": 10000,
+              "status": "ok",
+              "formula": "patrimoine.stockOuverture + patrimoine.resultatsCapitalises",
+              "explanation": "10 000 + 0 = 10 000",
+              "parameter": {
+                "key": "metric.bpm.patrimoineConstitue",
+                "revision": 0,
+                "origin": "défaut du code",
+                "updatedAt": null,
+                "isDefault": true
+              },
+              "inputs": [
+                {
+                  "name": "patrimoine.stockOuverture",
+                  "type": "variable",
+                  "label": "Stock d'ouverture",
+                  "unit": "EUR",
+                  "module": "patrimoine",
+                  "description": "Stock du Patrimoine à la date d'ouverture, saisi à la création ou plus tard. Inconnu tant qu'il n'est pas renseigné.",
+                  "value": 10000,
+                  "status": "ok",
+                  "note": null,
+                  "sources": [
+                    {
+                      "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+                      "kind": "patrimoine",
+                      "label": "Stock d'ouverture",
+                      "amount": 10000,
+                      "date": "2026-10-01"
+                    }
+                  ]
+                },
+                {
+                  "name": "patrimoine.resultatsCapitalises",
+                  "type": "variable",
+                  "label": "Résultats capitalisés",
+                  "unit": "EUR",
+                  "module": "patrimoine",
+                  "description": "Somme des résultats de périodes closes transférés au Patrimoine (capitalisations), à la date du jour.",
+                  "value": 0,
+                  "status": "ok",
+                  "note": "Aucune période close",
+                  "sources": []
+                }
+              ],
+              "sources": []
+            }
+          ],
+          "period": {
+            "key": "2026-10",
+            "index": 24321,
+            "start": "2026-10-01",
+            "end": "2026-10-31",
+            "label": "Octobre 2026",
+            "status": "ended",
+            "closureId": null
+          }
+        }
+      },
+      "stockBeforeCents": 1000000,
+      "sourceOperationIds": [
+        "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5",
+        "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa",
+        "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb",
+        "op_23127db5-1985-4744-8f30-068cd2c8f87d"
+      ]
     }
   },
   "lifeGoals": {
@@ -505124,6 +508392,26 @@
       "patrimoineId": "pat_e08c807d-88c1-494e-89b0-bffad9e1646b",
       "coreProjectId": "prj_9f6c6cd5-c926-401a-9eb4-018eadae166c",
       "removed": false
+    },
+    "obj_37727422-7346-4a40-9cc0-fd84367e60c7": {
+      "id": "obj_37727422-7346-4a40-9cc0-fd84367e60c7",
+      "kind": "lifeGoal",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:16:01.827Z",
+      "updatedAt": "2026-11-07T18:16:01.827Z",
+      "provenance": {
+        "command": "createGoal",
+        "requestKey": "goal-ee74cb2a-c9b8-4e6a-8712-5ab2f66c89f7",
+        "at": "2026-11-07T18:16:01.827Z"
+      },
+      "label": "Réserve de sécurité · recette BPM",
+      "type": "securite",
+      "date": "2027-06-01",
+      "targetTodayCents": 200000,
+      "patrimoineId": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+      "coreProjectId": "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+      "removed": false
     }
   },
   "projectOverruns": {
@@ -505462,6 +508750,35 @@
         "command": "billProjectOverruns",
         "at": "2026-11-06T13:26:41.114Z"
       }
+    },
+    "ovr_44f70225-df1d-4346-9d59-58cf10473a67": {
+      "id": "ovr_44f70225-df1d-4346-9d59-58cf10473a67",
+      "kind": "projectOverrun",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T18:07:16.023Z",
+      "updatedAt": "2026-11-07T18:07:38.382Z",
+      "provenance": {
+        "command": "decideTaskBudget",
+        "requestKey": null,
+        "at": "2026-11-07T18:07:16.023Z"
+      },
+      "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "taskId": "tsk_fdc67588-be59-476f-b49c-46a8ba767466",
+      "taskBudgetRequestId": "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789",
+      "reason": "ventilation",
+      "amountCents": 5000,
+      "note": null,
+      "status": "approved",
+      "requestedAt": "2026-11-07",
+      "decidedAt": "2026-11-07",
+      "billingDate": "2026-11-30",
+      "periodKey": "2026-11",
+      "billedAt": null,
+      "lastChange": {
+        "command": "decideProjectOverrun",
+        "at": "2026-11-07T18:07:38.382Z"
+      }
     }
   },
   "taskBudgetRequests": {
@@ -505748,6 +509065,102 @@
         "command": "decideTaskBudget",
         "at": "2026-11-07T17:02:55.082Z"
       }
+    },
+    "dmt_f3d6efc6-ba14-4cde-9bd3-5b10b36933aa": {
+      "id": "dmt_f3d6efc6-ba14-4cde-9bd3-5b10b36933aa",
+      "kind": "taskBudgetRequest",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T18:05:56.895Z",
+      "updatedAt": "2026-11-07T18:06:20.465Z",
+      "provenance": {
+        "command": "requestTaskBudget",
+        "requestKey": "web-6a94ffd7-ab36-4a85-becb-3001bdc452a9",
+        "at": "2026-11-07T18:05:56.895Z"
+      },
+      "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "taskId": "tsk_858d3e70-58de-4c18-b970-d52411fddcde",
+      "amountCents": 12000,
+      "note": "Peinture et préparation de la pièce",
+      "status": "approved",
+      "requestedAt": "2026-11-07",
+      "decidedAt": "2026-11-07",
+      "overrunId": null,
+      "lastChange": {
+        "command": "decideTaskBudget",
+        "at": "2026-11-07T18:06:20.465Z"
+      }
+    },
+    "dmt_02b65204-037e-4f1b-bd9c-c5951ba32f4a": {
+      "id": "dmt_02b65204-037e-4f1b-bd9c-c5951ba32f4a",
+      "kind": "taskBudgetRequest",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T18:06:54.742Z",
+      "updatedAt": "2026-11-07T18:06:56.783Z",
+      "provenance": {
+        "command": "requestTaskBudget",
+        "requestKey": "web-2eb3954f-48c5-45fc-9db8-9b772adaf8a7",
+        "at": "2026-11-07T18:06:54.742Z"
+      },
+      "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "taskId": "tsk_fdc67588-be59-476f-b49c-46a8ba767466",
+      "amountCents": 18000,
+      "note": "Peinture de qualité pour le bureau",
+      "status": "refused",
+      "requestedAt": "2026-11-07",
+      "decidedAt": "2026-11-07",
+      "overrunId": null,
+      "lastChange": {
+        "command": "decideTaskBudget",
+        "at": "2026-11-07T18:06:56.783Z"
+      }
+    },
+    "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789": {
+      "id": "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789",
+      "kind": "taskBudgetRequest",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 3,
+      "createdAt": "2026-11-07T18:07:00.844Z",
+      "updatedAt": "2026-11-07T18:07:38.382Z",
+      "provenance": {
+        "command": "requestTaskBudget",
+        "requestKey": "web-0dd7c5e0-dbb0-4faa-893a-9165955ee5b1",
+        "at": "2026-11-07T18:07:00.844Z"
+      },
+      "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "taskId": "tsk_fdc67588-be59-476f-b49c-46a8ba767466",
+      "amountCents": 18000,
+      "note": null,
+      "status": "approved",
+      "requestedAt": "2026-11-07",
+      "decidedAt": "2026-11-07",
+      "overrunId": "ovr_44f70225-df1d-4346-9d59-58cf10473a67",
+      "lastChange": {
+        "command": "decideProjectOverrun",
+        "at": "2026-11-07T18:07:38.382Z"
+      }
+    },
+    "dmt_9ebf472e-8e4a-45bf-9420-ed3ee70c4f4b": {
+      "id": "dmt_9ebf472e-8e4a-45bf-9420-ed3ee70c4f4b",
+      "kind": "taskBudgetRequest",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 1,
+      "createdAt": "2026-11-07T18:24:17.498Z",
+      "updatedAt": "2026-11-07T18:24:17.498Z",
+      "provenance": {
+        "command": "requestTaskBudget",
+        "requestKey": "web-163cfd70-2d47-494d-83c2-54b1afd35583",
+        "at": "2026-11-07T18:24:17.498Z"
+      },
+      "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c",
+      "taskId": "tsk_228f4b01-b4c2-48bf-a880-5c09d4314577",
+      "amountCents": 7000,
+      "note": "Étagère du bureau · demande à revoir après la recette",
+      "status": "pending",
+      "requestedAt": "2026-11-07",
+      "decidedAt": null,
+      "overrunId": null
     }
   },
   "creationRequests": {
@@ -544409,6 +547822,468 @@
         "categoryId": "cat_0b2a9e44-609f-47b4-bd46-95671da983a3"
       },
       "completedAt": "2026-11-07T17:18:45.985Z"
+    },
+    "web-4bc86379-a4e3-4829-a643-17ae6a872036": {
+      "requestKey": "web-4bc86379-a4e3-4829-a643-17ae6a872036",
+      "command": "createUser",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "d7cf9f67f858fa4afc82e4a8c95907dbda08e7f9483ec403b0245b85a5705680",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "user",
+          "id": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e"
+        },
+        {
+          "kind": "coreProject",
+          "id": "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_0587ced0-886f-42f8-834f-61b0f48e117c"
+        },
+        {
+          "kind": "patrimoine",
+          "id": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5"
+        },
+        {
+          "kind": "bpmComposition",
+          "id": "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94"
+        },
+        {
+          "kind": "cycleLink",
+          "id": "cyc_4457ea5a-1c8b-4d97-a646-91eb7e4d88ed"
+        }
+      ],
+      "result": {
+        "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+        "coreProjectId": "prj_ee4304c0-5e0c-4c45-a9a7-a954a89f0273",
+        "budgetId": "bud_0587ced0-886f-42f8-834f-61b0f48e117c",
+        "patrimoineId": "pat_32888220-1279-4b4a-83f3-e99cbd7ddaa5",
+        "bpmCompositionId": "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94",
+        "cycleLinkId": "cyc_4457ea5a-1c8b-4d97-a646-91eb7e4d88ed"
+      },
+      "completedAt": "2026-11-07T17:54:00.995Z"
+    },
+    "setup-a4a9aace-923a-453a-a98e-3bd4526a0671": {
+      "requestKey": "setup-a4a9aace-923a-453a-a98e-3bd4526a0671",
+      "command": "setupProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "151b6d1bc5cf37fa8343136813395705579bfdbcb7b28140f2246c28ec84ab08",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "recurrence",
+          "id": "rec_7930d110-6b34-44ad-9bb9-e2c973d604f2"
+        },
+        {
+          "kind": "recurrence",
+          "id": "rec_5fed93d6-4f57-4a6c-9513-8d5bcf98507d"
+        },
+        {
+          "kind": "recurrence",
+          "id": "rec_610037fa-d5a2-4384-99e5-728064221350"
+        },
+        {
+          "kind": "recurrence",
+          "id": "rec_0337e7f2-02e4-4d91-ad4a-2710dd6148ef"
+        }
+      ],
+      "result": {
+        "mode": "principal",
+        "bpmCompositionId": "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94",
+        "created": [
+          "rec_7930d110-6b34-44ad-9bb9-e2c973d604f2",
+          "rec_5fed93d6-4f57-4a6c-9513-8d5bcf98507d",
+          "rec_610037fa-d5a2-4384-99e5-728064221350",
+          "rec_0337e7f2-02e4-4d91-ad4a-2710dd6148ef"
+        ],
+        "updated": []
+      },
+      "completedAt": "2026-11-07T17:56:45.278Z"
+    },
+    "category-f5c21b36-b906-41a7-9ea1-9b078dff3432": {
+      "requestKey": "category-f5c21b36-b906-41a7-9ea1-9b078dff3432",
+      "command": "createChargeCategory",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "7e9f8e28fab36cb65aabe17fe15e1ca2d3693c1072a8fbc3d422844d465f1235",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "chargeCategory",
+          "id": "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09"
+        }
+      ],
+      "result": {
+        "categoryId": "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09"
+      },
+      "completedAt": "2026-11-07T17:57:43.803Z"
+    },
+    "entry-d46accb1-b42d-4fb2-9eaa-477a9bf6b148": {
+      "requestKey": "entry-d46accb1-b42d-4fb2-9eaa-477a9bf6b148",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "3bb564b9c950026bd2c60ae96efdd06e05313248ee01e0380d8a923c25ff18c3",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_7a47a373-0b05-402e-a993-fdd14a8c85bb"
+        }
+      ],
+      "result": {
+        "operationId": "op_7a47a373-0b05-402e-a993-fdd14a8c85bb"
+      },
+      "completedAt": "2026-11-07T17:57:54.182Z"
+    },
+    "web-fabca630-6142-48f1-8fa3-80077c25962f": {
+      "requestKey": "web-fabca630-6142-48f1-8fa3-80077c25962f",
+      "command": "createBpmProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "e6ba296c61617b5a632ff9d2798c7e6cd5af9d7fd5d4a8c53c911973ce9caa6f",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_95575a34-be82-4719-abf8-053902177331"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c"
+        }
+      ],
+      "result": {
+        "coreProjectId": "prj_95575a34-be82-4719-abf8-053902177331",
+        "budgetId": "bud_a72f6ca2-b9bb-438d-b70c-68bfc45c077c"
+      },
+      "completedAt": "2026-11-07T18:01:23.370Z"
+    },
+    "web-0503f9d5-ff71-49f6-967d-8200ac00b0f3": {
+      "requestKey": "web-0503f9d5-ff71-49f6-967d-8200ac00b0f3",
+      "command": "createBpmTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "67176c9eaed01722b68bbd410199fd8eba20187ed677641897a6d7935b59b62a",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_858d3e70-58de-4c18-b970-d52411fddcde"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_858d3e70-58de-4c18-b970-d52411fddcde"
+      },
+      "completedAt": "2026-11-07T18:04:00.223Z"
+    },
+    "web-d821fc42-bd8e-47e7-9485-f86c4c4996c4": {
+      "requestKey": "web-d821fc42-bd8e-47e7-9485-f86c4c4996c4",
+      "command": "createBpmTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "a96f8b261507b9860013e820b526958cd3845d96c009ea0e77c127526c900f24",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_fdc67588-be59-476f-b49c-46a8ba767466"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_fdc67588-be59-476f-b49c-46a8ba767466"
+      },
+      "completedAt": "2026-11-07T18:04:18.400Z"
+    },
+    "web-6a94ffd7-ab36-4a85-becb-3001bdc452a9": {
+      "requestKey": "web-6a94ffd7-ab36-4a85-becb-3001bdc452a9",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "49b708f5c1e9fb9c8d50c0605cbfb56fb688619b8753eaf23431e1a928817ed9",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "taskBudgetRequest",
+          "id": "dmt_f3d6efc6-ba14-4cde-9bd3-5b10b36933aa"
+        }
+      ],
+      "result": {
+        "requestId": "dmt_f3d6efc6-ba14-4cde-9bd3-5b10b36933aa"
+      },
+      "completedAt": "2026-11-07T18:05:56.895Z"
+    },
+    "web-2eb3954f-48c5-45fc-9db8-9b772adaf8a7": {
+      "requestKey": "web-2eb3954f-48c5-45fc-9db8-9b772adaf8a7",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "3c464bfa7722d7279e54e4e0171a39ae9f43d23949d7d49816ab4af053c3db24",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "taskBudgetRequest",
+          "id": "dmt_02b65204-037e-4f1b-bd9c-c5951ba32f4a"
+        }
+      ],
+      "result": {
+        "requestId": "dmt_02b65204-037e-4f1b-bd9c-c5951ba32f4a"
+      },
+      "completedAt": "2026-11-07T18:06:54.742Z"
+    },
+    "web-0dd7c5e0-dbb0-4faa-893a-9165955ee5b1": {
+      "requestKey": "web-0dd7c5e0-dbb0-4faa-893a-9165955ee5b1",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "4d9be02cbfb5244e00d5c57a149c65612b3974e63550e9f50dd2bdd72f9c0b0b",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "taskBudgetRequest",
+          "id": "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789"
+        }
+      ],
+      "result": {
+        "requestId": "dmt_0180ed5d-a35a-4f06-bc40-4751fb910789"
+      },
+      "completedAt": "2026-11-07T18:07:00.844Z"
+    },
+    "entry-96bd2601-8fc9-4a74-b5dc-08447a055cfc": {
+      "requestKey": "entry-96bd2601-8fc9-4a74-b5dc-08447a055cfc",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "3e22e51a86f52e74554597276f358af2d7ce999cf4cbf6c714c6eb2f3684a162",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_192ff48b-fd0c-443b-aff3-cff15de27e35"
+        }
+      ],
+      "result": {
+        "operationId": "op_192ff48b-fd0c-443b-aff3-cff15de27e35"
+      },
+      "completedAt": "2026-11-07T18:07:45.794Z"
+    },
+    "entry-0a6af1fe-3c4f-41ac-bb1b-61ce59b1c294": {
+      "requestKey": "entry-0a6af1fe-3c4f-41ac-bb1b-61ce59b1c294",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "df419bb42452ed718b1bd1c2407a37ef9c2e681cfe4ba3fac28a9ec7e0ece172",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_a1fbea54-f9b8-4b68-a065-1fe32d308eaf"
+        }
+      ],
+      "result": {
+        "operationId": "op_a1fbea54-f9b8-4b68-a065-1fe32d308eaf"
+      },
+      "completedAt": "2026-11-07T18:10:57.653Z"
+    },
+    "web-a84d4ba5-e550-45e6-a426-f51e9d9ce8d6": {
+      "requestKey": "web-a84d4ba5-e550-45e6-a426-f51e9d9ce8d6",
+      "command": "createBpmTask",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "0db16bc4ae77430c7520a5b9eccdbecbcb84bf0b3f0bd1b2fb1b52a472c2fc39",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "task",
+          "id": "tsk_228f4b01-b4c2-48bf-a880-5c09d4314577"
+        }
+      ],
+      "result": {
+        "taskId": "tsk_228f4b01-b4c2-48bf-a880-5c09d4314577"
+      },
+      "completedAt": "2026-11-07T18:11:52.235Z"
+    },
+    "setup-a17923dd-04d5-4fa7-a6aa-9c20b28021f0": {
+      "requestKey": "setup-a17923dd-04d5-4fa7-a6aa-9c20b28021f0",
+      "command": "setupProject",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "1d0211e91476b589f7e70472cfc9e2a11c3dfce1a83da132b7e7238748fa83a4",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_ac09755e-f4b2-4c2c-ad9f-5066436f07df"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_cc8254be-e970-4eb4-84ab-18a7f298f958"
+        },
+        {
+          "kind": "task",
+          "id": "tsk_181f3774-0387-46c8-8ab3-0e9a22c07c4c"
+        }
+      ],
+      "result": {
+        "mode": "branch",
+        "bpmCompositionId": "bpm_d6a415ad-218d-4453-abf5-1afe33b21e94",
+        "created": [],
+        "updated": [],
+        "budgetId": "bud_cc8254be-e970-4eb4-84ab-18a7f298f958",
+        "coreProjectId": "prj_ac09755e-f4b2-4c2c-ad9f-5066436f07df",
+        "taskIds": [
+          "tsk_181f3774-0387-46c8-8ab3-0e9a22c07c4c"
+        ]
+      },
+      "completedAt": "2026-11-07T18:12:56.716Z"
+    },
+    "settle-c035f5af-30f6-4f10-904c-8293822a75e0": {
+      "requestKey": "settle-c035f5af-30f6-4f10-904c-8293822a75e0",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "bc8464a81bec588f6e3dfb824776630ea30f616a6c186e88bfec2a71a4acf026",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5"
+        }
+      ],
+      "result": {
+        "operationId": "op_87369fb6-c3e8-4e63-bc6c-58825bd35ef5"
+      },
+      "completedAt": "2026-11-07T18:13:29.665Z"
+    },
+    "settle-30569399-cbc1-4ab5-92a0-ae59a3005cc5": {
+      "requestKey": "settle-30569399-cbc1-4ab5-92a0-ae59a3005cc5",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "b70925e6a679c235949012f1cf794127bcc53a4478b39b161d2e9edbd988d59c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa"
+        }
+      ],
+      "result": {
+        "operationId": "op_5e28e162-1097-417e-bd4d-1fbc654e3dfa"
+      },
+      "completedAt": "2026-11-07T18:14:08.737Z"
+    },
+    "settle-2478f605-4c83-448d-afac-7553591f340e": {
+      "requestKey": "settle-2478f605-4c83-448d-afac-7553591f340e",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "b70925e6a679c235949012f1cf794127bcc53a4478b39b161d2e9edbd988d59c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb"
+        }
+      ],
+      "result": {
+        "operationId": "op_f97a484b-09c0-4c41-9e6b-9ca47c0012bb"
+      },
+      "completedAt": "2026-11-07T18:14:16.078Z"
+    },
+    "settle-f7b7586a-199e-4ab5-b83e-ceccbc97db06": {
+      "requestKey": "settle-f7b7586a-199e-4ab5-b83e-ceccbc97db06",
+      "command": "settleOccurrence",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "b70925e6a679c235949012f1cf794127bcc53a4478b39b161d2e9edbd988d59c",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_23127db5-1985-4744-8f30-068cd2c8f87d"
+        }
+      ],
+      "result": {
+        "operationId": "op_23127db5-1985-4744-8f30-068cd2c8f87d"
+      },
+      "completedAt": "2026-11-07T18:14:23.413Z"
+    },
+    "web-c1cd1ef7-56fa-4dee-99ff-c881eafb9513": {
+      "requestKey": "web-c1cd1ef7-56fa-4dee-99ff-c881eafb9513",
+      "command": "closePeriod",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "45b67e3c950affa3f9e5f32d3acddd13df470e855d4b0bdc5df5d6edd7000b4e",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "closure",
+          "id": "clo_11c218f6-f22d-4399-a748-1fd49510134d"
+        },
+        {
+          "kind": "capitalization",
+          "id": "cap_18fa9213-a42a-41ee-837f-24fa1eafcd5f"
+        }
+      ],
+      "result": {
+        "closureId": "clo_11c218f6-f22d-4399-a748-1fd49510134d",
+        "capitalizationId": "cap_18fa9213-a42a-41ee-837f-24fa1eafcd5f"
+      },
+      "completedAt": "2026-11-07T18:15:33.018Z"
+    },
+    "goal-ee74cb2a-c9b8-4e6a-8712-5ab2f66c89f7": {
+      "requestKey": "goal-ee74cb2a-c9b8-4e6a-8712-5ab2f66c89f7",
+      "command": "createGoal",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "550f11a6c3d2398c2fcf37f2a4db1e7ab2b7381f8ca766c3697e87c68c9dbdd8",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "lifeGoal",
+          "id": "obj_37727422-7346-4a40-9cc0-fd84367e60c7"
+        }
+      ],
+      "result": {
+        "goalId": "obj_37727422-7346-4a40-9cc0-fd84367e60c7"
+      },
+      "completedAt": "2026-11-07T18:16:01.827Z"
+    },
+    "entry-4cd847be-7ffc-4ae8-a1ad-d3a8eb869e3e": {
+      "requestKey": "entry-4cd847be-7ffc-4ae8-a1ad-d3a8eb869e3e",
+      "command": "createOperation",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "69b3e63073fd20fd436fdf8c0b8c00e1f3b1c55729495f70f74afb1dfda24c5f",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "operation",
+          "id": "op_1f353930-063a-4372-a24e-1beb1c304c4c"
+        }
+      ],
+      "result": {
+        "operationId": "op_1f353930-063a-4372-a24e-1beb1c304c4c"
+      },
+      "completedAt": "2026-11-07T18:18:54.428Z"
+    },
+    "web-e3d818aa-b27b-4b08-9a0c-87a3faeb1251": {
+      "requestKey": "web-e3d818aa-b27b-4b08-9a0c-87a3faeb1251",
+      "command": "addCustomCostCenter",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "ee937478bffe1ebea6726358eca05acfbd44aac3aea60409ffad6648869b49e2",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "costCenter",
+          "id": "cc_365df9b3-543b-41d2-953b-6a94d14b251f"
+        }
+      ],
+      "result": {
+        "costCenterId": "cc_365df9b3-543b-41d2-953b-6a94d14b251f"
+      },
+      "completedAt": "2026-11-07T18:21:52.823Z"
+    },
+    "web-163cfd70-2d47-494d-83c2-54b1afd35583": {
+      "requestKey": "web-163cfd70-2d47-494d-83c2-54b1afd35583",
+      "command": "requestTaskBudget",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "fingerprint": "7479712b6e9e945108fcad3b909ec367aa6464f236ee5d6a77d8a13f913ff4f9",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "taskBudgetRequest",
+          "id": "dmt_9ebf472e-8e4a-45bf-9420-ed3ee70c4f4b"
+        }
+      ],
+      "result": {
+        "requestId": "dmt_9ebf472e-8e4a-45bf-9420-ed3ee70c4f4b"
+      },
+      "completedAt": "2026-11-07T18:24:17.498Z"
     }
   },
   "parameters": {
@@ -544825,6 +548700,27 @@
       "lastChange": {
         "command": "updateChargeCategory",
         "at": "2026-11-07T17:20:01.178Z"
+      }
+    },
+    "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09": {
+      "id": "cat_45cb3d04-4ce9-4b23-9518-6a3a3ee9fd09",
+      "kind": "chargeCategory",
+      "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+      "revision": 2,
+      "createdAt": "2026-11-07T17:57:43.803Z",
+      "updatedAt": "2026-11-07T18:18:18.027Z",
+      "provenance": {
+        "command": "createChargeCategory",
+        "requestKey": "category-f5c21b36-b906-41a7-9ea1-9b078dff3432",
+        "at": "2026-11-07T17:57:43.803Z"
+      },
+      "label": "Marché et produits frais · recette",
+      "costCenterRef": "std:alimentation",
+      "capCents": 5000,
+      "archived": false,
+      "lastChange": {
+        "command": "updateChargeCategory",
+        "at": "2026-11-07T18:18:18.027Z"
       }
     }
   }

@@ -3,6 +3,7 @@ import { PageObjectLabels } from '../../shared/plan-context';
 import { projectLink } from '../../shared/site-plan';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
+import { BpmFormDraft } from '../ui/form-draft';
 import { BpmPageBanner, BpmPageFocus } from '../ui';
 import {
   afterNextRender,
@@ -34,7 +35,7 @@ import { FUNDING, FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from '../ui
 import { BpmEntryFlow } from '../ui/entry-flow';
 import { BpmLineDetail } from '../ui/line-detail';
 import { BpmOverflowDirective } from '../ui/overflow';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 import { BpmLifeFundingComponent } from '../life/life-funding';
 import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-parts';
 import {
@@ -111,13 +112,14 @@ interface OverrunFlow {
     ShortDatePipe,
     BpmOverrunRequestComponent,
     BpmEntryFlow,
+    BpmFormDraft,
     BpmLineDetail,
     BpmTaskRequestsComponent,
     BpmLifeFundingComponent,
     BpmProjectEditor,
     BpmTaskEditor,
     BpmOverflowDirective,
-    ModalComponent,
+    BpmModal,
   ],
   templateUrl: './project.page.html',
   styleUrls: ['./projects.page.scss', './project.page.scss'],
@@ -163,14 +165,17 @@ export class BpmProjectPage {
   protected flow = signal<OverrunFlow | null>(null);
   protected shareFlow = signal<ShareFlow | null>(null);
   protected allocation = signal('');
-  protected returnEditor = signal<string | null>(null);
-  protected settling = signal<string | null>(null);
+  protected returnEditor = bpmQueryState<string | null>('retour', null, { overlay: true });
+  protected settling = bpmQueryState<string | null>('reglement', null, { overlay: true });
   protected entryId = bpmQueryState('entry', '', { overlay: true });
   protected editorOpen = computed(() => !!this.entryId());
-  protected lineId = signal<string | null>(null);
-  protected projectEditor = signal(false);
-  protected taskEditor = signal(false);
-  protected editingTask = signal<BpmTaskCard | null>(null);
+  protected lineId = bpmQueryState<string | null>('ligne', null, { overlay: true });
+  protected projectEditor = bpmQueryState('editProject', false, {
+    parse: value => value !== 'false', format: () => this.projectId || 'current', overlay: true,
+  });
+  protected taskEditorId = bpmQueryState('editTask', '', { overlay: true });
+  protected taskEditor = computed(() => !!this.taskEditorId());
+  protected editingTask = computed(() => this.data()?.tasks.find(t => t.task.id === this.taskEditorId()) ?? null);
   protected taskProjectOptions = computed(() => {
     const d = this.data();
     return d?.role === 'standard'
@@ -184,7 +189,7 @@ export class BpmProjectPage {
   );
   private requestKeys = new Map<string, string>();
   private projectId = '';
-  protected decisionsOpen = signal(false);
+  protected decisionsOpen = bpmQueryState('decisions', false, { parse: value => value !== 'false', format: () => 'open', overlay: true });
   protected taskAttention = bpmQueryState('attention', 'all');
   protected projectLead = computed(() => {
     const d = this.data();
@@ -311,7 +316,7 @@ export class BpmProjectPage {
   protected allocationRevision = signal(0);
   protected allocationError = signal<string | null>(null);
   protected query = bpmQueryState('q', '', { replace: true });
-  protected fundingTask = signal<string | null>(null);
+  protected fundingTask = bpmQueryState<string | null>('demande', null, { overlay: true });
   /** Tâche ouverte dans sa fenêtre : la carte du tableau garde une taille fixe. */
   protected openTaskId = bpmQueryState<string | null>('task', null, { overlay: true });
   protected openTask = computed(() => {
@@ -558,12 +563,10 @@ export class BpmProjectPage {
           : 'blue';
   }
   protected createTask() {
-    this.editingTask.set(null);
-    this.taskEditor.set(true);
+    this.taskEditorId.set('new');
   }
   protected editTask(t: BpmTaskCard) {
-    this.editingTask.set(t);
-    this.taskEditor.set(true);
+    this.taskEditorId.set(t.task.id);
   }
   protected addExpense(taskId: string | null) {
     this.expenseTaskId.set(taskId);
@@ -674,20 +677,20 @@ export class BpmProjectPage {
       this.projectId = p.get('id') ?? '';
       this.query.sync();
       this.taskAttention.sync();
-      this.decisionsOpen.set(false);
+      this.decisionsOpen.sync();
       this.data.set(null);
       this.flow.set(null);
       this.notice.set(null);
       this.allocationEditing.set(false);
       this.allocationError.set(null);
-      this.closeTask();
-      this.projectEditor.set(false);
+      this.taskEditorId.sync();
+      this.projectEditor.sync();
       this.entryId.sync();
-      this.lineId.set(null);
-      this.fundingTask.set(null);
+      this.lineId.sync();
+      this.fundingTask.sync();
       this.openTaskId.sync();
-      this.returnEditor.set(null);
-      this.settling.set(null);
+      this.returnEditor.sync();
+      this.settling.sync();
       this.requestKeys.clear();
       this.load();
     });
@@ -1001,6 +1004,7 @@ export class BpmProjectPage {
     budgetId: string,
     t: BpmTaskCard,
     controls: HTMLFormControlsCollection,
+    draft?: BpmFormDraft,
   ) {
     const get = (name: string) => (controls.namedItem(name) as HTMLInputElement).value;
     const amount = parseAmount(get('amount'));
@@ -1019,7 +1023,7 @@ export class BpmProjectPage {
       await this.bpm.requestTaskBudget(budgetId, t.task.id, { requestKey, amount, note });
       this.requestKeys.delete(signature);
     }, `Demande de « ${t.task.title} » enregistrée. Validez-la dans sa carte.`);
-    if (ok) this.fundingTask.set(null);
+    if (ok) { draft?.clear(); this.fundingTask.set(null); }
     return ok;
   }
 
@@ -1035,8 +1039,7 @@ export class BpmProjectPage {
   }
 
   protected closeTask() {
-    this.taskEditor.set(false);
-    this.editingTask.set(null);
+    this.taskEditorId.set('');
   }
   protected async taskSaved(text: string) {
     this.closeTask();
@@ -1054,6 +1057,7 @@ export class BpmProjectPage {
     t: BpmTaskCard,
     f: HTMLFormControlsCollection,
     revision: number,
+    draft?: BpmFormDraft,
   ) {
     const get = (n: string) =>
       (f.namedItem(n) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
@@ -1074,7 +1078,7 @@ export class BpmProjectPage {
         ? `Retour enregistré dans le budget du projet de vie : « ${t.task.title} » est déjà terminée.`
         : `Retour prévu : il sera enregistré dans le budget du projet de vie quand « ${t.task.title} » sera terminée.`,
     );
-    if (ok) this.returnEditor.set(null);
+    if (ok) { draft?.clear(); this.returnEditor.set(null); }
   }
 
   protected removeReturn(budgetId: string, t: BpmTaskCard, revision: number) {
@@ -1133,7 +1137,7 @@ export class BpmProjectPage {
     );
   }
 
-  protected settle(c: ProjectChargeLine, f: HTMLFormControlsCollection) {
+  protected settle(c: ProjectChargeLine, f: HTMLFormControlsCollection, draft?: BpmFormDraft) {
     const get = (n: string) => (f.namedItem(n) as HTMLInputElement | null)?.value ?? '';
     const amount = parseAmount(get('amount'));
     const realizedDate = get('date');
@@ -1160,6 +1164,7 @@ export class BpmProjectPage {
     return this.run(
       async (fund) => {
         await action(fund);
+        draft?.clear();
         this.settling.set(null);
       },
       () => this.settlementResult(c),

@@ -192,7 +192,7 @@
       </details>
     }
     @if (decisionsOpen()) {
-      <rjs-modal
+      <bpm-modal
         [open]="true"
         [headed]="true"
         title="Décisions de financement"
@@ -228,7 +228,7 @@
         >
           Fermer
         </button>
-      </rjs-modal>
+      </bpm-modal>
     }
     @if (notice(); as n) {
       <p
@@ -730,7 +730,7 @@
         @if (!editorOpen() && openTask(); as t) {
           @let tb = t.budget;
           <!-- Fenêtre de la tâche : tout ce que la carte de taille fixe ne montre pas. -->
-          <rjs-modal
+          <bpm-modal
             [open]="true"
             [headed]="true"
             [title]="t.task.title"
@@ -783,9 +783,11 @@
                 } @else if (fundingTask() === t.task.id) {
                   <form
                     class="task-funding-box"
+                    [bpmFormDraft]="'request:' + b.budgetId + ':' + t.task.id + ':' + b.revision"
+                    #requestDraft="bpmFormDraft"
                     (submit)="
                       $event.preventDefault();
-                      requestBudget(b.budgetId, t, $any($event.target).elements)
+                      requestBudget(b.budgetId, t, $any($event.target).elements, requestDraft)
                     "
                   >
                     <label
@@ -816,7 +818,7 @@
                       <button
                         type="button"
                         class="btn btn-secondary"
-                        (click)="fundingTask.set(null)"
+                        (click)="requestDraft.clear(); fundingTask.set(null)"
                       >
                         Annuler
                       </button>
@@ -926,9 +928,11 @@
                 } @else if (returnEditor() === t.task.id) {
                   <form
                     class="bpm-inline-form"
+                    [bpmFormDraft]="'return:' + b.budgetId + ':' + t.task.id + ':' + b.revision"
+                    #returnDraft="bpmFormDraft"
                     (submit)="
                       $event.preventDefault();
-                      saveReturn(b.budgetId, t, $any($event.target).elements, b.revision)
+                      saveReturn(b.budgetId, t, $any($event.target).elements, b.revision, returnDraft)
                     "
                   >
                     <label
@@ -958,7 +962,7 @@
                     <button
                       type="button"
                       class="btn btn-secondary"
-                      (click)="returnEditor.set(null)"
+                      (click)="returnDraft.clear(); returnEditor.set(null)"
                     >
                       Annuler
                     </button>
@@ -996,7 +1000,7 @@
                 </button>
               </div>
             </div>
-          </rjs-modal>
+          </bpm-modal>
         }
       </div>
     }
@@ -1364,12 +1368,15 @@
             La date réelle du paiement déterminera sa période. La date prévue sera conservée.
           </p>
         }
-        <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)">
-          Détail et modification
-        </button>
+        <div class="task-charge-actions">
+          <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)">Détail et modification</button>
+          @if (!c.settled && settling() !== c.id) {
+            <button type="button" class="text-link" [disabled]="busy()" (click)="settling.set(c.id)">Valider le règlement</button>
+          }
+        </div>
         @if (!c.settled) {
           @if (settling() === c.id) {
-            <form (submit)="$event.preventDefault(); settle(c, $any($event.target).elements)">
+            <form [bpmFormDraft]="'settlement:' + c.id" #settlementDraft="bpmFormDraft" (submit)="$event.preventDefault(); settle(c, $any($event.target).elements, settlementDraft)">
               <label
                 >Date réelle<input
                   name="date"
@@ -1390,15 +1397,11 @@
                 type="button"
                 class="text-link"
                 [disabled]="busy()"
-                (click)="settling.set(null)"
+                (click)="settlementDraft.clear(); settling.set(null)"
               >
                 Annuler
               </button>
             </form>
-          } @else {
-            <button class="text-link" [disabled]="busy()" (click)="settling.set(c.id)">
-              Valider le règlement
-            </button>
           }
         }
       </article>
@@ -1427,7 +1430,7 @@
     (saved)="projectSaved()"
   />
 }
-@if (taskEditor()) {
+@if (taskEditor() && data()?.role === 'standard' && (taskEditorId() === 'new' || editingTask())) {
   <bpm-task-editor
     [task]="editingTask()"
     [projects]="taskProjectOptions()"

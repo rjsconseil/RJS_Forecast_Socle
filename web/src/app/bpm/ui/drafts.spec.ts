@@ -53,4 +53,12 @@ describe('brouillons des formulaires BPM', () => {
     TestBed.inject(RecetteContext).userId.set('user-A');
     expect(TestBed.createComponent(Form).componentInstance.label()).toBe('Privé A');
   });
+  it('détache un formulaire conservé sans réécrire son ancien contexte à la destruction', () => {
+    const first = TestBed.createComponent(Form);
+    first.componentInstance.label.set('Premier projet');
+    first.componentInstance.draft.detach();
+    first.componentInstance.label.set('Autre projet');
+    first.destroy();
+    expect(TestBed.createComponent(Form).componentInstance.label()).toBe('Premier projet');
+  });
 });

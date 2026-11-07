@@ -9,7 +9,7 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { CapsReview, ChargeCategory, ReviewCharge } from '../../core/bpm-caps.models';
 import { EntryInput, RegisterLine } from '../../core/bpm-models';
 import { cents, CentsPipe, percentText, ShortDatePipe } from '../../core/format';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 import { BpmLifeGaugeComponent } from '../life/life-gauge';
 import { BpmLineDetail, BpmEntryFlow, BpmPageContext, bpmQueryState, BpmPageFocus, BpmPageResult, BpmPageFrame, capEuroText, capInput } from '../ui';
 import { BpmDrafts } from '../ui/drafts';
@@ -47,7 +47,7 @@ import {
     BpmLifeGaugeComponent,
     BpmLineDetail,
     BpmEntryFlow,
-    ModalComponent,
+    BpmModal,
   ],
   template: `
     <bpm-page
@@ -190,7 +190,7 @@ import {
             >
               <dt>À compenser</dt>
               <dd>{{ d() ? (d()!.totals.toCompensateCents | cents) : '—' }}</dd>
-              <span>Au-delà des plafonds, à reprendre ailleurs</span>
+              <span>Au-delà des plafonds de postes ; les catégories sont suivies séparément</span>
             </div>
             <div
               class="life-financial-stat life-available"
@@ -783,7 +783,7 @@ import {
       }
     </bpm-page>
 
-    <rjs-modal [open]="!!quickEditor()" [headed]="true" [title]="quickEditor() === 'create' ? 'Créer une catégorie dans son poste' : 'Régler un plafond'" [busy]="busy()" (closed)="quickEditor.set(null)">
+    <bpm-modal [open]="!!quickEditor()" [headed]="true" [title]="quickEditor() === 'create' ? 'Créer une catégorie dans son poste' : 'Régler un plafond'" [busy]="busy()" (closed)="quickEditor.set(null)">
       @if (notice()?.error) { <p class="bpm-error" role="alert">{{ notice()!.text }}</p> }
       @if (quickEditor() === 'create') {
         <form class="caps-setting-form" (ngSubmit)="createCategory()">
@@ -811,7 +811,7 @@ import {
         </form>
       }
       <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="quickEditor.set(null)">Fermer le panneau</button>
-    </rjs-modal>
+    </bpm-modal>
 
     <bpm-entry-flow [budgets]="budgets()" [defaults]="entryDefaults()" (saved)="saved($event)" />
     @if (lineId() && !ctx.q('entry')()) {
@@ -1006,7 +1006,7 @@ export class BpmCapsPage {
     if (this.view() === 'plafonds') {
       return { title: `${d.totals.cappedCount} plafond(s) défini(s)`, detail: 'Choisissez un poste ou une catégorie pour ajuster sa limite par période depuis le bandeau.', tone: 'info' };
     }
-    if (d.totals.overCount) return { title: `${d.totals.overCount} dépassement(s) · ${cents(d.totals.toCompensateCents)} à compenser`, detail: this.past() ? 'Ce bilan permet de comprendre les écarts et de préparer les prochains cycles.' : 'Examinez d’abord une charge encore à payer ; le règlement déjà enregistré reste consultable.', tone: 'warning' };
+    if (d.totals.overCount) return { title: d.totals.toCompensateCents > 0 ? `${d.totals.overCount} dépassement(s) · ${cents(d.totals.toCompensateCents)} à compenser sur les postes` : `${d.totals.overCount} plafond(s) de catégorie dépassé(s)`, detail: this.past() ? 'Ce bilan permet de comprendre les écarts et de préparer les prochains cycles.' : d.totals.toCompensateCents > 0 ? 'Examinez d’abord une charge encore à payer ; le règlement déjà enregistré reste consultable.' : 'Le poste garde de la marge, mais une catégorie a atteint sa propre limite. Examinez ses charges avant le prochain achat.', tone: 'warning' };
     if (this.s()?.near) return { title: `${this.s()!.near} plafond(s) proche(s) de leur limite`, detail: this.past() ? 'Ce bilan montre les limites qui méritent votre attention pour les cycles suivants.' : 'Vérifiez les marges avant la prochaine charge, puis ajustez les montants prévus si nécessaire.', tone: 'info' };
     return { title: d.totals.cappedCount ? 'Aucun plafond dépassé' : 'Vos premières limites restent à définir', detail: d.totals.cappedCount ? 'Les marges restent disponibles pour préparer votre prochaine dépense.' : 'Définissez un plafond de poste, puis précisez les catégories qui méritent leur propre limite.', tone: d.totals.cappedCount ? 'success' : 'info' };
   });

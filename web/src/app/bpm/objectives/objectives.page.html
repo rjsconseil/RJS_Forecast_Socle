@@ -154,7 +154,7 @@
           (saved)="goalSaved($event)"
         />
       }
-      <rjs-modal
+      <bpm-modal
         [open]="!!confirmGoal()"
         [headed]="true"
         title="Retirer cet objectif ?"
@@ -185,17 +185,17 @@
             Retirer l’objectif
           </button>
         </div>
-      </rjs-modal>
+      </bpm-modal>
 
 
-  <rjs-modal [open]="!!settingEditor()" [headed]="true" [title]="settingTitle()" [busy]="savingsBusy() || wealthBusy() || hypBusy()" (closed)="closeSetting()">
+  <bpm-modal [open]="!!settingEditor()" [headed]="true" [title]="settingTitle()" [busy]="savingsBusy() || wealthBusy() || hypBusy()" (closed)="closeSetting()">
     @switch (settingEditor()) {
       @case ('savings') { <ng-container *ngTemplateOutlet="savingsEditor" /> }
       @case ('wealth') { <ng-container *ngTemplateOutlet="wealthEditor" /> }
       @case ('projection') { <ng-container *ngTemplateOutlet="projectionEditor" /> }
     }
     <button class="btn btn-secondary" type="button" [disabled]="savingsBusy() || wealthBusy() || hypBusy()" (click)="closeSetting()">Fermer le panneau</button>
-  </rjs-modal>
+  </bpm-modal>
 
 <ng-template #savingsEditor><form class="life-objective-form" (ngSubmit)="saveSavings()" novalidate>
               <label

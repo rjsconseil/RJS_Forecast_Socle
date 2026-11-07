@@ -26,7 +26,7 @@ export function workspaceContextQuery(url: string, parent = ''): Record<string, 
   if (parent) for (const key of [
     'q', 'query', 'attention', 'project', 'filter', 'status', 'type', 'sort', 'mode', 'show',
     'scope', 'kind', 'inspect', 'budget', 'budgetId', 'profileQuery', 'userType',
-    'jour', 'vue', 'group', 'calGroup', 'calDone', 'calHidden', 'from', 'to', 'start', 'end', 'target',
+    'jour', 'vue', 'group', 'calGroup', 'calDone', 'calHidden', 'from', 'to', 'start', 'end', 'du', 'au', 'date', 'target', 'funding',
   ]) keys.add(key);
   return Object.fromEntries([...query.entries()].filter(([key]) => keys.has(key)));
 }

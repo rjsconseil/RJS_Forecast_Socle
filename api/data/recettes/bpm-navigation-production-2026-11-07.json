@@ -1,0 +1,177 @@
+{
+  "at": "2026-11-07T18:34:39.008Z",
+  "base": "http://localhost:4300",
+  "userId": "usr_8fefd55c-2eb0-4fcc-a4b9-3fe7f9547a6e",
+  "user": "Recette parcours BPM · 7 novembre 2026",
+  "checks": [
+    {
+      "name": "1440 px · /creer"
+    },
+    {
+      "name": "1440 px · /tableau-de-bord"
+    },
+    {
+      "name": "1440 px · /projet-de-vie"
+    },
+    {
+      "name": "1440 px · /plafonds"
+    },
+    {
+      "name": "1440 px · /vision"
+    },
+    {
+      "name": "1440 px · /app/projets"
+    },
+    {
+      "name": "1440 px · /app/gestion-projet"
+    },
+    {
+      "name": "1440 px · /app/taches"
+    },
+    {
+      "name": "1440 px · /app/reglages"
+    },
+    {
+      "name": "1440 px · /creer/projet-de-vie"
+    },
+    {
+      "name": "1440 px · /creer/projet-de-la-vie"
+    },
+    {
+      "name": "1440 px · /tableau-de-bord/entrees"
+    },
+    {
+      "name": "1440 px · /tableau-de-bord/rapprochement"
+    },
+    {
+      "name": "1440 px · /depenses/registre"
+    },
+    {
+      "name": "1440 px · /piloter"
+    },
+    {
+      "name": "1440 px · /projet-de-vie/budget-type"
+    },
+    {
+      "name": "1440 px · /projet-de-vie/cloture"
+    },
+    {
+      "name": "1440 px · /piloter/agir"
+    },
+    {
+      "name": "1440 px · /plafonds/reglages"
+    },
+    {
+      "name": "1440 px · /plafonds/categories"
+    },
+    {
+      "name": "1440 px · /vision/projection"
+    },
+    {
+      "name": "1440 px · /vision/reperes"
+    },
+    {
+      "name": "1440 px · /app/projets/suivi"
+    },
+    {
+      "name": "1440 px · /app/gestion-projet/nouveau"
+    },
+    {
+      "name": "1440 px · /app/gestion-projet/financement"
+    },
+    {
+      "name": "1440 px · /app/gestion-projet/decisions"
+    },
+    {
+      "name": "1440 px · /app/taches/nouvelle"
+    },
+    {
+      "name": "1440 px · /app/taches/rattacher"
+    },
+    {
+      "name": "1440 px · /app/reglages/cycle"
+    },
+    {
+      "name": "1440 px · /app/reglages/patrimoine"
+    },
+    {
+      "name": "1440 px · /app/reglages/postes"
+    },
+    {
+      "name": "1440 px · /depenses"
+    },
+    {
+      "name": "1440 px · /argent/entrees"
+    },
+    {
+      "name": "1440 px · /argent/reste"
+    },
+    {
+      "name": "1440 px · /argent/postes/std%3Aalimentation"
+    },
+    {
+      "name": "1440 px · /calendrier-budget"
+    },
+    {
+      "name": "1440 px · /calendrier-budget/agenda"
+    },
+    {
+      "name": "1440 px · /calendrier-budget/sources"
+    },
+    {
+      "name": "390 px · /tableau-de-bord"
+    },
+    {
+      "name": "390 px · /projet-de-vie"
+    },
+    {
+      "name": "390 px · /projet-de-vie/budget-type"
+    },
+    {
+      "name": "390 px · /projet-de-vie/cloture"
+    },
+    {
+      "name": "390 px · /plafonds/reglages"
+    },
+    {
+      "name": "390 px · /vision"
+    },
+    {
+      "name": "390 px · /vision/projection"
+    },
+    {
+      "name": "390 px · /app/gestion-projet"
+    },
+    {
+      "name": "390 px · /app/taches/rattacher"
+    },
+    {
+      "name": "390 px · /app/reglages/postes"
+    },
+    {
+      "name": "390 px · /calendrier-budget"
+    },
+    {
+      "name": "390 px · /calendrier-budget/agenda"
+    },
+    {
+      "name": "390 px · /calendrier-budget/sources"
+    },
+    {
+      "name": "Rapprochement : un seul retour vers la clôture et calcul conservé en avant"
+    },
+    {
+      "name": "Formulaire de tâche : retour, suivant, rechargement et historique natif"
+    },
+    {
+      "name": "Demande de part : montant et motif conservés entre étapes et après rechargement"
+    },
+    {
+      "name": "Agenda : événements accessibles, reprise de la date et commande stable"
+    },
+    {
+      "name": "Plusieurs retours, dernière étape et excursion hors de BPM"
+    }
+  ],
+  "errors": []
+}

@@ -618,6 +618,7 @@
     gap: 16px;
   }
   .calendar-agenda {
+    flex: 0 0 auto;
     position: static;
     width: 100%;
     max-height: none;
@@ -628,6 +629,9 @@
     margin: 0;
   }
   .calendar-agenda-list {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: auto;
     max-height: none;
     overflow: visible;
   }

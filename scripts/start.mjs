@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const apiPort = Number(process.env.J1_API_PORT ?? 3410);
 const webPort = 4300;
+const production = process.argv.includes('--production');
 const ng = join(root, 'web', 'node_modules', '@angular', 'cli', 'bin', 'ng.js');
 
 function stop(message) {
@@ -20,7 +21,8 @@ function stop(message) {
 
 const [major, minor] = process.versions.node.split('.').map(Number);
 if (major < 22 || (major === 22 && minor < 22)) stop(`Node ${process.versions.node} est trop ancien : installez Node 22.22 ou plus récent (24 ou 26 conviennent).`);
-if (!existsSync(ng)) stop('Les dépendances du site manquent. Depuis ce dossier, lancez d’abord :\n\n    npm install --prefix web');
+if (!production && !existsSync(ng)) stop('Les dépendances du site manquent. Depuis ce dossier, lancez d’abord :\n\n    npm install --prefix web');
+if (production && !existsSync(join(root, 'web/dist/web/browser/index.html'))) stop('Le site de production manque. Lancez d’abord npm run build.');
 
 /** Un port déjà pris par un lancement précédent donne sinon une erreur peu lisible dans les serveurs. */
 const listens = (port, host) =>
@@ -71,6 +73,7 @@ process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
 run('api', process.execPath, [join(root, 'api', 'src', 'server.mjs')]);
-run('site', process.execPath, [ng, 'serve'], { cwd: join(root, 'web'), env: { ...process.env, NG_CLI_ANALYTICS: 'false' } });
+if (production) run('site', process.execPath, [join(root, 'scripts/site-server.mjs')]);
+else run('site', process.execPath, [ng, 'serve'], { cwd: join(root, 'web'), env: { ...process.env, NG_CLI_ANALYTICS: 'false' } });
 
-console.log(`RJS Forecast démarre : site http://localhost:${webPort} · API http://localhost:${apiPort} (Ctrl+C pour arrêter)`);
+console.log(`RJS Forecast démarre${production ? ' en production' : ''} : site http://localhost:${webPort} · API http://localhost:${apiPort} (Ctrl+C pour arrêter)`);

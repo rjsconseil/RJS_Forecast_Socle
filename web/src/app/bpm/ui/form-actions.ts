@@ -27,11 +27,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
     :host {
       display: block;
     }
-    /* Dans une fenêtre, « Annuler » la referme : le parcours (quitter la page) reste dans la barre du haut. */
-    :host-context(dialog) bpm-navigation,
-    :host-context([role='dialog']) bpm-navigation {
-      display: none;
-    }
+    :host-context(dialog) bpm-navigation { display: none; }
     .bpm-actions {
       display: flex;
       gap: 10px;

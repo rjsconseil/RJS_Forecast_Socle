@@ -6,7 +6,7 @@ import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { LineDetail, RegisterLine } from '../../core/bpm-models';
 import { cents, parseAmount, shortDate, signedCents } from '../../core/format';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from './modal';
 import { capAlertText, withCapAlerts } from './caps';
 import { FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from './project-funding';
 import { bpmLoader, BpmRefresh, newRequestKey } from './page-context';
@@ -45,10 +45,10 @@ interface PendingOverrun {
 
 @Component({
   selector: 'bpm-line-detail',
-  imports: [FormsModule, BpmState, ModalComponent, RouterLink],
+  imports: [FormsModule, BpmState, BpmModal, RouterLink],
   styleUrls: ['../ref-styles/bpm-context.scss', '../ref-styles/bpm-pages.scss', './line-detail.scss'],
   template: `
-    <rjs-modal [open]="true" [headed]="true" [title]="d()?.line?.label ?? 'Détail de l’échéance'" [busy]="busy()" (closed)="closed.emit()">
+    <bpm-modal [open]="true" [headed]="true" [title]="d()?.line?.label ?? 'Détail de l’échéance'" [busy]="busy()" (closed)="closed.emit()">
       <div class="bpm-guide">
         <bpm-state [loading]="loader.loading() && !d()" [error]="loader.error()" (retry)="loader.reload()" />
         @if (message()) {
@@ -256,7 +256,7 @@ interface PendingOverrun {
           <button type="button" class="btn btn-secondary" (click)="closed.emit()">Fermer</button>
         </div>
       </div>
-    </rjs-modal>
+    </bpm-modal>
   `,
 })
 export class BpmLineDetail {

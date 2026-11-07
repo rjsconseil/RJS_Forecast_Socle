@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, inject, input, output } from '@angular/core';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmBudgetRef, EntryInput } from '../../core/bpm-models';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from './modal';
 import { BpmOperationEditor } from './operation-editor';
 import { BpmPageContext, bpmLoader } from './page-context';
 import { BpmState } from './state';
@@ -9,7 +9,7 @@ import { BpmState } from './state';
 /** L'ouverture de l'éditeur fait partie du parcours : une adresse suffit pour le reprendre. */
 @Component({
   selector: 'bpm-entry-flow',
-  imports: [BpmOperationEditor, BpmState, ModalComponent],
+  imports: [BpmOperationEditor, BpmState, BpmModal],
   template: `
     @if (id() && budgets().length) {
       @if (id() === 'new' || selectedLine()) {
@@ -22,13 +22,13 @@ import { BpmState } from './state';
           (saved)="complete($event)"
         />
       } @else {
-        <rjs-modal [open]="true" [headed]="true" title="Reprendre l’opération" (closed)="close()">
+        <bpm-modal [open]="true" [headed]="true" title="Reprendre l’opération" (closed)="close()">
           <bpm-state [loading]="line.loading()" [error]="line.error()" (retry)="line.reload()" />
           @if (!line.loading() && line.data()?.line?.id === id() && !selectedLine()) {
             <p class="bpm-error" role="alert">Cette opération appartient à un autre projet. Revenez au projet concerné pour la modifier.</p>
             <button type="button" class="btn btn-secondary" (click)="close()">Fermer</button>
           }
-        </rjs-modal>
+        </bpm-modal>
       }
     }
   `,

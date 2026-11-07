@@ -28,7 +28,7 @@ import { CoreProject, PRIORITY_LABEL, TaskStatus } from '../../core/models';
 import { CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
 import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-parts';
 import { BpmProjectEditor, BpmTaskEditor } from './project-editors';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 import { BpmProjectOverviewSummaryComponent } from './project-overview-summary';
 import { BpmProjectMetricsComponent } from './project-metrics';
 import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
@@ -40,7 +40,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
   imports: [
     BpmPageBanner,
     BpmCycleSetup,
-    ModalComponent,
+    BpmModal,
     BpmProjectOverviewSummaryComponent,
     RouterLink,
     CentsPipe,
@@ -197,7 +197,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
       </bpm-page-banner>
       <bpm-project-overview-summary [data]="data()" />
       @if (decisions() === 'tasks' && data(); as d) {
-        <rjs-modal
+        <bpm-modal
           [open]="true"
           [headed]="true"
           title="Décider les montants demandés par les tâches"
@@ -243,7 +243,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
           >
             Fermer
           </button>
-        </rjs-modal>
+        </bpm-modal>
       }
       @if (notice(); as n) {
         <p
@@ -681,7 +681,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
         </section>
 
         @if (cycleOpen()) {
-          <rjs-modal
+          <bpm-modal
             [open]="cycleOpen()"
             [headed]="true"
             title="Suivi du projet de vie et fin de cycle"
@@ -776,7 +776,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                 Fermer
               </button>
             </div>
-          </rjs-modal>
+          </bpm-modal>
         }
 
         <section class="bpm-section" aria-labelledby="unlinked-tasks-title">

@@ -47,9 +47,17 @@ function overlayLabel(params: URLSearchParams): string | null {
   const task = params.get('editTask');
   if (task) return task === 'new' ? 'Créer une tâche' : 'Modifier une tâche';
   if (params.get('decisions')) return 'Décider les demandes';
-  if (params.get('task')) return 'Détail de la tâche';
+  if (params.get('calPlan')) return 'Replanifier un événement';
+  if (params.get('reglement')) return 'Préparer le règlement';
+  if (params.get('demande')) return 'Demander une part de budget';
+  if (params.get('retour')) return 'Prévoir un retour au projet de vie';
+  const goal = params.get('goal');
+  if (goal) return goal === 'new' ? 'Créer un objectif daté' : 'Modifier un objectif daté';
+  const setting = params.get('reglage');
+  if (setting) return ({ savings: 'Régler l’épargne visée', wealth: 'Régler le cap patrimonial', projection: 'Ajuster les hypothèses' } as Record<string, string>)[setting] ?? 'Ajuster les repères';
   if (params.get('ligne')) return 'Détail d’une échéance';
   if (params.get('occurrence') || params.get('operation')) return 'Détail d’une opération';
+  if (params.get('task')) return 'Détail de la tâche';
   return null;
 }
 

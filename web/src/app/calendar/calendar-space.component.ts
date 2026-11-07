@@ -176,6 +176,7 @@ export class CalendarSpaceComponent {
         `« ${event.title} »${amount} est maintenant daté du ${DATE_FORMAT.format(new Date(date + 'T12:00:00Z'))}.`,
       );
       if (this.period) await this.fetch(this.period);
+      this.calendarView()?.finishPlan();
     } catch (err) {
       const e = toApiError(err);
       // La période est relue d'abord : le refus reste affiché ensuite (la relecture efface les messages).

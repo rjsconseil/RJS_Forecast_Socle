@@ -21,7 +21,7 @@ import {
   normalizeSearch,
 } from '../../projects/workspace-parts';
 import { BpmProjectOverviewSummaryComponent } from './project-overview-summary';
-import { ModalComponent } from '../../shared/modal.component';
+import { BpmModal } from '../ui/modal';
 import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-parts';
 
 /**
@@ -37,7 +37,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
     RouterLink,
     CentsPipe,
     ShortDatePipe,
-    ModalComponent,
+    BpmModal,
     BpmBudgetMeterComponent,
     BpmOverrunRequestComponent,
   ],
@@ -182,7 +182,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
       <bpm-project-overview-summary [data]="data()" [includeLifeProject]="true" />
 
       @if (cycleOpen()) {
-        <rjs-modal
+        <bpm-modal
           [open]="cycleOpen()"
           [headed]="true"
           title="Autorisations et fin de cycle"
@@ -238,7 +238,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
               Fermer
             </button>
           </div>
-        </rjs-modal>
+        </bpm-modal>
       }
 
       <div class="section-home-board">

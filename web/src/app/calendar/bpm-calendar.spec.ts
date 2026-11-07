@@ -220,6 +220,10 @@ describe('personnalisation du calendrier BPM', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     dom().querySelector<HTMLFormElement>('.calendar-plan')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     expect(moved).toEqual([{ event: actionable, date: '2027-01-12' }]);
+    fixture.componentRef.setInput('error', 'Cette période est close. Choisissez une autre date.');
+    await settle();
+    expect(dom().querySelector<HTMLInputElement>('.calendar-plan input')?.value).toBe('2027-01-12');
+    expect(dom().querySelector('[role="alert"]')?.textContent).toContain('Cette période est close');
   });
 
   it('ouvre toujours les sources BPM sans grille ni agenda et conserve les choix du profil', async () => {

@@ -1,8 +1,16 @@
-import { bpmAddress, emptyTrail, recordVisit, removeVisits, sameStep, TRAIL_LIMIT } from './navigation-model';
+import { bpmAddress, emptyTrail, recordVisit, removeVisits, sameStep, TRAIL_LIMIT, visitLabel } from './navigation-model';
 
 const visit = (id: string, url = `/creer?step=${id}`) => ({ id, url, label: id });
 
 describe('historique du parcours BPM', () => {
+  it('nomme les saisies et réglages pour distinguer chaque geste du parcours', () => {
+    expect(visitLabel('/vision?goal=new')).toBe('Créer un objectif daté');
+    expect(visitLabel('/vision?goal=obj_1')).toBe('Modifier un objectif daté');
+    expect(visitLabel('/vision/reperes?reglage=savings')).toBe('Régler l’épargne visée');
+    expect(visitLabel('/vision/projection?reglage=projection')).toBe('Ajuster les hypothèses');
+    expect(visitLabel('/app/gestion-projet/prj_1/taches?task=tsk_1&demande=tsk_1', 'Bureau')).toBe('Bureau · Tâches · Demander une part de budget');
+    expect(visitLabel('/app/gestion-projet/prj_1/taches?task=tsk_1&ligne=op_1', 'Bureau')).toBe('Bureau · Tâches · Détail d’une échéance');
+  });
   it('revient de plusieurs étapes puis retrouve le même chemin en avant', () => {
     let trail = emptyTrail();
     for (const id of ['1', '2', '3', '4']) trail = recordVisit(trail, visit(id));
