@@ -2,10 +2,11 @@
 // Budgets standards des projets de la vie), centres de coût et opérations prévues / réalisées.
 // Il fournit les variables sources des calculs ; il ne présente aucun chiffre lui-même.
 // Ses interfaces sont des interfaces de test : la création métier passe par le niveau applicatif.
+import { projectVariables, fundingChecks } from './project-analysis.mjs';
 import { fail } from '../../socle/errors.mjs';
 import { check } from '../../socle/object-management/inspect.mjs';
 import { today } from '../../socle/clock.mjs';
-import { date, expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
+import { date, expectedRevisionOf, integer, money, oneOf, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL, CADENCES, isOccurrence, occurrenceDates, occurrenceKey } from './recurrence.mjs';
 import { createFunding, fundingExtensions } from './funding.mjs';
 
@@ -297,6 +298,7 @@ export default {
   ],
 
   variables: [
+    ...projectVariables,
     { name: 'budget.revenusRealises', label: 'Revenus réalisés', unit: 'EUR', description: 'Somme des revenus réalisés datés dans la période, Budget « Projet de vie ».', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'income', realized: true }) },
     { name: 'budget.chargesRealisees', label: 'Charges réalisées', unit: 'EUR', description: 'Somme des charges réalisées datées dans la période, Budget « Projet de vie ».', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'charge', realized: true }) },
     { name: 'budget.revenusPrevus', label: 'Revenus prévus', unit: 'EUR', description: 'Somme des montants prévus des revenus (opérations et occurrences attendues) dont la date prévue est dans la période, réglés ou non.', resolve: (ctx, socle) => periodSum(ctx, socle, { direction: 'income', realized: false }) },
@@ -519,11 +521,38 @@ export default {
       operationsOf,
       operationView,
 
+      migrateObjectives(tx, id, legacy) {
+        if (!legacy) return;
+        const b = om.owned(tx.draft, 'budget', id, tx.userId);
+        const fields = Object.fromEntries(['savingsTargetCents', 'surplus'].filter(k => k in legacy).map(k => [k, legacy[k]]));
+        if (Object.keys(fields).length) om.update(tx, b, { objectives: { ...fields, ...(b.objectives ?? {}) } });
+      },
+      surplusProgress(closures, target) {
+        if (!target) return null;
+        const selected = closures.filter(c => c.periodKey >= target.startKey);
+        const cumulatedCents = selected.reduce((sum, c) => sum + c.resultCents, 0);
+        return { ...target, perPeriodCents: Math.ceil(target.targetCents / target.periods), cumulatedCents,
+          closedPeriods: selected.length, progressPct: target.targetCents > 0 ? Math.round(cumulatedCents / target.targetCents * 1000) / 10 : null };
+      },
+      objectivesOf: (state, id) => ({ savingsTargetCents: null, surplus: null, ...(state.budgets[id]?.objectives ?? {}) }),
+      patchObjectives(tx, id, input) {
+        if (!('savingsTarget' in input) && !('surplus' in input)) return;
+        const b = om.owned(tx.draft, 'budget', id, tx.userId);
+        const v = this.objectivesOf(tx.draft, id);
+      if ('savingsTarget' in input) v.savingsTargetCents = money('savingsTarget', input.savingsTarget, { nullable: true });
+      if ('surplus' in input) {
+        const sp = input.surplus;
+        v.surplus = sp === null ? null : { targetCents: money('surplus.target', sp?.target, { positive: true }), periods: integer('surplus.periods', sp?.periods, { min: 1, max: 600 }), startKey: /^\d{4}-(0[1-9]|1[0-2])$/.test(sp?.startKey ?? '') ? sp.startKey : fail('VALIDATION', 'Période de départ AAAA-MM attendue.', { field: 'surplus.startKey' }) };
+      }
+        om.update(tx, b, { objectives: v });
+      },
+
       // ---------- builders ----------
 
       /** Budget « Projet de vie » : unique par user (VIE-01), nom imposé. */
       buildLifeBudget(tx, { coreProjectId }) {
         if (lifeBudgetOf(tx.draft, tx.userId)) fail('UNIQUENESS_VIOLATION', 'Ce user possède déjà son Budget « Projet de vie ».', { userId: tx.userId });
+        if (om.list(tx.draft, 'budget', b => b.coreProjectId === coreProjectId).length) fail('UNIQUENESS_VIOLATION', 'Ce projet noyau sert déjà de racine à un Budget.', { coreProjectId });
         return om.create(tx, 'budget', { role: 'life', name: LIFE_BUDGET_NAME, coreProjectId, parentBudgetId: null, capsCents: {} });
       },
 
@@ -698,15 +727,9 @@ export default {
         return { replayed: r.replayed, recurrence: recurrenceView(socle.state, socle.state.recurrences[r.recurrenceId]) };
       },
 
-      /**
-       * Modifie une définition. Portée : les occurrences encore attendues ; les règlements déjà
-       * enregistrés gardent leurs dates et montants. La première date est figée dès qu'un règlement existe.
-       */
-      async updateRecurrence(ctx, id, input = {}) {
-        let scope;
-        await om.command('updateRecurrence', ctx, input, (tx) => {
+      patchRecurrence(tx, id, input = {}, { budgetId } = {}) {
           const r = om.owned(tx.draft, 'recurrence', id, tx.userId);
-          om.checkRevision(r, expectedRevisionOf(input));
+          if (budgetId && r.budgetId !== budgetId) fail('INCOMPATIBLE_REFERENCE', 'Cette récurrence appartient à un autre budget.', { field: 'recurrenceId', budgetId });
           const settlements = om.list(tx.draft, 'operation', (o) => o.recurrenceId === id);
           const patch = {};
           if ('label' in input) patch.label = text('label', input.label, { required: true, max: 200 });
@@ -725,7 +748,18 @@ export default {
           Object.assign(patch, categoryPatch(tx.draft, tx.userId, r, input, { direction: r.direction, ...patch }));
           if ('taskId' in input) patch.taskId = taskFor(tx.draft, tx.userId, tx.draft.budgets[r.budgetId], input.taskId);
           om.update(tx, r, patch);
-          scope = { appliesTo: 'occurrences encore attendues', settledUntouched: settlements.length };
+          return { recurrence: r, scope: { appliesTo: 'occurrences encore attendues', settledUntouched: settlements.length } };
+      },
+
+      /**
+       * Modifie une définition. Portée : les occurrences encore attendues ; les règlements déjà
+       * enregistrés gardent leurs dates et montants. La première date est figée dès qu'un règlement existe.
+       */
+      async updateRecurrence(ctx, id, input = {}) {
+        let scope;
+        await om.command('updateRecurrence', ctx, input, (tx) => {
+          om.checkRevision(om.owned(tx.draft, 'recurrence', id, tx.userId), expectedRevisionOf(input));
+          scope = this.patchRecurrence(tx, id, input).scope;
           return { recurrenceId: id };
         });
         return { recurrence: recurrenceView(socle.state, socle.state.recurrences[id]), scope };
@@ -784,11 +818,8 @@ export default {
         return { replayed: r.replayed, operation: operationView(socle.state, socle.state.operations[r.operationId]) };
       },
 
-      /** Plafonds facultatifs par centre et par période (centimes), sur un Budget du user. */
-      async setCaps(ctx, budgetId, input = {}) {
-        await om.command('setCaps', ctx, input, (tx) => {
+      patchCaps(tx, budgetId, input = {}) {
           const b = om.owned(tx.draft, 'budget', budgetId, tx.userId);
-          om.checkRevision(b, expectedRevisionOf(input));
           // `merge` : seuls les centres fournis changent (null retire leur plafond) ; sinon la liste remplace tout.
           const caps = input.merge === true ? { ...(b.capsCents ?? {}) } : {};
           for (const [ref, amount] of Object.entries(input.caps ?? {})) {
@@ -800,6 +831,14 @@ export default {
             caps[ref] = money(`caps.${ref}`, amount, { positive: true });
           }
           om.update(tx, b, { capsCents: caps });
+          return b;
+      },
+
+      /** Plafonds facultatifs par centre et par période (centimes), sur un Budget du user. */
+      async setCaps(ctx, budgetId, input = {}) {
+        await om.command('setCaps', ctx, input, (tx) => {
+          om.checkRevision(om.owned(tx.draft, 'budget', budgetId, tx.userId), expectedRevisionOf(input));
+          this.patchCaps(tx, budgetId, input);
           return { budgetId };
         });
         return budgetView(socle.state, socle.state.budgets[budgetId]);
@@ -814,12 +853,16 @@ export default {
           .map((r) => recurrenceView(state, r));
       },
 
+      buildCostCenter(tx, input) {
+        return om.create(tx, 'costCenter', { label: text('label', input.label, { required: true, max: 120 }), direction: oneOf('direction', input.direction, DIRECTIONS) });
+      },
+
       async addCustomCostCenter(ctx, input = {}) {
         const r = await om.command(
           'addCustomCostCenter',
           ctx,
           input,
-          (tx) => ({ costCenterId: om.create(tx, 'costCenter', { label: text('label', input.label, { required: true, max: 120 }), direction: oneOf('direction', input.direction, DIRECTIONS) }).id }),
+          (tx) => ({ costCenterId: this.buildCostCenter(tx, input).id }),
           { creation: true },
         );
         return { replayed: r.replayed, costCenters: costCentersOf(socle.state, ctx.userId), costCenterId: r.costCenterId };
@@ -922,6 +965,13 @@ export default {
       return !k || k.userId !== o.userId || o.direction !== 'charge' || k.costCenterRef !== refOf(o);
     });
     out.push(check('BUD-CAT-02', 'integrity', 'budget', 'Une dépense catégorisée est une charge du même user, dans le centre de sa catégorie', '0 dépense incohérente', `${badEntries.length} sur ${entries.length}`, badEntries.length ? 'failed' : 'passed', badEntries.map((o) => o.id)));
+    out.push(...fundingChecks(state, (userId, on) => {
+      for (const provide of socle.registry.extensions('fundingPeriod')) {
+        const period = provide(state, userId, on, socle);
+        if (period) return period;
+      }
+      return null;
+    }));
     return out;
   },
 

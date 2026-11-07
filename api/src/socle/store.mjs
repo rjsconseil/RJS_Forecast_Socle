@@ -14,9 +14,9 @@ import { randomUUID } from 'node:crypto';
 import { dirname } from 'node:path';
 import { DomainError } from './errors.mjs';
 
-export const STORE_SCHEMA = 'socle-store/0.5';
+export const STORE_SCHEMA = 'socle-store/0.6';
 /** Schémas antérieurs acceptés : ils sont migrés explicitement par les migrations déclarées des modules. */
-export const LEGACY_SCHEMAS = ['j1-store/0.2', 'socle-store/0.3', 'socle-store/0.4'];
+export const LEGACY_SCHEMAS = ['j1-store/0.2', 'socle-store/0.3', 'socle-store/0.4', 'socle-store/0.5'];
 
 // Collections techniques du socle, en plus des collections d'objets déclarées par les modules.
 const SYSTEM_COLLECTIONS = ['creationRequests', 'parameters'];

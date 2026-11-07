@@ -1,0 +1,110 @@
+:host { display: block; min-width: 0; }
+[hidden] { display: none !important; }
+.objectives-toolbar { display: grid; gap: 14px; }
+.objectives-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.objectives-tabs a {
+  flex: 1 1 200px; display: flex; align-items: center; gap: 12px;
+  min-height: 58px; padding: 10px 14px; color: #fff; text-decoration: none;
+  border: 1px solid #ffffff40; border-radius: 8px; background: #ffffff08;
+  strong { font-size: 14px; font-weight: 650; }
+  small { display: block; margin-top: 3px; font-size: 12px; opacity: .82; }
+  .tab-number { font-size: 19px; font-weight: 500; opacity: .7; }
+  &[aria-current='page'] { background: #fff; color: var(--bpm-section-deep, #40356d); border-color: #fff; }
+  &:hover { box-shadow: inset 0 0 0 1px #ffffff80; }
+}
+.objectives-summary-band {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px;
+  padding: 22px; margin: 0; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--raised-surface);
+  > div { display: grid; align-content: start; gap: 7px; min-width: 0; }
+  > div + div { border-left: 1px solid var(--line); padding-left: 20px; }
+  dt { font-size: 12px; font-weight: 650; color: var(--muted); }
+  dd { margin: 0; font-size: clamp(22px, 2.1vw, 30px); font-weight: 700; color: var(--app-accent); overflow-wrap: anywhere; }
+  small { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .summary-covered dd { color: var(--status-success); }
+  .summary-attention dd { color: var(--status-warning); }
+}
+.objectives-panel { min-width: 0; padding: 22px; background: var(--raised-surface); border: 1px solid var(--line); border-radius: 12px; }
+.objectives-section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+.objectives-section-head :is(h2,h3,p), .objective-identity h3 { margin: 0; }
+.objectives-section-head p:not(.eyebrow) { color: var(--muted); font-size: 14px; line-height: 1.55; margin-top: 7px; max-width: 80ch; }
+.objectives-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.objectives-next { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; background: var(--app-accent-soft); border-left: 3px solid var(--app-accent); padding: 12px 16px; border-radius: 6px; margin-bottom: 18px; font-size: 13px; }
+.objectives-next > span:first-child { color: var(--muted); font-weight: 600; }
+.objectives-next .text-link { margin-left: auto; }
+.life-goal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.objective-card {
+  --goal-color: var(--muted); display: grid; grid-template-columns: minmax(170px, .8fr) minmax(0, 2fr) auto;
+  align-items: start; gap: 22px; padding: 20px; border: 1px solid var(--line); border-left: 4px solid var(--goal-color); border-radius: 10px;
+  &[data-status='funded'] { --goal-color: var(--status-success); }
+  &[data-status='partial'] { --goal-color: var(--status-warning); }
+  &[data-status='unfunded'] { --goal-color: var(--status-danger); }
+}
+.objective-identity { min-width: 0; display: grid; gap: 9px; justify-items: start; h3 { overflow-wrap: anywhere; font-size: 18px; line-height: 1.4; } }
+.objective-type { color: var(--app-accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.objective-date { color: var(--muted); font-size: 13px; }
+.is-overdue, .objective-warning { color: var(--status-warning); }
+.life-goal-status { background: color-mix(in srgb, var(--goal-color) 10%, var(--raised-surface)); color: var(--goal-color); padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 650; }
+.objective-finances { min-width: 0; }
+.objective-finances dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 0; }
+.objective-finances dt { font-size: 11px; color: var(--muted); line-height: 1.4; min-height: 2.8em; }
+.objective-finances dd { margin: 5px 0 0; font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }
+.objective-finances .is-gap dd { color: var(--status-danger); }
+.objective-progress-row { display: flex; align-items: center; gap: 14px; margin: 18px 0 9px; font-size: 12px; font-weight: 650; color: var(--goal-color); }
+.objective-progress { flex: 1; height: 7px; border-radius: 5px; background: var(--line); overflow: hidden; > span { display: block; height: 100%; background: var(--goal-color); border-radius: inherit; } }
+.objective-note, .bpm-help { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.objective-warning { font-size: 12px; line-height: 1.5; margin: 6px 0 0; }
+.objective-note { margin: 8px 0; }
+.objective-actions { display: grid; justify-items: stretch; gap: 12px; }
+.objective-remove { color: var(--muted); font-size: 12px; }
+.objectives-empty { text-align: center; padding: 36px 20px; h3 { margin: 0 0 12px; } p { color: var(--muted); max-width: 65ch; margin: 0 auto 20px; line-height: 1.6; } }
+.objectives-handoff { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 20px 0 0; margin-top: 20px; border-top: 1px solid var(--line); > div { flex: 1 1 25rem; } p { color: var(--muted); margin: 6px 0 0; font-size: 13px; line-height: 1.6; } }
+.objectives-reperes { display: grid; gap: 20px; > .objectives-section-head { margin: 0; } }
+.objective-big-number { color: var(--app-accent); font-size: 26px; }
+.life-objective-form { display: grid; gap: 14px; padding: 18px; background: var(--soft); border-radius: 9px; min-width: 0; }
+.life-objective-form label { display: grid; gap: 7px; font-size: 13px; font-weight: 600; min-width: 0; }
+.life-objective-form :is(input,select) { width: 100%; min-width: 0; min-height: 44px; }
+.life-objective-form > label { max-width: 28rem; }
+.life-objective-form p { margin: 0; }
+.life-objective-fields { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.bpm-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.bpm-error { color: var(--status-danger); font-size: 13px; }
+.objectives-feedback { display: flex; align-items: center; gap: 12px; justify-content: space-between; background: var(--status-success-surface); color: var(--status-success); padding: 14px 18px; border-radius: 9px; margin: 0; }
+.objectives-projection-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); align-items: start; gap: 20px; }
+.projection-reading { display: grid; gap: 18px; }
+.projection-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 0; dt { color: var(--muted); font-size: 12px; } dd { margin: 8px 0; font-size: 25px; color: var(--app-accent); font-weight: 650; overflow-wrap: anywhere; } small { color: var(--muted); font-size: 12px; } }
+.objectives-callout { margin: 0; padding: 14px; color: var(--muted); background: var(--soft); border-radius: 8px; font-size: 13px; line-height: 1.6; a { margin-left: 8px; } }
+.projection-table summary { cursor: pointer; font-size: 13px; padding: 12px 0; font-weight: 600; }
+#hypotheses > h3 { margin: 0 0 8px; }
+bpm-vision-objectives { display: grid; gap: 20px; }
+@media(min-width: 1500px) { bpm-vision-objectives { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; } }
+@media(max-width: 1200px) {
+  .objective-card { grid-template-columns: minmax(0,1fr) auto; }
+  .objective-identity { grid-column: 1; }
+  .objective-actions { grid-column: 2; grid-row: 1; }
+  .objective-finances { grid-column: 1/-1; }
+  .objectives-projection-layout { grid-template-columns: minmax(0,1fr); }
+}
+@media(max-width: 700px) {
+  .objectives-tabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; }
+  .objectives-tabs a { min-width: 0; padding: 10px 8px; align-items: start; .tab-number, small { display: none; } strong { font-size: 12px; } }
+  .objectives-summary-band { grid-template-columns: repeat(2,minmax(0,1fr)); padding: 16px; gap: 18px; > div + div { padding-left: 0; border-left: 0; } dd { font-size: 22px; } }
+  .objectives-panel, .objective-card { padding: 16px; }
+  .objective-card { gap: 16px; }
+  .objective-finances dl, .life-objective-fields { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .objective-finances dt { min-height: auto; }
+  .objective-progress-row { flex-wrap: wrap; }
+  .objective-progress { min-width: 60px; }
+  .projection-metrics { grid-template-columns: minmax(0,1fr); }
+  .life-objective-form { padding: 12px; }
+}
+
+.objectives-context-command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  min-width: 0;
+  label { flex: 1 1 220px; max-width: 30rem; }
+  > span { flex: 1 1 240px; font-size: 13px; line-height: 1.5; }
+}

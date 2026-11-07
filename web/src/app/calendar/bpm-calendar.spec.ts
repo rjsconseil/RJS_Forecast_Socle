@@ -1,6 +1,6 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { RecetteContext } from '../core/api.service';
 import { CalendarComponent } from './calendar.component';
 import { CalendarData, CalendarEvent } from './calendar.models';
@@ -79,13 +79,14 @@ describe('personnalisation du calendrier BPM', () => {
     await fixture.whenStable();
     fixture.detectChanges();
   }
-  async function create(bpm = true) {
+  async function create(bpm = true, presentation: 'calendar' | 'agenda' | 'sources' = 'calendar') {
     fixture = TestBed.createComponent(CalendarComponent);
     fixture.componentRef.setInput('bpm', bpm);
+    fixture.componentRef.setInput('presentation', presentation);
     fixture.componentRef.setInput('data', data);
     fixture.componentInstance.displayedEventsChange.subscribe((events) => selected.push(events));
     await settle();
-    if (bpm) {
+    if (bpm && presentation === 'calendar') {
       dom().querySelector<HTMLButtonElement>('.bpm-calendar-customize')!.click();
       await settle();
     }
@@ -170,12 +171,89 @@ describe('personnalisation du calendrier BPM', () => {
     expect(selected.at(-1)).toHaveLength(2);
   });
 
+  it('retrouve un repère depuis le bandeau et ignore une source masquée', async () => {
+    await create();
+    const entries = [...dom().querySelectorAll<HTMLElement>('.calendar-agenda-item')];
+    for (const entry of entries) entry.scrollIntoView = vi.fn();
+    fixture.componentInstance.focusEvent(data.events[1]);
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(dom().querySelector('.calendar-agenda-item.is-pinned')?.textContent).toContain(
+      'Courses',
+    );
+    expect(dom().querySelectorAll('.calendar-agenda-item.is-pinned')).toHaveLength(1);
+    expect(document.activeElement?.textContent).toContain('Courses');
+    await toggle('Revenu');
+    fixture.componentInstance.focusEvent(data.events[0]);
+    await settle();
+    expect(dom().querySelector('.calendar-agenda-item.is-pinned')?.textContent).toContain(
+      'Courses',
+    );
+  });
+
   it('n’active ni panneau ni préférences BPM dans les autres calendriers', async () => {
     await create(false);
     expect(dom().querySelector('.bpm-calendar-customize')).toBeNull();
     expect(dom().querySelector('.calendar-elements')).not.toBeNull();
     expect(dom().querySelector('.is-bpm-calendar')).toBeNull();
     expect(selected).toEqual([]);
+  });
+
+  it('consacre l’agenda aux événements et conserve l’ouverture et la replanification', async () => {
+    await create(true, 'agenda');
+    const actionable = { ...data.events[0], link: '/projects/p1', reschedule: { method: 'PUT' as const, url: '/api/tasks/t1', field: 'dueDate' } };
+    fixture.componentRef.setInput('data', { ...data, events: [actionable] });
+    const opened: CalendarEvent[] = [];
+    const moved: { event: CalendarEvent; date: string }[] = [];
+    fixture.componentInstance.open.subscribe((item) => opened.push(item));
+    fixture.componentInstance.reschedule.subscribe((item) => moved.push(item));
+    await settle();
+    expect(dom().querySelector('.calendar-month-wrap')).toBeNull();
+    expect(dom().querySelector('.calendar-grid-shortcut')).toBeNull();
+    expect(dom().querySelector('.calendar-agenda-item')?.textContent).toContain('Salaire');
+    [...dom().querySelectorAll<HTMLButtonElement>('.calendar-agenda-actions button')].find((button) => button.textContent?.trim() === 'Ouvrir')!.click();
+    expect(opened).toEqual([actionable]);
+    [...dom().querySelectorAll<HTMLButtonElement>('.calendar-agenda-actions button')].find((button) => button.textContent?.trim() === 'Replanifier')!.click();
+    await settle();
+    const input = dom().querySelector<HTMLInputElement>('.calendar-plan input')!;
+    input.value = '2027-01-12';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    dom().querySelector<HTMLFormElement>('.calendar-plan')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect(moved).toEqual([{ event: actionable, date: '2027-01-12' }]);
+  });
+
+  it('ouvre toujours les sources BPM sans grille ni agenda et conserve les choix du profil', async () => {
+    await create(true, 'sources');
+    expect(dom().querySelector('#bpm-calendar-personalization')).toBeTruthy();
+    expect(dom().querySelector('.calendar-month-wrap')).toBeNull();
+    expect(dom().querySelector('.calendar-agenda')).toBeNull();
+    await toggle('Dépense');
+    fixture.componentInstance.togglePersonalization();
+    await settle();
+    expect(dom().querySelector('#bpm-calendar-personalization')).toBeTruthy();
+    expect(readDisplayPreferences('calendar-test-a', data).sources['depense']).toBe(false);
+    fixture.destroy();
+    await create(true, 'agenda');
+    expect(dom().querySelector('.calendar-agenda-list')?.textContent).not.toContain('Courses');
+  });
+
+  it('reprend les sources génériques et les filtres de l’URL dans l’agenda', async () => {
+    await create(false, 'sources');
+    const expense = [...dom().querySelectorAll<HTMLLabelElement>('.calendar-element-toggle')].find((label) => label.textContent?.includes('Dépense'))!;
+    expense.querySelector<HTMLInputElement>('input')!.click();
+    fixture.componentInstance.setIncludeDone(false);
+    fixture.componentInstance.selectGroup('budget');
+    await settle();
+    const url = TestBed.inject(Router).url;
+    expect(url).toContain('calHidden=depense');
+    expect(url).toContain('calDone=0');
+    expect(url).toContain('calGroup=budget');
+    fixture.destroy();
+    await create(false, 'agenda');
+    expect(dom().querySelector('.calendar-agenda-list')?.textContent).toContain('Salaire');
+    expect(dom().querySelector('.calendar-agenda-list')?.textContent).not.toContain('Courses');
+    expect(fixture.componentInstance.toolbarState().includeDone).toBe(false);
+    expect(fixture.componentInstance.toolbarState().group).toBe('budget');
   });
 
   it('réinitialise les sources, la densité et les indicateurs du service', async () => {

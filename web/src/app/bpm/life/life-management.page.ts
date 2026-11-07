@@ -1,7 +1,8 @@
+import { injectPageWorkspace } from '../../shared/page-workspace';
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Params, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api, newRequestKey, RecetteContext, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmLifeManagement, LifeHealth, LifeLine } from '../../core/bpm-life.models';
@@ -9,15 +10,13 @@ import { CHARGE_NATURE_LABEL, ChargeNature, EntryInput, RegisterLine } from '../
 import { ProjectOverrun } from '../../core/bpm-projects.models';
 import { cents, CentsPipe, percentText, ShortDatePipe, SignedCentsPipe } from '../../core/format';
 import { ModalComponent } from '../../shared/modal.component';
-import { PeriodNavigationComponent } from '../../shared/period-navigation.component';
 import { BpmOverrunRequestComponent } from '../projects/project-parts';
-import { BpmLineDetail, BpmOperationEditor, BpmRefresh, FUNDING, ProjectFunding } from '../ui';
+import { BpmPageBanner, BpmPageFocus, BpmPageResult, BpmPageContext, BpmEntryFlow, bpmQueryState, BpmLineDetail, BpmRefresh, FUNDING, ProjectFunding } from '../ui';
 import { BpmActBudgetType } from '../pages/act-budget-type';
-import { shiftPeriod } from '../ui/page-context';
 import { BpmFragmentNavigation } from '../ui/fragment-navigation';
 import { BpmLifeFundingComponent } from './life-funding';
 import { BpmLifeGaugeComponent } from './life-gauge';
-import { BpmLifeObjectives } from './life-objectives';
+import { OBJECTIVE_FRAGMENTS } from '../objectives/objectives-model';
 import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './life-volets';
 
 /**
@@ -29,53 +28,44 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
  */
 @Component({
   selector: 'app-bpm-life-management',
+  providers: [BpmPageContext],
   styleUrls: ['../projects/projects.page.scss', './life-management.page.scss'],
-  imports: [RouterLink, NgTemplateOutlet, CentsPipe, SignedCentsPipe, ShortDatePipe, ModalComponent, PeriodNavigationComponent, BpmOverrunRequestComponent, BpmLineDetail, BpmOperationEditor, BpmLifeGaugeComponent, BpmLifeFundingComponent, BpmActBudgetType, BpmLifeObjectives, BpmFragmentNavigation],
+  imports: [BpmEntryFlow, BpmPageBanner, RouterLink, NgTemplateOutlet, CentsPipe, SignedCentsPipe, ShortDatePipe, ModalComponent, BpmOverrunRequestComponent, BpmLineDetail, BpmLifeGaugeComponent, BpmLifeFundingComponent, BpmActBudgetType, BpmFragmentNavigation],
   template: `
     <div class="page page-wide bpm-projects bpm-project-page bpm-management bpm-life-management" bpmFragmentNavigation [bpmFragmentReady]="!!data()">
-      <header class="life-projects-banner" data-ui-pattern="heading" data-sticky-hero>
-        <div class="life-banner-copy">
-          <p class="eyebrow">Budget/Patrimoine · Ma vision budgétaire</p>
-          <h1 class="display">Gestion du projet de vie</h1>
-          <p class="page-intro">
-            Le projet qui englobe tous les autres : pilotez le budget du cycle, réglez l’essentiel à
-            temps, maîtrisez les dépenses courantes pour profiter de ce que vous avez, et suivez ce
-            qui s’accumule cycle après cycle.
-          </p>
-        </div>
-        <div class="life-header-actions">
-          <a class="btn btn-secondary" routerLink="/app/reglages">Réglages du cycle</a>
-          <button class="btn btn-secondary" type="button" [disabled]="!data()" (click)="followOpen.set(true)">
-            Suivi et clôture
-            @if (pending()) {
-              <span class="life-alert-count">{{ pending() }}</span>
-            }
-          </button>
-          @if (data()?.context?.period; as p) {
-            <rjs-period-navigation
-              class="life-period-nav"
-              tone="accent"
-              [start]="p.start"
-              [end]="p.endExclusive"
-              label="Période du projet de vie consultée"
-              previousLabel="Période précédente"
-              nextLabel="Période suivante"
-              currentLabel="Revenir à la période en cours"
-              compactCurrentLabel="Revenir"
-              [status]="readingText().status"
-              [compactStatus]="readingText().compact"
-              [previousQuery]="periodQuery(-1)"
-              [nextQuery]="periodQuery(1)"
-              [currentQuery]="{ period: null }"
-              [previousDisabled]="atFirst()"
-              [nextDisabled]="atCurrent()"
-              [busy]="loading()"
-            />
-          } @else if (data()) {
-            <p class="life-period-empty">Cycle à configurer : aucune période à parcourir.</p>
-          }
-        </div>
-        <div class="life-banner-tools" aria-label="Commandes du projet de vie">
+      <bpm-page-banner
+        title="Gestion du projet de vie"
+        kicker="Ma vision budgétaire"
+        lead="Pilotez votre cycle, réglez l’essentiel à temps et décidez de ce que vos projets peuvent recevoir."
+        [context]="data()?.context"
+        [periodNav]="true"
+        [focus]="pageFocus()"
+        [scope]="pageScope()"
+        [result]="pageResult()"
+        toolsLabel="Piloter le projet de vie"
+      >
+        @if (!workspace() && data()?.cycle?.status === 'to_configure') {
+          <a primary class="btn btn-primary" routerLink="/app/reglages">Configurer mon cycle</a>
+        } @else {
+          <button primary class="btn btn-primary" type="button" [disabled]="!data() || busy() || (workspace()?.key === 'life-budget' && (!budgetType()?.ready() || budgetType()?.saving()))" (click)="runPriority()">{{ priorityLabel() }}</button>
+        }
+        @if (workspace()?.key === 'life-budget') {
+          <ng-container actions>
+          <button actions class="btn btn-secondary" type="button" [disabled]="!budgetType()?.ready() || budgetType()?.saving()" (click)="budgetType()?.addRecurring('income')">＋ Entrée récurrente</button>
+          @if (budgetType()?.pendingChanges()) { <button actions class="btn btn-secondary" type="button" [disabled]="budgetType()?.saving()" (click)="budgetType()?.addRecurring('charge')">＋ Charge récurrente</button> }
+          <a actions class="bpm-link" routerLink="/depenses/registre" queryParamsHandling="preserve">Vérifier les échéances générées →</a>
+          </ng-container>
+        } @else {
+          <button actions class="btn btn-secondary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une entrée ou une charge</button>
+        }
+        @if (!workspace() && priorityKind() !== 'budget') {
+          <button actions class="btn btn-secondary" type="button" [disabled]="!data()" (click)="budgetTypeOpen.set(true)">Budget type</button>
+        }
+        @if (!workspace() && pending() && priorityKind() !== 'follow') {
+          <button actions class="btn btn-secondary" type="button" (click)="followOpen.set(true)">Suivi et clôture <span class="life-alert-count">{{ pending() }}</span></button>
+        }
+        <div tools class="life-context-tools">
+        @if (!workspace()) {
           <label>
             Afficher les volets
             <select [value]="filter()" (change)="filter.set($any($event.target).value)">
@@ -86,33 +76,35 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
               <option value="unknown">À renseigner</option>
             </select>
           </label>
-          <form class="life-budget-project" (submit)="$event.preventDefault(); openLine(dueChoice())">
-            <label>
-              Échéance à régler
-              <select [value]="dueChoice()" [disabled]="!data()?.dueSoon?.lines?.length" (change)="dueChoice.set($any($event.target).value)">
-                <option value="">
-                  {{ !data() ? 'Chargement…' : data()!.dueSoon.lines.length ? 'Choisir une échéance…' : 'Aucune échéance ouverte' }}
-                </option>
-                @for (l of data()?.dueSoon?.lines ?? []; track l.id) {
-                  <option [value]="l.id">{{ l.plannedDate | shortDate }} · {{ l.label }} · {{ l.plannedCents | cents }}{{ l.status === 'late' ? ' (en retard)' : '' }}</option>
-                }
-              </select>
-            </label>
-            <button type="submit" class="btn btn-secondary" [disabled]="!dueChoice()">Ouvrir</button>
-          </form>
-          <button class="btn btn-primary life-create" type="button" [disabled]="!budgets().length" (click)="openEntry()">
-            <span aria-hidden="true">+</span> Saisir une entrée ou une charge
-          </button>
-          <nav class="life-local-navigation" aria-label="Accès directs au pilotage">
-            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-objectives">Objectifs et avenir</a>
-            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-budget-type">Budget type</a>
-            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-due">Échéances à régler</a>
-            <a [routerLink]="[]" queryParamsHandling="preserve" fragment="life-decisions">Décisions attendues</a>
-            <a routerLink="/plafonds" [queryParams]="period() ? { period: period() } : {}">Plafonds et catégories</a>
-          </nav>
+          @if (data()?.dueSoon?.lines?.length) {
+            <div class="life-budget-project">
+              <label>Échéance à régler
+                <select [value]="dueChoice()" (change)="dueChoice.set($any($event.target).value)">
+                  <option value="">Choisir une échéance à examiner…</option>
+                  @for (l of data()!.dueSoon.lines; track l.id) {
+                    <option [value]="l.id">{{ l.plannedDate | shortDate }} · {{ l.label }} · {{ l.plannedCents | cents }}{{ l.status === 'late' ? ' (en retard)' : '' }}</option>
+                  }
+                </select>
+              </label>
+            </div>
+          }
+          @if (capOverCount()) {
+            <a class="btn btn-secondary" routerLink="/plafonds" [queryParams]="{ period: period(), show: 'over' }">Traiter {{ capOverCount() }} dépassement(s)</a>
+          } @else if (data() && data()!.results.savingsTargetCents === null) {
+            <a class="btn btn-secondary" routerLink="/vision" [queryParams]="{ view: 'reperes' }" fragment="epargne">Fixer mon épargne visée</a>
+          } @else if (nextUnfunded(); as project) {
+            <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', project.coreProjectId]">Préparer les projets sans enveloppe</a>
+          }
+        } @else if (workspace()?.key === 'life-budget') {
+          <p>{{ budgetType()?.pendingChanges() ?? 0 }} modification(s) à enregistrer · les règlements existants restent conservés.</p>
+        } @else {
+          <a class="btn btn-secondary" routerLink="/tableau-de-bord/rapprochement" queryParamsHandling="preserve">Vérifier le compte avant la clôture</a>
+          <span>{{ data()?.results?.toCloseCount ?? 0 }} cycle(s) terminé(s) à clôturer</span>
+        }
         </div>
-      </header>
+      </bpm-page-banner>
 
+      @if (!workspace()) {
       <section class="life-summary" aria-label="Synthèse du projet de vie" [attr.aria-busy]="!data()">
         <div class="life-project-stats" aria-label="État des volets du projet de vie">
           <div class="life-stat life-stat-total">
@@ -162,15 +154,13 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
         </dl>
       </section>
 
+      }
       @if (reading() && reading() !== 'current') {
         <p class="life-reading-note" role="status">
           Vous consultez <strong>{{ data()!.cycle.period!.label }}</strong> ({{ readingText().status.toLowerCase() }}) : les volets
           montrent cette période. Les échéances à régler, les décisions et la clôture restent celles d’aujourd’hui.
           <a [routerLink]="[]" [queryParams]="{ period: null }">Revenir à la période en cours →</a>
         </p>
-      }
-      @if (notice(); as n) {
-        <p class="bpm-feedback" [class.is-error]="n.error" [attr.role]="n.error ? 'alert' : 'status'">{{ n.text }}</p>
       }
       @if (error()) {
         <div class="empty-state" role="alert">
@@ -183,6 +173,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
       }
 
       @if (data(); as d) {
+        @if (!workspace()) {
         <section class="bpm-section" aria-labelledby="life-volets-title">
           <header>
             <h2 id="life-volets-title">{{ d.lifeProject.title }}</h2>
@@ -403,12 +394,16 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           </div>
         </section>
 
-        <bpm-life-objectives />
 
-        <details class="life-budget-type-disclosure" id="life-budget-type" [open]="budgetTypeOpen()" (toggle)="budgetTypeOpen.set($any($event.target).open)">
-          <summary><strong>Budget type et dépenses récurrentes</strong><span>Préparer les entrées et charges des prochaines périodes</span></summary>
-          @if (budgetTypeOpen()) { <bpm-act-budget-type [showCaps]="false" /> }
-        </details>
+        <section class="life-budget-type-disclosure" id="life-budget-type" aria-labelledby="life-budget-type-title">
+          <h2 id="life-budget-type-title">Budget type et dépenses récurrentes</h2>
+          <p>Préparez les entrées et charges des prochaines périodes. Le panneau reste accessible depuis le bandeau.</p>
+          <button class="btn btn-secondary" type="button" (click)="budgetTypeOpen.set(true)">Ouvrir le budget type</button>
+        </section>
+        <rjs-modal [open]="budgetTypeOpen()" [headed]="true" [wide]="true" title="Préparer mon budget type" (closed)="budgetTypeOpen.set(false)">
+          @if (budgetTypeLoaded()) { <bpm-act-budget-type [showCaps]="false" /> }
+          <button class="btn btn-secondary" type="button" (click)="budgetTypeOpen.set(false)">Fermer et conserver la saisie</button>
+        </rjs-modal>
 
         @if (d.projects.projectCount || d.projects.pendingRequests.length) {
           <section class="bpm-section" id="life-funding" aria-labelledby="life-funding-title">
@@ -495,6 +490,18 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
 
         @if (followOpen()) {
           <rjs-modal [open]="followOpen()" [headed]="true" title="Suivi et clôture du projet de vie" [busy]="busy()" (closed)="followOpen.set(false)">
+            <ng-container *ngTemplateOutlet="followContent; context: { $implicit: d }" />
+          </rjs-modal>
+        }
+        } @else if (workspace()?.key === 'life-budget') {
+          <bpm-act-budget-type [showCaps]="false" />
+        } @else if (workspace()?.key === 'life-closing') {
+          <ng-container *ngTemplateOutlet="followContent; context: { $implicit: d }" />
+        }
+      }
+    </div>
+
+    <ng-template #followContent let-d>
             <p>{{ d.context.user.label }} · {{ d.lifeProject.title }} · {{ d.cycle.period?.label ?? 'Cycle à configurer' }}</p>
             <dl class="bpm-kpis">
               <div>
@@ -559,6 +566,22 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                 </p>
               }
             </section>
+            @if (d.projects.pendingRequests.length || d.projects.taskRequestCount || d.projects.billable.length) {
+              <section class="bpm-section" aria-label="Suites à donner aux projets">
+                <h2>Demandes et dépassements des projets</h2>
+                @for (request of d.projects.pendingRequests; track request.id) {
+                  <bpm-overrun-request [overrun]="request" [busy]="busy()" (decide)="decideOverrun(request, $event)" />
+                }
+                @for (request of d.projects.taskRequests ?? []; track request.id) {
+                  <p>« {{ request.taskTitle }} » · {{ request.budgetName }} · {{ request.amountCents | cents }} demandés
+                    <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', request.coreProjectId]" fragment="requests-title">Examiner la part demandée</a>
+                  </p>
+                }
+                @if (d.projects.billable.length) {
+                  <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="bill()">Intégrer {{ d.projects.billableCents | cents }} de dépassements au budget de vie</button>
+                }
+              </section>
+            }
             <p class="bpm-note">
               Décisions de dépassement et facturation :
               <a routerLink="/projet-de-vie" fragment="life-decisions" (click)="followOpen.set(false)">Décisions attendues</a>.
@@ -567,15 +590,12 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
               <a class="text-link" [routerLink]="['/app/projets', d.lifeProject.coreProjectId]">Fiche du projet de vie ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord">Tableau de bord ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord" fragment="bm-history" (click)="followOpen.set(false)">Historique des cycles ↗</a>
-              <a class="text-link" routerLink="/projet-de-vie" fragment="objectifs-budgetaires" (click)="followOpen.set(false)">Objectif d’excédent ↗</a>
+              <a class="text-link" routerLink="/vision" fragment="objectifs-budgetaires" (click)="followOpen.set(false)">Objectif d’excédent ↗</a>
             </nav>
-            <div class="bpm-actions">
-              <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="followOpen.set(false)">Fermer</button>
-            </div>
-          </rjs-modal>
-        }
-      }
-    </div>
+            @if (!workspace()) {
+              <div class="bpm-actions"><button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="followOpen.set(false)">Fermer</button></div>
+            }
+    </ng-template>
 
     <ng-template #natureDetail let-x>
       <div class="bpm-table-wrap">
@@ -646,24 +666,41 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
       </div>
     </ng-template>
 
-    @if (entryOpen() && budgets().length) {
-      <bpm-operation-editor [budgets]="budgets()" [line]="editing()" [defaults]="entryDefaults()" (closed)="closeEntry()" (saved)="saved($event)" />
-    } @else if (lineId()) {
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="entryDefaults()" (saved)="saved($event)" /> @if (lineId() && !ctx.q('entry')()) {
       <bpm-line-detail [lineId]="lineId()!" (closed)="closeLine()" (edit)="editLine($event)" />
     }
   `,
 })
 export class BpmLifeManagementPage {
+  protected ctx = inject(BpmPageContext);
   private bpm = inject(BpmApi);
   private funding = inject(ProjectFunding);
   protected readonly L = FUNDING;
   private api = inject(Api);
   private route = inject(ActivatedRoute);
+  protected workspace = injectPageWorkspace();
+  protected budgetType = viewChild(BpmActBudgetType);
   private refresh = inject(BpmRefresh);
   private context = inject(RecetteContext);
   private fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
+  private objectivesRouter = inject(Router);
+  private followMovedObjectives = effect(() => {
+    const fragment = this.fragment();
+    if (fragment && OBJECTIVE_FRAGMENTS.includes(fragment)) {
+      void this.objectivesRouter.navigate(['/vision'], { fragment, replaceUrl: true });
+    }
+  });
   protected budgetTypeOpen = signal(false);
+  protected budgetTypeLoaded = signal(false);
+  private keepBudgetType = effect(() => {
+    if (this.budgetTypeOpen()) this.budgetTypeLoaded.set(true);
+  });
+  private budgetTypeOwner = effect(() => {
+    this.context.userId();
+    untracked(() => { this.budgetTypeOpen.set(false); this.budgetTypeLoaded.set(false); });
+  });
   private sequence = 0;
+  private readingOwner = this.context.userId();
   /** Période consultée (`?period=AAAA-MM`) ; absente = période en cours. */
   private periodKey = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   protected period = computed(() => this.periodKey().get('period') || undefined);
@@ -672,14 +709,12 @@ export class BpmLifeManagementPage {
   protected error = signal('');
   protected busy = signal(false);
   protected notice = signal<{ text: string; error: boolean } | null>(null);
-  protected filter = signal<'all' | LifeHealth>('all');
-  protected expanded = signal(new Set<string>());
+  protected filter = bpmQueryState<'all' | LifeHealth>('filter', 'all');
+  protected expanded = bpmQueryState('expanded', new Set<string>(), { parse: raw => new Set(raw.split(',').filter(Boolean)), format: ids => [...ids].join(','), replace: true });
   protected followOpen = signal(false);
   protected dueChoice = signal('');
-  protected lineId = signal<string | null>(null);
-  protected entryOpen = signal(false);
-  protected editing = signal<RegisterLine | null>(null);
-  protected entryDefaults = signal<Partial<EntryInput>>({ direction: 'charge' });
+  protected lineId = bpmQueryState<string | null>('ligne', null);
+  protected entryDefaults = computed<Partial<EntryInput>>(() => ({ direction: this.ctx.query().get('entryDirection') === 'income' ? 'income' : 'charge' }));
   private closeKey = newRequestKey();
 
   protected readonly summaryHealths: { key: LifeHealth; label: string }[] = [
@@ -701,6 +736,73 @@ export class BpmLifeManagementPage {
     const d = this.data();
     return d ? followCount(d) : 0;
   });
+  protected nextDue = computed(() => [...(this.data()?.dueSoon.lines ?? [])]
+    .sort((a, b) => Number(b.status === 'late') - Number(a.status === 'late') || a.plannedDate.localeCompare(b.plannedDate))[0] ?? null);
+  protected selectedDue = computed(() => this.data()?.dueSoon.lines.find(line => line.id === this.dueChoice()) ?? null);
+  protected priorityKind = computed(() => this.workspace()?.key === 'life-budget' ? 'budget' : this.workspace()?.key === 'life-closing' ? 'follow' : this.selectedDue() || (this.data()?.dueSoon.lateCount && this.nextDue()) ? 'due' : this.pending() ? 'follow' : this.nextDue() ? 'due' : 'budget');
+  protected priorityDue = computed(() => this.selectedDue() ?? this.nextDue());
+  protected pageScope = computed(() => {
+    const d = this.data();
+    if (!d) return 'Projet de vie · chargement du contexte';
+    const reading = d.context.period?.label ?? 'cycle à configurer';
+    const action = this.workspace()?.key === 'life-closing' ? 'Clôture des cycles terminés · décisions des projets' : this.priorityKind() === 'due' && this.priorityDue() ? `Échéance ouverte à ce jour : ${this.priorityDue()!.label}` : this.priorityKind() === 'follow' ? 'Décisions et clôtures à traiter aujourd’hui' : 'Budget type des prochaines périodes';
+    return `${d.context.user.label} · Lecture : ${reading} · ${action}${this.filter() !== 'all' ? ` · ${this.visibleVolets().length} volet(s) affiché(s) sur 6` : ''}`;
+  });
+  protected pageResult = computed<BpmPageResult | null>(() => {
+    const notice = this.notice();
+    if (this.workspace()?.key === 'life-budget') {
+      const budget = this.budgetType();
+      if (budget?.saving()) return { message: 'Enregistrement du budget type…', tone: 'info' };
+      if (budget?.feedback()) return { message: budget.feedback()!, tone: budget.feedback()!.includes('non enregistrée') ? 'warning' : 'success' };
+    }
+    if (notice?.error) return { message: notice.text, tone: 'danger' };
+    if (this.busy()) return { message: 'Enregistrement et vérification du projet de vie…', tone: 'info' };
+    if (this.error()) return { message: `${notice ? notice.text + ' ' : ''}Lecture non actualisée : ${this.error()}`, tone: notice ? 'warning' : 'danger' };
+    return notice ? { message: notice.text, tone: 'success' } : null;
+  });
+  protected nextUnfunded = computed(() => this.data()?.projects.projects.find(project => project.state === 'unallocated') ?? null);
+  protected capOverCount = computed(() => (this.data()?.natures.indispensable.overCount ?? 0) + (this.data()?.natures.courante.overCount ?? 0));
+  protected pageFocus = computed<BpmPageFocus | null>(() => {
+    const d = this.data();
+    if (!d) return null;
+    if (this.workspace()?.key === 'life-budget') return {
+      title: this.budgetType()?.pendingChanges() ? `${this.budgetType()!.pendingChanges()} modification(s) du budget type` : 'Préparez les prochaines périodes',
+      detail: 'Ajustez les lignes récurrentes puis enregistrez. Les montants déjà réglés restent conservés.', tone: this.budgetType()?.pendingChanges() ? 'warning' : 'info',
+    };
+    if (this.workspace()?.key === 'life-closing') return {
+      title: d.results.toCloseCount ? `${d.results.toCloseCount} cycle(s) terminé(s) à clôturer` : 'Aucun cycle terminé à clôturer',
+      detail: d.results.closing?.possible ? 'Relisez le résultat et le patrimoine après capitalisation, puis clôturez le cycle.' : d.results.closing?.reason ?? 'Le cycle en cours reste disponible pour les règlements.',
+      tone: d.results.toCloseCount ? 'warning' : 'success',
+    };
+    if (d.cycle.status === 'to_configure') return { title: 'Votre cycle reste à configurer', detail: 'Choisissez son point de départ pour prévoir et suivre les échéances.', tone: 'warning' };
+    if (this.selectedDue()) return { title: `Échéance sélectionnée : ${this.selectedDue()!.label}`, detail: `${cents(this.selectedDue()!.plannedCents)} à vérifier dans le détail avant d’enregistrer le règlement.`, tone: this.selectedDue()!.status === 'late' ? 'danger' : 'info' };
+    if (d.dueSoon.lateCount && this.nextDue()) return { title: `${d.dueSoon.lateCount} échéance(s) en retard`, detail: `Commencez par « ${this.nextDue()!.label} ». Le détail permet de vérifier puis enregistrer le règlement.`, tone: 'danger' };
+    if (this.pending()) return { title: `${this.pending()} suite(s) à donner`, detail: `${d.results.toCloseCount} période(s) à clôturer · ${d.projects.pendingRequests.length + d.projects.taskRequestCount} demande(s) de financement.`, tone: 'warning' };
+    if (this.nextDue()) return { title: `À préparer : ${this.nextDue()!.label}`, detail: `${cents(this.nextDue()!.plannedCents)} à vérifier avant le règlement. Les échéances restent celles d’aujourd’hui.`, tone: 'info' };
+    if ((d.cycle.flows?.expectedCents ?? 0) < 0 && d.cycle.reading !== 'closed') return { title: 'Le cycle prévoit un déficit', detail: 'Réexaminez les charges et les entrées du budget type avant de financer un autre projet.', tone: 'warning' };
+    return { title: d.cycle.reading === 'closed' ? 'Bilan de la période clôturée' : 'Aucune échéance urgente ni décision en attente', detail: 'Profitez de ce point pour vérifier le budget type et préparer la prochaine période.', tone: 'success' };
+  });
+  protected priorityLabel = computed(() => this.workspace()?.key === 'life-budget'
+    ? this.budgetType()?.pendingChanges() ? `Enregistrer le budget type · ${this.budgetType()!.pendingChanges()} modification(s)` : '＋ Ajouter une charge récurrente'
+    : this.workspace()?.key === 'life-closing'
+      ? this.data()?.results.closing?.possible && this.data()?.results.closing?.preview ? `Clôturer ${this.data()!.results.closing!.preview!.periodLabel}` : 'Actualiser la clôture'
+      : this.priorityKind() === 'due' ? `Examiner et régler · ${this.priorityDue()?.label ?? 'échéance'}` : this.priorityKind() === 'follow' ? 'Ouvrir les suites à donner' : 'Revoir mon budget type');
+  protected runPriority() {
+    if (this.workspace()?.key === 'life-budget') {
+      if (this.budgetType()?.pendingChanges()) void this.budgetType()?.saveAll();
+      else this.budgetType()?.addRecurring('charge');
+      return;
+    }
+    if (this.workspace()?.key === 'life-closing') {
+      const preview = this.data()?.results.closing?.preview;
+      if (this.data()?.results.closing?.possible && preview) void this.close(preview.periodKey, preview.resultCents);
+      else void this.load();
+      return;
+    }
+    if (this.priorityKind() === 'due' && this.priorityDue()) this.openLine(this.priorityDue()!.id);
+    else if (this.priorityKind() === 'follow') this.followOpen.set(true);
+    else this.budgetTypeOpen.set(true);
+  }
   protected pct = (v: number | null) => percentText(v, 0);
   protected euros = (v: number | null) => (v === null ? 'Inconnu' : cents(Math.round(v * 100)));
 
@@ -708,8 +810,14 @@ export class BpmLifeManagementPage {
   private reader = effect(() => {
     this.period();
     this.refresh.version();
-    this.context.userId();
-    untracked(() => this.load());
+    const owner = this.context.userId();
+    untracked(() => {
+      if (owner !== this.readingOwner) {
+        this.data.set(null); this.notice.set(null); this.followOpen.set(false); this.dueChoice.set('');
+        this.readingOwner = owner;
+      }
+      void this.load();
+    });
   });
   private openSection = effect(() => {
     if (this.fragment() === 'life-budget-type') this.budgetTypeOpen.set(true);
@@ -727,14 +835,6 @@ export class BpmLifeManagementPage {
     }
   });
   protected shownKey = computed(() => this.data()?.context.period?.key ?? null);
-  protected atFirst = computed(() => !!this.shownKey() && this.shownKey() === this.data()?.context.periods?.firstKey);
-  protected atCurrent = computed(() => !!this.shownKey() && this.shownKey() === this.data()?.context.periods?.currentKey);
-  /** Période voisine ; revenir sur la période en cours retire le paramètre (adresse de la page nue). */
-  protected periodQuery(delta: number): Params {
-    const key = this.shownKey();
-    const target = key ? shiftPeriod(key, delta) : null;
-    return { period: target && target !== this.data()?.context.periods?.currentKey ? target : null };
-  }
 
   async load() {
     const sequence = ++this.sequence;
@@ -790,13 +890,10 @@ export class BpmLifeManagementPage {
   }
 
   protected openEntry(direction: 'income' | 'charge' = 'charge') {
-    this.editing.set(null);
-    this.entryDefaults.set({ direction });
-    this.entryOpen.set(true);
+    void this.ctx.setQuery({ entry: 'new', entryDirection: direction });
   }
   protected closeEntry() {
-    this.entryOpen.set(false);
-    this.editing.set(null);
+    void this.ctx.setQuery({ entry: null, entryDirection: null }, { replace: true });
   }
   protected saved(text: string) {
     this.closeEntry();
@@ -812,8 +909,7 @@ export class BpmLifeManagementPage {
   }
   protected editLine(line: RegisterLine) {
     this.lineId.set(null);
-    this.editing.set(line);
-    this.entryOpen.set(true);
+    void this.ctx.setQuery({ entry: line.id });
   }
 
   protected natureLabel(l: LifeLine) {

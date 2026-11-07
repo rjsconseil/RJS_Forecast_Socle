@@ -1,3 +1,5 @@
+import { injectPageWorkspace } from '../shared/page-workspace';
+import { PageHeroDirective } from '../shared/page-hero.directive';
 import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragStart, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -23,18 +25,18 @@ import {
  */
 @Component({
   selector: 'app-tasks-board',
-  imports: [RouterLink, HoursPipe, CdkDropListGroup, CdkDropList, CdkDrag, CdkDragHandle, ItemSummaryComponent, ItemBoardToolsComponent],
+  imports: [PageHeroDirective, RouterLink, HoursPipe, CdkDropListGroup, CdkDropList, CdkDrag, CdkDragHandle, ItemSummaryComponent, ItemBoardToolsComponent],
   template: `
     <div class="page page-wide landing-page section-home">
-      <div class="section-home-top section-home-top-task">
+      <div class="section-home-top section-home-top-task" rjsPageHero #pageHero="pageHero" data-ui-pattern="heading">
         <header class="section-home-hero">
-          <div class="section-home-banner" data-ui-pattern="heading">
+          <div class="section-home-banner">
             <p class="eyebrow"><span class="eyebrow-line"></span>Tâches</p>
-            <h1 class="display">Tâches</h1>
+            <h1 class="display">{{ workspace()?.title || 'Tâches' }}</h1>
           </div>
         </header>
         <aside class="section-home-task-intro">
-          <p class="page-intro">Organisez le travail par projet. Les tâches sans projet peuvent être rattachées plus tard.</p>
+          <p class="page-intro">{{ workspace()?.lead || 'Organisez le travail par projet. Les tâches sans projet peuvent être rattachées plus tard.' }}</p>
         </aside>
         <rjs-item-summary
           class="section-home-task-summary"
@@ -46,10 +48,14 @@ import {
         <rjs-item-board-tools
           class="section-home-task-tools"
           kind="task"
+          [compact]="pageHero.compact()"
+          [scope]="toolbarScope()"
+          [result]="toolbarResult()"
           createLink="/tasks/new"
           [createQuery]="selectedProjectId() ? { projectId: selectedProjectId()! } : null"
           [createLabel]="selectedProjectId() ? 'Nouvelle tâche dans ce projet' : 'Nouvelle tâche'"
           [filterOptions]="filterOptions()"
+          [showFilter]="workspace()?.key !== 'core-unassigned'"
           [filter]="filter()"
           (filterChange)="setFilter({ project: $event === 'all' ? null : $event })"
           [search]="query()"
@@ -76,9 +82,13 @@ import {
           } @else {
             <p>Ce projet n’est plus disponible. Choisissez un autre filtre pour retrouver les tâches.</p>
           }
-          <button class="text-link" type="button" (click)="setFilter({ project: null })">
-            {{ filter() === 'unassigned' || selectedProjectTitle() ? 'Effacer le filtre' : 'Afficher toutes les tâches' }}
-          </button>
+          @if (workspace()?.key === 'core-unassigned') {
+            <a class="text-link" routerLink="/tasks" [queryParams]="{ q: query() || null }">Afficher toutes les tâches →</a>
+          } @else {
+            <button class="text-link" type="button" (click)="setFilter({ project: null })">
+              {{ filter() === 'unassigned' || selectedProjectTitle() ? 'Effacer le filtre' : 'Afficher toutes les tâches' }}
+            </button>
+          }
         </aside>
       }
 
@@ -216,6 +226,7 @@ import {
   `,
 })
 export class TasksBoard implements OnInit {
+  protected readonly workspace = injectPageWorkspace();
   private api = inject(Api);
   protected columns = COLUMNS;
   protected readonly date = displayDate;
@@ -235,6 +246,7 @@ export class TasksBoard implements OnInit {
   /** Filtres gardés dans l'URL (`project`, `q`) comme dans la référence. `__none` reste accepté (anciens liens). */
   protected query = computed(() => this.params().get('q') ?? '');
   protected filter = computed(() => {
+    if (this.workspace()?.key === 'core-unassigned') return 'unassigned';
     const value = this.params().get('project');
     return !value ? 'all' : value === '__none' ? 'unassigned' : value;
   });
@@ -251,11 +263,13 @@ export class TasksBoard implements OnInit {
         (f === 'all' || (f === 'unassigned' ? t.task.projectId === null : t.task.projectId === f)),
     );
   });
-  protected remaining = computed(() => this.tasks().filter((t) => t.task.status !== 'done').length);
-  protected progress = computed(() => (this.tasks().length ? Math.round((100 * this.countAll('done')) / this.tasks().length) : 0));
+  private readonly summaryTasks = computed(() => this.workspace()?.key === 'core-unassigned'
+    ? this.tasks().filter((t) => !t.task.projectId) : this.tasks());
+  protected remaining = computed(() => this.summaryTasks().filter((t) => t.task.status !== 'done').length);
+  protected progress = computed(() => (this.summaryTasks().length ? Math.round((100 * this.countAll('done')) / this.summaryTasks().length) : 0));
   protected counts = computed(() => Object.fromEntries(COLUMNS.map((c) => [c.id, this.countAll(c.id)])) as Record<TaskStatus, number>);
   protected countAll(status: TaskStatus) {
-    return this.tasks().filter((t) => t.task.status === status).length;
+    return this.summaryTasks().filter((t) => t.task.status === status).length;
   }
   protected setFilter(patch: { project?: string | null; q?: string | null }) {
     this.router.navigate([], { queryParams: patch, queryParamsHandling: 'merge', replaceUrl: true });
@@ -280,6 +294,14 @@ export class TasksBoard implements OnInit {
       seen.set(t.task.projectId, entry);
     }
     return seen;
+  });
+  protected toolbarScope = computed(() => {
+    const project = this.filter() === 'unassigned' ? 'Tâches sans projet' : this.selectedProjectTitle() || 'Tous les projets';
+    return `Sélection · ${project} · ${this.visible().length} / ${this.summaryTasks().length} tâche(s)`;
+  });
+  protected toolbarResult = computed(() => {
+    const notice = this.notice();
+    return notice ? { message: notice.text, tone: notice.error ? 'danger' as const : 'success' as const } : null;
   });
   protected selectedProjectTitle = computed(() => {
     const id = this.selectedProjectId();

@@ -1,4 +1,6 @@
-import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import { BpmDrafts, DraftHandle } from '../ui/drafts';
+import { BpmFormActions } from '../ui/form-actions';
+import { Component, computed, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
@@ -21,11 +23,12 @@ export interface GoalTypeOption {
  */
 @Component({
   selector: 'bpm-goal-editor',
-  imports: [FormsModule, ModalComponent],
+  imports: [BpmFormActions, FormsModule, ModalComponent],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss'],
   template: `
-    <rjs-modal [headed]="true" [open]="true" [title]="heading()" [busy]="busy()" (closed)="closed.emit()">
-      <form class="bv-form" (ngSubmit)="save()" novalidate>
+    <rjs-modal [headed]="true" [open]="true" [title]="heading()" [busy]="busy()" (closed)="cancel()">
+      <form class="bv-form" (ngSubmit)="save()" (input)="draft?.save()" (change)="draft?.save()" novalidate>
+        @if (draft?.restored) { <p class="bpm-help" role="status">Votre brouillon a été repris.</p> }
         <div class="bv-kinds" role="radiogroup" aria-label="Type d’objectif">
           @for (t of types(); track t.key) {
             <label class="bv-kind" [class.is-selected]="type() === t.key">
@@ -65,15 +68,16 @@ export interface GoalTypeOption {
             }
           </div>
         }
-        <div class="bpm-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="busy()">{{ busy() ? 'Enregistrement…' : goal() ? 'Enregistrer les modifications' : 'Ajouter l’objectif' }}</button>
-          <button type="button" class="btn btn-secondary" (click)="closed.emit()" [disabled]="busy()">Annuler</button>
-        </div>
+        <bpm-form-actions [busy]="busy()" [label]="goal() ? 'Enregistrer les modifications' : 'Ajouter l’objectif'" (cancel)="cancel()" />
       </form>
     </rjs-modal>
   `,
 })
 export class BpmGoalEditor implements OnInit {
+  private drafts = inject(BpmDrafts);
+  private destroy = inject(DestroyRef);
+  protected draft?: DraftHandle;
+  protected cancel() { this.draft?.clear(); this.closed.emit(); }
   private bpm = inject(BpmApi);
   private refresh = inject(BpmRefresh);
   /** Objectif à modifier ; absent = création. */
@@ -106,6 +110,7 @@ export class BpmGoalEditor implements OnInit {
       this.date.set(g.date);
       this.target.set(String(g.targetTodayCents / 100).replace('.', ','));
     }
+    this.draft = this.drafts.fields(`goal:${g?.id ?? 'new'}:${g?.revision ?? 0}`, this, ['label', 'type', 'date', 'target', 'requestKey'], this.destroy);
   }
 
   protected err(field: string) {
@@ -129,10 +134,12 @@ export class BpmGoalEditor implements OnInit {
       if (g) {
         await this.bpm.updateGoal(g.id, { ...body, expectedRevision: g.revision });
         this.refresh.bump();
+        this.draft?.clear();
         this.saved.emit(`Objectif « ${body.label} » modifié.`);
       } else {
         const r = await this.bpm.createGoal({ ...body, requestKey: this.requestKey });
         this.refresh.bump();
+        this.draft?.clear();
         this.saved.emit(r.replayed ? `Objectif « ${r.goal.label} » déjà enregistré (demande rejouée).` : `Objectif « ${r.goal.label} » ajouté.`);
       }
     } catch (e) {

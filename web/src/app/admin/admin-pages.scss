@@ -338,3 +338,6 @@ code.adm-formula {
   padding: var(--ecart-4) var(--ecart-8);
   border-radius: var(--rayon-8);
 }
+.adm-layout.is-specialized {
+  grid-template-columns: minmax(0, 1fr);
+}

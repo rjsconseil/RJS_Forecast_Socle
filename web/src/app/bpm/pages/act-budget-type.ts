@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
@@ -6,6 +6,7 @@ import { Cadence, Direction, Recurrence } from '../../core/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { bpmLoader, BpmRefresh, BpmState, newRequestKey } from '../ui';
+import { BpmDrafts } from '../ui/drafts';
 import { localToday } from './act-due';
 
 type RecCadence = Exclude<Cadence, 'once'>;
@@ -221,12 +222,24 @@ export class BpmActBudgetType {
   protected busy = signal(false);
   protected message = signal<string | null>(null);
 
+  readonly pendingChanges = computed(() => this.pendingCount());
+  readonly saving = computed(() => this.busy());
+  readonly feedback = computed(() => this.message());
+  readonly ready = computed(() => !!this.bt.data());
+  addRecurring(direction: Direction) { this.addLine(direction); }
+
   constructor() {
+    inject(BpmDrafts).connect('budget-type',
+      () => ({ rows: this.rows().filter(row => this.isDirty(row) || row.kept), news: this.news(), capDraft: this.capDraft(), capsBase: this.capsBase() }),
+      draft => { this.rows.set(draft.rows); this.news.set(draft.news); this.capDraft.set(draft.capDraft); this.capsBase.set(draft.capsBase); },
+      inject(DestroyRef));
     // Relecture : les lignes enregistrées remplacent les brouillons, sauf ceux conservés après un échec.
     effect(() => {
-      const lines = this.bt.data()?.lines ?? [];
+      const data = this.bt.data();
+      if (!data) return;
+      const lines = data.lines;
       untracked(() => {
-        const kept = new Map(this.rows().filter((r) => r.kept).map((r) => [r.id, r] as const));
+        const kept = new Map(this.rows().filter((r) => r.kept || this.isDirty(r)).map((r) => [r.id, r] as const));
         this.rows.set(lines.map((l) => kept.get(l.id) ?? this.fromLine(l)));
       });
     });
@@ -304,7 +317,7 @@ export class BpmActBudgetType {
       if (r.cadence !== r.orig.cadence) body['cadence'] = r.cadence;
       try {
         await this.bpm.updateRecurrence(r.id, body);
-        this.patch(r.id, { error: null, kept: false });
+        this.patch(r.id, { error: null, kept: false, orig: { label: r.label.trim(), amountCents, cadence: r.cadence } });
         updated++;
       } catch (e) {
         const err = toApiError(e);

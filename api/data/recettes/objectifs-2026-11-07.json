@@ -1,0 +1,235 @@
+{
+  "userId": "usr_133e9fa4-83b2-45a7-9098-37f0b1beafdb",
+  "label": "TEST OBJECTIFS · Parcours complet · 2026-11-07",
+  "cases": [
+    {
+      "id": "obj_59c9fcbf-28ca-4f45-8e25-52fd7e2ba9e7",
+      "label": "Achat à réexaminer — date dépassée",
+      "expectedStatus": "funded"
+    },
+    {
+      "id": "obj_558de9a6-378c-4348-a7dd-2a92fbfc6074",
+      "label": "Réserve de sécurité — couverte",
+      "expectedStatus": "funded"
+    },
+    {
+      "id": "obj_5609d93a-a163-4202-88d2-c4b5e78eeff1",
+      "label": "Équipement du logement — couvert",
+      "expectedStatus": "funded"
+    },
+    {
+      "id": "obj_0b0e0f25-d532-4f29-ac90-cfcbb2b3d535",
+      "label": "Études — financement partiel",
+      "expectedStatus": "partial"
+    },
+    {
+      "id": "obj_9ae7ead6-f47f-4640-aa90-076b673f49f3",
+      "label": "Voyage — reste à financer",
+      "expectedStatus": "unfunded"
+    },
+    {
+      "id": "obj_0b90fc6b-b24b-44f5-8009-0ceb498fbd72",
+      "label": "Retraite — au-delà de l’horizon",
+      "expectedStatus": "outOfHorizon"
+    }
+  ],
+  "projection": {
+    "context": {
+      "user": {
+        "id": "usr_133e9fa4-83b2-45a7-9098-37f0b1beafdb",
+        "label": "TEST OBJECTIFS · Parcours complet · 2026-11-07",
+        "userType": "individuel"
+      },
+      "scope": "principal",
+      "scopeLabel": "Budget du projet de vie",
+      "budgets": [
+        {
+          "id": "bud_e148f410-38e1-42e9-9b4e-f8e912e7e20d",
+          "name": "Budget du projet de vie",
+          "role": "life",
+          "coreProjectId": "prj_d7740e6c-bef4-42ec-a442-75cf2a922344",
+          "capsCents": {},
+          "revision": 1
+        }
+      ],
+      "period": {
+        "key": "2026-11",
+        "index": 24322,
+        "start": "2026-11-01",
+        "end": "2026-11-30",
+        "label": "Novembre 2026",
+        "status": "current",
+        "closureId": null,
+        "endExclusive": "2026-12-01"
+      },
+      "periods": {
+        "firstKey": "2026-11",
+        "currentKey": "2026-11"
+      },
+      "calculationDate": "2026-11-07",
+      "revision": 2363,
+      "unit": "centimes (EUR)"
+    },
+    "hypotheses": {
+      "horizonYears": 5,
+      "ratePct": 0,
+      "inflationPct": 0,
+      "inflationSource": "Hypothèse de test : prix constants",
+      "contributionCents": 10000,
+      "contributionSource": "Apport saisi",
+      "cadence": "monthly",
+      "perYear": 12,
+      "startCents": 500000,
+      "stockReason": null,
+      "extraCents": 0
+    },
+    "label": "Estimation",
+    "status": "estimate",
+    "realReturnPct": 0,
+    "annualContributionCents": 120000,
+    "rows": [
+      {
+        "year": 2026,
+        "n": 0,
+        "nominalCents": 450000,
+        "realCents": 450000,
+        "priceIndex": 1,
+        "reservedCents": 100000
+      },
+      {
+        "year": 2027,
+        "n": 1,
+        "nominalCents": 170000,
+        "realCents": 170000,
+        "priceIndex": 1,
+        "reservedCents": 100000
+      },
+      {
+        "year": 2028,
+        "n": 2,
+        "nominalCents": 100000,
+        "realCents": 100000,
+        "priceIndex": 1,
+        "reservedCents": 100000
+      },
+      {
+        "year": 2029,
+        "n": 3,
+        "nominalCents": 220000,
+        "realCents": 220000,
+        "priceIndex": 1,
+        "reservedCents": 100000
+      },
+      {
+        "year": 2030,
+        "n": 4,
+        "nominalCents": 340000,
+        "realCents": 340000,
+        "priceIndex": 1,
+        "reservedCents": 100000
+      },
+      {
+        "year": 2031,
+        "n": 5,
+        "nominalCents": 460000,
+        "realCents": 460000,
+        "priceIndex": 1,
+        "reservedCents": 100000
+      }
+    ],
+    "goals": [
+      {
+        "goalId": "obj_59c9fcbf-28ca-4f45-8e25-52fd7e2ba9e7",
+        "label": "Achat à réexaminer — date dépassée",
+        "type": "achat",
+        "typeLabel": "Achat",
+        "consumes": true,
+        "date": "2026-10-01",
+        "year": 2026,
+        "targetTodayCents": 50000,
+        "nominalTargetCents": 50000,
+        "coveredCents": 50000,
+        "status": "funded",
+        "coveragePct": 100
+      },
+      {
+        "goalId": "obj_558de9a6-378c-4348-a7dd-2a92fbfc6074",
+        "label": "Réserve de sécurité — couverte",
+        "type": "securite",
+        "typeLabel": "Sécurité",
+        "consumes": false,
+        "date": "2026-12-31",
+        "year": 2026,
+        "targetTodayCents": 100000,
+        "nominalTargetCents": 100000,
+        "coveredCents": 100000,
+        "status": "funded",
+        "coveragePct": 100
+      },
+      {
+        "goalId": "obj_5609d93a-a163-4202-88d2-c4b5e78eeff1",
+        "label": "Équipement du logement — couvert",
+        "type": "achat",
+        "typeLabel": "Achat",
+        "consumes": true,
+        "date": "2027-06-01",
+        "year": 2027,
+        "targetTodayCents": 400000,
+        "nominalTargetCents": 400000,
+        "coveredCents": 400000,
+        "status": "funded",
+        "coveragePct": 100
+      },
+      {
+        "goalId": "obj_0b0e0f25-d532-4f29-ac90-cfcbb2b3d535",
+        "label": "Études — financement partiel",
+        "type": "etudes",
+        "typeLabel": "Études",
+        "consumes": true,
+        "date": "2028-09-01",
+        "year": 2028,
+        "targetTodayCents": 500000,
+        "nominalTargetCents": 500000,
+        "coveredCents": 190000,
+        "status": "partial",
+        "coveragePct": 38
+      },
+      {
+        "goalId": "obj_9ae7ead6-f47f-4640-aa90-076b673f49f3",
+        "label": "Voyage — reste à financer",
+        "type": "autre",
+        "typeLabel": "Autre",
+        "consumes": true,
+        "date": "2028-12-01",
+        "year": 2028,
+        "targetTodayCents": 250000,
+        "nominalTargetCents": 250000,
+        "coveredCents": 0,
+        "status": "unfunded",
+        "coveragePct": 0
+      },
+      {
+        "goalId": "obj_0b90fc6b-b24b-44f5-8009-0ceb498fbd72",
+        "label": "Retraite — au-delà de l’horizon",
+        "type": "retraite",
+        "typeLabel": "Retraite",
+        "date": "2035-01-01",
+        "targetTodayCents": 10000000,
+        "nominalTargetCents": null,
+        "coveredCents": null,
+        "status": "outOfHorizon",
+        "coveragePct": null
+      }
+    ],
+    "keyFigures": {
+      "nominalAtHorizonCents": 460000,
+      "realAtHorizonCents": 460000,
+      "realReturnPct": 0,
+      "erosionWithoutReturnCents": 0
+    },
+    "comparison": {
+      "label": "Comparaison indisponible",
+      "reason": "Au moins deux clôtures sont nécessaires."
+    }
+  }
+}

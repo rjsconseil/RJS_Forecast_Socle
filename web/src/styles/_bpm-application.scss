@@ -709,3 +709,182 @@
     }
   }
 }
+
+/* Finition applicative commune : mêmes surfaces et contrôles dans chaque section BPM. */
+.app-shell:is([data-module='bpm'], [data-space='budget-calendar']) {
+  main :is(.bpm-page-banner, .life-projects-banner) {
+    border: 1px solid color-mix(in srgb, var(--bpm-section-deep) 80%, white);
+    border-radius: 16px;
+    background: linear-gradient(115deg, var(--bpm-section-deep), color-mix(in srgb, var(--bpm-section-accent) 70%, var(--bpm-section-deep)));
+    box-shadow: 0 8px 24px rgb(22 35 55 / 9%);
+  }
+  main .bpm-banner-copy h1 {
+    letter-spacing: -.025em;
+    line-height: 1.15;
+  }
+  main .bpm-banner-intro { max-width: 68ch; line-height: 1.6; }
+  main .bpm-banner-context {
+    align-items: center;
+    gap: 8px 16px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: rgb(255 255 255 / 8%);
+    border: 1px solid rgb(255 255 255 / 12%);
+    font-size: 12px;
+  }
+  main bpm-toolbar .bpm-context-toolbar {
+    padding: 12px;
+    border-radius: 12px;
+    background: rgb(10 20 40 / 12%);
+    border-color: rgb(255 255 255 / 20%);
+    :is(.btn, .app-hero-action, .bpm-link) {
+      min-height: 44px;
+      border-radius: 9px;
+      padding-inline: 14px;
+      font-weight: 650;
+    }
+    :is(input, select) {
+      min-height: 44px;
+      border-radius: 9px;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 6%);
+    }
+    .bpm-toolbar-shortcuts a {
+      min-height: 40px;
+      border-radius: 8px;
+      border-color: rgb(255 255 255 / 16%);
+    }
+    .bpm-toolbar-caption { letter-spacing: .06em; }
+  }
+  main :is(.objectives-summary-band, .life-projects-kpis, .life-project-kpis) {
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgb(22 35 55 / 4%);
+    font-variant-numeric: tabular-nums;
+  }
+  main :is(.objective-card, .caps-setting-form, .caps-category-directory) {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgb(22 35 55 / 3%);
+  }
+  main :is(.objectives-tabs, .bpm-toolbar-shortcuts) a[aria-current='page'] {
+    box-shadow: inset 0 -3px 0 var(--bpm-section-accent);
+  }
+  main .objectives-tabs a { min-height: 60px; border-radius: 10px; }
+  main :is(input, select, textarea):focus-visible {
+    outline: 3px solid var(--bpm-section-accent);
+    outline-offset: 2px;
+  }
+  main :is(.bpm-page-banner, .life-projects-banner) :is(input, select, textarea):focus-visible {
+    outline-color: #d8edff;
+  }
+  @media (max-width: 700px) {
+    main :is(.bpm-page-banner, .life-projects-banner) { border-radius: 12px; }
+    main .bpm-banner-context { display: grid; }
+    main .objectives-tabs { grid-template-columns: minmax(0, 1fr); }
+  }
+}
+
+/* Le parcours reste accessible au-dessus du bandeau fixé, y compris après le focus d'une étape. */
+.app-shell:is([data-module='bpm'], [data-space='budget-calendar']) .main-shell main > bpm-navigation {
+  padding: 0;
+  position: sticky;
+  top: var(--bpm-routebar-top, 0px);
+  z-index: 45;
+  background: var(--page-surface, #f3f6fb);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Un bandeau unique et compact au défilement ; les actions restent au premier plan. */
+.app-shell:is([data-module='bpm'], [data-space='budget-calendar']) .main-shell main {
+  bpm-page-banner.bpm-page-banner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 20px;
+    padding: 18px 20px;
+    min-width: 0;
+    overflow-anchor: none;
+    max-height: min(65dvh, calc(100dvh - var(--page-top-offset, 100px) - 100px));
+    bpm-heading { grid-column: 1; grid-row: 1; }
+    .bpm-banner-period { grid-column: 2; grid-row: 1; }
+    .bpm-banner-expand {
+      grid-column: 1 / -1;
+      justify-self: end;
+      min-height: 32px;
+      padding: 5px 10px;
+      border: 1px solid #ffffff50;
+      border-radius: 6px;
+      background: transparent;
+      color: #fff;
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    &.bpm-banner-compact {
+      gap: 8px 16px;
+      padding-block: 10px;
+      .bpm-banner-intro, .bpm-banner-context, .bpm-banner-back, .eyebrow { display: none; }
+      h1.display { margin: 0; font-size: 20px; }
+      .bpm-banner-period { min-width: 180px; }
+      .period-navigation > :is(a, .period-nav-arrow) { min-height: 44px; }
+      .period-nav-title { font-size: 15px; }
+      .bpm-toolbar-focus { padding-bottom: 7px; }
+      .bpm-toolbar-focus p { display: none; }
+      .bpm-toolbar-caption { display: none; }
+      .bpm-context-toolbar { padding: 8px 10px; gap: 8px; }
+    }
+  }
+  @media (max-width: 700px) {
+    bpm-page-banner.bpm-page-banner {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 12px;
+      gap: 9px;
+      h1.display { font-size: 23px; }
+      .bpm-banner-period { grid-column: 1; grid-row: auto; }
+      .bpm-banner-context { font-size: 10px; padding: 7px 9px; }
+      &.bpm-banner-compact {
+        h1.display { font-size: 18px; }
+        .bpm-toolbar-focus strong { font-size: 12px; }
+        .bpm-toolbar-command-row { display: flex; }
+      }
+    }
+  }
+}
+
+.app-shell:is([data-module='bpm'], [data-space='budget-calendar']) .main-shell main bpm-page-banner.bpm-banner-compact {
+  .period-nav-title { display: flex; flex-direction: row; align-items: baseline; justify-content: center; gap: 4px; }
+  .period-nav-full { display: none; }
+  .period-nav-compact { display: inline; }
+  .period-nav-year { font-size: inherit; }
+  @media (max-width: 700px) {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 46%);
+    align-items: center;
+    gap: 8px;
+    .bpm-banner-period { grid-column: 2; grid-row: 1; min-width: 0; }
+    bpm-heading { grid-column: 1; grid-row: 1; }
+    h1.display { font-size: 16px; }
+    .bpm-toolbar-actions > [toolbarActions] { display: flex; gap: 6px; }
+    .bpm-toolbar-actions > [toolbarActions] > :is(button, a) { flex: 1 1 120px; min-height: 42px; padding: 7px 9px; font-size: 11px; }
+    .bpm-toolbar-toggle { width: auto; min-height: 38px; padding-block: 6px; }
+    .bpm-banner-expand { min-height: 28px; padding-block: 4px; }
+    .bpm-toolbar-focus strong { font-size: 11px; }
+  }
+}
+@media (max-width: 700px) {
+  .app-shell:is([data-module='bpm'], [data-space='budget-calendar']) .main-shell main bpm-page-banner:not(.bpm-banner-compact) .bpm-banner-intro { display: block; }
+}
+
+@media (max-width: 700px) {
+  .app-shell:is([data-module='bpm'], [data-space='budget-calendar']) .main-shell main bpm-page-banner.bpm-page-banner.bpm-banner-compact .bpm-banner-period {
+    min-width: 0; width: 100%; max-width: none;
+    rjs-period-navigation { width: 100%; min-width: 0; }
+    .period-navigation { width: 100%; min-width: 0; grid-template-columns: 40px minmax(0, 1fr) 40px; box-sizing: border-box; }
+    .period-nav-title, .period-nav-primary { font-size: 11px; }
+    .period-nav-current { padding-inline: 0; }
+  }
+}
+
+/* Le résultat et l'action principale appartiennent au cadre de travail commun. */
+.app-shell:is([data-module='bpm'], [data-space='budget-calendar']) .main-shell main bpm-page-banner {
+  .bpm-banner-primary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .bpm-banner-primary > :is(div, span)[primary] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .bpm-toolbar-primary:has(> [toolbarPrimary]:empty) { display: none; }
+  .page-toolbar-scope { max-width: 100%; }
+}

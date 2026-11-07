@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-07",
+  "label": "TEST BPM · Parcours et reprise · 2026-11-07",
+  "userId": "usr_b9280bcf-3364-428a-977a-f741fb9853ce",
+  "api": "http://localhost:3410",
+  "projects": {
+    "cuisine": {
+      "coreProjectId": "prj_3dd46daa-9477-4158-a659-3cd96feb1088",
+      "budgetId": "bud_80988c1b-392f-43dd-8283-d582b48bea04"
+    },
+    "voyage": {
+      "coreProjectId": "prj_c3f17fc0-3803-48bc-ac3c-e33bdaa2e44c",
+      "budgetId": "bud_e4043ba0-a47b-457d-b7a5-c5f2dc4136a0"
+    },
+    "atelier": {
+      "coreProjectId": "prj_d5c1b4c9-93bf-4599-a812-f68ee0e3b56f",
+      "budgetId": "bud_12544b12-cda8-4fb8-9c08-7321906fb814"
+    }
+  },
+  "tasks": {
+    "equipement": "tsk_50ae0c88-1957-4c51-a9ae-f5001390fc2b",
+    "pose": "tsk_f9bfe028-8aeb-48ac-b8a3-66936dce512a",
+    "reservation": "tsk_aeefe084-67f5-42cf-9a45-f3746690a61a",
+    "libre": "tsk_e7b13a2b-431d-408b-be1f-0015e143f325",
+    "atelier": "tsk_44132691-526e-4246-a061-4be1d4e830f3"
+  },
+  "requestId": "dmt_f56eacc6-063f-4e6b-8621-c4453ddde4f5",
+  "categories": {
+    "courses": "cat_5fcd3d9b-a227-4cbe-9586-e807ef64e32e",
+    "cinema": "cat_971974c6-320c-44d1-b9c8-00f939173dfc",
+    "carburant": "cat_391f410e-410d-47da-a7c4-36d6964d3306",
+    "proximite": "cat_10f55527-cbe6-4215-a2c6-4e9c5f69951a"
+  },
+  "operations": {
+    "revenu": "op_c113c0eb-4b48-45f8-ad72-dac2239af4a1",
+    "loyer": "op_339ecff4-458d-47c7-b163-c9ce5170f8be",
+    "courses1": "op_4addc7b7-8618-4fb4-b084-7774d85dc2c2",
+    "courses2": "op_faf93229-1aea-4a88-bbac-fd30ef117f25",
+    "courses3": "op_90667698-42cd-4575-b653-87a86f2332e9",
+    "cinema": "op_67470e5b-8f29-4424-9b24-aa843c41e739",
+    "carburant1": "op_f1f7eb39-3d54-4b07-aafa-0e471d424724",
+    "carburant2": "op_ed633eaa-b0b4-4198-a342-6f0cf34bce93",
+    "acompte": "op_7385902a-61da-4d1b-a174-8ea5ce6ce6fb",
+    "solde": "op_c5aff2ba-8abc-4e0f-a5b2-4d1bc4fe1050",
+    "pose": "op_3cb53342-d9ff-4697-82aa-37a1b6103bba",
+    "voyage": "op_efa8f071-cb57-41b4-a313-c6df37209c4c",
+    "reprise": "op_bcd8e198-8e10-4c4e-8afa-a0c7d1ae3f1b",
+    "materiel": "op_72c84eec-60f8-4ccb-9025-005c2b21f371"
+  },
+  "verified": [
+    "Projet et budget 1 pour 1 ; tâches liées au projet courant.",
+    "Enveloppe cuisine de 1 200 €, dont 800 € ventilés sur les équipements.",
+    "160 € réglés remontent au budget du projet de vie ; les prévisions restent distinctes.",
+    "Demande de 250 € conservée en attente de validation.",
+    "Voyage et dépense de décembre préparés sans enveloppe.",
+    "Dépassement indépendant : alimentation et courses, cinéma seul, transport seul.",
+    "Tâche sans projet disponible pour rattachement."
+  ],
+  "uiVerified": [
+    "Création d’une catégorie pendant une saisie puis Retour : libellé, montant, poste conservés et catégorie sélectionnable.",
+    "Opération reprise enregistrée une seule fois, pour 37,50 €.",
+    "Assistant de création complet avec retour de l’étape 3 à 2 puis Suivant ; création d’Atelier vélo et de sa tâche.",
+    "Enveloppe de 300 € enregistrée depuis la fiche ; le formulaire se ferme sans autre écriture.",
+    "Demande de 175 € envoyée puis accordée sur la tâche.",
+    "Ouverture d’une dépense depuis la tâche sans superposition de fenêtres ; règlement de 75 € et retour automatique à la tâche.",
+    "La tâche conserve 100 € de part disponible ; les deux projets réglés remontent 235 € au projet de vie."
+  ],
+  "fixes": [
+    "Choix radio, cases et sélections de l’assistant synchronisés après ngModel.",
+    "Fenêtre de tâche suspendue pendant l’éditeur d’opération, puis rouverte.",
+    "Nombre de postes plafonnés dépassés cohérent même si une de leurs catégories dépasse aussi.",
+    "Renvoi vers Objectifs et avenir corrigé dans le volet des résultats."
+  ],
+  "counts": {
+    "coreProjects": 4,
+    "tasks": 5,
+    "budgets": 4,
+    "operations": 14,
+    "chargeCategories": 4,
+    "taskBudgetRequests": 2
+  },
+  "preservedExistingObjects": 6062,
+  "validation": {
+    "frontendTests": 169,
+    "frontendTestFiles": 24,
+    "productionBuild": "passed",
+    "site": "http://localhost:4300/app/gestion-projet",
+    "dataKept": true
+  }
+}

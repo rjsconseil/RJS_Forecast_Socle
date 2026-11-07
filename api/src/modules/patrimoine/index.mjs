@@ -2,6 +2,7 @@
 // Budget « Projet de vie » et à la même racine noyau. Son stock évolue par capitalisations : le
 // résultat signé d'une période close y est transféré une seule fois. Le stock peut être négatif.
 // Ses interfaces sont des interfaces de test.
+import { createObjectives } from './objectives.mjs';
 import { fail } from '../../socle/errors.mjs';
 import { check } from '../../socle/object-management/inspect.mjs';
 import { date, expectedRevisionOf, money, text } from '../../socle/validation.mjs';
@@ -23,6 +24,7 @@ export default {
   level: 2,
   dependsOn: ['core', 'budget'],
   kinds: {
+    lifeGoal: { collection: 'lifeGoals', prefix: 'obj', label: 'Objectif de projection', references: { patrimoineId: { kind: 'patrimoine', required: true }, coreProjectId: { kind: 'coreProject', required: true } } },
     patrimoine: {
       collection: 'patrimoines',
       prefix: 'pat',
@@ -126,6 +128,7 @@ export default {
     };
 
     return {
+      ...createObjectives(socle),
       patrimoineOf,
 
       /** Patrimoine unique du user (PAT-01) : même racine noyau que le Budget « Projet de vie ». */
@@ -152,15 +155,21 @@ export default {
         return om.create(tx, 'capitalization', { patrimoineId, amountCents, date: date('date', on, { required: true }), label: text('label', label, { required: true }), source });
       },
 
-      async updatePatrimoine(ctx, id, input = {}) {
-        await om.command('updatePatrimoine', ctx, input, (tx) => {
-          const p = om.owned(tx.draft, 'patrimoine', id, tx.userId);
-          om.checkRevision(p, expectedRevisionOf(input));
+      patchPatrimoine(tx, id, input = {}) {
+        const p = om.owned(tx.draft, 'patrimoine', id, tx.userId);
           const patch = {};
           if ('openingStock' in input) patch.openingStockCents = money('openingStock', input.openingStock, { nullable: true, signed: true });
           if ('openingDate' in input) patch.openingDate = date('openingDate', input.openingDate);
           if ('objective' in input) patch.objectiveCents = money('objective', input.objective, { nullable: true });
           om.update(tx, p, patch);
+        return p;
+      },
+
+      async updatePatrimoine(ctx, id, input = {}) {
+        await om.command('updatePatrimoine', ctx, input, (tx) => {
+          const p = om.owned(tx.draft, 'patrimoine', id, tx.userId);
+          om.checkRevision(p, expectedRevisionOf(input));
+          this.patchPatrimoine(tx, id, input);
           return { patrimoineId: id };
         });
         return view(socle.state, socle.state.patrimoines[id]);
@@ -183,6 +192,11 @@ export default {
       const b = p ? state.budgets[p.principalBudgetId] : null;
       const shared = !p || (b?.role === 'life' && b.coreProjectId === p.coreProjectId);
       out.push(check('PAT-01', 'integrity', 'patrimoine', `Patrimoine unique pour ${u.label}, racine partagée avec le Budget « Projet de vie »`, '≤ 1 Patrimoine ; racine commune', `${pats.length} Patrimoine ; racine ${p ? (shared ? 'commune' : 'différente') : 'sans objet'}`, pats.length <= 1 && shared ? 'passed' : 'failed', pats.map((x) => x.id)));
+    }
+    for (const g of Object.values(state.lifeGoals ?? {})) {
+      const p = state.patrimoines[g.patrimoineId];
+      const linked = p && p.userId === g.userId && p.coreProjectId === g.coreProjectId;
+      out.push(check('PAT-OBJ-01', 'integrity', 'patrimoine', `Objectif ${g.label} relié au patrimoine et à sa racine noyau`, 'même user et même racine', linked ? 'relié' : 'liaison incohérente', linked ? 'passed' : 'failed', [g.id, g.patrimoineId, g.coreProjectId].filter(Boolean)));
     }
     return out;
   },

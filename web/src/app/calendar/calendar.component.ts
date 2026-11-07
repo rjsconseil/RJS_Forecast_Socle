@@ -85,6 +85,9 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
     <section
       class="calendar is-360 calendar-module"
       [class.is-bpm-calendar]="bpm()"
+      [class.has-external-tools]="externalTools()"
+      [class.is-specialized-calendar]="presentation() !== 'calendar'"
+      [attr.data-presentation]="presentation()"
       [attr.aria-label]="data()?.calendar?.label ?? 'Calendrier'"
       [attr.aria-busy]="loading() || busy()"
     >
@@ -95,136 +98,138 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
       >
         <div class="calendar-right-rail">
           <div class="calendar-control-row">
-            <div class="calendar-options">
-              <select
-                class="calendar-date-filter"
-                aria-label="Regroupement affiché"
-                [ngModel]="group()"
-                (ngModelChange)="group.set($event)"
-              >
-                <option value="all">Tous les regroupements</option>
-                @for (g of groups(); track g.key) {
-                  <option [value]="g.key">{{ g.label }}</option>
-                }
-              </select>
-              <label class="calendar-completed-control">
-                <input
-                  type="checkbox"
-                  aria-label="Afficher les éléments terminés"
-                  [ngModel]="includeDone()"
-                  (ngModelChange)="setIncludeDone($event)"
-                />
-                <span>Terminés inclus</span>
-                <span class="calendar-help">
-                  <button
-                    type="button"
-                    class="calendar-help-trigger"
-                    aria-label="Aide : afficher les éléments terminés"
-                    aria-describedby="calendar-completed-help"
-                  >
-                    i
-                  </button>
-                  <span id="calendar-completed-help" class="calendar-help-tooltip" role="tooltip"
-                    >Afficher les éléments terminés ou réglés ; ils restent atténués.</span
-                  >
-                </span>
-              </label>
-            </div>
-            <div class="calendar-toolbar">
-              <div class="calendar-period-control">
-                <div class="calendar-view-switch" role="group" aria-label="Vue du calendrier">
-                  <button
-                    type="button"
-                    [attr.aria-pressed]="view() === 'year'"
-                    aria-label="Vue annuelle"
-                    title="Année"
-                    (click)="setView('year')"
-                  >
-                    Année
-                  </button>
-                  <button
-                    type="button"
-                    [attr.aria-pressed]="view() === 'month'"
-                    aria-label="Vue mensuelle"
-                    title="Mois"
-                    (click)="setView('month')"
-                  >
-                    Mois
-                  </button>
-                  <button
-                    type="button"
-                    [attr.aria-pressed]="view() === 'week'"
-                    aria-label="Vue hebdomadaire"
-                    title="Semaine"
-                    (click)="setView('week')"
-                  >
-                    Semaine
-                  </button>
-                </div>
-                <div
-                  class="calendar-paging"
-                  [attr.aria-label]="'Changer la période : ' + periodName()"
+            @if (!externalTools()) {
+              <div class="calendar-options">
+                <select
+                  class="calendar-date-filter"
+                  aria-label="Regroupement affiché"
+                  [ngModel]="group()"
+                  (ngModelChange)="selectGroup($event)"
                 >
-                  <button
-                    class="btn btn-secondary"
-                    type="button"
-                    [attr.aria-label]="previousLabel()"
-                    (click)="movePeriod(-1)"
-                  >
-                    ←
-                  </button>
-                  <h2 aria-live="polite" class="visually-hidden" [title]="periodName()">
-                    {{ periodName() }}
-                  </h2>
-                  <button
-                    class="btn btn-secondary"
-                    type="button"
-                    [attr.aria-label]="nextLabel()"
-                    (click)="movePeriod(1)"
-                  >
-                    →
-                  </button>
-                </div>
-                <div class="calendar-actions">
-                  <button class="btn btn-secondary" type="button" (click)="selectDay(today)">
-                    Aujourd’hui
-                  </button>
-                  <span class="calendar-month-picker">
+                  <option value="all">Tous les regroupements</option>
+                  @for (g of groups(); track g.key) {
+                    <option [value]="g.key">{{ g.label }}</option>
+                  }
+                </select>
+                <label class="calendar-completed-control">
+                  <input
+                    type="checkbox"
+                    aria-label="Afficher les éléments terminés"
+                    [ngModel]="includeDone()"
+                    (ngModelChange)="setIncludeDone($event)"
+                  />
+                  <span>Terminés inclus</span>
+                  <span class="calendar-help">
                     <button
-                      class="btn btn-secondary calendar-month-trigger"
                       type="button"
-                      [attr.aria-label]="'Choisir un mois : ' + monthButtonLabel()"
-                      (click)="openMonthPicker(monthPicker)"
+                      class="calendar-help-trigger"
+                      aria-label="Aide : afficher les éléments terminés"
+                      aria-describedby="calendar-completed-help"
                     >
-                      {{ monthButtonLabel() }}
+                      i
                     </button>
-                    <input
-                      #monthPicker
-                      class="calendar-month-input"
-                      type="month"
-                      tabindex="-1"
-                      aria-hidden="true"
-                      [ngModel]="month()"
-                      (ngModelChange)="chooseMonth($event)"
-                    />
+                    <span id="calendar-completed-help" class="calendar-help-tooltip" role="tooltip"
+                      >Afficher les éléments terminés ou réglés ; ils restent atténués.</span
+                    >
                   </span>
-                </div>
-                @if (bpm()) {
-                  <button
-                    type="button"
-                    class="btn btn-secondary bpm-calendar-customize"
-                    [attr.aria-expanded]="customizing()"
-                    aria-controls="bpm-calendar-personalization"
-                    (click)="customizing.set(!customizing())"
-                  >
-                    Personnaliser l’affichage
-                    <span aria-hidden="true">{{ customizing() ? '−' : '+' }}</span>
-                  </button>
-                }
+                </label>
               </div>
-            </div>
+              <div class="calendar-toolbar">
+                <div class="calendar-period-control">
+                  <div class="calendar-view-switch" role="group" aria-label="Vue du calendrier">
+                    <button
+                      type="button"
+                      [attr.aria-pressed]="view() === 'year'"
+                      aria-label="Vue annuelle"
+                      title="Année"
+                      (click)="setView('year')"
+                    >
+                      Année
+                    </button>
+                    <button
+                      type="button"
+                      [attr.aria-pressed]="view() === 'month'"
+                      aria-label="Vue mensuelle"
+                      title="Mois"
+                      (click)="setView('month')"
+                    >
+                      Mois
+                    </button>
+                    <button
+                      type="button"
+                      [attr.aria-pressed]="view() === 'week'"
+                      aria-label="Vue hebdomadaire"
+                      title="Semaine"
+                      (click)="setView('week')"
+                    >
+                      Semaine
+                    </button>
+                  </div>
+                  <div
+                    class="calendar-paging"
+                    [attr.aria-label]="'Changer la période : ' + periodName()"
+                  >
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [attr.aria-label]="previousLabel()"
+                      (click)="movePeriod(-1)"
+                    >
+                      ←
+                    </button>
+                    <h2 aria-live="polite" class="visually-hidden" [title]="periodName()">
+                      {{ periodName() }}
+                    </h2>
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [attr.aria-label]="nextLabel()"
+                      (click)="movePeriod(1)"
+                    >
+                      →
+                    </button>
+                  </div>
+                  <div class="calendar-actions">
+                    <button class="btn btn-secondary" type="button" (click)="selectDay(today)">
+                      Aujourd’hui
+                    </button>
+                    <span class="calendar-month-picker">
+                      <button
+                        class="btn btn-secondary calendar-month-trigger"
+                        type="button"
+                        [attr.aria-label]="'Choisir un mois : ' + monthButtonLabel()"
+                        (click)="openMonthPicker(monthPicker)"
+                      >
+                        {{ monthButtonLabel() }}
+                      </button>
+                      <input
+                        #monthPicker
+                        class="calendar-month-input"
+                        type="month"
+                        tabindex="-1"
+                        aria-hidden="true"
+                        [ngModel]="month()"
+                        (ngModelChange)="chooseMonth($event)"
+                      />
+                    </span>
+                  </div>
+                  @if (bpm() && presentation() !== 'sources') {
+                    <button
+                      type="button"
+                      class="btn btn-secondary bpm-calendar-customize"
+                      [attr.aria-expanded]="customizing()"
+                      aria-controls="bpm-calendar-personalization"
+                      (click)="customizing.set(!customizing())"
+                    >
+                      Personnaliser l’affichage
+                      <span aria-hidden="true">{{ customizing() ? '−' : '+' }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
             @if (bpm()) {
-              @if (customizing()) {
+              @if (presentation() === 'sources' || (presentation() === 'calendar' && customizing())) {
                 <section
                   id="bpm-calendar-personalization"
                   class="bpm-calendar-personalization"
@@ -304,7 +309,10 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                 {{ visibleSourceCount() }} / {{ elements().length }} sources ·
                 {{ periodEvents().length }} événements affichés
               </p>
-            } @else if (elements().length) {
+            } @else if (elements().length && presentation() !== 'agenda') {
+              @if (presentation() === 'sources') {
+                <header class="calendar-source-heading"><h2>Sources affichées</h2><p>Choisissez les types de repères à retrouver dans le calendrier et l’agenda.</p><button type="button" class="text-link" (click)="showAllSources()">Tout afficher</button></header>
+              }
               <div class="calendar-elements" role="group" aria-label="Éléments affichés">
                 @for (el of elements(); track el.id) {
                   <label
@@ -330,9 +338,12 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
               </div>
             }
           </div>
+          @if (presentation() === 'calendar') {
           <button class="calendar-grid-shortcut" type="button" (click)="focusCalendarGrid()">
             Aller aux jours du calendrier
           </button>
+          }
+          @if (presentation() !== 'sources') {
           <aside class="calendar-agenda" aria-label="Repères de la période">
             <div class="calendar-agenda-heading">
               <div>
@@ -388,7 +399,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                         [attr.aria-label]="
                           (isPinned(event.key) ? 'Désélectionner ' : 'Mettre en évidence ') +
                           event.title +
-                          ' dans le calendrier'
+                          (presentation() === 'agenda' ? ' dans l’agenda' : ' dans le calendrier')
                         "
                         (click)="toggleHighlight(event.key)"
                       >
@@ -480,8 +491,10 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
               </form>
             }
           </aside>
+          }
         </div>
 
+        @if (presentation() === 'calendar') {
         <div
           class="calendar-month-wrap"
           tabindex="-1"
@@ -951,6 +964,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
           </p>
         </div>
         <ng-content />
+        }
       </div>
       @if (loading()) {
         <p class="calendar-feedback calendar-loading" role="status">Chargement des repères…</p>
@@ -968,6 +982,9 @@ export class CalendarComponent {
   readonly data = input<CalendarData | null>(null);
   /** Personnalisation visuelle réservée au calendrier de l’application BPM. */
   readonly bpm = input(false);
+  /** La page BPM porte ses commandes dans son bandeau contextuel. */
+  readonly externalTools = input(false);
+  readonly presentation = input<'calendar' | 'agenda' | 'sources'>('calendar');
   readonly loading = input(false);
   readonly busy = input(false);
   readonly error = input<string | null>(null);
@@ -1004,7 +1021,7 @@ export class CalendarComponent {
 
   protected readonly hidden = signal<ReadonlySet<string>>(new Set());
   protected readonly includeDone = signal(true);
-  protected readonly group = signal('all');
+  protected readonly group = signal(this.route.snapshot.queryParamMap.get('calGroup') || 'all');
   protected readonly customizing = signal(false);
   protected readonly dayFields = BPM_DAY_FIELDS;
   private readonly preferences = signal<BpmCalendarPreferences | null>(null);
@@ -1178,11 +1195,23 @@ export class CalendarComponent {
           new Set(data.elements.filter((el) => !preferences.sources[el.id]).map((el) => el.id)),
         );
         this.includeDone.set(preferences.includeDone);
-        this.group.set('all');
+        this.group.set(this.params().get('calGroup') || 'all');
       });
     });
     effect(() => {
-      if (this.bpm()) this.displayedEventsChange.emit(this.events());
+      if (this.bpm() || this.presentation() !== 'calendar') this.displayedEventsChange.emit(this.events());
+    });
+    effect(() => {
+      const params = this.params(), data = this.data(), bpm = this.bpm();
+      untracked(() => {
+        this.group.set(params.get('calGroup') || 'all');
+        if (!bpm && data) {
+          this.includeDone.set(params.get('calDone') !== '0');
+          this.hidden.set(new Set(params.has('calHidden')
+            ? (params.get('calHidden') || '').split(',').filter(Boolean)
+            : data.elements.filter((element) => !element.visible).map((element) => element.id)));
+        }
+      });
     });
     // Un lien vers un autre jour (`?jour=`) déplace la période affichée.
     effect(() => {
@@ -1195,6 +1224,58 @@ export class CalendarComponent {
       }
     });
     queueMicrotask(() => this.emitPeriod());
+  }
+
+  /** État unique des commandes : le bandeau et la grille lisent les mêmes signaux. */
+  readonly toolbarState = computed(() => ({
+    day: this.selectedDay(),
+    view: this.view(),
+    period: this.periodName(),
+    previous: this.previousLabel(),
+    next: this.nextLabel(),
+    customizing: this.customizing() || this.presentation() === 'sources',
+    groups: this.groups(),
+    group: this.group(),
+    includeDone: this.includeDone(),
+  }));
+
+  goToday() {
+    this.selectDay(this.today);
+  }
+
+  /** Retrouve dans la grille et dans l’agenda le repère choisi depuis le bandeau fixe. */
+  focusEvent(event: CalendarEvent) {
+    if (!this.events().some((item) => item.key === event.key)) return;
+    this.selectDay(event.date);
+    this.pinnedEventKeys.set(new Set([event.key]));
+    setTimeout(() => {
+      const entry = Array.from(
+        this.host.nativeElement.querySelectorAll<HTMLElement>('.calendar-agenda-item'),
+      ).find((item) => item.dataset['eventKey'] === event.key);
+      entry?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      entry
+        ?.querySelector<HTMLButtonElement>('.calendar-agenda-select')
+        ?.focus({ preventScroll: true });
+    });
+  }
+
+  selectGroup(group: string) {
+    if (group === 'all' || this.groups().some((item) => item.key === group)) {
+      this.group.set(group);
+      this.syncFilters();
+    }
+  }
+
+  togglePersonalization() {
+    if (this.presentation() === 'sources') return;
+    this.customizing.update((value) => !value);
+    if (this.customizing()) {
+      setTimeout(() => {
+        this.host.nativeElement
+          .querySelector('#bpm-calendar-personalization')
+          ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+    }
   }
 
   // ---------- lecture ----------
@@ -1286,6 +1367,7 @@ export class CalendarComponent {
           this.elements().map((el) => [el.id, !this.hidden().has(el.id)]),
         ),
       });
+    if (!this.bpm()) this.syncFilters();
     this.releasePeek();
   }
 
@@ -1313,15 +1395,17 @@ export class CalendarComponent {
     if (Number.isInteger(perCell) && perCell >= 1 && perCell <= 6)
       this.savePreferences({ perCell });
   }
-  protected setIncludeDone(includeDone: boolean) {
+  setIncludeDone(includeDone: boolean) {
     this.includeDone.set(includeDone);
     if (this.bpm()) this.savePreferences({ includeDone });
+    else this.syncFilters();
   }
   protected showAllSources() {
     this.hidden.set(new Set());
     this.savePreferences({
       sources: Object.fromEntries(this.elements().map((el) => [el.id, true])),
     });
+    if (!this.bpm()) this.syncFilters();
   }
   protected resetDisplay() {
     const data = this.data();
@@ -1759,7 +1843,7 @@ export class CalendarComponent {
       this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus();
     });
   }
-  protected selectDay(day: string) {
+  selectDay(day: string) {
     if (!validDate(day)) return;
     const before = gridWindow(this.selectedDay(), this.view());
     if (this.view() === 'month' && day.slice(0, 7) !== this.month()) this.pinnedMonthDay.set(null);
@@ -1771,7 +1855,7 @@ export class CalendarComponent {
     if (after.start !== before.start || after.end !== before.end) this.emitPeriod();
     this.syncUrl();
   }
-  protected movePeriod(step: number) {
+  movePeriod(step: number) {
     this.selectDay(shiftPeriod(this.selectedDay(), this.view(), step));
   }
   protected chooseMonth(month: string) {
@@ -1787,7 +1871,7 @@ export class CalendarComponent {
       input.focus();
     }
   }
-  protected setView(view: CalendarView, { chosen = true } = {}) {
+  setView(view: CalendarView, { chosen = true } = {}) {
     if (chosen) this.viewChosen = true;
     this.releasePeek();
     this.cancelYearPeekClose();
@@ -1805,6 +1889,19 @@ export class CalendarComponent {
     const view = this.view();
     const { start, end } = gridWindow(day, view);
     this.periodChange.emit({ day, view, from: start, to: end });
+  }
+  private syncFilters() {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        calGroup: this.group() === 'all' ? null : this.group(),
+        ...(!this.bpm() ? {
+          calDone: this.includeDone() ? null : '0',
+          calHidden: [...this.hidden()].join(','),
+        } : {}),
+      },
+      queryParamsHandling: 'merge', replaceUrl: true,
+    });
   }
   private syncUrl() {
     void this.router.navigate([], {

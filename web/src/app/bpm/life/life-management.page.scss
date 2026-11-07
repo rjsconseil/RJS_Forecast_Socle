@@ -4,7 +4,6 @@
 // complétés par l'état de santé de chaque volet et la jauge du projet de vie.
 
 .bpm-life-management {
-  --life-header-actions-width: 380px;
   // Violet des boutons de la page, résolu ici (hors du bandeau, qui redéfinit --app-accent en blanc).
   --period-nav-accent: var(--app-accent);
 }
@@ -14,27 +13,17 @@
   font-size: scaled(var(--fs-xl));
 }
 
-// Bandeau : le sélecteur de période (violet, comme les boutons de la page) sous « Réglages » et « Suivi & clôture ».
-.bpm-life-management .life-header-actions {
-  justify-content: flex-end;
-  max-width: var(--life-header-actions-width);
-}
-.life-period-nav {
-  flex: 1 0 100%;
-}
-.life-period-empty {
-  flex: 1 0 100%;
-  margin: 0;
-  font-size: scaled(var(--fs-sm));
-  opacity: 0.85;
-}
-// L'introduction s'arrête avant la colonne des commandes, qui porte maintenant le sélecteur.
-.bpm-life-management .life-banner-copy .page-intro {
-  max-width: 68ch;
-}
-// Trois commandes dans la barre d'outils : volets affichés, échéance à régler, saisie.
-.bpm-life-management .life-banner-tools {
-  grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.7fr) auto;
+.life-context-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+
+  > label { flex: 1 1 180px; }
+  .life-budget-project { flex: 2 1 340px; min-width: 0; }
+  select { min-width: 0; width: 100%; }
 }
 
 // Consultation d'une autre période que la période en cours.
@@ -232,23 +221,6 @@ bpm-life-gauge {
 }
 
 // Petits écrans : la carte passe sur une colonne (mêmes points de rupture que la gestion de projet).
-@media (max-width: 1100px) {
-  .bpm-life-management .life-banner-tools {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}
-@media (max-width: 700px) {
-  .bpm-life-management .life-header-actions {
-    max-width: none;
-    justify-content: flex-start;
-  }
-  .bpm-life-management .life-banner-copy .page-intro {
-    max-width: none;
-  }
-  .bpm-life-management .life-banner-tools {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 @media (max-width: 900px) {
   .bpm-life-management .bpm-management-card {
     grid-template-columns: minmax(0, 1fr);
@@ -258,15 +230,18 @@ bpm-life-gauge {
   }
 }
 
-/* Accès intégrés : objectifs et récurrences restent dans le cockpit du projet de vie. */
-.life-local-navigation { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 18px; padding-top: 8px; border-top: 1px solid #ffffff30; }
-.life-local-navigation a { color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; padding-block: 5px; }
-.life-local-navigation a:hover { text-decoration: underline; }
-.life-budget-type-disclosure { border: 1px solid var(--line); border-radius: 12px; background: var(--raised-surface); min-width: 0; }
-.life-budget-type-disclosure > summary { cursor: pointer; padding: 20px; }
-.life-budget-type-disclosure > summary span { margin-left: 16px; color: var(--muted); font-size: 13px; }
-.life-budget-type-disclosure > bpm-act-budget-type { display: block; padding: 0 20px 20px; min-width: 0; }
-@media (max-width: 640px) { .life-budget-type-disclosure > summary span { display: block; margin: 6px 0 0; } }
+/* Le budget type s'ouvre dans le même panneau depuis le contenu ou le bandeau fixe. */
+.life-budget-type-disclosure {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--raised-surface);
+  min-width: 0;
+  h2, p { margin: 0; }
+  > .btn { justify-self: start; }
+}
 
 .life-line-task {
   display: block;

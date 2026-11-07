@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PageFocus, PageResult, PageToolbar } from '../shared/page-toolbar.component';
 import { COLUMNS, TaskStatus } from '../core/models';
 
 /**
@@ -136,41 +137,39 @@ export class ProjectFilterComponent {
 
 @Component({
   selector: 'rjs-item-board-tools',
-  imports: [RouterLink, ProjectFilterComponent],
+  imports: [RouterLink, ProjectFilterComponent, PageToolbar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [':host { display: block; }'],
   template: `
-    <div class="section-home-board-tools" data-ui-pattern="panel">
-      <div class="board-tools-title" data-ui-pattern="section-heading">
-        <h2 class="section-title">Tableau des {{ section().plural }}</h2>
-        <a class="btn btn-primary" [routerLink]="createLink()" [queryParams]="createQuery()"
-          ><span class="btn-plus">+</span>{{ createLabel() }}</a
-        >
-      </div>
-      <div class="board-tools-filters">
-        <rjs-project-filter [kind]="kind()" [options]="filterOptions()" [(value)]="filter" />
+    <rjs-page-toolbar [label]="'Tableau des ' + section().plural" [compact]="compact()"
+      [scope]="scope()" [focus]="focus()" [result]="result()">
+      <a toolbarPrimary class="btn btn-primary" [routerLink]="createLink()" [queryParams]="createQuery()"
+        ><span class="btn-plus">+</span>{{ createLabel() }}</a>
+      <div toolbarFilters class="board-tools-filters">
+        @if (showFilter()) { <rjs-project-filter [kind]="kind()" [options]="filterOptions()" [(value)]="filter" /> }
         <label class="board-search">
           Rechercher dans les {{ section().plural }}
-          <input
-            type="search"
-            placeholder="Nom, description ou référence…"
-            [value]="search()"
-            (input)="search.set($any($event.target).value)"
-          />
+          <input type="search" placeholder="Nom, description ou référence…" [value]="search()" (input)="search.set($any($event.target).value)" />
         </label>
         @if (search()) {
           <button class="btn btn-secondary" type="button" (click)="search.set('')">Effacer la recherche</button>
         }
+        <ng-content select="[boardExtra]" />
       </div>
-    </div>
+    </rjs-page-toolbar>
   `,
 })
 export class ItemBoardToolsComponent {
   readonly kind = input.required<BoardKind>();
   readonly filterOptions = input<FilterOption[]>([]);
+  readonly showFilter = input(true);
   readonly createLink = input.required<string>();
   readonly createQuery = input<Record<string, string> | null>(null);
   readonly createLabel = input.required<string>();
+  readonly compact = input(false);
+  readonly scope = input('');
+  readonly focus = input<PageFocus | null>(null);
+  readonly result = input<PageResult | null>(null);
   readonly filter = model('all');
   readonly search = model('');
   protected readonly section = computed(() => SECTION[this.kind()]);

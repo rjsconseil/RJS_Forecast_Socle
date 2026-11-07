@@ -154,6 +154,10 @@ export default {
     }
 
     return {
+      patchProject(tx, id, input) {
+        const p = om.owned(tx.draft, 'coreProject', id, tx.userId);
+        return om.update(tx, p, projectFields({ ...p, ...pick(input, PROJECT_FIELDS) }));
+      },
       buildProject,
       buildTask,
       contextOf,
@@ -171,7 +175,7 @@ export default {
         await om.command('updateCoreProject', ctx, input, (tx) => {
           const p = om.owned(tx.draft, 'coreProject', id, tx.userId);
           om.checkRevision(p, expectedRevisionOf(input));
-          om.update(tx, p, projectFields({ ...p, ...pick(input, PROJECT_FIELDS) }));
+          this.patchProject(tx, id, input);
           return { projectId: id };
         });
         return readProjectDetail(ctx, id);

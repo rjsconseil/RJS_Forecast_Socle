@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { occurrenceDates } from '../src/modules/budget/recurrence.mjs';
-import { project } from '../src/modules/bpm/projection.mjs';
+import { project } from '../src/modules/patrimoine/projection.mjs';
 import { camille, key, makeSocle, makeUser, operation, rejects } from './helpers.mjs';
 
 const recurrence = (socle, ctx, input) => socle.modules.budget.createRecurrence(ctx, { requestKey: key('rec'), costCenterRef: input.direction === 'income' ? 'std:salaires' : 'std:logement', label: 'Récurrence', ...input });

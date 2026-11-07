@@ -72,7 +72,7 @@ const detail = () =>
     context: { period: null },
   }) as unknown as BpmProjectDetail;
 
-async function setup(render = false) {
+async function setup(render = false, workspaceKey?: string) {
   const state = detail();
   const params = new BehaviorSubject(convertToParamMap({ id: 'prj_1' }));
   const bpm = {
@@ -91,7 +91,16 @@ async function setup(render = false) {
       provideRouter([]),
       { provide: Api, useValue: api },
       { provide: BpmApi, useValue: bpm },
-      { provide: ActivatedRoute, useValue: { paramMap: params, fragment: of(null), queryParamMap: of(convertToParamMap({ lifePeriod: '2026-09' })) } },
+      {
+        provide: ActivatedRoute,
+        useValue: {
+          data: of(workspaceKey ? { workspace: { key: workspaceKey, title: 'Vue spécialisée', lead: '', parent: '/app/gestion-projet' } } : {}),
+          paramMap: params,
+          fragment: of(null),
+          queryParams: of({ lifePeriod: '2026-09' }),
+          queryParamMap: of(convertToParamMap({ lifePeriod: '2026-09' })),
+        },
+      },
     ],
   });
   if (!render) TestBed.overrideComponent(BpmProjectPage, { set: { template: '' } });
@@ -103,6 +112,110 @@ async function setup(render = false) {
 }
 
 describe('cockpit du projet', () => {
+  it('consacre la vue budget aux finances et la vue tâches au travail du même projet', async () => {
+    const budget = await setup(true, 'project-budget');
+    budget.fixture.detectChanges();
+    expect(budget.fixture.nativeElement.querySelector('.project-cockpit')).toBeTruthy();
+    expect(budget.fixture.nativeElement.querySelector('.project-task-board')).toBeNull();
+    expect(budget.fixture.nativeElement.querySelector('section[aria-label="Parts des tâches à décider"]')).toBeTruthy();
+    budget.fixture.destroy();
+    TestBed.resetTestingModule();
+    const tasks = await setup(true, 'project-tasks');
+    tasks.fixture.detectChanges();
+    expect(tasks.fixture.nativeElement.querySelector('.project-task-board')).toBeTruthy();
+    expect(tasks.fixture.nativeElement.querySelector('.project-cockpit')).toBeNull();
+  });
+
+  it('propose l’enveloppe avant la première dépense et ouvre sa saisie sans écriture', async () => {
+    const { page, state, bpm } = await setup();
+    page.data.set({ ...state, budget: { ...state.budget!, regime: false, allocationCents: null } });
+    expect(page.pageFocus().title).toContain('reste à attribuer');
+    expect(page.nextActionLabel()).toBe('Attribuer l’enveloppe');
+    page.runNextAction();
+    expect(page.allocationEditing()).toBe(true);
+    expect(bpm.allocate).not.toHaveBeenCalled();
+  });
+
+  it('ouvre le règlement exigible le plus ancien dans la tâche concernée, sans le valider', async () => {
+    const { page, state, api } = await setup();
+    page.data.set({
+      ...state,
+      context: { ...state.context, calculationDate: '2026-11-07' },
+      charges: [
+        {
+          id: 'later',
+          taskId: 'tsk_2',
+          label: 'Commande',
+          plannedDate: '2026-11-06',
+          plannedCents: 6000,
+          settled: false,
+        },
+        {
+          id: 'first',
+          taskId: 'tsk_1',
+          label: 'Acompte',
+          plannedDate: '2026-11-02',
+          plannedCents: 2000,
+          settled: false,
+        },
+        {
+          id: 'future',
+          taskId: 'tsk_1',
+          label: 'Livraison',
+          plannedDate: '2026-12-01',
+          plannedCents: 3000,
+          settled: false,
+        },
+      ],
+    });
+    expect(page.pageFocus().title).toContain('Acompte');
+    page.runNextAction();
+    expect(page.openTaskId()).toBe('tsk_1');
+    expect(page.settling()).toBe('first');
+    expect(api.changeTaskStatus).not.toHaveBeenCalled();
+  });
+
+  it('privilégie les décisions de financement et conserve les filtres lors de leur ouverture', async () => {
+    const { page, state } = await setup();
+    state.tasks[0].task.status = 'blocked';
+    page.data.set({ ...state, requests: [{ id: 'request', taskId: 'tsk_1', status: 'pending' }] });
+    page.query.set('Choisir');
+    page.taskAttention.set('blocked');
+    page.runNextAction();
+    expect(page.decisionsOpen()).toBe(true);
+    expect(page.query()).toBe('Choisir');
+    expect(page.taskAttention()).toBe('blocked');
+    expect(page.pageFocus().title).toContain('1 décision');
+  });
+  it('ne propose pas une décision ou un règlement d’une tâche masquée par la sélection', async () => {
+    const { page, state } = await setup();
+    page.data.set({ ...state, requests: [{ id: 'request', taskId: 'tsk_1', status: 'pending' }] });
+    page.query.set('aucune tâche');
+    expect(page.pendingTaskRequests()).toEqual([]);
+    expect(page.nextTask()).toBeNull();
+    expect(page.nextActionLabel()).toBe('Réinitialiser la sélection');
+    page.runNextAction();
+    expect(page.decisionsOpen()).toBe(false);
+    expect(page.query()).toBe('');
+  });
+
+  it('suspend la fenêtre de la tâche pendant la saisie, puis la reprend à la fermeture', async () => {
+    const { page, fixture, state } = await setup(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    page.openTaskId.set(state.tasks[0].task.id);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    expect(root.querySelector('dialog[aria-label="Choisir le plan"]')).not.toBeNull();
+    page.addExpense(state.tasks[0].task.id);
+    fixture.detectChanges();
+    expect(root.querySelector('dialog[aria-label="Choisir le plan"]')).toBeNull();
+    expect(page.openTaskId()).toBe(state.tasks[0].task.id);
+    page.entryId.set('');
+    fixture.detectChanges();
+    expect(root.querySelector('dialog[aria-label="Choisir le plan"]')).not.toBeNull();
+  });
+
   it('enregistre uniquement l’enveloppe et ferme son formulaire après succès', async () => {
     const { page, bpm, api } = await setup();
     page.editAllocation();
@@ -186,12 +299,16 @@ describe('cockpit du projet', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(
-      root.querySelector('[aria-label="Autorisation du budget du projet de vie"] bpm-overrun-request'),
+      root.querySelector(
+        '[aria-label="Autorisation du budget du projet de vie"] bpm-overrun-request',
+      ),
     ).toBeTruthy();
     await page.decideFlow('approve');
     // La demande déposée puis autorisée, la part est rejouée telle quelle (sans financement : elle tient désormais).
     expect(setTaskShare).toHaveBeenCalledTimes(2);
-    expect(setTaskShare).toHaveBeenLastCalledWith('bud_1', 'tsk_1', 600, 7, { authorizeOverrun: undefined });
+    expect(setTaskShare).toHaveBeenLastCalledWith('bud_1', 'tsk_1', 600, 7, {
+      authorizeOverrun: undefined,
+    });
     expect(page.flow()).toBeNull();
   });
 
@@ -204,11 +321,20 @@ describe('cockpit du projet', () => {
           code: 'OVERRUN_AUTHORIZATION_REQUIRED',
           action: null,
           message: 'Il manque 100 €.',
-          details: { budgetId: 'bud_1', taskId: 'tsk_1', overrunCents: 10000, ceilingCents: 50000, reason: 'ventilation' },
+          details: {
+            budgetId: 'bud_1',
+            taskId: 'tsk_1',
+            overrunCents: 10000,
+            ceilingCents: 50000,
+            reason: 'ventilation',
+          },
         }),
       )
       .mockResolvedValue({});
-    const requestOverrun = vi.fn(async () => ({ overrunId: 'ovr_1', overrun: { id: 'ovr_1', revision: 1 } }));
+    const requestOverrun = vi.fn(async () => ({
+      overrunId: 'ovr_1',
+      overrun: { id: 'ovr_1', revision: 1 },
+    }));
     const decideOverrun = vi.fn(async () => ({ notice: null }));
     Object.assign(bpm, { setTaskShare, requestOverrun, decideOverrun });
     await page.saveShare('bud_1', state.tasks[0], '600', 7);
@@ -217,7 +343,9 @@ describe('cockpit du projet', () => {
     expect(requestOverrun).not.toHaveBeenCalled();
     expect(decideOverrun).not.toHaveBeenCalled();
     expect(setTaskShare).toHaveBeenCalledTimes(2);
-    expect(setTaskShare).toHaveBeenLastCalledWith('bud_1', 'tsk_1', 600, 7, { authorizeOverrun: true });
+    expect(setTaskShare).toHaveBeenLastCalledWith('bud_1', 'tsk_1', 600, 7, {
+      authorizeOverrun: true,
+    });
     expect(page.flow()).toBeNull();
   });
 
@@ -320,7 +448,9 @@ describe('cockpit du projet', () => {
     const card = root.querySelector('.project-task-card') as HTMLElement;
     // La carte n'énumère pas les dépenses : elle en donne le nombre et ouvre la fenêtre.
     expect(card.querySelectorAll('.task-charge').length).toBe(0);
-    const open = [...card.querySelectorAll('button')].find((b) => b.textContent?.includes('Dépenses · 13'));
+    const open = [...card.querySelectorAll('button')].find((b) =>
+      b.textContent?.includes('Dépenses · 13'),
+    );
     expect(open).toBeTruthy();
     open!.click();
     fixture.detectChanges();
@@ -331,7 +461,9 @@ describe('cockpit du projet', () => {
     page.closeTaskPanel();
     fixture.detectChanges();
     expect(root.querySelector('dialog')).toBeNull();
-    const ask = [...card.querySelectorAll('button')].find((b) => b.textContent?.includes('Demander un montant'));
+    const ask = [...card.querySelectorAll('button')].find((b) =>
+      b.textContent?.includes('Demander un montant'),
+    );
     ask!.click();
     fixture.detectChanges();
     expect(root.querySelector('dialog .task-funding-box input[name="amount"]')).toBeTruthy();
@@ -351,26 +483,71 @@ describe('cockpit du projet', () => {
   });
 
   it.each([
-    { label: 'avant l’enveloppe', regime: true, validated: false, beforeAllocation: true, expected: 'Sa date réelle précède l’attribution' },
-    { label: 'sans enveloppe', regime: false, validated: false, beforeAllocation: false, expected: 'Ce projet n’a pas d’enveloppe' },
-    { label: 'sur l’enveloppe', regime: true, validated: true, beforeAllocation: false, expected: 'remonté au budget du projet de vie à sa date réelle' },
-  ])('explique le règlement $label à partir de la lecture du middleware, sans changer la date prévue', async ({ regime, validated, beforeAllocation, expected }) => {
-    const { page, bpm, state } = await setup();
-    state.budget!.regime = regime;
-    const charge = { id: 'op_date', operationId: 'op_date', kind: 'operation', taskId: 'tsk_1', label: 'Devis avancé', plannedDate: '2027-02-05', plannedCents: 4000, revision: 2, settled: false } as any;
-    state.charges = [charge];
-    const realizeOperation = vi.fn(async () => {
-      state.charges = [{ ...charge, settled: true, realizedDate: '2026-11-05', realizedCents: 4500, validated, beforeAllocation }];
-    });
-    Object.assign(bpm, { realizeOperation });
-    const form = document.createElement('form');
-    form.innerHTML = '<input name="date" value="2026-11-05"><input name="amount" value="45">';
-    await page.settle(charge, form.elements);
-    expect(realizeOperation).toHaveBeenCalledExactlyOnceWith('op_date', { expectedRevision: 2, realizedDate: '2026-11-05', realizedAmount: 45, fund: undefined });
-    expect(state.charges[0].plannedDate).toBe('2027-02-05');
-    expect(page.notice().text).toContain(expected);
-    if (!validated) expect(page.notice().text).not.toContain('Il est remonté');
-  });
+    {
+      label: 'avant l’enveloppe',
+      regime: true,
+      validated: false,
+      beforeAllocation: true,
+      expected: 'Sa date réelle précède l’attribution',
+    },
+    {
+      label: 'sans enveloppe',
+      regime: false,
+      validated: false,
+      beforeAllocation: false,
+      expected: 'Ce projet n’a pas d’enveloppe',
+    },
+    {
+      label: 'sur l’enveloppe',
+      regime: true,
+      validated: true,
+      beforeAllocation: false,
+      expected: 'remonté au budget du projet de vie à sa date réelle',
+    },
+  ])(
+    'explique le règlement $label à partir de la lecture du middleware, sans changer la date prévue',
+    async ({ regime, validated, beforeAllocation, expected }) => {
+      const { page, bpm, state } = await setup();
+      state.budget!.regime = regime;
+      const charge = {
+        id: 'op_date',
+        operationId: 'op_date',
+        kind: 'operation',
+        taskId: 'tsk_1',
+        label: 'Devis avancé',
+        plannedDate: '2027-02-05',
+        plannedCents: 4000,
+        revision: 2,
+        settled: false,
+      } as any;
+      state.charges = [charge];
+      const realizeOperation = vi.fn(async () => {
+        state.charges = [
+          {
+            ...charge,
+            settled: true,
+            realizedDate: '2026-11-05',
+            realizedCents: 4500,
+            validated,
+            beforeAllocation,
+          },
+        ];
+      });
+      Object.assign(bpm, { realizeOperation });
+      const form = document.createElement('form');
+      form.innerHTML = '<input name="date" value="2026-11-05"><input name="amount" value="45">';
+      await page.settle(charge, form.elements);
+      expect(realizeOperation).toHaveBeenCalledExactlyOnceWith('op_date', {
+        expectedRevision: 2,
+        realizedDate: '2026-11-05',
+        realizedAmount: 45,
+        fund: undefined,
+      });
+      expect(state.charges[0].plannedDate).toBe('2027-02-05');
+      expect(page.notice().text).toContain(expected);
+      if (!validated) expect(page.notice().text).not.toContain('Il est remonté');
+    },
+  );
 
   it('permet de retrouver et modifier une dépense depuis sa tâche tout en conservant la tâche ouverte', async () => {
     const { page, state, bpm } = await setup();
@@ -380,13 +557,13 @@ describe('cockpit du projet', () => {
     expect(page.lineId()).toBe('op_1');
     page.editCharge(line);
     expect(page.lineId()).toBeNull();
-    expect(page.editingLine()).toBe(line);
+    expect(page.entryId()).toBe(line.id);
     expect(page.editorOpen()).toBe(true);
     expect(page.openTaskId()).toBe('tsk_1');
     const reads = bpm.projectDetail.mock.calls.length;
     await page.onSaved('Date prévue modifiée.');
     expect(page.editorOpen()).toBe(false);
-    expect(page.editingLine()).toBeNull();
+    expect(page.entryId()).toBe('');
     expect(page.openTaskId()).toBe('tsk_1');
     expect(bpm.projectDetail.mock.calls.length).toBeGreaterThan(reads);
   });
@@ -395,9 +572,13 @@ describe('cockpit du projet', () => {
     const { fixture, page } = await setup(true);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
-    const back = [...root.querySelectorAll<HTMLAnchorElement>('a')].find((a) => a.textContent?.includes('Projet de vie · financement'))!;
-    expect(back.getAttribute('href')).toBe('/projet-de-vie?period=2026-09#life-funding');
-    expect(root.querySelector('.project-reading-scope')?.textContent).toContain('toute la durée du projet');
+    const back = [...root.querySelectorAll<HTMLAnchorElement>('a')].find((a) =>
+      a.textContent?.includes('Échéances à régler dans le projet de vie'),
+    )!;
+    expect(back.getAttribute('href')).toBe('/projet-de-vie?period=2026-09#life-due');
+    expect(root.querySelector('.project-reading-scope')?.textContent).toContain(
+      'toute la durée du projet',
+    );
     expect(page.lifePeriod()).toBe('2026-09');
   });
 });
@@ -435,7 +616,12 @@ describe('repères budgétaires du projet et estimation de la tâche', () => {
     { remaining: null, label: 'Consommation à estimer', tone: 'unknown' },
   ])('nomme correctement un reste de $remaining centimes', ({ remaining, label, tone }) => {
     const f = TestBed.createComponent(BpmProjectMetricsComponent);
-    f.componentRef.setInput('budget', { ...detail().budget, regime: true, ceilingCents: 10000, remainingCents: remaining });
+    f.componentRef.setInput('budget', {
+      ...detail().budget,
+      regime: true,
+      ceilingCents: 10000,
+      remainingCents: remaining,
+    });
     f.detectChanges();
     const root: HTMLElement = f.nativeElement;
     expect(root.querySelector('.pm-signal')?.textContent).toContain(label);
@@ -445,11 +631,25 @@ describe('repères budgétaires du projet et estimation de la tâche', () => {
   it('distingue un dépassement estimé selon le temps des règlements réellement payés', () => {
     const f = TestBed.createComponent(BpmProjectMetricsComponent);
     const t = task('tsk_1', 'Finir');
-    f.componentRef.setInput('task', { ...t, budget: { ...t.budget, shareCents: 10000, paidCents: 1000, timeConsumedCents: 12000, timeRemainingCents: -2000, timeConsumptionPercent: 120 } });
+    f.componentRef.setInput('task', {
+      ...t,
+      budget: {
+        ...t.budget,
+        shareCents: 10000,
+        paidCents: 1000,
+        timeConsumedCents: 12000,
+        timeRemainingCents: -2000,
+        timeConsumptionPercent: 120,
+      },
+    });
     f.detectChanges();
     const root: HTMLElement = f.nativeElement;
-    expect(root.querySelector('.pm-signal')?.textContent).toContain('Estimation au-delà de la part');
+    expect(root.querySelector('.pm-signal')?.textContent).toContain(
+      'Estimation au-delà de la part',
+    );
     expect(root.textContent).toContain('Estimation au prorata du temps saisi');
-    expect(root.querySelector('.pm-metric-caption')?.textContent).not.toContain('Réglé sur l’enveloppe');
+    expect(root.querySelector('.pm-metric-caption')?.textContent).not.toContain(
+      'Réglé sur l’enveloppe',
+    );
   });
 });

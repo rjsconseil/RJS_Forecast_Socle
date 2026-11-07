@@ -198,6 +198,18 @@ describe('lecture des dates des flux dans BPM', () => {
     )!;
     expect(back.getAttribute('href')).toBe('/argent/entrees?period=2026-10');
   });
+  it('conserve le plafond saisi dans le bandeau après une relecture sans changement serveur', async () => {
+    const page = await harness.navigateByUrl('/argent/postes/std:loisirs', BpmCenterPage);
+    await settle();
+    const input = harness.routeNativeElement!.querySelector<HTMLInputElement>('bpm-page-banner input[name="cap"]')!;
+    input.value = '250';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
+    (page as any).read.reload();
+    await settle();
+    expect(input.value).toBe('250');
+    expect((harness.routeNativeElement!.querySelector('bpm-page-banner button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
+  });
   it('les entrées affichent les montants réellement reçus et un compteur cohérent', async () => {
     await harness.navigateByUrl('/argent/entrees?period=2026-11', BpmIncomesPage);
     await settle();

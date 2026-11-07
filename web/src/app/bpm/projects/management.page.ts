@@ -1,4 +1,16 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { BpmPageBanner, BpmPageFocus } from '../ui';
+import { BpmPageContext } from '../ui/page-context';
+import { bpmQueryState } from '../ui/query-state';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  inject,
+  Injector,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
@@ -22,8 +34,10 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
 
 @Component({
   selector: 'app-bpm-project-management',
+  providers: [BpmPageContext],
   styleUrl: './projects.page.scss',
   imports: [
+    BpmPageBanner,
     ModalComponent,
     BpmProjectOverviewSummaryComponent,
     RouterLink,
@@ -38,32 +52,44 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
   ],
   template: `
     <div class="page page-wide bpm-projects bpm-project-page bpm-management">
-      <header class="life-projects-banner" data-ui-pattern="heading" data-sticky-hero>
-        <div class="life-banner-copy">
-          <p class="eyebrow">Budget/Patrimoine · Mes projets de la vie</p>
-          <h1 class="display">Gestion de projet</h1>
-          <p class="page-intro">
-            Donnez un cadre à chaque projet de la vie : préparez ses tâches, attribuez son budget,
-            puis validez les montants dont les tâches ont besoin.
-          </p>
+      <bpm-page-banner
+        class="life-projects-banner"
+        kicker="Mes projets de la vie"
+        title="Gestion de projet"
+        lead="Préparez vos projets, attribuez leur enveloppe et arbitrez les demandes des tâches. Le bandeau vous propose la prochaine étape selon leur situation."
+        [focus]="pageFocus()"
+        [scope]="toolbarScope()"
+        [result]="toolbarResult()"
+        toolsLabel="Piloter vos projets"
+      >
+        <div primary>
+          @if (data()?.life?.taskRequests?.length) {
+            <button type="button" class="btn btn-primary" (click)="decisions.set('tasks')">Décider {{ data()!.life.taskRequests.length }} demande(s)</button>
+          } @else if (data()?.life?.pendingRequests?.length) {
+            <button type="button" class="btn btn-primary" (click)="cycleOpen.set(true)">Autoriser les dépassements en attente</button>
+          } @else if (unfundedCount()) {
+            <button type="button" class="btn btn-primary" (click)="showUnfunded()">Attribuer {{ unfundedCount() }} enveloppe(s)</button>
+          } @else if (visibleProjects().length === 1) {
+            <button type="button" class="btn btn-primary" (click)="openTask(visibleProjects()[0].project.id)">+ Créer une tâche dans le projet affiché</button>
+          } @else {
+            <button type="button" class="btn btn-primary" [disabled]="!data()" (click)="openProject()">+ Créer un projet de la vie</button>
+          }
         </div>
-        <div class="life-header-actions">
-          <button class="btn btn-secondary" type="button" [disabled]="!data()" (click)="openTask()">
-            Créer une tâche
-          </button>
-          <button
-            class="btn btn-secondary"
-            type="button"
-            [disabled]="!data()"
-            (click)="cycleOpen.set(true)"
-          >
-            Suivi et cycle
-            @if (data()?.life?.pendingRequests?.length) {
-              <span class="life-alert-count">{{ data()!.life.pendingRequests.length }}</span>
-            }
-          </button>
+        <div actions>
+          @if (hasManagementFollowup()) {
+            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openProject()">+ Créer un projet de la vie</button>
+          }
+          @if (visibleProjects().length !== 1) {
+            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openTask()">Créer une tâche</button>
+          }
+          @if (!data()?.life?.pendingRequests?.length || data()?.life?.taskRequests?.length) {
+            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="cycleOpen.set(true)">Suivi et cycle</button>
+          }
+          @if (visibleProjects().length === 1) {
+            <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', visibleProjects()[0].project.id]">Piloter le projet affiché</a>
+          }
         </div>
-        <div class="life-banner-tools" aria-label="Commandes de gestion des projets">
+        <div tools class="life-banner-tools">
           <label>
             Afficher les projets
             <select [value]="filter()" (change)="filter.set($any($event.target).value)">
@@ -72,6 +98,9 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
               <option value="unfunded">Budget à attribuer</option>
               <option value="done">Terminés</option>
               <option value="deficit">En dépassement</option>
+              <option value="requests">Demandes à décider</option>
+              <option value="empty">Sans tâche</option>
+              <option value="late">Échéance dépassée</option>
             </select>
           </label>
           <label>
@@ -96,6 +125,45 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
               }
             </span>
           </label>
+          @if (search() || filter() !== 'all') {
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="search.set(''); filter.set('all')"
+            >
+              Réinitialiser la vue ({{ visibleProjects().length }})
+            </button>
+          }
+          @if (availableTasks().length && projectOptions().length) {
+            <form
+              class="life-attach-task"
+              (submit)="
+                $event.preventDefault();
+                attachById(
+                  $any($event.target).elements.taskId.value,
+                  $any($event.target).elements.projectId.value
+                )
+              "
+            >
+              <label
+                >Tâche à rattacher<select name="taskId" required [disabled]="busy()">
+                  <option value="">{{ availableTasks().length }} tâche(s) sans projet…</option>
+                  @for (t of availableTasks(); track t.task.id) {
+                    <option [value]="t.task.id">{{ t.task.title }}</option>
+                  }
+                </select></label
+              >
+              <label
+                >Projet destinataire<select name="projectId" required [disabled]="busy()">
+                  <option value="">Choisir un projet…</option>
+                  @for (p of projectOptions(); track p.projectId) {
+                    <option [value]="p.projectId">{{ p.title }}</option>
+                  }
+                </select></label
+              >
+              <button type="submit" class="btn btn-secondary" [disabled]="busy()">Rattacher</button>
+            </form>
+          }
           <form class="life-budget-project" (submit)="$event.preventDefault(); adopt()">
             <label>
               Projet à budgéter
@@ -124,17 +192,58 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
               Budgéter
             </button>
           </form>
-          <button
-            class="btn btn-primary life-create"
-            type="button"
-            [disabled]="!data()"
-            (click)="openProject()"
-          >
-            <span aria-hidden="true">+</span> Créer un projet de la vie
-          </button>
         </div>
-      </header>
+      </bpm-page-banner>
       <bpm-project-overview-summary [data]="data()" />
+      @if (decisions() === 'tasks' && data(); as d) {
+        <rjs-modal
+          [open]="true"
+          [headed]="true"
+          title="Décider les montants demandés par les tâches"
+          [busy]="busy()"
+          (closed)="decisions.set('')"
+        >
+          <p>
+            Accordez le montant demandé, refusez-le ou annulez la demande. Chaque décision actualise
+            le financement des projets.
+          </p>
+          @if (notice(); as n) {
+            <p
+              class="bpm-feedback"
+              [class.is-error]="n.error"
+              [attr.role]="n.error ? 'alert' : 'status'"
+            >
+              {{ n.text }}
+            </p>
+          }
+          @for (r of d.life.taskRequests; track r.id) {
+            <bpm-task-requests
+              [requests]="[r]"
+              [funded]="projectFunded(r.coreProjectId)"
+              [busy]="busy()"
+              (decide)="decideRequest($event)"
+            />
+            @if (!projectFunded(r.coreProjectId)) {
+              <a
+                class="btn btn-secondary"
+                [routerLink]="['/app/gestion-projet', r.coreProjectId]"
+                fragment="enveloppe"
+                >Attribuer l’enveloppe de {{ r.budgetName }}</a
+              >
+            }
+          } @empty {
+            <p>Toutes les demandes de montant ont été traitées.</p>
+          }
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="busy()"
+            (click)="decisions.set('')"
+          >
+            Fermer
+          </button>
+        </rjs-modal>
+      }
       @if (notice(); as n) {
         <p
           class="bpm-feedback"
@@ -165,6 +274,8 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
             @for (p of visibleProjects(); track p.project.id) {
               <article
                 class="bpm-management-card"
+                [id]="'managed-project-' + p.project.id"
+                tabindex="-1"
                 [class.is-expanded]="expandedProjects().has(p.project.id)"
                 [attr.data-budget-state]="p.budget?.state"
                 [attr.aria-label]="'Projet ' + p.project.title"
@@ -397,7 +508,9 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                             </div>
                             <div>
                               <dt>{{ L.toShare }}</dt>
-                              <dd [class.is-deficit]="(b.availableCents ?? 0) < 0">{{ b.availableCents | cents }}</dd>
+                              <dd [class.is-deficit]="(b.availableCents ?? 0) < 0">
+                                {{ b.availableCents | cents }}
+                              </dd>
                             </div>
                             <div>
                               <dt>Réglé dans le cycle</dt>
@@ -496,11 +609,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                             [funded]="p.budget?.regime ?? false"
                             [busy]="busy()"
                             [overrun]="taskOverrun(t)"
-                            (edit)="
-                              editingTask.set($event);
-                              taskProjectId.set(p.project.id);
-                              taskEditor.set(true)
-                            "
+                            (edit)="taskEditor.set($event.task.id); taskProjectId.set(p.project.id)"
                             (detach)="detach($event)"
                             (status)="changeTaskStatus($event)"
                             (request)="requestTaskBudget($event)"
@@ -558,11 +667,16 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
             manque de fonds, une autorisation de dépassement est demandée au budget du projet de
             vie.
           </p>
-          <bpm-task-requests
-            [requests]="d.life.taskRequests"
-            [busy]="busy()"
-            (decide)="decideRequest($event)"
-          />
+          @for (r of d.life.taskRequests; track r.id) {
+            <bpm-task-requests
+              [requests]="[r]"
+              [funded]="projectFunded(r.coreProjectId)"
+              [busy]="busy()"
+              (decide)="decideRequest($event)"
+            />
+          } @empty {
+            <p class="bpm-note">Aucune demande de montant.</p>
+          }
         </section>
 
         @if (cycleOpen()) {
@@ -689,11 +803,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                 @for (t of availableTasks(); track t.task.id) {
                   <tr>
                     <th>
-                      <button
-                        type="button"
-                        class="text-link"
-                        (click)="editingTask.set(t); taskEditor.set(true)"
-                      >
+                      <button type="button" class="text-link" (click)="taskEditor.set(t.task.id)">
                         {{ t.task.title }}
                       </button>
                     </th>
@@ -736,14 +846,14 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
         </section>
       }
     </div>
-    @if (projectEditor()) {
+    @if (projectEditor() && (projectEditor() === 'new' || editingProject())) {
       <bpm-project-editor
         [project]="editingProject()"
-        (closed)="projectEditor.set(false)"
+        (closed)="projectEditor.set('')"
         (saved)="created($event.projectId)"
       />
     }
-    @if (taskEditor()) {
+    @if (taskEditor() && (taskEditor() === 'new' || editingTask())) {
       <bpm-task-editor
         [task]="editingTask()"
         [projects]="projectOptions()"
@@ -762,6 +872,8 @@ export class BpmProjectManagementPage implements OnInit {
   private api = inject(Api);
   private router = inject(Router);
   private sequence = 0;
+  private document = inject(DOCUMENT);
+  private injector = inject(Injector);
   protected data = signal<BpmProjectsOverview | null>(null);
   protected tasks = signal<BpmTasksOverview | null>(null);
   protected availableTasks = computed(() =>
@@ -772,18 +884,82 @@ export class BpmProjectManagementPage implements OnInit {
   protected error = signal('');
   protected busy = signal(false);
   protected notice = signal<{ text: string; error: boolean } | null>(null);
-  protected projectEditor = signal(false);
-  protected taskEditor = signal(false);
-  protected editingTask = signal<BpmTaskCard | null>(null);
-  protected search = signal('');
-  protected filter = signal('all');
+  protected toolbarResult = computed(() => {
+    const notice = this.notice();
+    return notice ? { message: notice.text, tone: notice.error ? 'danger' as const : 'success' as const } : null;
+  });
+  protected projectEditor = bpmQueryState('editProject', '');
+  protected taskEditor = bpmQueryState('editTask', '');
+  protected editingTask = computed(
+    () => this.tasks()?.tasks.find((t) => t.task.id === this.taskEditor()) ?? null,
+  );
+  protected search = bpmQueryState('q', '', { replace: true });
+  protected filter = bpmQueryState('filter', 'all');
   protected candidate = signal('');
   protected cycleOpen = signal(false);
-  protected editingProject = signal<CoreProject | null>(null);
-  protected taskProjectId = signal('');
+  protected decisions = bpmQueryState('decisions', '');
+  protected unfundedCount = computed(
+    () => (this.data()?.projects ?? []).filter((p) => !p.budget?.regime).length,
+  );
+  protected hasManagementFollowup = computed(() => !!(this.data()?.life.taskRequests.length || this.data()?.life.pendingRequests.length || this.unfundedCount() || this.visibleProjects().length === 1));
+  protected toolbarScope = computed(() => `Section · décisions sur tous les projets · Vue : ${this.visibleProjects().length} / ${this.data()?.projects.length ?? 0} projet(s)`);
+  protected pageFocus = computed<BpmPageFocus>(() => {
+    const d = this.data();
+    if (this.error())
+      return {
+        title: 'Les projets et tâches n’ont pas pu être actualisés',
+        detail: this.error(),
+        tone: 'danger',
+      };
+    if (!d) return { title: 'Lecture des projets et des tâches…', tone: 'info' };
+    if (d.life.taskRequests.length)
+      return {
+        title: `${d.life.taskRequests.length} demande(s) de montant attendent une décision`,
+        detail: 'Ouvrez les demandes pour accorder les parts ou traiter un dépassement.',
+        tone: 'warning',
+      };
+    if (d.life.pendingRequests.length)
+      return {
+        title: `${d.life.pendingRequests.length} dépassement(s) attendent une autorisation`,
+        detail: 'Le suivi et cycle regroupe les décisions du projet de vie.',
+        tone: 'warning',
+      };
+    if (this.unfundedCount())
+      return {
+        title: `${this.unfundedCount()} projet(s) sans enveloppe`,
+        detail:
+          'Attribuez leur budget ; les règlements suivants pourront remonter au projet de vie.',
+        tone: 'warning',
+      };
+    if (this.availableTasks().length)
+      return {
+        title: `${this.availableTasks().length} tâche(s) sans projet à organiser`,
+        detail: 'Choisissez la tâche et son projet destinataire directement dans les outils.',
+        tone: 'info',
+      };
+    if (!d.projects.length)
+      return {
+        title: 'Commencez par un projet, puis préparez ses tâches',
+        detail: 'Le financement peut être défini après la création.',
+        tone: 'info',
+      };
+    return {
+      title: `${this.visibleProjects().length} projet(s) dans cette vue · ${d.life.fundedCount} financé(s)`,
+      detail: 'Créez une tâche ou ouvrez le projet affiché pour poursuivre son pilotage.',
+      tone: 'success',
+    };
+  });
+  protected editingProject = computed(
+    () => this.data()?.projects.find((p) => p.project.id === this.projectEditor())?.project ?? null,
+  );
+  protected taskProjectId = bpmQueryState('taskProject', '');
   protected allocationProjectId = signal('');
   protected attachProjectId = signal('');
-  protected expandedProjects = signal(new Set<string>());
+  protected expandedProjects = bpmQueryState('expanded', new Set<string>(), {
+    parse: (raw) => new Set(raw.split(',').filter(Boolean)),
+    format: (ids) => [...ids].join(','),
+    replace: true,
+  });
   protected tasksByProject = computed(() => {
     const groups = new Map<string, BpmTaskCard[]>();
     for (const task of this.tasks()?.tasks ?? []) {
@@ -809,7 +985,13 @@ export class BpmProjectManagementPage implements OnInit {
           (this.filter() === 'open' && p.view.column !== 'done') ||
           (this.filter() === 'done' && p.view.column === 'done') ||
           (this.filter() === 'unfunded' && !p.budget?.regime) ||
-          (this.filter() === 'deficit' && p.budget?.deficit)),
+          (this.filter() === 'deficit' && p.budget?.deficit) ||
+          (this.filter() === 'requests' && this.requestCount(p.project.id) > 0) ||
+          (this.filter() === 'empty' && p.view.time.taskCount === 0) ||
+          (this.filter() === 'late' &&
+            p.view.column !== 'done' &&
+            !!p.project.dueDate &&
+            p.project.dueDate < (this.data()?.context.calculationDate ?? ''))),
     );
   });
   ngOnInit() {
@@ -837,7 +1019,10 @@ export class BpmProjectManagementPage implements OnInit {
     try {
       const result = await action();
       await this.load();
-      this.notice.set({ text: typeof success === 'function' ? success(result) : success, error: false });
+      this.notice.set({
+        text: typeof success === 'function' ? success(result) : success,
+        error: false,
+      });
     } catch (err) {
       await this.load();
       this.notice.set({ text: toApiError(err).message, error: true });
@@ -845,25 +1030,40 @@ export class BpmProjectManagementPage implements OnInit {
       this.busy.set(false);
     }
   }
+  protected showUnfunded() {
+    this.search.set('');
+    this.filter.set('unfunded');
+    const first = this.data()?.projects.find((p) => !p.budget?.regime);
+    if (!first) return;
+    this.allocationProjectId.set(first.project.id);
+    afterNextRender(
+      () => {
+        const project = this.document.getElementById(`managed-project-${first.project.id}`);
+        project?.scrollIntoView?.({ block: 'center' });
+        project
+          ?.querySelector<HTMLInputElement>('input[name="amount"]')
+          ?.focus({ preventScroll: true });
+      },
+      { injector: this.injector },
+    );
+  }
   protected openProject(project: CoreProject | null = null) {
-    this.editingProject.set(project);
-    this.projectEditor.set(true);
+    this.projectEditor.set(project?.id ?? 'new');
   }
   protected openTask(projectId = '') {
-    this.editingTask.set(null);
     this.taskProjectId.set(projectId);
-    this.taskEditor.set(true);
+    this.taskEditor.set('new');
   }
   protected created(projectId: string) {
-    this.projectEditor.set(false);
-    if (this.editingProject()) {
+    const edited = !!this.editingProject();
+    this.projectEditor.set('');
+    if (edited) {
       this.load();
       this.notice.set({ text: 'Projet enregistré.', error: false });
     } else this.router.navigate(['/app/gestion-projet', projectId]);
   }
   protected closeTask() {
-    this.taskEditor.set(false);
-    this.editingTask.set(null);
+    this.taskEditor.set('');
   }
   protected taskSaved(text: string) {
     const projectId = this.taskProjectId();
@@ -901,6 +1101,9 @@ export class BpmProjectManagementPage implements OnInit {
       () => this.bpm.allocate(p.budget!.budgetId, amount, p.budget!.revision),
       'Budget du projet enregistré.',
     );
+  }
+  protected projectFunded(projectId: string) {
+    return !!this.data()?.projects.find((p) => p.project.id === projectId)?.budget?.regime;
   }
   protected requestCount(projectId: string) {
     return this.data()?.life.taskRequests.filter((r) => r.coreProjectId === projectId).length ?? 0;
@@ -944,10 +1147,12 @@ export class BpmProjectManagementPage implements OnInit {
     );
   }
   protected adopt() {
-    return this.run(
-      () => this.bpm.adoptProject({ coreProjectId: this.candidate(), requestKey: newRequestKey() }),
-      'Le projet dispose maintenant de son budget. Ouvrez sa fiche pour lui attribuer un montant.',
-    );
+    const projectId = this.candidate();
+    if (!projectId || !this.data()?.candidates.some((p) => p.projectId === projectId)) return;
+    return this.run(async () => {
+      await this.bpm.adoptProject({ coreProjectId: projectId, requestKey: newRequestKey() });
+      this.candidate.set('');
+    }, 'Le projet dispose maintenant de son budget. Ouvrez sa fiche pour lui attribuer un montant.');
   }
   protected decideRequest(e: {
     request: TaskBudgetRequest;
@@ -955,10 +1160,16 @@ export class BpmProjectManagementPage implements OnInit {
   }) {
     const revision = this.data()?.projects.find((p) => p.budget?.budgetId === e.request.budgetId)
       ?.budget?.revision;
-    return this.run(() => this.funding.decideTaskRequest(e.request, e.decision, revision), (r) => r.message);
+    return this.run(
+      () => this.funding.decideTaskRequest(e.request, e.decision, revision),
+      (r) => r.message,
+    );
   }
   protected decideOverrun(o: ProjectOverrun, decision: 'approve' | 'refuse') {
-    return this.run(() => this.funding.decide(o, decision), (r) => r.message);
+    return this.run(
+      () => this.funding.decide(o, decision),
+      (r) => r.message,
+    );
   }
   protected bill() {
     return this.run(

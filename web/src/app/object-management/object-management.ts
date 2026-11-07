@@ -5,6 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
 import { Api, OmCheck, OmDebug, OmInventoryRow, OmKind, OmRelation, toApiError, UserDirectory } from '../core/api.service';
+import { injectPageWorkspace } from '../shared/page-workspace';
 
 type Tab = 'inventory' | 'architecture' | 'relations' | 'views' | 'parameters' | 'checks' | 'receipts' | 'journal' | 'exports';
 
@@ -34,9 +35,9 @@ const INSPECTION_KEYS = new Set(['object', 'nature', 'outgoing', 'incoming', 'cr
         data-sticky-hero
         tone="indigo"
         headingId="om-title"
-        title="Object Management"
+        [title]="workspace()?.title ?? 'Object Management'"
         kicker="Noyau transverse · Object Management"
-        lead="Diagnostic en lecture seule des objets persistés des trois niveaux. Aucune lecture ne modifie ni ne répare."
+        [lead]="workspace()?.lead ?? 'Diagnostic en lecture seule des objets persistés des trois niveaux. Aucune lecture ne modifie ni ne répare.'"
         [chips]="heroChips()"
       >
         <label heroTools class="adm-hero-field"
@@ -57,6 +58,7 @@ const INSPECTION_KEYS = new Set(['object', 'nature', 'outgoing', 'incoming', 'cr
       }
 
       @if (dbg(); as d) {
+        @if (!workspace()) {
         <div class="cfg-modules" role="tablist" aria-label="Vues d'Object Management">
           @for (t of tabs; track t[0]) {
             <button
@@ -74,9 +76,10 @@ const INSPECTION_KEYS = new Set(['object', 'nature', 'outgoing', 'incoming', 'cr
             </button>
           }
         </div>
+        }
 
-        <section class="adm-panel-stack" role="tabpanel" [id]="'om-panel-' + tab()" [attr.aria-labelledby]="'om-tab-' + tab()">
-          @switch (tab()) {
+        <section class="adm-panel-stack" [attr.role]="workspace() ? 'region' : 'tabpanel'" [id]="'om-panel-' + activeTab()" [attr.aria-labelledby]="workspace() ? 'om-title' : 'om-tab-' + activeTab()">
+          @switch (activeTab()) {
             @case ('inventory') {
               <section class="cfg-panel" data-ui-pattern="panel" aria-labelledby="om-inventory-title">
                 <span class="cfg-number">Périmètre {{ d.scope }}</span>
@@ -541,6 +544,7 @@ export class ObjectManagement implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private directory = inject(UserDirectory);
+  protected workspace = injectPageWorkspace();
   private closeBtn = viewChild<ElementRef<HTMLButtonElement>>('closeBtn');
 
   protected users = this.directory.users;
@@ -562,9 +566,13 @@ export class ObjectManagement implements OnInit {
   };
 
   protected tab = signal<Tab>('inventory');
-  protected scope = signal('all');
-  protected q = signal('');
-  protected kind = signal('');
+  protected activeTab = computed<Tab>(() => {
+    const key = this.workspace()?.key;
+    return key === 'objects-relations' ? 'relations' : key === 'objects-checks' ? 'checks' : key === 'objects-journal' ? 'journal' : this.tab();
+  });
+  protected scope = signal(this.route.snapshot.queryParamMap.get('scope') ?? 'all');
+  protected q = signal(this.route.snapshot.queryParamMap.get('q') ?? '');
+  protected kind = signal(this.route.snapshot.queryParamMap.get('kind') ?? '');
   protected dbg = signal<OmDebug | null>(null);
   protected kinds = signal<OmKind[]>([]);
   protected csvFiles = signal<string[]>([]);
@@ -684,6 +692,15 @@ export class ObjectManagement implements OnInit {
 
   async loadInventory() {
     try {
+      const query = this.route.snapshot.queryParamMap;
+      if ((query.get('scope') ?? 'all') !== this.scope() || (query.get('q') ?? '') !== this.q() || (query.get('kind') ?? '') !== this.kind()) {
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { scope: this.scope() === 'all' ? null : this.scope(), q: this.q() || null, kind: this.kind() || null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      }
       this.inventory.set(await this.api.omObjects({ q: this.q(), kind: this.kind(), scope: this.scope() }));
     } catch (err) {
       this.error.set(toApiError(err).message);

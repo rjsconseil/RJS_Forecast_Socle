@@ -9,7 +9,7 @@
   align-content: space-between;
   align-items: start;
   gap: 8px 24px;
-  min-height: 230px;
+  min-height: 0;
 }
 
 .life-banner-copy {
@@ -25,7 +25,7 @@
   }
   h1,
   .eyebrow {
-    max-width: calc(100% - var(--life-header-actions-width, 260px));
+    max-width: none;
   }
 
   .page-intro {
@@ -38,19 +38,17 @@
   }
 }
 
-.life-cycle-trigger,
 .life-header-actions {
   grid-column: 2;
   grid-row: 1;
-  align-self: start;
-}
-.life-header-actions {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-self: start;
 }
-.bpm-management {
-  --life-header-actions-width: 360px;
+.life-projects-banner > bpm-toolbar {
+  grid-column: 1 / -1;
+  min-width: 0;
 }
 .bpm-management > bpm-project-overview-summary {
   margin: 0;
@@ -68,54 +66,7 @@ bpm-project-overview-summary {
 }
 
 .life-banner-tools {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(160px, 1fr) minmax(190px, 1.15fr) minmax(270px, 1.5fr) auto;
-  align-items: end;
-  gap: 10px 16px;
-  border-top: 1px solid var(--outline);
-  padding-top: 6px;
-
-  label {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
-    min-width: 0;
-    margin: 0;
-    color: var(--heading-ink);
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  select,
-  input {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    height: 42px;
-    margin: 0;
-    padding: 8px 12px;
-    border: 1px solid var(--control-line);
-    border-radius: var(--radius-sm);
-    background: var(--field-surface);
-    color: var(--field-ink);
-    font: inherit;
-    font-size: 14px;
-  }
-
-  input::placeholder {
-    color: var(--field-placeholder);
-  }
-  select:disabled {
-    opacity: 0.7;
-  }
-
-  .btn {
-    min-height: 42px;
-    padding: 8px 14px;
-    font-size: 14px;
-    white-space: nowrap;
-  }
+  min-width: 0;
 }
 
 .life-search-field {
@@ -150,6 +101,7 @@ bpm-project-overview-summary {
   gap: 8px;
   align-items: end;
   margin: 0;
+  min-width: 0;
 }
 
 .life-summary {
@@ -276,15 +228,6 @@ bpm-project-overview-summary {
 }
 
 @media (max-width: 1500px) {
-  .life-banner-tools {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .life-create {
-    justify-self: end;
-  }
-  .life-projects-banner {
-    min-height: 296px;
-  }
   .life-summary {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
@@ -314,15 +257,6 @@ bpm-project-overview-summary {
   .life-banner-copy .page-intro {
     font-size: 16px;
   }
-  .life-banner-tools {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-  }
-  .life-cycle-trigger,
-  .life-create {
-    justify-self: stretch;
-  }
-  .life-cycle-trigger,
   .life-header-actions {
     grid-column: 1;
     grid-row: auto;
@@ -376,4 +310,30 @@ bpm-project-overview-summary {
 }
 .life-financial-stat[data-tone='warning'] dd {
   color: var(--status-warning);
+}
+
+/* Les opérations rapides gardent les champs et leur validation dans le bandeau partagé. */
+.life-attach-task {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr)) auto;
+  align-items: end;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+}
+.bpm-project-description {
+  margin-block: 12px 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  white-space: pre-line;
+}
+.bpm-project-description summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+@media (max-width: 700px) {
+  .life-attach-task {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

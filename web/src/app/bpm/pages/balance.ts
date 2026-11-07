@@ -1,11 +1,13 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
+import { injectPageWorkspace } from '../../shared/page-workspace';
+import { Component, computed, DestroyRef, inject, linkedSignal, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BpmApi } from '../../core/bpm-api.service';
 import { EntryInput, RegisterLine } from '../../core/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents, SignedCentsPipe } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmState, bpmLoader } from '../ui';
+import { BpmDrafts } from '../ui/drafts';
+import { BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, BpmState, bpmLoader } from '../ui';
 import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
 
 /**
@@ -17,22 +19,34 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
 @Component({
   selector: 'bpm-page-balance',
   providers: [BpmPageContext],
-  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmOperationEditor, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
+  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmEntryFlow, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
       kicker="Tableau de bord"
-      title="Solde de la période"
+      [title]="workspace()?.title ?? 'Solde de la période'"
+      [back]="{ label: 'Retour au tableau de bord', link: workspace()?.parent ?? '/tableau-de-bord', query: carry() }"
       pageClass="bpm-money bpm-money-detail"
-      lead="Le solde rejoint le patrimoine."
+      [lead]="workspace()?.lead ?? 'Comparer le budget et votre compte, puis expliquer les écarts.'" [focus]="pageFocus()" [result]="notice() ? { message: notice()!, tone: 'success' } : null" toolsLabel="Rapprocher avec mon compte"
       [context]="b()?.context"
       [periodKey]="period()"
       [periodNav]="true"
       (periodChange)="ctx.setQuery({ period: $event })"
     >
-      <a actions class="app-hero-action" routerLink="/tableau-de-bord" [queryParams]="carry()">← Retour au tableau de bord</a>
-      <button actions type="button" class="app-hero-action is-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée ou une charge</button>
-      <a actions class="bpm-link" routerLink="/depenses" [queryParams]="carry()">Dépenses de la période →</a>
+      @if (b()?.reconciliation?.gapCents; as gap) {
+        <button primary type="button" class="app-hero-action" (click)="fillGap(gap)">Préparer l’opération d’écart · {{ abs(gap) | cents }}</button>
+      }
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée ou une charge</button>
+      @if (b()?.toReceiveCents) { <a actions class="bpm-link" routerLink="/argent/entrees" [queryParams]="carry()">Vérifier les {{ b()!.toReceiveCents | cents }} à recevoir →</a> }
+      @if (b()?.toPayCents) { <a actions class="bpm-link" routerLink="/depenses" [queryParams]="carry()">Revoir les charges de la période →</a> }
+      <form tools class="bpm-toolbar-search" (ngSubmit)="reconcile()" novalidate>
+        <label>Solde initial du compte (€)<input name="initial" inputmode="decimal" [(ngModel)]="initial" [attr.aria-invalid]="recError() === 'initial' ? 'true' : null" /></label>
+        <label>Solde actuel du compte (€)<input name="current" inputmode="decimal" [(ngModel)]="current" [attr.aria-invalid]="recError() === 'current' ? 'true' : null" /></label>
+        <button type="submit" class="btn btn-primary" [disabled]="!b()">Calculer l’écart</button>
+        @if (b()?.reconciliation) { <button type="button" class="btn btn-secondary" (click)="clearReconciliation()">Effacer le rapprochement</button> }
+        @if (recError()) { <p role="alert">Montant attendu dans le champ {{ recError() === 'initial' ? 'Solde initial' : 'Solde actuel' }}.</p> }
+        <small>Comparaison sans écriture. Les montants restent dans votre parcours de navigation.</small>
+      </form>
 
       <div class="bpm-money bpm-money-body bpm-money-detail" data-tone="budget">
         @if (problem(); as p) {
@@ -60,6 +74,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
             <p class="bmd-note-banner">Clôture prévue le {{ v.closingDate | shortDate }} : le réalisé suit la date de règlement, le restant la date prévue.</p>
           }
 
+          @if (!workspace()) {
           <section class="bm-statement" aria-labelledby="bmd-rest-title" data-ui-pattern="panel">
             <h2 id="bmd-rest-title">Le calcul du reste</h2>
             <table class="bmd-rest">
@@ -106,30 +121,11 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
             <p class="bpm-help">À la clôture, le résultat signé de la période est capitalisé une seule fois dans le Patrimoine, même s'il est nul ou négatif. <a routerLink="/tableau-de-bord" [queryParams]="carry()" fragment="bm-wealth">Patrimoine au tableau de bord →</a></p>
           </section>
 
+          }
           <section class="bm-statement" id="verifier" aria-labelledby="bmd-check-title" data-ui-pattern="panel">
             <h2 id="bmd-check-title">Vérifier avec mon compte</h2>
             <p class="bpm-help">Saisissez le solde du compte au début de la période et aujourd'hui. Variation = actuel − initial ; écart = variation − net réalisé. Rien n'est enregistré.</p>
-            <form class="bmd-check" (ngSubmit)="reconcile()" novalidate>
-              <div class="bmd-check-fields">
-                <label class="bmd-field">
-                  <span>Solde initial (€)</span>
-                  <input name="initial" inputmode="decimal" class="num" [(ngModel)]="initial" [attr.aria-invalid]="recError() === 'initial' ? 'true' : null" />
-                </label>
-                <label class="bmd-field">
-                  <span>Solde actuel (€)</span>
-                  <input name="current" inputmode="decimal" class="num" [(ngModel)]="current" [attr.aria-invalid]="recError() === 'current' ? 'true' : null" />
-                </label>
-              </div>
-              @if (recError()) {
-                <p class="bmd-message" data-state="danger" role="alert">Montant attendu dans le champ {{ recError() === 'initial' ? 'Solde initial' : 'Solde actuel' }} (ex. 1 250,40 ou −80).</p>
-              }
-              <div class="bmd-actions">
-                <button type="submit" class="bmd-primary">Calculer l'écart</button>
-                @if (v.reconciliation) {
-                  <button type="button" class="btn btn-secondary" (click)="clearReconciliation()">Effacer</button>
-                }
-              </div>
-            </form>
+
             @if (v.reconciliation; as r) {
               <ul class="bmd-rest-lines">
                 <li><span>Variation du compte</span><span>{{ r.variationCents | signedCents }}</span></li>
@@ -150,9 +146,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
       </div>
     </bpm-page>
 
-    @if (editorOpen() && budgets().length) {
-      <bpm-operation-editor [budgets]="budgets()" [line]="editLine()" [defaults]="defaults()" (closed)="closeEditor()" (saved)="onSaved($event)" />
-    }
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="defaults()" (saved)="onSaved($event)" />
   `,
   styles: `
     :host { display: block; }
@@ -162,6 +156,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
   `,
 })
 export class BpmBalancePage {
+  protected workspace = injectPageWorkspace();
   protected ctx = inject(BpmPageContext);
   private bpm = inject(BpmApi);
 
@@ -177,6 +172,13 @@ export class BpmBalancePage {
   );
   protected b = computed(() => this.loader.data());
   protected problem = computed(() => setupProblem(this.loader.error()));
+  protected pageFocus = computed<BpmPageFocus | null>(() => {
+    const b = this.b();
+    if (!b) return null;
+    const gap = b.reconciliation?.gapCents;
+    if (gap !== null && gap !== undefined) return { title: gap === 0 ? 'Le budget correspond à la variation du compte' : `Écart à expliquer : ${signedCents(gap)}`, detail: gap === 0 ? 'Le rapprochement est équilibré pour les soldes saisis.' : 'Vérifiez les règlements et leurs dates, puis préparez une opération si un flux manque.', tone: gap === 0 ? 'success' : 'warning' };
+    return { title: b.expectedCents === null ? 'Solde prévu inconnu' : `Solde prévu : ${signedCents(b.expectedCents)}`, detail: 'Saisissez les deux soldes du compte dans les outils pour comparer sa variation au réalisé.', tone: b.expectedCents !== null && b.expectedCents < 0 ? 'danger' : 'info' };
+  });
   protected budgets = computed(() => this.b()?.context.budgets ?? []);
   protected readonly formulaKeys = ['bpm.revenus', 'bpm.charges', 'bpm.resultatPeriode', 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu', 'bpm.patrimoineFinPeriode'];
 
@@ -234,6 +236,10 @@ export class BpmBalancePage {
     this.recError.set(null);
     this.ctx.setQuery({ initial: String(i), current: String(c) });
   }
+  constructor() {
+    inject(BpmDrafts).fields(`reconciliation:${this.period() ?? 'current'}`, this, ['initial', 'current'], inject(DestroyRef));
+  }
+
   protected clearReconciliation() {
     this.recError.set(null);
     this.ctx.setQuery({ initial: null, current: null });
@@ -241,25 +247,20 @@ export class BpmBalancePage {
 
   // ---------- éditeur partagé ----------
 
-  protected editorOpen = signal(false);
-  protected editLine = signal<RegisterLine | null>(null);
   protected defaults = signal<Partial<EntryInput>>({});
   protected notice = signal<string | null>(null);
 
   protected openCreate() {
-    this.editLine.set(null);
     this.defaults.set({});
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: 'new' });
   }
   /** Préremplit l'éditeur à partir de l'écart, sans rien créer : l'utilisateur relit puis enregistre. */
   protected fillGap(gapCents: number) {
-    this.editLine.set(null);
     this.defaults.set({ direction: gapCents < 0 ? 'charge' : 'income', amount: Math.abs(gapCents) / 100, label: gapCents < 0 ? 'Dépense manquante (rapprochement)' : 'Entrée manquante (rapprochement)', note: 'Saisie issue du rapprochement de compte.' });
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: 'new' });
   }
   protected closeEditor() {
-    this.editorOpen.set(false);
-    this.editLine.set(null);
+    void this.ctx.setQuery({ entry: null }, { replace: true });
   }
   protected onSaved(message: string) {
     this.closeEditor();

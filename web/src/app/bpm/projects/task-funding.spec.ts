@@ -138,7 +138,7 @@ describe('clés des demandes de montant depuis la fiche projet', () => {
         },
         {
           provide: ActivatedRoute,
-          useValue: { paramMap: of(convertToParamMap({ id: 'prj_1' })), fragment: of(null) },
+          useValue: { paramMap: of(convertToParamMap({ id: 'prj_1' })), fragment: of(null), queryParamMap: of(convertToParamMap({})) },
         },
       ],
     });
@@ -182,7 +182,7 @@ describe('clés des demandes de montant depuis la fiche projet', () => {
         { provide: BpmApi, useValue: bpm },
         {
           provide: ActivatedRoute,
-          useValue: { paramMap: of(convertToParamMap({ id: 'prj_1' })), fragment: of(null) },
+          useValue: { paramMap: of(convertToParamMap({ id: 'prj_1' })), fragment: of(null), queryParamMap: of(convertToParamMap({})) },
         },
       ],
     });

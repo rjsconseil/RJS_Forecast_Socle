@@ -226,7 +226,7 @@ export class BpmDashboardCap {
           } @else if (objective() !== null) {
             <p>Stock à renseigner : progression non calculable.</p>
           }
-          <a routerLink="/vision" [queryParams]="carry()">Modifier l’objectif →</a>
+          <a routerLink="/vision" fragment="cap-patrimonial">Modifier l’objectif →</a>
         </div>
       </div>
       <details class="wealth-composition">

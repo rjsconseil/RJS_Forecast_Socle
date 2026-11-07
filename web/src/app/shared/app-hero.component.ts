@@ -1,5 +1,14 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ViewEncapsulation,
+  inject,
+  input,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PageHeroDirective } from './page-hero.directive';
+import { PageFocus, PageResult, PageToolbar } from './page-toolbar.component';
+import { injectPageWorkspace, injectWorkspaceReturn } from './page-workspace';
 
 export interface HeroChip {
   label: string;
@@ -21,22 +30,26 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
  */
 @Component({
   selector: 'rjs-app-hero',
-  imports: [RouterLink],
+  imports: [RouterLink, PageToolbar],
+  hostDirectives: [PageHeroDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Les classes app-hero-* sont propres au bandeau : globales, elles habillent aussi les commandes projetées.
   encapsulation: ViewEncapsulation.None,
   styleUrl: './app-hero.component.scss',
   template: `
     <section class="app-hero" [attr.data-hero]="tone()" [attr.aria-labelledby]="headingId()">
+      @if (parent(); as back) {
+        <a class="app-hero-parent" [routerLink]="back.link" [queryParams]="back.query">← {{ back.label }}</a>
+      }
       <div class="app-hero-heading">
-        @if (lead()) {
-          <p class="app-hero-lead">{{ lead() }}</p>
+        @if (workspace()?.lead || lead()) {
+          <p class="app-hero-lead">{{ workspace()?.lead || lead() }}</p>
         }
         <div class="app-hero-title">
           @if (level() === 1) {
-            <h1 [id]="headingId()">{{ title() }}</h1>
+            <h1 [id]="headingId()">{{ workspace()?.title || title() }}</h1>
           } @else {
-            <h2 [id]="headingId()">{{ title() }}</h2>
+            <h2 [id]="headingId()">{{ workspace()?.title || title() }}</h2>
           }
           <p class="app-hero-kicker">{{ kicker() }}</p>
         </div>
@@ -57,35 +70,49 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
         <div class="app-hero-meta"><ng-content select="[heroMeta], [heroMetaWide]" /></div>
         <div class="app-hero-footer"><ng-content select="[heroFooter]" /></div>
       </div>
-      <div class="app-hero-toolbar" role="group" aria-label="Outils de la page">
-        <div class="app-hero-commandbar">
-          @if (toolsLabel()) {
-            <span class="app-hero-toolbar-label">{{ toolsLabel() }}</span>
+      <rjs-page-toolbar
+        class="app-hero-toolbar"
+        [focus]="focus()"
+        [label]="toolsLabel() || 'Outils de la page'"
+        [compact]="hero.compact()"
+        [scope]="scope()"
+        [result]="result()"
+      >
+        <div toolbarPrimary class="app-hero-primary"><ng-content select="[heroPrimary]" /></div>
+        <div toolbarActions class="app-hero-actions">
+          @for (action of actions(); track action.label; let first = $first) {
+            <a
+              class="app-hero-action"
+              [class.is-secondary]="!first"
+              [routerLink]="action.link"
+              [queryParams]="action.query ?? null"
+              [fragment]="action.fragment"
+              >{{ action.label }}</a
+            >
           }
-          <div class="app-hero-tools"><ng-content select="[heroTools]" /></div>
-          <div class="app-hero-copy">
-            <!-- Liens déclarés et commandes projetées ([heroActions]) partagent la même rangée. -->
-            <div class="app-hero-actions">
-              @for (action of actions(); track action.label; let first = $first) {
-                <a
-                  class="app-hero-action"
-                  [class.is-secondary]="!first"
-                  [routerLink]="action.link"
-                  [queryParams]="action.query ?? null"
-                  [fragment]="action.fragment"
-                  >{{ action.label }}</a
-                >
-              }
-              <ng-content select="[heroActions]" />
-            </div>
-          </div>
+          <ng-content select="[heroActions]" />
         </div>
-        <div class="app-hero-page-tools"><ng-content select="[heroPageTools]" /></div>
-      </div>
+        <div toolbarFilters class="app-hero-page-tools">
+          <ng-content select="[heroTools], [heroPageTools]" />
+          @if (hero.compact()) {
+            <button
+              type="button"
+              class="app-hero-expand"
+              [attr.aria-expanded]="hero.expanded()"
+              (click)="hero.expanded.set(!hero.expanded())"
+            >
+              {{ hero.expanded() ? 'Réduire la présentation' : 'Présentation et contexte' }}
+            </button>
+          }
+        </div>
+      </rjs-page-toolbar>
     </section>
   `,
 })
 export class AppHeroComponent {
+  protected readonly workspace = injectPageWorkspace();
+  protected readonly parent = injectWorkspaceReturn();
+  protected readonly hero = inject(PageHeroDirective);
   readonly kicker = input.required<string>();
   readonly title = input.required<string>();
   readonly headingId = input.required<string>();
@@ -96,4 +123,7 @@ export class AppHeroComponent {
   readonly actions = input<HeroAction[]>([]);
   /** Facultatif : les modules peuvent nommer la rangée de leurs actions. */
   readonly toolsLabel = input('');
+  readonly focus = input<PageFocus | null>(null);
+  readonly scope = input('');
+  readonly result = input<PageResult | null>(null);
 }

@@ -352,7 +352,7 @@ test('C11 fichier modifié par un autre écrivain : écriture refusée, rien n�
 
 // ---------- migration explicite des données existantes ----------
 
-test('migration j1-store/0.2 → socle-store/0.5 : IDs conservés, changements enregistrés, rejouable', async () => {
+test('migration j1-store/0.2 → socle-store/0.6 : IDs conservés, changements enregistrés, rejouable', async () => {
   const { socle, dataFile } = await makeSocle();
   await socle.close();
   await copyFile(new URL('./fixtures/j1-store-0.2.json', import.meta.url), dataFile);
@@ -360,11 +360,11 @@ test('migration j1-store/0.2 → socle-store/0.5 : IDs conservés, changements e
   const legacyIds = ['users', 'coreProjects', 'tasks', 'budgets', 'patrimoines', 'bpmCompositions'].flatMap((c) => Object.keys(legacy[c]));
 
   const s1 = await createSocle({ dataFile, modules: SOCLE_MODULES });
-  assert.equal(s1.state.schemaVersion, 'socle-store/0.5');
+  assert.equal(s1.state.schemaVersion, 'socle-store/0.6');
   for (const id of legacyIds) assert.ok(s1.om.find(s1.state, id), id);
   const m = s1.state.migrations.at(-1);
   assert.equal(m.from, 'j1-store/0.2');
-  assert.deepEqual(m.steps.map((s) => s.id).sort(), ['bpm-composition-et-cycle', 'bpm-vision', 'budget-recurrences-et-plafonds', 'patrimoine-champs-stock', 'users-type-par-defaut']);
+  assert.deepEqual(m.steps.map((s) => s.id).sort(), ['bpm-composition-et-cycle', 'bpm-domaines-middleware', 'bpm-vision', 'budget-recurrences-et-plafonds', 'patrimoine-champs-stock', 'users-type-par-defaut']);
   for (const u of Object.values(s1.state.users)) assert.ok(u.userType);
   const checks = s1.inspector.checks(s1.state);
   assert.equal(checks.find((c) => c.rule === 'OM-REF-01').result, 'passed', JSON.stringify(checks.find((c) => c.rule === 'OM-REF-01').anomalies));

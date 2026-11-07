@@ -1,5 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AppHeroComponent } from '../shared/app-hero.component';
+import { injectPageWorkspace } from '../shared/page-workspace';
+import { FormsModule } from '@angular/forms';
+import { BpmPageBanner, BpmPageFocus } from '../bpm/ui';
 import { CalendarSpaceComponent } from './calendar-space.component';
 import { CalendarData, CalendarEvent, CalendarPeriod } from './calendar.models';
 import { formatAmount, groupsOf, periodSummary } from './calendar-model';
@@ -30,23 +41,241 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
  */
 @Component({
   selector: 'app-calendar-page',
-  imports: [CalendarSpaceComponent],
+  imports: [CalendarSpaceComponent, FormsModule, BpmPageBanner, AppHeroComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    `
+      bpm-page-banner, rjs-app-hero {
+        min-width: 0;
+        width: 100%;
+        grid-column: 1 / -1;
+      }
+      .bpm-calendar-header-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 12px 18px;
+      }
+      .bpm-calendar-header-filters > label {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 0;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .bpm-calendar-header-filters :is(input[type='date'], select) {
+        width: auto;
+        max-width: 260px;
+        min-width: 100px;
+        padding: 9px 10px;
+        border-radius: 7px;
+        border: 1px solid #dbe4ed;
+        color: #24364b;
+        background: #fff;
+        font: inherit;
+      }
+      .bpm-calendar-header-paging {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        align-self: end;
+        min-height: 42px;
+      }
+      .bpm-calendar-header-paging > span {
+        min-width: 100px;
+        text-align: center;
+        font-weight: 650;
+      }
+      .bpm-calendar-header-filters > .bpm-calendar-header-completed {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        align-self: end;
+        min-height: 42px;
+      }
+      .bpm-calendar-header-completed input {
+        width: 20px;
+        min-height: 20px;
+        height: 20px;
+      }
+    `,
+  ],
   template: `
-    <div class="page page-wide calendar-360-page calendar-module-page">
+    <div
+      class="page page-wide calendar-360-page calendar-module-page"
+      [class.bpm-app]="isBpm"
+      [attr.data-tone]="isBpm ? 'budget' : null"
+    >
       <div class="calendar-360-top">
-        <header class="page-head">
-          <div>
-            <div class="page-hero-title">
-              <h1 class="display">
-                {{ page.title }} <em>{{ page.emphasis }}</em>
-              </h1>
-              <p class="eyebrow"><span class="eyebrow-line"></span>{{ page.eyebrow }}</p>
-            </div>
-          </div>
-          <p class="lead calendar-360-intro">{{ page.intro }}</p>
-        </header>
+        @if (isBpm) {
+          <bpm-page-banner
+            [title]="page.title + ' ' + page.emphasis"
+            kicker="Calendrier"
+            [lead]="page.intro"
+            [focus]="focus()"
+            [scope]="readingScope()"
+            [result]="
+              tools()?.error
+                ? { message: tools()!.error!, tone: 'danger' }
+                : tools()?.feedback
+                  ? { message: tools()!.feedback, tone: 'success' }
+                  : null
+            "
+            toolsLabel="Période et affichage"
+          >
+            <ng-container primary>
+              <div class="bpm-calendar-header-paging" role="group" aria-label="Changer de période">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [attr.aria-label]="tools()?.previous ?? 'Période précédente'"
+                  (click)="space()?.movePeriod(-1)"
+                >
+                  ←
+                </button>
+                <span aria-live="polite">{{ tools()?.period ?? 'Chargement…' }}</span>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [attr.aria-label]="tools()?.next ?? 'Période suivante'"
+                  (click)="space()?.movePeriod(1)"
+                >
+                  →
+                </button>
+              </div>
+              @if (presentation() !== 'sources' && priority(); as event) {
+                <button
+                  type="button"
+                  class="app-hero-action"
+                  [disabled]="tools()?.loading"
+                  (click)="open(event)"
+                  [attr.aria-label]="'Ouvrir le repère · ' + event.title"
+                >
+                  Ouvrir
+                </button>
+              }
+            </ng-container>
+            <ng-container actions>
+              <button type="button" class="btn btn-secondary" (click)="space()?.goToday()">
+                Aujourd’hui
+              </button>
+              @if (presentation() === 'agenda') {
+                <a class="btn btn-secondary" [routerLink]="workspace()!.parent + '/sources'" queryParamsHandling="preserve">Choisir les sources</a>
+              } @else if (presentation() === 'sources') {
+                <a class="btn btn-primary" [routerLink]="workspace()!.parent + '/agenda'" queryParamsHandling="preserve">Voir l’agenda avec ces choix</a>
+              } @else {
+              <button
+                type="button"
+                class="btn btn-primary"
+                [attr.aria-expanded]="tools()?.customizing ?? false"
+                aria-controls="bpm-calendar-personalization"
+                (click)="space()?.togglePersonalization()"
+              >
+                Sources et affichage
+                <span aria-hidden="true">{{ tools()?.customizing ? '−' : '+' }}</span>
+              </button>
+              }
+            </ng-container>
+            <div tools class="bpm-calendar-header-filters">
+              @if (presentation() !== 'sources' && priorities().length) {
+                <label
+                  ><span>Repère à suivre</span
+                  ><select [ngModel]="priority()?.key" (ngModelChange)="priorityKey.set($event)">
+                    @for (event of priorities(); track event.key) {
+                      <option [value]="event.key">{{ event.date }} · {{ event.title }}</option>
+                    }
+                  </select></label
+                >
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="locatePriority()"
+                  [disabled]="tools()?.loading"
+                >
+                  {{ presentation() === 'agenda' ? 'Retrouver dans l’agenda' : 'Voir dans le calendrier' }}
+                </button>
+              }
 
+              <label
+                ><span>Aller au jour</span
+                ><input
+                  type="date"
+                  [ngModel]="tools()?.day"
+                  (ngModelChange)="space()?.selectDay($event)"
+              /></label>
+              <label
+                ><span>Vue</span
+                ><select
+                  [ngModel]="tools()?.view ?? 'month'"
+                  (ngModelChange)="space()?.selectView($event)"
+                >
+                  <option value="month">Mois</option>
+                  <option value="year">Année</option>
+                  <option value="week">Semaine</option>
+                </select></label
+              >
+              <label
+                ><span>Regroupement</span
+                ><select
+                  [ngModel]="tools()?.group ?? 'all'"
+                  (ngModelChange)="space()?.selectGroup($event)"
+                >
+                  <option value="all">Tous les regroupements</option>
+                  @for (group of tools()?.groups ?? []; track group.key) {
+                    <option [value]="group.key">{{ group.label }}</option>
+                  }
+                </select></label
+              >
+              <label class="bpm-calendar-header-completed"
+                ><input
+                  type="checkbox"
+                  [ngModel]="tools()?.includeDone ?? true"
+                  (ngModelChange)="space()?.setIncludeDone($event)"
+                /><span>Terminés inclus</span></label
+              >
+            </div>
+          </bpm-page-banner>
+        } @else if (presentation() !== 'calendar') {
+          <rjs-app-hero
+            [title]="page.title + ' ' + page.emphasis" [kicker]="page.eyebrow"
+            [lead]="page.intro" headingId="calendar-specialized-heading"
+            [focus]="focus()" [scope]="readingScope()" toolsLabel="Période et affichage"
+            [result]="tools()?.error ? { message: tools()!.error!, tone: 'danger' } : tools()?.feedback ? { message: tools()!.feedback, tone: 'success' } : null"
+          >
+            <div heroPrimary class="bpm-calendar-header-paging" role="group" aria-label="Changer de période">
+              <button type="button" class="btn btn-secondary" [attr.aria-label]="tools()?.previous ?? 'Période précédente'" (click)="space()?.movePeriod(-1)">←</button>
+              <span aria-live="polite">{{ tools()?.period ?? 'Chargement…' }}</span>
+              <button type="button" class="btn btn-secondary" [attr.aria-label]="tools()?.next ?? 'Période suivante'" (click)="space()?.movePeriod(1)">→</button>
+            </div>
+            <div heroActions>
+              <button type="button" class="btn btn-secondary" (click)="space()?.goToday()">Aujourd’hui</button>
+              @if (presentation() === 'agenda') { <a class="btn btn-secondary" [routerLink]="workspace()!.parent + '/sources'" queryParamsHandling="preserve">Choisir les sources</a> }
+              @else { <a class="btn btn-primary" [routerLink]="workspace()!.parent + '/agenda'" queryParamsHandling="preserve">Voir l’agenda avec ces choix</a> }
+            </div>
+            <div heroTools class="bpm-calendar-header-filters">
+              <label>Aller au jour<input type="date" [ngModel]="tools()?.day" (ngModelChange)="space()?.selectDay($event)" /></label>
+              <label>Période<select [ngModel]="tools()?.view ?? 'month'" (ngModelChange)="space()?.selectView($event)"><option value="month">Mois</option><option value="year">Année</option><option value="week">Semaine</option></select></label>
+              <label>Regroupement<select [ngModel]="tools()?.group ?? 'all'" (ngModelChange)="space()?.selectGroup($event)"><option value="all">Tous les regroupements</option>@for (group of tools()?.groups ?? []; track group.key) { <option [value]="group.key">{{ group.label }}</option> }</select></label>
+              <label class="bpm-calendar-header-completed"><input type="checkbox" [ngModel]="tools()?.includeDone ?? true" (ngModelChange)="space()?.setIncludeDone($event)" /><span>Terminés inclus</span></label>
+            </div>
+          </rjs-app-hero>
+        } @else {
+          <header class="page-head">
+            <div>
+              <div class="page-hero-title">
+                <h1 class="display">
+                  {{ page.title }} <em>{{ page.emphasis }}</em>
+                </h1>
+                <p class="eyebrow"><span class="eyebrow-line"></span>{{ page.eyebrow }}</p>
+              </div>
+            </div>
+            <p class="lead calendar-360-intro">{{ page.intro }}</p>
+          </header>
+        }
+
+        @if (presentation() === 'calendar') {
         <section class="calendar-360-overview" aria-label="Synthèse de la période">
           <div class="calendar-360-overview-body">
             <section class="summary-band calendar-360-stats" aria-label="Chiffres de la période">
@@ -156,12 +385,16 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
             </details>
           </div>
         </section>
+        }
 
         <rjs-calendar-space
           [calendar]="page.calendar"
+          [externalTools]="isBpm || presentation() !== 'calendar'"
+          [presentation]="presentation()"
           (loaded)="onLoaded($event.data, $event.period)"
           (displayedEventsChange)="displayedEvents.set($event)"
         >
+          @if (presentation() === 'calendar') {
           <section class="calendar-360-content" [attr.aria-label]="page.groupsTitle">
             <div class="calendar-360-section-title">
               <h2>{{ page.groupsTitle }}</h2>
@@ -244,12 +477,17 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
               }
             </div>
           </section>
+          }
         </rjs-calendar-space>
       </div>
     </div>
   `,
 })
 export class CalendarPage {
+  protected readonly workspace = injectPageWorkspace();
+  protected readonly presentation = computed<'calendar' | 'agenda' | 'sources'>(() => this.workspace()?.key === 'calendar-agenda' ? 'agenda' : this.workspace()?.key === 'calendar-sources' ? 'sources' : 'calendar');
+  protected readonly space = viewChild(CalendarSpaceComponent);
+  protected readonly tools = computed(() => this.space()?.toolbarState());
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly page = this.route.snapshot.data as CalendarPageData;
@@ -265,9 +503,67 @@ export class CalendarPage {
   /** Repères de la période affichée (la fenêtre lue peut déborder sur les mois voisins). */
   private readonly events = computed(() => {
     const p = this.period();
-    const source = this.isBpm ? (this.displayedEvents() ?? []) : (this.data()?.events ?? []);
+    const source = this.isBpm || this.presentation() !== 'calendar' ? (this.displayedEvents() ?? []) : (this.data()?.events ?? []);
     return p ? source.filter((e) => inPeriod(e.date, p.day, p.view)) : [];
   });
+  protected readonly readingScope = computed(() => {
+    const tools = this.tools();
+    const group =
+      tools?.group === 'all'
+        ? 'Tous les regroupements'
+        : (tools?.groups.find((item) => item.key === tools.group)?.label ?? 'Regroupement courant');
+    return `${group} · ${this.summary().markers} repère(s) · ${tools?.includeDone ? 'avec terminés' : 'à suivre'}`;
+  });
+  protected readonly priorityKey = signal<string | null>(null);
+  /** Les priorités respectent les sources, le regroupement et la période réellement affichés. */
+  protected readonly priorities = computed(() =>
+    this.events()
+      .filter((event) => !event.done && !!event.link)
+      .sort(
+        (a, b) =>
+          Number(b.urgent === 'overdue') - Number(a.urgent === 'overdue') ||
+          a.date.localeCompare(b.date) ||
+          a.title.localeCompare(b.title, 'fr'),
+      ),
+  );
+  protected readonly priority = computed(
+    () =>
+      this.priorities().find((event) => event.key === this.priorityKey()) ??
+      this.priorities()[0] ??
+      null,
+  );
+  protected readonly focus = computed<BpmPageFocus | null>(() => {
+    if (this.tools()?.loading)
+      return { title: 'Lecture de la période…', detail: this.tools()?.period, tone: 'info' };
+    if (this.tools()?.error)
+      return {
+        title: 'Le calendrier n’a pas pu être actualisé',
+        detail: this.tools()?.error ?? undefined,
+        tone: 'warning',
+      };
+    if (this.presentation() === 'sources') return {
+      title: 'Choisissez les sources et les informations utiles à votre lecture.',
+      detail: this.isBpm ? 'Ces préférences sont conservées pour votre profil sur ce navigateur.' : 'Vos choix suivent l’URL quand vous revenez au calendrier ou à l’agenda.',
+      tone: 'info',
+    };
+    if (!this.data()) return null;
+    const event = this.priority();
+    if (!event)
+      return {
+        title: 'Aucun repère à suivre dans la sélection',
+        detail: 'Changez de période, de sources ou de regroupement pour élargir votre lecture.',
+        tone: 'info',
+      };
+    return {
+      title: `${this.priorities().length} repère(s) à suivre · ${event.title}`,
+      detail: `${this.date(event.date)}${event.groupLabel ? ' · ' + event.groupLabel : ''}${event.amountCents !== null ? ' · ' + this.money(event.amountCents, event.direction) : ''}`,
+      tone: event.urgent === 'overdue' ? 'warning' : 'info',
+    };
+  });
+  protected locatePriority() {
+    const event = this.priority();
+    if (event) this.space()?.focusEvent(event);
+  }
   protected readonly summary = computed(() =>
     periodSummary(this.events(), this.data()?.elements ?? []),
   );

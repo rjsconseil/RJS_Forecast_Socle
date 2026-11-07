@@ -6,8 +6,9 @@
 import { fail } from '../../socle/errors.mjs';
 import { date, money, oneOf } from '../../socle/validation.mjs';
 import { CADENCES, PER_YEAR, monthlyAverageCents, occurrenceDates, parseOccurrenceKey } from '../budget/recurrence.mjs';
-import { addDays, today, periodContaining } from './periods.mjs';
-import { GOAL_TYPES, project } from './projection.mjs';
+import { addDays, today, periodContaining } from '../budget/periods.mjs';
+import { GOAL_TYPES } from '../patrimoine/projection.mjs';
+import { percent } from '../patrimoine/objectives.mjs';
 import { fundedStandardsOf, isValidatedCharge, specialProjectLines } from './projects.mjs';
 import { essentialRefsOf, NATURES, NATURE_LABEL, natureOf } from './natures.mjs';
 
@@ -17,7 +18,6 @@ const STATUS_LABEL = { settled: 'Réglé', due: 'Du jour', late: 'En retard', pe
 const NATURE_ORDER = ['entrees', ...NATURES];
 /** Groupe et filtre des dépenses sans catégorie personnalisée. */
 const NO_CATEGORY = '__none__';
-export const DEFAULT_VISION = { horizonYears: 20, annualReturnPct: null, inflationPct: 2, inflationSource: 'Hypothèse par défaut modifiable', contributionCents: null, contributionCadence: 'monthly', savingsTargetCents: null, surplus: null };
 
 const cents = (v) => (v === null || v === undefined ? null : Math.round(v * 100));
 const sum = (lines, f) => lines.reduce((s, l) => s + (f(l) ?? 0), 0);
@@ -26,15 +26,6 @@ const sign = (direction) => (direction === 'income' ? 1 : -1);
 /** Montant venant d'une adresse (texte « 12,50 » ou « 12.50 ») : converti à la frontière, puis validé en centimes. */
 const queryMoney = (field, value, opts) => money(field, typeof value === 'string' && value.trim() !== '' ? Number(value.replace(',', '.').replace(/\s/g, '')) : value, opts);
 
-export function percent(field, value, { min = -100, max = 100, nullable = false } = {}) {
-  if (value === null || value === undefined || value === '') {
-    if (nullable) return null;
-    fail('VALIDATION', `Le champ ${field} est obligatoire.`, { field });
-  }
-  const n = typeof value === 'string' ? Number(value.replace(',', '.')) : value;
-  if (typeof n !== 'number' || !Number.isFinite(n) || n < min || n > max) fail('VALIDATION', `Le champ ${field} doit être un pourcentage entre ${min} et ${max}.`, { field });
-  return n;
-}
 
 /**
  * @param socle socle complet
@@ -817,14 +808,8 @@ export function createReads(socle, h) {
     };
   }
 
-  const visionOf = (comp) => ({ ...DEFAULT_VISION, ...(comp.vision ?? {}) });
-  const goalsOf = (state, userId) => om.list(state, 'lifeGoal', (g) => g.userId === userId && !g.removed).sort((a, c) => a.date.localeCompare(c.date));
-  const monthsUntil = (from, to) => {
-    const [fy, fm] = from.split('-').map(Number);
-    const [ty, tm] = to.split('-').map(Number);
-    return (ty - fy) * 12 + (tm - fm);
-  };
-
+  const visionOf = (comp) => ({ ...socle.modules.patrimoine.projectionSettingsOf(socle.state, comp.patrimoineId), ...socle.modules.budget.objectivesOf(socle.state, comp.budgetId) });
+  const goalsOf = (state, userId) => socle.modules.patrimoine.goalsOf(state, userId);
   function events(ctx) {
     const b = base(ctx);
     const v = visionOf(b.comp);
@@ -832,22 +817,13 @@ export function createReads(socle, h) {
     return {
       context: contextOf(b),
       assumptions: [`Inflation ${v.inflationPct} % par an (${v.inflationSource})`, 'Provision = coût futur ÷ périodes mensuelles restantes'],
-      rows: goalsOf(b.state, b.userId)
-        .filter((g) => g.date > now)
-        .map((g) => {
-          const years = Number(g.date.slice(0, 4)) - Number(now.slice(0, 4));
-          const futureCents = Math.round(g.targetTodayCents * (1 + v.inflationPct / 100) ** Math.max(0, years));
-          const periods = monthsUntil(now, g.date);
-          return { goalId: g.id, label: g.label, type: g.type, date: g.date, targetTodayCents: g.targetTodayCents, futureCostCents: futureCents, periodsAvailable: periods, provisionPerPeriodCents: periods > 0 ? Math.ceil(futureCents / periods) : null, reason: periods > 0 ? null : 'Échéance dans la période courante' };
-        }),
+      rows: socle.modules.patrimoine.goalProvisions(goalsOf(b.state, b.userId), v.inflationPct, now),
     };
   }
 
   function surplusProgress(b, v) {
     if (!v.surplus) return null;
-    const closures = h.closuresOf(b.state, b.cycle?.id).filter((c) => c.periodKey >= v.surplus.startKey);
-    const cumulated = sum(closures, (c) => c.resultCents);
-    return { ...v.surplus, perPeriodCents: Math.ceil(v.surplus.targetCents / v.surplus.periods), cumulatedCents: cumulated, closedPeriods: closures.length, progressPct: v.surplus.targetCents > 0 ? Math.round((cumulated / v.surplus.targetCents) * 1000) / 10 : null };
+    return socle.modules.budget.surplusProgress(h.closuresOf(b.state, b.cycle?.id), v.surplus);
   }
 
   function directives(ctx) {
@@ -910,7 +886,7 @@ export function createReads(socle, h) {
       return { context: contextOf(b), hypotheses: hy, status: 'missing-hypothesis', reason: 'Rendement annuel à renseigner (Objectifs et avenir › Hypothèses).', rows: [], goals: [] };
     }
     const extraCents = q.extra !== undefined && q.extra !== '' ? queryMoney('extra', q.extra, { signed: true }) : 0;
-    const run = (contribution) => project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: contribution, perYear: hy.perYear, goals });
+    const run = (contribution) => socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: contribution, perYear: hy.perYear, goals });
     const result = run(hy.contributionCents + extraCents);
     const out = { context: contextOf(b), hypotheses: { ...hy, extraCents }, label: 'Estimation', ...result };
     if (extraCents) {
@@ -922,7 +898,7 @@ export function createReads(socle, h) {
     const closures = h.closuresOf(b.state, b.cycle?.id);
     if (closures.length >= 2 && hy.contributionSource !== 'Moyenne réelle des clôtures') {
       const avg = Math.round(sum(closures, (c) => c.resultCents) / closures.length);
-      const alt = project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: avg, perYear: 12, goals });
+      const alt = socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: avg, perYear: 12, goals });
       out.comparison = { label: 'Apport fondé sur la moyenne réelle des clôtures', contributionCents: avg, closures: closures.length, rows: alt.rows, keyFigures: alt.keyFigures };
     } else {
       out.comparison = { label: 'Comparaison indisponible', reason: 'Au moins deux clôtures sont nécessaires.' };

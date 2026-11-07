@@ -1,4 +1,6 @@
-import { Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
+import { BpmDrafts, DraftHandle } from './drafts';
+import { BpmFormActions } from './form-actions';
+import { Component, computed, DestroyRef, effect, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Api, ApiError, toApiError } from '../../core/api.service';
@@ -25,11 +27,12 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
  */
 @Component({
   selector: 'bpm-operation-editor',
-  imports: [FormsModule, RouterLink, CentsPipe, ModalComponent],
+  imports: [BpmFormActions, FormsModule, RouterLink, CentsPipe, ModalComponent],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss', '../ref-styles/bpm-flow-editor.component.scss', './operation-editor.scss'],
   template: `
     <rjs-modal [open]="true" [headed]="true" [title]="heading()" [busy]="busy()" (closed)="close()">
-      <form class="fe-form" data-bpm-frame="form" (ngSubmit)="save()" novalidate>
+      <form class="fe-form" data-bpm-frame="form" (ngSubmit)="save()" (input)="draft?.save()" (change)="draft?.save()" novalidate>
+        @if (draft?.restored) { <p class="bpm-help" role="status">Votre brouillon a été repris.</p> }
         <p class="bpm-help">Une date, un montant, un poste. Voyez l’effet avant d’enregistrer.</p>
         @if (error(); as e) {
           <div [class]="e.isConflict ? 'bpm-missing' : 'bpm-error'" role="alert">
@@ -155,27 +158,19 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
             }
           </label>
           @if (direction() === 'charge' && center() !== '__new__') {
-            <label
-              >Catégorie (facultatif)
-              <select name="categoryId" [(ngModel)]="categoryId" [attr.aria-invalid]="fieldErr('categoryId') ? 'true' : null">
-                <option value="">Sans catégorie</option>
-                @for (k of categoryOptions(); track k.id) {
-                  <option [value]="k.id">{{ k.label }}{{ k.archived ? ' (retirée)' : k.capCents === null ? '' : ' · plafond ' + (k.capCents | cents) }}</option>
-                }
-              </select>
-              @if (fieldErr('categoryId')) {
-                <small class="fe-field-error">{{ fieldErr('categoryId') }}</small>
-              } @else {
-                <small>
-                  @if (categoryOptions().length) {
-                    Choisissez une catégorie de ce poste. Son plafond est suivi indépendamment et ne bloque jamais la dépense.
-                  } @else {
-                    Aucune catégorie dans ce poste.
+            <div class="fe-category-field">
+              <label>Catégorie (facultatif)
+                <select name="categoryId" [(ngModel)]="categoryId" [attr.aria-invalid]="fieldErr('categoryId') ? 'true' : null">
+                  <option value="">Sans catégorie</option>
+                  @for (k of categoryOptions(); track k.id) {
+                    <option [value]="k.id">{{ k.label }}{{ k.archived ? ' (retirée)' : k.capCents === null ? '' : ' · plafond ' + (k.capCents | cents) }}</option>
                   }
-                  <a routerLink="/plafonds" (click)="close()">Gérer les catégories</a>
-                </small>
-              }
-            </label>
+                </select>
+              </label>
+              @if (fieldErr('categoryId')) { <small class="fe-field-error">{{ fieldErr('categoryId') }}</small> }
+              <small>{{ categoryOptions().length ? 'Son plafond est suivi indépendamment et ne bloque jamais la dépense.' : 'Aucune catégorie dans ce poste.' }}</small>
+              <a class="btn btn-secondary" routerLink="/plafonds" [queryParams]="{view: 'categories'}">Gérer les catégories</a>
+            </div>
           }
           @if (center() === '__new__') {
             <label
@@ -277,17 +272,17 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
         @if (capPreviewError()) {
           <p class="bpm-error" role="alert">{{ capPreviewError() }} Vous pouvez réessayer ou enregistrer sans cette vérification.</p>
         }
-        <div class="bpm-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="busy()">
-            {{ busy() ? 'Vérification et enregistrement…' : capConfirmation() ? (capPreviewError() ? 'Enregistrer sans vérification' : 'Enregistrer malgré le dépassement') : editing() ? 'Enregistrer les modifications' : 'Enregistrer' }}
-          </button>
-          <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="close()">Annuler</button>
-        </div>
+        <bpm-form-actions [busy]="busy()"
+          [label]="capConfirmation() ? (capPreviewError() ? 'Enregistrer sans vérification' : 'Enregistrer malgré le dépassement') : editing() ? 'Enregistrer les modifications' : 'Enregistrer'"
+          (cancel)="close()" />
       </form>
     </rjs-modal>
   `,
 })
 export class BpmOperationEditor implements OnInit {
+  private drafts = inject(BpmDrafts);
+  private destroy = inject(DestroyRef);
+  protected draft?: DraftHandle;
   private bpm = inject(BpmApi);
   private api = inject(Api);
   private refresh = inject(BpmRefresh);
@@ -430,6 +425,7 @@ export class BpmOperationEditor implements OnInit {
     } catch (e) {
       this.error.set(toApiError(e));
     }
+    this.draft = this.drafts.fields(`entry:${l?.id ?? 'new'}:${l?.revision ?? 0}:${d.budgetId ?? life?.id ?? ''}:${d.taskId ?? ''}:${d.direction ?? 'charge'}:${d.costCenterRef ?? ''}:${d.categoryId ?? ''}`, this, ['budgetId', 'direction', 'label', 'amount', 'center', 'newCenter', 'cadence', 'date', 'endDate', 'note', 'taskId', 'categoryId', 'realized', 'realizedDate', 'realizedAmount', 'requestKey', 'centerKey'], this.destroy);
   }
 
   /** Bascule ponctuel / récurrent de la référence : une récurrence part sur un rythme mensuel. */
@@ -475,6 +471,7 @@ export class BpmOperationEditor implements OnInit {
   }
 
   protected close() {
+    this.draft?.clear();
     this.closed.emit();
   }
 
@@ -572,6 +569,7 @@ export class BpmOperationEditor implements OnInit {
         message = withCapAlerts('Opération modifiée.', r.capAlerts);
       }
       this.refresh.bump();
+      this.draft?.clear();
       this.saved.emit(message);
     } catch (e) {
       this.fundingRefusalSignature.set(sentSignature);

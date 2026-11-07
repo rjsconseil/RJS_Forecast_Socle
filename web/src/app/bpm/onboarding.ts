@@ -1,11 +1,12 @@
 import { afterNextRender, Component, computed, ElementRef, inject, Injector, OnInit, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api, newRequestKey, RecetteContext, toApiError, UserDirectory } from '../core/api.service';
 import { UserType } from '../core/models';
 import { euros, parseAmount, shortDate } from '../core/format';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
+import { injectPageWorkspace } from '../shared/page-workspace';
 
 type Field = 'label' | 'userType' | 'openingStock' | 'openingDate' | 'objective' | 'anchorDay' | 'cycleStartDate';
 
@@ -43,17 +44,25 @@ function todayIso(): string {
         data-sticky-hero
         tone="indigo"
         headingId="users-page-title"
-        title="Utilisateurs"
+        [title]="workspace()?.title ?? 'Utilisateurs'"
         kicker="Utilisateurs · administration"
-        lead="Créez les utilisateurs : leur Budget « Projet de vie », leur Patrimoine et leur composition BPM naissent ensemble."
+        [lead]="workspace()?.lead ?? 'Créez les utilisateurs : leur Budget « Projet de vie », leur Patrimoine et leur composition BPM naissent ensemble.'"
         [chips]="heroChips()"
+        [result]="error() ? { message: error()!, tone: 'danger' } : null"
       >
+        @if (workspace()) {
+          <button heroPrimary type="button" class="app-hero-action" (click)="submit()" [disabled]="saving() || !types().length || !usersReady()">{{ saving() ? 'Création…' : 'Créer l’utilisateur et son espace' }}</button>
+        }
+        <ng-container heroActions>
+        @if (!workspace()) {
         <button heroActions type="button" class="app-hero-action" (click)="focusForm()" [disabled]="!types().length || !usersReady()">
           <span aria-hidden="true">+</span> {{ firstProfile() ? 'Créer le premier utilisateur' : 'Nouvel utilisateur' }}
         </button>
         <a heroActions class="app-hero-action is-secondary" routerLink="/utilisateurs" fragment="us-profiles-title" queryParamsHandling="preserve" (click)="focusList()"
           >Retrouver un utilisateur</a
         >
+        }
+        </ng-container>
       </rjs-app-hero>
 
       <p class="us-note">
@@ -73,6 +82,7 @@ function todayIso(): string {
         <p class="us-empty" role="status">Lecture des utilisateurs…</p>
       } @else {
       <section #profilesSection class="us-section" aria-labelledby="us-profiles-title">
+        @if (!workspace()) {
         <div class="us-section-head">
           <div>
             <h2 id="us-profiles-title">Utilisateurs</h2>
@@ -89,27 +99,31 @@ function todayIso(): string {
               type="search"
               placeholder="Nom, identifiant ou type"
               [value]="profileQuery()"
-              (input)="profileQuery.set($any($event.target).value)"
+              (input)="setProfileFilters($any($event.target).value, typeFilter())"
             />
           </label>
           <label for="us-profile-type"
             >Type
-            <select id="us-profile-type" [value]="typeFilter()" (change)="typeFilter.set($any($event.target).value)">
+            <select id="us-profile-type" [value]="typeFilter()" (change)="setProfileFilters(profileQuery(), $any($event.target).value)">
               <option value="all">Tous les utilisateurs</option>
               @for (t of types(); track t.key) {
-                <option [value]="t.key">{{ t.label }}</option>
+                <option [value]="t.key" [selected]="typeFilter() === t.key">{{ t.label }}</option>
               }
             </select>
           </label>
           @if (profileQuery() || typeFilter() !== 'all') {
-            <button class="btn btn-secondary filter-reset" type="button" (click)="profileQuery.set(''); typeFilter.set('all')">
+            <button class="btn btn-secondary filter-reset" type="button" (click)="setProfileFilters('', 'all')">
               Effacer les filtres
             </button>
           }
         </div>
         <p class="filter-summary" role="status">{{ filteredUsers().length }} utilisateur(s) affiché(s)</p>
+        } @else {
+          <h2 id="us-profiles-title">Le profil et son point de départ</h2>
+        }
 
-        <div class="us-split">
+        <div class="us-split" [class.is-specialized]="!!workspace()">
+          @if (!workspace()) {
           <div class="us-list">
             @for (row of filteredUsers(); track row.user.id) {
               <article class="us-row" [attr.aria-current]="row.current ? 'true' : null">
@@ -157,6 +171,7 @@ function todayIso(): string {
               }
             }
           </div>
+          }
 
           @if (showForm()) {
             <form class="us-form" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="us-form-title" [attr.aria-busy]="saving()">
@@ -330,8 +345,10 @@ function todayIso(): string {
 export class BpmOnboarding implements OnInit {
   private api = inject(Api);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private ctx = inject(RecetteContext);
   private directory = inject(UserDirectory);
+  protected workspace = injectPageWorkspace();
   private profileLabel = viewChild<ElementRef<HTMLInputElement>>('profileLabel');
   private profileSearch = viewChild<ElementRef<HTMLInputElement>>('profileSearch');
   private profilesSection = viewChild<ElementRef<HTMLElement>>('profilesSection');
@@ -353,9 +370,9 @@ export class BpmOnboarding implements OnInit {
   protected firstProfile = computed(() => this.usersReady() && this.users().length === 0);
   /** Comme le brouillon de la référence : le formulaire s'ouvre sur demande, d'office pour le premier utilisateur. */
   protected formOpen = signal(false);
-  protected showForm = computed(() => this.formOpen() || this.firstProfile());
-  protected profileQuery = signal('');
-  protected typeFilter = signal('all');
+  protected showForm = computed(() => this.workspace()?.key === 'users-new' || this.formOpen() || this.firstProfile());
+  protected profileQuery = signal(this.route.snapshot.queryParamMap.get('profileQuery') ?? '');
+  protected typeFilter = signal(this.route.snapshot.queryParamMap.get('userType') ?? 'all');
   protected filteredUsers = computed(() => {
     const query = this.profileQuery().trim().toLocaleLowerCase('fr');
     const type = this.typeFilter();
@@ -424,6 +441,17 @@ export class BpmOnboarding implements OnInit {
     return this.fieldErrors()[field] ?? null;
   }
 
+  protected setProfileFilters(query: string, type: string) {
+    this.profileQuery.set(query);
+    this.typeFilter.set(type);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { profileQuery: query || null, userType: type === 'all' ? null : type },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   /** Commande du bandeau : amène au formulaire de création, curseur dans le premier champ. */
   protected focusForm() {
     this.formOpen.set(true);
@@ -444,6 +472,7 @@ export class BpmOnboarding implements OnInit {
     if (this.types().length) this.form.controls.userType.setValue(this.types()[0].key);
     this.fieldErrors.set({});
     this.error.set(null);
+    if (this.workspace()?.key === 'users-new') void this.router.navigate(['/utilisateurs'], { queryParamsHandling: 'preserve' });
   }
 
   /** Aiguillage de la référence (`profile-choice`) : l'utilisateur choisi vaut pour tout le site. */

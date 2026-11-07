@@ -1,0 +1,15 @@
+.workspace-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 18px;
+}
+.workspace-funding-card, .workspace-assignment-card, .workspace-next {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.workspace-funding-card h3, .workspace-assignment-card h3 { margin: 0; }
+.workspace-funding-card form { margin-top: auto; }
+.workspace-assignment-card p { overflow-wrap: anywhere; }
+.bpm-specialized-projects > bpm-project-editor,
+.bpm-specialized-projects > bpm-task-editor { display: block; max-width: 900px; margin-inline: auto; }

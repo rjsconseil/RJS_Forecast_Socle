@@ -25,7 +25,7 @@ Commandes : `npm test` (API, `node:test`), `npm --prefix web test -- --watch=fal
 | C07 export de preuve d'un instantané commun | `GET /api/om/export.zip` | C « C07 export de preuve… » | Testé |
 | C08 vocabulaire | libellés API et pages | C « C08 vocabulaire… » ; pages : relecture | Testé (API) / À vérifier (pages) |
 | C09 dates civiles strictes | `socle/validation.mjs` | C « C09… », K « branche » (30 février) | Testé |
-| C10 suivi après 600 périodes | `bpm/periods.mjs` (calcul par index) | C « C10… » | Testé |
+| C10 suivi après 600 périodes | `budget/periods.mjs` (calcul par index) | C « C10… » | Testé |
 | C11 un seul écrivain du stockage | `socle/store` (verrou, PERSISTENCE_CONFLICT) | C « C11 » ×3 | Testé |
 | Migration des données existantes | `socle-store/0.5`, IDs conservés | C « migration j1-store/0.2 → 0.5… » | Testé |
 
@@ -80,7 +80,7 @@ Commandes : `npm test` (API, `node:test`), `npm --prefix web test -- --watch=fal
 | Styles en couches (source puis passerelle), polices Inter / IBM Plex Mono / Newsreader | `styles.scss`, `_fonts.scss` | build | À vérifier |
 | Consolidation père/enfants | `impact` | K « branche » (`consolidated.status = not-defined`) | Choix métier |
 | Répartition patrimoniale | middleware Patrimoine | — | Choix métier (aucun contrat d'allocations) |
-| Cycles hebdomadaire / annuel de clôture | `bpm/periods.mjs` (mensuel) | — | Choix métier |
+| Cycles hebdomadaire / annuel de clôture | `budget/periods.mjs` (mensuel) | — | Choix métier |
 
 ## 4. Pages BPM (§6–§12) — markup et feuilles du site de référence
 

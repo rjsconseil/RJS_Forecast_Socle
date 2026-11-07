@@ -15,8 +15,8 @@ réversible.
 | `calendar` — Calendrier (service paramétrable) | 0 transverse | users | — (lit les natures déclarées au registre) |
 | `core` — Noyau transverse | 1 | users | `coreProject` (prj), `task` (tsk) |
 | `budget` — Budget Management (middleware) | 2 | core | `budget` (bud), `costCenter` (cc), `operation` (op), `recurrence`, `projectOverrun` (ovr), `taskBudgetRequest` (dmt) |
-| `patrimoine` — Patrimoine Management (middleware) | 2 | core, budget | `patrimoine` (pat), `capitalization` (cap) |
-| `bpm` — Budget/Patrimoine Management (application) | 3 | core, budget, patrimoine | `bpmComposition` (bpm), `cycleLink` (cyc), `closure` (clo), `lifeGoal` (obj) |
+| `patrimoine` — Patrimoine Management (middleware) | 2 | core, budget | `patrimoine` (pat), `capitalization` (cap), `lifeGoal` (obj) |
+| `bpm` — Budget/Patrimoine Management (application) | 3 | core, budget, patrimoine | `bpmComposition` (bpm), `cycleLink` (cyc), `closure` (clo) |
 
 Règle : un module ne dépend que de modules de niveau inférieur ou égal (vérifié par `Registry.register`).
 Un niveau supérieur **enrichit** un niveau inférieur par des **extensions** (inversion de dépendance) : le
@@ -24,8 +24,7 @@ noyau ne connaît ni Budget ni BPM.
 
 **Répartition des responsabilités.** Le noyau est la colle des trois niveaux (projets, tâches, Object Management) et
 reste minimal. Les deux middlewares portent **toutes** les règles métier et fonctionnelles de leur domaine (Budget :
-opérations, récurrences, règlements, plafonds, financement des projets de la vie ; Patrimoine : stock et
-capitalisations). BPM est le module applicatif : il compose les objets, porte le cycle et les clôtures, et prend en
+opérations, récurrences, règlements, plafonds, financement des projets de la vie ; Patrimoine : stock, capitalisations, objectifs datés et projections). BPM est le module applicatif : il compose les objets, porte le cycle et les clôtures, et prend en
 charge la complexité de l'interface — présentation, facilitation (raccourcis, parcours guidés), enchaînements de cause à
 conséquence. Il ne réécrit pas une règle d'un middleware : il appelle ses commandes et affiche ses refus. Côté site,
 les gestes de financement passent par un seul service (`web/src/app/bpm/ui/project-funding.ts` : `ProjectFunding`,
@@ -36,7 +35,7 @@ gestion des projets et la page projet de vie.
 
 - `registry.mjs` — `Registry` : modules, natures d'objets, préfixes, `collect(field)`, `extensions(name)`, `composition(name)`.
 - `store.mjs` — `JsonStore` : fichier JSON révisé, mutations sérialisées, écriture atomique. **Écrivain unique** : verrou `<fichier>.lock` (PID) — une seconde instance, du même processus ou d'un autre, est refusée (`STORE_LOCKED`) ; avant chaque écriture, l'empreinte du fichier est comparée à la dernière lue/écrite et un fichier modifié par ailleurs est refusé (`PERSISTENCE_CONFLICT`), sans rien écraser. Garantie : pas de perte silencieuse entre instances sur un même disque local ; pas de multi-écrivain.
-- Migrations : chaque module déclare `migrations: [{ from, id, description, apply(draft, tx, socle) }]` ; au chargement d'un schéma ancien (`j1-store/0.2`, `socle-store/0.3`, `socle-store/0.4`), elles s'exécutent dans une seule mutation, conservent les IDs et sont tracées dans `state.migrations`. Schéma courant : `socle-store/0.5`.
+- Migrations : chaque module déclare `migrations: [{ from, id, description, apply(draft, tx, socle) }]` ; au chargement d'un schéma ancien (`j1-store/0.2`, `socle-store/0.3`, `socle-store/0.4`), elles s'exécutent dans une seule mutation, conservent les IDs et sont tracées dans `state.migrations`. Schéma courant : `socle-store/0.6` (migration depuis 0.5 incluse).
 - `clock.mjs` — `today()` : date du jour du socle (`SOCLE_TODAY` en recette).
 - `object-management/object-manager.mjs` — `ObjectManager` (`socle.om`) :
   - `om.command(action, ctx, input, fn, { creation?, anonymous? })` → **seul chemin d'écriture**. Une écriture atomique ; `creation: true` exige `input.requestKey` (idempotence) ; journal automatique.
@@ -142,7 +141,7 @@ transaction : user → projet noyau principal → Budget « Projet de vie » →
 - Préparation (C06) : `preparation(ctx)` (prêt / à préparer / incohérent, sans écriture) et `prepareComposition(ctx)` ; contrôle BPM-01 « exactement un » ensemble principal.
 - Lectures communes (`reads.mjs`, `s.reads`) : `summary`, `register`, `lineDetail`, `centers`, `centerDetail`, `incomes`, `balance` (avec rapprochement), `history` (paginé), `impact`, `budgetType`, `due`, `events`, `directives`, `projection` (+ simulation `extra`, comparaison des apports), `previewEntry` (aucune mutation). Chaque lecture porte le contexte commun (user, périmètre, budgets, période début inclus/fin exclue, date de calcul, révision).
 - Partir de zéro : `setupProfile(ctx)` et `setupProject(ctx, input)` — une commande rejouable ; mode `principal` (configure l'ensemble existant, met à jour les lignes du budget type sans les recréer) ou `branch` (Budget standard + projet noyau + ≥ 1 tâche, sans second Patrimoine).
-- Vision et objectifs : `updateVision`, `goals`, `createGoal`, `updateGoal`, `removeGoal` (archivage `removed`) ; projection pure dans `projection.mjs` (convention annuelle de la spec, objectifs consommant/réservant le capital).
+- Vision et objectifs : `updateVision`, `goals`, `createGoal`, `updateGoal`, `removeGoal` (archivage `removed`) ; projection déléguée à `patrimoine/projection.mjs` (convention annuelle de la spec, objectifs consommant/réservant le capital).
 
 ### calendar (`socle.modules.calendar`) — transverse
 - Moteur unique (`engine.mjs`) piloté par une configuration ; aucune extension à déclarer par les autres modules.
@@ -167,3 +166,41 @@ explicite d'une période terminée [P] ; source d'une période close refusée [P
 administrables [P]), C09 (stock = ouverture + résultats capitalisés, formule administrable [P]), C10
 (objectif = montant, information seule [P]), C04 (pas d'authentification : contexte user par en-tête).
 Consolidation père/enfants : non définie — les lectures présentent chaque Budget séparément (`impact.consolidated.status = 'not-defined'`). Allocations patrimoniales, versements entre actifs et phases : aucun contrat — non exposés. Cycles hebdomadaire/annuel et rattrapage automatique : non activés.
+
+
+## 7. Frontières renforcées — 7 novembre 2026
+
+Le noyau reste propriétaire des projets et des tâches. Les middlewares enrichissent ces racines ;
+BPM assemble les réponses pour les pages et compose leurs commandes dans une transaction unique.
+
+| Responsabilité | Propriétaire | Consommation par BPM |
+|---|---|---|
+| Création et validation des projets/tâches | Noyau | Builders et commandes du noyau ; aucune écriture directe |
+| Opérations, récurrences, centres, plafonds | Budget | Builders et fonctions transactionnelles communes avec les routes du middleware |
+| Enveloppes, parts, contrôles financiers, charges consolidées | Budget (`funding`, `project-analysis`) | Présentation des chiffres, messages et actions retournés |
+| Dates et politique du cycle | Budget (`periods`, `cycle-policy`) | Contexte fourni par BPM, sans réimplémentation des interdictions |
+| Épargne visée et objectif d’excédent | Budget (`budget.objectives`) | Formulaire agrégé et présentation de progression |
+| Stock, capitalisations, hypothèses et objectifs datés | Patrimoine (`projectionSettings`, `lifeGoal`) | Façade `/api/bpm/vision` et `/api/bpm/goals`, contrats HTTP conservés |
+| Navigation, regroupements, libellés, graphes, filtres | BPM | Modèles de lecture et composants Angular |
+| Composition, lien de cycle et reçu de clôture | BPM | Coordination des deux middlewares, pas une deuxième comptabilité |
+
+Les objets `lifeGoal` ont deux références obligatoires : `patrimoineId` et `coreProjectId`.
+Leur projet noyau est celui du patrimoine unique. Un projet de la vie possède sa propre racine et un
+budget standard ; son budget père le rattache à la composition BPM du projet de vie et au patrimoine
+unique. Aucun patrimoine supplémentaire n’est créé pour une branche. Les contrôles `PAT-OBJ-01` et
+`BPM-02` vérifient ces liens, en plus des contrôles Object Management existants.
+
+L’assistant BPM emploie `core.patchProject`, `budget.buildCostCenter`, `budget.patchRecurrence`,
+`budget.patchCaps` et `patrimoine.patchPatrimoine`. Ces fonctions acceptent la transaction du socle :
+il n’y a ni écritures imbriquées ni enregistrement partiel. Les routes autonomes appellent les mêmes
+fonctions après contrôle de révision. Une récurrence d’un autre budget ne peut plus être modifiée par
+le parcours courant ; une date de fin invalide ou un plafond sur un poste inconnu annule toute la commande.
+
+La migration 0.6 déplace les réglages `bpmComposition.vision` vers les objets Budget et Patrimoine,
+rattache les objectifs à leur racine et conserve leurs IDs, montants et dates. La révision de la
+composition continue à protéger le formulaire agrégé. Une clôture BPM reste un reçu d’orchestration
+avec les chiffres enregistrés et la référence de capitalisation exécutée par Patrimoine.
+
+Les tests `api/test/bpm-boundaries.test.mjs` couvrent les écritures autorisées, l’absence d’import
+ascendant, l’autonomie des middlewares sans BPM, la migration et sa reprise, les références et les
+refus atomiques. Le contrôle des frontières doit être étendu à chaque nouvelle fonction transactionnelle.

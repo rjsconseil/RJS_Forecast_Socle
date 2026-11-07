@@ -1,5 +1,8 @@
-import { Component, inject, input, OnInit, output, signal } from '@angular/core';
+import { BpmDrafts, DraftHandle } from '../ui/drafts';
+import { BpmFormActions } from '../ui/form-actions';
+import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmTaskCard } from '../../core/bpm-projects.models';
@@ -9,16 +12,18 @@ import { ModalComponent } from '../../shared/modal.component';
 
 @Component({
   selector: 'bpm-project-editor',
-  imports: [FormsModule, ModalComponent],
+  imports: [BpmFormActions, FormsModule, ModalComponent, NgTemplateOutlet],
   template: `
-    <rjs-modal
-      [open]="true"
-      [headed]="true"
-      [title]="project() ? 'Modifier le projet de la vie' : 'Créer un projet de la vie'"
-      [busy]="busy()"
-      (closed)="closed.emit()"
-    >
-      <form class="bpm-management-form" (ngSubmit)="save()">
+    <ng-template #editorForm>
+      <form
+        class="bpm-management-form"
+        (ngSubmit)="save()"
+        (input)="draft?.save()"
+        (change)="draft?.save()"
+      >
+        @if (draft?.restored) {
+          <p class="bpm-note" role="status">Votre brouillon a été repris.</p>
+        }
         <p class="bpm-note">
           Un projet de la vie dispose de son propre budget, enfant du budget de votre projet de vie
           unique.
@@ -66,26 +71,40 @@ import { ModalComponent } from '../../shared/modal.component';
             projet de vie.
           </p>
         }
-        <div class="bpm-actions">
-          <button class="btn btn-primary" type="submit" [disabled]="busy() || !title.trim()">
-            {{
-              busy() ? 'Enregistrement…' : project() ? 'Enregistrer le projet' : 'Créer le projet'
-            }}
-          </button>
-          <button
-            class="btn btn-secondary"
-            type="button"
-            [disabled]="busy()"
-            (click)="closed.emit()"
-          >
-            Annuler
-          </button>
-        </div>
+        <bpm-form-actions
+          [busy]="busy()"
+          [valid]="!!title.trim()"
+          [label]="project() ? 'Enregistrer le projet' : 'Créer le projet'"
+          (cancel)="cancel()"
+        />
       </form>
-    </rjs-modal>
+    </ng-template>
+    @if (inline()) {
+      <section class="bpm-panel bpm-inline-editor" [attr.aria-label]="project() ? 'Modifier le projet de la vie' : 'Créer un projet de la vie'">
+        <ng-container *ngTemplateOutlet="editorForm" />
+      </section>
+    } @else {
+      <rjs-modal
+        [open]="true"
+        [headed]="true"
+        [title]="project() ? 'Modifier le projet de la vie' : 'Créer un projet de la vie'"
+        [busy]="busy()"
+        (closed)="cancel()"
+      >
+        <ng-container *ngTemplateOutlet="editorForm" />
+      </rjs-modal>
+    }
   `,
 })
 export class BpmProjectEditor implements OnInit {
+  readonly inline = input(false);
+  private drafts = inject(BpmDrafts);
+  private destroy = inject(DestroyRef);
+  protected draft?: DraftHandle;
+  protected cancel() {
+    this.draft?.clear();
+    this.closed.emit();
+  }
   readonly project = input<CoreProject | null>(null);
   readonly closed = output<void>();
   readonly saved = output<{ projectId: string; title: string }>();
@@ -110,6 +129,12 @@ export class BpmProjectEditor implements OnInit {
       this.startDate = p.startDate ?? '';
       this.dueDate = p.dueDate ?? '';
     }
+    this.draft = this.drafts.fields(
+      `project:${p?.id ?? 'new'}:${p?.revision ?? 0}`,
+      this,
+      ['title', 'description', 'priority', 'startDate', 'dueDate', 'amount', 'requestKey'],
+      this.destroy,
+    );
   }
 
   protected async save() {
@@ -135,6 +160,7 @@ export class BpmProjectEditor implements OnInit {
             .id
         : (await this.bpm.createProject({ ...input, amount, requestKey: this.requestKey }))
             .coreProjectId;
+      this.draft?.clear();
       this.saved.emit({ projectId, title: input.title });
     } catch (err) {
       this.error.set(toApiError(err).message);
@@ -151,16 +177,18 @@ export interface TaskProjectOption {
 
 @Component({
   selector: 'bpm-task-editor',
-  imports: [FormsModule, ModalComponent],
+  imports: [BpmFormActions, FormsModule, ModalComponent, NgTemplateOutlet],
   template: `
-    <rjs-modal
-      [open]="true"
-      [headed]="true"
-      [title]="task() ? 'Modifier la tâche' : 'Créer une tâche'"
-      [busy]="busy()"
-      (closed)="closed.emit()"
-    >
-      <form class="bpm-management-form" (ngSubmit)="save()">
+    <ng-template #editorForm>
+      <form
+        class="bpm-management-form"
+        (ngSubmit)="save()"
+        (input)="draft?.save()"
+        (change)="draft?.save()"
+      >
+        @if (draft?.restored) {
+          <p class="bpm-note" role="status">Votre brouillon a été repris.</p>
+        }
         @if (error()) {
           <p class="bpm-feedback is-error" role="alert">{{ error() }}</p>
         }
@@ -235,24 +263,40 @@ export interface TaskProjectOption {
             >Échéance<input name="dueDate" type="date" [(ngModel)]="dueDate" [min]="startDate"
           /></label>
         </div>
-        <div class="bpm-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="busy() || !title.trim()">
-            {{ busy() ? 'Enregistrement…' : task() ? 'Enregistrer la tâche' : 'Créer la tâche' }}
-          </button>
-          <button
-            type="button"
-            class="btn btn-secondary"
-            [disabled]="busy()"
-            (click)="closed.emit()"
-          >
-            Annuler
-          </button>
-        </div>
+        <bpm-form-actions
+          [busy]="busy()"
+          [valid]="!!title.trim()"
+          [label]="task() ? 'Enregistrer la tâche' : 'Créer la tâche'"
+          (cancel)="cancel()"
+        />
       </form>
-    </rjs-modal>
+    </ng-template>
+    @if (inline()) {
+      <section class="bpm-panel bpm-inline-editor" [attr.aria-label]="task() ? 'Modifier la tâche' : 'Créer une tâche'">
+        <ng-container *ngTemplateOutlet="editorForm" />
+      </section>
+    } @else {
+      <rjs-modal
+        [open]="true"
+        [headed]="true"
+        [title]="task() ? 'Modifier la tâche' : 'Créer une tâche'"
+        [busy]="busy()"
+        (closed)="cancel()"
+      >
+        <ng-container *ngTemplateOutlet="editorForm" />
+      </rjs-modal>
+    }
   `,
 })
 export class BpmTaskEditor implements OnInit {
+  readonly inline = input(false);
+  private drafts = inject(BpmDrafts);
+  private destroy = inject(DestroyRef);
+  protected draft?: DraftHandle;
+  protected cancel() {
+    this.draft?.clear();
+    this.closed.emit();
+  }
   readonly task = input<BpmTaskCard | null>(null);
   readonly projects = input<TaskProjectOption[]>([]);
   readonly defaultProjectId = input('');
@@ -286,6 +330,22 @@ export class BpmTaskEditor implements OnInit {
       this.startDate = t.startDate ?? '';
       this.dueDate = t.dueDate ?? '';
     }
+    this.draft = this.drafts.fields(
+      `task:${t?.id ?? 'new'}:${t?.revision ?? 0}:${this.defaultProjectId()}`,
+      this,
+      [
+        'title',
+        'description',
+        'projectId',
+        'status',
+        'plannedHours',
+        'spentHours',
+        'startDate',
+        'dueDate',
+        'requestKey',
+      ],
+      this.destroy,
+    );
   }
 
   protected async save() {
@@ -310,6 +370,7 @@ export class BpmTaskEditor implements OnInit {
           projectId: this.defaultProjectId() || this.projectId || null,
           requestKey: this.requestKey,
         });
+      this.draft?.clear();
       this.saved.emit(
         `Tâche « ${input.title} » enregistrée${!t && !this.projectId ? ' ; vous pourrez la rattacher à un projet plus tard' : ''}.`,
       );

@@ -1,3 +1,5 @@
+import { injectPageWorkspace } from '../shared/page-workspace';
+import { PageHeroDirective } from '../shared/page-hero.directive';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -26,22 +28,23 @@ import {
  */
 @Component({
   selector: 'app-projects-board',
-  imports: [RouterLink, HoursPipe, PlannedTotalPipe, ItemSummaryComponent, ItemBoardToolsComponent, MiniCalendarComponent],
+  imports: [PageHeroDirective, RouterLink, HoursPipe, PlannedTotalPipe, ItemSummaryComponent, ItemBoardToolsComponent, MiniCalendarComponent],
   template: `
     <div class="page page-wide landing-page section-home">
-      <div class="section-home-top">
+      <div class="section-home-top" rjsPageHero #pageHero="pageHero" data-ui-pattern="heading">
         <header class="section-home-hero">
-          <div class="section-home-banner" data-ui-pattern="heading">
+          <div class="section-home-banner">
             <p class="eyebrow"><span class="eyebrow-line"></span>Projets</p>
-            <h1 class="display">Projets</h1>
+            <h1 class="display">{{ workspace()?.title || 'Projets' }}</h1>
             <p class="page-intro">
-              Créez un projet, puis suivez ses tâches, ses échéances et son budget. L'état d'un projet est calculé
-              depuis toutes ses tâches : seul le changement d'état d'une tâche le fait évoluer.
+              {{ workspace()?.lead || "Créez un projet, puis suivez ses tâches, ses échéances et son budget. L’état d’un projet se calcule depuis ses tâches." }}
             </p>
           </div>
           <rjs-item-summary kind="project" [remaining]="remaining()" [counts]="counts()" [progress]="progress()" />
           <rjs-item-board-tools
             kind="project"
+            [compact]="pageHero.compact()"
+            [scope]="toolbarScope()"
             createLink="/projects/new"
             createLabel="Nouveau projet"
             [filterOptions]="filterOptions()"
@@ -49,14 +52,19 @@ import {
             (filterChange)="setParams({ project: $event === 'all' ? null : $event })"
             [search]="search()"
             (searchChange)="setParams({ q: $event || null })"
-          />
-        </header>
+          >
+            <details boardExtra class="board-period-tools">
+              <summary>Choisir les dates de début des projets</summary>
         <rjs-mini-calendar
           class="landing-manifesto section-home-calendar"
           kind="project"
           [selectedRange]="range()"
           (rangeChange)="setRange($event)"
         />
+            </details>
+          </rjs-item-board-tools>
+        </header>
+
       </div>
 
       <div class="section-home-board">
@@ -74,6 +82,18 @@ import {
               {{ visible().length }} résultat(s) pour « {{ search().trim() }} » dans le filtre courant.
             </p>
           }
+          @if (workspace()?.key === 'project-planning') {
+            <section aria-label="Planification des projets">
+              <div class="bpm-table-wrap"><table class="bpm-table"><thead><tr><th scope="col">Projet</th><th scope="col">Début prévu</th><th scope="col">Échéance</th><th scope="col">Avancement</th><th scope="col">Suite</th></tr></thead><tbody>
+                @for (p of planningRows(); track p.project.id) {
+                  <tr><td><a [routerLink]="['/projects', p.project.id]">{{ p.project.title }}</a><br /><small>Priorité {{ priority[p.project.priority].toLowerCase() }} · {{ p.view.statusLabel }}</small></td>
+                  <td>{{ p.project.startDate ? date(p.project.startDate) : 'À planifier' }}</td><td [attr.data-urgency]="urgency(p.project.dueDate, p.view.column === 'done')">{{ p.project.dueDate ? date(p.project.dueDate) : 'À définir' }}</td>
+                  <td>{{ p.view.doneCount }} / {{ p.view.time.taskCount }} tâches · {{ p.view.completionPercent }} %</td>
+                  <td><a class="btn btn-secondary" [routerLink]="['/projects', p.project.id, 'edit']">Ajuster les dates</a> <a class="text-link" routerLink="/tasks/new" [queryParams]="{ projectId: p.project.id }">Préparer une tâche →</a></td></tr>
+                } @empty { <tr><td colspan="5">Aucun projet dans ce périmètre. Adaptez les dates ou la recherche dans le bandeau.</td></tr> }
+              </tbody></table></div>
+            </section>
+          } @else {
           <section class="board" aria-label="Tableau des projets">
             @for (col of columns; track col.id) {
               <div class="board-column" [attr.data-column]="col.id">
@@ -144,6 +164,7 @@ import {
               </div>
             }
           </section>
+          }
         }
         <nav class="board-nav" aria-label="Changer de section">
           <a routerLink="/tasks" class="text-link">Parcourir les tâches <span aria-hidden="true">↗</span></a>
@@ -153,6 +174,12 @@ import {
   `,
 })
 export class ProjectsBoard implements OnInit {
+  protected readonly workspace = injectPageWorkspace();
+  protected readonly planningRows = computed(() => [...this.visible()].sort((a, b) =>
+    (a.project.dueDate ?? '9999-12-31').localeCompare(b.project.dueDate ?? '9999-12-31') ||
+    (a.project.startDate ?? '9999-12-31').localeCompare(b.project.startDate ?? '9999-12-31') ||
+    a.project.title.localeCompare(b.project.title, 'fr'),
+  ));
   private api = inject(Api);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -189,6 +216,11 @@ export class ProjectsBoard implements OnInit {
     const groups = Object.fromEntries(COLUMNS.map((c) => [c.id, [] as ProjectSummary[]])) as Record<TaskStatus, ProjectSummary[]>;
     for (const p of this.visible()) groups[p.view.column].push(p);
     return groups;
+  });
+  protected toolbarScope = computed(() => {
+    const project = this.filterOptions().find((option) => option.value === this.filter())?.label ?? 'Tous les projets';
+    const range = this.range();
+    return `Sélection · ${project} · ${this.visible().length} / ${this.inWindow().length} projet(s)${range ? ` · Du ${displayDate(range.start)} au ${displayDate(range.end)}` : ''}`;
   });
   protected counts = computed(() => {
     const counts: Partial<Record<TaskStatus, number>> = {};

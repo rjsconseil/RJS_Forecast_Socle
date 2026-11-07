@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { hasSectionHome, locate, menuPages, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink } from './site-plan';
+import { hasPageMenu, hasSectionHome, locate, menuPages, pageChildren, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink } from './site-plan';
+import { PAGE_WORKSPACES } from './page-workspaces';
 
 describe('plan du site', () => {
   it('range les zones de l’accueil : BPM, Budget, Patrimoine, Noyau transverse, Administration', () => {
@@ -9,8 +10,8 @@ describe('plan du site', () => {
 
   it('situe une page, un détail et l’accueil', () => {
     expect(locate('/')).toMatchObject({ kind: 'portal', zone: null });
-    expect(locate('/piloter/agir')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'agir' } });
-    expect(locate('/piloter')).toMatchObject({ page: { id: 'piloter' } });
+    expect(locate('/piloter/agir')).toMatchObject({ kind: 'subpage', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'projet-de-vie' }, subpage: { id: 'actions' } });
+    expect(locate('/piloter')).toMatchObject({ page: { id: 'tableau-de-bord' }, subpage: { id: 'analysis' } });
     expect(locate('/projet-de-vie')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'projet-de-vie' } });
     expect(locate('/plafonds')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'plafonds', label: 'Plafonds et catégories' } });
     expect(locate('/argent/postes/std%3Alogement')).toMatchObject({ kind: 'detail', section: { id: 'vision' } });
@@ -35,12 +36,40 @@ describe('plan du site', () => {
     expect(locate('/zones/inconnue')).toMatchObject({ kind: 'unknown' });
   });
 
-  it('limite Ma vision budgétaire à trois pages sans perdre les liens de détail', () => {
+  it('expose les objectifs comme quatrième page de Ma vision budgétaire', () => {
     const section = planZone('bpm')!.sections.find((s) => s.id === 'vision')!;
-    expect(menuPages(section).map((p) => p.id)).toEqual(['tableau-de-bord', 'projet-de-vie', 'plafonds']);
-    for (const link of ['/depenses', '/piloter', '/piloter/agir', '/vision']) {
+    expect(menuPages(section).map((p) => p.id)).toEqual(['tableau-de-bord', 'projet-de-vie', 'plafonds', 'vision']);
+    for (const link of ['/depenses']) {
       expect(locate(link)).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { hidden: true } });
     }
+  });
+
+  it('rattache chaque vue spécialisée à une page principale visible du même plan', () => {
+    for (const view of PAGE_WORKSPACES) {
+      const path = '/' + view.path.replace(':id', 'prj_test');
+      const at = locate(path + '?period=2026-10');
+      expect(at.kind, path).toBe('subpage');
+      expect(at.page?.link, path).toBe(view.parent);
+      expect(at.page?.hidden, path).not.toBe(true);
+      expect(at.subpage?.label, path).toBe(view.label);
+      expect(pageChildren(at.page!, path).some(child => child.link === path), path).toBe(true);
+    }
+  });
+
+  it('propose le détail courant sans exposer un identifiant de projet non résolu', () => {
+    const page = locate('/app/gestion-projet').page!;
+    expect(pageChildren(page).some(child => child.link.includes(':id'))).toBe(false);
+    expect(pageChildren(page, '/app/gestion-projet/nouveau').some(child => child.id === 'project-budget')).toBe(false);
+    expect(pageChildren(page, '/app/projets/prj_42').find(child => child.id === 'project-budget')?.link).toBe('/app/gestion-projet/prj_42/budget');
+    expect(pageChildren(locate('/projects').page!, '/projects/prj_42/edit').at(-1)?.link).toBe('/projects/prj_42/edit');
+  });
+
+  it('ouvre les pages spécialisées des sections simples sans ajouter un accueil intermédiaire', () => {
+    const budget = planZone('budget')!;
+    const section = budget.sections.find(section => section.id === 'tests')!;
+    expect(hasPageMenu(section)).toBe(true);
+    expect(hasSectionHome(section)).toBe(false);
+    expect(sectionEntry(budget, section).link).toBe('/socle/budget');
   });
 
   it('titre les accueils génériques', () => {

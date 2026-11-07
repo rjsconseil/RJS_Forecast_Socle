@@ -1,6 +1,6 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Params, Router } from '@angular/router';
 import { ApiError, RecetteContext, toApiError } from '../../core/api.service';
 
 /** Version des lectures BPM : incrémentée après chaque écriture réussie pour recharger les pages affectées. */
@@ -23,10 +23,10 @@ export class BpmPageContext {
   private router = inject(Router);
   readonly userId = inject(RecetteContext).userId;
   readonly refresh = inject(BpmRefresh);
-  readonly query = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
-  readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot.paramMap });
+  readonly query = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot?.queryParamMap ?? convertToParamMap({}) });
+  readonly params = toSignal(this.route.paramMap, { initialValue: this.route.snapshot?.paramMap ?? convertToParamMap({}) });
   /** Ancre de l'URL (#bm-period-income…) : un lien vers un tiroir l'ouvre, comme dans la référence. */
-  readonly fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
+  readonly fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot?.fragment ?? null });
   /** Période lue (clé AAAA-MM) ; absente = période courante calculée par l'API. */
   readonly period = computed(() => this.query().get('period') || undefined);
 
@@ -34,11 +34,18 @@ export class BpmPageContext {
     return computed(() => this.query().get(name) ?? '');
   }
 
+  private pendingQuery: Params = {};
+
   /** Fusionne des paramètres d'URL ; `null` ou '' retire le paramètre. */
   setQuery(patch: Params, opts: { replace?: boolean } = {}) {
     const clean: Params = {};
     for (const [k, v] of Object.entries(patch)) clean[k] = v === '' || v === undefined ? null : v;
-    return this.router.navigate([], { relativeTo: this.route, queryParams: clean, queryParamsHandling: 'merge', replaceUrl: opts.replace ?? false });
+    // Plusieurs contrôles peuvent être remis à zéro dans le même geste : conserver tous les patchs.
+    Object.assign(this.pendingQuery, clean);
+    const next = { ...this.route.snapshot?.queryParams, ...this.pendingQuery };
+    const request = this.router.navigate([], { relativeTo: this.route, queryParams: next, replaceUrl: opts.replace ?? false });
+    void request.finally(() => { if (Object.entries(this.pendingQuery).every(([k, v]) => next[k] === v)) this.pendingQuery = {}; });
+    return request;
   }
 
   /** Paramètres à transmettre à un lien de détail pour garder le contexte de lecture. */

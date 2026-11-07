@@ -1,0 +1,284 @@
+/* Préfixe et hôte explicites : ces styles ne concernent que les outils BPM. */
+:is(bpm-toolbar, rjs-page-toolbar) {
+  display: block;
+  grid-column: 1 / -1;
+  min-width: 0;
+  width: 100%;
+}
+
+.app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-context-toolbar {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 10px;
+  background: rgb(0 0 0 / 14%);
+  color: #fff;
+
+  .bpm-toolbar-command-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 18px;
+    min-width: 0;
+  }
+  .bpm-toolbar-caption {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgb(255 255 255 / 86%);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .bpm-toolbar-caption svg { width: 18px; height: 18px; flex: 0 0 18px; }
+  .bpm-toolbar-actions { flex: 1 1 auto; min-width: 0; }
+  .bpm-toolbar-actions > [toolbarActions] {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .bpm-toolbar-filters:has(> :empty), .bpm-toolbar-filters:empty { display: none; }
+  .bpm-toolbar-filters > [toolbarFilters] {
+    margin: 0;
+    padding: 10px 0 0;
+    border: 0;
+    border-top: 1px solid rgb(255 255 255 / 16%);
+  }
+  .life-banner-tools:is([toolbarFilters], [tools]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 10px;
+    > label { flex: 1 1 180px; }
+    > form { flex: 1.5 1 280px; }
+    > .btn { flex: 0 1 auto; }
+    label {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+      margin: 0;
+      color: #e2ecf8;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    :is(input, select) {
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+      min-height: 42px;
+      margin: 0;
+      padding: 9px 11px;
+      border: 1px solid #d8e0ec;
+      border-radius: 6px;
+      background: #fff;
+      color: #202a3c;
+      font: inherit;
+      font-size: 13px;
+    }
+    .life-search-field input { padding-right: 36px; }
+  }
+  :is(.btn, .app-hero-action, .bpm-link) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 42px;
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid rgb(255 255 255 / 26%);
+    border-radius: 7px;
+    background: rgb(255 255 255 / 8%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-decoration: none;
+    white-space: normal;
+    text-align: center;
+  }
+  :is(.btn-primary, button.app-hero-action) {
+    background: #fff;
+    border-color: #fff;
+    color: var(--bpm-section-deep, #153e70);
+  }
+  :is(.btn, .app-hero-action, .bpm-link):hover:not(:disabled) {
+    background: #fff;
+    border-color: #fff;
+    color: var(--bpm-section-deep, #153e70);
+  }
+  :is(a, button, input, select):focus-visible { outline: 3px solid #bce5ff; outline-offset: 3px; }
+  :is(input, select) { min-height: 42px; }
+  :disabled { cursor: not-allowed; opacity: .55; }
+
+  .bpm-toolbar-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .bpm-toolbar-shortcuts a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 7px 11px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: rgb(255 255 255 / 7%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 550;
+    text-decoration: none;
+  }
+  .bpm-toolbar-shortcuts a:hover { background: rgb(255 255 255 / 18%); border-color: rgb(255 255 255 / 28%); }
+  .bpm-caps-toolbar-tools { display: grid; gap: 12px; }
+  .bpm-toolbar-search {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    align-items: end;
+    gap: 10px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #fff;
+    box-shadow: none;
+  }
+  .bpm-toolbar-search label {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    margin: 0;
+    color: #e2ecf8;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .bpm-toolbar-search > .expense-search { grid-column: auto; grid-row: auto; }
+  .expense-filters.bpm-toolbar-search {
+    grid-template-columns: minmax(140px, 1fr) minmax(160px, 1fr) minmax(180px, 1.4fr) auto;
+  }
+  .bpm-toolbar-search :is(input, select) {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    padding: 9px 11px;
+    border: 1px solid #d8e0ec;
+    border-radius: 6px;
+    background: #fff;
+    color: #202a3c;
+    font-size: 13px;
+  }
+  .bpm-toolbar-search :is(p, small, .expense-search-help) { margin: 0; color: #e2ecf8; font-size: 12px; }
+  .bpm-toolbar-search .expense-advanced-filters,
+  .bpm-toolbar-search .expense-advanced-filters[open] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    min-width: 0;
+    padding: 0;
+  }
+  .expense-advanced-filters > summary {
+    padding: 10px 12px;
+    border: 1px solid rgb(255 255 255 / 25%);
+    border-radius: 6px;
+    background: rgb(255 255 255 / 6%);
+    color: #fff;
+    font-size: 13px;
+  }
+  .expense-search-help { grid-column: 1 / -1; }
+  .expense-direction { display: grid; gap: 5px; color: #e2ecf8; font-size: 12px; }
+  .expense-direction .segmented { display: flex; padding: 3px; border-color: rgb(255 255 255 / 25%); background: rgb(0 0 0 / 10%); }
+  .expense-direction .segmented button { flex: 1; min-height: 36px; color: #fff; font-size: 12px; }
+  .expense-direction .segmented button[aria-pressed='true'] { color: var(--bpm-section-deep, #153e70); background: #fff; }
+}
+
+@media (max-width: 1100px) {
+  .app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-context-toolbar .expense-filters.bpm-toolbar-search {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-context-toolbar {
+    padding: 10px;
+    gap: 10px;
+    .bpm-toolbar-command-row { display: grid; gap: 8px; }
+    .bpm-toolbar-actions > [toolbarActions] > :is(a, button) { flex: 1 1 auto; }
+    :is(.btn, .app-hero-action, .bpm-link) { min-height: 44px; }
+    .bpm-toolbar-shortcuts a { min-height: 44px; }
+    .expense-filters.bpm-toolbar-search { grid-template-columns: minmax(0, 1fr); }
+  }
+}
+
+/* Les champs restent montés : réduire les outils ne perd ni filtre ni saisie. */
+.app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-context-toolbar {
+  .bpm-toolbar-filters[hidden] { display: none; }
+  .bpm-toolbar-toggle { display: none; }
+  &:has(.bpm-toolbar-filters > [toolbarFilters]:not(:empty)) .bpm-toolbar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 9px 12px;
+    border: 1px solid rgb(255 255 255 / 24%);
+    border-radius: 9px;
+    background: rgb(255 255 255 / 8%);
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    span { font-size: 18px; }
+    &:hover { background: rgb(255 255 255 / 18%); }
+  }
+}
+@media (max-width: 700px) {
+  .app-shell:is([data-module='bpm'], [data-space='budget-calendar']) main .bpm-banner-intro { display: none; }
+  .app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-toolbar-toggle { width: 100%; }
+}
+
+.app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-toolbar-focus {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(255 255 255 / 18%);
+  strong { display: block; color: #fff; font-size: 14px; font-weight: 650; line-height: 1.4; }
+  p { margin: 3px 0 0; color: #e2ecf8; font-size: 12px; line-height: 1.5; }
+  .bpm-focus-mark { flex: none; width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: #b8dcff; }
+  &[data-state='warning'] .bpm-focus-mark { background: #ffcf83; }
+  &[data-state='danger'] .bpm-focus-mark { background: #ffb5bb; }
+  &[data-state='success'] .bpm-focus-mark { background: #95e3be; }
+}
+
+.app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-context-toolbar {
+  .page-toolbar-scope { margin: 0; color: #e2ecf8; font-size: 11px; line-height: 1.4; }
+  .page-toolbar-result { padding: 8px 10px; border: 1px solid #ffffff50; border-radius: 7px; background: #ffffff12; color: #fff; font-size: 12px; line-height: 1.4; }
+  .page-toolbar-result[data-state='danger'] { border-color: #ffb9bd; }
+  .page-toolbar-result[data-state='success'] { border-color: #a1e5c5; }
+  .bpm-toolbar-primary { flex: 1 1 auto; min-width: 0; }
+  .bpm-toolbar-primary > [toolbarPrimary] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .bpm-toolbar-primary:has(> [toolbarPrimary]:empty), .bpm-toolbar-primary:empty { display: none; }
+  .bpm-toolbar-actions:has(> [toolbarActions]:empty), .bpm-toolbar-actions:empty { display: none; }
+  &:is(.is-compact, .is-small):not(.is-open):has(.bpm-toolbar-primary > [toolbarPrimary]:not(:empty)) .bpm-toolbar-actions { display: none; }
+  &:has(.bpm-toolbar-primary > [toolbarPrimary]:not(:empty)):has(.bpm-toolbar-actions > [toolbarActions]:not(:empty)) .bpm-toolbar-toggle { display: inline-flex; }
+  &.is-compact .bpm-toolbar-caption { display: none; }
+}
+
+.app-shell .main-shell main :is(bpm-toolbar, rjs-page-toolbar) .bpm-context-toolbar {
+  .bpm-toolbar-primary > [toolbarPrimary] > :is(a, button) { max-width: 100%; }
+  &.is-compact .page-toolbar-scope { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  &:is(.is-small, .is-compact) .bpm-toolbar-primary > [toolbarPrimary] { width: 100%; }
+}

@@ -6,6 +6,9 @@
   display: grid;
   gap: var(--ecart-20);
 }
+.management-columns.is-specialized {
+  grid-template-columns: minmax(0, 1fr);
+}
 .psy-panel {
   display: grid;
   gap: var(--ecart-16);

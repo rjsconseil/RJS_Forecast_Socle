@@ -5,6 +5,8 @@
  * et de section (`/zones/<zone>/<section>`), la barre latérale et le fil d'Ariane en sont des projections.
  * Les libellés, sigles, symboles et tons reprennent ceux du registre ; les liens sont ceux de ce projet.
  */
+import { matchWorkspace, PAGE_WORKSPACES } from './page-workspaces';
+
 export interface PlanPage {
   id: string;
   label: string;
@@ -142,7 +144,7 @@ export const PLAN_ZONES: PlanZone[] = [
         acronym: '02',
         label: 'Ma vision budgétaire',
         intention: 'Comprendre · agir · préparer l’avenir',
-        description: 'Trois espaces : comprendre la période, piloter le projet de vie et ses objectifs, suivre les plafonds et catégories.',
+        description: 'Comprendre la période, piloter le projet de vie, suivre les plafonds et préparer ses objectifs.',
         tone: 'nav-iris',
         homeTone: 'nav-lagoon',
         home: 'direct',
@@ -155,7 +157,7 @@ export const PLAN_ZONES: PlanZone[] = [
           { id: 'plafonds', label: 'Plafonds et catégories', link: '/plafonds', symbol: '⌈', tone: 'nav-cobalt', description: 'Suivre les marges et les dépassements, définir les plafonds des postes et organiser les catégories de dépenses.', result: 'Voir ce qui dépasse, au niveau du centre et de la catégorie, sans jamais bloquer une dépense.' },
           { id: 'piloter', hidden: true, label: 'Graphiques et chiffres', link: '/piloter', symbol: '◎', tone: 'nav-cobalt', exact: true, description: 'Le bilan de la période : chiffres, graphiques, réel face au prévu, postes et clôtures.', result: 'Comprendre le bilan chiffré de la période.' },
           { id: 'agir', hidden: true, label: 'Ce qu’il faut faire', link: '/piloter/agir', symbol: '→', tone: 'nav-indigo', description: 'Les actions utiles de la période, classées par priorité.', result: 'Savoir quoi faire maintenant sur votre budget.' },
-          { id: 'vision', hidden: true, label: 'Objectifs et avenir', link: '/vision', symbol: '✦', tone: 'nav-iris', description: 'Vos objectifs et la projection des prochaines périodes.', result: 'Préparer l’avenir à partir des seules données saisies.' },
+          { id: 'vision', label: 'Objectifs et avenir', link: '/vision', symbol: '✦', tone: 'nav-iris', description: 'Vos objectifs et la projection des prochaines périodes.', result: 'Préparer l’avenir à partir des seules données saisies.' },
         ],
       },
       {
@@ -409,11 +411,11 @@ export function menuPages(section: PlanSection): PlanPage[] {
 }
 /** Une section à plusieurs pages montre ses pages sous son grand bouton. */
 export function hasPageMenu(section: PlanSection): boolean {
-  return menuPages(section).length > 1;
+  return menuPages(section).length > 1 || menuPages(section).some(page => PAGE_WORKSPACES.some(view => view.parent === page.link));
 }
 /** Une section à plusieurs pages a son accueil, sauf si elle s'ouvre sur sa page représentative. */
 export function hasSectionHome(section: PlanSection): boolean {
-  return hasPageMenu(section) && section.home !== 'direct';
+  return menuPages(section).length > 1 && section.home !== 'direct';
 }
 /** Titre d'onglet des accueils génériques : « Section · Zone · RJS Forecast ». */
 export function planTitle(zoneId: string | null | undefined, sectionId?: string | null): string {
@@ -459,16 +461,17 @@ const DETAILS: { re: RegExp; zone: string; section: string; label: string }[] = 
   { re: /^\/admin\/calculs\/.+/, zone: 'administration', section: 'parametres', label: 'Formule' },
 ];
 
-export type PlanLocationKind = 'portal' | 'zone' | 'section' | 'page' | 'detail' | 'unknown' | 'none';
+export type PlanLocationKind = 'portal' | 'zone' | 'section' | 'page' | 'subpage' | 'detail' | 'unknown' | 'none';
 export interface PlanLocation {
   kind: PlanLocationKind;
   zone: PlanZone | null;
   section: PlanSection | null;
   page: PlanPage | null;
   detailLabel: string | null;
+  subpage: PlanPage | null;
 }
 
-const at = (kind: PlanLocationKind, zone: PlanZone | null = null, section: PlanSection | null = null, page: PlanPage | null = null, detailLabel: string | null = null): PlanLocation => ({ kind, zone, section, page, detailLabel });
+const at = (kind: PlanLocationKind, zone: PlanZone | null = null, section: PlanSection | null = null, page: PlanPage | null = null, detailLabel: string | null = null, subpage: PlanPage | null = null): PlanLocation => ({ kind, zone, section, page, detailLabel, subpage });
 const matches = (page: PlanPage, path: string) => (page.exact ? path === page.link : path === page.link || path.startsWith(page.link + '/'));
 
 /** Situe une adresse dans le plan : portail, accueil de zone ou de section, page (ou détail rattaché). */
@@ -486,10 +489,23 @@ export function locate(url: string): PlanLocation {
     const section = zone.sections.find((entry) => entry.id === parts[2]) ?? null;
     return section ? at('section', zone, section) : at('unknown', zone);
   }
+  const specialized = matchWorkspace(path);
+  if (specialized) {
+    for (const zone of PLAN_ZONES) for (const section of zone.sections) {
+      const page = section.pages.find(page => page.link === specialized.workspace.parent);
+      if (page) return at('subpage', zone, section, page, null, {
+        id: specialized.workspace.key, link: path, label: specialized.workspace.label,
+        symbol: '↳', tone: page.tone, description: specialized.workspace.lead, result: specialized.workspace.lead,
+      });
+    }
+  }
   const detail = DETAILS.find((d) => d.re.test(path));
   if (detail) {
     const zone = planZone(detail.zone)!;
-    return at('detail', zone, zone.sections.find((s) => s.id === detail.section) ?? null, null, detail.label);
+    const section = zone.sections.find((s) => s.id === detail.section) ?? null;
+    const parent = path.startsWith('/admin/calculs/') ? '/admin/calculs'
+      : path.startsWith('/projects/') ? '/projects' : path.startsWith('/tasks/') ? '/tasks' : '/tableau-de-bord';
+    return at('detail', zone, section, section?.pages.find(page => page.link === parent) ?? null, detail.label);
   }
   let best: { zone: PlanZone; section: PlanSection; page: PlanPage } | null = null;
   for (const zone of PLAN_ZONES)
@@ -497,4 +513,18 @@ export function locate(url: string): PlanLocation {
       for (const page of section.pages)
         if (!page.zoneOverview && matches(page, path) && (!best || page.link.length > best.page.link.length)) best = { zone, section, page };
   return best ? at('page', best.zone, best.section, best.page) : at('none');
+}
+
+/** Le dernier niveau partage l'identité de son parent ; un projet ouvert ajoute ses propres espaces. */
+export function pageChildren(page: PlanPage, url = ''): PlanPage[] {
+  const path = url.split(/[?#]/)[0];
+  const projectId = /^\/app\/(?:gestion-projet|projets)\/(prj_[^/]+)(?:\/|$)/.exec(path)?.[1];
+  const children = PAGE_WORKSPACES.filter(view => view.parent === page.link)
+    .filter(view => !view.path.includes(':id') || !!projectId)
+    .map(view => ({ id: view.key, label: view.label, link: `/${view.path.replace(':id', projectId ?? '')}`,
+      symbol: '↳', tone: page.tone, description: view.lead, result: view.lead }));
+  const current = locate(url);
+  if (current.kind === 'detail' && current.page?.link === page.link && current.detailLabel)
+    children.push({ id: 'current-detail', label: current.detailLabel, link: path, symbol: '↳', tone: page.tone, description: '', result: '' });
+  return children;
 }

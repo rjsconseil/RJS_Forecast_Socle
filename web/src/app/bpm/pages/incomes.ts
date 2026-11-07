@@ -1,10 +1,11 @@
+import { injectPageWorkspace } from '../../shared/page-workspace';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { BpmApi } from '../../core/bpm-api.service';
 import { EntryInput, RegisterLine } from '../../core/bpm-models';
 import { cents, CentsPipe, PercentPipe, ShortDatePipe } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmLineDetail, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmShareChart, BpmState, bpmLoader, ShareItem } from '../ui';
+import { BpmLineDetail, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmShareChart, BpmState, bpmLoader, ShareItem } from '../ui';
 import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
 
 /**
@@ -15,22 +16,23 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
 @Component({
   selector: 'bpm-page-incomes',
   providers: [BpmPageContext],
-  imports: [RouterLink, BpmPageFrame, BpmState, BpmShareChart, BpmLineDetail, BpmOperationEditor, BpmSetupNeeded, MetricTilesComponent, CentsPipe, ShortDatePipe, PercentPipe],
+  imports: [RouterLink, BpmPageFrame, BpmState, BpmShareChart, BpmLineDetail, BpmEntryFlow, BpmSetupNeeded, MetricTilesComponent, CentsPipe, ShortDatePipe, PercentPipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
       kicker="Tableau de bord"
-      title="Détail des entrées"
+      [title]="workspace()?.title ?? 'Détail des entrées'"
+      [back]="{ label: 'Retour au tableau de bord', link: workspace()?.parent ?? '/tableau-de-bord', query: carry() }"
       pageClass="bpm-money bpm-money-detail"
-      [lead]="lead()"
+      [lead]="workspace()?.lead ?? lead()" [focus]="pageFocus()" [result]="notice() ? { message: notice()!, tone: 'success' } : null" toolsLabel="Recevoir et vérifier les entrées"
       [context]="d()?.context"
       [periodKey]="period()"
       [periodNav]="true"
       (periodChange)="ctx.setQuery({ period: $event })"
     >
-      <a actions class="app-hero-action" routerLink="/tableau-de-bord" [queryParams]="carry()">← Retour au tableau de bord</a>
-      <button actions type="button" class="app-hero-action is-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée</button>
-      <a actions class="bpm-link" routerLink="/depenses" [queryParams]="registerQuery()">Entrées de la période →</a>
+      @if (nextLine(); as line) { <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">Vérifier la réception · {{ line.label }}</button> }
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée</button>
+      @if (unrealized().length) { <a actions class="bpm-link" routerLink="/depenses" [queryParams]="unrealizedQuery()">Revoir {{ unrealized().length }} entrée(s) non réalisée(s)</a> }
 
       <div class="bpm-money bpm-money-body bpm-money-detail" data-tone="budget">
         @if (problem(); as p) {
@@ -168,9 +170,7 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
     @if (lineParam()) {
       <bpm-line-detail [lineId]="lineParam()" [period]="period()" (closed)="closeLine()" (edit)="startEdit($event)" />
     }
-    @if (editorOpen() && budgets().length) {
-      <bpm-operation-editor [budgets]="budgets()" [line]="editLine()" [defaults]="defaults" (closed)="closeEditor()" (saved)="onSaved($event)" />
-    }
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="defaults" (saved)="onSaved($event)" />
   `,
   styles: `
     :host { display: block; }
@@ -178,6 +178,7 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
   `,
 })
 export class BpmIncomesPage {
+  protected workspace = injectPageWorkspace();
   protected ctx = inject(BpmPageContext);
   private bpm = inject(BpmApi);
   private router = inject(Router);
@@ -195,6 +196,15 @@ export class BpmIncomesPage {
   protected received = computed(() => [...(this.d()?.settledLines ?? [])].sort((a, b) => (a.realizedDate ?? '').localeCompare(b.realizedDate ?? '') || a.label.localeCompare(b.label)));
   protected pending = computed(() => this.d()?.pendingLines ?? []);
   protected unrealized = computed(() => this.d()?.unrealizedLines ?? []);
+
+  protected nextLine = computed(() => nextOpenLine(this.pending()));
+  protected unrealizedQuery = computed(() => ({ ...this.registerQuery(), status: 'unrealized' }));
+  protected pageFocus = computed<BpmPageFocus | null>(() => {
+    const d = this.d();
+    if (!d) return null;
+    const next = this.nextLine();
+    return { title: next ? `${cents(d.expectedCents)} encore attendus` : `${cents(d.receivedCents)} reçus`, detail: next ? `${next.label} · ${next.statusLabel.toLocaleLowerCase('fr')} · ${cents(next.plannedCents)}. Vérifiez sa réception pour mettre à jour le solde.` : this.unrealized().length ? 'Des entrées sont restées non réalisées à la clôture. Consultez-les avant de préparer la suite.' : 'Toutes les entrées de cette sélection sont reçues. Vous pouvez préparer la suivante.', tone: next?.status === 'late' ? 'warning' : 'info' };
+  });
 
   /** Phrase du bandeau (source `lead-entrees`) : le reçu et le nombre de montants réels. */
   protected lead = computed(() => {
@@ -234,22 +244,17 @@ export class BpmIncomesPage {
   // ---------- éditeur partagé (entrée par défaut) ----------
 
   protected readonly defaults: Partial<EntryInput> = { direction: 'income' };
-  protected editorOpen = signal(false);
-  protected editLine = signal<RegisterLine | null>(null);
   protected notice = signal<string | null>(null);
 
   protected openCreate() {
-    this.editLine.set(null);
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: 'new' });
   }
   protected startEdit(line: RegisterLine) {
     this.closeLine();
-    this.editLine.set(line);
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: line.id });
   }
   protected closeEditor() {
-    this.editorOpen.set(false);
-    this.editLine.set(null);
+    void this.ctx.setQuery({ entry: null }, { replace: true });
   }
   protected onSaved(message: string) {
     this.closeEditor();

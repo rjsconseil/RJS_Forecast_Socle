@@ -1,3 +1,4 @@
+import { injectPageWorkspace } from '../../shared/page-workspace';
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -5,7 +6,7 @@ import { Api } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { CHARGE_NATURE_LABEL, ChargeNature, Direction, EntryInput, LineStatus, RegisterLine, RegisterQuery } from '../../core/bpm-models';
 import { cents, CentsPipe, ShortDatePipe, shortDate } from '../../core/format';
-import { BpmCapGauge, BpmLineDetail, bpmLoader, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmState, overCapsOf } from '../ui';
+import { BpmCapGauge, BpmLineDetail, bpmLoader, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmState, overCapsOf } from '../ui';
 import { settlementOutsideWindow } from './period-presentation';
 
 const STATUS_LABEL: Record<LineStatus, string> = { late: 'En retard', due: 'Du jour', pending: 'À venir', settled: 'Réglé', unrealized: 'Non réalisé' };
@@ -23,124 +24,131 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
  */
 @Component({
   selector: 'bpm-page-expenses',
-  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmLineDetail, BpmOperationEditor, BpmCapGauge, CentsPipe, ShortDatePipe],
+  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmLineDetail, BpmEntryFlow, BpmCapGauge, CentsPipe, ShortDatePipe],
   providers: [BpmPageContext],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-expenses.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
-      title="Dépenses de la période"
+      [title]="workspace()?.title ?? (direction() === 'income' ? 'Entrées de la période' : direction() === 'all' ? 'Entrées et dépenses' : 'Dépenses de la période')"
       pageClass="bpm-money expense-register-page"
-      [lead]="lead()"
+      [back]="workspace() ? { label: 'Retour au tableau de bord', link: workspace()!.parent, query: queryCarry() } : { label: 'Gestion du projet de vie', link: '/projet-de-vie', query: ctx.carry() }"
+      [lead]="workspace()?.lead ?? lead()" [focus]="pageFocus()" [result]="message() ? { message: message()!, tone: 'success' } : null" toolsLabel="Saisir, pointer et retrouver"
       [context]="reg.data()?.context"
       [periodKey]="ctx.period()"
       [periodNav]="!customWindow()"
       (periodChange)="ctx.setQuery({ period: $event })"
     >
-      <a actions class="bpm-link" routerLink="/tableau-de-bord" [queryParams]="ctx.carry()">← Tableau de bord</a>
-      <a actions class="bpm-link" routerLink="/projet-de-vie" [queryParams]="ctx.carry()">Gestion du projet de vie →</a>
-      <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="ctx.carry()">Plafonds et catégories →</a>
-      <button actions type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Ajouter une entrée' : direction() === 'all' ? 'Saisir un flux' : 'Ajouter une charge' }}</button>
+      @if (nextLine(); as line) {
+        <button primary type="button" class="app-hero-action" (click)="reviewNext()">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : 'Ouvrir la prochaine échéance' }} · {{ line.label }}</button>
+      }
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Ajouter une entrée' : direction() === 'all' ? 'Saisir un flux' : 'Ajouter une charge' }}</button>
+      @if (activeRefine().length || search()) {
+        <button actions type="button" class="btn btn-secondary" (click)="clearAll()">Effacer les filtres et la recherche</button>
+      }
+      @if (overCaps().length) {
+        <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="ctx.carry()">Revoir {{ overCaps().length }} plafond(s) dépassé(s) →</a>
+      }
+
+        <!-- Recherche visible, regroupement, sens et panneau « Affiner la liste » (ne touche pas à la recherche) -->
+      <section tools class="expense-filters bpm-toolbar-search" role="search" aria-label="Rechercher et affiner la liste">
+        <label class="expense-search">
+          {{ direction() === 'income' ? 'Afficher les entrées' : direction() === 'all' ? 'Afficher les échéances' : 'Afficher les dépenses' }}
+          <select name="expense-grouping" [ngModel]="groupBy()" (ngModelChange)="setGroup($event)">
+            @for (g of groupKeys; track g) { <option [value]="g">{{ g === 'date' && dateBasis() === 'realized' ? 'Par date de règlement' : groupLabel[g] }}</option> }
+          </select>
+        </label>
+        <label class="expense-search">
+          Lire les montants selon
+          <select name="expense-date-basis" [ngModel]="dateBasis()" (ngModelChange)="setDateBasis($event)">
+            <option value="planned">Les dates prévues</option>
+            <option value="realized">Les dates de règlement</option>
+          </select>
+        </label>
+        <label class="expense-search">
+          {{ direction() === 'income' ? 'Rechercher une entrée' : direction() === 'all' ? 'Rechercher une échéance' : 'Rechercher une dépense' }}
+          <input type="search" name="expense-search" [value]="search()" (input)="onSearch($any($event.target).value)" placeholder="Libellé, note ou poste…" aria-describedby="search-help" />
+        </label>
+        <div class="expense-direction">
+          <span id="dir-l">Sens</span>
+          <span class="segmented" role="group" aria-labelledby="dir-l">
+            <button type="button" [attr.aria-pressed]="direction() === 'charge'" (click)="setDirection('charge')">Charges</button>
+            <button type="button" [attr.aria-pressed]="direction() === 'income'" (click)="setDirection('income')">Entrées</button>
+            <button type="button" [attr.aria-pressed]="direction() === 'all'" (click)="setDirection('all')">Tout</button>
+          </span>
+        </div>
+        <details id="refine-panel" class="expense-advanced-filters" [open]="refineOpen()" (toggle)="refineOpen.set($any($event.target).open)">
+          <summary>
+            Affiner la liste
+            @if (activeRefine().length) { <span>{{ activeRefine().length }} filtre(s) actif(s)</span> }
+          </summary>
+          <div class="expense-filter-fields">
+            <label>
+              Projet
+              <select name="expense-budget" [ngModel]="budgetSel()" (ngModelChange)="setBudget($event)">
+                <option value="">Budget du projet de vie (principal)</option>
+                <option value="__all__">Tous les projets (chaque Budget une fois)</option>
+                @for (b of budgets(); track b.id) {
+                  @if (b.role === 'standard') { <option [value]="b.id">{{ b.name }} (projet de la vie)</option> }
+                }
+              </select>
+            </label>
+            <label>
+              État
+              <select name="expense-status" [ngModel]="ctx.q('status')()" (ngModelChange)="ctx.setQuery({ status: $event })">
+                <option value="">Tout afficher</option>
+                @for (s of statuses; track s) { <option [value]="s">{{ statusLabel[s] }}</option> }
+              </select>
+            </label>
+            <label>
+              Nature de charge
+              <select name="expense-nature" [ngModel]="ctx.q('nature')()" (ngModelChange)="setNature($event)">
+                <option value="">Tout afficher</option>
+                @for (n of natures; track n) { <option [value]="n">{{ natureLabel[n] }}</option> }
+              </select>
+            </label>
+            <label>
+              Poste
+              <select name="expense-center" [ngModel]="ctx.q('center')()" (ngModelChange)="ctx.setQuery({ center: $event })">
+                <option value="">Tout afficher</option>
+                <option value="__none__">Poste à préciser</option>
+                @for (c of centerOptions(); track c.ref) { <option [value]="c.ref">{{ c.label }}{{ c.standard ? '' : ' (personnel)' }}</option> }
+              </select>
+            </label>
+            <label>
+              Catégorie de dépense
+              <select name="expense-category" [ngModel]="ctx.q('category')()" (ngModelChange)="setCategory($event)" [disabled]="direction() === 'income'">
+                <option value="">{{ direction() === 'income' ? 'Réservé aux dépenses' : 'Tout afficher' }}</option>
+                <option value="__none__">Sans catégorie</option>
+                @for (k of categoryOptions(); track k.id) { <option [value]="k.id">{{ k.label }} · {{ k.costCenterLabel }}{{ k.archived ? ' (retirée)' : '' }}</option> }
+              </select>
+            </label>
+            <label>
+              Tâche du projet
+              <select name="expense-task" [ngModel]="ctx.q('taskId')()" (ngModelChange)="ctx.setQuery({ taskId: $event })" [disabled]="!taskOptions().length">
+                <option value="">{{ taskOptions().length ? 'Tout afficher' : 'Aucune tâche de projet budgétisé' }}</option>
+                @for (t of taskOptions(); track t.id) { <option [value]="t.id">{{ t.title }}</option> }
+              </select>
+            </label>
+            <label>
+              Du ({{ dateBasis() === 'realized' ? 'règlement' : 'prévision' }})
+              <input type="date" name="expense-from" [value]="ctx.q('from')()" (change)="setWindow('from', $any($event.target).value)" />
+            </label>
+            <label>
+              Au (inclus)
+              <input type="date" name="expense-to" [value]="ctx.q('to')()" (change)="setWindow('to', $any($event.target).value)" />
+            </label>
+          </div>
+          @if (windowError()) { <p class="bpm-error" role="alert">{{ windowError() }}</p> }
+          <p class="bpm-help">Une fenêtre de dates libre remplace la période pour la lecture ; elle ne change pas le cycle de clôture. Les deux dates sont nécessaires.</p>
+          <button type="button" class="btn btn-secondary" (click)="clearRefine()">Réinitialiser les filtres</button>
+        </details>
+        <small id="search-help" class="expense-search-help">La recherche est conservée à l'ouverture d'une ligne et dans le lien.</small>
+      </section>
 
       <div class="bpm-money bpm-money-body expense-register-page" data-tone="budget">
         @if (message()) {
           <div class="alert ok" role="status">{{ message() }} <button type="button" class="btn btn-secondary" (click)="message.set(null)">Fermer</button></div>
         }
-
-        <!-- Recherche visible, regroupement, sens et panneau « Affiner la liste » (ne touche pas à la recherche) -->
-        <section class="expense-filters" data-ui-pattern="panel" role="search" aria-label="Rechercher et affiner la liste">
-          <label class="expense-search">
-            {{ direction() === 'income' ? 'Afficher les entrées' : direction() === 'all' ? 'Afficher les échéances' : 'Afficher les dépenses' }}
-            <select name="expense-grouping" [ngModel]="groupBy()" (ngModelChange)="setGroup($event)">
-              @for (g of groupKeys; track g) { <option [value]="g">{{ g === 'date' && dateBasis() === 'realized' ? 'Par date de règlement' : groupLabel[g] }}</option> }
-            </select>
-          </label>
-          <label class="expense-search">
-            Lire les montants selon
-            <select name="expense-date-basis" [ngModel]="dateBasis()" (ngModelChange)="setDateBasis($event)">
-              <option value="planned">Les dates prévues</option>
-              <option value="realized">Les dates de règlement</option>
-            </select>
-          </label>
-          <label class="expense-search">
-            {{ direction() === 'income' ? 'Rechercher une entrée' : direction() === 'all' ? 'Rechercher une échéance' : 'Rechercher une dépense' }}
-            <input type="search" name="expense-search" [value]="search()" (input)="onSearch($any($event.target).value)" placeholder="Libellé, note ou poste…" aria-describedby="search-help" />
-          </label>
-          <div class="expense-direction">
-            <span id="dir-l">Sens</span>
-            <span class="segmented" role="group" aria-labelledby="dir-l">
-              <button type="button" [attr.aria-pressed]="direction() === 'charge'" (click)="setDirection('charge')">Charges</button>
-              <button type="button" [attr.aria-pressed]="direction() === 'income'" (click)="setDirection('income')">Entrées</button>
-              <button type="button" [attr.aria-pressed]="direction() === 'all'" (click)="setDirection('all')">Tout</button>
-            </span>
-          </div>
-          <details id="refine-panel" class="expense-advanced-filters" [open]="refineOpen()" (toggle)="refineOpen.set($any($event.target).open)">
-            <summary>
-              Affiner la liste
-              @if (activeRefine().length) { <span>{{ activeRefine().length }} filtre(s) actif(s)</span> }
-            </summary>
-            <div class="expense-filter-fields">
-              <label>
-                Projet
-                <select name="expense-budget" [ngModel]="budgetSel()" (ngModelChange)="setBudget($event)">
-                  <option value="">Budget du projet de vie (principal)</option>
-                  <option value="__all__">Tous les projets (chaque Budget une fois)</option>
-                  @for (b of budgets(); track b.id) {
-                    @if (b.role === 'standard') { <option [value]="b.id">{{ b.name }} (projet de la vie)</option> }
-                  }
-                </select>
-              </label>
-              <label>
-                État
-                <select name="expense-status" [ngModel]="ctx.q('status')()" (ngModelChange)="ctx.setQuery({ status: $event })">
-                  <option value="">Tout afficher</option>
-                  @for (s of statuses; track s) { <option [value]="s">{{ statusLabel[s] }}</option> }
-                </select>
-              </label>
-              <label>
-                Nature de charge
-                <select name="expense-nature" [ngModel]="ctx.q('nature')()" (ngModelChange)="setNature($event)">
-                  <option value="">Tout afficher</option>
-                  @for (n of natures; track n) { <option [value]="n">{{ natureLabel[n] }}</option> }
-                </select>
-              </label>
-              <label>
-                Poste
-                <select name="expense-center" [ngModel]="ctx.q('center')()" (ngModelChange)="ctx.setQuery({ center: $event })">
-                  <option value="">Tout afficher</option>
-                  <option value="__none__">Poste à préciser</option>
-                  @for (c of centerOptions(); track c.ref) { <option [value]="c.ref">{{ c.label }}{{ c.standard ? '' : ' (personnel)' }}</option> }
-                </select>
-              </label>
-              <label>
-                Catégorie de dépense
-                <select name="expense-category" [ngModel]="ctx.q('category')()" (ngModelChange)="setCategory($event)" [disabled]="direction() === 'income'">
-                  <option value="">{{ direction() === 'income' ? 'Réservé aux dépenses' : 'Tout afficher' }}</option>
-                  <option value="__none__">Sans catégorie</option>
-                  @for (k of categoryOptions(); track k.id) { <option [value]="k.id">{{ k.label }} · {{ k.costCenterLabel }}{{ k.archived ? ' (retirée)' : '' }}</option> }
-                </select>
-              </label>
-              <label>
-                Tâche du projet
-                <select name="expense-task" [ngModel]="ctx.q('taskId')()" (ngModelChange)="ctx.setQuery({ taskId: $event })" [disabled]="!taskOptions().length">
-                  <option value="">{{ taskOptions().length ? 'Tout afficher' : 'Aucune tâche de projet budgétisé' }}</option>
-                  @for (t of taskOptions(); track t.id) { <option [value]="t.id">{{ t.title }}</option> }
-                </select>
-              </label>
-              <label>
-                Du ({{ dateBasis() === 'realized' ? 'règlement' : 'prévision' }})
-                <input type="date" name="expense-from" [value]="ctx.q('from')()" (change)="setWindow('from', $any($event.target).value)" />
-              </label>
-              <label>
-                Au (inclus)
-                <input type="date" name="expense-to" [value]="ctx.q('to')()" (change)="setWindow('to', $any($event.target).value)" />
-              </label>
-            </div>
-            @if (windowError()) { <p class="bpm-error" role="alert">{{ windowError() }}</p> }
-            <p class="bpm-help">Une fenêtre de dates libre remplace la période pour la lecture ; elle ne change pas le cycle de clôture. Les deux dates sont nécessaires.</p>
-            <button type="button" class="btn btn-secondary" (click)="clearRefine()">Réinitialiser les filtres</button>
-          </details>
-          <small id="search-help" class="expense-search-help">La recherche est conservée à l'ouverture d'une ligne et dans le lien.</small>
-        </section>
 
         @if (activeRefine().length || customWindow()) {
           <p class="expense-active-filters" aria-label="Filtres actifs">
@@ -152,7 +160,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
         }
 
         <!-- La période en un regard : les totaux suivent les filtres -->
-        @if (reg.data(); as r) {
+        @if (!workspace()) { @if (reg.data(); as r) {
           <section class="expense-overview" data-bpm-frame="metrics" aria-labelledby="expense-overview-title">
             <header>
               <div>
@@ -202,6 +210,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
           </section>
         }
 
+        }
         <!-- Plafonds dépassés sur la période : signalés en rouge, jamais bloquants -->
         @if (overCaps().length) {
           <div class="expense-caps-alert" role="status">
@@ -213,6 +222,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
           </div>
         }
 
+        @if (!workspace()) {
         <details class="bm-calculation">
           <summary>Date prévue ou date réelle ?</summary>
           <div class="record-details">
@@ -221,6 +231,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
           </div>
         </details>
 
+        }
         <!-- Lien profond vers une ligne absente des filtres -->
         @if (missing()) {
           <div class="expense-note" role="status">
@@ -332,9 +343,7 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
       </div>
     </bpm-page>
 
-    @if (editorOpen() && budgets().length) {
-      <bpm-operation-editor [budgets]="budgets()" [line]="editing()" [defaults]="createDefaults()" (closed)="closeEditor()" (saved)="onSaved($event)" />
-    } @else if (selectedId()) {
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="createDefaults()" (saved)="onSaved($event)" /> @if (selectedId() && !ctx.q('entry')()) {
       <bpm-line-detail [lineId]="selectedId()!" [period]="ctx.period()" (closed)="closeDetail()" (edit)="openEdit($event)" />
     }
   `,
@@ -354,6 +363,8 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
   `,
 })
 export class BpmExpensesPage {
+  protected workspace = injectPageWorkspace();
+  protected queryCarry = computed(() => Object.fromEntries(this.ctx.query().keys.map(key => [key, this.ctx.query().get(key)!])));
   private bpm = inject(BpmApi);
   private api = inject(Api);
   protected ctx = inject(BpmPageContext);
@@ -426,6 +437,19 @@ export class BpmExpensesPage {
   /** Catégories (retirées comprises : elles portent encore des dépenses) ; filtrées sur le poste choisi. */
   private categoriesRead = bpmLoader(() => 0, () => this.bpm.categories(true).catch(() => []));
   private tasksRead = bpmLoader(() => 0, () => this.api.tasks().catch(() => []));
+
+  protected nextLine = computed(() => nextOpenLine(this.reg.data()?.lines ?? []));
+  protected pageFocus = computed<BpmPageFocus | null>(() => {
+    const r = this.reg.data();
+    if (!r) return null;
+    if (this.reg.error()) return { title: 'Dernière lecture à actualiser', detail: 'Les données de la sélection peuvent avoir changé.', tone: 'warning' };
+    const line = this.nextLine();
+    return { title: `${r.totals.lineCount} ligne(s) dans cette sélection`, detail: line ? `${line.statusLabel} : ${line.label} · ${cents(line.plannedCents)}. Ouvrez la fiche pour vérifier le règlement.` : r.totals.lineCount ? 'Aucune échéance ouverte dans la sélection. Affinez la recherche ou ajoutez un flux.' : r.totals.unfilteredCount ? 'Des lignes existent dans la période : élargissez les filtres pour les retrouver.' : 'Commencez par saisir une entrée ou une charge.', tone: line?.status === 'late' ? 'warning' : 'info' };
+  });
+  protected reviewNext() {
+    const line = this.nextLine();
+    if (line) void this.ctx.setQuery(this.lineQuery(line));
+  }
 
   protected budgets = computed(() => this.reg.data()?.context.budgets ?? []);
   protected byId = computed(() => new Map((this.reg.data()?.lines ?? []).map((l) => [l.id, l] as const)));
@@ -633,8 +657,6 @@ export class BpmExpensesPage {
 
   // ---------- détail et éditeur ----------
 
-  protected editorOpen = signal(false);
-  protected editing = signal<RegisterLine | null>(null);
   protected message = signal<string | null>(null);
 
   protected createDefaults = computed<Partial<EntryInput>>(() => {
@@ -652,16 +674,13 @@ export class BpmExpensesPage {
   });
 
   protected openCreate() {
-    this.editing.set(null);
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: 'new' });
   }
   protected openEdit(l: RegisterLine) {
-    this.editing.set(l);
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: l.id });
   }
   protected closeEditor() {
-    this.editorOpen.set(false);
-    this.editing.set(null);
+    void this.ctx.setQuery({ entry: null }, { replace: true });
   }
   protected onSaved(msg: string) {
     this.message.set(msg);

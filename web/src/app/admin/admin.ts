@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Api, ApiError, toApiError, UserDirectory } from '../core/api.service';
 import { EffectiveParameter, JournalEntry, ModuleDescription, RecentError } from '../core/models';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
+import { injectPageWorkspace } from '../shared/page-workspace';
 
 type Tab = 'modules' | 'parameters' | 'metrics' | 'journal' | 'errors';
 
@@ -21,16 +22,21 @@ const OBJECT_ID = /^[a-z]{2,4}_[0-9a-f]{8}-/;
         data-sticky-hero
         tone="indigo"
         headingId="adm-title"
-        title="Administration"
+        [title]="workspace()?.title ?? 'Administration'"
         kicker="Administration du site · Paramètres"
-        lead="Modules du socle, paramètres effectifs (défaut du code ou valeur administrée), formules des chiffres, journal et erreurs. Les invariants (unicité, références, intégrité) ne sont jamais des paramètres : ils ne s'administrent pas."
+        [lead]="workspace()?.lead ?? 'Modules du socle, paramètres effectifs (défaut du code ou valeur administrée), formules des chiffres, journal et erreurs. Les invariants (unicité, références, intégrité) ne sont jamais des paramètres : ils ne s’administrent pas.'"
         [chips]="heroChips()"
+        [result]="editError() || resetError() ? { message: (editError() ?? resetError()!.error).message, tone: 'danger' } : savedNote() ? { message: savedNote()!, tone: 'success' } : null"
       >
+        @if (workspace()?.key === 'admin-parameters' && editingParameter(); as p) {
+          <button heroPrimary type="button" class="app-hero-action" (click)="save(p)" [disabled]="saving()">{{ saving() ? 'Enregistrement…' : 'Enregistrer le paramètre' }}</button>
+        }
         <button heroActions type="button" class="app-hero-action" (click)="load()">Relire</button>
         <a heroActions class="app-hero-action is-secondary" routerLink="/admin/calculs">Calculs des chiffres →</a>
         <a heroActions class="app-hero-action is-secondary" routerLink="/object-management">Object Management →</a>
       </rjs-app-hero>
 
+      @if (!workspace()) {
       <div class="cfg-modules" role="tablist" aria-label="Sections de l'administration">
         @for (t of tabs; track t[0]) {
           <button
@@ -48,13 +54,14 @@ const OBJECT_ID = /^[a-z]{2,4}_[0-9a-f]{8}-/;
           </button>
         }
       </div>
+      }
 
       @if (error()) {
         <p class="cfg-error" role="alert">{{ error() }}</p>
       }
 
-      <section class="adm-panel-stack" role="tabpanel" [id]="'adm-panel-' + tab()" [attr.aria-labelledby]="'tab-' + tab()">
-        @switch (tab()) {
+      <section class="adm-panel-stack" [attr.role]="workspace() ? 'region' : 'tabpanel'" [id]="'adm-panel-' + activeTab()" [attr.aria-labelledby]="workspace() ? 'adm-title' : 'tab-' + activeTab()">
+        @switch (activeTab()) {
           @case ('modules') {
             <p class="cfg-hint">Architecture à trois niveaux : un module ne dépend que de modules de niveau inférieur ou égal ; les niveaux supérieurs enrichissent les inférieurs par extensions.</p>
             @for (lvl of modulesByLevel(); track lvl.level) {
@@ -302,6 +309,7 @@ const OBJECT_ID = /^[a-z]{2,4}_[0-9a-f]{8}-/;
 export class AdminPage implements OnInit {
   private api = inject(Api);
   private directory = inject(UserDirectory);
+  protected workspace = injectPageWorkspace();
 
   protected tabs: [Tab, string][] = [
     ['modules', 'Modules'],
@@ -311,10 +319,15 @@ export class AdminPage implements OnInit {
     ['errors', 'Erreurs récentes'],
   ];
   protected tab = signal<Tab>('modules');
+  protected activeTab = computed<Tab>(() => {
+    const key = this.workspace()?.key;
+    return key === 'admin-parameters' ? 'parameters' : key === 'admin-journal' ? 'journal' : key === 'admin-errors' ? 'errors' : this.tab();
+  });
   protected error = signal<string | null>(null);
 
   protected modules = signal<ModuleDescription[]>([]);
   protected parameters = signal<EffectiveParameter[]>([]);
+  protected editingParameter = computed(() => this.parameters().find((p) => p.key === this.editKey()) ?? null);
   protected journal = signal<JournalEntry[]>([]);
   protected errors = signal<RecentError[]>([]);
 
@@ -326,6 +339,7 @@ export class AdminPage implements OnInit {
   protected saving = signal(false);
   protected editError = signal<ApiError | null>(null);
   protected resetError = signal<{ key: string; error: ApiError } | null>(null);
+  protected savedNote = signal<string | null>(null);
 
   protected modulesByLevel = computed(() => {
     const mods = this.modules();
@@ -420,6 +434,7 @@ export class AdminPage implements OnInit {
   }
 
   startEdit(p: EffectiveParameter) {
+    this.savedNote.set(null);
     this.editKey.set(p.key);
     this.editError.set(null);
     this.resetError.set(null);
@@ -495,6 +510,7 @@ export class AdminPage implements OnInit {
   }
 
   async save(p: EffectiveParameter) {
+    this.savedNote.set(null);
     this.editError.set(null);
     const r = this.parsed(p);
     if (!r.ok) return;
@@ -502,6 +518,7 @@ export class AdminPage implements OnInit {
     try {
       const res = await this.api.setParameter(p.key, { value: r.value, expectedRevision: p.revision, note: this.note().trim() || undefined });
       this.replace(res.parameter);
+      this.savedNote.set(`${p.label} enregistré, révision ${res.parameter.revision}.`);
       this.editKey.set(null);
       this.journal.set(await this.api.journal(200));
     } catch (err) {
@@ -512,11 +529,13 @@ export class AdminPage implements OnInit {
   }
 
   async reset(p: EffectiveParameter) {
+    this.savedNote.set(null);
     this.resetError.set(null);
     this.saving.set(true);
     try {
       const res = await this.api.resetParameter(p.key, p.revision);
       this.replace(res.parameter);
+      this.savedNote.set(`${p.label} rétabli à sa valeur livrée.`);
       this.journal.set(await this.api.journal(200));
     } catch (err) {
       this.resetError.set({ key: p.key, error: toApiError(err) });

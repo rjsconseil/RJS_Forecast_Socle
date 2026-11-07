@@ -17,8 +17,8 @@ import { access, copyFile, mkdir, readFile, unlink, writeFile } from 'node:fs/pr
 import { join, resolve } from 'node:path';
 import { createSocle } from '../src/socle/index.mjs';
 import { SOCLE_MODULES } from '../src/modules/index.mjs';
-import { DEFAULT_VISION } from '../src/modules/bpm/reads.mjs';
-import { GOAL_TYPES } from '../src/modules/bpm/projection.mjs';
+import { DEFAULT_PROJECTION } from '../src/modules/patrimoine/objectives.mjs';
+import { GOAL_TYPES } from '../src/modules/patrimoine/projection.mjs';
 import { isOccurrence } from '../src/modules/budget/recurrence.mjs';
 import { STORE_SCHEMA } from '../src/socle/store.mjs';
 import { today } from '../src/socle/clock.mjs';
@@ -239,8 +239,10 @@ try {
         }),
         main.patrimoineProjectId ?? main.id,
       );
-      const vision = main.vision ? { ...DEFAULT_VISION, annualReturnPct: main.vision.returnPct ?? null, savingsTargetCents: main.vision.savingsTargetCents ?? null } : null;
-      const comp = tag(om.create(tx, 'bpmComposition', { label: `BPM de ${user.label}`, budgetId: life.id, patrimoineId: pat.id, coreProjectId: root.id, vision }), main.id);
+      const vision = main.vision ? { ...DEFAULT_PROJECTION, annualReturnPct: main.vision.returnPct ?? null, savingsTargetCents: main.vision.savingsTargetCents ?? null } : null;
+      budget.migrateObjectives(tx, life.id, vision);
+      patrimoine.migrateObjectives(tx, pat.id, vision);
+      const comp = tag(om.create(tx, 'bpmComposition', { label: `BPM de ${user.label}`, budgetId: life.id, patrimoineId: pat.id, coreProjectId: root.id }), main.id);
       tag(om.create(tx, 'cycleLink', { bpmCompositionId: comp.id, frequency: 'monthly', anchorDay: cycleStart ? 1 : null, startDate: cycleStart, state: cycleStart ? 'active' : 'to_configure' }), main.linkId);
       count('bpmCompositions');
 
@@ -339,7 +341,7 @@ try {
             note(`Objectif ${g.id} non importé (type, montant ou date manquant).`);
             continue;
           }
-          tag(om.create(tx, 'lifeGoal', { label: g.label, type: g.kind, date: g.targetDate, targetTodayCents: g.targetCents, removed: false }), g.id, { note: g.note || null });
+          tag(patrimoine.buildGoal(tx, { label: g.label, type: g.kind, date: g.targetDate, targetToday: euros(g.targetCents) }), g.id, { note: g.note || null });
           count('lifeGoals');
         }
       }

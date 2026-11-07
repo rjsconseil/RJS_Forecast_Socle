@@ -1,10 +1,13 @@
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api, ApiError, newRequestKey, toApiError } from '../core/api.service';
 import { CoreProject, PRIORITY_LABEL, Priority } from '../core/models';
 import { FormStatusComponent } from './workspace-parts';
+import { AppHeroComponent } from '../shared/app-hero.component';
+import { PageResult } from '../shared/page-toolbar.component';
+import { workspaceContextQuery } from '../shared/page-workspace';
 
 /**
  * Création et modification d'un projet, sur le gabarit de la fenêtre d'édition de la référence
@@ -14,29 +17,25 @@ import { FormStatusComponent } from './workspace-parts';
  */
 @Component({
   selector: 'app-project-form',
-  imports: [ReactiveFormsModule, RouterLink, FormStatusComponent],
+  imports: [ReactiveFormsModule, RouterLink, FormStatusComponent, AppHeroComponent],
   styleUrl: './entity-editor.page.scss',
   template: `
     <div class="page">
-      <header class="page-head page-head-compact">
-        <div>
-          <div class="page-hero-title">
-            <h1 class="display">{{ title() }}</h1>
-            <p class="eyebrow"><span class="eyebrow-line"></span>Projet</p>
-          </div>
-          <p class="lead">Posez le cadre du projet ; son état et ses chiffres se calculent ensuite depuis ses tâches.</p>
-        </div>
-        <nav class="site-page-tools" aria-label="Retour">
-          <a class="btn btn-secondary" [routerLink]="cancelLink()">← {{ id() ? 'Retour au projet' : 'Retour aux projets' }}</a>
-        </nav>
-      </header>
+      <rjs-app-hero tone="indigo" headingId="core-project-editor-title" kicker="Noyau · Projet"
+        [title]="title()" lead="Posez le cadre du projet ; son état et ses chiffres se calculent ensuite depuis ses tâches."
+        [scope]="id() ? 'Projet ' + id() : 'Nouveau projet · brouillon'" [result]="result()" toolsLabel="Enregistrer le projet">
+        <button heroPrimary type="submit" form="core-project-form" class="app-hero-action" [disabled]="saving() || loading() || !!loadError()">
+          {{ saving() ? 'Enregistrement…' : id() ? 'Enregistrer les modifications' : 'Créer le projet' }}
+        </button>
+        <a heroActions class="app-hero-action is-secondary" [routerLink]="cancelLink()" [queryParams]="returnQuery()">{{ id() ? '← Retour au projet' : 'Annuler' }}</a>
+      </rjs-app-hero>
 
       @if (loadError()) {
         <div class="empty-state" role="alert">
           <div class="empty-mark">!</div>
           <h2>Projet indisponible</h2>
           <p>{{ loadError() }}</p>
-          <a class="btn btn-secondary" routerLink="/projects">← Retour aux projets</a>
+          <a class="btn btn-secondary" routerLink="/projects" [queryParams]="returnQuery()">← Retour aux projets</a>
         </div>
       } @else {
         <section class="entity-editor-panel" [attr.aria-label]="title()">
@@ -49,8 +48,8 @@ import { FormStatusComponent } from './workspace-parts';
               }
             </div>
           </div>
-          <form class="editor-form" [formGroup]="form" [attr.aria-busy]="saving()" (ngSubmit)="submit()">
-            <fieldset class="editor-fields" [disabled]="saving()">
+          <form id="core-project-form" class="editor-form" [formGroup]="form" [attr.aria-busy]="saving() || loading()" (ngSubmit)="submit()">
+            <fieldset class="editor-fields" [disabled]="saving() || loading()">
               <h3 class="editor-section-title">01 · Définir le projet</h3>
               <label class="field field-full"
                 >Nom du projet <span class="field-requirement">Obligatoire</span>
@@ -119,8 +118,8 @@ import { FormStatusComponent } from './workspace-parts';
                 [error]="errorText()"
               />
               <span class="form-spacer"></span>
-              <a class="btn btn-secondary" [routerLink]="cancelLink()">Annuler</a>
-              <button class="btn btn-primary" type="submit" [disabled]="saving()">
+              <a class="btn btn-secondary" [routerLink]="cancelLink()" [queryParams]="returnQuery()">Annuler</a>
+              <button class="btn btn-primary" type="submit" [disabled]="saving() || loading()">
                 {{ saving() ? 'Enregistrement…' : id() ? 'Enregistrer' : 'Créer le projet' }}
               </button>
             </div>
@@ -134,9 +133,16 @@ export class ProjectForm implements OnInit {
   readonly id = input<string>();
   private api = inject(Api);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private query = toSignal(this.route.queryParams, { initialValue: this.route.snapshot.queryParams });
+  protected returnQuery = computed(() => {
+    this.query();
+    return workspaceContextQuery(this.router.url, '/projects');
+  });
 
   protected priorities = Object.entries(PRIORITY_LABEL) as [Priority, string][];
   protected saving = signal(false);
+  protected loading = signal(false);
   protected error = signal<ApiError | null>(null);
   protected loadError = signal<string | null>(null);
   private revision = 0;
@@ -157,6 +163,12 @@ export class ProjectForm implements OnInit {
     const e = this.error();
     return e ? `${e.body.action ?? 'Action'} refusée : ${e.message}` : '';
   });
+  protected result = computed<PageResult | null>(() => {
+    const error = this.loadError() || this.errorText();
+    if (error) return { message: error, tone: 'danger' };
+    if (this.loading()) return { message: 'Lecture du projet…', tone: 'info' };
+    return this.saving() ? { message: 'Enregistrement en cours…', tone: 'info' } : null;
+  });
 
   private values = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
   /** Simple repère de lecture (référence `planningHint`) : aucune règle n'empêche l'enregistrement. */
@@ -169,10 +181,13 @@ export class ProjectForm implements OnInit {
 
   async ngOnInit() {
     if (!this.id()) return;
+    this.loading.set(true);
     try {
       this.fill((await this.api.project(this.id()!)).project);
     } catch (err) {
       this.loadError.set(toApiError(err).message);
+    } finally {
+      this.loading.set(false);
     }
   }
 
@@ -188,6 +203,7 @@ export class ProjectForm implements OnInit {
   }
 
   async submit() {
+    if (this.saving() || this.loading() || this.loadError()) return;
     const v = this.form.getRawValue();
     if (!v.title.trim()) {
       this.form.markAllAsTouched();
@@ -201,7 +217,7 @@ export class ProjectForm implements OnInit {
       const r = this.id()
         ? await this.api.updateProject(this.id()!, { ...body, expectedRevision: this.revision })
         : await this.api.createProject({ ...body, requestKey: this.requestKey });
-      await this.router.navigate(['/projects', r.project.id]);
+      await this.router.navigate(['/projects', r.project.id], { queryParams: this.returnQuery() });
     } catch (err) {
       this.error.set(toApiError(err));
     } finally {

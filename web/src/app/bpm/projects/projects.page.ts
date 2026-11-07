@@ -1,3 +1,5 @@
+import { injectPageWorkspace } from '../../shared/page-workspace';
+import { BpmPageBanner, BpmPageFocus } from '../ui';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -30,6 +32,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
 @Component({
   selector: 'app-bpm-projects',
   imports: [
+    BpmPageBanner,
     BpmProjectOverviewSummaryComponent,
     RouterLink,
     CentsPipe,
@@ -41,28 +44,43 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
   styleUrl: './projects.page.scss',
   template: `
     <div class="page page-wide landing-page section-home bpm-projects">
-      <header class="life-projects-banner" data-ui-pattern="heading" data-sticky-hero>
-        <div class="life-banner-copy">
-          <p class="eyebrow">Budget/Patrimoine · Projets de la vie</p>
-          <h1 class="display">Projets de la vie</h1>
-          <p class="page-intro">
-            Votre projet de vie finance vos projets de la vie. Chaque projet reçoit une enveloppe
-            budgétaire à répartir entre ses tâches.
-          </p>
-        </div>
-        @if (data(); as d) {
-          <button
-            type="button"
-            class="btn btn-secondary life-cycle-trigger"
-            (click)="cycleOpen.set(true)"
-          >
-            Autorisations et cycle
-            @if (d.life.pendingRequests.length) {
-              <span class="life-alert-count">{{ d.life.pendingRequests.length }}</span>
+      <bpm-page-banner
+        class="life-projects-banner"
+        kicker="Mes projets de la vie"
+        title="Projets de la vie"
+        lead="Votre projet de vie finance vos projets de la vie. Repérez les projets à préparer, financer ou poursuivre, puis agissez sur leur budget et leurs tâches."
+        [focus]="pageFocus()"
+        [scope]="toolbarScope()"
+        [result]="toolbarResult()"
+        toolsLabel="Organiser les projets de la vie"
+      >
+        <div primary>
+          @if (data(); as d) {
+            @if (d.life.pendingRequests.length || d.life.billable.length) {
+              <button type="button" class="btn btn-primary" (click)="cycleOpen.set(true)">Traiter les autorisations et le cycle</button>
+            } @else if (d.life.taskRequests.length) {
+              <a class="btn btn-primary" routerLink="/app/gestion-projet" [queryParams]="{ decisions: 'tasks' }">Décider {{ d.life.taskRequests.length }} demande(s)</a>
+            } @else if (unfundedCount()) {
+              <a class="btn btn-primary" routerLink="/app/gestion-projet" [queryParams]="{ filter: 'unfunded' }">Attribuer {{ unfundedCount() }} enveloppe(s)</a>
+            } @else {
+              <a class="btn btn-primary" routerLink="/app/gestion-projet" [queryParams]="{ editProject: 'new' }">+ Créer un projet</a>
             }
-          </button>
-        }
-        <div class="life-banner-tools" aria-label="Commandes des projets">
+          } @else { <button type="button" class="btn btn-primary" disabled>Chargement des projets…</button> }
+        </div>
+        <div actions>
+          @if (hasPriorityAction()) {
+            <a class="btn btn-secondary life-create" routerLink="/app/gestion-projet" [queryParams]="{ editProject: 'new' }">+ Créer un projet</a>
+          }
+          @if (data(); as d) {
+            @if (!d.life.pendingRequests.length && !d.life.billable.length) {
+              <button type="button" class="btn btn-secondary" (click)="cycleOpen.set(true)">Autorisations et cycle</button>
+            }
+          }
+          @if (filter() !== 'all' && visible().length === 1) {
+            <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', visible()[0].project.id]">Piloter ce projet</a>
+          }
+        </div>
+        <div tools class="life-banner-tools">
           <label class="life-filter">
             Afficher les projets
             <select
@@ -76,6 +94,28 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
               @for (option of filterOptions(); track option.value) {
                 <option [value]="option.value">{{ option.label }}</option>
               }
+            </select>
+          </label>
+          <label class="life-filter">
+            Priorité de suivi
+            <select
+              [value]="attention()"
+              (change)="
+                setParams({
+                  attention: $any($event.target).value === 'all' ? null : $any($event.target).value,
+                })
+              "
+            >
+              <option value="all">Tout le suivi</option>
+              <option value="open">Projets à poursuivre</option>
+              <option value="unfunded">Enveloppe à attribuer ({{ unfundedCount() }})</option>
+              <option value="requests">
+                Demandes à décider ({{ data()?.life?.taskRequests?.length ?? 0 }})
+              </option>
+              <option value="deficit">
+                En dépassement ({{ data()?.life?.deficitCount ?? 0 }})
+              </option>
+              <option value="late">Échéance dépassée</option>
             </select>
           </label>
           <label class="life-search">
@@ -100,6 +140,15 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
               }
             </span>
           </label>
+          @if (search() || filter() !== 'all' || attention() !== 'all') {
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="setParams({ project: null, q: null, attention: null })"
+            >
+              Réinitialiser la vue ({{ visible().length }})
+            </button>
+          }
           <form class="life-budget-project" (submit)="$event.preventDefault(); adopt()">
             <label>
               Projet à budgéter
@@ -128,11 +177,8 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
               Budgéter
             </button>
           </form>
-          <a class="btn btn-primary life-create" routerLink="/app/gestion-projet"
-            ><span aria-hidden="true">+</span> Créer et gérer un projet</a
-          >
         </div>
-      </header>
+      </bpm-page-banner>
 
       <bpm-project-overview-summary [data]="data()" [includeLifeProject]="true" />
 
@@ -146,8 +192,8 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
         >
           @if (data(); as d) {
             <p>
-              Le budget du projet de vie autorise les dépassements des projets, puis les intègre en fin de
-              cycle.
+              Le budget du projet de vie autorise les dépassements des projets, puis les intègre en
+              fin de cycle.
             </p>
             <p>
               Dépassements autorisés : <strong>{{ d.life.approvedOverrunCents | cents }}</strong>
@@ -221,6 +267,19 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
               courant.
             </p>
           }
+          @if (workspace()?.key === 'projects-review') {
+            <section class="bpm-section" aria-label="Revue des projets">
+              <header><h2>Prochaine étape par projet</h2><span>{{ reviewProjects().length }} projet(s)</span></header>
+              <div class="bpm-table-wrap"><table class="bpm-table"><thead><tr><th scope="col">Projet</th><th scope="col">Travail</th><th scope="col">Enveloppe</th><th scope="col">Reste à consommer</th><th scope="col">Suite utile</th></tr></thead><tbody>
+                @for (p of reviewProjects(); track p.project.id) {
+                  <tr><td><a [routerLink]="['/app/gestion-projet', p.project.id]">{{ p.project.title }}</a><br /><small>{{ p.project.dueDate ? 'Échéance · ' + date(p.project.dueDate) : 'Échéance à définir' }}</small></td>
+                  <td>{{ p.view.doneCount }} / {{ p.view.time.taskCount }} tâches<br /><small>{{ p.view.statusLabel }}</small></td>
+                  <td>{{ p.budget?.allocationCents | cents }}</td><td>{{ p.budget?.remainingCents | cents }}</td>
+                  <td><a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', p.project.id, reviewStep(p).page]" queryParamsHandling="preserve">{{ reviewStep(p).label }}</a></td></tr>
+                } @empty { <tr><td colspan="5">Aucun projet de la vie dans cette sélection.</td></tr> }
+              </tbody></table></div>
+            </section>
+          } @else {
           <section class="board" aria-label="Tableau des projets de la vie">
             @for (col of columns; track col.id) {
               <div class="board-column" [attr.data-column]="col.id">
@@ -297,6 +356,7 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
               </div>
             }
           </section>
+          }
         }
         <nav class="board-nav" aria-label="Changer de section">
           <a routerLink="/app/taches" class="text-link"
@@ -311,6 +371,20 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
   `,
 })
 export class BpmProjectsPage implements OnInit {
+  protected readonly workspace = injectPageWorkspace();
+  protected readonly reviewProjects = computed(() => this.visible().filter((p) => p.role === 'standard').sort((a, b) => this.reviewPriority(b) - this.reviewPriority(a)));
+  private reviewPriority(p: BpmProjectCard) {
+    return (p.budget?.pendingOverrun ? 100 : 0) + (!p.budget?.regime ? 80 : 0) +
+      (p.budget?.deficit ? 60 : 0) + (p.project.dueDate && p.project.dueDate < (this.data()?.context.calculationDate ?? '') && p.view.column !== 'done' ? 40 : 0) +
+      (p.view.time.taskCount === 0 ? 20 : 0);
+  }
+  protected reviewStep(p: BpmProjectCard): { page: string; label: string } {
+    if (!p.budget?.regime) return { page: 'budget', label: 'Attribuer l’enveloppe' };
+    if (p.budget.pendingOverrun || (this.data()?.life.taskRequests.some((r) => r.coreProjectId === p.project.id))) return { page: 'budget', label: 'Décider le financement' };
+    if (p.budget.deficit) return { page: 'budget', label: 'Revoir le budget' };
+    if (p.view.column === 'done') return { page: 'budget', label: 'Contrôler la fin du projet' };
+    return { page: 'taches', label: p.view.time.taskCount ? 'Poursuivre les tâches' : 'Préparer la première tâche' };
+  }
   private bpm = inject(BpmApi);
   /** Décisions de financement communes à toutes les pages (mêmes gestes, mêmes messages). */
   private funding = inject(ProjectFunding);
@@ -326,6 +400,10 @@ export class BpmProjectsPage implements OnInit {
   protected error = signal<string | null>(null);
   protected busy = signal(false);
   protected notice = signal<{ text: string; error: boolean } | null>(null);
+  protected toolbarResult = computed(() => {
+    const notice = this.notice();
+    return notice ? { message: notice.text, tone: notice.error ? 'danger' as const : 'success' as const } : null;
+  });
   protected candidate = signal('');
   protected cycleOpen = signal(false);
   private params = toSignal(this.route.queryParamMap, {
@@ -333,6 +411,62 @@ export class BpmProjectsPage implements OnInit {
   });
   protected search = computed(() => this.params().get('q') ?? '');
   protected filter = computed(() => this.params().get('project') || 'all');
+  protected attention = computed(() => this.params().get('attention') || 'all');
+  protected unfundedCount = computed(
+    () => (this.data()?.projects ?? []).filter((p) => !p.budget?.regime).length,
+  );
+  protected hasPriorityAction = computed(() => {
+    const data = this.data();
+    return !!data && !!(data.life.pendingRequests.length || data.life.billable.length || data.life.taskRequests.length || this.unfundedCount());
+  });
+  protected toolbarScope = computed(() => `Section · tous les projets de la vie · Vue : ${this.visible().length} / ${this.cards().length} projet(s)`);
+  protected pageFocus = computed<BpmPageFocus>(() => {
+    const d = this.data();
+    if (this.error())
+      return {
+        title: 'Les projets n’ont pas pu être actualisés',
+        detail: this.error()!,
+        tone: 'danger',
+      };
+    if (!d) return { title: 'Lecture des projets et de leur financement…', tone: 'info' };
+    if (d.life.pendingRequests.length)
+      return {
+        title: `${d.life.pendingRequests.length} autorisation(s) de dépassement attendent votre décision`,
+        detail: 'Examinez les montants avant de poursuivre les opérations des projets.',
+        tone: 'warning',
+      };
+    if (d.life.taskRequests.length)
+      return {
+        title: `${d.life.taskRequests.length} demande(s) de tâche à décider`,
+        detail:
+          'La gestion de projet permet d’accorder les parts disponibles ou de traiter le financement manquant.',
+        tone: 'warning',
+      };
+    if (d.life.billable.length)
+      return {
+        title: `${d.life.billable.length} dépassement(s) autorisé(s) à intégrer en fin de cycle`,
+        detail: 'Ouvrez les autorisations et le cycle pour valider leur facturation.',
+        tone: 'warning',
+      };
+    if (this.unfundedCount())
+      return {
+        title: `${this.unfundedCount()} projet(s) attendent leur enveloppe`,
+        detail: 'Attribuez un budget avant de faire remonter leurs règlements au projet de vie.',
+        tone: 'warning',
+      };
+    if (!d.projects.length)
+      return {
+        title: 'Préparez votre premier projet de la vie',
+        detail: 'Créez le projet, puis ses tâches ; le budget peut être attribué ensuite.',
+        tone: 'info',
+      };
+    return {
+      title: `${this.visible().length} projet(s) dans cette vue · ${d.life.fundedCount} financé(s)`,
+      detail:
+        'Choisissez une priorité de suivi pour retrouver les projets qui demandent une action.',
+      tone: 'success',
+    };
+  });
 
   /** Projet de vie et projets de la vie : seuls projets du user présentés ici. */
   private cards = computed<BpmProjectCard[]>(() => {
@@ -349,6 +483,7 @@ export class BpmProjectsPage implements OnInit {
     return this.cards().filter(
       (p) =>
         (f === 'all' || p.project.id === f) &&
+        this.matchesAttention(p) &&
         (!q ||
           normalizeSearch(`${p.project.title} ${p.project.description} ${p.project.id}`).includes(
             q,
@@ -378,12 +513,32 @@ export class BpmProjectsPage implements OnInit {
     }
   }
 
-  protected setParams(patch: { project?: string | null; q?: string | null }) {
+  protected setParams(patch: {
+    project?: string | null;
+    q?: string | null;
+    attention?: string | null;
+  }) {
     this.router.navigate([], {
       queryParams: patch,
       queryParamsHandling: 'merge',
       replaceUrl: true,
     });
+  }
+
+  private matchesAttention(p: BpmProjectCard): boolean {
+    const mode = this.attention();
+    if (mode === 'open') return p.view.column !== 'done';
+    if (mode === 'unfunded') return p.role === 'standard' && !p.budget?.regime;
+    if (mode === 'deficit') return !!p.budget?.deficit;
+    if (mode === 'requests')
+      return !!this.data()?.life.taskRequests.some((r) => r.coreProjectId === p.project.id);
+    if (mode === 'late')
+      return (
+        p.view.column !== 'done' &&
+        !!p.project.dueDate &&
+        p.project.dueDate < (this.data()?.context.calculationDate ?? '')
+      );
+    return true;
   }
 
   protected progressLabel(p: BpmProjectCard): string {
@@ -395,12 +550,16 @@ export class BpmProjectsPage implements OnInit {
   }
 
   private async run<T>(action: () => Promise<T>, success: string | ((result: T) => string)) {
+    if (this.busy()) return;
     this.busy.set(true);
     this.notice.set(null);
     try {
       const result = await action();
       await this.load();
-      this.notice.set({ text: typeof success === 'function' ? success(result) : success, error: false });
+      this.notice.set({
+        text: typeof success === 'function' ? success(result) : success,
+        error: false,
+      });
     } catch (err) {
       const e = toApiError(err);
       await this.load();
@@ -416,7 +575,10 @@ export class BpmProjectsPage implements OnInit {
   }
 
   protected decide(o: ProjectOverrun, decision: 'approve' | 'refuse') {
-    return this.run(() => this.funding.decide(o, decision), (r) => `« ${o.budgetName} » · ${r.message}`);
+    return this.run(
+      () => this.funding.decide(o, decision),
+      (r) => `« ${o.budgetName} » · ${r.message}`,
+    );
   }
 
   protected bill() {
@@ -428,6 +590,7 @@ export class BpmProjectsPage implements OnInit {
 
   protected adopt() {
     const id = this.candidate();
+    if (!id || !this.data()?.candidates.some((c) => c.projectId === id)) return;
     const title = this.data()?.candidates.find((c) => c.projectId === id)?.title ?? '';
     return this.run(async () => {
       await this.bpm.adoptProject({ requestKey: newRequestKey(), coreProjectId: id });

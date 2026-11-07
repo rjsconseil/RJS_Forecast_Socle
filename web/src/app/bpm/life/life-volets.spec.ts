@@ -205,6 +205,21 @@ describe('Gestion du projet de vie — volets', () => {
     expect(courante.gauge.caption).toMatch(/^Aucun plafond par poste · 2 catégories plafonnées dont 1 dépassée \(Cantine −10,00\s€\)$/);
   });
 
+  it('garde les deux postes dépassés quand une catégorie du même poste dépasse aussi', () => {
+    const d = lecture();
+    Object.assign(d.natures.indispensable, {
+      capCents: 45000,
+      marginCents: -4500,
+      // Le total déduplique la catégorie déjà couverte par son poste.
+      overCount: 2,
+      rows: [{ ref: 'std:alimentation', over: true }, { ref: 'std:transport', over: true }],
+      categories: [{ id: 'k1', label: 'Courses', ref: 'std:alimentation', capCents: 18000, engagedCents: 21500, marginCents: -3500, over: true, near: false }],
+    });
+    const essentials = lifeVolets(d).find((x) => x.key === 'indispensable')!;
+    expect(essentials.gauge.caption).toContain('2 postes dépassés');
+    expect(essentials.gauge.caption).toContain('1 catégorie plafonnée dont 1 dépassée');
+  });
+
   it('cycle clôturé : nomme les entrées jamais reçues au lieu des retards', () => {
     const d = lecture({ closed: true });
     Object.assign(d.cycle.flows!, { unrealizedIncomeCount: 1, unrealizedIncomeCents: 14000, incomeGapCents: -100000 });

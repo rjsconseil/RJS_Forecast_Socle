@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Api, toApiError } from '../core/api.service';
 import { FormulaReference, MetricCatalog, MetricDefinitionRow } from '../core/models';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
+import { injectPageWorkspace } from '../shared/page-workspace';
 
 /** Documentation d'une ligne des fonctions admises dans une formule. */
 export const FUNCTION_DOCS: Record<string, { signature: string; doc: string }> = {
@@ -30,13 +31,18 @@ export function functionDoc(name: string) {
         data-sticky-hero
         tone="indigo"
         headingId="adm-metrics-title"
-        title="Calculs des chiffres présentés"
+        [title]="workspace()?.title ?? 'Calculs des chiffres présentés'"
         kicker="Administration du site · Calculs"
-        lead="Chaque chiffre affiché par l'application est une métrique ; sa formule est le paramètre administrable metric.<clé>. Une valeur inconnue se propage : elle n'est jamais remplacée par 0 sans siInconnu(x, 0) explicite."
+        [lead]="workspace()?.lead ?? 'Chaque chiffre affiché par l’application est une métrique ; sa formule est le paramètre administrable metric.<clé>. Une valeur inconnue se propage : elle n’est jamais remplacée par 0 sans siInconnu(x, 0) explicite.'"
         [chips]="heroChips()"
       >
         <button heroActions type="button" class="app-hero-action" (click)="load()">Relire</button>
-        <a heroActions class="app-hero-action is-secondary" routerLink="/admin">← Administration</a>
+        @if (!workspace()) {
+          <a heroActions class="app-hero-action is-secondary" routerLink="/admin/calculs/references">Explorer les références</a>
+        }
+        @if (!workspace()) {
+          <a heroActions class="app-hero-action is-secondary" routerLink="/admin">← Administration</a>
+        }
       </rjs-app-hero>
 
       @if (error()) {
@@ -44,7 +50,8 @@ export function functionDoc(name: string) {
       }
 
       @if (catalog(); as c) {
-        <div class="adm-layout">
+        <div class="adm-layout" [class.is-specialized]="!!workspace()">
+          @if (!workspace()) {
           <div class="adm-panel-stack" role="region" aria-label="Métriques">
             @for (g of groups(); track g.group; let gi = $index) {
               <section class="cfg-panel" data-ui-pattern="panel" [attr.aria-labelledby]="'adm-metric-group-' + gi">
@@ -80,6 +87,7 @@ export function functionDoc(name: string) {
               </section>
             }
           </div>
+          }
 
           <aside class="cfg-panel" data-ui-pattern="panel" aria-labelledby="adm-refs-title">
             <span class="cfg-number">Références utilisables</span>
@@ -121,6 +129,7 @@ export function functionDoc(name: string) {
 })
 export class AdminMetrics implements OnInit {
   private api = inject(Api);
+  protected workspace = injectPageWorkspace();
   protected catalog = signal<MetricCatalog | null>(null);
   protected error = signal<string | null>(null);
   protected doc = functionDoc;

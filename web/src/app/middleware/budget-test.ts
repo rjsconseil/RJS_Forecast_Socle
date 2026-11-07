@@ -1,10 +1,11 @@
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { JsonPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Api, ApiError, newRequestKey, RecetteContext, toApiError } from '../core/api.service';
 import { BudgetObject, CostCenter, Direction, Operation } from '../core/models';
 import { EurosPipe, parseAmount } from '../core/format';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
+import { injectPageWorkspace } from '../shared/page-workspace';
 
 interface OperationForm {
   budgetId: string;
@@ -28,12 +29,29 @@ interface OperationForm {
         tone="indigo"
         headingId="budget-test-title"
         kicker="Budget Management · Interface de test (niveau 2)"
-        title="Budget — middleware"
-        lead="Lecture brute des Budgets, opérations et centres de coût du user actif. Les commandes appellent directement le middleware (hors parcours applicatif BPM)."
+        [title]="workspace()?.title ?? 'Budget — middleware'"
+        [lead]="workspace()?.lead ?? 'Lecture brute des Budgets, opérations et centres de coût du user actif. Les commandes appellent directement le middleware (hors parcours applicatif BPM).'"
         [chips]="chips()"
+        [result]="createError() || realizeError() ? { message: (createError() ?? realizeError())!.message, tone: 'danger' } : created() ? { message: 'Opération créée. Le Budget sélectionné a été relu.', tone: 'success' } : null"
         toolsLabel="Commandes du middleware"
       >
         <button heroActions type="button" class="app-hero-action" (click)="load()" [disabled]="!ctx.userId()">Relire</button>
+        <ng-container heroActions>
+        @if (!workspace()) {
+          <a heroActions class="app-hero-action is-secondary" routerLink="/socle/budget/operations" [queryParams]="{ budget: selectedId() }">Gérer les opérations</a>
+          <a heroActions class="app-hero-action is-secondary" routerLink="/socle/budget/centres">Centres de coût</a>
+        }
+        </ng-container>
+        @if (workspace()?.key === 'budget-operations') {
+          <button heroPrimary type="button" class="app-hero-action" (click)="create()" [disabled]="busy() || !budgets().length">{{ busy() ? 'Envoi…' : 'Créer l’opération saisie' }}</button>
+        }
+        @if (workspace()?.key === 'budget-operations') {
+          <label heroTools class="adm-hero-field">Budget
+            <select [value]="selectedId() ?? ''" (change)="select($any($event.target).value); patch({ budgetId: $any($event.target).value })">
+              @for (b of budgets(); track b.id) { <option [value]="b.id" [selected]="selectedId() === b.id">{{ b.name }} · {{ b.role }}</option> }
+            </select>
+          </label>
+        }
       </rjs-app-hero>
 
       @if (!ctx.userId()) {
@@ -46,11 +64,12 @@ interface OperationForm {
             <div class="bw-feedback" data-tone="danger" role="alert"><strong>{{ e.body.code }}</strong> — {{ e.message }}<pre>{{ e.body.details | json }}</pre></div>
           }
 
+          @if (!workspace()) {
           <div class="bw-manager-toolbar">
             <p>Choisissez un Budget, relisez ses valeurs enregistrées, puis testez les commandes du middleware.</p>
             <div class="bw-actions">
-              <button class="btn btn-secondary" type="button" (click)="centersSection.scrollIntoView({ block: 'start' })">Centres de coût ↓</button>
-              <button class="btn btn-primary" type="button" (click)="createSection.scrollIntoView({ block: 'start' })" [disabled]="!budgets().length">＋ Créer une opération</button>
+              <a class="btn btn-secondary" routerLink="/socle/budget/centres">Centres de coût</a>
+              <a class="btn btn-primary" routerLink="/socle/budget/operations" [queryParams]="{ budget: selectedId() }">＋ Gérer les opérations</a>
             </div>
           </div>
 
@@ -141,7 +160,9 @@ interface OperationForm {
               }
             </section>
           </section>
+          }
 
+          @if (workspace()?.key !== 'budget-centers') {
           @if (selected(); as s) {
             <section class="bw-section" aria-labelledby="budget-test-operations-title">
               <div class="bw-section-head">
@@ -200,8 +221,10 @@ interface OperationForm {
               }
             </section>
           }
+          }
 
-          <div class="bw-foundations">
+          <div class="bw-foundations" [class.is-specialized]="!!workspace()">
+            @if (workspace()?.key !== 'budget-centers') {
             <section class="bw-section" id="budget-test-create" #createSection aria-labelledby="budget-test-create-title">
               <div class="bw-section-head">
                 <div>
@@ -215,7 +238,7 @@ interface OperationForm {
                     <span>Budget (budgetId)</span>
                     <select [value]="form().budgetId" (change)="patch({ budgetId: $any($event.target).value })">
                       @for (b of budgets(); track b.id) {
-                        <option [value]="b.id">{{ b.name }} · {{ b.role }} · {{ b.id }}</option>
+                        <option [value]="b.id" [selected]="form().budgetId === b.id">{{ b.name }} · {{ b.role }} · {{ b.id }}</option>
                       }
                     </select>
                   </label>
@@ -267,7 +290,9 @@ interface OperationForm {
                 </div>
               </form>
             </section>
+            }
 
+            @if (workspace()?.key !== 'budget-operations') {
             <section class="bw-section" #centersSection aria-labelledby="budget-test-centers-title">
               <div class="bw-section-head">
                 <div>
@@ -296,6 +321,7 @@ interface OperationForm {
                 <p class="budget-empty-copy">Aucun centre de coût.</p>
               }
             </section>
+            }
           </div>
         </section>
       }
@@ -304,7 +330,10 @@ interface OperationForm {
 })
 export class BudgetTest {
   private api = inject(Api);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   protected ctx = inject(RecetteContext);
+  protected workspace = injectPageWorkspace();
 
   protected budgets = signal<BudgetObject[]>([]);
   protected costCenters = signal<CostCenter[]>([]);
@@ -369,7 +398,7 @@ export class BudgetTest {
       this.budgets.set(budgets);
       this.costCenters.set(centers);
       if (!budgets.some((b) => b.id === this.form().budgetId)) this.patch({ budgetId: budgets[0]?.id ?? '' });
-      const sel = this.selectedId();
+      const sel = this.selectedId() ?? this.route.snapshot.queryParamMap.get('budget');
       if (sel && budgets.some((b) => b.id === sel)) await this.select(sel);
       else if (budgets[0]) await this.select(budgets[0].id);
     } catch (err) {
@@ -379,6 +408,10 @@ export class BudgetTest {
 
   async select(id: string) {
     this.selectedId.set(id);
+    if (this.route.snapshot.queryParamMap.get('budget') !== id) {
+      void this.router.navigate([], { relativeTo: this.route, queryParams: { budget: id }, queryParamsHandling: 'merge', replaceUrl: true });
+    }
+    if (this.workspace()?.key === 'budget-operations') this.patch({ budgetId: id });
     this.realizeError.set(null);
     try {
       this.selected.set(await this.api.budget(id));

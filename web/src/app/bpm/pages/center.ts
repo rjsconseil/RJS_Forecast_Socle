@@ -6,7 +6,7 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { EntryInput, RegisterLine } from '../../core/bpm-models';
 import { cents, CentsPipe, percentText, ShortDatePipe } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmCapChart, BpmCapGauge, BpmLineDetail, bpmLoader, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmState, capEuroText, capInput, CapRow, newRequestKey } from '../ui';
+import { BpmCapChart, BpmCapGauge, BpmLineDetail, bpmLoader, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmState, capEuroText, capInput, CapRow, newRequestKey } from '../ui';
 
 /** Page d'où l'on vient (`?from=`) : surtitre du bandeau et lien de retour. */
 const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
@@ -24,23 +24,31 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
  */
 @Component({
   selector: 'bpm-page-center',
-  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmCapChart, BpmCapGauge, BpmLineDetail, BpmOperationEditor, MetricTilesComponent, CentsPipe, ShortDatePipe],
+  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmCapChart, BpmCapGauge, BpmLineDetail, BpmEntryFlow, MetricTilesComponent, CentsPipe, ShortDatePipe],
   providers: [BpmPageContext],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
       [kicker]="origin().label"
+      [back]="{ label: origin().back, link: origin().link, query: ctx.carry() }"
       [title]="title()"
       pageClass="bpm-money bpm-money-detail"
-      [lead]="lead()"
+      [lead]="lead()" [focus]="pageFocus()" [result]="capNotice() ? { message: capNotice()!.text, tone: capNotice()!.error ? 'danger' : 'success' } : message() ? { message: message()!, tone: 'success' } : null" toolsLabel="Piloter ce poste"
       [context]="read.data()?.context"
       [periodKey]="ctx.period()"
       [periodNav]="true"
       (periodChange)="ctx.setQuery({ period: $event })"
     >
-      <a actions class="app-hero-action" [routerLink]="origin().link" [queryParams]="ctx.carry()">← {{ origin().back }}</a>
-      <button actions type="button" class="app-hero-action is-secondary" (click)="openCreate()" [disabled]="!read.data()">＋ {{ isIncome() ? 'Ajouter une entrée' : 'Ajouter une charge' }}</button>
-      <a actions class="bpm-link" routerLink="/depenses" [queryParams]="registerQuery()">{{ isIncome() ? 'Entrées de la période' : 'Dépenses de la période' }} →</a>
+      @if (nextLine(); as line) { <button primary type="button" class="app-hero-action" (click)="reviewNext()">Vérifier {{ isIncome() ? 'la réception' : 'le règlement' }} · {{ line.label }}</button> }
+      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!read.data()">＋ {{ isIncome() ? 'Ajouter une entrée à ce poste' : 'Ajouter une charge à ce poste' }}</button>
+      @if (!isIncome() && read.data()) {
+        <form tools class="bpm-toolbar-search" (ngSubmit)="saveCap()" aria-label="Plafond du poste">
+          <label>Plafond de ce poste, par période (€)<input name="cap" inputmode="decimal" [(ngModel)]="capDraft" placeholder="Sans plafond" [disabled]="capBusy()" /></label>
+          <button type="submit" class="btn btn-primary" [disabled]="capBusy() || !capDirty()">{{ capBusy() ? 'Enregistrement…' : 'Enregistrer le plafond' }}</button>
+          @if (read.data()?.cap?.capCents !== null && read.data()?.cap?.capCents !== undefined) { <button type="button" class="btn btn-secondary" [disabled]="capBusy()" (click)="saveCap(null)">Retirer le plafond</button> }
+          @if (capNotice(); as n) { <p [attr.role]="n.error ? 'alert' : 'status'">{{ n.text }}</p> }
+        </form>
+      }
 
       <div class="bpm-money bpm-money-body bpm-money-detail" data-tone="budget">
         <bpm-state [loading]="read.loading() && !read.data()" [error]="read.error()" (retry)="read.reload()" />
@@ -69,16 +77,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
                 }
               </header>
               <bpm-cap-chart [rows]="capRows()" />
-              <form class="bmd-cap-form" (ngSubmit)="saveCap()" aria-label="Plafond du poste">
-                <label>
-                  Plafond du poste, par période (€)
-                  <input name="cap" inputmode="decimal" [(ngModel)]="capDraft" placeholder="Sans plafond" [disabled]="capBusy()" />
-                </label>
-                <button type="submit" class="btn btn-primary" [disabled]="capBusy() || !capDirty()">Enregistrer le plafond</button>
-                @if (d.cap && d.cap.capCents !== null) {
-                  <button type="button" class="btn btn-secondary" [disabled]="capBusy()" (click)="saveCap(null)">Retirer le plafond</button>
-                }
-              </form>
+
               <p class="bpm-help">Engagé = payé + encore prévu sur la période. Au-delà du plafond, le poste passe en rouge sans jamais bloquer une dépense ; un plafond n'est jamais converti en dépense.</p>
 
               <h3 class="bmd-caps-sub">Catégories de ce poste <span class="bmd-count">({{ d.categories.length }})</span></h3>
@@ -102,9 +101,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
                 <label>Plafond (€, facultatif) <input name="catCap" inputmode="decimal" [(ngModel)]="catCap" placeholder="Sans plafond" [disabled]="capBusy()" /></label>
                 <button type="submit" class="btn btn-secondary" [disabled]="capBusy()">＋ Ajouter la catégorie</button>
               </form>
-              @if (capNotice(); as n) {
-                <p class="bmd-cap-notice" [attr.data-state]="n.error ? 'danger' : null" [attr.role]="n.error ? 'alert' : 'status'">{{ n.text }}</p>
-              }
+
               <p class="bpm-help"><a routerLink="/plafonds" [queryParams]="ctx.carry()">Tous les plafonds et catégories →</a></p>
             </section>
           }
@@ -192,9 +189,7 @@ const ORIGINS: Record<string, { label: string; link: string; back: string }> = {
       </div>
     </bpm-page>
 
-    @if (editorOpen() && read.data(); as d) {
-      <bpm-operation-editor [budgets]="d.context.budgets" [line]="editing()" [defaults]="defaults()" (closed)="closeEditor()" (saved)="onSaved($event)" />
-    } @else if (selectedId()) {
+    @if (read.data(); as d) { <bpm-entry-flow [budgets]="d.context.budgets" [defaults]="defaults()" (saved)="onSaved($event)" /> } @else if (selectedId()) {
       <bpm-line-detail [lineId]="selectedId()!" [period]="ctx.period()" (closed)="closeDetail()" (edit)="openEdit($event)" />
     }
   `,
@@ -248,6 +243,19 @@ export class BpmCenterPage {
     if (!c) return 'Lecture du relevé…';
     return `${cents(c.paidCents)} ${this.isIncome() ? 'reçus' : 'payés'} sur la période en ${this.settled().length} montant(s).`;
   });
+  protected nextLine = computed(() => nextOpenLine(this.open()));
+  protected pageFocus = computed<BpmPageFocus | null>(() => {
+    const d = this.read.data();
+    if (!d) return null;
+    if (d.cap?.over) return { title: `Plafond dépassé de ${cents(-(d.cap.marginCents ?? 0))}`, detail: 'Relisez les échéances de ce poste et ajustez le plafond si votre budget a changé.', tone: 'warning' };
+    const line = this.nextLine();
+    return { title: line ? `${this.open().length} échéance(s) à suivre sur ce poste` : 'Aucune échéance ouverte sur ce poste', detail: line ? `${line.label} · ${cents(line.plannedCents)} · ${line.statusLabel}.` : 'Ajoutez un flux dans ce poste ou ajustez son plafond.', tone: line?.status === 'late' ? 'warning' : 'info' };
+  });
+  protected reviewNext() {
+    const line = this.nextLine();
+    if (line) void this.ctx.setQuery(this.lineQuery(line));
+  }
+
   protected origin = computed(() => ORIGINS[this.ctx.q('from')()] ?? ORIGINS['tableau-de-bord']);
   protected shareTitle = computed(() => (this.read.data()?.basis.kind === 'received' ? 'Part des entrées' : 'Part des dépenses'));
   protected capRows = computed<CapRow[]>(() => {
@@ -259,8 +267,12 @@ export class BpmCenterPage {
 
   protected capBusy = signal(false);
   protected capNotice = signal<{ text: string; error: boolean } | null>(null);
-  /** Saisie du plafond du poste (euros), recalée sur chaque lecture. */
-  protected capDraft = linkedSignal(() => capEuroText(this.read.data()?.cap?.capCents));
+  /** Une relecture identique ne doit pas remplacer le plafond encore saisi dans les outils. */
+  private capSource = computed(() => {
+    const d = this.read.data();
+    return { key: `${d?.context.user.id ?? ''}:${d?.center.ref ?? ''}`, value: capEuroText(d?.cap?.capCents) };
+  }, { equal: (a, b) => a.key === b.key && a.value === b.value });
+  protected capDraft = linkedSignal(() => this.capSource().value);
   protected capDirty = computed(() => this.capDraft().trim() !== capEuroText(this.read.data()?.cap?.capCents));
   protected catLabel = signal('');
   protected catCap = signal('');
@@ -370,24 +382,19 @@ export class BpmCenterPage {
 
   // ---------- éditeur partagé ----------
 
-  protected editorOpen = signal(false);
-  protected editing = signal<RegisterLine | null>(null);
   protected message = signal<string | null>(null);
   protected defaults = computed<Partial<EntryInput>>(() => {
     const c = this.read.data()?.center;
     return c ? { costCenterRef: c.ref, direction: c.direction } : {};
   });
   protected openCreate() {
-    this.editing.set(null);
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: 'new' });
   }
   protected openEdit(l: RegisterLine) {
-    this.editing.set(l);
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: l.id });
   }
   protected closeEditor() {
-    this.editorOpen.set(false);
-    this.editing.set(null);
+    void this.ctx.setQuery({ entry: null }, { replace: true });
   }
   protected onSaved(msg: string) {
     this.message.set(msg);

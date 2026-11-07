@@ -180,7 +180,7 @@ export const JOURNEY: { title: string; lead: string; number: string; milestones:
       id: 'launch',
       title: 'Relire et démarrer',
       goal: 'Transformer le brouillon en un projet utilisable.',
-      result: 'Après confirmation, le tableau de bord devient votre point d’entrée.',
+      result: 'Après confirmation, ouvrez le projet préparé et poursuivez son pilotage.',
       steps: [7],
     },
   ],

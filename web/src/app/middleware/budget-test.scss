@@ -12,6 +12,10 @@
   min-width: 0;
 }
 
+.bw-foundations.is-specialized {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .bw-manager-list button {
   display: flex;
   align-items: center;

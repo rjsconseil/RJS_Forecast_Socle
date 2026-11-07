@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Component } from '@angular/core';
 import { routes } from './app.routes';
+import { PAGE_WORKSPACES } from './shared/page-workspaces';
 
 // Destinations BPM adressables directement et redirections des anciens liens (spec §4).
 describe('routes BPM', () => {
@@ -19,6 +20,23 @@ describe('routes BPM', () => {
   it('ouvre l’accueil des zones à la racine', () => {
     expect(find('')?.loadComponent).toBeTruthy();
     expect(find('**')?.redirectTo).toBe('');
+  });
+
+  it('enregistre chaque vue une seule fois avant les paramètres dynamiques', () => {
+    for (const view of PAGE_WORKSPACES) {
+      const registered = routes.filter(route => route.path === view.path);
+      expect(registered, view.path).toHaveLength(1);
+      expect(registered[0].data?.['workspace']?.key, view.path).toBe(view.key);
+      expect(registered[0].loadComponent, view.path).toBeTypeOf('function');
+    }
+    for (const [specific, dynamic] of [['app/gestion-projet/nouveau', 'app/gestion-projet/:id'], ['projects/planning', 'projects/:id'], ['admin/calculs/references', 'admin/calculs/:key']])
+      expect(routes.indexOf(find(specific)!)).toBeLessThan(routes.indexOf(find(dynamic)!));
+    expect(routes.at(-1)?.path).toBe('**');
+  });
+
+  it('hérite de la configuration du bon calendrier', () => {
+    for (const parent of ['calendrier', 'calendrier-budget', 'patrimoine/calendrier'])
+      for (const mode of ['agenda', 'sources']) expect(find(`${parent}/${mode}`)?.data?.['calendar']).toBe(find(parent)?.data?.['calendar']);
   });
 
   it('déclare les accueils génériques de zone et de section', () => {

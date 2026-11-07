@@ -6,6 +6,7 @@ import { PatrimoineRead } from '../core/models';
 import { euros, EurosPipe, parseAmount } from '../core/format';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
 import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.component';
+import { injectPageWorkspace } from '../shared/page-workspace';
 
 /** Interface de test du niveau 2 (Patrimoine Management) : lecture brute et mise à jour du Patrimoine. */
 @Component({
@@ -19,12 +20,22 @@ import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.compone
         tone="lagoon"
         headingId="patrimoine-test-title"
         kicker="Patrimoine Management · Interface de test (niveau 2)"
-        title="Patrimoine — middleware"
-        lead="Lecture brute du Patrimoine du user actif et de ses capitalisations. Les capitalisations ne sont créées que par les clôtures de période BPM (niveau 3) ; les sommes ci-dessous sont brutes, les chiffres présentés à l'utilisateur passent par les métriques."
+        [title]="workspace()?.title ?? 'Patrimoine — middleware'"
+        [lead]="workspace()?.lead ?? 'Lecture brute du Patrimoine du user actif et de ses capitalisations. Les capitalisations ne sont créées que par les clôtures de période BPM (niveau 3) ; les sommes ci-dessous sont brutes, les chiffres présentés à l’utilisateur passent par les métriques.'"
         [chips]="chips()"
+        [result]="saveError() ? { message: saveError()!.message, tone: 'danger' } : savedNote() ? { message: savedNote()!, tone: 'success' } : null"
         toolsLabel="Commandes du middleware"
       >
+        @if (workspace()?.key === 'patrimoine-settings' && data(); as d) {
+          <button heroPrimary type="button" class="app-hero-action" (click)="save(d)" [disabled]="busy()">{{ busy() ? 'Enregistrement…' : 'Enregistrer les réglages' }}</button>
+        }
         <button heroActions type="button" class="app-hero-action" (click)="load()" [disabled]="!ctx.userId()">Relire</button>
+        <ng-container heroActions>
+        @if (!workspace()) {
+          <a heroActions class="app-hero-action is-secondary" routerLink="/socle/patrimoine/reglages">Régler le patrimoine</a>
+          <a heroActions class="app-hero-action is-secondary" routerLink="/socle/patrimoine/capitalisations">Examiner les capitalisations</a>
+        }
+        </ng-container>
       </rjs-app-hero>
 
       @if (!ctx.userId()) {
@@ -41,7 +52,9 @@ import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.compone
         @if (data(); as d) {
           <rjs-metric-tiles label="Sommes brutes du Patrimoine (raw)" [tiles]="tiles()" />
 
-          <div class="management-columns">
+          @if (workspace()?.key !== 'patrimoine-capitalizations') {
+          <div class="management-columns" [class.is-specialized]="!!workspace()">
+            @if (!workspace()) {
             <section class="management-panel" aria-labelledby="patrimoine-test-object-title" data-ui-pattern="panel">
               <h2 id="patrimoine-test-object-title">Objet Patrimoine · {{ d.patrimoine.label }}</h2>
               <p>Valeurs enregistrées par le middleware, révision {{ d.patrimoine.revision }}.</p>
@@ -84,6 +97,7 @@ import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.compone
                 <li><div><strong>Révision {{ d.patrimoine.revision }}</strong><small><code>{{ d.patrimoine.provenance.command }}</code> · {{ d.patrimoine.updatedAt }}</small></div></li>
               </ul>
             </section>
+            }
 
             <section class="management-panel" aria-labelledby="patrimoine-test-update-title" data-ui-pattern="panel">
               <h2 id="patrimoine-test-update-title">Modifier · {{ d.patrimoine.label }}</h2>
@@ -123,7 +137,9 @@ import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.compone
               </form>
             </section>
           </div>
+          }
 
+          @if (workspace()?.key !== 'patrimoine-settings') {
           <section class="psy-panel" aria-labelledby="patrimoine-test-caps-title" data-ui-pattern="panel">
             <header>
               <p class="psy-kicker">Capitalisations · {{ d.capitalizations.length }}</p>
@@ -155,11 +171,14 @@ import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.compone
               <p class="psy-state">Aucune capitalisation (elles naissent des clôtures de période BPM).</p>
             }
           </section>
+          }
 
+          @if (!workspace()) {
           <details class="psy-json app-disclosure">
             <summary>JSON brut</summary>
             <pre>{{ d | json }}</pre>
           </details>
+          }
         } @else if (!loadError()) {
           <p class="psy-state" role="status">Lecture du patrimoine…</p>
         }
@@ -170,6 +189,7 @@ import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.compone
 export class PatrimoineTest {
   private api = inject(Api);
   protected ctx = inject(RecetteContext);
+  protected workspace = injectPageWorkspace();
 
   protected data = signal<PatrimoineRead | null>(null);
   protected loadError = signal<ApiError | null>(null);

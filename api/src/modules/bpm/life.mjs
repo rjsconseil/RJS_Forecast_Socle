@@ -9,7 +9,7 @@
 import { monthlyAverageCents } from '../budget/recurrence.mjs';
 import { isNearCap } from '../budget/index.mjs';
 import { centerRefOf, essentialRefsOf, ESSENTIALS_PARAMETER, NATURE_LABEL, natureOf } from './natures.mjs';
-import { addDays, today } from './periods.mjs';
+import { addDays, today } from '../budget/periods.mjs';
 
 const RESULT = 'bpm.resultatPeriode';
 const KEYS = [

@@ -1,0 +1,350 @@
+<bpm-page [title]="workspace()?.title ?? 'Objectifs et avenir'"
+  [back]="workspace() ? { label: 'Retour aux objectifs et à l’avenir', link: workspace()!.parent, query: carry() } : null" pageClass="bpm-objectives-workspace"
+  [lead]="workspace()?.lead ?? 'Donnez une date et un montant à vos envies, suivez votre effort d’épargne et préparez votre patrimoine.'"
+  [context]="summary.data()?.context" [focus]="pageFocus()" [scope]="pageScope()" [result]="pageResult()" toolsLabel="Préparer mes objectifs et mon avenir">
+  <button primary class="btn btn-primary" type="button" [disabled]="!profile.data() || commandBusy()" (click)="runPrimary()">{{ primaryLabel() }}</button>
+  @if (primaryKind() !== 'create') {
+    <button actions class="btn btn-secondary" type="button" [disabled]="!profile.data()" (click)="editGoal(null)">+ Ajouter un objectif daté</button>
+  }
+  @if (view() === 'suivi' && primaryKind() !== 'projection' && goals.data()?.length && !coverageAvailable()) {
+    <button actions class="btn btn-secondary" type="button" [disabled]="!profile.data()" (click)="openSetting('projection')">Calculer la couverture des objectifs</button>
+  }
+  <button actions class="btn btn-secondary" type="button" (click)="refreshAll()" [disabled]="profile.loading() || goals.loading() || projection.loading() || commandBusy()">Actualiser</button>
+  @if (workspace()?.key === 'vision-projection') {
+    <a actions class="bpm-link" routerLink="/vision/reperes" [queryParams]="carry()">Ajuster mes repères d’épargne →</a>
+  } @else if (workspace()?.key === 'vision-landmarks') {
+    <a actions class="bpm-link" routerLink="/vision/projection" [queryParams]="carry()">Mesurer l’effet dans la projection →</a>
+  }
+  <div tools class="objectives-toolbar">
+    @if (!workspace()) {
+    <nav class="objectives-tabs" aria-label="Espaces des objectifs">
+      @for (tab of tabs; track tab.key; let i = $index) {
+        <a [routerLink]="[]" [queryParams]="{view: tab.key}" queryParamsHandling="merge" [fragment]="undefined"
+          [attr.aria-current]="view() === tab.key ? 'page' : null">
+          <span class="tab-number">0{{ i + 1 }}</span><span><strong>{{ tab.label }}</strong><small>{{ tab.note }}</small></span>
+        </a>
+      }
+    </nav>
+    }
+    @if (view() === 'reperes') {
+      <div class="objectives-context-command">
+        <label>Repère à préparer<select [ngModel]="settingChoice()" (ngModelChange)="settingChoice.set($event)">
+          <option value="savings">Épargne visée par période</option><option value="wealth">Cap patrimonial</option>
+        </select></label>
+        <span>Les saisies en cours restent disponibles en changeant d’espace.</span>
+      </div>
+    }
+    @if (view() === 'projection') {
+      <div class="objectives-context-command">
+        <span>{{ hypDirty() ? 'Un scénario modifié attend votre enregistrement.' : 'La couverture des objectifs utilise les hypothèses enregistrées.' }}</span>
+        @if (coverageAvailable() && attentionCount()) {
+          <button type="button" class="btn btn-secondary" (click)="reviewAttention()">Examiner les {{ attentionCount() }} objectifs à revoir</button>
+        }
+      </div>
+    }
+    @if (view() === 'suivi') {
+      <div class="bpm-toolbar-search objectives-filters" role="search" aria-label="Rechercher et filtrer les objectifs">
+        <label>Rechercher<input type="search" placeholder="Nom ou type d’objectif…" [ngModel]="search()" (ngModelChange)="search.set($event)" /></label>
+        <label>Type<select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)"><option value="all">Tous les types</option>
+          @for (type of profile.data()?.goalTypes ?? []; track type.key) { <option [value]="type.key">{{ type.label }}</option> }
+        </select></label>
+        <label>Situation<select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+          <option value="all">Toutes les situations</option><option value="funded">Couverts dans le scénario</option><option value="partial">Partiellement couverts</option>
+          <option value="unfunded">À financer</option><option value="outOfHorizon">Hors horizon</option><option value="unknown">À calculer</option><option value="overdue">Date dépassée</option>
+        </select></label>
+        <label>Trier<select [ngModel]="sort()" (ngModelChange)="sort.set($event)"><option value="date">Date la plus proche</option><option value="amount">Montant décroissant</option><option value="gap">Manque estimé décroissant</option></select></label>
+        @if (hasFilters()) { <button class="btn btn-secondary" type="button" (click)="resetFilters()">Effacer les filtres</button> }
+      </div>
+    }
+  </div>
+
+  <bpm-state [loading]="profile.loading() && !profile.data()" [error]="profile.error()" (retry)="profile.reload()" />
+  @if (profile.data(); as p) {
+    <dl [hidden]="workspace()?.key === 'vision-landmarks'" class="objectives-summary-band" aria-label="Synthèse des objectifs datés">
+      <div><dt>Objectifs datés</dt><dd>{{ goals.data() ? goalRows().length : '—' }}</dd><small>Intentions actives</small></div>
+      <div><dt>Cibles en euros actuels</dt><dd>{{ targetTotal() === null ? '—' : (targetTotal() | cents) }}</dd><small>Montants visés, non réservés</small></div>
+      <div class="summary-covered"><dt>Couverts dans le scénario</dt><dd>{{ coverageAvailable() ? coveredCount() : '—' }}</dd><small>Selon les hypothèses enregistrées</small></div>
+      <div class="summary-attention"><dt>À examiner</dt><dd>{{ goals.data() ? attentionCount() : '—' }}</dd><small>Date, financement ou calcul à revoir</small></div>
+    </dl>
+
+    <section class="objectives-panel" [hidden]="view() !== 'suivi'" id="life-dated-goals" aria-labelledby="dated-goals-title">
+      <header class="objectives-section-head"><div><p class="eyebrow">Votre feuille de route</p><h2 id="dated-goals-title">Les objectifs que vous préparez</h2><p>La couverture est une estimation du scénario, pas de l’argent déjà mis de côté.</p></div>
+        <span class="objectives-count">{{ filteredGoals().length }} / {{ goalRows().length }} affichés</span></header>
+      @if (nextGoal(); as next) { <div class="objectives-next"><span>Prochaine échéance</span><strong>{{ next.goal.label }}</strong><span>{{ next.goal.date | shortDate }}</span><button class="text-link" type="button" (click)="editGoal(next.goal)">Ajuster</button></div> }
+      <bpm-state [loading]="goals.loading() && !goals.data()" [error]="goals.error()" (retry)="goals.reload()" />
+      <bpm-state [error]="projection.error()" (retry)="projection.reload()" />
+      @if (projection.data()?.status !== 'estimate' && !projection.loading() && !projection.error()) {
+        <p class="objectives-callout" role="status"><strong>La couverture reste à calculer.</strong> {{ projection.data()?.reason ?? 'Complétez les hypothèses de votre projection.' }}
+          <a [routerLink]="[]" [queryParams]="{view: 'projection'}">Compléter la projection →</a></p>
+      }
+      <ul class="life-goal-list">
+        @for (g of filteredGoals(); track g.goal.id) {
+          <li class="objective-card" [attr.data-status]="g.status">
+            <div class="objective-identity"><span class="objective-type">{{ g.goal.typeLabel ?? g.goal.type }}</span><h3>{{ g.goal.label }}</h3>
+              <span class="objective-date" [class.is-overdue]="g.overdue">{{ g.goal.date | shortDate }} @if (g.overdue) { · Date dépassée }</span>
+              <span class="life-goal-status" [attr.data-status]="g.status">{{ projection.loading() ? 'Recalcul en cours…' : g.statusLabel }}</span>
+            </div>
+            <div class="objective-finances"><dl>
+              <div><dt>Cible aujourd’hui</dt><dd>{{ g.goal.targetTodayCents | cents }}</dd></div>
+              <div><dt>Cible à l’échéance</dt><dd>{{ g.cov?.nominalTargetCents == null ? 'À calculer' : (g.cov!.nominalTargetCents | cents) }}</dd></div>
+              <div><dt>Couvert dans le scénario</dt><dd>{{ g.cov?.coveredCents == null ? 'À calculer' : (g.cov!.coveredCents | cents) }}</dd></div>
+              <div [class.is-gap]="(g.gapCents ?? 0) > 0"><dt>Reste à couvrir estimé</dt><dd>{{ g.gapCents === null ? 'À calculer' : (g.gapCents | cents) }}</dd></div>
+            </dl>
+              <div class="objective-progress-row"><span>{{ g.meter === null ? 'Couverture inconnue' : g.meter + ' % couverts' }}</span>
+                <div class="objective-progress" role="progressbar" [attr.aria-label]="'Couverture estimée de ' + g.goal.label" [attr.aria-valuenow]="g.meter" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="g.meter === null ? 'Non calculable' : g.meter + ' %'"><span [style.width.%]="g.meter ?? 0"></span></div></div>
+              <p class="objective-note">{{ goalEffect(g.goal) }}</p>
+              @if (g.overdue) { <p class="objective-warning">La date est passée : ajustez l’échéance ou retirez l’objectif s’il n’est plus à préparer. La projection ne prouve pas sa réalisation.</p> }
+              @if (g.status === 'outOfHorizon') { <p class="objective-warning">L’année de cet objectif est en dehors de la projection. Revoyez sa date ou l’horizon du scénario.</p> }
+              @if (g.cov?.revised) { <p class="objective-warning">La couverture a été réduite par un déficit ultérieur dans le scénario.</p> }
+            </div>
+            <div class="objective-actions"><button class="btn btn-secondary" type="button" [attr.aria-label]="'Modifier l’objectif ' + g.goal.label" (click)="editGoal(g.goal)">Modifier</button>
+              <button class="text-link objective-remove" type="button" [attr.aria-label]="'Retirer l’objectif ' + g.goal.label" (click)="requestRemoval(g.goal)">Retirer</button></div>
+          </li>
+        } @empty {
+          @if (goals.data() && !goals.error()) { <li class="objectives-empty"><h3>{{ hasFilters() ? 'Aucun objectif ne correspond' : 'Quel est votre prochain objectif ?' }}</h3>
+            <p>{{ hasFilters() ? 'Élargissez la recherche ou changez les filtres.' : 'Un achat, les études, la retraite ou une réserve de sécurité : donnez un montant et une date à ce que vous préparez.' }}</p>
+            @if (hasFilters()) { <button class="btn btn-secondary" type="button" (click)="resetFilters()">Afficher tous les objectifs</button> }
+            @else { <button class="btn btn-primary" type="button" (click)="editGoal(null)">+ Ajouter un objectif daté</button> }</li> }
+        }
+      </ul>
+      <aside class="objectives-handoff"><div><strong>Prêt à passer à l’action ?</strong><p>Un objectif prépare une intention. Créez un projet de la vie pour organiser ses tâches et attribuer une enveloppe réelle.</p></div><a class="btn btn-secondary" routerLink="/app/gestion-projet">Gérer mes projets →</a></aside>
+    </section>
+
+    <section class="objectives-reperes" [hidden]="view() !== 'reperes'" aria-label="Épargne et patrimoine">
+      <header class="objectives-section-head"><div><p class="eyebrow">Vos repères financiers</p><h2>Épargner régulièrement, construire dans la durée</h2><p>L’épargne par période, l’excédent cumulé et le patrimoine visé sont trois repères distincts.</p></div></header>
+      <section class="objectives-panel" id="epargne"><header class="objectives-section-head"><div><h3>Épargne visée par période</h3><p>Le montant que vous souhaitez conserver à la fin de chaque cycle.</p></div><strong class="objective-big-number">{{ p.principal.vision.savingsTargetCents === null ? 'À définir' : (p.principal.vision.savingsTargetCents | cents) }}</strong></header>
+                  @if (settingEditor() !== 'savings') { <ng-container *ngTemplateOutlet="savingsEditor" /> }
+              @else { <p class="bpm-help">Ce réglage est ouvert dans le panneau de saisie.</p> }
+      </section>
+                  <bpm-vision-objectives
+              [profile]="profile"
+              [directives]="directives"
+              [summary]="summary"
+              [contribution]="contributionLabel()"
+              [inlineWealthEditor]="true"
+              (saved)="recordResult($event)"
+            >
+              <div wealthEditor>
+                @if (settingEditor() !== 'wealth') { <ng-container *ngTemplateOutlet="wealthEditor" /> }
+                @else { <p class="bpm-help">Le cap patrimonial est ouvert dans le panneau de réglage.</p> }
+              </div>
+            </bpm-vision-objectives>
+    </section>
+
+    <section class="objectives-projection" [hidden]="view() !== 'projection'" id="life-projection" aria-labelledby="projection-title">
+      <header class="objectives-section-head"><div><p class="eyebrow">Un scénario pour décider</p><h2 id="projection-title">Votre trajectoire patrimoniale</h2><p>Les objectifs datés, les apports et l’inflation sont pris en compte dans une estimation annuelle.</p></div><span class="objective-type">{{ p.principal.vision.horizonYears }} ans</span></header>
+      <div class="objectives-projection-layout">
+        <div class="objectives-panel projection-reading">
+          <bpm-state [loading]="projection.loading()" [error]="projection.error()" (retry)="projection.reload()" />
+          @if (projection.data(); as pr) {
+            @if (pr.status === 'estimate' && !projection.error()) {
+              <dl class="projection-metrics"><div><dt>Patrimoine estimé en {{ pr.rows.at(-1)?.year }}</dt><dd>{{ pr.rows.at(-1)?.nominalCents | signedCents }}</dd><small>Valeur nominale</small></div><div><dt>En euros d’aujourd’hui</dt><dd>{{ pr.rows.at(-1)?.realCents | signedCents }}</dd><small>Pouvoir d’achat après inflation</small></div></dl>
+              <bpm-series-chart title="Projection du patrimoine" categoryLabel="Année" [categories]="projectionYears()" [series]="projectionSeries()" [formats]="['lines']" initialFormat="lines" [height]="280" />
+              <p class="objective-note">Apport retenu : {{ pr.hypotheses?.contributionCents | signedCents }} {{ contributionCadenceLabel() }} · {{ pr.hypotheses?.contributionSource }}.</p>
+              <details class="projection-table"><summary>Détail année par année</summary><div class="table-scroll"><table class="data-table"><thead><tr><th>Année</th><th class="num">Valeur nominale</th><th class="num">Euros actuels</th><th class="num">Capital réservé simulé</th></tr></thead><tbody>
+                @for (row of pr.rows; track row.year) { <tr><th>{{ row.year }}</th><td class="num">{{ row.nominalCents | signedCents }}</td><td class="num">{{ row.realCents | signedCents }}</td><td class="num">{{ row.reservedCents | cents }}</td></tr> }
+              </tbody></table></div></details>
+            } @else { <div class="objectives-empty"><h3>Complétez votre scénario</h3><p>{{ pr.reason ?? 'Le patrimoine initial et une hypothèse de rendement sont nécessaires au calcul.' }}</p>
+              @if (pr.hypotheses?.startCents == null) { <a class="btn btn-secondary" routerLink="/app/reglages" fragment="bc-wealth-title">Renseigner le patrimoine initial</a> }</div> }
+          }
+          <p class="objectives-callout">Le calcul applique les objectifs par année, dans l’ordre de leurs dates. Un achat consomme du capital simulé ; une réserve en affecte une part. Aucun paiement ni placement n’est exécuté.</p>
+        </div>
+        <aside class="objectives-panel" id="hypotheses"><h3>Hypothèses du scénario</h3><p class="objective-note">Les modifications prennent effet après enregistrement et recalculent la couverture de tous vos objectifs.</p>
+                        @if (settingEditor() !== 'projection') { <ng-container *ngTemplateOutlet="projectionEditor" /> }
+              @else { <p class="bpm-help">Ce réglage est ouvert dans le panneau de saisie.</p> }
+        </aside>
+      </div>
+    </section>
+  }
+        @if (editing(); as ed) {
+        <bpm-goal-editor
+          [goal]="ed.goal"
+          [types]="profile.data()?.goalTypes ?? []"
+          (closed)="closeGoal()"
+          (saved)="goalSaved($event)"
+        />
+      }
+      <rjs-modal
+        [open]="!!confirmGoal()"
+        [headed]="true"
+        title="Retirer cet objectif ?"
+        [busy]="removing()"
+        (closed)="confirmGoal.set(null)"
+      >
+        <p>
+          « {{ confirmGoal()?.label }} » sera retiré des projections et conservé dans l’historique.
+          Aucun paiement n’est modifié.
+        </p>
+        @if (removeError()) {
+          <p class="bpm-error" role="alert">{{ removeError() }}</p>
+        }
+        <div class="bpm-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            [disabled]="removing()"
+            (click)="confirmGoal.set(null)"
+          >
+            Annuler</button
+          ><button
+            type="button"
+            class="btn btn-primary"
+            [disabled]="removing()"
+            (click)="removeGoal()"
+          >
+            Retirer l’objectif
+          </button>
+        </div>
+      </rjs-modal>
+
+
+  <rjs-modal [open]="!!settingEditor()" [headed]="true" [title]="settingTitle()" [busy]="savingsBusy() || wealthBusy() || hypBusy()" (closed)="closeSetting()">
+    @switch (settingEditor()) {
+      @case ('savings') { <ng-container *ngTemplateOutlet="savingsEditor" /> }
+      @case ('wealth') { <ng-container *ngTemplateOutlet="wealthEditor" /> }
+      @case ('projection') { <ng-container *ngTemplateOutlet="projectionEditor" /> }
+    }
+    <button class="btn btn-secondary" type="button" [disabled]="savingsBusy() || wealthBusy() || hypBusy()" (click)="closeSetting()">Fermer le panneau</button>
+  </rjs-modal>
+
+<ng-template #savingsEditor><form class="life-objective-form" (ngSubmit)="saveSavings()" novalidate>
+              <label
+                >Épargne visée par période (€)<input
+                  name="savingsTarget"
+                  inputmode="decimal"
+                  [(ngModel)]="savingsTarget"
+                  (ngModelChange)="savingsDirty.set(true)"
+                  placeholder="Sans objectif"
+              /></label>
+              <p class="bpm-help">
+                Un repère pour le solde de chaque période, sans transfert automatique d’argent.
+              </p>
+              @if (savingsError()) {
+                <p class="bpm-error" role="alert">
+                  {{ savingsError() }} Votre saisie est conservée.
+                </p>
+              }
+              <div class="bpm-actions">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="savingsBusy() || !savingsDirty()"
+                >
+                  Enregistrer l’épargne visée</button
+                ><button
+                  type="button"
+                  class="btn btn-secondary"
+                  [disabled]="savingsBusy()"
+                  (click)="resetSavings()"
+                >
+                  Annuler les modifications
+                </button>
+              </div>
+            </form></ng-template>
+<ng-template #wealthEditor><form class="life-objective-form" (ngSubmit)="saveWealth()" novalidate>
+                <label
+                  >Cap patrimonial (€)<input
+                    name="wealthTarget"
+                    inputmode="decimal"
+                    [(ngModel)]="wealthTarget"
+                    (ngModelChange)="wealthDirty.set(true)"
+                    placeholder="Sans objectif"
+                /></label>
+                <p class="bpm-help">
+                  Un champ vide retire l’objectif. Le montant du patrimoine reste inchangé.
+                </p>
+                @if (wealthError()) {
+                  <p class="bpm-error" role="alert">
+                    {{ wealthError() }} Votre saisie est conservée.
+                  </p>
+                }
+                <div class="bpm-actions">
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="wealthBusy() || !wealthDirty()"
+                  >
+                    Enregistrer le cap patrimonial</button
+                  ><button
+                    type="button"
+                    class="btn btn-secondary"
+                    [disabled]="wealthBusy()"
+                    (click)="resetWealth()"
+                  >
+                    Annuler les modifications
+                  </button>
+                </div>
+              </form></ng-template>
+<ng-template #projectionEditor><form
+                class="life-objective-form"
+                (ngSubmit)="saveHypotheses()"
+                (input)="hypDirty.set(true)"
+                (change)="hypDirty.set(true)"
+                novalidate
+              >
+                <div class="life-objective-fields">
+                  <label
+                    >Horizon (années)<input
+                      name="horizon"
+                      inputmode="numeric"
+                      [(ngModel)]="horizon"
+                  /></label>
+                  <label
+                    >Rendement annuel (%)<input
+                      name="rate"
+                      inputmode="decimal"
+                      [(ngModel)]="rate"
+                      placeholder="À renseigner"
+                  /></label>
+                  <label
+                    >Inflation annuelle (%)<input
+                      name="inflation"
+                      inputmode="decimal"
+                      [(ngModel)]="inflation"
+                  /></label>
+                  <label
+                    >Source de l’inflation<input
+                      name="inflationSource"
+                      [(ngModel)]="inflationSource"
+                      maxlength="200"
+                  /></label>
+                  <label
+                    >Apport régulier (€)<input
+                      name="contribution"
+                      inputmode="decimal"
+                      [(ngModel)]="contribution"
+                      placeholder="Moyenne du budget type"
+                  /></label>
+                  <label
+                    >Rythme de l’apport<select name="cadence" [(ngModel)]="cadence">
+                      <option value="weekly">Par semaine</option>
+                      <option value="monthly">Par mois</option>
+                      <option value="yearly">Par an</option>
+                    </select></label
+                  >
+                </div>
+                <p class="bpm-help">
+                  Rendement vide : projection indisponible. Apport vide : moyenne du budget type. Ce
+                  scénario ne réalise aucun paiement.
+                </p>
+                @if (hypError()) {
+                  <p class="bpm-error" role="alert">{{ hypError() }} Votre saisie est conservée.</p>
+                }
+                <div class="bpm-actions">
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="hypBusy() || !hypDirty()"
+                  >
+                    Enregistrer les hypothèses</button
+                  ><button
+                    type="button"
+                    class="btn btn-secondary"
+                    [disabled]="hypBusy()"
+                    (click)="resetHypotheses()"
+                  >
+                    Annuler les modifications
+                  </button>
+                </div>
+              </form></ng-template>
+</bpm-page>

@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { BpmApi } from '../../core/bpm-api.service';
-import { CapsReview, ChargeCategory, ReviewCenter } from '../../core/bpm-caps.models';
+import { CapsReview, ChargeCategory, ReviewCenter, ReviewCharge } from '../../core/bpm-caps.models';
 import { BpmCapsPage } from './caps';
 
 const center = (ref: string, label: string, capCents: number | null): ReviewCenter => ({
@@ -69,6 +69,7 @@ describe('les trois espaces des plafonds BPM', () => {
   let harness: RouterTestingHarness;
   let api: {
     capsReview: ReturnType<typeof vi.fn>;
+    line: ReturnType<typeof vi.fn>;
     categories: ReturnType<typeof vi.fn>;
     setCaps: ReturnType<typeof vi.fn>;
     updateCategory: ReturnType<typeof vi.fn>;
@@ -99,6 +100,10 @@ describe('les trois espaces des plafonds BPM', () => {
     );
     await settle();
   }
+  async function click(label: string) {
+    [...dom().querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.trim() === label)!.click();
+    await settle();
+  }
   async function open(view = 'plafonds') {
     const page = await harness.navigateByUrl(`/plafonds?view=${view}`, BpmCapsPage);
     await settle();
@@ -108,6 +113,7 @@ describe('les trois espaces des plafonds BPM', () => {
   beforeEach(async () => {
     api = {
       capsReview: vi.fn().mockResolvedValue(review),
+      line: vi.fn().mockRejectedValue(new Error('Détail chargé par son service dédié')),
       categories: vi.fn().mockResolvedValue(catalog),
       setCaps: vi.fn().mockResolvedValue({}),
       updateCategory: vi.fn().mockResolvedValue({}),
@@ -117,7 +123,11 @@ describe('les trois espaces des plafonds BPM', () => {
     };
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'plafonds', component: BpmCapsPage }]),
+        provideRouter([
+          { path: 'plafonds', component: BpmCapsPage },
+          { path: 'plafonds/reglages', component: BpmCapsPage, data: { workspace: { key: 'caps-settings', parent: '/plafonds', title: 'Définir mes plafonds', lead: 'Régler mes limites.' } } },
+          { path: 'plafonds/categories', component: BpmCapsPage, data: { workspace: { key: 'caps-categories', parent: '/plafonds', title: 'Organiser mes catégories', lead: 'Ranger mes dépenses.' } } },
+        ]),
         { provide: BpmApi, useValue: api },
       ],
     });
@@ -315,4 +325,90 @@ describe('les trois espaces des plafonds BPM', () => {
       'Suivi et pilotage',
     );
   });
+  it('reprend le plafond choisi dans un panneau depuis le bandeau et conserve une saisie refusée', async () => {
+    await open();
+    await select('centerRef', 'std:transport');
+    await fill('centerCap', '95');
+    await click('Relire le plafond choisi');
+    expect(control<HTMLInputElement>('input[name="quickCenterAmount"]').value).toBe('95');
+    expect(control('dialog[open]').textContent).toContain('Transport');
+    api.setCaps.mockRejectedValueOnce(new Error('Enregistrement momentanément indisponible'));
+    await click('Enregistrer ce plafond');
+    await vi.waitFor(async () => { await settle(); expect(control('dialog[open]').textContent).toContain('Enregistrement momentanément indisponible'); });
+    expect(control<HTMLInputElement>('input[name="quickCenterAmount"]').value).toBe('95');
+    expect(api.setCaps).toHaveBeenCalledWith({ expectedRevision: 7, caps: { 'std:transport': 95 }, merge: true });
+  });
+
+  it('enchaîne création contextualisée et préparation du plafond sans créer de limite automatiquement', async () => {
+    await open();
+    await select('centerRef', 'std:transport');
+    await click('Créer une catégorie dans ce poste');
+    expect(control<HTMLSelectElement>('select[name="quickNewCenter"]').value).toBe('std:transport');
+    const created = { ...catalog[0], id: 'cat_train', label: 'Train', costCenterRef: 'std:transport', costCenterLabel: 'Transport', capCents: null, revision: 1 };
+    api.createCategory.mockResolvedValue({ category: created });
+    api.categories.mockResolvedValue([...catalog, created]);
+    await fill('quickNewLabel', 'Train');
+    await click('Créer puis préparer son plafond');
+    expect(api.createCategory).toHaveBeenCalledWith(expect.objectContaining({ label: 'Train', costCenterRef: 'std:transport' }));
+    expect(control('dialog[open]').textContent).toContain('Train');
+    expect(control('input[name="quickCategoryAmount"]')).toBeTruthy();
+    expect(api.updateCategory).not.toHaveBeenCalled();
+    await fill('quickCategoryAmount', '60');
+    await vi.waitFor(async () => { await settle(); expect(control<HTMLButtonElement>('dialog[open] button[type="submit"]').disabled).toBe(false); });
+    await click('Enregistrer ce plafond');
+    expect(api.updateCategory).toHaveBeenCalledWith('cat_train', { expectedRevision: 1, cap: 60 });
+    expect(api.setCaps).not.toHaveBeenCalled();
+  });
+
+  it('ouvre une charge encore à payer du dépassement de catégorie, même si le poste reste sous sa limite', async () => {
+    const charge = (id: string, categoryId: string | null, engagedCents: number, engagedAs: 'paid' | 'toPay'): ReviewCharge => ({
+      id, categoryId, label: id, engagedCents, engagedAs, cadence: 'once', cadenceLabel: 'Ponctuelle',
+      plannedDate: '2026-11-08', plannedCents: engagedCents, status: 'pending', origin: '2026-11-08',
+      sinceMonths: 0, rank: null, perYearCents: null, monthlyCents: null, newThisPeriod: true,
+    }) as ReviewCharge;
+    const charges = [charge('already_paid', 'cat_cine', 4500, 'paid'), charge('still_planned', 'cat_cine', 1500, 'toPay'), charge('other_category', null, 9000, 'toPay')];
+    api.capsReview.mockResolvedValue({ ...review,
+      centers: [{ ...review.centers[0], engagedCents: 15000, paidCents: 4500, toPayCents: 10500, marginCents: 5000, chargeIds: charges.map(charge => charge.id) }],
+      categories: [{ ...catalog[0], paidCents: 4500, toPayCents: 1500, engagedCents: 6000, marginCents: -2000, usedPct: 150, over: true, lineCount: 2, chargeIds: ['already_paid', 'still_planned'] }],
+      charges: Object.fromEntries(charges.map(charge => [charge.id, charge])),
+      totals: { ...review.totals, overCount: 1 },
+    });
+    await open('suivi');
+    await click('Revoir une charge avant paiement');
+    expect(TestBed.inject(Router).url).toContain('ligne=still_planned');
+    expect(api.line).toHaveBeenCalledWith('still_planned', undefined);
+    expect(api.setCaps).not.toHaveBeenCalled();
+    expect(api.updateCategory).not.toHaveBeenCalled();
+  });
+
+  it('donne priorité à la sauvegarde du plafond et conserve le résultat dans le bandeau', async () => {
+    await open();
+    await select('centerRef', 'std:transport');
+    await fill('centerCap', '75');
+    expect(control('.bpm-toolbar-primary').textContent).toContain('Enregistrer le poste modifié');
+    expect(control('.page-toolbar-scope').textContent).toContain('Transport');
+    expect(control('.page-toolbar-scope').textContent).toContain('toutes les périodes');
+    api.setCaps.mockRejectedValueOnce(new Error('Révision modifiée par un autre enregistrement'));
+    await click('Enregistrer le poste modifié');
+    await vi.waitFor(async () => { await settle(); expect(control('.page-toolbar-result').textContent).toContain('Révision modifiée'); });
+    expect(control('.page-toolbar-result').getAttribute('role')).toBe('alert');
+    expect(control<HTMLInputElement>('input[name="centerCap"]').value).toBe('75');
+  });
+
+  it('isole les catégories sur leur route puis rejoint le réglage du plafond choisi', async () => {
+    await harness.navigateByUrl('/plafonds/categories?view=suivi&period=2026-10');
+    await settle();
+    expect(dom().querySelector('.caps-workspaces')).toBeNull();
+    expect(dom().querySelector('.caps-review')).toBeNull();
+    expect(control('#caps-categories-title').textContent).toContain('catégories');
+    const row = [...dom().querySelectorAll<HTMLElement>('.caps-cat-row')].find(el => el.textContent?.includes('Cinéma'))!;
+    [...row.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.trim() === 'Définir le plafond')!.click();
+    await settle();
+    expect(TestBed.inject(Router).url).toContain('/plafonds/reglages');
+    expect(TestBed.inject(Router).url).toContain('period=2026-10');
+    expect(TestBed.inject(Router).url).toContain('target=category:cat_cine');
+    expect(dom().querySelector('.caps-review')).toBeNull();
+    expect(api.updateCategory).not.toHaveBeenCalled();
+  });
+
 });

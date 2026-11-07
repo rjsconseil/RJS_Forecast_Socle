@@ -1,12 +1,13 @@
 import { ResolveFn, Routes } from '@angular/router';
 import { planTitle } from './shared/site-plan';
+import { PAGE_WORKSPACES } from './shared/page-workspaces';
 
 /** Titre des accueils génériques du plan : « Section · Zone · RJS Forecast ». */
 const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.get('zone'), route.paramMap.get('section'));
 
 // Trois espaces : l'application BPM (niveau 3) en deux sections, la gestion des utilisateurs et le socle
 // (noyau, middlewares en interfaces de test, Object Management, Administration).
-export const routes: Routes = [
+const mainRoutes: Routes = [
   // Accueil : le portail des zones (Budget/Patrimoine Management, Budget, Patrimoine, Noyau transverse, Administration).
   { path: '', pathMatch: 'full', title: 'Accueil · RJS Forecast', loadComponent: () => import('./home/home').then((m) => m.HomePage) },
   // Accueils génériques du plan du site (`shared/site-plan.ts`) : accueil de zone, accueil de section.
@@ -23,7 +24,7 @@ export const routes: Routes = [
   { path: 'piloter', title: 'Graphiques et chiffres — RJS Forecast', loadComponent: () => import('./bpm/pages/pilot').then((m) => m.BpmPilotPage) },
   { path: 'piloter/agir', title: "Ce qu'il faut faire — RJS Forecast", loadComponent: () => import('./bpm/pages/act').then((m) => m.BpmActPage) },
   { path: 'projet-de-vie', title: 'Gestion du projet de vie — RJS Forecast', loadComponent: () => import('./bpm/life/life-management.page').then((m) => m.BpmLifeManagementPage) },
-  { path: 'vision', title: 'Objectifs et avenir — RJS Forecast', loadComponent: () => import('./bpm/pages/vision').then((m) => m.BpmVisionPage) },
+  { path: 'vision', title: 'Objectifs et avenir — RJS Forecast', loadComponent: () => import('./bpm/objectives/objectives.page').then((m) => m.BpmObjectivesPage) },
 
   // ---------- Sous-pages de détail (atteintes depuis les chiffres, graphes et listes) ----------
   { path: 'argent/entrees', title: 'Détail des entrées — RJS Forecast', loadComponent: () => import('./bpm/pages/incomes').then((m) => m.BpmIncomesPage) },
@@ -109,4 +110,18 @@ export const routes: Routes = [
   { path: 'admin/calculs/:key', title: 'Formule — Administration', loadComponent: () => import('./admin/metric-editor').then((m) => m.MetricEditor) },
 
   { path: '**', redirectTo: '' },
+];
+
+// Les destinations spécialisées précèdent les identifiants dynamiques et partagent leur module.
+export const routes: Routes = [
+  ...PAGE_WORKSPACES.filter(view => !view.existing).map(view => ({
+    path: view.path,
+    title: `${view.title} — RJS Forecast`,
+    loadComponent: view.loadComponent,
+    data: { ...mainRoutes.find(route => route.path === view.parent.slice(1))?.data, workspace: view },
+  })),
+  ...mainRoutes.map(route => {
+    const workspace = PAGE_WORKSPACES.find(view => view.existing && view.path === route.path);
+    return workspace ? { ...route, data: { ...route.data, workspace } } : route;
+  }),
 ];

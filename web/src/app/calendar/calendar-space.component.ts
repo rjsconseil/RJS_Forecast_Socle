@@ -1,12 +1,14 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   inject,
   input,
   output,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { RecetteContext, toApiError } from '../core/api.service';
@@ -14,6 +16,7 @@ import { CalendarComponent } from './calendar.component';
 import { CalendarData, CalendarEvent, CalendarPeriod } from './calendar.models';
 import { CalendarService } from './calendar.service';
 import { formatAmount } from './calendar-model';
+import { CalendarView, validDate } from './calendar-dates';
 
 const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
   day: 'numeric',
@@ -36,6 +39,8 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
     <rjs-calendar
       [data]="data()"
       [bpm]="calendar() === 'budgetPatrimoine'"
+      [externalTools]="externalTools()"
+      [presentation]="presentation()"
       [loading]="loading()"
       [busy]="busy()"
       [error]="error()"
@@ -56,6 +61,21 @@ export class CalendarSpaceComponent {
   readonly configuration = input<unknown>(null);
   /** La page ouvre elle-même les repères (sinon : navigation vers leur lien). */
   readonly openInPlace = input(false);
+  readonly externalTools = input(false);
+  readonly presentation = input<'calendar' | 'agenda' | 'sources'>('calendar');
+  private readonly calendarView = viewChild(CalendarComponent);
+  readonly toolbarState = computed(() => {
+    const state = this.calendarView()?.toolbarState();
+    return state
+      ? {
+          ...state,
+          loading: this.loading(),
+          busy: this.busy(),
+          error: this.error(),
+          feedback: this.feedback(),
+        }
+      : undefined;
+  });
   readonly loaded = output<{ data: CalendarData; period: CalendarPeriod }>();
   readonly opened = output<CalendarEvent>();
   readonly displayedEventsChange = output<CalendarEvent[]>();
@@ -83,6 +103,32 @@ export class CalendarSpaceComponent {
 
   private get period() {
     return this.periodShown();
+  }
+
+  movePeriod(step: number) {
+    this.calendarView()?.movePeriod(step);
+  }
+  goToday() {
+    this.calendarView()?.goToday();
+  }
+  selectDay(day: string) {
+    if (validDate(day)) this.calendarView()?.selectDay(day);
+  }
+  selectView(view: string) {
+    if (view === 'month' || view === 'week' || view === 'year')
+      this.calendarView()?.setView(view as CalendarView);
+  }
+  selectGroup(group: string) {
+    this.calendarView()?.selectGroup(group);
+  }
+  setIncludeDone(value: boolean) {
+    this.calendarView()?.setIncludeDone(value);
+  }
+  togglePersonalization() {
+    this.calendarView()?.togglePersonalization();
+  }
+  focusEvent(event: CalendarEvent) {
+    this.calendarView()?.focusEvent(event);
   }
 
   /** Période affichée par le calendrier : sa fenêtre sera lue. */

@@ -18,9 +18,6 @@
 .project-detail-banner .life-banner-copy h1 {
   overflow-wrap: anywhere;
 }
-.project-detail-tools {
-  grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.5fr) auto auto auto;
-}
 .project-section-label {
   display: block;
   text-transform: uppercase;
@@ -511,21 +508,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
-@media (max-width: 1500px) {
-  .project-detail-tools {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .project-detail-tools .life-budget-project {
-    grid-column: span 2;
-  }
-}
 @media (max-width: 700px) {
-  .project-detail-tools {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .project-detail-tools .life-budget-project {
-    grid-column: auto;
-  }
   .project-description {
     padding-right: 0;
   }
@@ -612,8 +595,6 @@
   flex-wrap: wrap;
   gap: 0.25rem 1.25rem;
 }
-
-
 
 /* Fenêtre d'une tâche : tout le détail que la carte de taille fixe ne montre pas. */
 .task-panel {

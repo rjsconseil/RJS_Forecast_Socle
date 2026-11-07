@@ -9,7 +9,7 @@ import { CenterRow, EntryInput, Recurrence, RegisterLine } from '../../core/bpm-
 import { cents, CentsPipe, euros, figureValue, percentText, ShortDatePipe, signedCents, SignedCentsPipe } from '../../core/format';
 import { ClosingPreview } from '../../core/models';
 import { MetricDetail, MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmLineDetail, BpmOperationEditor, BpmPageContext, BpmPageFrame, BpmRefresh, BpmState, bpmLoader, newRequestKey, overCapsOf } from '../ui';
+import { BpmLineDetail, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmRefresh, BpmState, bpmLoader, newRequestKey, overCapsOf } from '../ui';
 import { BpmDashboardHistory } from './dashboard-history';
 import { BpmDashboardWealth, BpmSetupNeeded, setupProblem } from './dashboard-parts';
 
@@ -45,23 +45,44 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
 @Component({
   selector: 'bpm-page-dashboard',
   providers: [BpmPageContext],
-  imports: [NgTemplateOutlet, RouterLink, BpmPageFrame, BpmState, BpmLineDetail, BpmOperationEditor, BpmDashboardWealth, BpmDashboardHistory, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
+  imports: [NgTemplateOutlet, RouterLink, BpmPageFrame, BpmState, BpmLineDetail, BpmEntryFlow, BpmDashboardWealth, BpmDashboardHistory, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-expenses.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
       title="Tableau de bord"
       pageClass="bpm-money"
       [lead]="lead()"
+      [focus]="pageFocus()" [result]="notice() ? { message: notice()!, tone: 'success' } : null" toolsLabel="Agir sur cette période"
       [context]="info()"
       [periodKey]="period()"
       [periodNav]="true"
       (periodChange)="goPeriod($event)"
     >
-      <button actions type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ Ajouter une entrée ou une charge</button>
-      <a actions class="bpm-link" routerLink="/projet-de-vie" [queryParams]="carry()">Gestion du projet de vie →</a>
-      <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="carry()">Plafonds et catégories →</a>
-      <a actions class="bpm-link" routerLink="/projet-de-vie" fragment="life-objectives">Mes objectifs →</a>
-      <a actions class="bpm-link" routerLink="/depenses" [queryParams]="carry()">Détail des dépenses →</a>
+      @if (nextLine(); as line) {
+        <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : 'Préparer la prochaine échéance' }} · {{ line.label }}</button>
+      }
+      @if (!summary.data()?.closed) {
+        <ng-container actions>
+        <button type="button" class="btn btn-secondary" (click)="openCreate('income')" [disabled]="!budgets().length">＋ Entrée</button>
+        <button type="button" class="btn btn-secondary" (click)="openCreate('charge')" [disabled]="!budgets().length">＋ Charge</button>
+        </ng-container>
+      }
+      @if (dash.data()?.closing?.possible) {
+        <button actions type="button" class="btn btn-secondary" (click)="prepareClosing()" [disabled]="!dash.data()?.closing?.preview">Préparer la clôture…</button>
+      }
+      @if (overCaps().length) {
+        <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="carry()">Revoir {{ overCaps().length }} plafond(s) dépassé(s) →</a>
+      }
+      @if (summary.data()?.closed) {
+        <a actions class="app-hero-action" [routerLink]="[]" [queryParams]="{ period: null }">Revenir à la période en cours</a>
+      }
+      <nav tools class="bpm-toolbar-shortcuts" aria-label="Explorer les données de la période">
+        @if (incomeLines().length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-period-income">{{ incomeLines().length }} entrée(s)</a> }
+        @if (chargeLines().length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-period-expenses">{{ chargeLines().length }} charge(s)</a> }
+        @if (lifeProjects.data()?.length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-projects">{{ lifeProjects.data()!.length }} projet(s) financé(s)</a> }
+        <a routerLink="/argent/reste" [queryParams]="carry()" fragment="verifier">Rapprocher avec mon compte</a>
+        @if (summary.data()?.closed) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-history">Comparer les périodes closes</a> }
+      </nav>
 
       <div class="bpm-money bpm-money-body" data-tone="budget">
         @if (notice()) {
@@ -510,9 +531,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
     @if (lineParam()) {
       <bpm-line-detail [lineId]="lineParam()" [period]="period()" (closed)="closeLine()" (edit)="startEdit($event)" />
     }
-    @if (editorOpen() && budgets().length) {
-      <bpm-operation-editor [budgets]="budgets()" [line]="editLine()" [defaults]="editorDefaults()" (closed)="closeEditor()" (saved)="onSaved($event)" />
-    }
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="editorDefaults()" (saved)="onSaved($event)" />
   `,
   styles: `
     :host { display: block; }
@@ -556,6 +575,24 @@ export class BpmDashboard {
   protected centers = bpmLoader(() => this.period(), (p) => this.bpm.centers({ period: p, direction: 'charge' }));
   /** Plafonds dépassés de la période, lus avec le registre (aucune lecture de plus). */
   protected overCaps = computed(() => overCapsOf(this.register.data()?.caps, (ref) => this.centers.data()?.rows.find((r) => r.ref === ref)?.label));
+
+  protected nextLine = computed(() => this.summary.data()?.closed ? null : nextOpenLine(this.register.data()?.lines ?? []));
+  protected pageFocus = computed<BpmPageFocus | null>(() => {
+    const summary = this.summary.data();
+    if (!summary) return null;
+    if (this.summary.error() || this.register.error()) return { title: 'Lecture à actualiser', detail: 'Les dernières données connues restent affichées. Vérifiez la connexion avant de décider.', tone: 'warning' };
+    if (!summary.context.period) return { title: 'Configurer le cycle pour commencer', detail: 'La période et son solde seront disponibles après le démarrage du projet de vie.', tone: 'info' };
+    if (summary.closed) return { title: 'Période clôturée · résultat enregistré', detail: 'Comparez son résultat ou reprenez le suivi de la période en cours.', tone: 'success' };
+    const line = this.nextLine();
+    if (line) return { title: line.status === 'late' ? 'Une échéance en retard à vérifier' : line.status === 'due' ? 'Une échéance arrive aujourd’hui' : 'Anticiper la prochaine échéance', detail: `${line.label} · ${cents(line.plannedCents)} · ${line.plannedDate}. Ouvrez-la pour relire et pointer son règlement.`, tone: line.status === 'late' ? 'warning' : 'info' };
+    if (this.dash.data()?.closing.possible) return { title: 'La période est prête pour une revue de clôture', detail: 'Relisez le montant à capitaliser avant la confirmation.', tone: 'info' };
+    const expected = this.v('bpm.soldeAttendu');
+    return { title: expected === null ? 'Solde à préciser' : `Solde prévu : ${signedCents(expected)}`, detail: 'Rapprochez le réalisé avec votre compte ou préparez les prochains flux.', tone: expected !== null && expected < 0 ? 'danger' : 'success' };
+  });
+  protected prepareClosing() {
+    this.askClose();
+    document.getElementById('dash-close')?.scrollIntoView({ block: 'start' });
+  }
 
   protected info = computed(() => this.summary.data()?.context ?? null);
   protected problem = computed(() => setupProblem(this.summary.error()));
@@ -873,8 +910,6 @@ export class BpmDashboard {
 
   // ---------- navigation, détail et éditeur ----------
 
-  protected editorOpen = signal(false);
-  protected editLine = signal<RegisterLine | null>(null);
   protected editorDefaults = signal<Partial<EntryInput>>({});
   /** Message laissé par l'assistant « Partir de zéro » (état de navigation `bpmNotice`). */
   protected notice = signal<string | null>((history.state as { bpmNotice?: string } | null)?.bpmNotice ?? null);
@@ -906,20 +941,17 @@ export class BpmDashboard {
   protected closeLine() {
     this.ctx.setQuery({ ligne: null });
   }
-  protected openCreate() {
-    this.editLine.set(null);
-    this.editorDefaults.set({});
-    this.editorOpen.set(true);
+  protected openCreate(direction?: 'income' | 'charge') {
+    this.editorDefaults.set(direction ? { direction } : {});
+    void this.ctx.setQuery({ entry: 'new' });
   }
   protected startEdit(line: RegisterLine) {
     this.closeLine();
-    this.editLine.set(line);
     this.editorDefaults.set({});
-    this.editorOpen.set(true);
+    void this.ctx.setQuery({ entry: line.id });
   }
   protected closeEditor() {
-    this.editorOpen.set(false);
-    this.editLine.set(null);
+    void this.ctx.setQuery({ entry: null }, { replace: true });
   }
   protected onSaved(message: string) {
     this.closeEditor();

@@ -2,16 +2,17 @@
 // Patrimoine sur le noyau : création du user et de son triplet, projets de la vie, cycle et
 // clôtures, parcours métier. Chaque chiffre présenté est une métrique dont la formule est
 // administrée (`metric.<clé>`) et dont l'explication remonte jusqu'aux objets sources.
+import { cycleFields, assertCycleChange, assertOpenDates, assertClosable } from '../budget/cycle-policy.mjs';
 import { fail } from '../../socle/errors.mjs';
 import { check } from '../../socle/object-management/inspect.mjs';
 import { date, expectedRevisionOf, integer, money, oneOf, text } from '../../socle/validation.mjs';
 import { CADENCES } from '../budget/recurrence.mjs';
-import { createReads, DEFAULT_VISION, percent } from './reads.mjs';
+import { createReads } from './reads.mjs';
 import { createLife } from './life.mjs';
 import { essentialsParameter } from './natures.mjs';
-import { GOAL_TYPES } from './projection.mjs';
-import { createProjects, cycleChecks, inRegime, projectBudget, projectExtensions, projectVariables } from './projects.mjs';
-import { cycleBounds, dayBefore, indexOfKey, periodByIndex, periodByKey, periodsPage, today } from './periods.mjs';
+import { GOAL_TYPES } from '../patrimoine/projection.mjs';
+import { createProjects, projectExtensions } from './projects.mjs';
+import { cycleBounds, dayBefore, indexOfKey, periodByIndex, periodByKey, periodsPage, today } from '../budget/periods.mjs';
 
 const RESULT_METRIC = 'bpm.resultatPeriode';
 
@@ -55,11 +56,6 @@ const closuresOf = (state, cycleId) => Object.values(state.closures).filter((c) 
  * Liaison de cycle : mensuelle [P] ; active dès que le jour d'ancrage est connu.
  * `startField` : nom du champ tel que l'appelant l'a envoyé (erreur rendue par champ, C09).
  */
-function cycleFields({ anchorDay, startDate }, startField = 'cycleStartDate') {
-  const day = integer('anchorDay', anchorDay, { min: 1, max: 28, nullable: true });
-  const start = date(startField, startDate);
-  return { frequency: 'monthly', anchorDay: day, startDate: day === null ? start : start ?? today(), state: day === null ? 'to_configure' : 'active' };
-}
 
 /**
  * État de préparation BPM d'un user (C06), en lecture seule : exactement un Budget « Projet de vie »,
@@ -147,9 +143,7 @@ function closingContract(state, userId, socle, periodKey) {
   if (!cs) fail('FORBIDDEN_BY_RULE', 'Le cycle est à configurer : aucune période à clôturer.');
   const period = cs.find(periodKey);
   if (!period) fail('NOT_FOUND', 'Période inconnue pour ce cycle.', { periodKey });
-  if (period.status === 'closed') fail('UNIQUENESS_VIOLATION', 'Cette période est déjà close.', { periodKey: period.key, closureId: period.closureId });
-  if (period.status !== 'ended') fail('FORBIDDEN_BY_RULE', 'Seule une période terminée peut être close.', { periodKey: period.key, end: period.end });
-  if (cs.firstOpen.key !== period.key) fail('FORBIDDEN_BY_RULE', `Les périodes se clôturent dans l'ordre : clôturer d'abord ${cs.firstOpen.label} [P].`, { periodKey: cs.firstOpen.key });
+  assertClosable(period, cs.firstOpen);
   const mctx = metricContext(state, userId, socle, { periodKey: period.key });
   const result = socle.metrics.evaluate(mctx, RESULT_METRIC);
   if (result.value === null) fail('FORBIDDEN_BY_RULE', `Résultat inconnu : ${result.unavailableReason}`, { metric: RESULT_METRIC });
@@ -201,7 +195,6 @@ export default {
         capitalizationId: { kind: 'capitalization' },
       },
     },
-    lifeGoal: { collection: 'lifeGoals', prefix: 'obj', label: 'Objectif de projection' },
   },
 
   parameters: [
@@ -223,7 +216,6 @@ export default {
     essentialsParameter,
   ],
 
-  variables: projectVariables,
 
   metrics: METRICS,
 
@@ -243,7 +235,10 @@ export default {
         };
       }
       if (kind === 'standard') {
+        const budget = state.budgets[acc.enrichment.budgetId];
+        const comp = Object.values(state.bpmCompositions).find(c => c.budgetId === budget?.parentBudgetId && c.userId === budget?.userId);
         return {
+          enrichment: { bpmCompositionId: comp?.id ?? null, lifeProjectId: comp?.coreProjectId ?? null, patrimoineId: comp?.patrimoineId ?? null },
           pathways: {
             canAddTask: true,
             isTaskDestination: true,
@@ -266,16 +261,8 @@ export default {
     /** Une période close est figée [P] : aucune opération du Budget « Projet de vie » n'y entre ni n'en sort. */
     operationGuard(state, { userId, budgetId, dates }) {
       const comp = compositionOf(state, userId);
-      // Les dépenses d'un projet financé entrent dans les chiffres du budget de vie : une période close l'est aussi pour elles
-      // (depuis l'attribution ; avant, ou sans budget attribué, elles restent hors budget de vie).
-      const b = state.budgets[budgetId];
-      const funded = b?.parentBudgetId === comp?.budgetId && Number.isInteger(b.allocationCents) && typeof b.allocationDate === 'string';
-      if (!comp || (comp.budgetId !== budgetId && !funded)) return;
-      const cycle = cycleOf(state, comp.id);
-      for (const c of closuresOf(state, cycle?.id)) {
-        const d = dates.find((x) => x >= c.periodStart && x <= c.periodEnd && (!funded || x >= b.allocationDate));
-        if (d) fail('PERIOD_CLOSED', `La période ${c.periodLabel} est close : ${comp.budgetId === budgetId ? 'opération refusée' : `dépense du projet « ${b.name} » refusée`} (${d}). Datez-la dans la période en cours.`, { periodKey: c.periodKey, closureId: c.id, date: d });
-      }
+      const cycle = comp ? cycleOf(state, comp.id) : null;
+      assertOpenDates({ budget: state.budgets[budgetId], principalBudgetId: comp?.budgetId, closures: closuresOf(state, cycle?.id), dates });
     },
 
     userSummary(state, user) {
@@ -304,7 +291,7 @@ export default {
         openingDate: input.openingDate ?? (input.openingStock === null || input.openingStock === undefined ? null : today()),
         objective: input.objective,
       });
-      const comp = socle.om.create(tx, 'bpmComposition', { label: `BPM de ${user.label}`, budgetId: life.id, patrimoineId: pat.id, coreProjectId: root.id, vision: null });
+      const comp = socle.om.create(tx, 'bpmComposition', { label: `BPM de ${user.label}`, budgetId: life.id, patrimoineId: pat.id, coreProjectId: root.id });
       const cycle = socle.om.create(tx, 'cycleLink', { bpmCompositionId: comp.id, ...cycleFields({ anchorDay: input.anchorDay, startDate: input.cycleStartDate }) });
       return { userId: user.id, coreProjectId: root.id, budgetId: life.id, patrimoineId: pat.id, bpmCompositionId: comp.id, cycleLinkId: cycle.id };
     },
@@ -346,6 +333,27 @@ export default {
         return changes;
       },
     },
+    {
+      from: ['j1-store/0.2', 'socle-store/0.3', 'socle-store/0.4', 'socle-store/0.5'],
+      id: 'bpm-domaines-middleware',
+      description: 'Transfert des objectifs aux middlewares et rattachement des objectifs patrimoniaux à leur racine noyau, sans changer les IDs ni les montants.',
+      apply(draft, tx, socle) {
+        const changes = [];
+        for (const comp of Object.values(draft.bpmCompositions)) {
+          tx.userId = comp.userId;
+          socle.modules.budget.migrateObjectives(tx, comp.budgetId, comp.vision);
+          socle.modules.patrimoine.migrateObjectives(tx, comp.patrimoineId, comp.vision);
+          if ('vision' in comp) {
+            delete comp.vision;
+            socle.om.update(tx, comp, {});
+          }
+          changes.push(`${comp.id} : objectifs transférés aux middlewares ; racine ${comp.coreProjectId}`);
+        }
+        tx.userId = null;
+        return changes;
+      },
+    },
+
   ],
 
   setup(socle) {
@@ -436,31 +444,12 @@ export default {
     // Gestion du projet de vie : lecture de pilotage du projet unique (voir life.mjs).
     const life = createLife(socle, { figuresFor, closuresOf, closingOf }, reads, projects);
 
-    /** Hypothèses de vision validées (pourcentages, montants en centimes). */
-    function visionFields(current, input = {}) {
-      const v = { ...DEFAULT_VISION, ...(current ?? {}) };
-      if ('horizonYears' in input) v.horizonYears = integer('horizonYears', input.horizonYears, { min: 1, max: 80 });
-      if ('annualReturnPct' in input) v.annualReturnPct = percent('annualReturnPct', input.annualReturnPct, { min: -50, max: 50, nullable: true });
-      if ('inflationPct' in input) v.inflationPct = percent('inflationPct', input.inflationPct, { min: -20, max: 50 });
-      if ('inflationSource' in input) v.inflationSource = text('inflationSource', input.inflationSource, { max: 200 }) || DEFAULT_VISION.inflationSource;
-      if ('contribution' in input) v.contributionCents = money('contribution', input.contribution, { nullable: true, signed: true });
-      if ('contributionCadence' in input) v.contributionCadence = oneOf('contributionCadence', input.contributionCadence, CADENCES);
-      if ('savingsTarget' in input) v.savingsTargetCents = money('savingsTarget', input.savingsTarget, { nullable: true });
-      if ('surplus' in input) {
-        const sp = input.surplus;
-        v.surplus = sp === null ? null : { targetCents: money('surplus.target', sp?.target, { positive: true }), periods: integer('surplus.periods', sp?.periods, { min: 1, max: 600 }), startKey: /^\d{4}-(0[1-9]|1[0-2])$/.test(sp?.startKey ?? '') ? sp.startKey : fail('VALIDATION', 'Période de départ AAAA-MM attendue.', { field: 'surplus.startKey' }) };
-      }
-      return v;
-    }
-
-    function goalFields(input = {}, i = null) {
-      const f = (name) => (i === null ? name : `goals[${i}].${name}`);
-      return {
-        label: text(f('label'), input.label, { required: true, max: 200 }),
-        type: oneOf(f('type'), input.type, Object.keys(GOAL_TYPES)),
-        date: date(f('date'), input.date, { required: true }),
-        targetTodayCents: money(f('targetToday'), input.targetToday, { positive: true }),
-      };
+    // Une écriture atomique compose les deux middlewares ; la révision de composition
+    // protège le formulaire agrégé existant, sans stocker ses règles financières dans BPM.
+    function applyVision(tx, comp, input) {
+      socle.modules.budget.patchObjectives(tx, comp.budgetId, input);
+      socle.modules.patrimoine.patchProjectionSettings(tx, comp.patrimoineId, input);
+      om.update(tx, comp, {});
     }
 
     return {
@@ -475,45 +464,17 @@ export default {
           const comp = compositionOf(tx.draft, tx.userId);
           if (!comp) fail('NOT_FOUND', 'Ce user n’a pas de composition BPM.');
           om.checkRevision(comp, expectedRevisionOf(input));
-          om.update(tx, comp, { vision: visionFields(comp.vision, input) });
+          applyVision(tx, comp, input);
           return { bpmCompositionId: comp.id };
         });
         const comp = compositionOf(socle.state, ctx.userId);
         return { revision: comp.revision, vision: reads.visionOf(comp) };
       },
 
-      goals(ctx) {
-        const state = socle.state;
-        const userId = om.requireUser(state, ctx);
-        return reads.goalsOf(state, userId).map((g) => ({ ...structuredClone(g), typeLabel: GOAL_TYPES[g.type].label }));
-      },
-
-      /** Objectif de projection : ne crée ni Budget, ni tâche, ni paiement. */
-      async createGoal(ctx, input = {}) {
-        const r = await om.command('createGoal', ctx, input, (tx) => ({ goalId: om.create(tx, 'lifeGoal', { ...goalFields(input), removed: false }).id }), { creation: true });
-        return { replayed: r.replayed, goal: structuredClone(socle.state.lifeGoals[r.goalId]) };
-      },
-
-      async updateGoal(ctx, id, input = {}) {
-        await om.command('updateGoal', ctx, input, (tx) => {
-          const g = om.owned(tx.draft, 'lifeGoal', id, tx.userId);
-          om.checkRevision(g, expectedRevisionOf(input));
-          om.update(tx, g, goalFields({ label: g.label, type: g.type, date: g.date, targetToday: g.targetTodayCents / 100, ...input }));
-          return { goalId: id };
-        });
-        return { goal: structuredClone(socle.state.lifeGoals[id]) };
-      },
-
-      /** Retrait d'un objectif : conservé dans l'historique (traçabilité), exclu des projections. */
-      async removeGoal(ctx, id, input = {}) {
-        await om.command('removeGoal', ctx, input, (tx) => {
-          const g = om.owned(tx.draft, 'lifeGoal', id, tx.userId);
-          om.checkRevision(g, expectedRevisionOf(input));
-          om.update(tx, g, { removed: true });
-          return { goalId: id };
-        });
-        return { removed: true, goalId: id };
-      },
+      goals: (ctx) => socle.modules.patrimoine.goals(ctx),
+      createGoal: (ctx, input) => socle.modules.patrimoine.createGoal(ctx, input),
+      updateGoal: (ctx, id, input) => socle.modules.patrimoine.updateGoal(ctx, id, input),
+      removeGoal: (ctx, id, input) => socle.modules.patrimoine.removeGoal(ctx, id, input),
 
       /**
        * Partir de zéro (assistant en 7 étapes), en UNE commande rejouable :
@@ -536,26 +497,20 @@ export default {
             const out = { mode, bpmCompositionId: comp.id, created: [], updated: [] };
 
             if (mode === 'principal') {
-              const root = tx.draft.coreProjects[comp.coreProjectId];
               const patch = {};
-              if ('name' in project) patch.title = text('project.name', project.name, { required: true, max: 200 });
-              if ('description' in project) patch.description = text('project.description', project.description, { max: 5000 });
-              if (Object.keys(patch).length) om.update(tx, root, patch);
+              if ('name' in project) patch.title = project.name;
+              if ('description' in project) patch.description = project.description;
+              if (Object.keys(patch).length) core.patchProject(tx, comp.coreProjectId, patch);
               if (input.patrimoine) {
+                const fields = { ...input.patrimoine };
                 const p = tx.draft.patrimoines[comp.patrimoineId];
-                const pp = {};
-                if ('openingStock' in input.patrimoine) pp.openingStockCents = money('patrimoine.openingStock', input.patrimoine.openingStock, { nullable: true, signed: true });
-                if ('openingDate' in input.patrimoine) pp.openingDate = date('patrimoine.openingDate', input.patrimoine.openingDate);
-                if ('objective' in input.patrimoine) pp.objectiveCents = money('patrimoine.objective', input.patrimoine.objective, { nullable: true });
-                if (pp.openingStockCents !== undefined && pp.openingStockCents !== null && !pp.openingDate && !p.openingDate) pp.openingDate = today();
-                if (Object.keys(pp).length) om.update(tx, p, pp);
+                if (fields.openingStock != null && !fields.openingDate && !p.openingDate) fields.openingDate = today();
+                socle.modules.patrimoine.patchPatrimoine(tx, comp.patrimoineId, fields);
               }
               if (input.cycle) {
                 const cycle = cycleOf(tx.draft, comp.id);
                 const next = cycleFields({ anchorDay: input.cycle.anchorDay, startDate: input.cycle.startDate ?? cycle.startDate }, 'cycle.startDate');
-                if (closuresOf(tx.draft, cycle.id).length && (next.anchorDay !== cycle.anchorDay || next.startDate !== cycle.startDate)) {
-                  fail('FORBIDDEN_BY_RULE', 'Des périodes sont déjà closes : le jour d’ancrage et la date de début sont figés [P].', { field: 'cycle.anchorDay' });
-                }
+                assertCycleChange(cycle, next, closuresOf(tx.draft, cycle.id), 'cycle.anchorDay');
                 om.update(tx, cycle, next);
               }
             } else {
@@ -575,7 +530,7 @@ export default {
             // Centres personnalisés propres au user (jamais ajoutés au catalogue global).
             const tempRefs = {};
             for (const [i, c] of (input.customCenters ?? []).entries()) {
-              const cc = om.create(tx, 'costCenter', { label: text(`customCenters[${i}].label`, c.label, { required: true, max: 120 }), direction: oneOf(`customCenters[${i}].direction`, c.direction, ['income', 'charge']) });
+              const cc = budget.buildCostCenter(tx, c);
               tempRefs[`new:${c.tempRef ?? i}`] = cc.id;
               out.created.push(cc.id);
             }
@@ -584,12 +539,9 @@ export default {
             for (const [i, e] of (input.entries ?? []).entries()) {
               const entry = { ...e, budgetId, costCenterRef: refOf(e.costCenterRef) };
               if (e.recurrenceId) {
-                const rec = om.owned(tx.draft, 'recurrence', e.recurrenceId, tx.userId);
-                const patch = {};
-                if ('label' in e) patch.label = text(`entries[${i}].label`, e.label, { required: true, max: 200 });
-                if ('amount' in e) patch.amountCents = money(`entries[${i}].amount`, e.amount, { positive: true });
-                if ('endDate' in e) patch.endDate = date(`entries[${i}].endDate`, e.endDate);
-                om.update(tx, rec, patch);
+                // Même validation que l'édition directe, sans écrire hors du budget du parcours.
+                const fields = Object.fromEntries(['label', 'amount', 'endDate'].filter(k => k in e).map(k => [k, e[k]]));
+                const { recurrence: rec } = budget.patchRecurrence(tx, e.recurrenceId, fields, { budgetId });
                 out.updated.push(rec.id);
                 continue;
               }
@@ -606,23 +558,16 @@ export default {
             }
 
             if (input.caps) {
-              const b = tx.draft.budgets[budgetId];
-              const caps = { ...(b.capsCents ?? {}) };
-              for (const [ref, amount] of Object.entries(input.caps)) {
-                const real = refOf(ref);
-                if (amount === null || amount === '') delete caps[real];
-                else caps[real] = money(`caps.${ref}`, amount, { positive: true });
-              }
-              om.update(tx, b, { capsCents: caps });
+              budget.patchCaps(tx, budgetId, { merge: true, caps: Object.fromEntries(Object.entries(input.caps).map(([ref, amount]) => [refOf(ref), amount])) });
             }
-            if (input.vision) om.update(tx, comp, { vision: visionFields(comp.vision, input.vision) });
+            if (input.vision) applyVision(tx, comp, input.vision);
             for (const [i, g] of (input.goals ?? []).entries()) {
               if (g.goalId) {
                 const goal = om.owned(tx.draft, 'lifeGoal', g.goalId, tx.userId);
-                om.update(tx, goal, goalFields({ label: goal.label, type: goal.type, date: goal.date, targetToday: goal.targetTodayCents / 100, ...g }, i));
+                socle.modules.patrimoine.patchGoal(tx, goal.id, g);
                 out.updated.push(goal.id);
               } else {
-                out.created.push(om.create(tx, 'lifeGoal', { ...goalFields(g, i), removed: false }).id);
+                out.created.push(socle.modules.patrimoine.buildGoal(tx, g).id);
               }
             }
             return out;
@@ -739,7 +684,7 @@ export default {
             }
             let comp = compositionOf(tx.draft, tx.userId);
             if (!comp) {
-              comp = om.create(tx, 'bpmComposition', { label: `BPM de ${tx.draft.users[tx.userId].label}`, budgetId: life.id, patrimoineId: pat.id, coreProjectId: rootId, vision: null });
+              comp = om.create(tx, 'bpmComposition', { label: `BPM de ${tx.draft.users[tx.userId].label}`, budgetId: life.id, patrimoineId: pat.id, coreProjectId: rootId });
               created.push('bpmComposition');
             }
             if (!cycleOf(tx.draft, comp.id)) {
@@ -760,9 +705,7 @@ export default {
           const cycle = cycleOf(tx.draft, comp.id);
           om.checkRevision(cycle, expectedRevisionOf(input));
           const next = cycleFields({ anchorDay: input.anchorDay, startDate: input.startDate ?? cycle.startDate }, 'startDate');
-          if (closuresOf(tx.draft, cycle.id).length && (next.anchorDay !== cycle.anchorDay || next.startDate !== cycle.startDate)) {
-            fail('FORBIDDEN_BY_RULE', 'Des périodes sont déjà closes : le jour d’ancrage et la date de début sont figés [P].');
-          }
+          assertCycleChange(cycle, next, closuresOf(tx.draft, cycle.id));
           om.update(tx, cycle, next);
           return { cycleLinkId: cycle.id };
         });
@@ -877,6 +820,11 @@ export default {
       });
     }
     for (const b of Object.values(state.budgets).filter((x) => x.role === 'standard')) {
+      const comp = compositionOf(state, b.userId);
+      const parent = state.budgets[b.parentBudgetId];
+      const linked = comp && parent?.id === comp.budgetId && parent.userId === b.userId && b.coreProjectId !== comp.coreProjectId;
+      out.push(check('BPM-02', 'integrity', 'bpm', `Projet ${b.name} dans la composition du projet de vie`, 'racine propre, budget père de la composition, même user', linked ? 'relié' : 'liaison incohérente', linked ? 'passed' : 'failed', [b.id, b.coreProjectId, comp?.id].filter(Boolean)));
+
       const n = Object.values(state.tasks).filter((t) => t.projectId === b.coreProjectId).length;
       if (!n) out.push(check('A-PARC-01', 'pathway', 'bpm', `Projet de la vie ${b.name} sans tâche`, 'au moins une tâche dans le parcours métier', '0 tâche', 'warning', [b.id]));
     }
@@ -891,15 +839,6 @@ export default {
       keys.add(`${c.cycleLinkId}/${c.periodKey}`);
       const ok = unique && cap && cap.amountCents === c.resultCents && cap.source?.id === c.id;
       out.push(check('CLO-01', 'integrity', 'bpm', `Clôture ${c.periodLabel} : unique, résultat transféré une seule fois`, 'une capitalisation du même montant, une clôture par période', ok ? 'cohérent' : 'incohérent', ok ? 'passed' : 'failed', [c.id, c.capitalizationId].filter(Boolean)));
-    }
-    // Projets de la vie financés par le budget de vie (C05, règles du 4 novembre 2026 [P]).
-    const now = today();
-    for (const b of Object.values(state.budgets).filter(inRegime)) {
-      const fig = projectBudget(state, b, now);
-      out.push(check('PRJ-01', 'integrity', 'bpm', `Projet ${b.name} : parts des tâches dans le budget autorisé`, 'somme des parts ≤ budget attribué + dépassements autorisés', `${fig.sharesCents / 100} € sur ${fig.ceilingCents / 100} €`, fig.sharesCents <= fig.ceilingCents ? 'passed' : 'failed', [b.id]));
-      const late = Object.values(state.projectOverruns ?? {}).filter((x) => x.budgetId === b.id && x.status === 'approved' && x.billingDate && x.billingDate < now);
-      if (late.length) out.push(check('PRJ-02', 'pathway', 'bpm', `Projet ${b.name} : dépassement autorisé à facturer au budget de vie`, 'facturé à la fin du cycle', `${late.length} dépassement(s) dont la fin de cycle est passée`, 'warning', [b.id, ...late.map((x) => x.id)]));
-      if (cycleChecks(state, b, fig).some((c) => c.level === 'warning')) out.push(check('PRJ-03', 'pathway', 'bpm', `Projet ${b.name} : contrôles de fin de cycle`, 'budget = somme des parts ; charges des tâches planifiées et à jour', 'au moins un point à revoir', 'warning', [b.id]));
     }
     // Reste ouvert : les projets de la vie sans montant attribué ne sont pas consolidés dans le budget de vie.
     out.push({ rule: 'C05', category: 'not-implemented', description: 'Consolidation des projets de la vie sans budget attribué par le budget de vie', expected: 'décision ouverte', observed: 'flux non consolidés (chaque Budget présenté séparément)', result: 'not-run', execution: 'not-run', ids: [] });

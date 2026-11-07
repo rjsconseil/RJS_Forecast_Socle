@@ -1,10 +1,11 @@
-import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmDirectives, BpmSummary, SetupProfile, Vision } from '../../core/bpm-models';
 import { CentsPipe, PercentPipe, SignedCentsPipe, parseAmount, signedCents } from '../../core/format';
+import { BpmDrafts } from '../ui/drafts';
 import { BpmProgress, BpmRefresh, BpmState, Loader } from '../ui';
 
 /** Nombre saisi (virgule acceptée) : null si vide, NaN si invalide. */
@@ -209,6 +210,7 @@ export class BpmVisionObjectives {
   protected sStart = signal('');
 
   constructor() {
+    inject(BpmDrafts).fields('vision-surplus', this, ['sTarget', 'sPeriods', 'sStart', 'surplusDirty', 'surplusOpen'], inject(DestroyRef));
     // Brouillon initialisé depuis la version enregistrée, sans écraser une saisie en cours.
     effect(() => {
       const v = this.vision();

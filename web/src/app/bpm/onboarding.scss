@@ -9,6 +9,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.us-split.is-specialized:has(> .us-form) {
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: var(--ecart-20);
+}
+
 /* Message d'un champ à corriger, sous le champ (même place que l'aide). */
 .field-hint[data-state='error'] {
   color: var(--status-danger);
