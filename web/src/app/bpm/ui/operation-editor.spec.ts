@@ -310,4 +310,19 @@ describe('éditeur d’opération partagé', () => {
     f.destroy();
   });
 
+  it('écarte un aperçu en vol quand la saisie devient incomplète', async () => {
+    const f = await open();
+    const ed = f.componentInstance as any;
+    ed.label.set('Courses'); ed.amount.set('75'); ed.date.set('2026-11-08');
+    f.detectChanges();
+    await new Promise(resolve => setTimeout(resolve, 400));
+    const request = http.expectOne('/api/bpm/operations/preview');
+    ed.label.set(''); f.detectChanges();
+    request.flush({ before: { netCents: 10000 }, after: { netCents: 2500 } });
+    await new Promise(resolve => setTimeout(resolve));
+    expect(ed.preview()).toBeNull();
+    expect(ed.previewLoading()).toBe(false);
+    http.match(() => true); f.destroy();
+  });
+
 });

@@ -28,8 +28,14 @@ import { BpmSetupNeeded, setupProblem, shade } from './dashboard-parts';
       [periodNav]="true"
       (periodChange)="ctx.setQuery({ period: $event })"
     >
-      @if (nextLine(); as line) { <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">Vérifier la réception · {{ line.label }}</button> }
-      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir une entrée</button>
+      @if (nextLine(); as line) {
+        <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">Vérifier la réception · {{ line.label }}</button>
+      } @else {
+        <button primary type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir une entrée</button>
+      }
+      @if (nextLine()) {
+        <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir une entrée</button>
+      }
       @if (unrealized().length) { <a actions class="bpm-link" routerLink="/depenses/registre" [queryParams]="unrealizedQuery()">Revoir {{ unrealized().length }} entrée(s) non réalisée(s)</a> }
 
       <div class="bpm-money bpm-money-body bpm-money-detail" data-tone="budget">

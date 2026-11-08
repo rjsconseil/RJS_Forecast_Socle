@@ -52,9 +52,10 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           <ng-container actions>
           <button actions class="btn btn-secondary" type="button" [disabled]="!budgetType()?.ready() || budgetType()?.saving()" (click)="budgetType()?.addRecurring('income')">＋ Entrée récurrente</button>
           @if (budgetType()?.pendingChanges()) { <button actions class="btn btn-secondary" type="button" [disabled]="budgetType()?.saving()" (click)="budgetType()?.addRecurring('charge')">＋ Dépense récurrente</button> }
-          <a actions class="bpm-link" routerLink="/depenses/registre" queryParamsHandling="preserve">Vérifier les échéances générées →</a>
+          <a actions class="bpm-link" routerLink="/piloter/agir">Vérifier les échéances à régler →</a>
+          <a actions class="bpm-link" routerLink="/plafonds/reglages">Définir mes plafonds →</a>
           </ng-container>
-        } @else {
+        } @else if (workspace()?.key !== 'life-closing') {
           <button actions class="btn btn-secondary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une entrée ou une dépense</button>
         }
         @if (!workspace() && priorityKind() !== 'budget') {
@@ -512,8 +513,8 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                 <dd>{{ d.cycle.flows?.expectedCents | signedCents }}</dd>
               </div>
               <div>
-                <dt>Stock enregistré</dt>
-                <dd>{{ d.patrimoine.stockCents | cents }}</dd>
+                <dt>{{ d.cycle.reading === 'closed' ? 'Patrimoine après clôture' : 'Stock avant la période' }}</dt>
+                <dd>{{ (d.cycle.reading === 'closed' ? d.patrimoine.afterCents : d.patrimoine.stockCents) | cents }}</dd>
               </div>
               <div>
                 <dt>Cycles à clôturer</dt>
@@ -561,7 +562,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
               } @else {
                 <p class="bpm-note">
                   Aucun cycle terminé à clôturer.
-                  {{ d.cycle.period ? 'Le cycle en cours se clôturera après le ' + (d.cycle.period.end | shortDate) + '.' : '' }}
+                  {{ d.cycle.reading === 'current' && d.cycle.period ? 'Le cycle en cours se clôturera après le ' + (d.cycle.period.end | shortDate) + '.' : 'Reprenez le cycle en cours pour poursuivre le suivi.' }}
                 </p>
               }
             </section>
@@ -581,15 +582,17 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
                 }
               </section>
             }
+            @if (d.projects.pendingRequests.length || d.projects.taskRequestCount || d.projects.billable.length) {
             <p class="bpm-note">
               Décisions de dépassement et facturation :
               <a routerLink="/projet-de-vie" fragment="life-decisions" (click)="followOpen.set(false)">Décisions attendues</a>.
             </p>
+            }
             <nav class="bpm-actions" aria-label="Vues complémentaires">
               <a class="text-link" [routerLink]="['/app/gestion-projet', d.lifeProject.coreProjectId]">Fiche du projet de vie ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord">Tableau de bord ↗</a>
               <a class="text-link" routerLink="/tableau-de-bord" fragment="bm-history" (click)="followOpen.set(false)">Historique des cycles ↗</a>
-              <a class="text-link" routerLink="/vision" fragment="objectifs-budgetaires" (click)="followOpen.set(false)">Objectif d’excédent ↗</a>
+              <a class="text-link" routerLink="/vision/reperes" fragment="bp-target-title" (click)="followOpen.set(false)">Objectif d’excédent ↗</a>
             </nav>
             @if (!workspace()) {
               <div class="bpm-actions"><button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="followOpen.set(false)">Fermer</button></div>
@@ -682,11 +685,11 @@ export class BpmLifeManagementPage {
   private refresh = inject(BpmRefresh);
   private context = inject(RecetteContext);
   private fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
-  private objectivesRouter = inject(Router);
+  private router = inject(Router);
   private followMovedObjectives = effect(() => {
     const fragment = this.fragment();
     if (fragment && OBJECTIVE_FRAGMENTS.includes(fragment)) {
-      void this.objectivesRouter.navigate(['/vision'], { fragment, replaceUrl: true });
+      void this.router.navigate(['/vision'], { fragment, replaceUrl: true });
     }
   });
   protected budgetTypeOpen = signal(false);
@@ -784,7 +787,7 @@ export class BpmLifeManagementPage {
   protected priorityLabel = computed(() => this.workspace()?.key === 'life-budget'
     ? this.budgetType()?.pendingChanges() ? `Enregistrer le budget type · ${this.budgetType()!.pendingChanges()} modification(s)` : '＋ Ajouter une dépense récurrente'
     : this.workspace()?.key === 'life-closing'
-      ? this.data()?.results.closing?.possible && this.data()?.results.closing?.preview ? `Clôturer ${this.data()!.results.closing!.preview!.periodLabel}` : 'Actualiser la clôture'
+      ? this.data()?.results.closing?.possible && this.data()?.results.closing?.preview ? `Clôturer ${this.data()!.results.closing!.preview!.periodLabel}` : this.data()?.results.toCloseCount ? 'Actualiser la clôture' : 'Revenir au cycle en cours'
       : this.priorityKind() === 'due' ? `Examiner et régler · ${this.priorityDue()?.label ?? 'échéance'}` : this.priorityKind() === 'follow' ? 'Ouvrir les suites à donner' : 'Revoir mon budget type');
   protected runPriority() {
     if (this.workspace()?.key === 'life-budget') {
@@ -795,7 +798,8 @@ export class BpmLifeManagementPage {
     if (this.workspace()?.key === 'life-closing') {
       const preview = this.data()?.results.closing?.preview;
       if (this.data()?.results.closing?.possible && preview) void this.close(preview.periodKey, preview.resultCents);
-      else void this.load();
+      else if (this.data()?.results.toCloseCount) void this.load();
+      else void this.router.navigate(['/projet-de-vie']);
       return;
     }
     if (this.priorityKind() === 'due' && this.priorityDue()) this.openLine(this.priorityDue()!.id);

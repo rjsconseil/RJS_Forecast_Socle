@@ -54,8 +54,8 @@ import { bpmLoader, BpmProgress, BpmRefresh, BpmState } from '../ui';
           </details>
         </div>
         <p class="bpm-help">
-          Indications calculées sans écriture. L'épargne nécessaire vient de l'objectif d'excédent (onglet suivant) ou de l'épargne visée ;
-          les provisions viennent des objectifs datés (<a routerLink="/vision">Objectifs et avenir</a>) ; le plafond est la somme des plafonds par centre (onglet Budget type).
+          Indications calculées sans écriture. L'épargne nécessaire vient de l'objectif d'excédent ou de l'épargne visée ;
+          les provisions viennent des objectifs datés (<a routerLink="/vision">Objectifs et avenir</a>) ; le plafond est la somme des limites définies dans <a routerLink="/plafonds/reglages">Définir les plafonds</a>.
         </p>
       }
     </section>
@@ -141,7 +141,7 @@ export class BpmActDirectives {
             </label>
           </div>
           @if (perPeriod() !== null) {
-            <p>Soit <strong class="num">{{ perPeriod()! | cents }}</strong> d'excédent par période (arrondi au centime supérieur par l'API).</p>
+            <p>Soit <strong class="num">{{ perPeriod()! | cents }}</strong> d'excédent par période (arrondi au centime supérieur).</p>
           }
           <p class="bpm-help">Enregistrer cet objectif ne modifie pas le stock du Patrimoine : il fixe l'épargne nécessaire des directives. Le stock n'évolue qu'à la clôture, par la capitalisation du résultat réel.</p>
           <div class="bpm-actions">

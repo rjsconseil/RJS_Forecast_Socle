@@ -670,4 +670,11 @@ describe('repères budgétaires du projet et estimation de la tâche', () => {
       'Réglé sur l’enveloppe',
     );
   });
+  it('rend le reliquat avec la révision lue sans avoir ouvert l’éditeur d’enveloppe', async () => {
+    const { page, bpm, state } = await setup();
+    await page.applyCheck('bud_1', 10000, 'Rendre le reliquat');
+    expect(bpm.allocate).toHaveBeenCalledWith('bud_1', 100, 7);
+    expect(state.budget!.allocationCents).toBe(10000);
+  });
+
 });

@@ -1,23 +1,18 @@
 import { Component, computed, inject, linkedSignal, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BpmApi } from '../../core/bpm-api.service';
-import { EntryInput } from '../../core/bpm-models';
-import { cents, CentsPipe, parseAmount, percentText, shortDate, SignedCentsPipe } from '../../core/format';
+import { Cadence } from '../../core/bpm-models';
+import { cents, CentsPipe, parseAmount, percentText, SignedCentsPipe } from '../../core/format';
 import { bpmLoader, BpmPageContext, BpmSeriesChart, BpmState, ChartSeries } from '../ui';
 
 const CADENCE_TEXT: Record<string, string> = { weekly: 'semaine', monthly: 'mois', yearly: 'année' };
 
-/** Premier jour du mois suivant (date locale). */
-function firstOfNextMonth() {
-  const d = new Date();
-  const n = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-01`;
-}
+export interface SimulationAdoption { contributionCents: number; cadence: Exclude<Cadence, 'once'>; }
 
 /**
  * Panneau « Simulation » : effort supplémentaire par période → Patrimoine futur et écart au scénario
  * de base (lecture `projection?extra=`, aucune écriture). L'effort appliqué est gardé dans l'URL
- * (`?effort=`). « Adopter » ouvre seulement l'éditeur prérempli : rien n'est écrit sans validation.
+ * (`?effort=`). Retenir un scénario préremplit les hypothèses ; seule leur confirmation les enregistre.
  */
 @Component({
   selector: 'bpm-act-simulation',
@@ -48,7 +43,7 @@ function firstOfNextMonth() {
           @if (p.status === 'missing-hypothesis' || !p.keyFigures) {
             <p class="bpm-missing" role="status">
               Non calculable : {{ p.reason ?? 'hypothèses de projection incomplètes.' }}
-              <a routerLink="/vision">Compléter dans Objectifs et avenir →</a>
+              <a routerLink="/vision/projection">Compléter dans Objectifs et avenir →</a>
             </p>
           } @else {
             @if (p.hypotheses.startCents === null) {
@@ -96,22 +91,10 @@ function firstOfNextMonth() {
             </details>
 
             <section class="adopt" aria-labelledby="bp-adopt-title">
-              <h3 id="bp-adopt-title">Adopter cet effort</h3>
-              @if (extraEuros() !== null && extraEuros()! > 0) {
-                <p>« Adopter » ouvre l'éditeur partagé prérempli, sans rien enregistrer :</p>
-                <ul class="bp-dir-list">
-                  <li>Charge récurrente <strong>mensuelle</strong> « Épargne supplémentaire » du Budget du projet de vie.</li>
-                  <li>Montant <strong>{{ extraCents() | cents }}</strong> par occurrence, première date le {{ firstDateText }}, sans fin.</li>
-                  <li>Choisissez le poste dans le formulaire. Vous pouvez créer un poste personnel « Épargne » et conserver la note de simulation.</li>
-                </ul>
-                @if (p.hypotheses.cadence !== 'monthly') {
-                  <p class="bpm-missing">L'apport de projection est par {{ cadenceText() }} : la charge proposée est mensuelle, vérifiez le montant avant d'enregistrer.</p>
-                }
-                <p class="bpm-help">L'enregistrement n'a lieu que si vous validez l'éditeur ; il réduit le solde attendu des périodes concernées, sans modifier le stock avant clôture.</p>
-                <button type="button" class="btn btn-secondary" (click)="adopt()">Adopter…</button>
-              } @else {
-                <p class="bpm-help">Seul un effort positif peut être adopté comme charge d'épargne.</p>
-              }
+              <h3 id="bp-adopt-title">Retenir ce scénario</h3>
+              <p>Apport proposé : <strong>{{ (p.hypotheses.contributionCents ?? 0) + (p.hypotheses.extraCents ?? 0) | cents }}</strong> par {{ cadenceText() }}.</p>
+              <p class="bpm-help">Relisez les hypothèses avant de les enregistrer. Cette action ajuste la projection ; elle ne crée ni dépense ni transfert.</p>
+              <button type="button" class="btn btn-secondary" [disabled]="sim.loading() || !!sim.error()" (click)="adopt()">Reprendre cet apport dans les hypothèses</button>
             </section>
           }
         }
@@ -129,7 +112,7 @@ function firstOfNextMonth() {
 export class BpmActSimulation {
   private bpm = inject(BpmApi);
   private ctx = inject(BpmPageContext);
-  readonly adoptRequest = output<Partial<EntryInput>>();
+  readonly adoptRequest = output<SimulationAdoption>();
 
   /** Effort appliqué (euros, URL). */
   protected effort = computed(() => this.ctx.q('effort')());
@@ -166,7 +149,6 @@ export class BpmActSimulation {
   protected sign(v: number | null) {
     return v === null ? null : v < 0 ? 'negative' : v > 0 ? 'positive' : null;
   }
-  protected readonly firstDateText = shortDate(firstOfNextMonth());
 
   protected apply(e: Event) {
     e.preventDefault();
@@ -179,15 +161,9 @@ export class BpmActSimulation {
   }
 
   protected adopt() {
-    const extra = this.extraEuros();
-    if (extra === null || extra <= 0) return;
-    this.adoptRequest.emit({
-      direction: 'charge',
-      label: 'Épargne supplémentaire',
-      amount: extra,
-      cadence: 'monthly',
-      date: firstOfNextMonth(),
-      note: `Effort adopté depuis la simulation de « Ce qu'il faut faire » : ${cents(Math.round(extra * 100))} par période.`,
-    });
+    const projection = this.sim.data();
+    if (!projection || projection.status !== 'estimate' || this.sim.loading() || this.sim.error()) return;
+    const h = projection.hypotheses;
+    this.adoptRequest.emit({ contributionCents: (h.contributionCents ?? 0) + (h.extraCents ?? 0), cadence: h.cadence });
   }
 }

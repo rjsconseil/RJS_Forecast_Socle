@@ -31,15 +31,22 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
       [periodNav]="true"
       (periodChange)="ctx.setQuery({ period: $event })"
     >
-      @if (b()?.reconciliation?.gapCents; as gap) {
+      @if (!b()?.closed && b()?.reconciliation?.gapCents; as gap) {
         <button primary type="button" class="app-hero-action" (click)="fillGap(gap)">Préparer l’opération d’écart · {{ abs(gap) | cents }}</button>
       }
-      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir une entrée ou une dépense</button>
+      @if (b()?.reconciliation?.gapCents === 0) {
+        @if (periodEnded() && !b()?.closed) {
+          <a primary class="app-hero-action" routerLink="/projet-de-vie/cloture" [queryParams]="carry()">Préparer la clôture de cette période</a>
+        } @else {
+          <a primary class="app-hero-action" routerLink="/tableau-de-bord" [queryParams]="carry()">Revenir au tableau de bord</a>
+        }
+      }
+      @if (!b()?.closed) { <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ Saisir une entrée ou une dépense</button> }
       @if (b()?.toReceiveCents) { <a actions class="bpm-link" routerLink="/tableau-de-bord/entrees" [queryParams]="carry()">Vérifier les {{ b()!.toReceiveCents | cents }} à recevoir →</a> }
       @if (b()?.toPayCents) { <a actions class="bpm-link" routerLink="/depenses/registre" [queryParams]="carry()">Revoir les charges de la période →</a> }
       <form tools class="bpm-toolbar-search" (ngSubmit)="reconcile()" novalidate>
         <label>Solde initial du compte (€)<input name="initial" inputmode="decimal" [(ngModel)]="initial" [attr.aria-invalid]="recError() === 'initial' ? 'true' : null" /></label>
-        <label>Solde actuel du compte (€)<input name="current" inputmode="decimal" [(ngModel)]="current" [attr.aria-invalid]="recError() === 'current' ? 'true' : null" /></label>
+        <label>{{ periodEnded() ? 'Solde du compte en fin de période (€)' : 'Solde actuel du compte (€)' }}<input name="current" inputmode="decimal" [(ngModel)]="current" [attr.aria-invalid]="recError() === 'current' ? 'true' : null" /></label>
         <button type="submit" class="btn btn-primary" [disabled]="!b()">Calculer l’écart</button>
         @if (b()?.reconciliation) { <button type="button" class="btn btn-secondary" (click)="clearReconciliation()">Effacer le rapprochement</button> }
         @if (recError()) { <p role="alert">Montant attendu dans le champ {{ recError() === 'initial' ? 'Solde initial' : 'Solde actuel' }}.</p> }
@@ -122,7 +129,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
           }
           <section class="bm-statement" id="verifier" aria-labelledby="bmd-check-title" data-ui-pattern="panel">
             <h2 id="bmd-check-title">Vérifier avec mon compte</h2>
-            <p class="bpm-help">Saisissez le solde du compte au début de la période et aujourd'hui. Variation = actuel − initial ; écart = variation − net réalisé. Rien n'est enregistré.</p>
+            <p class="bpm-help">Comparez le solde au début de la période avec {{ periodEnded() ? 'celui de sa date de fin' : 'celui d’aujourd’hui' }}. La différence doit correspondre aux entrées reçues moins les dépenses payées.</p>
 
             @if (v.reconciliation; as r) {
               <ul class="bmd-rest-lines">
@@ -132,7 +139,7 @@ import { BpmSetupNeeded, setupProblem } from './dashboard-parts';
               </ul>
               <p class="bpm-help"><code>{{ r.formula }}</code></p>
               <p class="bmd-message" [attr.data-state]="r.gapCents === 0 ? 'success' : 'warning'">{{ r.suggestion }}</p>
-              @if (r.gapCents !== null && r.gapCents !== 0) {
+              @if (!v.closed && r.gapCents !== null && r.gapCents !== 0) {
                 <div class="bmd-actions">
                   <button type="button" class="bmd-primary" (click)="fillGap(r.gapCents)">Saisir l'opération manquante…</button>
                 </div>
@@ -169,6 +176,10 @@ export class BpmBalancePage {
     (k) => this.bpm.balance(k),
   );
   protected b = computed(() => this.loader.data());
+  protected periodEnded = computed(() => {
+    const value = this.b();
+    return !!value?.context.period && value.context.period.endExclusive <= value.context.calculationDate;
+  });
   protected problem = computed(() => setupProblem(this.loader.error()));
   protected pageFocus = computed<BpmPageFocus | null>(() => {
     const b = this.b();

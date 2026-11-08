@@ -128,9 +128,8 @@ interface AnalysisPoint {
         <a
           actions
           class="btn btn-secondary"
-          routerLink="/piloter/agir"
-          [queryParams]="ctx.carry()"
-          fragment="saisie-des-flux"
+          routerLink="/depenses/registre"
+          [queryParams]="{ period: ctx.period(), entry: 'new', direction: 'all' }"
           >＋ Saisir une entrée ou une dépense</a
         >
       }
@@ -420,7 +419,7 @@ interface AnalysisPoint {
               </p>
             }
             <p class="bpm-help">
-              <a routerLink="/piloter/agir" fragment="bp-dir-title"
+              <a routerLink="/vision/reperes" fragment="bp-dir-title"
                 >Voir vos repères et leurs hypothèses →</a
               >
             </p>
@@ -819,7 +818,7 @@ interface AnalysisPoint {
               [empty]="!!budgetType.data()?.empty"
               emptyText="Aucune opération récurrente active : le budget type est vide."
             >
-              <a class="btn btn-secondary small" routerLink="/piloter/agir" fragment="budget-type"
+              <a class="btn btn-secondary small" routerLink="/projet-de-vie/budget-type"
                 >Composer mon budget type</a
               >
             </bpm-state>
@@ -874,7 +873,7 @@ interface AnalysisPoint {
                 </p>
               }
             }
-            <a class="btn btn-secondary" routerLink="/piloter/agir" fragment="budget-type"
+            <a class="btn btn-secondary" routerLink="/projet-de-vie/budget-type"
               >Modifier mon budget type →</a
             >
           </section>
@@ -1303,8 +1302,8 @@ export class BpmPilotPage {
         unit,
         source: 'Directives — ' + (it?.assumptions.join(' ; ') || 'aucune hypothèse'),
         reason: it?.reason ?? null,
-        link: '/piloter/agir',
-        query: { panneau: 'directives' },
+        link: '/vision/reperes',
+        query: this.carryQuery(),
       };
     };
     const c = this.centers.data();

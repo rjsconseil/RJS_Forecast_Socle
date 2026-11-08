@@ -197,7 +197,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
           </label>
           @if (!editing() && cadence() === 'once') {
             <label class="bp-check fe-wide"
-              ><input type="checkbox" name="realized" [(ngModel)]="realized" /> Déjà {{ direction() === 'income' ? 'reçue' : 'payée' }}</label
+              ><input type="checkbox" name="realized" [ngModel]="realized()" (ngModelChange)="setRealized($event)" /> Déjà {{ direction() === 'income' ? 'reçue' : 'payée' }}</label
             >
             @if (realized()) {
               <label
@@ -209,7 +209,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
               </label>
               <label
                 >Montant réel (€, si différent)
-                <input name="realizedAmount" inputmode="decimal" [(ngModel)]="realizedAmount" />
+                <input name="realizedAmount" inputmode="decimal" [(ngModel)]="realizedAmount" [placeholder]="amount()" />
               </label>
               <p class="fe-schedule-note fe-wide">Une date réelle future est refusée : saisissez alors l'opération comme prévision.</p>
             }
@@ -223,7 +223,8 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
           <section class="fe-impact" aria-live="polite" [attr.aria-labelledby]="impactId">
             <h3 [id]="impactId" class="fe-section-title"><span>03</span>Vérifier l’impact</h3>
             <p class="fe-impact-rule">Comparez le solde et le patrimoine avant / après cette opération.</p>
-            @if (preview(); as p) {
+            @if (previewLoading()) { <p class="fe-impact-rule" role="status">Calcul de l’impact de votre saisie…</p> }
+            @else if (preview(); as p) {
               <div class="fe-impact-grid">
                 <article>
                   <h4>Solde prévu à la clôture</h4>
@@ -328,6 +329,7 @@ export class BpmOperationEditor implements OnInit {
     const l = this.line();
     return { ...this.input(), ...(l ? { replaceId: l.recurrenceId ?? l.operationId ?? l.id } : {}) };
   }
+  protected previewLoading = signal(false);
   protected preview = signal<EntryPreview | null>(null);
   protected previewError = signal<string | null>(null);
   private requestKey = newRequestKey('entry');
@@ -338,7 +340,7 @@ export class BpmOperationEditor implements OnInit {
 
   protected editing = computed(() => !!this.line());
   protected isRecurrence = computed(() => !!this.line()?.recurrenceId);
-  protected heading = computed(() => (this.editing() ? (this.isRecurrence() ? 'Modifier l’opération récurrente' : 'Modifier l’opération') : 'Saisir une entrée ou une dépense'));
+  protected heading = computed(() => (this.editing() ? (this.isRecurrence() ? 'Modifier l’opération récurrente' : 'Modifier l’opération') : this.direction() === 'income' ? 'Saisir une entrée' : 'Saisir une dépense'));
   protected centerOptions = computed(() => this.centers().filter((c) => c.direction === this.direction()));
   /** Catégories actives du centre choisi ; la catégorie actuelle d'une ligne reste proposée même retirée. */
   protected categoryOptions = computed(() => this.categories().filter((k) => k.costCenterRef === this.center() && (!k.archived || k.id === this.line()?.categoryId)));
@@ -367,24 +369,28 @@ export class BpmOperationEditor implements OnInit {
       onCleanup(() => { active = false; clearTimeout(timer); });
     });
     // Aperçu sans mutation, relancé après une courte pause de saisie ; seule la dernière réponse compte.
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let token = 0;
-    effect(() => {
+    effect((onCleanup) => {
       if (this.editing()) return;
       const input = this.input();
-      clearTimeout(timer);
-      if (!input.label || !input.amount || !(input.date || input.firstDate) || input.costCenterRef === '__new__') {
-        this.preview.set(null);
-        return;
-      }
-      const mine = ++token;
-      timer = setTimeout(() => {
+      this.preview.set(null);
+      this.previewError.set(null);
+      this.previewLoading.set(false);
+      if (!input.label || !input.amount || !(input.date || input.firstDate) || input.costCenterRef === '__new__') return;
+      this.previewLoading.set(true);
+      let active = true;
+      const timer = setTimeout(() => {
         this.bpm.previewEntry(input).then(
-          (p) => mine === token && (this.preview.set(p), this.previewError.set(null)),
-          (e) => mine === token && (this.preview.set(null), this.previewError.set(toApiError(e).message)),
-        );
+          p => { if (active) this.preview.set(p); },
+          e => { if (active) this.previewError.set(toApiError(e).message); },
+        ).finally(() => { if (active) this.previewLoading.set(false); });
       }, 350);
+      onCleanup(() => { active = false; clearTimeout(timer); });
     });
+  }
+
+  protected setRealized(value: boolean) {
+    this.realized.set(value);
+    if (value && !this.realizedDate()) this.realizedDate.set(this.date());
   }
 
   async ngOnInit() {

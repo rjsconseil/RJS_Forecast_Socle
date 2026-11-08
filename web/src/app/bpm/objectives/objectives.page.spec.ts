@@ -70,7 +70,7 @@ describe('page dédiée Objectifs et avenir', () => {
     bpm = {
       setupProfile: vi.fn().mockResolvedValue(profile()),
       summary: vi.fn().mockResolvedValue({ context: { user: { label: 'Profil test' }, calculationDate: '2026-11-06', scope: 'principal', period: { key: '2026-11', label: 'Novembre 2026', start: '2026-11-01', endExclusive: '2026-12-01' } }, figures: {} }),
-      directives: vi.fn().mockResolvedValue({ items: [], surplus: null }),
+      directives: vi.fn().mockResolvedValue({ context: { period: { key: '2026-11' } }, items: [], surplus: null }),
       goals: vi.fn().mockResolvedValue([goal]),
       projection: vi.fn().mockResolvedValue({ status: 'unknown', rows: [], goals: [] }),
       updateVision: vi.fn().mockResolvedValue({ revision: 10 }),
@@ -312,6 +312,25 @@ describe('page dédiée Objectifs et avenir', () => {
     expect(element<HTMLInputElement>('input[name="rate"]').value).toBe('6,5');
     expect(element('.bpm-toolbar-primary').textContent).toContain('Enregistrer le scénario saisi');
     expect(bpm['updateVision']).not.toHaveBeenCalled();
+  });
+
+  it('reprend un effort dans la projection avec sa cadence, puis efface la comparaison après confirmation', async () => {
+    bpm['projection'].mockImplementation(async (options = {}) => ({
+      status: 'estimate', rows: [], goals: [], keyFigures: {}, difference: [],
+      hypotheses: { contributionCents: 20000, extraCents: (options.extra ?? 0) * 100, cadence: 'weekly', startCents: 500000, horizonYears: 20, inflationPct: 2, ratePct: 3 },
+    }));
+    await harness.navigateByUrl('/vision/projection?effort=25');
+    await settle();
+    await click('Reprendre cet apport dans les hypothèses');
+    expect(element<HTMLInputElement>('input[name="contribution"]').value).toBe('225');
+    expect(element<HTMLSelectElement>('select[name="cadence"]').value).toBe('weekly');
+    expect(bpm['updateVision']).not.toHaveBeenCalled();
+    await submitFor('horizon');
+    expect(bpm['updateVision']).toHaveBeenCalledWith(expect.objectContaining({ contribution: 225, contributionCadence: 'weekly' }));
+    await vi.waitFor(() => {
+      expect(TestBed.inject(Router).url).not.toContain('effort=');
+      expect(TestBed.inject(Router).url).not.toContain('reglage=');
+    });
   });
 
 });

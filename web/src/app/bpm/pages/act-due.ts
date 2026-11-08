@@ -138,7 +138,7 @@ export class BpmActDueRow implements OnInit {
       <section class="bv-card" aria-labelledby="bp-pending-title" data-ui-pattern="panel">
         <h2 id="bp-pending-title">Échéances à traiter</h2>
         <p>En retard ou du jour : marquez-les payées ou reçues avec leurs valeurs réelles.</p>
-        <p class="bpm-help">Règlement manuel : la date réelle ne peut pas être future (sinon l'API refuse et la saisie est conservée). Une occurrence déjà réglée n'est jamais réglée une seconde fois.</p>
+        <p class="bpm-help">Indiquez la date et le montant figurant sur votre compte. Les échéances futures restent dans le calendrier.</p>
 
         @if (notice(); as n) {
           <p class="bv-saved" role="status">

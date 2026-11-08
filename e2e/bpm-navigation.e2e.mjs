@@ -156,11 +156,51 @@ try {
   assert.equal(new URL(page.url()).pathname, '/piloter');
   assert(await page.locator('main > bpm-navigation .nav-back').isEnabled());
   check('Plusieurs retours, dernière étape et excursion hors de BPM');
+
+  for (const path of ['/tableau-de-bord', '/piloter/agir']) {
+    await open(path);
+    const toggle = page.locator('bpm-page-banner .bpm-toolbar-toggle');
+    if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+    await page.locator('bpm-page-banner').getByRole('button', { name: '＋ Saisir une entrée', exact: true }).click();
+    await page.waitForURL(url => url.searchParams.get('entryDirection') === 'income');
+    await page.locator('bpm-operation-editor input[name=label]').fill('Entrée en préparation · navigation');
+    await page.locator('bpm-operation-editor input[name=amount]').fill('50');
+    await page.locator('dialog[open] .modal-journey .nav-back').click();
+    await page.waitForURL(url => !url.searchParams.has('entry'));
+    await page.locator('main > bpm-navigation .nav-forward').click();
+    await page.waitForURL(url => url.searchParams.get('entry') === 'new');
+    await page.reload({ waitUntil: 'networkidle' });
+    assert(await page.locator('bpm-operation-editor input[name=direction][value=income]').isChecked());
+    assert.equal(await page.locator('bpm-operation-editor input[name=amount]').inputValue(), '50');
+    await page.locator('dialog[open] .modal-close').click();
+    await page.waitForURL(url => !url.searchParams.has('entry'));
+    assert(!new URL(page.url()).searchParams.has('entryDirection'));
+    check(`Saisie d’entrée : sens et brouillon conservés en arrière, en avant et au rechargement · ${path}`);
+  }
+
+  const legacy = [
+    ['?panneau=budget-type', '/projet-de-vie/budget-type', null],
+    ['#bp-dir-title', '/vision/reperes', '#bp-dir-title'],
+    ['?panneau=objectif', '/vision/reperes', '#bp-target-title'],
+    ['?panneau=simulation&effort=100', '/vision/projection', '#bp-sim-title'],
+    ['#saisie-des-flux', '/depenses/registre', null],
+  ];
+  for (const [suffix, path, hash] of legacy) {
+    await open('/piloter/agir' + suffix);
+    await page.waitForURL(url => url.pathname === path);
+    if (hash) {
+      assert.equal(new URL(page.url()).hash, hash);
+      await page.locator(hash).waitFor({ state: 'visible' });
+    }
+    if (suffix.includes('simulation')) assert.equal(new URL(page.url()).searchParams.get('effort'), '100');
+    if (suffix.includes('saisie')) await page.locator('bpm-operation-editor').waitFor({ state: 'visible' });
+    check(`Ancien accès conservé : ${suffix} → ${path}`);
+  }
   assert.deepEqual(errors, []);
   const directory = join(root, 'api/data/recettes');
   await mkdir(directory, { recursive: true });
   const report = { at: new Date().toISOString(), base, userId, user: user.label, checks, errors };
-  await writeFile(join(directory, 'bpm-navigation-production-2026-11-07.json'), JSON.stringify(report, null, 2) + '\n');
+  await writeFile(join(directory, `bpm-navigation-production-${report.at.slice(0, 10)}.json`), JSON.stringify(report, null, 2) + '\n');
   console.log(`${checks.length} contrôles réussis · profil ${user.label}`);
 } catch (error) {
   await page.screenshot({ path: '/tmp/bpm-navigation-failure.png', fullPage: true }).catch(() => {});

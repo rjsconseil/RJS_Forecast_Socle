@@ -13,6 +13,8 @@ import { BpmApi } from '../../core/bpm-api.service';
 import { Cadence, LifeGoal, Vision } from '../../core/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, SignedCentsPipe } from '../../core/format';
 import { BpmModal } from '../ui/modal';
+import { BpmActSimulation, SimulationAdoption } from '../pages/act-simulation';
+import { BpmActDirectives, BpmActSurplus } from '../pages/act-guidance';
 import { BpmGoalEditor } from '../pages/vision-goal-editor';
 import { BpmVisionObjectives, euroText, num } from '../pages/vision-objectives';
 import { BpmPageFocus, BpmPageResult, BpmPageFrame, BpmRefresh, BpmSeriesChart, BpmState, ChartSeries, bpmLoader } from '../ui';
@@ -25,6 +27,7 @@ const CADENCES = { weekly: 'semaine', monthly: 'mois', yearly: 'an' };
   selector: 'bpm-objectives-page',
   providers: [BpmPageContext],
   imports: [
+    BpmActSimulation, BpmActDirectives, BpmActSurplus,
     FormsModule,
     NgTemplateOutlet,
     RouterLink,
@@ -51,8 +54,8 @@ export class BpmObjectivesPage {
   protected workspace = injectPageWorkspace();
   protected carry = computed(() => Object.fromEntries(this.ctx.query().keys.filter(key => key !== 'view').map(key => [key, this.ctx.query().get(key)!])));
   private user = inject(RecetteContext).userId;
-  private fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
-  private params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+  protected fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
+  protected params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   protected view = computed(() => this.workspace()?.key === 'vision-projection' ? 'projection' : this.workspace()?.key === 'vision-landmarks' ? 'reperes' : objectivesView(this.params().get('view'), this.fragment()));
   private readonly legacyView = redirectLegacyView(() => this.view(), 'suivi', { reperes: '/vision/reperes', projection: '/vision/projection' }, () => !!this.workspace());
   protected tabs = [
@@ -120,6 +123,12 @@ export class BpmObjectivesPage {
       ? 'Moyenne du budget type'
       : `${cents(v.contributionCents)} / ${CADENCES[v.contributionCadence]}`;
   });
+  protected adoptSimulation(value: SimulationAdoption) {
+    this.contribution.set(String(value.contributionCents / 100).replace('.', ','));
+    this.cadence.set(value.cadence);
+    this.hypDirty.set(true);
+    this.openSetting('projection');
+  }
   protected today = computed(() => this.summary.data()?.context.calculationDate ?? '');
   protected goalRows = computed(() => objectiveRows(this.goals.data() ?? [],
     this.projection.loading() || this.projection.error() ? null : this.projection.data(), this.today()));
@@ -452,7 +461,7 @@ export class BpmObjectivesPage {
       this.hypDirty.set(false);
       this.hypOpen.set(false);
       this.message.set('Hypothèses enregistrées.');
-      if (this.settingEditor() === 'projection') this.closeSetting();
+      void this.ctx.setQuery({ reglage: null, effort: null }, { replace: true });
       this.refresh.bump();
     } catch (e) {
       this.hypError.set(toApiError(e).message);

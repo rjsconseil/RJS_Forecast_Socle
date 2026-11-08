@@ -39,8 +39,12 @@ const NATURES: ChargeNature[] = ['indispensable', 'courante', 'projet'];
     >
       @if (nextLine(); as line) {
         <button primary type="button" class="app-hero-action" (click)="reviewNext()">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : direction() === 'income' ? 'Ouvrir la prochaine entrée' : direction() === 'all' ? 'Ouvrir la prochaine échéance' : 'Ouvrir la prochaine dépense' }} · {{ line.label }}</button>
+      } @else {
+        <button primary type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Saisir une entrée' : direction() === 'all' ? 'Saisir une entrée ou une dépense' : 'Saisir une dépense' }}</button>
       }
-      <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Saisir une entrée' : direction() === 'all' ? 'Saisir une entrée ou une dépense' : 'Saisir une dépense' }}</button>
+      @if (nextLine()) {
+        <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Saisir une entrée' : direction() === 'all' ? 'Saisir une entrée ou une dépense' : 'Saisir une dépense' }}</button>
+      }
       @if (activeRefine().length || search()) {
         <button actions type="button" class="btn btn-secondary" (click)="clearAll()">Effacer les filtres et la recherche</button>
       }

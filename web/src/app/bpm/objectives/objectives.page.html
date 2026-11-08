@@ -119,6 +119,10 @@
                 @else { <p class="bpm-help">Le cap patrimonial est ouvert dans le panneau de réglage.</p> }
               </div>
             </bpm-vision-objectives>
+      <details class="objectives-panel" [open]="fragment() === 'bp-target-title' || fragment() === 'bp-dir-title'">
+        <summary>Préparer un excédent sur plusieurs périodes</summary>
+        @if (view() === 'reperes') { <bpm-act-surplus /><bpm-act-directives /> }
+      </details>
     </section>
 
     <section class="objectives-projection" [hidden]="view() !== 'projection'" id="life-projection" aria-labelledby="projection-title">
@@ -144,6 +148,10 @@
               @else { <p class="bpm-help">Ce réglage est ouvert dans le panneau de saisie.</p> }
         </aside>
       </div>
+      <details class="objectives-panel" [open]="fragment() === 'bp-sim-title' || !!params().get('effort')">
+        <summary>Comparer un autre effort d’épargne</summary>
+        @if (view() === 'projection') { <bpm-act-simulation (adoptRequest)="adoptSimulation($event)" /> }
+      </details>
     </section>
   }
         @if (editing(); as ed) {

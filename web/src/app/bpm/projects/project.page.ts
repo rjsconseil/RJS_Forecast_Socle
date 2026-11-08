@@ -495,7 +495,7 @@ export class BpmProjectPage {
     }
     const task = this.nextTask();
     if (task) {
-      this.showTask(task, task.task.status === 'done' ? 'funding' : null);
+      this.showTask(task);
       return;
     }
     if (d.tasks.length && this.workspaceKey() === 'project-tasks')
@@ -929,7 +929,7 @@ export class BpmProjectPage {
     this.busy.set(true);
     this.notice.set(null);
     try {
-      await this.bpm.allocate(budgetId, amountCents / 100, this.allocationRevision());
+      await this.bpm.allocate(budgetId, amountCents / 100, this.data()!.budget!.revision);
       await this.load();
       this.notice.set({
         text: `${label} : enveloppe ramenée à ${cents(amountCents)}.`,

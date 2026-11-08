@@ -11,6 +11,7 @@ import { ClosingPreview } from '../../core/models';
 import { MetricDetail, MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { BpmCycleSetup, BpmLineDetail, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, isCycleRefusal, nextOpenLine, BpmRefresh, BpmState, bpmLoader, newRequestKey, overCapsOf } from '../ui';
 import { BpmDashboardHistory } from './dashboard-history';
+import { BpmJourneys } from '../ui/journeys';
 import { BpmDashboardWealth, BpmSetupNeeded, setupProblem } from './dashboard-parts';
 
 /** Un poste (centre) de la période et ses échéances, comme les listes source `rjs-bpm-income-list` / `rjs-bpm-period-expenses`. */
@@ -45,7 +46,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
 @Component({
   selector: 'bpm-page-dashboard',
   providers: [BpmPageContext],
-  imports: [NgTemplateOutlet, RouterLink, BpmPageFrame, BpmState, BpmCycleSetup, BpmLineDetail, BpmEntryFlow, BpmDashboardWealth, BpmDashboardHistory, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
+  imports: [BpmJourneys, NgTemplateOutlet, RouterLink, BpmPageFrame, BpmState, BpmCycleSetup, BpmLineDetail, BpmEntryFlow, BpmDashboardWealth, BpmDashboardHistory, BpmSetupNeeded, MetricTilesComponent, CentsPipe, SignedCentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-expenses.page.scss', './bpm-money-page.scss'],
   template: `
     <bpm-page
@@ -65,11 +66,13 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
         <a primary class="app-hero-action" routerLink="/creer/projet-de-vie">Démarrer mon projet de vie</a>
       } @else if (nextLine(); as line) {
         <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : 'Préparer la prochaine échéance' }} · {{ line.label }}</button>
+      } @else if (summary.data() && !summary.data()!.closed) {
+        <button primary type="button" class="app-hero-action" (click)="openCreate('charge')">＋ Saisir une dépense</button>
       }
-      @if (!summary.data()?.closed) {
+      @if (!noCycle() && !summary.data()?.closed) {
         <ng-container actions>
         <button type="button" class="btn btn-secondary" (click)="openCreate('income')" [disabled]="!budgets().length">＋ Saisir une entrée</button>
-        <button type="button" class="btn btn-secondary" (click)="openCreate('charge')" [disabled]="!budgets().length">＋ Saisir une dépense</button>
+        @if (nextLine()) { <button type="button" class="btn btn-secondary" (click)="openCreate('charge')" [disabled]="!budgets().length">＋ Saisir une dépense</button> }
         </ng-container>
       }
       @if (dash.data()?.closing?.possible) {
@@ -81,6 +84,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
       @if (summary.data()?.closed) {
         <a actions class="app-hero-action" [routerLink]="[]" [queryParams]="{ period: null }">Revenir à la période en cours</a>
       }
+      @if (!noCycle()) {
       <nav tools class="bpm-toolbar-shortcuts" aria-label="Explorer les données de la période">
         @if (incomeLines().length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-period-income">{{ incomeLines().length }} entrée(s)</a> }
         @if (chargeLines().length) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-period-expenses">{{ chargeLines().length }} charge(s)</a> }
@@ -88,6 +92,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
         <a routerLink="/tableau-de-bord/rapprochement" [queryParams]="carry()" fragment="verifier">Rapprocher avec mon compte</a>
         @if (summary.data()?.closed) { <a [routerLink]="[]" queryParamsHandling="preserve" fragment="bm-history">Comparer les périodes closes</a> }
       </nav>
+      }
 
       <div class="bpm-money bpm-money-body" data-tone="budget">
         @if (notice()) {
@@ -98,7 +103,15 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
           <bpm-setup-needed [kind]="p" [message]="summary.error()?.message ?? ''" />
         } @else if (!summary.data()) {
           <bpm-state [loading]="summary.loading()" [error]="summary.error()" [lines]="4" (retry)="summary.reload()" />
+        } @else if (noCycle()) {
+          <section class="bpm-card bpm-empty" aria-labelledby="start-budget-title">
+            <h2 id="start-budget-title">Préparons votre budget quotidien</h2>
+            <p>Choisissez votre rythme mensuel, renseignez vos revenus et vos charges habituelles, puis vérifiez le récapitulatif.</p>
+            <p>Votre saisie est conservée à chaque étape. Les chiffres de la période apparaîtront après la confirmation.</p>
+            <a class="btn btn-primary" routerLink="/creer/projet-de-vie">Commencer la configuration</a>
+          </section>
         } @else {
+          <bpm-journeys [periodQuery]="carry()" [initiallyOpen]="noOperation()" />
           @let s = summary.data()!;
           @if (!s.context.period) {
             <p class="bpm-missing" role="note">
@@ -535,7 +548,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
     @if (lineParam()) {
       <bpm-line-detail [lineId]="lineParam()" [period]="period()" (closed)="closeLine()" (edit)="startEdit($event)" />
     }
-    <bpm-entry-flow [budgets]="budgets()" [defaults]="editorDefaults()" (saved)="onSaved($event)" />
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="editorDefaults()" [clearOnClose]="['entryDirection']" (saved)="onSaved($event)" />
   `,
   styles: `
     :host { display: block; }
@@ -917,7 +930,7 @@ export class BpmDashboard {
 
   // ---------- navigation, détail et éditeur ----------
 
-  protected editorDefaults = signal<Partial<EntryInput>>({});
+  protected editorDefaults = computed<Partial<EntryInput>>(() => ({ direction: this.ctx.q('entryDirection')() === 'income' ? 'income' : 'charge' }));
   /**
    * Résultat d'une action faite sur cette page (saisie enregistrée…). Le message laissé par une autre page
    * (état de navigation `bpmNotice`, assistant de démarrage, création d'utilisateur) est affiché une seule fois,
@@ -953,12 +966,10 @@ export class BpmDashboard {
     this.ctx.setQuery({ ligne: null }, { replace: true });
   }
   protected openCreate(direction?: 'income' | 'charge') {
-    this.editorDefaults.set(direction ? { direction } : {});
-    void this.ctx.setQuery({ entry: 'new' });
+    void this.ctx.setQuery({ entry: 'new', entryDirection: direction ?? 'charge' });
   }
   protected startEdit(line: RegisterLine) {
     this.closeLine();
-    this.editorDefaults.set({});
     void this.ctx.setQuery({ entry: line.id });
   }
   protected closeEditor() {

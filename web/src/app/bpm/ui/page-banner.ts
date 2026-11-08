@@ -81,16 +81,6 @@ const PERIOD_NAV = {
     }
     @if (context(); as c) {
       <div class="bpm-banner-context">
-        <span
-          ><strong>{{ c.user.label }}</strong> ·
-          {{
-            c.scope === 'principal'
-              ? 'Budget du projet de vie'
-              : c.scope === 'budget'
-                ? c.scopeLabel
-                : 'Ensemble des budgets du profil'
-          }}</span
-        >
         <span>Montants en euros · calcul au {{ date(c.calculationDate) }}</span>
       </div>
     }
