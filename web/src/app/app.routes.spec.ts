@@ -3,6 +3,7 @@ import { provideRouter, Router } from '@angular/router';
 import { Component } from '@angular/core';
 import { routes } from './app.routes';
 import { PAGE_WORKSPACES } from './shared/page-workspaces';
+import { RecetteContext } from './core/api.service';
 
 // Destinations BPM adressables directement et redirections des anciens liens (spec §4).
 describe('routes BPM', () => {
@@ -15,6 +16,20 @@ describe('routes BPM', () => {
       expect(r!.loadComponent, path).toBeTypeOf('function');
       expect(r!.title, path).toBeTruthy();
     }
+  });
+
+  it('réserve « Démarrer un projet » au visiteur : un user connecté retrouve la gestion de son projet de vie', () => {
+    for (const path of ['creer', 'creer/projet-de-vie']) {
+      const guard = find(path)!.canActivate![0] as () => unknown;
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({ providers: [provideRouter([])] });
+      const ctx = TestBed.inject(RecetteContext);
+      ctx.userId.set(null);
+      expect(TestBed.runInInjectionContext(guard), path).toBe(true);
+      ctx.userId.set('usr_1');
+      expect(String(TestBed.runInInjectionContext(guard)), path).toBe('/projet-de-vie');
+    }
+    expect(find('creer/projet-de-la-vie'), 'plus de projet de la vie depuis Démarrer').toBeUndefined();
   });
 
   it('ouvre l’accueil des zones à la racine', () => {
@@ -36,7 +51,18 @@ describe('routes BPM', () => {
 
   it('hérite de la configuration du bon calendrier', () => {
     for (const parent of ['calendrier', 'calendrier-budget', 'patrimoine/calendrier'])
-      for (const mode of ['agenda', 'sources']) expect(find(`${parent}/${mode}`)?.data?.['calendar']).toBe(find(parent)?.data?.['calendar']);
+      for (const mode of parent === 'calendrier-budget' ? ['agenda'] : ['agenda', 'sources']) expect(find(`${parent}/${mode}`)?.data?.['calendar']).toBe(find(parent)?.data?.['calendar']);
+  });
+
+  it('mène l’ancienne page des sources du calendrier BPM au dépliant « Sources et affichage »', async () => {
+    @Component({ template: '' })
+    class Empty {}
+    TestBed.configureTestingModule({
+      providers: [provideRouter([{ path: 'calendrier-budget', component: Empty }, find('calendrier-budget/sources')!])],
+    });
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/calendrier-budget/sources?vue=semaine');
+    expect(router.url).toBe('/calendrier-budget?vue=semaine#sources-et-affichage');
   });
 
   it('déclare les accueils génériques de zone et de section', () => {

@@ -37,8 +37,8 @@ try {
   const catalog = await readFile(join(root, 'web/src/app/shared/page-workspaces.ts'), 'utf8');
   const children = [...catalog.matchAll(/view\(\s*'([^']+)'\s*,\s*'([^']+)'/g)]
     .filter(match => parents.includes(match[2]) && !match[1].includes(':')).map(match => '/' + match[1]);
-  const paths = [...new Set([...parents, ...children, '/depenses', '/argent/entrees', '/argent/reste', '/argent/postes/std%3Aalimentation', '/calendrier-budget', '/calendrier-budget/agenda', '/calendrier-budget/sources'])];
-  const mobile = ['/tableau-de-bord', '/projet-de-vie', '/projet-de-vie/budget-type', '/projet-de-vie/cloture', '/plafonds/reglages', '/vision', '/vision/projection', '/app/gestion-projet', '/app/taches/rattacher', '/app/reglages/postes', '/calendrier-budget', '/calendrier-budget/agenda', '/calendrier-budget/sources'];
+  const paths = [...new Set([...parents, ...children, '/depenses', '/argent/entrees', '/argent/reste', '/argent/postes/std%3Aalimentation', '/calendrier-budget', '/calendrier-budget/agenda'])];
+  const mobile = ['/tableau-de-bord', '/projet-de-vie', '/projet-de-vie/budget-type', '/projet-de-vie/cloture', '/plafonds/reglages', '/vision', '/vision/projection', '/app/gestion-projet', '/app/taches/rattacher', '/app/reglages/postes', '/calendrier-budget', '/calendrier-budget/agenda'];
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
     for (const path of width === 1440 ? paths : mobile) {

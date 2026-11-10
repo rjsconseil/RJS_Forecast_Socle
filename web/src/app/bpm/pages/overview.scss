@@ -1,0 +1,522 @@
+// Vue d'ensemble BPM : une identité propre (bandeau profond, chaîne, arbre), sur les couleurs des sections BPM.
+:host {
+  display: block;
+  min-width: 0;
+}
+.bpm-overview {
+  display: grid;
+  gap: 28px;
+  --ov-accent: var(--bpm-section-accent, var(--app-accent));
+}
+[data-bpm-tone] {
+  --ov-accent: var(--bpm-section-accent);
+}
+.ov-title {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.ov-muted {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+}
+.ov-link {
+  color: var(--ov-accent);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+.ov-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--status-success-surface);
+  color: var(--status-success);
+  white-space: nowrap;
+  &[data-health='watch'],
+  &[data-state='at-risk'],
+  &[data-state='unallocated'] {
+    background: var(--status-warning-surface);
+    color: var(--status-warning);
+  }
+  &[data-health='alert'],
+  &[data-state='deficit'] {
+    background: var(--status-danger-surface);
+    color: var(--status-danger);
+  }
+}
+
+// ---------- bandeau ----------
+.ov-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 40px 44px 36px;
+  border-radius: 20px;
+  color: #fff;
+  // Fond et ombre : éclat commun des cadres du haut (styles/_hero-glow.scss), sur les couleurs d'origine.
+  --glow-base: #153e70;
+  --glow-end: #3d3778;
+  --glow-low: #16786b;
+  h1 {
+    max-width: 22ch;
+    margin: 0 0 14px;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: #fff;
+    em {
+      font-style: normal;
+      color: #bfe0ff;
+    }
+  }
+}
+.ov-kicker {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #cfe3fb;
+}
+.ov-lead {
+  max-width: 68ch;
+  margin: 0 0 18px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #e4eefb;
+  strong {
+    color: #fff;
+  }
+}
+.ov-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+  span {
+    padding: 4px 12px;
+    border: 1px solid #ffffff38;
+    border-radius: 999px;
+    font-size: 12px;
+    color: #e4eefb;
+    background: #ffffff14;
+  }
+}
+.ov-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ov-btn-light {
+  background: #fff;
+  color: var(--bpm-section-deep, #153e70);
+  border-color: #fff;
+  &:hover {
+    background: #eaf2fc;
+  }
+}
+.ov-btn-ghost {
+  background: transparent;
+  color: #fff;
+  border-color: #ffffff70;
+  &:hover {
+    background: #ffffff1f;
+  }
+}
+
+// ---------- chaîne de financement ----------
+.ov-stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 64px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ov-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 18px 16px;
+  border: 1px solid var(--bpm-section-line, var(--outline));
+  border-top: 4px solid var(--ov-accent);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--bpm-section-soft, #eaf2fc), var(--raised-surface) 55%);
+  box-shadow: var(--app-panel-shadow);
+  h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ov-accent);
+  }
+  dl {
+    display: grid;
+    gap: 6px;
+    margin: 4px 0 6px;
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 13px;
+    }
+    dt {
+      color: var(--muted);
+    }
+    dd {
+      margin: 0;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+  }
+  .ov-link {
+    margin-top: auto;
+  }
+}
+.ov-stage-step {
+  position: absolute;
+  top: -15px;
+  left: 16px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--ov-accent);
+  box-shadow: 0 0 0 4px var(--app-canvas, #f3f6fa);
+}
+.ov-stage-hero {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+// Le flux entre deux étapes : une flèche et le verbe (« alimentent », « attribue 2 400 € »…).
+.ov-flow {
+  position: absolute;
+  top: 50%;
+  right: -58px;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  transform: translateY(-50%);
+  &::before {
+    content: '';
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--ov-accent), var(--outline));
+  }
+  &::after {
+    content: '▶';
+    position: absolute;
+    right: -2px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  small {
+    position: absolute;
+    top: 8px;
+    width: 64px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    color: var(--muted);
+  }
+}
+.ov-health {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  .ov-link {
+    margin-left: auto;
+  }
+}
+
+// ---------- arbre ----------
+.ov-tree,
+.ov-panel {
+  padding: 24px;
+  border: 1px solid var(--outline);
+  border-radius: 16px;
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.ov-section-head p {
+  margin: -8px 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.ov-root {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: fit-content;
+  padding: 12px 18px;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #153e70, #2563a6);
+  strong,
+  small {
+    display: block;
+  }
+  small {
+    color: #d6e6f8;
+    font-size: 12px;
+  }
+}
+.ov-root-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #ffffff26;
+  font-size: 18px;
+}
+.ov-projects {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+  padding-top: 22px;
+  // Le tronc qui relie le projet de vie à ses projets.
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 34px;
+    width: 2px;
+    height: 22px;
+    background: var(--bpm-section-line, var(--outline));
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    top: 21px;
+    left: 34px;
+    right: 24px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--bpm-section-line, var(--outline)), transparent);
+  }
+}
+.ov-project {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--outline);
+  border-left: 4px solid var(--ov-accent);
+  border-radius: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--raised-surface);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px -20px var(--ov-accent);
+  }
+  &[data-state='deficit'] {
+    border-left-color: var(--status-danger);
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 10px;
+  }
+  h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+.ov-project-meta,
+.ov-paid {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  strong {
+    color: var(--ink);
+  }
+}
+.ov-envelope {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  span {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  strong {
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+.ov-bar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bpm-section-soft, #eaf2fc);
+}
+.ov-bar-thin {
+  height: 8px;
+}
+.ov-seg {
+  flex: 0 0 auto;
+  min-width: 4px;
+  background: color-mix(in srgb, var(--ov-accent) calc(100% - var(--seg, 0) * 22%), #fff);
+}
+.ov-seg-rest {
+  background: repeating-linear-gradient(135deg, var(--bpm-section-line, #bfd3ed) 0 4px, transparent 4px 8px);
+}
+.ov-tasks {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--ov-accent) calc(100% - var(--seg, 0) * 22%), #fff);
+  }
+  small {
+    color: var(--muted);
+    margin-left: 4px;
+  }
+  strong {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ov-rest i {
+    background: repeating-linear-gradient(135deg, var(--bpm-section-line, #bfd3ed) 0 2px, transparent 2px 4px);
+    outline: 1px solid var(--bpm-section-line, #bfd3ed);
+  }
+}
+.ov-project-new {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border: 2px dashed var(--bpm-section-line, var(--outline));
+  background: var(--bpm-section-soft, transparent);
+  span {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 22px;
+    background: var(--ov-accent);
+  }
+  small {
+    color: var(--muted);
+  }
+}
+
+// ---------- décisions et patrimoine ----------
+.ov-duo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.ov-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 4px solid var(--ov-accent);
+  .ov-title {
+    margin: 0;
+  }
+  .btn,
+  .ov-link {
+    align-self: flex-start;
+  }
+}
+.ov-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--bpm-section-soft, #eaf2fc);
+    font-size: 13px;
+  }
+}
+
+// Les quatre espaces de l'application sur une ligne (deux en largeur moyenne).
+.ov-spaces ::ng-deep .plan-page-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+  .ov-spaces ::ng-deep .plan-page-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ov-stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 40px;
+  }
+  .ov-stage:nth-child(2n) .ov-flow {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .ov-hero {
+    padding: 28px 22px;
+  }
+  .ov-stages,
+  .ov-duo,
+  .ov-spaces ::ng-deep .plan-page-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ov-flow {
+    display: none;
+  }
+  .ov-health .ov-link {
+    margin-left: 0;
+  }
+  .ov-tree,
+  .ov-panel {
+    padding: 16px;
+  }
+}

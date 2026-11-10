@@ -124,9 +124,8 @@ export class CalendarSpaceComponent {
   setIncludeDone(value: boolean) {
     this.calendarView()?.setIncludeDone(value);
   }
-  togglePersonalization() {
-    this.calendarView()?.togglePersonalization();
-  }
+  /** L'encadré de personnalisation du calendrier BPM, que la page place où elle veut. */
+  readonly personalization = computed(() => this.calendarView()?.personalization() ?? null);
   focusEvent(event: CalendarEvent) {
     this.calendarView()?.focusEvent(event);
   }

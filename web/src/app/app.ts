@@ -24,6 +24,7 @@ import {
   sectionEntry,
   sectionHomeLink,
   zoneHomeLink,
+  zoneSections,
 } from './shared/site-plan';
 
 /**
@@ -130,7 +131,7 @@ export class ResponsiveNavigationDirective {
             </div>
             <div class="nav-label">Sections de la zone</div>
             <nav class="section-switch" [attr.aria-label]="'Sections de ' + zone.label">
-              @for (section of zone.sections; track section.id) {
+              @for (section of visibleSections(zone); track section.id) {
                 @let entry = entryOf(zone, section);
                 @let current = location().section?.id === section.id;
                 <a
@@ -181,7 +182,7 @@ export class ResponsiveNavigationDirective {
                   <a class="section-switch-entry" [attr.data-tone]="zone.tone" [routerLink]="zoneHome(zone)"
                     ><span class="section-mark" aria-hidden="true">{{ zone.acronym }}</span
                     ><span class="section-switch-text"
-                      ><strong>{{ zone.label }}</strong><small>{{ zone.sections.length }} sections</small></span
+                      ><strong>{{ zone.label }}</strong><small>{{ visibleSections(zone).length }} sections</small></span
                     ></a
                   >
                 }
@@ -217,6 +218,7 @@ export class ResponsiveNavigationDirective {
             <label class="appearance-picker">
               <span>Utilisateur actif</span>
               <select aria-label="Utilisateur actif" (change)="choose($any($event.target).value)" [disabled]="!users().length">
+                <option value="" [selected]="!ctx.connected()">Non connecté</option>
                 @for (u of users(); track u.id) {
                   <option [value]="u.id" [selected]="u.id === ctx.userId()">{{ u.label }} · {{ u.userTypeLabel }}</option>
                 }
@@ -274,8 +276,8 @@ export class ResponsiveNavigationDirective {
               <div class="page plan-page">
                 <section class="plan-empty" data-ui-pattern="empty">
                   <h1>Bienvenue</h1>
-                  <p>Aucun utilisateur pour l’instant. Créez le premier : son Budget « Projet de vie », son Patrimoine et sa composition BPM seront créés en même temps.</p>
-                  <a class="plan-action" routerLink="/utilisateurs">Créer un utilisateur <span aria-hidden="true">→</span></a>
+                  <p>Aucun utilisateur pour l’instant. Démarrez votre projet de vie : votre profil, son budget et son patrimoine seront créés en même temps.</p>
+                  <a class="plan-action" routerLink="/creer">Démarrer un projet <span aria-hidden="true">→</span></a>
                 </section>
               </div>
             } @else {
@@ -375,8 +377,8 @@ export class App implements OnInit {
   async ngOnInit() {
     try {
       const users = await this.directory.refresh();
-      // Sans choix mémorisé dans ce navigateur : le premier user qui a des entrées budgétaires.
-      if (!users.some((u) => u.id === this.ctx.userId())) this.ctx.select((users.find((u) => (u.entryCount ?? 0) > 0) ?? users[0])?.id ?? null, { remember: false });
+      // Sans connexion mémorisée (ou user disparu), le site s'ouvre non connecté : seul « Démarrer un projet » est proposé.
+      if (this.ctx.connected() && !users.some((u) => u.id === this.ctx.userId())) this.ctx.select(null);
       this.ready.set(true);
     } catch (err) {
       this.error.set(toApiError(err).message);
@@ -395,6 +397,9 @@ export class App implements OnInit {
   protected sectionHome(section: PlanSection) {
     return hasSectionHome(section);
   }
+  protected visibleSections(zone: PlanZone) {
+    return zoneSections(zone, this.ctx.connected());
+  }
   protected entryOf(zone: PlanZone, section: PlanSection) {
     return sectionEntry(zone, section);
   }
@@ -403,7 +408,7 @@ export class App implements OnInit {
   }
 
   choose(id: string) {
-    this.ctx.select(id);
+    this.ctx.select(id || null);
     // Le périmètre change : on revient à l'entrée de la section pour ne pas afficher un objet d'un autre user.
     const { zone, section } = this.location();
     const target = zone && section ? sectionEntry(zone, section).link : this.path();

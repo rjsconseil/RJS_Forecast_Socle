@@ -50,8 +50,15 @@ export interface PlanSection {
   module?: string;
   /** Nuance d'espace de `_identities.scss`. */
   space: string;
+  /** Public de la section ; absent = tout le monde. Voir `PlanAudience`. */
+  audience?: PlanAudience;
   pages: PlanPage[];
 }
+/**
+ * `visitor` : seulement sans user connecté (« Démarrer un projet » : le projet de vie naît avec son user).
+ * Réservé : `sponsor`, un user connecté qui créera des users rattachés dont il sera le parent (non codé).
+ */
+export type PlanAudience = 'visitor' | 'sponsor';
 export type PlanBandId = 'flagship' | 'assembled' | 'core' | 'technical';
 export interface PlanZone {
   id: string;
@@ -131,19 +138,20 @@ export const PLAN_ZONES: PlanZone[] = [
     module: 'bpm',
     assembles: ['budget', 'patrimoine'],
     sections: [
-      ensemble('bpm', 'Reçu, dépensé, reste et impact patrimonial : la lecture de votre période, avec le détail de chaque flux.', 'bpm', 'bpm-creer'),
+      ensemble('bpm', 'La chaîne de financement de l’application : vos entrées et sorties, le budget du projet de vie, les enveloppes de vos projets de la vie et les parts de leurs tâches.', 'bpm', 'bpm-creer'),
       {
         id: 'demarrer',
         acronym: '01',
         label: 'Démarrer un projet',
-        intention: 'Le cœur : créer un projet',
-        description: 'Configurer le projet de vie, son budget et le patrimoine unique du profil, ou préparer un nouveau projet de la vie.',
+        intention: 'Créer son projet de vie, une seule fois',
+        description: 'Découvrir le projet de vie, puis le créer avec son profil, son budget et son patrimoine uniques.',
+        audience: 'visitor',
         tone: 'nav-teal',
         homeTone: 'nav-lagoon',
         home: 'direct',
         module: 'bpm',
         space: 'bpm-creer',
-        pages: [{ id: 'creer', label: 'Démarrer un projet', mainLabel: 'Choisir le parcours', link: '/creer', symbol: '＋', tone: 'nav-blue', description: 'Créer un projet Budget/Patrimoine à partir de zéro.', result: 'Un projet relié, prêt à entrer dans le cycle.' }],
+        pages: [{ id: 'creer', label: 'Démarrer un projet', mainLabel: 'Le projet de vie', link: '/creer', symbol: '＋', tone: 'nav-blue', description: 'Ce qu’est le projet de vie et pourquoi le créer avant d’utiliser le site.', result: 'Un projet de vie créé une seule fois, avec son budget et son patrimoine.' }],
       },
       {
         id: 'vision',
@@ -409,6 +417,11 @@ export const PLAN_ZONES: PlanZone[] = [
 ];
 
 export const planZone = (id: string | null | undefined): PlanZone | null => PLAN_ZONES.find((z) => z.id === id) ?? null;
+
+/** Les sections d'une zone visibles pour ce public : `connected` = un user est connecté. */
+export function zoneSections(zone: PlanZone, connected: boolean): PlanSection[] {
+  return zone.sections.filter((section) => !section.audience || (section.audience === 'visitor') !== connected);
+}
 
 /** Les pages de menu d'une section : sans les pages seulement repérables. */
 export function menuPages(section: PlanSection): PlanPage[] {

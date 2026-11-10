@@ -41,3 +41,6 @@
 @use 'bpm-application';
 
 @use 'page-workspace';
+
+// Éclat commun des cadres du haut de page (en dernier : il habille tous les bandeaux).
+@use 'hero-glow';

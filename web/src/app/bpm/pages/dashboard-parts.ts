@@ -32,14 +32,17 @@ export function shade(token: string, i: number) {
   template: `
     <section class="bpm-empty bpm-card" data-ui-pattern="panel" role="status">
       @if (kind() === 'user') {
-        <h2>Aucun profil financier sélectionné</h2>
-        <p class="bpm-help">Choisissez un profil financier dans le bandeau ou créez-en un. Chaque profil dispose de son projet de vie et de son patrimoine uniques.</p>
-        <div class="bpm-actions"><a class="btn btn-primary" routerLink="/utilisateurs">Choisir un profil financier</a></div>
+        <h2>Vous n’êtes pas connecté</h2>
+        <p class="bpm-help">Connectez-vous à votre profil, ou démarrez votre projet de vie : chaque profil dispose de son projet de vie et de son patrimoine uniques.</p>
+        <div class="bpm-actions">
+          <a class="btn btn-primary" routerLink="/creer">Démarrer mon projet de vie</a>
+          <a class="btn btn-secondary" routerLink="/utilisateurs">Me connecter</a>
+        </div>
       } @else {
         <h2>Espace BPM à préparer</h2>
         <p class="bpm-help">{{ message() }}</p>
         <p class="bpm-missing">Terminez la configuration du budget du projet de vie et du patrimoine pour retrouver vos chiffres ici.</p>
-        <div class="bpm-actions"><a class="btn btn-primary" routerLink="/creer">Configurer mon espace</a></div>
+        <div class="bpm-actions"><a class="btn btn-primary" routerLink="/projet-de-vie">Configurer mon projet de vie</a></div>
       }
     </section>
   `,

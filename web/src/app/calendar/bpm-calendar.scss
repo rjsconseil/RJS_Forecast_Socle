@@ -106,11 +106,6 @@
     min-height: 44px;
     font-size: 15px;
   }
-  .bpm-calendar-customize {
-    width: auto;
-    flex: 0 1 auto;
-    justify-content: center;
-  }
   .calendar-month-wrap {
     grid-column: 1;
     grid-row: 2;
@@ -234,108 +229,11 @@
     grid-column: 1 / -1;
     grid-row: 3;
   }
-  .bpm-calendar-customize {
-    gap: 14px;
-  }
   .bpm-calendar-source-summary {
     grid-column: 1 / -1;
     margin: 0;
     color: var(--muted);
     font-size: 12px;
-  }
-  .bpm-calendar-personalization {
-    grid-column: 1 / -1;
-    padding: 18px;
-    border: 1px solid var(--outline);
-    border-radius: 12px;
-    background: var(--raised-surface);
-    color: var(--ink);
-  }
-  .bpm-calendar-preference-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  .bpm-calendar-preference-head h3 {
-    font-size: 17px;
-    margin: 0 0 6px;
-  }
-  .bpm-calendar-preference-head p {
-    font-size: 12px;
-    color: var(--muted);
-    margin: 0;
-  }
-  .bpm-calendar-preference-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr 1fr;
-    gap: 24px;
-  }
-  .bpm-calendar-preference-grid fieldset {
-    min-width: 0;
-    padding: 0;
-    margin: 0;
-    border: 0;
-  }
-  .bpm-calendar-preference-grid legend {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-  .bpm-calendar-preference-grid fieldset > p {
-    min-height: 36px;
-    margin: 0 0 10px;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .bpm-calendar-choice {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 44px;
-    margin: 0;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .bpm-calendar-choice input {
-    width: 22px;
-    height: 22px;
-    min-height: 0;
-    margin: 0;
-    accent-color: var(--app-accent);
-  }
-  .bpm-calendar-choice i {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--event-tone);
-    flex: 0 0 auto;
-  }
-  .bpm-calendar-choice span {
-    flex: 1;
-  }
-  .bpm-calendar-choice small {
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-  .bpm-calendar-density {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 14px;
-    font-size: 12px;
-  }
-  .bpm-calendar-density select {
-    width: 68px;
-    min-height: 48px;
-  }
-  .bpm-calendar-personalization .text-link {
-    min-height: 44px;
-    padding: 8px 10px;
-    touch-action: manipulation;
   }
   .bpm-calendar-event-status,
   .bpm-calendar-event-group {
@@ -538,9 +436,6 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .bpm-calendar-preference-grid {
-      grid-template-columns: 1fr 1fr;
-    }
   }
 }
 @media (max-width: 640px) {
@@ -566,18 +461,8 @@
     .calendar-toolbar .btn {
       padding: 11px 12px;
     }
-    .bpm-calendar-personalization {
-      padding: 12px;
-    }
-    .bpm-calendar-preference-grid,
     .calendar-agenda-list {
       grid-template-columns: 1fr;
-    }
-    .bpm-calendar-preference-head {
-      flex-direction: column;
-    }
-    .bpm-calendar-preference-grid fieldset > p {
-      min-height: 0;
     }
     .calendar-agenda {
       height: 420px;
@@ -642,4 +527,123 @@
     gap: 12px;
   }
   .calendar-element-toggle { min-height: 56px; }
+}
+
+/*
+ * Encadré « Votre calendrier, vos repères ». Déclaré par ce composant (ses styles s'y appliquent), il est
+ * affiché par la page BPM dans son dépliant « Sources et affichage », hors de la grille du calendrier :
+ * ses règles ne dépendent donc pas de l'ancêtre `.calendar`.
+ */
+.bpm-calendar-personalization {
+  padding: 18px;
+  border: 1px solid var(--outline);
+  border-radius: 12px;
+  background: var(--raised-surface);
+  color: var(--ink);
+}
+.bpm-calendar-preference-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.bpm-calendar-preference-head h3 {
+  font-size: 17px;
+  text-transform: none;
+  margin: 0 0 6px;
+}
+.bpm-calendar-preference-head p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.bpm-calendar-preference-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 24px;
+}
+.bpm-calendar-preference-grid fieldset {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.bpm-calendar-preference-grid legend {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.bpm-calendar-preference-grid fieldset > p {
+  min-height: 36px;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.bpm-calendar-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.bpm-calendar-choice input {
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  margin: 0;
+  accent-color: var(--app-accent);
+}
+.bpm-calendar-choice i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--event-tone);
+  flex: 0 0 auto;
+}
+.bpm-calendar-choice span {
+  flex: 1;
+}
+.bpm-calendar-choice small {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.bpm-calendar-density {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+.bpm-calendar-density select {
+  width: 68px;
+  min-height: 48px;
+}
+.bpm-calendar-personalization .text-link {
+  min-height: 44px;
+  padding: 8px 10px;
+  touch-action: manipulation;
+}
+@media (max-width: 1100px) {
+  .bpm-calendar-preference-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .bpm-calendar-personalization {
+    padding: 12px;
+  }
+  .bpm-calendar-preference-grid {
+    grid-template-columns: 1fr;
+  }
+  .bpm-calendar-preference-head {
+    flex-direction: column;
+  }
+  .bpm-calendar-preference-grid fieldset > p {
+    min-height: 0;
+  }
 }

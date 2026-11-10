@@ -63,7 +63,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
         <a actions class="btn btn-secondary" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
       }
       @if (noCycle()) {
-        <a primary class="app-hero-action" routerLink="/creer/projet-de-vie">Démarrer mon projet de vie</a>
+        <a primary class="app-hero-action" routerLink="/projet-de-vie">Configurer mon projet de vie</a>
       } @else if (nextLine(); as line) {
         <button primary type="button" class="app-hero-action" (click)="openLine(line.id)">{{ line.status === 'late' ? 'Traiter le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : 'Préparer la prochaine échéance' }} · {{ line.label }}</button>
       } @else if (summary.data() && !summary.data()!.closed) {
@@ -108,7 +108,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
             <h2 id="start-budget-title">Préparons votre budget quotidien</h2>
             <p>Choisissez votre rythme mensuel, renseignez vos revenus et vos charges habituelles, puis vérifiez le récapitulatif.</p>
             <p>Votre saisie est conservée à chaque étape. Les chiffres de la période apparaîtront après la confirmation.</p>
-            <a class="btn btn-primary" routerLink="/creer/projet-de-vie">Commencer la configuration</a>
+            <a class="btn btn-primary" routerLink="/projet-de-vie/budget-type">Commencer la configuration</a>
           </section>
         } @else {
           <bpm-journeys [periodQuery]="carry()" [initiallyOpen]="noOperation()" />
@@ -407,7 +407,7 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
                         }
                       </ol>
                     } @else {
-                      <p class="bm-projects-help">Aucun autre projet rattaché à votre projet de vie : un voyage, un équipement, une formation… <a class="bm-action-link" routerLink="/creer/projet-de-la-vie">Créer un projet de la vie →</a></p>
+                      <p class="bm-projects-help">Aucun autre projet rattaché à votre projet de vie : un voyage, un équipement, une formation… <a class="bm-action-link" routerLink="/app/gestion-projet/nouveau">Créer un projet de la vie →</a></p>
                     }
                   }
                 </div>

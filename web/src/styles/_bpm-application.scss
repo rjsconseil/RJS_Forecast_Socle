@@ -11,28 +11,32 @@
 
   // Une famille de couleur par section, des repères de sous-page conservés.
   &[data-section-tone='nav-teal'],
-  .section-switch-entry[data-tone='nav-teal'] {
+  .section-switch-entry[data-tone='nav-teal'],
+  [data-bpm-tone='nav-teal'] {
     --bpm-section-accent: #16786b;
     --bpm-section-deep: #12594f;
     --bpm-section-soft: #e8f5f0;
     --bpm-section-line: #b9ddd2;
   }
   &[data-section-tone='nav-iris'],
-  .section-switch-entry[data-tone='nav-iris'] {
+  .section-switch-entry[data-tone='nav-iris'],
+  [data-bpm-tone='nav-iris'] {
     --bpm-section-accent: #5951a6;
     --bpm-section-deep: #3d3778;
     --bpm-section-soft: #f0edfa;
     --bpm-section-line: #d0c9ec;
   }
   &[data-section-tone='nav-petrol'],
-  .section-switch-entry[data-tone='nav-petrol'] {
+  .section-switch-entry[data-tone='nav-petrol'],
+  [data-bpm-tone='nav-petrol'] {
     --bpm-section-accent: #1b6b86;
     --bpm-section-deep: #164e65;
     --bpm-section-soft: #e8f3f8;
     --bpm-section-line: #b8d7e4;
   }
   &[data-section-tone='nav-cyan'],
-  .section-switch-entry[data-tone='nav-cyan'] {
+  .section-switch-entry[data-tone='nav-cyan'],
+  [data-bpm-tone='nav-cyan'] {
     --bpm-section-accent: #854b8b;
     --bpm-section-deep: #663a70;
     --bpm-section-soft: #f6edf7;
@@ -714,9 +718,7 @@
 .app-shell:is([data-module='bpm'], [data-space='budget-calendar']) {
   main :is(.bpm-page-banner, .life-projects-banner) {
     border: 1px solid color-mix(in srgb, var(--bpm-section-deep) 80%, white);
-    border-radius: 16px;
-    background: linear-gradient(115deg, var(--bpm-section-deep), color-mix(in srgb, var(--bpm-section-accent) 70%, var(--bpm-section-deep)));
-    box-shadow: 0 8px 24px rgb(22 35 55 / 9%);
+    border-radius: 16px; // fond et ombre : _hero-glow.scss
   }
   main .bpm-banner-copy h1 {
     letter-spacing: -.025em;

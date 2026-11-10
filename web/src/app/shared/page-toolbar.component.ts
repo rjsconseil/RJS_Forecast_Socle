@@ -3,7 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
+  effect,
+  ElementRef,
   inject,
   input,
   signal,
@@ -102,10 +103,15 @@ export class PageToolbar {
   protected readonly filtersId = `bpm-toolbar-filters-${++toolbarId}`;
   protected readonly actionsId = `${this.filtersId}-actions`;
   protected readonly narrow = toSignal(inject(BreakpointObserver).observe('(max-width: 700px)'));
-  private readonly expanded = signal<boolean | null>(null);
-  protected readonly filtersVisible = computed(
-    () => this.expanded() ?? (!this.narrow()?.matches && !this.compact()),
-  );
+  /** Outils repliés par défaut : l'utilisateur les déplie, le défilement vers le bas les replie. */
+  private readonly expanded = signal(false);
+  protected readonly filtersVisible = this.expanded.asReadonly();
+  private readonly host = inject(ElementRef<HTMLElement>).nativeElement;
+  constructor() {
+    effect(() => {
+      if (this.compact() && !this.host.contains(document.activeElement)) this.expanded.set(false);
+    });
+  }
   /** Un champ ou une commande en cours d'utilisation ne disparaît pas au défilement. */
   protected keepFocusedTools(event: FocusEvent) {
     const target = event.target as Element | null;

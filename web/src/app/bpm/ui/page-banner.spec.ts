@@ -92,20 +92,28 @@ describe('bandeau commun et coordination', () => {
     expect(element.querySelector('section')?.textContent).not.toContain('Contenu du parcours');
     expect(element.textContent).toContain('Contenu du parcours');
   });
-  it('garde les outils ouverts lors de la compaction si une saisie y a le focus', async () => {
+  it('replie les outils par défaut et au défilement, sauf si une saisie y a le focus', async () => {
     TestBed.configureTestingModule({
       providers: [provideRouter([{ path: 'cadre', component: Host }])],
     });
     const h = await RouterTestingHarness.create('/cadre');
+    const tools = h.routeNativeElement!.querySelector('.bpm-toolbar-filters')!;
+    expect(tools.hasAttribute('hidden')).toBe(true);
+    (h.routeNativeElement!.querySelector('.bpm-toolbar-toggle') as HTMLButtonElement).click();
+    h.detectChanges();
     const field = h.routeNativeElement!.querySelector('input')!;
-    field.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    field.focus();
     const banner = h.routeDebugElement!.query(By.css('bpm-page-banner'));
     banner.injector.get(PageHeroDirective).compact.set(true);
     h.detectChanges();
-    expect(
-      h.routeNativeElement!.querySelector('.bpm-toolbar-filters')!.hasAttribute('hidden'),
-    ).toBe(false);
+    expect(tools.hasAttribute('hidden')).toBe(false);
     expect(field.value).toBe('Cuisine');
+    field.blur();
+    banner.injector.get(PageHeroDirective).compact.set(false);
+    h.detectChanges();
+    banner.injector.get(PageHeroDirective).compact.set(true);
+    h.detectChanges();
+    expect(tools.hasAttribute('hidden')).toBe(true);
   });
   it('change la période en conservant les filtres et retire le détail devenu hors contexte', async () => {
     TestBed.configureTestingModule({

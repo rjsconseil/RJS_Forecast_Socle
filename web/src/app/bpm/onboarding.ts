@@ -10,7 +10,8 @@ import { injectPageWorkspace } from '../shared/page-workspace';
 
 type Field = 'label' | 'userType' | 'openingStock' | 'openingDate' | 'objective' | 'anchorDay' | 'cycleStartDate';
 
-const CHAIN: { title: string; detail: string }[] = [
+/** Ce qui naît en une seule écriture avec le user : son projet de vie et tout ce qui le relie. */
+export const LIFE_PROJECT_CHAIN: { title: string; detail: string }[] = [
   { title: 'Utilisateur', detail: 'Votre profil et son type' },
   { title: 'Projet noyau « Projet de vie »', detail: 'La racine de tous vos projets' },
   { title: 'Budget « Projet de vie »', detail: 'Revenus et charges, période par période' },
@@ -45,13 +46,13 @@ function todayIso(): string {
         tone="indigo"
         headingId="users-page-title"
         [title]="workspace()?.title ?? 'Utilisateurs'"
-        kicker="Utilisateurs · administration"
+        [kicker]="startLife() ? 'Démarrer un projet · une seule fois' : 'Utilisateurs · administration'"
         [lead]="workspace()?.lead ?? 'Créez les utilisateurs : leur Budget « Projet de vie », leur Patrimoine et leur composition BPM naissent ensemble.'"
         [chips]="heroChips()"
         [result]="error() ? { message: error()!, tone: 'danger' } : null"
       >
         @if (workspace()) {
-          <button heroPrimary type="button" class="app-hero-action" (click)="submit()" [disabled]="saving() || !types().length || !usersReady()">{{ saving() ? 'Création…' : 'Créer l’utilisateur et son espace' }}</button>
+          <button heroPrimary type="button" class="app-hero-action" (click)="submit()" [disabled]="saving() || !types().length || !usersReady()">{{ saving() ? 'Création…' : startLife() ? 'Créer mon projet de vie' : 'Créer l’utilisateur et son espace' }}</button>
         }
         <ng-container heroActions>
         @if (!workspace()) {
@@ -175,7 +176,7 @@ function todayIso(): string {
 
           @if (showForm()) {
             <form class="us-form" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="us-form-title" [attr.aria-busy]="saving()">
-              <h3 id="us-form-title">{{ firstProfile() ? 'Créons votre espace Budget & Patrimoine' : 'Nouvel utilisateur' }}</h3>
+              <h3 id="us-form-title">{{ startLife() ? 'Votre profil et votre projet de vie' : firstProfile() ? 'Créons votre espace Budget & Patrimoine' : 'Nouvel utilisateur' }}</h3>
 
               <label>
                 Libellé
@@ -295,7 +296,7 @@ function todayIso(): string {
 
               <div class="us-actions">
                 <button class="btn btn-primary" type="submit" [disabled]="saving() || !types().length">
-                  {{ saving() ? 'Création en cours…' : 'Créer et utiliser cet utilisateur' }}
+                  {{ saving() ? 'Création en cours…' : startLife() ? 'Créer mon projet de vie' : 'Créer et utiliser cet utilisateur' }}
                 </button>
                 <button class="btn btn-secondary" type="button" [disabled]="saving()" (click)="cancel()">Annuler</button>
               </div>
@@ -354,7 +355,7 @@ export class BpmOnboarding implements OnInit {
   private profilesSection = viewChild<ElementRef<HTMLElement>>('profilesSection');
   private injector = inject(Injector);
 
-  protected chain = CHAIN;
+  protected chain = LIFE_PROJECT_CHAIN;
   protected types = signal<UserType[]>([]);
   protected saving = signal(false);
   protected error = signal<string | null>(null);
@@ -370,7 +371,9 @@ export class BpmOnboarding implements OnInit {
   protected firstProfile = computed(() => this.usersReady() && this.users().length === 0);
   /** Comme le brouillon de la référence : le formulaire s'ouvre sur demande, d'office pour le premier utilisateur. */
   protected formOpen = signal(false);
-  protected showForm = computed(() => this.workspace()?.key === 'users-new' || this.formOpen() || this.firstProfile());
+  /** Création du projet de vie depuis « Démarrer un projet » (visiteur) : même formulaire, même écriture unique. */
+  protected startLife = computed(() => this.workspace()?.key === 'start-life');
+  protected showForm = computed(() => !!this.workspace() || this.formOpen() || this.firstProfile());
   protected profileQuery = signal(this.route.snapshot.queryParamMap.get('profileQuery') ?? '');
   protected typeFilter = signal(this.route.snapshot.queryParamMap.get('userType') ?? 'all');
   protected filteredUsers = computed(() => {
@@ -472,7 +475,8 @@ export class BpmOnboarding implements OnInit {
     if (this.types().length) this.form.controls.userType.setValue(this.types()[0].key);
     this.fieldErrors.set({});
     this.error.set(null);
-    if (this.workspace()?.key === 'users-new') void this.router.navigate(['/utilisateurs'], { queryParamsHandling: 'preserve' });
+    if (this.startLife()) void this.router.navigate(['/creer']);
+    else if (this.workspace()?.key === 'users-new') void this.router.navigate(['/utilisateurs'], { queryParamsHandling: 'preserve' });
   }
 
   /** Aiguillage de la référence (`profile-choice`) : l'utilisateur choisi vaut pour tout le site. */
@@ -520,6 +524,8 @@ export class BpmOnboarding implements OnInit {
     const openingStock = stock as number | null;
     this.saving.set(true);
     try {
+      // Le créateur n'est pas transmis : un futur user « parent » (audience `sponsor` du plan) passera ici
+      // son identité pour devenir le maître du user créé. Aujourd'hui, seul un visiteur crée son propre user.
       const r = await this.api.createUser({
         requestKey: this.requestKey,
         label,
@@ -536,11 +542,12 @@ export class BpmOnboarding implements OnInit {
       // Le tableau de bord propose ensuite l'étape suivante ; la confirmation dit ce qui reste à faire.
       // Le cycle est actif dès que le jour d'ancrage est donné (début aujourd'hui par défaut, règle du middleware).
       const cycleReady = anchorDay !== null;
-      await this.router.navigate(['/app'], {
+      // Depuis « Démarrer un projet », le projet de vie créé se poursuit dans sa gestion, seul lieu de modification.
+      await this.router.navigate([this.startLife() ? '/projet-de-vie' : '/app'], {
         state: {
           bpmNotice: cycleReady
-            ? `Utilisateur « ${label} » créé.`
-            : `Utilisateur « ${label} » créé. Démarrez son projet de vie pour régler le cycle et le budget.`,
+            ? `Utilisateur « ${label} » créé avec son projet de vie.`
+            : `Utilisateur « ${label} » créé avec son projet de vie. Réglez son cycle et son budget dans la gestion du projet de vie.`,
         },
       });
     } catch (err) {

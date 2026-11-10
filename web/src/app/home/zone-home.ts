@@ -2,24 +2,25 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
-import { BpmDashboard } from '../bpm/pages/dashboard';
-import { PLAN_OVERVIEW_TONE, PlanCard, PlanSection, menuPages, planZone, sectionEntry } from '../shared/site-plan';
-import { PlanCardsComponent } from './plan-cards';
+import { RecetteContext } from '../core/api.service';
+import { BpmOverviewPage } from '../bpm/pages/overview';
+import { PLAN_OVERVIEW_TONE, PlanCard, planZone } from '../shared/site-plan';
+import { PlanCardsComponent, zoneSectionCards } from './plan-cards';
 
 /**
  * L'accueil d'une zone (`/zones/<zone>`, gabarit `zone-home.page` de la référence) : sa mission, ce qu'on
  * peut y faire, par où commencer, puis une carte par grande section. Chaque carte annonce ce que la section
  * produit, ses pages, et ouvre son accueil ou sa page utile. Aucune entrée ne lance de traitement.
- * Comme dans la référence, la vue d'ensemble de Budget/Patrimoine Management est sa lecture de la période.
+ * La vue d'ensemble de Budget/Patrimoine Management est propre : la chaîne de financement de l'application.
  */
 @Component({
   selector: 'rjs-zone-home',
-  imports: [RouterLink, PlanCardsComponent, BpmDashboard],
+  imports: [RouterLink, PlanCardsComponent, BpmOverviewPage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (zone(); as zone) {
       @if (zone.id === 'bpm') {
-        <bpm-page-dashboard />
+        <bpm-overview [zone]="zone" />
       } @else {
         <div class="page plan-page plan-zone-home" [attr.data-tone]="overviewTone">
           <header class="plan-heading" data-ui-pattern="heading">
@@ -75,30 +76,11 @@ import { PlanCardsComponent } from './plan-cards';
 })
 export class ZoneHomePage {
   protected readonly overviewTone = PLAN_OVERVIEW_TONE;
+  private readonly ctx = inject(RecetteContext);
   private readonly zoneId = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('zone'))));
   protected readonly zone = computed(() => planZone(this.zoneId()));
-  /** Les grandes sections de la zone, hors de sa vue d'ensemble (cette page même). */
-  protected readonly sections = computed(() =>
-    (this.zone()?.sections ?? []).filter((section) => !section.pages.some((p) => p.zoneOverview) && menuPages(section).length),
-  );
   protected readonly cards = computed<PlanCard[]>(() => {
     const zone = this.zone();
-    return zone
-      ? this.sections().map((section) => ({
-          id: section.id,
-          label: section.label,
-          description: section.description,
-          result: this.pages(section)
-            .map((page) => page.label)
-            .join(' · '),
-          ...sectionEntry(zone, section),
-          tone: section.tone ?? zone.tone,
-          step: section.intention,
-          action: 'Entrer dans ' + section.label,
-        }))
-      : [];
+    return zone ? zoneSectionCards(zone, this.ctx.connected()) : [];
   });
-  protected pages(section: PlanSection) {
-    return menuPages(section);
-  }
 }

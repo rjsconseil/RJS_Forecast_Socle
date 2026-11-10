@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasPageMenu, hasSectionHome, locate, menuPages, pageChildren, planContext, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink } from './site-plan';
+import { hasPageMenu, hasSectionHome, locate, menuPages, pageChildren, planContext, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink, zoneSections } from './site-plan';
 import { PAGE_WORKSPACES } from './page-workspaces';
 
 describe('plan du site', () => {
@@ -93,8 +93,15 @@ describe('plan du site', () => {
 
   it('ne répète pas une page qui porte le nom de sa section', () => {
     expect(planContext('/creer').crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Démarrer un projet']);
-    expect(planContext('/creer/projet-de-vie').crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Démarrer un projet', 'Créer le projet de vie']);
+    expect(planContext('/creer/projet-de-vie').crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Démarrer un projet', 'Créer mon projet de vie']);
     expect(planContext('/creer/projet-de-vie').eyebrow).toBe('Démarrer un projet');
+  });
+
+  it('ne montre « Démarrer un projet » qu’au visiteur non connecté', () => {
+    const bpm = planZone('bpm')!;
+    expect(zoneSections(bpm, false).map(s => s.id)).toContain('demarrer');
+    expect(zoneSections(bpm, true).map(s => s.id)).not.toContain('demarrer');
+    expect(zoneSections(bpm, true).map(s => s.id)).toEqual(['ensemble', 'vision', 'projets-vie', 'calendrier']);
   });
 
   it('nomme la fiche ouverte et range ses sous-pages en onglets', () => {

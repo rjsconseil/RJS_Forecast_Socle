@@ -12,7 +12,9 @@ import {
   input,
   output,
   signal,
+  TemplateRef,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -215,98 +217,10 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                       />
                     </span>
                   </div>
-                  @if (bpm() && presentation() !== 'sources') {
-                    <button
-                      type="button"
-                      class="btn btn-secondary bpm-calendar-customize"
-                      [attr.aria-expanded]="customizing()"
-                      aria-controls="bpm-calendar-personalization"
-                      (click)="customizing.set(!customizing())"
-                    >
-                      Personnaliser l’affichage
-                      <span aria-hidden="true">{{ customizing() ? '−' : '+' }}</span>
-                    </button>
-                  }
                 </div>
               </div>
             }
             @if (bpm()) {
-              @if (presentation() === 'sources' || (presentation() === 'calendar' && customizing())) {
-                <section
-                  id="bpm-calendar-personalization"
-                  class="bpm-calendar-personalization"
-                  aria-label="Personnaliser le calendrier"
-                >
-                  <div class="bpm-calendar-preference-head">
-                    <div>
-                      <h3>Votre calendrier, vos repères</h3>
-                      <p>
-                        Mémorisé pour ce profil sur ce navigateur. Les données financières restent
-                        inchangées.
-                      </p>
-                    </div>
-                    <button class="text-link" type="button" (click)="resetDisplay()">
-                      Réinitialiser
-                    </button>
-                  </div>
-                  <div class="bpm-calendar-preference-grid">
-                    <fieldset>
-                      <legend>Sources affichées</legend>
-                      <p>Les sources disponibles proviennent de votre calendrier BPM.</p>
-                      @for (el of elements(); track el.id) {
-                        <label class="bpm-calendar-choice" [style.--event-tone]="tone(el.tone)"
-                          ><input
-                            type="checkbox"
-                            [checked]="!hidden().has(el.id)"
-                            (change)="toggleElement(el.id)"
-                          /><i aria-hidden="true"></i><span>{{ el.label }}</span
-                          ><small>{{ countInPeriod(el.id) }}</small></label
-                        >
-                      }
-                      <button type="button" class="text-link" (click)="showAllSources()">
-                        Tout afficher
-                      </button>
-                    </fieldset>
-                    <fieldset>
-                      <legend>Informations par événement</legend>
-                      <p>Dans les cases et la liste des événements.</p>
-                      @for (field of dayFields; track field.key) {
-                        <label class="bpm-calendar-choice"
-                          ><input
-                            type="checkbox"
-                            [checked]="showField(field.key)"
-                            (change)="toggleField(field.key)"
-                          /><span>{{ field.label }}</span></label
-                        >
-                      }
-                      <label class="bpm-calendar-density"
-                        >Événements par case<select
-                          aria-label="Événements par case"
-                          [ngModel]="perCell()"
-                          (ngModelChange)="setDensity($event)"
-                        >
-                          @for (n of [1, 2, 3, 4, 5, 6]; track n) {
-                            <option [ngValue]="n">{{ n }}</option>
-                          }
-                        </select></label
-                      >
-                    </fieldset>
-                    <fieldset>
-                      <legend>Bilan au survol d’un jour</legend>
-                      <p>Choisissez les indicateurs de l’aperçu.</p>
-                      @for (indicator of data()?.indicators ?? []; track indicator.key) {
-                        <label class="bpm-calendar-choice"
-                          ><input
-                            type="checkbox"
-                            [checked]="indicatorShown(indicator.key)"
-                            (change)="toggleIndicator(indicator.key)"
-                          /><span>{{ indicator.label }}</span></label
-                        >
-                      }
-                    </fieldset>
-                  </div>
-                </section>
-              }
               <p class="bpm-calendar-source-summary" role="status">
                 {{ visibleSourceCount() }} / {{ elements().length }} sources ·
                 {{ periodEvents().length }} événements affichés
@@ -978,6 +892,83 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
         <p class="import-issues" role="alert">{{ error() }}</p>
       }
     </section>
+    <!-- Encadré « Votre calendrier, vos repères » : la page BPM l’affiche dans son dépliant « Sources et affichage ». -->
+    <ng-template #personalization>
+      <section
+        id="bpm-calendar-personalization"
+        class="bpm-calendar-personalization"
+        aria-label="Personnaliser le calendrier"
+      >
+        <div class="bpm-calendar-preference-head">
+          <div>
+            <h3>Votre calendrier, vos repères</h3>
+            <p>
+              Mémorisé pour ce profil sur ce navigateur. Les données financières restent
+              inchangées.
+            </p>
+          </div>
+          <button class="text-link" type="button" (click)="resetDisplay()">
+            Réinitialiser
+          </button>
+        </div>
+        <div class="bpm-calendar-preference-grid">
+          <fieldset>
+            <legend>Sources affichées</legend>
+            <p>Les sources disponibles proviennent de votre calendrier BPM.</p>
+            @for (el of elements(); track el.id) {
+              <label class="bpm-calendar-choice" [style.--event-tone]="tone(el.tone)"
+                ><input
+                  type="checkbox"
+                  [checked]="!hidden().has(el.id)"
+                  (change)="toggleElement(el.id)"
+                /><i aria-hidden="true"></i><span>{{ el.label }}</span
+                ><small>{{ countInPeriod(el.id) }}</small></label
+              >
+            }
+            <button type="button" class="text-link" (click)="showAllSources()">
+              Tout afficher
+            </button>
+          </fieldset>
+          <fieldset>
+            <legend>Informations par événement</legend>
+            <p>Dans les cases et la liste des événements.</p>
+            @for (field of dayFields; track field.key) {
+              <label class="bpm-calendar-choice"
+                ><input
+                  type="checkbox"
+                  [checked]="showField(field.key)"
+                  (change)="toggleField(field.key)"
+                /><span>{{ field.label }}</span></label
+              >
+            }
+            <label class="bpm-calendar-density"
+              >Événements par case<select
+                aria-label="Événements par case"
+                [ngModel]="perCell()"
+                (ngModelChange)="setDensity($event)"
+              >
+                @for (n of [1, 2, 3, 4, 5, 6]; track n) {
+                  <option [ngValue]="n">{{ n }}</option>
+                }
+              </select></label
+            >
+          </fieldset>
+          <fieldset>
+            <legend>Bilan au survol d’un jour</legend>
+            <p>Choisissez les indicateurs de l’aperçu.</p>
+            @for (indicator of data()?.indicators ?? []; track indicator.key) {
+              <label class="bpm-calendar-choice"
+                ><input
+                  type="checkbox"
+                  [checked]="indicatorShown(indicator.key)"
+                  (change)="toggleIndicator(indicator.key)"
+                /><span>{{ indicator.label }}</span></label
+              >
+            }
+          </fieldset>
+        </div>
+      </section>
+    </ng-template>
   `,
 })
 export class CalendarComponent {
@@ -987,6 +978,8 @@ export class CalendarComponent {
   /** La page BPM porte ses commandes dans son bandeau contextuel. */
   readonly externalTools = input(false);
   readonly presentation = input<'calendar' | 'agenda' | 'sources'>('calendar');
+  /** L’encadré de personnalisation BPM, affiché par la page dans son dépliant « Sources et affichage ». */
+  readonly personalization = viewChild.required<TemplateRef<unknown>>('personalization');
   readonly loading = input(false);
   readonly busy = input(false);
   readonly error = input<string | null>(null);
@@ -1025,7 +1018,6 @@ export class CalendarComponent {
   protected readonly hidden = signal<ReadonlySet<string>>(new Set());
   protected readonly includeDone = signal(true);
   protected readonly group = signal(this.route.snapshot.queryParamMap.get('calGroup') || 'all');
-  protected readonly customizing = signal(false);
   protected readonly dayFields = BPM_DAY_FIELDS;
   private readonly preferences = signal<BpmCalendarPreferences | null>(null);
   private preferenceProfile: string | null | undefined;
@@ -1247,7 +1239,6 @@ export class CalendarComponent {
     period: this.periodName(),
     previous: this.previousLabel(),
     next: this.nextLabel(),
-    customizing: this.customizing() || this.presentation() === 'sources',
     groups: this.groups(),
     group: this.group(),
     includeDone: this.includeDone(),
@@ -1277,18 +1268,6 @@ export class CalendarComponent {
     if (group === 'all' || this.groups().some((item) => item.key === group)) {
       this.group.set(group);
       this.syncFilters();
-    }
-  }
-
-  togglePersonalization() {
-    if (this.presentation() === 'sources') return;
-    this.customizing.update((value) => !value);
-    if (this.customizing()) {
-      setTimeout(() => {
-        this.host.nativeElement
-          .querySelector('#bpm-calendar-personalization')
-          ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      });
     }
   }
 

@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { ApplicationRef, EmbeddedViewRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RecetteContext } from '../core/api.service';
@@ -73,11 +73,15 @@ describe('personnalisation du calendrier BPM', () => {
   let fixture: ComponentFixture<CalendarComponent>;
   const profile = signal<string | null>('calendar-test-a');
   const selected: CalendarEvent[][] = [];
+  /** L'encadré de personnalisation, affiché comme le fait la page (dans son dépliant), à côté du calendrier. */
+  let panel: EmbeddedViewRef<unknown> | null = null;
   const dom = () => fixture.nativeElement as HTMLElement;
   async function settle() {
     fixture.detectChanges();
+    panel?.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
+    panel?.detectChanges();
   }
   async function create(bpm = true, presentation: 'calendar' | 'agenda' | 'sources' = 'calendar') {
     fixture = TestBed.createComponent(CalendarComponent);
@@ -87,7 +91,10 @@ describe('personnalisation du calendrier BPM', () => {
     fixture.componentInstance.displayedEventsChange.subscribe((events) => selected.push(events));
     await settle();
     if (bpm && presentation === 'calendar') {
-      dom().querySelector<HTMLButtonElement>('.bpm-calendar-customize')!.click();
+      panel?.destroy();
+      panel = fixture.componentInstance.personalization().createEmbeddedView(null);
+      TestBed.inject(ApplicationRef).attachView(panel);
+      dom().append(...panel.rootNodes);
       await settle();
     }
   }
@@ -98,6 +105,11 @@ describe('personnalisation du calendrier BPM', () => {
       .click();
     await settle();
   }
+
+  afterEach(() => {
+    panel?.destroy();
+    panel = null;
+  });
 
   beforeEach(() => {
     profile.set('calendar-test-a');
@@ -226,16 +238,14 @@ describe('personnalisation du calendrier BPM', () => {
     expect(dom().querySelector('[role="alert"]')?.textContent).toContain('Cette période est close');
   });
 
-  it('ouvre toujours les sources BPM sans grille ni agenda et conserve les choix du profil', async () => {
-    await create(true, 'sources');
-    expect(dom().querySelector('#bpm-calendar-personalization')).toBeTruthy();
-    expect(dom().querySelector('.calendar-month-wrap')).toBeNull();
-    expect(dom().querySelector('.calendar-agenda')).toBeNull();
+  it('garde l’encadré hors de la grille et retrouve les choix du profil dans l’agenda', async () => {
+    await create(true, 'calendar');
+    expect(fixture.nativeElement.querySelector('.calendar #bpm-calendar-personalization')).toBeNull();
+    expect(dom().querySelectorAll('#bpm-calendar-personalization')).toHaveLength(1);
     await toggle('Dépense');
-    fixture.componentInstance.togglePersonalization();
-    await settle();
-    expect(dom().querySelector('#bpm-calendar-personalization')).toBeTruthy();
     expect(readDisplayPreferences('calendar-test-a', data).sources['depense']).toBe(false);
+    panel?.destroy();
+    panel = null;
     fixture.destroy();
     await create(true, 'agenda');
     expect(dom().querySelector('.calendar-agenda-list')?.textContent).not.toContain('Courses');

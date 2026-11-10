@@ -1,6 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PlanCard } from '../shared/site-plan';
+import { PlanCard, PlanZone, menuPages, sectionEntry, zoneSections } from '../shared/site-plan';
+
+/** Une carte par grande section d'une zone, hors de sa vue d'ensemble : la même sur tous les accueils de zone. */
+export function zoneSectionCards(zone: PlanZone, connected: boolean): PlanCard[] {
+  return zoneSections(zone, connected)
+    .filter((section) => !section.pages.some((p) => p.zoneOverview) && menuPages(section).length)
+    .map((section) => ({
+      id: section.id,
+      label: section.label,
+      description: section.description,
+      result: menuPages(section).map((page) => page.label).join(' · '),
+      ...sectionEntry(zone, section),
+      tone: section.tone ?? zone.tone,
+      step: section.intention,
+      action: 'Entrer dans ' + section.label,
+    }));
+}
 
 let planCardsId = 0;
 

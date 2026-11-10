@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
-import { RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
+import { CanActivateFn, RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
+import { RecetteContext } from './core/api.service';
 import { planTitle } from './shared/site-plan';
 import { PAGE_WORKSPACES } from './shared/page-workspaces';
 
@@ -12,6 +13,9 @@ const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.ge
 
 // Trois espaces : l'application BPM (niveau 3) en deux sections, la gestion des utilisateurs et le socle
 // (noyau, middlewares en interfaces de test, Object Management, Administration).
+/** « Démarrer un projet » est réservé au visiteur : un user connecté a déjà son projet de vie et le modifie dans sa gestion. */
+const visitorOnly: CanActivateFn = () => !inject(RecetteContext).connected() || inject(Router).createUrlTree(['/projet-de-vie']);
+
 const mainRoutes: Routes = [
   // Accueil : le portail des zones (Budget/Patrimoine Management, Budget, Patrimoine, Noyau transverse, Administration).
   { path: '', pathMatch: 'full', title: 'Accueil · RJS Forecast', loadComponent: () => import('./home/home').then((m) => m.HomePage) },
@@ -20,7 +24,7 @@ const mainRoutes: Routes = [
   { path: 'zones/:zone/:section', title: planRouteTitle, loadComponent: () => import('./home/section-landing').then((m) => m.SectionLandingPage) },
 
   // ---------- Application BPM (niveau 3) : Démarrer un projet ----------
-  { path: 'creer', title: 'Démarrer un projet — RJS Forecast', loadComponent: () => import('./bpm/pages/create').then((m) => m.BpmCreatePage) },
+  { path: 'creer', title: 'Démarrer un projet — RJS Forecast', canActivate: [visitorOnly], loadComponent: () => import('./bpm/pages/start').then((m) => m.BpmStartPage) },
 
   // ---------- Application BPM : Ma vision budgétaire ----------
   { path: 'tableau-de-bord', title: 'Tableau de bord — RJS Forecast', loadComponent: () => import('./bpm/pages/dashboard').then((m) => m.BpmDashboard) },
@@ -115,17 +119,26 @@ const mainRoutes: Routes = [
   { path: 'admin/calculs', title: 'Calculs — Administration', loadComponent: () => import('./admin/metrics').then((m) => m.AdminMetrics) },
   { path: 'admin/calculs/:key', title: 'Formule — Administration', loadComponent: () => import('./admin/metric-editor').then((m) => m.MetricEditor) },
 
+  // L'ancienne page des sources du calendrier BPM : ses réglages sont dans le dépliant de la page du calendrier.
+  {
+    path: 'calendrier-budget/sources',
+    redirectTo: ({ queryParams }) => inject(Router).createUrlTree(['/calendrier-budget'], { queryParams, fragment: 'sources-et-affichage' }),
+  },
   { path: '**', redirectTo: '' },
 ];
 
 // Les destinations spécialisées précèdent les identifiants dynamiques et partagent leur module.
 export const routes: Routes = [
-  ...PAGE_WORKSPACES.filter(view => !view.existing).map(view => ({
-    path: view.path,
-    title: `${view.title} — RJS Forecast`,
-    loadComponent: view.loadComponent,
-    data: { ...mainRoutes.find(route => route.path === view.parent.slice(1))?.data, workspace: view },
-  })),
+  ...PAGE_WORKSPACES.filter(view => !view.existing).map(view => {
+    const parent = mainRoutes.find(route => route.path === view.parent.slice(1));
+    return {
+      path: view.path,
+      title: `${view.title} — RJS Forecast`,
+      loadComponent: view.loadComponent,
+      canActivate: parent?.canActivate,
+      data: { ...parent?.data, workspace: view },
+    };
+  }),
   ...mainRoutes.map(route => {
     const workspace = PAGE_WORKSPACES.find(view => view.existing && view.path === route.path);
     return workspace ? { ...route, data: { ...route.data, workspace } } : route;

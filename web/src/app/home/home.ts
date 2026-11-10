@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RecetteContext } from '../core/api.service';
 import { RouterLink } from '@angular/router';
-import { PLAN_OVERVIEW_TONE, PLAN_ZONES, PlanSection, PlanZone, planZone, portalBands, sectionEntry, zoneHomeLink } from '../shared/site-plan';
+import { PLAN_OVERVIEW_TONE, PLAN_ZONES, PlanSection, PlanZone, planZone, portalBands, sectionEntry, zoneHomeLink, zoneSections } from '../shared/site-plan';
 
 type PortalRow = ReturnType<typeof portalBands>[number];
 
@@ -71,7 +72,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
                       </p>
                     }
                     <nav class="plan-entries" [attr.aria-label]="'Sections de ' + zone.label">
-                      @for (section of zone.sections; track section.id) {
+                      @for (section of visibleSections(zone); track section.id) {
                         @let entry = entryOf(zone, section);
                         <a class="plan-entry" [attr.data-tone]="section.tone ?? zone.tone" [routerLink]="entry.link" [queryParams]="entry.query"
                           ><span class="plan-entry-mark" aria-hidden="true">{{ section.acronym }}</span
@@ -107,6 +108,10 @@ export class HomePage {
   protected assembled(zone: PlanZone) {
     const parts = (zone.assembles ?? []).map(planZone).filter((p): p is PlanZone => !!p);
     return parts.length ? parts : null;
+  }
+  private readonly ctx = inject(RecetteContext);
+  protected visibleSections(zone: PlanZone) {
+    return zoneSections(zone, this.ctx.connected());
   }
   protected entryOf(zone: PlanZone, section: PlanSection) {
     return sectionEntry(zone, section);

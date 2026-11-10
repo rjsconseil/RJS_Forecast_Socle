@@ -9,7 +9,7 @@ export function isCycleRefusal(e: ApiError | null | undefined): boolean {
 
 /**
  * Les deux chemins pour sortir de « Cycle à configurer », partout les mêmes :
- * l'assistant du projet de vie (cycle, patrimoine, budget type en une fois, il complète un budget existant),
+ * la gestion du projet de vie (cycle, patrimoine, budget type),
  * ou le seul réglage du cycle pour qui veut aller vite.
  */
 @Component({
@@ -20,12 +20,12 @@ export function isCycleRefusal(e: ApiError | null | undefined): boolean {
   template: `
     @if (buttons()) {
       <span class="bpm-actions bpm-cycle-setup">
-        <a class="btn btn-primary" routerLink="/creer/projet-de-vie">Démarrer mon projet de vie</a>
+        <a class="btn btn-primary" routerLink="/projet-de-vie">Configurer mon projet de vie</a>
         <a class="btn btn-secondary" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
       </span>
     } @else {
       <span class="bpm-cycle-setup">
-        <a class="bm-action-link" routerLink="/creer/projet-de-vie">Démarrer mon projet de vie →</a>
+        <a class="bm-action-link" routerLink="/projet-de-vie">Configurer mon projet de vie →</a>
         <span aria-hidden="true"> · </span>
         <a class="bm-action-link" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
       </span>

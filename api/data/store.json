@@ -1,114 +1,8 @@
 {
   "schemaVersion": "socle-store/0.6",
-  "revision": 2500,
-  "updatedAt": "2026-11-08T07:29:54.280Z",
+  "revision": 2509,
+  "updatedAt": "2026-11-09T08:19:59.170Z",
   "journal": [
-    {
-      "at": "2026-11-06T11:50:42.439Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-1be20e66-60e4-4763-b0d7-8d9706e91ca6",
-      "created": [
-        "op_968933ec-83f1-4e3b-8e5e-2a863cf8ced5"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.516Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-6c02381b-49e1-4524-bf17-557b0f89729e",
-      "created": [
-        "op_caa5593c-6b08-47c5-94ea-610a74b2d827"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.584Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-bc119818-5e4f-4fec-a22d-723d01c5ff17",
-      "created": [
-        "op_c701c0bf-1c28-4314-8d23-583b82aa8919"
-      ],
-      "updated": [
-        "bud_9b088b5a-6a70-4b39-b038-fe069671a5e8"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.651Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-aa85b692-b8b0-4e36-814d-745da24e5009",
-      "created": [
-        "op_8bf09a7e-dc80-40c0-9591-f6c0bfb608dd"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.725Z",
-      "command": "createOperation",
-      "userId": "usr_daab6df0-fd16-44fc-83ce-a401229218b5",
-      "requestKey": "recette-bpm-541c7d18-a304-4039-94b2-5d2d0ad66ddd",
-      "created": [
-        "op_cac71d15-2f7a-4d54-b59f-584d7cdd7ce8"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.798Z",
-      "command": "createUser",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-31d4835d-cfad-4678-b4ab-a62bc1586651",
-      "created": [
-        "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-        "prj_b4af1f5b-9e3f-40bd-aed4-a4d4c6a4594b",
-        "bud_55bfe224-a4da-4fc9-91cd-7790e2630594",
-        "pat_29ad2824-a2a2-439f-9ad6-0505bb49990c",
-        "bpm_88cf2d5c-19d6-4145-b5ba-2a77469ed56f",
-        "cyc_56e3306f-dab2-491b-a71d-82630a58804a"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.864Z",
-      "command": "createOperation",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-882715c8-5afb-4a47-bba7-2d46105b4c39",
-      "created": [
-        "op_4f406f58-3060-47c6-8d5e-ccfd691f4fa1"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.927Z",
-      "command": "createOperation",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-5a26d3f5-4f4e-4d8e-a258-a06fda42b336",
-      "created": [
-        "op_4f8b1119-75cb-4d80-99de-c8102d2c80dc"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:42.996Z",
-      "command": "createOperation",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-9f4d0c5c-3cda-43b3-8edf-a9d87bacc68e",
-      "created": [
-        "op_2eea6c12-2142-4ef1-adc6-516244964c14"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
     {
       "at": "2026-11-06T11:50:43.074Z",
       "command": "createOperation",
@@ -22653,6 +22547,109 @@
         "bpm_a0b3c35e-a365-40c1-9110-2e3068346de0"
       ],
       "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:06:56.359Z",
+      "command": "setupProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": "setup-79deaef3-6f88-4e66-a06e-966c5bd8a5a8",
+      "created": [
+        "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e",
+        "bud_b1016776-ec05-457e-b4b9-944cee26e872",
+        "tsk_da3658a7-c552-40ac-8a7e-efe4a1d3413e",
+        "tsk_cc8c77bf-40a0-44e4-8a07-31e724355004"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:08:02.800Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_b1016776-ec05-457e-b4b9-944cee26e872"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:10:22.910Z",
+      "command": "requestTaskBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": "web-d471e001-64be-47cd-b43e-7855efca3f61",
+      "created": [
+        "dmt_0dd53e5b-0c82-4a60-884b-2470518681a1"
+      ],
+      "updated": [],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:10:39.428Z",
+      "command": "decideTaskBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_b1016776-ec05-457e-b4b9-944cee26e872",
+        "dmt_0dd53e5b-0c82-4a60-884b-2470518681a1"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:16:51.754Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_b1016776-ec05-457e-b4b9-944cee26e872"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:19:42.963Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_3431b230-bd89-4d3c-a163-872943973e2e"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:19:49.379Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:19:54.039Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_312386b3-44ed-4442-9a90-a782bf76f8b8"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-09T08:19:59.169Z",
+      "command": "allocateProjectBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "bud_d46873c7-cb5b-4938-8318-5fcb5e1fbaeb"
+      ],
+      "outcome": "committed"
     }
   ],
   "migrations": [
@@ -28067,6 +28064,24 @@
       "priority": "medium",
       "startDate": "2026-11-08",
       "dueDate": "2026-11-30"
+    },
+    "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e": {
+      "id": "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e",
+      "kind": "coreProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 1,
+      "createdAt": "2026-11-09T08:06:56.359Z",
+      "updatedAt": "2026-11-09T08:06:56.359Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-79deaef3-6f88-4e66-a06e-966c5bd8a5a8",
+        "at": "2026-11-09T08:06:56.359Z"
+      },
+      "title": "Mon projet de la vie (RJS)",
+      "description": "Mon projet de la vie doit commencer maintenant. ",
+      "priority": "medium",
+      "startDate": null,
+      "dueDate": null
     }
   },
   "tasks": {
@@ -33467,6 +33482,48 @@
         "command": "updateTask",
         "at": "2026-11-08T07:07:09.748Z"
       }
+    },
+    "tsk_da3658a7-c552-40ac-8a7e-efe4a1d3413e": {
+      "id": "tsk_da3658a7-c552-40ac-8a7e-efe4a1d3413e",
+      "kind": "task",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 1,
+      "createdAt": "2026-11-09T08:06:56.359Z",
+      "updatedAt": "2026-11-09T08:06:56.359Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-79deaef3-6f88-4e66-a06e-966c5bd8a5a8",
+        "at": "2026-11-09T08:06:56.359Z"
+      },
+      "title": "Démarrer mon projet de la vie",
+      "description": "La première tache de mon projet de la vie est la. ",
+      "status": "todo",
+      "plannedHours": 5,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e"
+    },
+    "tsk_cc8c77bf-40a0-44e4-8a07-31e724355004": {
+      "id": "tsk_cc8c77bf-40a0-44e4-8a07-31e724355004",
+      "kind": "task",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 1,
+      "createdAt": "2026-11-09T08:06:56.359Z",
+      "updatedAt": "2026-11-09T08:06:56.359Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-79deaef3-6f88-4e66-a06e-966c5bd8a5a8",
+        "at": "2026-11-09T08:06:56.359Z"
+      },
+      "title": "Ma deuxième tache",
+      "description": "La deuxième tache de mon projet de la vie. ",
+      "status": "todo",
+      "plannedHours": 10,
+      "spentHours": 0,
+      "startDate": null,
+      "dueDate": null,
+      "projectId": "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e"
     }
   },
   "budgets": {
@@ -35672,9 +35729,9 @@
       "id": "bud_3431b230-bd89-4d3c-a163-872943973e2e",
       "kind": "budget",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-06T09:36:17.165Z",
-      "updatedAt": "2026-11-06T09:36:17.165Z",
+      "updatedAt": "2026-11-09T08:19:42.963Z",
       "provenance": {
         "command": "adoptProject",
         "requestKey": "web-aca2e284-3485-479a-8a58-f98625a49c2f",
@@ -35684,15 +35741,23 @@
       "name": "Exemple temps et complétude",
       "coreProjectId": "prj_ca3273f2-d60f-463a-9541-049c16053b52",
       "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
-      "capsCents": {}
+      "capsCents": {},
+      "allocationCents": 50000,
+      "allocationDate": "2026-11-09",
+      "taskSharesCents": {},
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-09T08:19:42.963Z"
+      }
     },
     "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7": {
       "id": "bud_d829550d-3767-41b2-8f7b-25f6fcad86f7",
       "kind": "budget",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-06T09:36:38.906Z",
-      "updatedAt": "2026-11-06T09:36:38.906Z",
+      "updatedAt": "2026-11-09T08:19:49.379Z",
       "provenance": {
         "command": "adoptProject",
         "requestKey": "web-f8dd56df-21ce-4f9d-bc94-b791ccdcc8b2",
@@ -35702,15 +35767,23 @@
       "name": "Préparer mon installation",
       "coreProjectId": "prj_53e97ffb-15aa-42e9-8270-3d3d6223852d",
       "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
-      "capsCents": {}
+      "capsCents": {},
+      "allocationCents": 51000,
+      "allocationDate": "2026-11-09",
+      "taskSharesCents": {},
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-09T08:19:49.379Z"
+      }
     },
     "bud_312386b3-44ed-4442-9a90-a782bf76f8b8": {
       "id": "bud_312386b3-44ed-4442-9a90-a782bf76f8b8",
       "kind": "budget",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-06T09:37:06.364Z",
-      "updatedAt": "2026-11-06T09:37:06.364Z",
+      "updatedAt": "2026-11-09T08:19:54.039Z",
       "provenance": {
         "command": "adoptProject",
         "requestKey": "web-d9aa33f5-375b-416b-bd2d-614043722752",
@@ -35720,7 +35793,15 @@
       "name": "État — À faire (vide)",
       "coreProjectId": "prj_e4cdea29-d5ad-4931-a405-6e53aab543a0",
       "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
-      "capsCents": {}
+      "capsCents": {},
+      "allocationCents": 52000,
+      "allocationDate": "2026-11-09",
+      "taskSharesCents": {},
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-09T08:19:54.039Z"
+      }
     },
     "bud_01d3daa0-6bef-445e-8856-3633034f1cd9": {
       "id": "bud_01d3daa0-6bef-445e-8856-3633034f1cd9",
@@ -37616,9 +37697,9 @@
       "id": "bud_d46873c7-cb5b-4938-8318-5fcb5e1fbaeb",
       "kind": "budget",
       "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
-      "revision": 1,
+      "revision": 2,
       "createdAt": "2026-11-07T00:57:33.670Z",
-      "updatedAt": "2026-11-07T00:57:33.670Z",
+      "updatedAt": "2026-11-09T08:19:59.169Z",
       "provenance": {
         "command": "adoptProject",
         "requestKey": "web-e384b0d5-fa6a-4646-a15e-c30c6b4605c1",
@@ -37628,7 +37709,15 @@
       "name": "État — À reprendre",
       "coreProjectId": "prj_662b6c76-2021-44e6-926e-85e26b932002",
       "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
-      "capsCents": {}
+      "capsCents": {},
+      "allocationCents": 53000,
+      "allocationDate": "2026-11-09",
+      "taskSharesCents": {},
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-09T08:19:59.169Z"
+      }
     },
     "bud_751b6054-4a8d-4034-ba2d-233f71fcdba1": {
       "id": "bud_751b6054-4a8d-4034-ba2d-233f71fcdba1",
@@ -38052,6 +38141,34 @@
       "lastChange": {
         "command": "allocateProjectBudget",
         "at": "2026-11-08T07:22:17.377Z"
+      }
+    },
+    "bud_b1016776-ec05-457e-b4b9-944cee26e872": {
+      "id": "bud_b1016776-ec05-457e-b4b9-944cee26e872",
+      "kind": "budget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 4,
+      "createdAt": "2026-11-09T08:06:56.359Z",
+      "updatedAt": "2026-11-09T08:16:51.754Z",
+      "provenance": {
+        "command": "setupProject",
+        "requestKey": "setup-79deaef3-6f88-4e66-a06e-966c5bd8a5a8",
+        "at": "2026-11-09T08:06:56.359Z"
+      },
+      "role": "standard",
+      "name": "Mon projet de la vie (RJS)",
+      "coreProjectId": "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e",
+      "parentBudgetId": "bud_942de379-478b-4075-b26a-c42a4a6a3a3e",
+      "capsCents": {},
+      "allocationCents": 175000,
+      "allocationDate": "2026-11-09",
+      "taskSharesCents": {
+        "tsk_da3658a7-c552-40ac-8a7e-efe4a1d3413e": 25000
+      },
+      "taskReturns": {},
+      "lastChange": {
+        "command": "allocateProjectBudget",
+        "at": "2026-11-09T08:16:51.754Z"
       }
     }
   },
@@ -512233,6 +512350,31 @@
         "command": "decideTaskBudget",
         "at": "2026-11-08T07:06:28.059Z"
       }
+    },
+    "dmt_0dd53e5b-0c82-4a60-884b-2470518681a1": {
+      "id": "dmt_0dd53e5b-0c82-4a60-884b-2470518681a1",
+      "kind": "taskBudgetRequest",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "revision": 2,
+      "createdAt": "2026-11-09T08:10:22.910Z",
+      "updatedAt": "2026-11-09T08:10:39.428Z",
+      "provenance": {
+        "command": "requestTaskBudget",
+        "requestKey": "web-d471e001-64be-47cd-b43e-7855efca3f61",
+        "at": "2026-11-09T08:10:22.910Z"
+      },
+      "budgetId": "bud_b1016776-ec05-457e-b4b9-944cee26e872",
+      "taskId": "tsk_da3658a7-c552-40ac-8a7e-efe4a1d3413e",
+      "amountCents": 25000,
+      "note": "motif de tache RJS: faire un achat",
+      "status": "approved",
+      "requestedAt": "2026-11-09",
+      "decidedAt": "2026-11-09",
+      "overrunId": null,
+      "lastChange": {
+        "command": "decideTaskBudget",
+        "at": "2026-11-09T08:10:39.428Z"
+      }
     }
   },
   "creationRequests": {
@@ -551695,6 +551837,61 @@
         "operationId": "op_1c6e99df-416d-4bda-927f-ed4d92e979b0"
       },
       "completedAt": "2026-11-08T07:27:21.688Z"
+    },
+    "setup-79deaef3-6f88-4e66-a06e-966c5bd8a5a8": {
+      "requestKey": "setup-79deaef3-6f88-4e66-a06e-966c5bd8a5a8",
+      "command": "setupProject",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "fingerprint": "3667b6846b0162f1f67dbd6dc9f5acd753140be15d1a7bcc7d996b1c29bf82c8",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "coreProject",
+          "id": "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e"
+        },
+        {
+          "kind": "budget",
+          "id": "bud_b1016776-ec05-457e-b4b9-944cee26e872"
+        },
+        {
+          "kind": "task",
+          "id": "tsk_da3658a7-c552-40ac-8a7e-efe4a1d3413e"
+        },
+        {
+          "kind": "task",
+          "id": "tsk_cc8c77bf-40a0-44e4-8a07-31e724355004"
+        }
+      ],
+      "result": {
+        "mode": "branch",
+        "bpmCompositionId": "bpm_9d251789-ed19-4c3a-b92c-04dd9d6c9622",
+        "created": [],
+        "updated": [],
+        "budgetId": "bud_b1016776-ec05-457e-b4b9-944cee26e872",
+        "coreProjectId": "prj_f2f3fe04-5a05-4ca2-b517-1cdb5a31416e",
+        "taskIds": [
+          "tsk_da3658a7-c552-40ac-8a7e-efe4a1d3413e",
+          "tsk_cc8c77bf-40a0-44e4-8a07-31e724355004"
+        ]
+      },
+      "completedAt": "2026-11-09T08:06:56.359Z"
+    },
+    "web-d471e001-64be-47cd-b43e-7855efca3f61": {
+      "requestKey": "web-d471e001-64be-47cd-b43e-7855efca3f61",
+      "command": "requestTaskBudget",
+      "userId": "usr_1ee2490a-5dad-4d96-87ab-a20dbafe420b",
+      "fingerprint": "0863ea4734c24209ccca3163af2985215adba00eda55a417c087c9fb59b884b2",
+      "status": "completed",
+      "createdObjects": [
+        {
+          "kind": "taskBudgetRequest",
+          "id": "dmt_0dd53e5b-0c82-4a60-884b-2470518681a1"
+        }
+      ],
+      "result": {
+        "requestId": "dmt_0dd53e5b-0c82-4a60-884b-2470518681a1"
+      },
+      "completedAt": "2026-11-09T08:10:22.910Z"
     }
   },
   "parameters": {

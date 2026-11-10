@@ -243,7 +243,7 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
     disclosure: { label: 'Projets & décisions', summary: `${count(p.projectCount, 'projet')} · ${count(decisions, 'décision attendue', 'décisions attendues')}` },
     // Parcours le plus courant d'abord : décider ce qui attend, sinon piloter les projets.
     primary: !p.projectCount
-      ? { label: 'Créer un projet de la vie', link: '/creer/projet-de-la-vie' }
+      ? { label: 'Créer un projet de la vie', link: '/app/gestion-projet/nouveau' }
       : decisions > 0
         ? { label: `Décider (${decisions})`, link: '/projet-de-vie', fragment: 'life-decisions' }
         : { label: 'Piloter les projets', link: '/app/gestion-projet' },

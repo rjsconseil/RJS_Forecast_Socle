@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   ApiErrorBody,
@@ -34,6 +34,8 @@ const USER_KEY = 'rjs.activeUserId';
 @Injectable({ providedIn: 'root' })
 export class RecetteContext {
   readonly userId = signal<string | null>(readStored());
+  /** Connecté = un user choisi ; sans user, le site ne propose que « Démarrer un projet ». */
+  readonly connected = computed(() => this.userId() !== null);
 
   /** `remember: false` pour un choix par défaut : seul un choix fait par la personne est mémorisé. */
   select(id: string | null, { remember = true } = {}) {

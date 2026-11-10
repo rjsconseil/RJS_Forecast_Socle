@@ -466,7 +466,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
               Aucun projet de la vie n’est rattaché : aucune enveloppe à suivre ni décision attendue. Un projet de la vie finance
               une envie (voyage, travaux, formation…) par une enveloppe ; ses dépenses validées entrent alors dans le cycle.
             </p>
-            <div class="bpm-actions"><a class="btn btn-primary" routerLink="/creer/projet-de-la-vie">Créer un projet de la vie</a></div>
+            <div class="bpm-actions"><a class="btn btn-primary" routerLink="/app/gestion-projet/nouveau">Créer un projet de la vie</a></div>
           </section>
         }
 

@@ -78,7 +78,12 @@ export default {
     return {
       buildUser,
 
-      /** Création d'un user ; la composition initiale (si un module la fournit) s'exécute dans la même écriture. */
+      /**
+       * Création d'un user ; la composition initiale (si un module la fournit : le projet de vie BPM) s'exécute
+       * dans la même écriture. Le projet de vie naît donc une seule fois, avec son user, et ne disparaît qu'avec lui.
+       * Commande anonyme : aujourd'hui seul un visiteur crée son propre user. Point d'extension prévu (non codé) :
+       * un user connecté « parent » passera son contexte ici pour devenir le maître du user créé.
+       */
       createUser(input) {
         return om.command(
           'createUser',

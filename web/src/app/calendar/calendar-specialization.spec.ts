@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
@@ -6,6 +6,7 @@ import { CalendarPage } from './calendar.page';
 import { CalendarService } from './calendar.service';
 import { CalendarData } from './calendar.models';
 
+let fixture: ComponentFixture<CalendarPage>;
 async function setup(calendar: string, key?: string) {
   const data: CalendarData = {
     calendar: { id: calendar, label: 'Calendrier de test', description: null }, parameter: null,
@@ -25,7 +26,7 @@ async function setup(calendar: string, key?: string) {
       snapshot: { data: routeData, queryParams: { jour: '2026-11-07' }, queryParamMap: convertToParamMap({ jour: '2026-11-07' }) },
     } },
   ] });
-  const fixture = TestBed.createComponent(CalendarPage);
+  fixture = TestBed.createComponent(CalendarPage);
   fixture.detectChanges();
   await fixture.whenStable();
   fixture.detectChanges();
@@ -43,14 +44,20 @@ describe('pages spécialisées du calendrier partagé', () => {
     expect(dom.querySelector('.calendar-elements')).toBeNull();
   });
 
-  it('ouvre directement les préférences BPM sans dupliquer les événements', async () => {
-    const dom = await setup('budgetPatrimoine', 'calendar-sources');
-    expect(dom.querySelector('bpm-page-banner h1')?.textContent).toContain('Sources spécialisées');
-    expect(dom.querySelector('#bpm-calendar-personalization')).toBeTruthy();
-    expect(dom.querySelector('.calendar-360-overview')).toBeNull();
-    expect(dom.querySelector('.calendar-agenda')).toBeNull();
-    expect(dom.querySelector('.calendar-month-wrap')).toBeNull();
+  it('place les préférences BPM dans le dépliant « Sources et affichage » de la page, une seule fois', async () => {
+    const dom = await setup('budgetPatrimoine');
+    const settings = dom.querySelector<HTMLDetailsElement>('details#sources-et-affichage')!;
+    expect(settings.querySelector('summary')?.textContent).toContain('Sources et affichage');
+    expect(settings.open).toBe(false);
+    expect(settings.querySelector('#bpm-calendar-personalization h3')?.textContent).toContain('Votre calendrier, vos repères');
     expect(dom.querySelectorAll('#bpm-calendar-personalization')).toHaveLength(1);
+    expect(dom.querySelector('.calendar-360-milestone')).toBeNull();
+    expect(dom.textContent).not.toContain('Chronologie des événements');
+    const button = [...dom.querySelectorAll<HTMLButtonElement>('bpm-page-banner button')].find((b) => b.textContent?.includes('Sources et affichage'))!;
+    button.click();
+    fixture.detectChanges();
+    expect(settings.open).toBe(true);
+    expect(button.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('garde les synthèses et la grille de la page principale', async () => {

@@ -2,10 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppHeroComponent } from '../shared/app-hero.component';
 import { injectPageWorkspace } from '../shared/page-workspace';
@@ -28,6 +31,8 @@ export interface CalendarPageData {
   groupKicker: string;
 }
 
+const SETTINGS_ANCHOR = 'sources-et-affichage';
+
 const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
   day: 'numeric',
   month: 'short',
@@ -42,10 +47,13 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
  */
 @Component({
   selector: 'app-calendar-page',
-  imports: [CalendarSpaceComponent, FormsModule, BpmPageBanner, AppHeroComponent, RouterLink],
+  imports: [CalendarSpaceComponent, FormsModule, BpmPageBanner, AppHeroComponent, RouterLink, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
+      .calendar-360-settings-body {
+        padding-top: 16px;
+      }
       bpm-page-banner, rjs-app-hero {
         min-width: 0;
         width: 100%;
@@ -145,7 +153,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
                   →
                 </button>
               </div>
-              @if (presentation() !== 'sources' && priority(); as event) {
+              @if (priority(); as event) {
                 <button
                   type="button"
                   class="app-hero-action"
@@ -162,24 +170,22 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
                 Aujourd’hui
               </button>
               @if (presentation() === 'agenda') {
-                <a class="btn btn-secondary" [routerLink]="workspace()!.parent + '/sources'" queryParamsHandling="preserve">Choisir les sources</a>
-              } @else if (presentation() === 'sources') {
-                <a class="btn btn-primary" [routerLink]="workspace()!.parent + '/agenda'" queryParamsHandling="preserve">Voir l’agenda avec ces choix</a>
+                <a class="btn btn-secondary" [routerLink]="workspace()!.parent" [fragment]="settingsAnchor" queryParamsHandling="preserve">Choisir les sources</a>
               } @else {
               <button
                 type="button"
                 class="btn btn-primary"
-                [attr.aria-expanded]="tools()?.customizing ?? false"
-                aria-controls="bpm-calendar-personalization"
-                (click)="space()?.togglePersonalization()"
+                [attr.aria-expanded]="settingsOpen()"
+                [attr.aria-controls]="settingsAnchor"
+                (click)="toggleSettings()"
               >
                 Sources et affichage
-                <span aria-hidden="true">{{ tools()?.customizing ? '−' : '+' }}</span>
+                <span aria-hidden="true">{{ settingsOpen() ? '−' : '+' }}</span>
               </button>
               }
             </ng-container>
             <div tools class="bpm-calendar-header-filters">
-              @if (presentation() !== 'sources' && priorities().length) {
+              @if (priorities().length) {
                 <label
                   ><span>Repère à suivre</span
                   ><select [ngModel]="priority()?.key" (ngModelChange)="priorityKey.set($event)">
@@ -337,52 +343,79 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
               >
             </div>
 
-            <details class="calendar-360-timeline">
-              <summary>
-                <span class="calendar-360-timeline-copy">
-                  <strong>{{
-                    isBpm ? 'Chronologie des événements' : 'Dates de la période'
-                  }}</strong>
-                  <small>Tous les repères de la période, classés par mois</small>
-                </span>
-                <span class="calendar-360-timeline-controls">
-                  <span class="calendar-360-timeline-count"
-                    >{{ summary().markers }} {{ isBpm ? 'événements' : 'dates' }}</span
-                  >
-                  <span class="calendar-360-timeline-closed">Afficher</span>
-                  <span class="calendar-360-timeline-open">Masquer</span>
-                  <span class="calendar-360-timeline-chevron" aria-hidden="true"></span>
-                </span>
-              </summary>
-              <div class="calendar-360-timeline-body">
-                @for (m of months(); track m.month) {
-                  <section>
-                    <h3>{{ monthName(m.month) }}</h3>
-                    @for (event of m.events; track event.key) {
-                      <div class="calendar-360-milestone" [attr.data-kind]="markerOf(event)">
-                        <span>{{ date(event.date) }}</span>
-                        <span>{{ elementLabel(event) }}</span>
-                        <button
-                          class="task-title-link"
-                          type="button"
-                          [disabled]="!event.link"
-                          (click)="open(event)"
-                        >
-                          {{ event.title }}
-                        </button>
-                        <span class="status-pill" [attr.data-status]="event.status">{{
-                          event.amountCents !== null
-                            ? money(event.amountCents, event.direction)
-                            : event.statusLabel
-                        }}</span>
-                      </div>
-                    }
-                  </section>
-                } @empty {
-                  <p>Aucun repère dans cette période.</p>
-                }
-              </div>
-            </details>
+            @if (isBpm) {
+              <!-- Le dépliant de la page porte les préférences d'affichage du calendrier (sources, informations, bilan). -->
+              <details
+                #settings
+                class="calendar-360-timeline calendar-360-settings"
+                [id]="settingsAnchor"
+                [open]="settingsOpen()"
+                (toggle)="settingsOpen.set(settings.open)"
+              >
+                <summary>
+                  <span class="calendar-360-timeline-copy">
+                    <strong>Sources et affichage</strong>
+                    <small>Sources affichées, informations par événement et bilan au survol d’un jour</small>
+                  </span>
+                  <span class="calendar-360-timeline-controls">
+                    <span class="calendar-360-timeline-count">{{ summary().markers }} événements affichés</span>
+                    <span class="calendar-360-timeline-closed">Afficher</span>
+                    <span class="calendar-360-timeline-open">Masquer</span>
+                    <span class="calendar-360-timeline-chevron" aria-hidden="true"></span>
+                  </span>
+                </summary>
+                <div class="calendar-360-timeline-body calendar-360-settings-body">
+                  @if (space()?.personalization(); as personalization) {
+                    <ng-container [ngTemplateOutlet]="personalization" />
+                  }
+                </div>
+              </details>
+            } @else {
+              <details class="calendar-360-timeline">
+                <summary>
+                  <span class="calendar-360-timeline-copy">
+                    <strong>Dates de la période</strong>
+                    <small>Tous les repères de la période, classés par mois</small>
+                  </span>
+                  <span class="calendar-360-timeline-controls">
+                    <span class="calendar-360-timeline-count"
+                      >{{ summary().markers }} dates</span
+                    >
+                    <span class="calendar-360-timeline-closed">Afficher</span>
+                    <span class="calendar-360-timeline-open">Masquer</span>
+                    <span class="calendar-360-timeline-chevron" aria-hidden="true"></span>
+                  </span>
+                </summary>
+                <div class="calendar-360-timeline-body">
+                  @for (m of months(); track m.month) {
+                    <section>
+                      <h3>{{ monthName(m.month) }}</h3>
+                      @for (event of m.events; track event.key) {
+                        <div class="calendar-360-milestone" [attr.data-kind]="markerOf(event)">
+                          <span>{{ date(event.date) }}</span>
+                          <span>{{ elementLabel(event) }}</span>
+                          <button
+                            class="task-title-link"
+                            type="button"
+                            [disabled]="!event.link"
+                            (click)="open(event)"
+                          >
+                            {{ event.title }}
+                          </button>
+                          <span class="status-pill" [attr.data-status]="event.status">{{
+                            event.amountCents !== null
+                              ? money(event.amountCents, event.direction)
+                              : event.statusLabel
+                          }}</span>
+                        </div>
+                      }
+                    </section>
+                  } @empty {
+                    <p>Aucun repère dans cette période.</p>
+                  }
+                </div>
+              </details>
+            }
           </div>
         </section>
         }
@@ -492,6 +525,27 @@ export class CalendarPage {
   private readonly router = inject(Router);
   protected readonly page = this.route.snapshot.data as CalendarPageData;
   protected readonly isBpm = this.page.calendar === 'budgetPatrimoine';
+  /** Ancre du dépliant « Sources et affichage » : l'agenda y renvoie (`/calendrier-budget#sources-et-affichage`). */
+  protected readonly settingsAnchor = SETTINGS_ANCHOR;
+  protected readonly settingsOpen = signal(false);
+  private readonly settings = viewChild<ElementRef<HTMLDetailsElement>>('settings');
+
+  constructor() {
+    // Arriver par l'ancre (lien « Choisir les sources » de l'agenda, ancienne page des sources) ouvre le dépliant.
+    this.route.fragment.pipe(takeUntilDestroyed()).subscribe((fragment) => {
+      if (this.isBpm && fragment === SETTINGS_ANCHOR) this.showSettings(true);
+    });
+  }
+
+  /** Le bouton du bandeau ouvre ou referme le même dépliant que son lien, et l'amène à l'écran. */
+  protected toggleSettings() {
+    this.showSettings(!this.settingsOpen());
+  }
+  private showSettings(open: boolean) {
+    this.settingsOpen.set(open);
+    if (open)
+      setTimeout(() => this.settings()?.nativeElement.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' }));
+  }
   /** Le titre suit le menu : la page porte le nom sous lequel on l'a choisie. */
   private readonly plan = injectPlanContext();
   protected readonly planLabel = computed(() => this.plan().label);
@@ -546,7 +600,7 @@ export class CalendarPage {
       };
     if (this.presentation() === 'sources') return {
       title: 'Choisissez les sources et les informations utiles à votre lecture.',
-      detail: this.isBpm ? 'Ces préférences sont conservées pour votre profil sur ce navigateur.' : 'Vos choix suivent l’URL quand vous revenez au calendrier ou à l’agenda.',
+      detail: 'Vos choix suivent l’URL quand vous revenez au calendrier ou à l’agenda.',
       tone: 'info',
     };
     if (!this.data()) return null;

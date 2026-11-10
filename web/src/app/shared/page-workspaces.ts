@@ -15,8 +15,8 @@ const view = (path: string, parent: string, key: string, label: string, lead: st
 
 /** Un seul catalogue pour les routes, la profondeur du menu et le contexte des bandeaux. */
 export const PAGE_WORKSPACES: WorkspaceDestination[] = [
-  view('creer/projet-de-vie', '/creer', 'start-life', 'Créer le projet de vie', 'Préparez le projet principal, son budget et son point de départ patrimonial.', () => import('../bpm/pages/create').then(m => m.BpmCreatePage)),
-  view('creer/projet-de-la-vie', '/creer', 'start-project', 'Créer un projet de la vie', 'Préparez un projet et son financement dans le contexte de votre projet de vie.', () => import('../bpm/pages/create').then(m => m.BpmCreatePage)),
+  // Démarrer un projet ne crée que le projet de vie : le user et tout son espace naissent ensemble, une seule fois.
+  view('creer/projet-de-vie', '/creer', 'start-life', 'Créer mon projet de vie', 'Donnez un nom à votre profil et, si vous les connaissez, votre patrimoine de départ et le début de votre cycle.', () => import('../bpm/onboarding').then(m => m.BpmOnboarding)),
   view('tableau-de-bord/entrees', '/tableau-de-bord', 'incomes', 'Entrées de la période', 'Vérifiez les réceptions, leurs sources et les montants encore attendus.', () => import('../bpm/pages/incomes').then(m => m.BpmIncomesPage)),
   view('tableau-de-bord/rapprochement', '/tableau-de-bord', 'reconciliation', 'Rapprocher avec mon compte', 'Comparez les soldes de votre compte au réalisé, puis expliquez un éventuel écart.', () => import('../bpm/pages/balance').then(m => m.BpmBalancePage)),
   view('depenses/registre', '/tableau-de-bord', 'register', 'Registre des flux', 'Retrouvez un flux, vérifiez son règlement ou préparez une nouvelle opération.', () => import('../bpm/pages/expenses').then(m => m.BpmExpensesPage)),
@@ -59,9 +59,12 @@ export const PAGE_WORKSPACES: WorkspaceDestination[] = [
     ['calendrier-budget', 'budgetPatrimoine', 'Calendrier Budget/Patrimoine'],
     ['calendrier', 'noyau', 'Calendrier du travail'],
     ['patrimoine/calendrier', 'patrimoine', 'Calendrier du patrimoine'],
-  ].flatMap(([path]) => [
+  ].flatMap(([path, calendar]) => [
     view(`${path}/agenda`, `/${path}`, 'calendar-agenda', 'Agenda des événements', 'Parcourez les repères datés, ouvrez leur détail et replanifiez ceux qui le permettent.', () => import('../calendar/calendar.page').then(m => m.CalendarPage)),
-    view(`${path}/sources`, `/${path}`, 'calendar-sources', 'Sources et affichage', 'Choisissez les sources et les informations utiles dans ce calendrier.', () => import('../calendar/calendar.page').then(m => m.CalendarPage)),
+    // Le calendrier BPM porte ses sources dans le dépliant « Sources et affichage » de sa page (`/calendrier-budget#sources-et-affichage`).
+    ...(calendar === 'budgetPatrimoine' ? [] : [
+      view(`${path}/sources`, `/${path}`, 'calendar-sources', 'Sources et affichage', 'Choisissez les sources et les informations utiles dans ce calendrier.', () => import('../calendar/calendar.page').then(m => m.CalendarPage)),
+    ]),
   ]),
 ];
 
