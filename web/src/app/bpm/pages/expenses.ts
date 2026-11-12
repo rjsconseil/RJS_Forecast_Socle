@@ -1,4 +1,4 @@
-import { injectPageWorkspace } from '../../shared/page-workspace';
+import { injectPageWorkspace } from '../../plan/page-workspace';
 import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';

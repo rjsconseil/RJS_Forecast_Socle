@@ -34,7 +34,7 @@ try {
   const user = users.find(user => user.id === userId);
   assert(user, 'Profil de recette introuvable');
   const parents = ['/creer', '/tableau-de-bord', '/projet-de-vie', '/plafonds', '/vision', '/app/projets', '/app/gestion-projet', '/app/taches', '/app/reglages'];
-  const catalog = await readFile(join(root, 'web/src/app/shared/page-workspaces.ts'), 'utf8');
+  const catalog = await readFile(join(root, 'web/src/app/plan/page-workspaces.ts'), 'utf8');
   const children = [...catalog.matchAll(/view\(\s*'([^']+)'\s*,\s*'([^']+)'/g)]
     .filter(match => parents.includes(match[2]) && !match[1].includes(':')).map(match => '/' + match[1]);
   const paths = [...new Set([...parents, ...children, '/depenses', '/argent/entrees', '/argent/reste', '/argent/postes/std%3Aalimentation', '/calendrier-budget', '/calendrier-budget/agenda'])];
@@ -75,9 +75,9 @@ try {
   await page.locator('input[name=current]').fill(current);
   await page.getByRole('button', { name: 'Calculer l’écart', exact: true }).click();
   await page.waitForURL(url => url.searchParams.get('current') === current);
-  await page.locator('main > bpm-navigation .nav-back').click();
+  await page.locator('main > rjs-journey .nav-back').click();
   await page.waitForURL(url => url.pathname === '/projet-de-vie/cloture');
-  await page.locator('main > bpm-navigation .nav-forward').click();
+  await page.locator('main > rjs-journey .nav-forward').click();
   await page.waitForURL(url => url.pathname.endsWith('/rapprochement'));
   assert.equal(await page.locator('input[name=current]').inputValue(), current);
   check('Rapprochement : un seul retour vers la clôture et calcul conservé en avant');
@@ -94,7 +94,7 @@ try {
   await page.locator('bpm-task-editor input[name=plannedHours]').fill('2.5');
   await page.locator('bpm-task-editor .modal-journey .nav-back').click();
   await page.waitForURL(url => !url.searchParams.has('editTask'));
-  await page.locator('main > bpm-navigation .nav-forward').click();
+  await page.locator('main > rjs-journey .nav-forward').click();
   await page.waitForURL(url => url.searchParams.get('editTask') === 'new');
   assert.equal(await page.locator('bpm-task-editor input[name=title]').inputValue(), 'Brouillon de navigation · recette');
   await page.reload({ waitUntil: 'networkidle' });
@@ -131,9 +131,9 @@ try {
   await page.waitForURL(url => url.searchParams.has('calPlan'));
   await page.locator('.calendar-plan input').fill('2026-11-10');
   await page.waitForURL(url => url.searchParams.get('calDate') === '2026-11-10');
-  await page.locator('main > bpm-navigation .nav-back').click();
+  await page.locator('main > rjs-journey .nav-back').click();
   await page.waitForURL(url => !url.searchParams.has('calPlan'));
-  await page.locator('main > bpm-navigation .nav-forward').click();
+  await page.locator('main > rjs-journey .nav-forward').click();
   await page.waitForURL(url => url.searchParams.has('calPlan'));
   assert.equal(await page.locator('.calendar-plan input').inputValue(), '2026-11-10');
   await page.getByRole('button', { name: 'Enregistrer la date', exact: true }).click({ trial: true });
@@ -145,16 +145,16 @@ try {
   await page.waitForURL(url => url.pathname.endsWith('/entrees'));
   await page.locator('bpm-page-banner').getByRole('link', { name: 'Graphiques et chiffres', exact: true }).click();
   await page.waitForURL(url => url.pathname === '/piloter');
-  await page.locator('main > bpm-navigation .nav-back').click();
+  await page.locator('main > rjs-journey .nav-back').click();
   await page.waitForURL(url => url.pathname.endsWith('/entrees'));
-  await page.locator('main > bpm-navigation .nav-back').click();
+  await page.locator('main > rjs-journey .nav-back').click();
   await page.waitForURL(url => url.pathname === '/tableau-de-bord');
-  await page.locator('main > bpm-navigation .nav-last').click();
+  await page.locator('main > rjs-journey .nav-last').click();
   await page.waitForURL(url => url.pathname === '/piloter');
   await open('/projects');
   await page.goBack({ waitUntil: 'networkidle' });
   assert.equal(new URL(page.url()).pathname, '/piloter');
-  assert(await page.locator('main > bpm-navigation .nav-back').isEnabled());
+  assert(await page.locator('main > rjs-journey .nav-back').isEnabled());
   check('Plusieurs retours, dernière étape et excursion hors de BPM');
 
   for (const path of ['/tableau-de-bord', '/piloter/agir']) {
@@ -167,7 +167,7 @@ try {
     await page.locator('bpm-operation-editor input[name=amount]').fill('50');
     await page.locator('dialog[open] .modal-journey .nav-back').click();
     await page.waitForURL(url => !url.searchParams.has('entry'));
-    await page.locator('main > bpm-navigation .nav-forward').click();
+    await page.locator('main > rjs-journey .nav-forward').click();
     await page.waitForURL(url => url.searchParams.get('entry') === 'new');
     await page.reload({ waitUntil: 'networkidle' });
     assert(await page.locator('bpm-operation-editor input[name=direction][value=income]').isChecked());

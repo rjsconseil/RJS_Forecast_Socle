@@ -1,5 +1,5 @@
 import { redirectLegacyView } from '../ui/legacy-view';
-import { injectPageWorkspace } from '../../shared/page-workspace';
+import { injectPageWorkspace } from '../../plan/page-workspace';
 import { afterNextRender, Component, computed, DestroyRef, effect, ElementRef, inject, Injector, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';

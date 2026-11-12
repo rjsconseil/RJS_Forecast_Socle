@@ -48,7 +48,7 @@ type Row = ReviewCenter | ReviewCategory;
 const HEALTH_LABEL: Record<CardHealth, string> = { alert: 'Plafond dépassé', watch: 'Proche du plafond', ok: 'Dans le plafond', unknown: 'Sans plafond' };
 const HEALTH_ORDER: Record<CardHealth, number> = { alert: 0, watch: 1, ok: 2, unknown: 3 };
 
-export function healthOf(r: Pick<Row, 'capCents' | 'engagedCents' | 'over'>): CardHealth {
+export function healthOf(r: Pick<Row, 'capCents' | 'over' | 'near'>): CardHealth {
   return { none: 'unknown', over: 'alert', near: 'watch', ok: 'ok' }[capTone(r)] as CardHealth;
 }
 

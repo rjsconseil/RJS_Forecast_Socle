@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
 import { RecetteContext } from './core/api.service';
-import { planTitle } from './shared/site-plan';
-import { PAGE_WORKSPACES } from './shared/page-workspaces';
+import { planTitle } from './plan/site-plan';
+import { PAGE_WORKSPACES } from './plan/page-workspaces';
 
 /** Une seule adresse par écran : les anciennes adresses y mènent en gardant la période et les filtres. */
 const canonical = (target: (params: Record<string, string>) => string[]): RedirectFunction => ({ params, queryParams, fragment }) =>
@@ -20,7 +20,7 @@ const mainRoutes: Routes = [
   { path: 'navigation', title: 'Navigation system — RJS Forecast', loadComponent: () => import('./navigation/navigation-settings.page').then(m => m.NavigationSettingsPage) },
   // Accueil : le portail des zones (Budget/Patrimoine Management, Budget, Patrimoine, Noyau transverse, Administration).
   { path: '', pathMatch: 'full', title: 'Accueil · RJS Forecast', loadComponent: () => import('./home/home').then((m) => m.HomePage) },
-  // Accueils génériques du plan du site (`shared/site-plan.ts`) : accueil de zone, accueil de section.
+  // Accueils génériques du plan du site (`plan/site-plan.ts`) : accueil de zone, accueil de section.
   { path: 'zones/:zone', title: planRouteTitle, loadComponent: () => import('./home/zone-home').then((m) => m.ZoneHomePage) },
   { path: 'zones/:zone/:section', title: planRouteTitle, loadComponent: () => import('./home/section-landing').then((m) => m.SectionLandingPage) },
 

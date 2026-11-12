@@ -11,9 +11,9 @@ import { BpmToolbar } from './toolbar';
 
 import { BpmPageFocus, BpmPageResult } from './page-focus';
 import { PageHeroDirective } from '../../shared/page-hero.directive';
-import { injectPageWorkspace, injectWorkspaceReturn } from '../../shared/page-workspace';
-import { injectCurrentUrl, injectPlanContext } from '../../shared/plan-context';
-import { PageTabs } from '../../shared/page-tabs.component';
+import { injectPageWorkspace, injectWorkspaceReturn } from '../../plan/page-workspace';
+import { injectCurrentUrl, injectPlanContext } from '../../plan/plan-context';
+import { PageTabs } from '../../plan/page-tabs.component';
 let heroId = 0;
 
 /** Libellés de la navigation de période de la référence (`bpm-period-nav.component.ts`). */

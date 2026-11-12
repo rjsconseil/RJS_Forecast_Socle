@@ -1,4 +1,4 @@
-import { NavigationSurfaceDirective } from '../../navigation/navigation-ui';
+import { NavigationSurfaceDirective } from '../navigation/navigation-ui';
 import { Location } from '@angular/common';
 import {
   Component,
@@ -14,12 +14,13 @@ import {
 } from '@angular/core';
 import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RecetteContext } from '../../core/api.service';
-import { PageObjectLabels } from '../../shared/plan-context';
+import { RecetteContext } from '../core/api.service';
+import { PageObjectLabels } from './plan-context';
+import { locate } from './site-plan';
 import {
-  BpmTrail,
-  BpmVisit,
-  bpmAddress,
+  JourneyTrail,
+  JourneyVisit,
+  journeyAddress,
   emptyTrail,
   objectKey,
   recordVisit,
@@ -27,7 +28,7 @@ import {
   sameStep,
   TRAIL_LIMIT,
   visitLabel,
-} from './navigation-model';
+} from './journey-model';
 
 /** Ce que l'entrée courante du navigateur sait de ses voisines (étapes du parcours). */
 interface EntryTags {
@@ -50,23 +51,24 @@ const text = (value: unknown) => (typeof value === 'string' && value ? value : u
 const pathOf = (url: string) => url.split(/[?#]/)[0];
 
 /**
- * Le parcours BPM de l'utilisateur, par profil et par onglet.
+ * Le parcours de l'utilisateur dans tous les modules du site, par profil et par onglet : un seul fil
+ * « Retour / Suivant / Mon parcours » structure la navigation de chaque zone du plan.
  *
  * - « ← Retour » et « Suivant → » se déplacent d'une étape ; la liste « Mon parcours » permet de
  *   rejoindre directement n'importe quelle étape, y compris la dernière atteinte.
  * - Les boutons du navigateur suivent le même parcours : chaque entrée d'historique porte l'identité
  *   de son étape. Quand l'historique du navigateur ne correspond plus (étapes retirées, passage par
  *   une autre zone), le parcours rejoint l'étape visée par une navigation ordinaire.
- * - Une excursion hors de BPM ne crée pas d'étape et ne fait rien perdre.
+ * - Un passage par le portail (hors zones) ne crée pas d'étape et ne fait rien perdre.
  */
 @Injectable({ providedIn: 'root' })
-export class BpmNavigation {
+export class Journey {
   private router = inject(Router);
   private location = inject(Location);
   private user = inject(RecetteContext).userId;
   private objectLabels = inject(PageObjectLabels);
   private owner = this.user();
-  private trail = signal<BpmTrail>(this.restore());
+  private trail = signal<JourneyTrail>(this.restore());
   private pending: PendingMove | null = null;
   /** L'entrée courante du navigateur est bien l'étape sous le curseur. */
   private anchored = false;
@@ -91,23 +93,23 @@ export class BpmNavigation {
         const state = (navigation?.extras.state ?? {}) as Record<string, unknown>;
         const restored = (event.restoredState ?? null) as Record<string, unknown> | null;
         this.pending = {
-          restoredId: text(restored?.['bpmVisitId']) ?? text(state['bpmVisitId']),
+          restoredId: text(restored?.['journeyVisitId']) ?? text(state['journeyVisitId']),
           history: !!restored,
           replace: !!navigation?.extras.replaceUrl,
           initial: !this.router.navigated,
-          notice: text(state['bpmNotice']) ?? null,
+          notice: text(state['journeyNotice']) ?? null,
           from: this.anchored ? (this.current()?.id ?? null) : null,
           fromPath: pathOf(this.router.url),
           fromTags: this.anchored ? { ...this.tags } : { prevId: null, nextId: null },
           arrivalTags: restored
-            ? { prevId: text(restored['bpmPrevId']) ?? null, nextId: text(restored['bpmNextId']) ?? null }
+            ? { prevId: text(restored['journeyPrevId']) ?? null, nextId: text(restored['journeyNextId']) ?? null }
             : null,
         };
       } else if (event instanceof NavigationEnd) {
         const move = this.pending;
         this.pending = null;
         const url = event.urlAfterRedirects;
-        if (bpmAddress(url) && move) this.arrive(url, move);
+        if (journeyAddress(url) && move) this.arrive(url, move);
         else {
           this.anchored = false;
           this.tags = { prevId: null, nextId: null };
@@ -153,7 +155,7 @@ export class BpmNavigation {
     if (this.busy()) return;
     const target = this.previous();
     if (target) this.reach(target, this.anchored && this.tags.prevId === target.id ? 'back' : null);
-    else if (bpmAddress(fallback) && !sameStep(fallback, this.router.url)) void this.router.navigateByUrl(fallback);
+    else if (journeyAddress(fallback) && !sameStep(fallback, this.router.url)) void this.router.navigateByUrl(fallback);
   }
   forward() {
     const target = this.next();
@@ -178,7 +180,7 @@ export class BpmNavigation {
     this.persist();
   }
 
-  private reach(target: BpmVisit, browser: 'back' | 'forward' | null) {
+  private reach(target: JourneyVisit, browser: 'back' | 'forward' | null) {
     const current = this.current();
     if (current && sameStep(current.url, target.url)) {
       // Même adresse : le routeur ignorerait la navigation, seul le curseur se déplace.
@@ -189,7 +191,7 @@ export class BpmNavigation {
     }
     if (browser === 'back') this.location.back();
     else if (browser === 'forward') this.location.forward();
-    else void this.router.navigateByUrl(target.url, { state: { bpmVisitId: target.id } });
+    else void this.router.navigateByUrl(target.url, { state: { journeyVisitId: target.id } });
   }
 
   /** Le nom de l'objet visité : celui que publie la page, sinon celui qu'une étape du parcours a retenu. */
@@ -226,18 +228,18 @@ export class BpmNavigation {
     this.anchored = true;
     this.location.replaceState(url, '', {
       ...(this.location.getState() as object),
-      bpmVisitId: arrived.id,
-      bpmPrevId: tags.prevId,
-      bpmNextId: tags.nextId,
+      journeyVisitId: arrived.id,
+      journeyPrevId: tags.prevId,
+      journeyNextId: tags.nextId,
     });
   }
 
   private key() {
-    return `bpm-navigation:${this.owner ?? 'anonymous'}`;
+    return `rjs-journey:${this.owner ?? 'anonymous'}`;
   }
-  private restore(): BpmTrail {
+  private restore(): JourneyTrail {
     try {
-      const data = JSON.parse(sessionStorage.getItem(this.key()) ?? 'null') as BpmTrail | null;
+      const data = JSON.parse(sessionStorage.getItem(this.key()) ?? 'null') as JourneyTrail | null;
       if (
         data &&
         Array.isArray(data.visits) &&
@@ -248,7 +250,7 @@ export class BpmNavigation {
         data.visits.every(
           (v) =>
             typeof v.id === 'string' &&
-            bpmAddress(v.url) &&
+            journeyAddress(v.url) &&
             typeof v.label === 'string' &&
             (v.object === undefined || typeof v.object === 'string'),
         )
@@ -269,25 +271,25 @@ export class BpmNavigation {
 }
 
 @Component({
-  selector: 'bpm-navigation',
+  selector: 'rjs-journey',
   imports: [NavigationSurfaceDirective],
   host: {
     '(document:click)': 'closeOutside($event)',
     '(document:keydown.escape)': 'closeTrail()',
   },
   template: `
-    <nav navigationSurface="tertiary" class="bpm-journey-navigation" [attr.aria-label]="compact() ? 'Parcours du formulaire' : 'Avancer et revenir dans mon parcours'">
+    <nav navigationSurface="tertiary" class="journey-navigation" [attr.aria-label]="compact() ? 'Parcours du formulaire' : 'Avancer et revenir dans mon parcours'">
       <button
         type="button"
         data-navigation-level="detail" class="nav-step nav-back"
         (click)="navigation.back()"
         [disabled]="blocked() || navigation.pendingNavigation() || !navigation.previous()"
-        [title]="navigation.previous()?.label ?? 'Début du parcours'"
+        [title]="stepLabel(navigation.previous()) ?? 'Début du parcours'"
       >
         <span aria-hidden="true">←</span
         ><span
           >Retour<span class="nav-destination">
-            · {{ navigation.previous()?.label ?? 'Début du parcours' }}</span
+            · {{ stepLabel(navigation.previous()) ?? 'Début du parcours' }}</span
           ></span
         >
       </button>
@@ -295,10 +297,10 @@ export class BpmNavigation {
         <details class="nav-trail" #trail (toggle)="opened.set(trail.open)">
           <summary data-navigation-level="page"
             [attr.aria-label]="
-              'Mon parcours : étape ' + position() + ' sur ' + navigation.visits().length + ' · ' + (navigation.current()?.label ?? 'Mon parcours BPM')
+              'Mon parcours : étape ' + position() + ' sur ' + navigation.visits().length + ' · ' + (navigation.current()?.label ?? 'Mon parcours')
             "
           >
-            <span class="nav-current" aria-live="polite">{{ navigation.current()?.label ?? 'Mon parcours BPM' }}</span>
+            <span class="nav-current" aria-live="polite">{{ navigation.current()?.label ?? 'Mon parcours' }}</span>
             @if (navigation.visits().length > 1) {
               <span class="nav-position">{{ position() }} / {{ navigation.visits().length }}</span>
             }
@@ -317,6 +319,7 @@ export class BpmNavigation {
                       [attr.aria-current]="i === navigation.cursor() ? 'step' : null"
                     >
                       <span class="nav-trail-index">{{ i + 1 }}</span>
+                      <span class="nav-trail-zone" [attr.title]="zoneOf(visit.url)?.label">{{ zoneOf(visit.url)?.acronym }}</span>
                       <span class="nav-trail-label">{{ visit.label }}</span>
                       @if (i === navigation.cursor()) {
                         <span class="nav-trail-tag">Vous êtes ici</span>
@@ -338,10 +341,10 @@ export class BpmNavigation {
         data-navigation-level="detail" class="nav-step nav-forward"
         (click)="navigation.forward()"
         [disabled]="blocked() || navigation.pendingNavigation() || !navigation.next()"
-        [title]="navigation.next()?.label ?? 'Aucune étape suivante visitée'"
+        [title]="stepLabel(navigation.next()) ?? 'Aucune étape suivante visitée'"
       >
         <span
-          >Suivant<span class="nav-destination"> · {{ navigation.next()?.label ?? '' }}</span></span
+          >Suivant<span class="nav-destination"> · {{ stepLabel(navigation.next()) ?? '' }}</span></span
         ><span aria-hidden="true">→</span>
       </button>
       @if (!compact() && navigation.ahead() > 1) {
@@ -358,7 +361,7 @@ export class BpmNavigation {
       }
     </nav>
     @if (!compact() && navigation.notice(); as message) {
-      <p class="bpm-navigation-notice" role="status">
+      <p class="journey-notice" role="status">
         {{ message
         }}<button
           type="button"
@@ -370,15 +373,24 @@ export class BpmNavigation {
       </p>
     }
   `,
-  styleUrl: './navigation.scss',
+  styleUrl: './journey.scss',
 })
-export class BpmNavigationComponent {
+export class JourneyBar {
   readonly compact = input(false);
   readonly blocked = input(false);
-  protected navigation = inject(BpmNavigation);
+  protected navigation = inject(Journey);
   protected opened = signal(false);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected position = computed(() => this.navigation.cursor() + 1);
+  /** Le parcours traverse les modules : chaque étape porte le sigle de sa zone. */
+  protected zoneOf = (url: string) => locate(url).zone;
+  /** Une étape d'une autre zone est nommée avec sa zone : « Noyau transverse · Projets ». */
+  protected stepLabel(visit: JourneyVisit | null) {
+    if (!visit) return null;
+    const zone = this.zoneOf(visit.url);
+    const here = this.navigation.current();
+    return zone && here && this.zoneOf(here.url)?.id !== zone.id ? `${zone.label} · ${visit.label}` : visit.label;
+  }
 
   protected go(index: number) {
     this.closeTrail();
@@ -395,9 +407,9 @@ export class BpmNavigationComponent {
 }
 
 /** Un lien de retour conserve un href utile pour une arrivée directe ou un nouvel onglet. */
-@Directive({ selector: 'a[bpmBack]', host: { '(click)': 'follow($event)' } })
-export class BpmBack {
-  private navigation = inject(BpmNavigation);
+@Directive({ selector: 'a[journeyBack]', host: { '(click)': 'follow($event)' } })
+export class JourneyBack {
+  private navigation = inject(Journey);
   protected follow(event: MouseEvent) {
     if (
       event.button !== 0 ||

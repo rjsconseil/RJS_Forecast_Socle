@@ -7,7 +7,7 @@ import { CoreProject, PRIORITY_LABEL, Priority } from '../core/models';
 import { FormStatusComponent } from './workspace-parts';
 import { AppHeroComponent } from '../shared/app-hero.component';
 import { PageResult } from '../shared/page-toolbar.component';
-import { workspaceContextQuery } from '../shared/page-workspace';
+import { workspaceContextQuery } from '../plan/page-workspace';
 
 /**
  * Création et modification d'un projet, sur le gabarit de la fenêtre d'édition de la référence

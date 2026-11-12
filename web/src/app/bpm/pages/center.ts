@@ -1,7 +1,7 @@
-import { Component, computed, effect, inject, linkedSignal, signal } from '@angular/core';
+import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { PageObjectLabels } from '../../shared/plan-context';
+import { publishObjectLabel } from '../../plan/plan-context';
 import { toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { EntryInput, RegisterLine } from '../../core/bpm-models';
@@ -191,7 +191,9 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
       </div>
     </bpm-page>
 
-    @if (read.data(); as d) { <bpm-entry-flow [budgets]="d.context.budgets" [defaults]="defaults()" (saved)="onSaved($event)" /> } @else if (selectedId()) {
+    @if (read.data(); as d) { <bpm-entry-flow [budgets]="d.context.budgets" [defaults]="defaults()" (saved)="onSaved($event)" /> }
+    <!-- L'éditeur et le détail sont indépendants : le clic sur une ligne ouvre toujours son détail (audit A01). -->
+    @if (selectedId()) {
       <bpm-line-detail [lineId]="selectedId()!" [period]="ctx.period()" (closed)="closeDetail()" (edit)="openEdit($event)" />
     }
   `,
@@ -230,16 +232,11 @@ export class BpmCenterPage {
   );
 
   /** Le cadre (fil d'Ariane, menu, historique) nomme le poste ouvert au lieu de « Détail d’un poste ». */
-  private readonly framed = (() => {
-    const labels = inject(PageObjectLabels);
-    const router = inject(Router);
-    effect(() => {
-      const c = this.read.data()?.center;
-      const ref = this.ref();
-      if (!ref) return;
-      labels.set(router.createUrlTree(['/argent/postes', ref]).toString(), c ? (c.direction === 'income' ? `Source ${c.label}` : `Poste ${c.label}`) : null);
-    });
-  })();
+  private readonly router = inject(Router);
+  private readonly framed = publishObjectLabel(
+    () => (this.ref() ? this.router.createUrlTree(['/argent/postes', this.ref()]).toString() : null),
+    () => { const c = this.read.data()?.center; return c ? (c.direction === 'income' ? `Source ${c.label}` : `Poste ${c.label}`) : null; },
+  );
 
   protected isIncome = computed(() => this.read.data()?.center.direction === 'income');
   /** Titre source « Le poste {name} » ; une source d'entrées garde son nom de source. */

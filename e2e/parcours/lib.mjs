@@ -162,7 +162,7 @@ export async function api(page, path) {
 
 /** La barre de parcours de la page (« ← Retour / Suivant → ») ou celle d'une fenêtre ouverte. */
 export function bar(page, { modal = false } = {}) {
-  const root = modal ? page.locator('dialog[open] .modal-journey') : page.locator('main > bpm-navigation');
+  const root = modal ? page.locator('dialog[open] .modal-journey') : page.locator('main > rjs-journey');
   return {
     root,
     back: () => root.locator('.nav-back').click(),
@@ -173,7 +173,7 @@ export function bar(page, { modal = false } = {}) {
     /** Les étapes enregistrées (sessionStorage) et le curseur. */
     trail: () =>
       page.evaluate(() => {
-        const key = Object.keys(sessionStorage).find((k) => k.startsWith('bpm-navigation:'));
+        const key = Object.keys(sessionStorage).find((k) => k.startsWith('rjs-journey:'));
         return key ? JSON.parse(sessionStorage.getItem(key)) : null;
       }),
   };
@@ -182,7 +182,7 @@ export function bar(page, { modal = false } = {}) {
 /** Le dernier message de confirmation ou d'état visible (barre de parcours, bandeau, statut). */
 export async function notices(page) {
   const texts = await page
-    .locator('.bpm-navigation-notice, [role=status], [role=alert]')
+    .locator('.journey-notice, [role=status], [role=alert]')
     .evaluateAll((elements) => elements.filter((e) => e.offsetParent).map((e) => e.innerText));
   return texts.map(norm).filter(Boolean);
 }

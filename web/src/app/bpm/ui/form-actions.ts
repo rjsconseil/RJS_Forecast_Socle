@@ -1,13 +1,13 @@
-import { BpmNavigationComponent } from './navigation';
+import { JourneyBar } from '../../plan/journey';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
 /** Une seule convention d'enregistrement/annulation pour les formulaires BPM. */
 @Component({
   selector: 'bpm-form-actions',
-  imports: [BpmNavigationComponent],
+  imports: [JourneyBar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <bpm-navigation [compact]="true" [blocked]="busy()" />
+    <rjs-journey [compact]="true" [blocked]="busy()" />
     <div class="bpm-actions">
       <button
         class="btn btn-primary"
@@ -27,7 +27,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
     :host {
       display: block;
     }
-    :host-context(dialog) bpm-navigation { display: none; }
+    :host-context(dialog) rjs-journey { display: none; }
     .bpm-actions {
       display: flex;
       gap: 10px;

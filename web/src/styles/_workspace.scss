@@ -208,6 +208,12 @@
   color: var(--band-ink);
   background: var(--app-accent-soft);
   box-shadow: var(--app-panel-shadow);
+  /* Fond clair même dans un bandeau sombre : l'encre redevient celle du bandeau de chiffres. */
+  --ink: var(--band-ink);
+  --heading-ink: var(--band-ink);
+  --eyebrow-color: var(--band-ink);
+  --band-accent: var(--band-ink);
+  --muted: color-mix(in srgb, var(--band-ink) 72%, transparent);
 }
 .summary-band.summary-band-compact {
   grid-template-columns: var(--fr-1-15) repeat(var(--colonnes-3), minmax(0, var(--fr-1)));

@@ -1,21 +1,22 @@
-import { locate, OBJECT_FALLBACK } from '../../shared/site-plan';
+import { locate, OBJECT_FALLBACK } from './site-plan';
 
-export interface BpmVisit {
+export interface JourneyVisit {
   id: string;
   url: string;
   label: string;
   /** Le nom de l'objet ouvert à cette étape (projet, poste), retenu pour survivre au rechargement. */
   object?: string;
 }
-export interface BpmTrail {
-  visits: BpmVisit[];
+export interface JourneyTrail {
+  visits: JourneyVisit[];
   cursor: number;
 }
 /** Assez d'étapes pour une longue séance : revenir en arrière n'est jamais limité en pratique. */
 export const TRAIL_LIMIT = 200;
-export const emptyTrail = (): BpmTrail => ({ visits: [], cursor: -1 });
-export const bpmAddress = (url: string) =>
-  url.startsWith('/') && !url.startsWith('//') && locate(url).zone?.id === 'bpm';
+export const emptyTrail = (): JourneyTrail => ({ visits: [], cursor: -1 });
+/** Toute page d'une zone du plan est une étape du parcours ; le portail et les adresses externes n'en sont pas. */
+export const journeyAddress = (url: string) =>
+  url.startsWith('/') && !url.startsWith('//') && !!locate(url).zone;
 
 /** Deux adresses identiques à l'ordre des paramètres près désignent la même étape. */
 export function sameStep(a: string, b: string): boolean {
@@ -75,7 +76,7 @@ export function visitLabel(url: string, objectLabel: string | null = null): stri
   const step = params.get('step');
   return at.page?.id === 'creer' && step
     ? `${at.subpage?.label ?? 'Démarrer un projet'} · étape ${step}`
-    : (at.subpage?.label ?? (at.detailLabel ? objectLabel || at.detailLabel : null) ?? at.page?.label ?? at.section?.label ?? 'Accueil BPM');
+    : (at.subpage?.label ?? (at.detailLabel ? objectLabel || at.detailLabel : null) ?? at.page?.label ?? at.section?.label ?? at.zone?.label ?? 'Accueil');
 }
 
 /**
@@ -86,10 +87,10 @@ export function visitLabel(url: string, objectLabel: string | null = null): stri
  * - Seule une nouvelle direction remplace le chemin à venir, comme un navigateur.
  */
 export function recordVisit(
-  trail: BpmTrail,
-  visit: BpmVisit,
+  trail: JourneyTrail,
+  visit: JourneyVisit,
   options: { restoredId?: string; replace?: boolean } = {},
-): BpmTrail {
+): JourneyTrail {
   const restored =
     options.restoredId == null ? -1 : trail.visits.findIndex((v) => v.id === options.restoredId);
   if (restored >= 0)
@@ -126,7 +127,7 @@ export function recordVisit(
  * Un parcours guidé confirmé (assistant de démarrage…) n'a plus d'étapes où revenir : elles sont
  * retirées du parcours, le curseur reste sur ce qui précédait.
  */
-export function removeVisits(trail: BpmTrail, consumed: (url: string) => boolean): BpmTrail {
+export function removeVisits(trail: JourneyTrail, consumed: (url: string) => boolean): JourneyTrail {
   const kept = trail.visits.filter((v) => !consumed(v.url));
   if (kept.length === trail.visits.length) return trail;
   let cursor = -1;

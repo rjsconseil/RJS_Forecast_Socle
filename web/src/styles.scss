@@ -45,4 +45,7 @@
 // Éclat commun des cadres du haut de page (en dernier : il habille tous les bandeaux).
 @use 'hero-glow';
 
+// Relief et effets communs : survol des cartes, halo des commandes, entrée des fenêtres.
+@use 'elevation';
+
 @use './app/navigation/navigation';

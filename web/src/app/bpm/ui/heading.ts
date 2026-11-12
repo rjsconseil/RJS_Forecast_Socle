@@ -1,7 +1,7 @@
 import { NavigationLabel, NavigationSurfaceDirective } from '../../navigation/navigation-ui';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BpmBack } from './navigation';
+import { JourneyBack } from '../../plan/journey';
 
 export interface BpmBackTarget {
   label: string;
@@ -14,14 +14,14 @@ export interface BpmBackTarget {
 @Component({
   selector: 'bpm-heading',
   host: { class: 'bpm-banner-copy life-banner-copy' },
-  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink, BpmBack],
+  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink, JourneyBack],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (back(); as b) {
       @if (b.direct) {
         <a navigationSurface="tertiary" data-navigation-level="detail" class="bpm-banner-back" [routerLink]="b.link" [queryParams]="b.query ?? {}" [attr.aria-label]="'Remonter à : ' + (b.label | navigationLabel:b.link)"><span aria-hidden="true">↑</span> {{ b.label | navigationLabel:b.link }}</a>
       } @else {
-        <a navigationSurface="tertiary" data-navigation-level="detail" class="bpm-banner-back" bpmBack [routerLink]="b.link" [queryParams]="b.query ?? {}">← {{ b.label | navigationLabel:b.link }}</a>
+        <a navigationSurface="tertiary" data-navigation-level="detail" class="bpm-banner-back" journeyBack [routerLink]="b.link" [queryParams]="b.query ?? {}">← {{ b.label | navigationLabel:b.link }}</a>
       }
     }
     @if (kicker()) {

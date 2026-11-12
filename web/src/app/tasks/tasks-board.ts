@@ -1,4 +1,4 @@
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 import { PageHeroDirective } from '../shared/page-hero.directive';
 import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDragStart, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';

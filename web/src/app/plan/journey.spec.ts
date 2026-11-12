@@ -4,11 +4,11 @@ import { provideLocationMocks } from '@angular/common/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { RecetteContext } from '../../core/api.service';
-import { PageObjectLabels } from '../../shared/plan-context';
-import { BpmNavigation } from './navigation';
-import { BpmPageContext } from './page-context';
-import { bpmQueryState } from './query-state';
+import { RecetteContext } from '../core/api.service';
+import { PageObjectLabels } from './plan-context';
+import { Journey } from './journey';
+import { BpmPageContext } from '../bpm/ui/page-context';
+import { bpmQueryState } from '../bpm/ui/query-state';
 
 @Component({ template: '', providers: [BpmPageContext] })
 class Page {
@@ -19,7 +19,7 @@ class Page {
 
 describe('coordination des pages BPM', () => {
   let harness: RouterTestingHarness;
-  let nav: BpmNavigation;
+  let nav: Journey;
   let router: Router;
   async function settle() {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -35,12 +35,13 @@ describe('coordination des pages BPM', () => {
           { path: 'app/gestion-projet/:id', component: Page },
           { path: 'projet-de-vie', component: Page },
           { path: 'socle/budget', component: Page },
+          { path: '', component: Page },
         ]),
         provideLocationMocks(),
       ],
     });
     TestBed.inject(RecetteContext).userId.set('user-A');
-    nav = TestBed.inject(BpmNavigation);
+    nav = TestBed.inject(Journey);
     router = TestBed.inject(Router);
     router.setUpLocationChangeListener();
     harness = await RouterTestingHarness.create();
@@ -72,25 +73,31 @@ describe('coordination des pages BPM', () => {
     await settle();
     expect(router.url).toBe('/app/gestion-projet?period=2026-10');
   });
+  it('suit les pages de tous les modules dans un seul parcours', async () => {
+    await harness.navigateByUrl('/projet-de-vie', Page);
+    await harness.navigateByUrl('/socle/budget', Page);
+    expect(nav.visits().map((v) => v.url)).toEqual(['/projet-de-vie', '/socle/budget']);
+    expect(nav.previous()?.url).toBe('/projet-de-vie');
+  });
   it('garde une identité de visite dans l’historique navigateur et isole les profils', async () => {
     await harness.navigateByUrl('/app/gestion-projet', Page);
-    expect((TestBed.inject(Location).getState() as any).bpmVisitId).toBeTruthy();
+    expect((TestBed.inject(Location).getState() as any).journeyVisitId).toBeTruthy();
     await harness.navigateByUrl('/projet-de-vie', Page);
     expect(nav.previous()?.url).toBe('/app/gestion-projet');
     TestBed.inject(RecetteContext).userId.set('user-B');
     TestBed.tick();
     expect(nav.previous()).toBeNull();
   });
-  it('une excursion hors de BPM ne crée pas d’étape et ne fait rien perdre', async () => {
+  it('un passage par le portail ne crée pas d’étape et ne fait rien perdre', async () => {
     await harness.navigateByUrl('/app/gestion-projet', Page);
     await harness.navigateByUrl('/projet-de-vie', Page);
-    await harness.navigateByUrl('/socle/budget', Page);
+    await harness.navigateByUrl('/', Page);
     expect(nav.current()?.url).toBe('/projet-de-vie');
     await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
     expect(nav.visits().map((v) => v.url)).toEqual(['/app/gestion-projet', '/projet-de-vie', '/app/gestion-projet/prj_1']);
     nav.back();
     await settle();
-    // Le navigateur garderait la page du socle : le parcours rejoint directement l’étape BPM précédente.
+    // Le navigateur garderait le portail : le parcours rejoint directement l’étape précédente.
     expect(router.url).toBe('/projet-de-vie');
   });
   it('revient de trois étapes, avance par un lien de la page, puis rejoint la dernière étape atteinte', async () => {
@@ -121,7 +128,7 @@ describe('coordination des pages BPM', () => {
     await harness.navigateByUrl('/app/gestion-projet', Page);
     await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
     nav.completeFlow((url) => url.startsWith('/app/gestion-projet/'));
-    await router.navigateByUrl('/projet-de-vie', { state: { bpmNotice: 'Projet enregistré.' } });
+    await router.navigateByUrl('/projet-de-vie', { state: { journeyNotice: 'Projet enregistré.' } });
     await settle();
     expect(nav.notice()).toBe('Projet enregistré.');
     await router.navigateByUrl('/projet-de-vie?expanded=indispensable', { replaceUrl: true });
@@ -134,7 +141,7 @@ describe('coordination des pages BPM', () => {
   });
   it('ouvrir une autre adresse au chargement (favori, adresse tapée) ajoute une étape, recharger la même la garde', async () => {
     sessionStorage.setItem(
-      'bpm-navigation:user-B',
+      'rjs-journey:user-B',
       JSON.stringify({
         visits: [
           { id: 'liste', url: '/app/gestion-projet', label: 'Gestion de projet' },

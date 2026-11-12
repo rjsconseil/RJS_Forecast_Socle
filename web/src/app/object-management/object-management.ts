@@ -5,7 +5,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
 import { Api, OmCheck, OmDebug, OmInventoryRow, OmKind, OmRelation, toApiError, UserDirectory } from '../core/api.service';
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 
 type Tab = 'inventory' | 'architecture' | 'relations' | 'views' | 'parameters' | 'checks' | 'receipts' | 'journal' | 'exports';
 

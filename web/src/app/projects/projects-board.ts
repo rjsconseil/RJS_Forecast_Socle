@@ -1,4 +1,4 @@
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 import { PageHeroDirective } from '../shared/page-hero.directive';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';

@@ -3,7 +3,7 @@ import { settlementOutsideWindow } from './period-presentation';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Api, toApiError } from '../../core/api.service';
+import { toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { CenterRow, EntryInput, Recurrence, RegisterLine } from '../../core/bpm-models';
 import { cents, CentsPipe, euros, figureValue, percentText, ShortDatePipe, signedCents, SignedCentsPipe } from '../../core/format';
@@ -574,7 +574,6 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
 export class BpmDashboard {
   private ctx = inject(BpmPageContext);
   private bpm = inject(BpmApi);
-  private api = inject(Api);
   private refresh = inject(BpmRefresh);
   /** Ancre de l'URL (#bm-period-income, #bm-projects…) : elle ouvre le tiroir visé, comme dans la source. */
   private fragment = toSignal(inject(ActivatedRoute).fragment, { initialValue: null });
@@ -585,10 +584,10 @@ export class BpmDashboard {
 
   // Lectures communes (rechargées après toute écriture, réponses périmées ignorées).
   protected summary = bpmLoader(() => this.period(), (p) => this.bpm.summary(p));
-  protected dash = bpmLoader(() => this.period(), (p) => this.api.dashboard(p));
+  protected dash = bpmLoader(() => this.period(), (p) => this.bpm.dashboard(p));
   protected register = bpmLoader(() => this.period(), (p) => this.bpm.register({ period: p, groupBy: 'none' }));
   protected recurrences = bpmLoader(() => 0, () => this.bpm.recurrences());
-  protected lifeProjects = bpmLoader(() => 0, () => this.api.lifeProjects());
+  protected lifeProjects = bpmLoader(() => 0, () => this.bpm.lifeProjects());
   protected centers = bpmLoader(() => this.period(), (p) => this.bpm.centers({ period: p, direction: 'charge' }));
   /** Plafonds dépassés de la période, lus avec le registre (aucune lecture de plus). */
   protected overCaps = computed(() => overCapsOf(this.register.data()?.caps, (ref) => this.centers.data()?.rows.find((r) => r.ref === ref)?.label));
@@ -797,7 +796,7 @@ export class BpmDashboard {
     this.closingNow.set(true);
     this.closeError.set(null);
     try {
-      const r = await this.api.closePeriod({ requestKey: this.closeKey, periodKey, expectedResultCents: pv.resultCents });
+      const r = await this.bpm.closePeriod({ requestKey: this.closeKey, periodKey, expectedResultCents: pv.resultCents });
       this.closeKey = newRequestKey('close');
       this.confirming.set(false);
       this.closedMessage.set(`${r.closure.periodLabel} est close : ${signedCents(r.closure.resultCents)} capitalisés dans le Patrimoine.`);
@@ -933,7 +932,7 @@ export class BpmDashboard {
   protected editorDefaults = computed<Partial<EntryInput>>(() => ({ direction: this.ctx.q('entryDirection')() === 'income' ? 'income' : 'charge' }));
   /**
    * Résultat d'une action faite sur cette page (saisie enregistrée…). Le message laissé par une autre page
-   * (état de navigation `bpmNotice`, assistant de démarrage, création d'utilisateur) est affiché une seule fois,
+   * (état de navigation `journeyNotice`, assistant de démarrage, création d'utilisateur) est affiché une seule fois,
    * par la barre de parcours.
    */
   protected notice = signal<string | null>(null);

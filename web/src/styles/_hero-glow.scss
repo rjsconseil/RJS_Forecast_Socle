@@ -1,10 +1,11 @@
 /*
  * Éclat des cadres du haut de page : deux halos de lumière sur le dégradé de la section et une ombre portée
- * profonde. Un seul jeu de règles pour tous les bandeaux (BPM, projets, bandeau commun, vue d'ensemble).
+ * profonde. Un seul jeu de règles pour tous les bandeaux (BPM, projets, bandeau commun, vue d'ensemble,
+ * accueil du site et accueils de zone).
  * Chaque cadre garde ses couleurs : --glow-base (fond), --glow-end (fin du dégradé), --glow-low (halo bas).
  * `.app-shell.app-shell` : égale la spécificité du fond commun des en-têtes (styles de base) pour passer après lui.
  */
-.app-shell.app-shell .main-shell main :is(bpm-page-banner, .life-projects-banner, rjs-app-hero .app-hero, .ov-hero) {
+.app-shell.app-shell .main-shell main :is(bpm-page-banner, .life-projects-banner, rjs-app-hero .app-hero, .ov-hero, .plan-heading, .section-home-top[data-sticky-hero]) {
   --glow-base: var(--bpm-section-deep, var(--heading-surface, #153e70));
   --glow-end: color-mix(in srgb, var(--bpm-section-accent, var(--space-solid, #2563a6)) 55%, var(--glow-base));
   --glow-low: var(--bpm-section-accent, var(--space-solid, #2563a6));

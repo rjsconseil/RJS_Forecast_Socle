@@ -1,4 +1,4 @@
-import { bpmAddress, emptyTrail, recordVisit, removeVisits, sameStep, TRAIL_LIMIT, visitLabel } from './navigation-model';
+import { journeyAddress, emptyTrail, recordVisit, removeVisits, sameStep, TRAIL_LIMIT, visitLabel } from './journey-model';
 
 const visit = (id: string, url = `/creer?step=${id}`) => ({ id, url, label: id });
 
@@ -42,10 +42,11 @@ describe('historique du parcours BPM', () => {
     expect(trail.visits).toHaveLength(TRAIL_LIMIT);
     expect(trail.cursor).toBe(TRAIL_LIMIT - 1);
     expect(trail.visits[0].id).toBe('30');
-    expect(bpmAddress('https://example.com')).toBe(false);
-    expect(bpmAddress('//example.com')).toBe(false);
-    expect(bpmAddress('/socle/budget')).toBe(false);
-    expect(bpmAddress('/app/gestion-projet/prj_1?q=travaux')).toBe(true);
+    expect(journeyAddress('https://example.com')).toBe(false);
+    expect(journeyAddress('//example.com')).toBe(false);
+    expect(journeyAddress('/')).toBe(false);
+    expect(journeyAddress('/socle/budget')).toBe(true);
+    expect(journeyAddress('/app/gestion-projet/prj_1?q=travaux')).toBe(true);
   });
   it('rejoindre l’étape suivante par un lien de la page garde le chemin jusqu’à la dernière étape atteinte', () => {
     let trail = emptyTrail();

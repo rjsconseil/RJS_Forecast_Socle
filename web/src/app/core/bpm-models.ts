@@ -401,7 +401,6 @@ export interface EntryPreview {
   mutation: false;
   before: { netCents: number | null; expectedCents: number | null; stockEstimateCents: number | null };
   after: { netCents: number | null; expectedCents: number | null; stockEstimateCents: number | null };
-  effectInPeriod: { plannedCents: number; realizedCents: number };
   note: string | null;
 }
 

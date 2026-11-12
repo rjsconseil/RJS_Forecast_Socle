@@ -1,6 +1,6 @@
-import { injectPageWorkspace } from '../../shared/page-workspace';
-import { PageObjectLabels } from '../../shared/plan-context';
-import { projectLink } from '../../shared/site-plan';
+import { injectPageWorkspace } from '../../plan/page-workspace';
+import { PageObjectLabels } from '../../plan/plan-context';
+import { projectLink } from '../../plan/site-plan';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
 import { BpmFormDraft } from '../ui/form-draft';
@@ -519,6 +519,11 @@ export class BpmProjectPage {
   }
   /** Ouvre la fenêtre de la tâche, au besoin sur sa part (demande) ou ses dépenses. */
   protected showTask(t: BpmTaskCard, section: 'funding' | 'charges' | null = null) {
+    // La vue Budget ne monte pas la fenêtre de tâche : la tâche s'ouvre dans la sous-page Tâches (audit A05).
+    if (this.workspaceKey() === 'project-budget') {
+      void this.router.navigate(['/app/gestion-projet', this.projectId, 'taches'], { queryParams: { task: t.task.id }, queryParamsHandling: 'merge' });
+      return;
+    }
     this.fundingTask.set(section === 'funding' && !t.budget?.request ? t.task.id : null);
     this.returnEditor.set(null);
     this.settling.set(null);

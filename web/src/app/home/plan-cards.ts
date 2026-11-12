@@ -1,7 +1,7 @@
 import { NavigationLabel, NavigationSurfaceDirective } from '../navigation/navigation-ui';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PlanCard, PlanZone, menuPages, sectionEntry, zoneSections } from '../shared/site-plan';
+import { PlanCard, PlanZone, menuPages, sectionEntry, zoneSections } from '../plan/site-plan';
 
 /** Une carte par grande section d'une zone, hors de sa vue d'ensemble : la même sur tous les accueils de zone. */
 export function zoneSectionCards(zone: PlanZone, connected: boolean): PlanCard[] {

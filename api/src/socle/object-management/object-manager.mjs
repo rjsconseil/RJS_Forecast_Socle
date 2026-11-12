@@ -148,6 +148,19 @@ export class ObjectManager {
     }
   }
 
+  // ---------- simulation ----------
+
+  /**
+   * Exécute `fn(tx)` sur une copie de l'état : mêmes constructeurs et mêmes refus qu'une commande,
+   * sans écriture, journal ni clé de demande. Renvoie l'état simulé pour le lire avec les mêmes métriques.
+   */
+  simulate(action, ctx, input, fn) {
+    const draft = structuredClone(this.store.state);
+    const tx = { draft, command: action, now: new Date().toISOString(), created: [], updated: [], unchanged: false, input };
+    tx.userId = this.requireUser(draft, ctx);
+    return { draft, result: fn(tx) };
+  }
+
   // ---------- commandes ----------
 
   /**

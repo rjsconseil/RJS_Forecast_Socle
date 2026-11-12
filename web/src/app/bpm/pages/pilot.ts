@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Api } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { DirectiveItem, GoalType, HistoryRow, Recurrence } from '../../core/bpm-models';
 import {
@@ -1042,7 +1041,6 @@ interface AnalysisPoint {
 export class BpmPilotPage {
   protected readonly ctx = inject(BpmPageContext);
   private readonly bpm = inject(BpmApi);
-  private readonly api = inject(Api);
   private readonly router = inject(Router);
   protected readonly windows = WINDOWS;
   protected readonly closureWindow = 36;
@@ -1092,7 +1090,7 @@ export class BpmPilotPage {
   );
   protected closures = bpmLoader(
     () => 0,
-    () => this.api.closures(),
+    () => this.bpm.closures(),
   );
   protected closureHistory = bpmLoader(
     () => 0,

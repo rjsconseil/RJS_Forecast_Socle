@@ -6,6 +6,7 @@ export * from './metric';
 export * from './charts';
 export * from './operation-editor';
 export * from './line-detail';
+export * from './settlement';
 export * from './caps';
 export * from './project-funding';
 export * from './overflow';

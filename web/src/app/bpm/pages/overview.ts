@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { JourneyResume } from '../../plan/journey-resume';
 import { RouterLink } from '@angular/router';
 import { RecetteContext } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
@@ -6,7 +7,7 @@ import { BpmProjectCard, BpmTaskCard, ProjectBudgetState } from '../../core/bpm-
 import { cents } from '../../core/format';
 import { TASK_STATUS_LABEL } from '../../core/models';
 import { PlanCardsComponent, zoneSectionCards } from '../../home/plan-cards';
-import { PlanZone } from '../../shared/site-plan';
+import { PlanZone } from '../../plan/site-plan';
 import { bpmLoader, BpmState, FUNDING } from '../ui';
 
 const STATE_LABEL: Record<ProjectBudgetState, string> = {
@@ -25,7 +26,7 @@ const pct = (part: number, whole: number | null | undefined) => (whole ? Math.ro
  */
 @Component({
   selector: 'bpm-overview',
-  imports: [RouterLink, BpmState, PlanCardsComponent],
+  imports: [RouterLink, BpmState, PlanCardsComponent, JourneyResume],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './overview.scss',
   template: `
@@ -48,6 +49,7 @@ const pct = (part: number, whole: number | null | undefined) => (whole ? Math.ro
           <a class="btn ov-btn-ghost" routerLink="/app/gestion-projet" [queryParams]="{ editProject: 'new' }">＋ Créer un projet de la vie</a>
         </div>
       </header>
+      <rjs-journey-resume zone="bpm" title="Reprendre dans Budget/Patrimoine" />
 
       <bpm-state [loading]="loading()" [error]="error()" (retry)="reload()" />
 

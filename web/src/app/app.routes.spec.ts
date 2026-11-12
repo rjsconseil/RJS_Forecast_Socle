@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Component } from '@angular/core';
 import { routes } from './app.routes';
-import { PAGE_WORKSPACES } from './shared/page-workspaces';
+import { PAGE_WORKSPACES } from './plan/page-workspaces';
 import { RecetteContext } from './core/api.service';
 
 // Destinations BPM adressables directement et redirections des anciens liens (spec §4).

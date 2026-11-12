@@ -45,6 +45,8 @@
           }
           <a class="btn btn-secondary" routerLink="/app/gestion-projet" [queryParams]="d.life?.taskRequests?.length ? { decisions: 'tasks' } : {}">{{ d.life?.taskRequests?.length ? 'Décider les montants des tâches' : 'Piloter les projets financés' }}</a>
         }
+        <!-- Chaque projet BPM est une racine du noyau : sa fiche noyau (dates, tâches, état dérivé) reste à un clic. -->
+        <a class="btn btn-secondary" [routerLink]="['/projects', d.project.project.id]" title="Fiche du projet dans le noyau transverse">Racine noyau ↗</a>
       </div>
       <div tools class="life-banner-tools project-detail-tools">
         @if (d.role === 'standard' && d.budget; as b) {

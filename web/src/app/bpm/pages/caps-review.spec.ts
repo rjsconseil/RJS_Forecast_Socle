@@ -1,7 +1,7 @@
 import { CapsReview, ReviewCategory, ReviewCenter } from '../../core/bpm-caps.models';
 import { reviewCards } from './caps-review';
 
-const measure = (capCents: number | null, engagedCents: number) => ({ capCents, engagedCents, paidCents: engagedCents, toPayCents: 0, marginCents: capCents === null ? null : capCents - engagedCents, usedPct: capCents ? engagedCents / capCents * 100 : null, over: capCents !== null && engagedCents > capCents, lineCount: 0, chargeIds: [] });
+const measure = (capCents: number | null, engagedCents: number) => ({ capCents, engagedCents, paidCents: engagedCents, toPayCents: 0, marginCents: capCents === null ? null : capCents - engagedCents, usedPct: capCents ? engagedCents / capCents * 100 : null, over: capCents !== null && engagedCents > capCents, near: capCents !== null && engagedCents <= capCents && engagedCents >= capCents * 0.85, lineCount: 0, chargeIds: [] });
 const center = (cap: number | null): ReviewCenter => ({ ref: 'std:loisirs', label: 'Loisirs', standard: true, ...measure(cap, 3500) });
 const category: ReviewCategory = { id: 'cat_1', label: 'Cinéma', costCenterRef: 'std:loisirs', costCenterLabel: 'Loisirs', archived: false, revision: 1, ...measure(3000, 3500) };
 const data = (cap: number | null) => ({ centers: [center(cap)], categories: [category], charges: {} }) as CapsReview;

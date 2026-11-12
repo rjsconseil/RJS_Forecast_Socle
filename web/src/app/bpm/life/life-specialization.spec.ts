@@ -50,7 +50,7 @@ describe('vues spécialisées du projet de vie', () => {
         { path: 'projet-de-vie/budget-type', component: BpmLifeManagementPage, data: { workspace: { key: 'life-budget', parent: '/projet-de-vie', title: 'Budget type', lead: 'Préparer les prochaines périodes.' } } },
         { path: 'projet-de-vie/cloture', component: BpmLifeManagementPage, data: { workspace: { key: 'life-closing', parent: '/projet-de-vie', title: 'Clôture', lead: 'Relire et capitaliser le résultat.' } } },
       ]),
-      { provide: BpmApi, useValue: bpm }, { provide: Api, useValue: api },
+      { provide: BpmApi, useValue: { ...bpm, closePeriod: api.closePeriod } }, { provide: Api, useValue: {} },
     ] });
     TestBed.inject(RecetteContext).select('life-workspace-test', { remember: false });
     harness = await RouterTestingHarness.create();

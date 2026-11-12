@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, Signal, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, Signal, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -50,4 +50,16 @@ export function injectPlanContext(): Signal<PlanContext> {
   const url = injectCurrentUrl();
   const labels = inject(PageObjectLabels);
   return computed(() => planContext(url(), labels.labelFor(url())));
+}
+
+/**
+ * Une fiche publie le nom de l'objet qu'elle affiche (à appeler dans un contexte d'injection) :
+ * fil d'Ariane, menu, parcours et titre de l'onglet le reprennent, quel que soit le module.
+ */
+export function publishObjectLabel(link: () => string | null, label: () => string | null | undefined): void {
+  const labels = inject(PageObjectLabels);
+  effect(() => {
+    const at = link();
+    if (at) labels.set(at, label());
+  });
 }

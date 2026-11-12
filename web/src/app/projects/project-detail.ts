@@ -11,6 +11,7 @@ import { displayDate, displayTimestamp, dueTitle, dueUrgency } from './workspace
  * fixé sous la barre du site, puis la fiche — cadre, plan (tâches), budget — et son pied d'audit.
  * Tous les chiffres viennent de la projection API ; la page ne recalcule pas l'état du projet.
  */
+import { publishObjectLabel } from '../plan/plan-context';
 @Component({
   selector: 'app-project-detail',
   imports: [RouterLink, HoursPipe, PlannedTotalPipe],
@@ -31,6 +32,10 @@ import { displayDate, displayTimestamp, dueTitle, dueUrgency } from './workspace
               <a class="text-link" [routerLink]="['/projects', d.project.id, 'edit']">Modifier le projet</a>
               @if (d.pathways.canAddTask) {
                 <a class="text-link" routerLink="/tasks/new" [queryParams]="{ projectId: d.project.id }">Ajouter une tâche à ce projet</a>
+              }
+              <!-- Le noyau porte la racine ; l'application qui l'enrichit s'ouvre d'un clic. -->
+              @if (d.enrichment; as e) {
+                <a class="text-link" [routerLink]="e.kind === 'life' ? ['/projet-de-vie'] : ['/app/gestion-projet', d.project.id]">Ouvrir dans Budget/Patrimoine ↗</a>
               }
             </div>
           }
@@ -328,6 +333,8 @@ export class ProjectDetailPage implements OnInit {
   protected readonly urgency = dueUrgency;
   protected readonly dueTitle = dueTitle;
   protected d = signal<ProjectDetail | null>(null);
+  /** Le parcours, le fil d'Ariane et l'onglet nomment le projet ouvert, comme les fiches BPM. */
+  private readonly framed = publishObjectLabel(() => '/projects/' + this.id(), () => this.d()?.project.title);
   protected error = signal<string | null>(null);
   private queryParams = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   private fragment = toSignal(this.route.fragment);

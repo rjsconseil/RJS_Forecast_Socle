@@ -1,13 +1,12 @@
-import { Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { ApiError, toApiError } from '../../core/api.service';
+import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
+import { toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { Cadence, Direction, Recurrence } from '../../core/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { bpmLoader, BpmRefresh, BpmState, newRequestKey } from '../ui';
 import { BpmDrafts } from '../ui/drafts';
-import { localToday } from './act-due';
+import { localToday } from '../../calendar/calendar-dates';
 
 type RecCadence = Exclude<Cadence, 'once'>;
 const CADENCE_LABEL: Record<RecCadence, string> = { weekly: 'Hebdomadaire', monthly: 'Mensuelle', yearly: 'Annuelle' };
@@ -51,7 +50,7 @@ const toCents = (raw: string) => {
  */
 @Component({
   selector: 'bpm-act-budget-type',
-  imports: [RouterLink, BpmState, MetricTilesComponent, CentsPipe, ShortDatePipe],
+  imports: [BpmState, MetricTilesComponent, CentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-month-type.component.scss'],
   template: `
     <section class="bm-month" data-bpm-frame="form" id="budget-type" aria-labelledby="bm-month-title">
@@ -151,31 +150,6 @@ const toCents = (raw: string) => {
           <p class="bpm-help">Chaque ligne existante est mise à jour en gardant son identité (pas de recréation). La portée porte sur les occurrences encore attendues ; les règlements déjà enregistrés ne changent pas. Le rythme et la première date sont figés dès qu'une occurrence est réglée. Pour une fin, une note ou un centre, ouvrez la ligne depuis le registre.</p>
         </div>
 
-        @if (showCaps()) {
-        <details class="bpm-limited">
-          <summary>Plafonds par poste (facultatifs, par période)</summary>
-          <div class="bm-form">
-            @if (capsError(); as e) { <p class="bpm-error" role="alert">{{ e.message }} Saisie conservée.</p> }
-            @if (capsMessage()) { <p class="bm-saved" role="status">{{ capsMessage() }}</p> }
-            <fieldset>
-              <legend>Plafond par période</legend>
-              <div class="caps-grid">
-                @for (c of centersOf('charge'); track c.ref) {
-                  <label class="bm-start">
-                    {{ c.label }}{{ c.standard ? '' : ' (personnel)' }}
-                    <input class="num" inputmode="decimal" [value]="capDraft()[c.ref] ?? ''" (input)="setCap(c.ref, $any($event.target).value)" placeholder="Sans plafond" />
-                  </label>
-                }
-              </div>
-            </fieldset>
-            <p class="bpm-help">Un champ vide retire le plafond. Les plafonds s'appliquent au Budget du projet de vie ; la marge = plafond − payé − restant prévu. Un dépassement est signalé en rouge, jamais bloquant.</p>
-            <p class="bpm-help">Pour définir des plafonds indépendants par poste et par catégorie : <a routerLink="/plafonds">Plafonds et catégories →</a></p>
-            <div class="bpm-actions">
-              <button type="button" class="btn btn-secondary" (click)="saveCaps()" [disabled]="capsBusy() || !capsDirty()">{{ capsBusy() ? 'Enregistrement…' : 'Enregistrer les plafonds' }}</button>
-            </div>
-          </div>
-        </details>
-        }
       }
     </section>
   `,
@@ -188,13 +162,9 @@ const toCents = (raw: string) => {
     .bm-fixed { color: var(--ink); overflow-wrap: anywhere; }
     .bpm-actions { align-items: center; }
     .spacer { flex: 1 1 auto; }
-    .caps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr)); gap: var(--ecart-12); }
-    .caps-grid .bm-start { max-width: none; }
-    .caps-grid input { min-height: 2.75rem; }
   `,
 })
 export class BpmActBudgetType {
-  readonly showCaps = input(true);
   private bpm = inject(BpmApi);
   private refresh = inject(BpmRefresh);
 
@@ -230,8 +200,8 @@ export class BpmActBudgetType {
 
   constructor() {
     inject(BpmDrafts).connect('budget-type',
-      () => ({ rows: this.rows().filter(row => this.isDirty(row) || row.kept), news: this.news(), capDraft: this.capDraft(), capsBase: this.capsBase() }),
-      draft => { this.rows.set(draft.rows); this.news.set(draft.news); this.capDraft.set(draft.capDraft); this.capsBase.set(draft.capsBase); },
+      () => ({ rows: this.rows().filter(row => this.isDirty(row) || row.kept), news: this.news() }),
+      draft => { this.rows.set(draft.rows); this.news.set(draft.news); },
       inject(DestroyRef));
     // Relecture : les lignes enregistrées remplacent les brouillons, sauf ceux conservés après un échec.
     effect(() => {
@@ -241,14 +211,6 @@ export class BpmActBudgetType {
       untracked(() => {
         const kept = new Map(this.rows().filter((r) => r.kept || this.isDirty(r)).map((r) => [r.id, r] as const));
         this.rows.set(lines.map((l) => kept.get(l.id) ?? this.fromLine(l)));
-      });
-    });
-    effect(() => {
-      const caps = this.life()?.capsCents ?? {};
-      untracked(() => {
-        if (this.capsDirty()) return;
-        this.capDraft.set(Object.fromEntries(Object.entries(caps).map(([k, v]) => [k, euroText(v)])));
-        this.capsBase.set({ ...this.capDraft() });
       });
     });
   }
@@ -347,55 +309,6 @@ export class BpmActBudgetType {
     this.message.set(
       [updated ? `${updated} ligne(s) mise(s) à jour` : '', created ? `${created} ligne(s) ajoutée(s)` : '', failed ? `${failed} non enregistrée(s) : brouillon conservé` : ''].filter(Boolean).join(' · ') || null,
     );
-  }
-
-  // ---------- plafonds ----------
-
-  protected capDraft = signal<Record<string, string>>({});
-  private capsBase = signal<Record<string, string>>({});
-  protected capsBusy = signal(false);
-  protected capsError = signal<ApiError | null>(null);
-  protected capsMessage = signal<string | null>(null);
-  protected capsDirty = computed(() => {
-    const d = this.capDraft();
-    const base = this.capsBase();
-    const keys = new Set([...Object.keys(d), ...Object.keys(base)]);
-    return [...keys].some((k) => (d[k] ?? '').trim() !== (base[k] ?? '').trim());
-  });
-  protected setCap(ref: string, v: string) {
-    this.capDraft.update((d) => ({ ...d, [ref]: v }));
-  }
-
-  async saveCaps() {
-    const life = this.life();
-    if (!life || this.capsBusy()) return;
-    const caps: Record<string, number | null> = {};
-    for (const c of this.centersOf('charge')) {
-      const raw = (this.capDraft()[c.ref] ?? '').trim();
-      if (!raw) {
-        caps[c.ref] = null;
-        continue;
-      }
-      const a = parseAmount(raw);
-      if (typeof a !== 'number' || a <= 0) {
-        this.capsError.set(new ApiError(400, { code: 'VALIDATION', action: null, message: `Plafond « ${c.label} » : montant positif attendu.` }));
-        return;
-      }
-      caps[c.ref] = a;
-    }
-    this.capsBusy.set(true);
-    this.capsError.set(null);
-    this.capsMessage.set(null);
-    try {
-      await this.bpm.setCaps({ expectedRevision: life.revision, caps });
-      this.capsBase.set({ ...this.capDraft() });
-      this.capsMessage.set(`Plafonds enregistrés (${Object.values(caps).filter((v) => v !== null).length} centre(s) plafonné(s)).`);
-      this.refresh.bump();
-    } catch (e) {
-      this.capsError.set(toApiError(e));
-    } finally {
-      this.capsBusy.set(false);
-    }
   }
 
   protected readonly fmt = cents;

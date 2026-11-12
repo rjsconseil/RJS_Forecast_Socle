@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { PlanCard, hasSectionHome, menuPages, planZone, sectionEntry, zoneHomeLink } from '../shared/site-plan';
+import { PlanCard, hasSectionHome, menuPages, planZone, sectionEntry, zoneHomeLink } from '../plan/site-plan';
 import { PlanCardsComponent } from './plan-cards';
 
 /**

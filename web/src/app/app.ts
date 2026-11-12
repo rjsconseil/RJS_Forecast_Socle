@@ -1,7 +1,7 @@
 import { ResponsiveNavigationDirective } from './navigation/responsive-navigation';
 import { NavigationLabel, NavigationSurfaceDirective } from './navigation/navigation-ui';
-import { BpmNavigation, BpmNavigationComponent } from './bpm/ui/navigation';
-import { visitLabel } from './bpm/ui/navigation-model';
+import { Journey, JourneyBar } from './plan/journey';
+import { visitLabel } from './plan/journey-model';
 import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -10,9 +10,9 @@ import { filter, map } from 'rxjs';
 import { RecetteContext, toApiError, UserDirectory } from './core/api.service';
 import { AccountChipComponent } from './shared/account-chip.component';
 import { StickyPageHeroDirective } from './shared/sticky-page-hero.directive';
-import { SectionPageMenu } from './shared/section-page-menu.component';
-import { workspaceContextQuery } from './shared/page-workspace';
-import { PageObjectLabels } from './shared/plan-context';
+import { SectionPageMenu } from './plan/section-page-menu.component';
+import { workspaceContextQuery } from './plan/page-workspace';
+import { PageObjectLabels } from './plan/plan-context';
 import {
   hasPageMenu,
   hasSectionHome,
@@ -27,7 +27,7 @@ import {
   sectionHomeLink,
   zoneHomeLink,
   zoneSections,
-} from './shared/site-plan';
+} from './plan/site-plan';
 
 /**
  * Coquille du site de référence (`app.ts` de rjsconseil/rjs-forecast, `_shell.scss`, `_zones.scss`) :
@@ -37,7 +37,7 @@ import {
  */
 @Component({
   selector: 'app-root',
-  imports: [NavigationLabel, NavigationSurfaceDirective, SectionPageMenu, BpmNavigationComponent, RouterOutlet, RouterLink, AccountChipComponent, ResponsiveNavigationDirective, StickyPageHeroDirective],
+  imports: [NavigationLabel, NavigationSurfaceDirective, SectionPageMenu, JourneyBar, RouterOutlet, RouterLink, AccountChipComponent, ResponsiveNavigationDirective, StickyPageHeroDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a class="skip-link" href="#main">Aller au contenu</a>
@@ -153,6 +153,8 @@ import {
             }
           }
 
+          <!-- Dans une zone, un accès direct aux autres modules ; sur le portail, la liste des zones suffit. -->
+          @if (location().zone) {
           <details class="navigation-module-switcher">
             <summary>Tous les modules</summary>
             <nav aria-label="Accès à tous les modules">
@@ -161,7 +163,8 @@ import {
               }
             </nav>
           </details>
-          <a class="navigation-settings-link" data-navigation-level="detail" routerLink="/navigation">{{ "Réglages de navigation" | navigationLabel:"/navigation" }}</a>
+          }
+          <a class="navigation-settings-link" data-navigation-level="detail" routerLink="/navigation"><span aria-hidden="true">⚙</span> {{ "Réglages de navigation" | navigationLabel:"/navigation" }}</a>
           <div class="sidebar-tools">
             <div class="profile-switcher" aria-label="Utilisateur connecté" role="group">
               <span class="profile-switcher-mark" aria-hidden="true">{{ activeInitial() }}</span>
@@ -253,7 +256,8 @@ import {
                 </section>
               </div>
             } @else {
-              @if (workspaceIdentity().module === 'bpm' || workspaceIdentity().space === 'budget-calendar') { <bpm-navigation /> }
+              <!-- Le parcours (Retour / Mon parcours / Suivant) structure toutes les zones du plan, pas seulement BPM. -->
+              @if (location().zone) { <rjs-journey /> }
               <router-outlet />
             }
           } @else if (!error()) {
@@ -271,7 +275,7 @@ import {
   `,
 })
 export class App implements OnInit {
-  private readonly bpmNavigation = inject(BpmNavigation);
+  private readonly journey = inject(Journey);
   protected ctx = inject(RecetteContext);
   private directory = inject(UserDirectory);
   private router = inject(Router);
@@ -291,7 +295,8 @@ export class App implements OnInit {
       filter((e) => e instanceof NavigationEnd),
       map((e) => (e as NavigationEnd).urlAfterRedirects),
     ),
-    { initialValue: this.router.url },
+    // Avant la première navigation, le routeur ne connaît que « / » : l'adresse du navigateur situe déjà la zone.
+    { initialValue: this.router.navigated ? this.router.url : window.location.pathname + window.location.search },
   );
   private path = computed(() => this.url().split(/[?#]/)[0]);
   /** Où se trouve l'adresse courante dans le plan : zone, section, page. */

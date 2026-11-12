@@ -6,7 +6,7 @@ import { PatrimoineRead } from '../core/models';
 import { euros, EurosPipe, parseAmount } from '../core/format';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
 import { MetricTile, MetricTilesComponent } from '../shared/metric-tiles.component';
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 
 /** Interface de test du niveau 2 (Patrimoine Management) : lecture brute et mise à jour du Patrimoine. */
 @Component({

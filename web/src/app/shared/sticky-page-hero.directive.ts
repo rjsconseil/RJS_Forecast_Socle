@@ -6,7 +6,7 @@ export function pageTopOffset(): number {
   const mobile = document.querySelector<HTMLElement>('.sidebar-mobile-head');
   const base = bar && getComputedStyle(bar).position === 'sticky' ? bar.getBoundingClientRect().height
     : mobile && mobile.getBoundingClientRect().height ? mobile.closest('.sidebar')?.getBoundingClientRect().height ?? 0 : 0;
-  const navigation = document.querySelector<HTMLElement>('main > bpm-navigation');
+  const navigation = document.querySelector<HTMLElement>('main > rjs-journey');
   return base + (navigation?.getBoundingClientRect().height ?? 0);
 }
 
@@ -39,7 +39,7 @@ export class StickyPageHeroDirective {
       if (sidebar) resize.observe(sidebar);
       const sync = () => {
         frame = 0;
-        const routebar = main.querySelector<HTMLElement>(':scope > bpm-navigation');
+        const routebar = main.querySelector<HTMLElement>(':scope > rjs-journey');
         if (routebar !== navigation) {
           if (navigation) resize.unobserve(navigation);
           navigation = routebar;

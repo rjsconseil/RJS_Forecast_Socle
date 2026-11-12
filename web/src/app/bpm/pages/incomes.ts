@@ -1,4 +1,4 @@
-import { injectPageWorkspace } from '../../shared/page-workspace';
+import { injectPageWorkspace } from '../../plan/page-workspace';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { BpmApi } from '../../core/bpm-api.service';

@@ -59,6 +59,7 @@ import { PlanTab } from './site-plan';
       text-decoration: none;
       opacity: 0.82;
       white-space: nowrap;
+      transition: opacity 160ms ease, background-color 160ms ease, box-shadow 240ms ease;
     }
     .page-tab:hover,
     .page-tab:focus-visible {
@@ -70,7 +71,7 @@ import { PlanTab } from './site-plan';
       opacity: 1;
       background: var(--page-tab-current-bg, #fff);
       color: var(--page-tab-current-ink, #14213d);
-      box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.2), 0 8px 18px -8px rgb(0 0 0 / 0.45);
     }
     @media (max-width: 700px) {
       .page-tabs {

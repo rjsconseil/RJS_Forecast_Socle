@@ -4,7 +4,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { RecetteContext } from '../core/api.service';
 import { BpmOverviewPage } from '../bpm/pages/overview';
-import { PLAN_OVERVIEW_TONE, PlanCard, planZone } from '../shared/site-plan';
+import { PLAN_OVERVIEW_TONE, PlanCard, planZone } from '../plan/site-plan';
+import { JourneyResume } from '../plan/journey-resume';
 import { PlanCardsComponent, zoneSectionCards } from './plan-cards';
 
 /**
@@ -15,7 +16,7 @@ import { PlanCardsComponent, zoneSectionCards } from './plan-cards';
  */
 @Component({
   selector: 'rjs-zone-home',
-  imports: [RouterLink, PlanCardsComponent, BpmOverviewPage],
+  imports: [RouterLink, PlanCardsComponent, BpmOverviewPage, JourneyResume],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (zone(); as zone) {
@@ -34,6 +35,7 @@ import { PlanCardsComponent, zoneSectionCards } from './plan-cards';
             </div>
             <p>{{ zone.mission }}</p>
           </header>
+          <rjs-journey-resume [zone]="zone.id" title="Reprendre dans cette zone" />
 
           @if (zone.overview; as overview) {
             <section class="plan-overview" aria-labelledby="overview-results">

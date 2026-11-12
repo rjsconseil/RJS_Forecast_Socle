@@ -44,7 +44,9 @@
   --app-canvas: var(--slate-100);
   --app-focus-ring: var(--indigo-500);
   /* Relief étagé et doux : un contact net, puis une ombre large et diffuse. */
-  --app-panel-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-5), transparent);
+  --app-panel-shadow:
+    0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-6), transparent),
+    0 var(--ombre-12) var(--ombre-32) calc(-1 * var(--ombre-16)) color-mix(in srgb, var(--slate-950) var(--part-18), transparent);
   /* États et étapes communs : aucun vocabulaire de couleur propre à un module. */
   --neutral-action-hover: var(--slate-800);
   --step-surface: var(--slate-900);
@@ -185,13 +187,13 @@
   --card-surface-active: var(--brand-soft);
   --card-focus: var(--app-focus-ring);
   --card-hover-surface: var(--slate-50);
-  --card-glow: 0 0 0 var(--trait-1) var(--slate-300), 0 var(--ombre-4) var(--ombre-12) calc(-1 * var(--ombre-2)) color-mix(in srgb, var(--slate-950) var(--part-8), transparent);
-  --card-glow-strong: 0 0 0 var(--trait-1) var(--brand-line), 0 var(--ombre-8) var(--ombre-16) calc(-1 * var(--ombre-4)) color-mix(in srgb, var(--slate-950) var(--part-10), transparent);
+  --card-glow: 0 0 0 var(--trait-1) var(--slate-300), 0 var(--ombre-8) var(--ombre-24) calc(-1 * var(--ombre-8)) color-mix(in srgb, var(--slate-950) var(--part-16), transparent);
+  --card-glow-strong: 0 0 0 var(--trait-1) var(--brand-line), 0 var(--ombre-16) var(--ombre-32) calc(-1 * var(--ombre-12)) color-mix(in srgb, var(--app-accent) var(--part-35), transparent);
   --card-border-width: var(--trait-1);
   --card-radius: var(--radius-lg);
-  --card-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-5), transparent);
-  --card-hover-shadow: var(--card-glow);
-  --card-lift: 0;
+  --card-shadow: var(--app-panel-shadow);
+  --card-hover-shadow: var(--card-glow-strong);
+  --card-lift: calc(-1 * var(--ombre-2));
   --card-press-shadow: inset 0 0 0 var(--trait-1) var(--slate-300);
   --card-control-line: var(--slate-500);
   --card-focus-halo: 0 0 0 var(--ombre-6)
@@ -380,7 +382,9 @@
   --btn-font-size: var(--fs-sm);
   --btn-primary-ink: var(--white);
   --btn-primary-surface: var(--brand-solid);
-  --btn-primary-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-12), transparent);
+  --btn-primary-shadow:
+    0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-12), transparent),
+    0 var(--ombre-6) var(--ombre-16) calc(-1 * var(--ombre-6)) color-mix(in srgb, var(--btn-primary-surface) var(--part-45), transparent);
   --btn-primary-hover: var(--brand-hover);
   --btn-primary-active: var(--indigo-900);
   --btn-secondary-ink: var(--slate-800);
@@ -441,7 +445,7 @@
   --board-empty-ink: var(--slate-600);
   --task-card-line: var(--slate-200);
   --task-card-radius: var(--rayon-8);
-  --task-card-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--slate-950) var(--part-5), transparent);
+  --task-card-shadow: var(--app-panel-shadow);
   --task-card-code: var(--slate-600);
   --task-link-hover: var(--app-accent);
   --follow-up-line: var(--slate-150);
@@ -553,7 +557,9 @@
   --app-accent-line: var(--brand-line);
   --app-canvas: var(--slate-950);
   --app-focus-ring: var(--indigo-300);
-  --app-panel-shadow: 0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--black) var(--part-35), transparent);
+  --app-panel-shadow:
+    0 var(--ombre-1) var(--ombre-2) color-mix(in srgb, var(--black) var(--part-35), transparent),
+    0 var(--ombre-12) var(--ombre-32) calc(-1 * var(--ombre-16)) color-mix(in srgb, var(--black) var(--part-55), transparent);
   --neutral-action-hover: var(--slate-200);
   --status-success: var(--green-200);
   --status-success-hover: var(--green-100);

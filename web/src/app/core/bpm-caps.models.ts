@@ -24,8 +24,8 @@ export interface CapMeasure {
   marginCents: number | null;
   usedPct: number | null;
   over: boolean;
-  /** Proche du plafond selon la règle du middleware Budget (85 % engagés). */
-  near?: boolean;
+  /** Proche du plafond : règle du middleware Budget, seule source du seuil (audit ARCH-10). */
+  near: boolean;
   lineCount: number;
 }
 
@@ -56,7 +56,7 @@ export interface CapAlert {
 }
 
 /** Résumé d'un plafond joint au registre : plafond, engagé, marge, consommation, dépassement. */
-export type CapBrief = Pick<CapMeasure, 'capCents' | 'engagedCents' | 'marginCents' | 'usedPct' | 'over'>;
+export type CapBrief = Pick<CapMeasure, 'capCents' | 'engagedCents' | 'marginCents' | 'usedPct' | 'over' | 'near'>;
 
 export interface RegisterCaps {
   centers: Record<string, CapBrief>;

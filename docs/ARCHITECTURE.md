@@ -204,3 +204,24 @@ avec les chiffres enregistrés et la référence de capitalisation exécutée pa
 Les tests `api/test/bpm-boundaries.test.mjs` couvrent les écritures autorisées, l’absence d’import
 ascendant, l’autonomie des middlewares sans BPM, la migration et sa reprise, les références et les
 refus atomiques. Le contrôle des frontières doit être étendu à chaque nouvelle fonction transactionnelle.
+
+
+## 8. Organisation du site Angular — 12 novembre 2026
+
+| Dossier `web/src/app` | Rôle |
+|---|---|
+| `navigation/` | Moteur générique : configuration, surfaces, libellés (`navigationLabel`), réglages `/navigation`. Aucune connaissance des pages. |
+| `plan/` | Plan du site (zones → sections → pages, `locate`) et ses projections : adaptateur vers le moteur, espaces et onglets de page, menu de section, libellés d'objet (`publishObjectLabel`), parcours unifié (`Journey`, barre Retour/Mon parcours/Suivant, bloc « Reprendre »). |
+| `core/` | Clients HTTP : `ApiService` (transverse, noyau, middlewares) et `BpmApi` (seul client des routes `/api/bpm/*`). |
+| `bpm/` | Pages et composants du niveau 3 : présentation et interaction, aucune règle métier. |
+
+Le parcours couvre toute page appartenant à une zone du plan (noyau, middlewares, BPM, administration) ;
+le portail et les adresses externes n'en font pas partie. Les fiches d'objet publient leur nom via
+`publishObjectLabel` pour que le parcours, le fil et les onglets l'affichent. Une fiche BPM renvoie à sa
+racine noyau (« Racine noyau ↗ ») et la fiche noyau à son enrichissement Budget/Patrimoine.
+
+Parité des parcours (audit ARCH-01, 02, 03, 10) : l'aperçu d'une saisie exécute les constructeurs Budget sur
+une copie de l'état (`om.simulate`) puis lit les mêmes métriques que la synthèse ; le règlement d'une
+échéance passe par un seul contrôleur web (`bpm/ui/settlement.ts`) depuis la ligne rapide comme depuis la
+fiche ; `setupProject` accepte `expectedRevisions` ; le seuil « proche du plafond » n'existe que dans Budget.
+Le relief et les effets visuels viennent des jetons d'ombre (`_tokens.scss`) et de `_elevation.scss`.

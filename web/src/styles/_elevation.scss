@@ -1,0 +1,70 @@
+/*
+ * Relief et effets communs (12 novembre 2026). Les ombres viennent des jetons (--app-panel-shadow, --card-*,
+ * --btn-primary-shadow) ; ce fichier n'ajoute que le mouvement : survol des cartes cliquables, halo des
+ * commandes, entrée des fenêtres. La règle « mouvement réduit » de `_interactions.scss` les neutralise.
+ */
+.app-shell :is(.plan-destination, .plan-entry, .plan-tool, a[data-ui-pattern~='panel']) {
+  transition:
+    border-color var(--ease-fast),
+    background-color var(--ease-fast),
+    box-shadow var(--duree-240) ease,
+    transform var(--duree-240) ease;
+}
+@media (hover: hover) {
+  /* Une carte qui mène ailleurs se soulève ; un panneau de lecture reste posé. */
+  .app-shell :is(.plan-destination, a[data-ui-pattern~='panel']):hover {
+    box-shadow: var(--card-hover-shadow);
+    transform: translateY(var(--card-lift));
+  }
+  .app-shell :is(.plan-entry, .plan-tool):hover:not(:active) {
+    transform: translateY(var(--card-lift));
+  }
+  .app-shell .btn-primary:hover:not(:disabled) {
+    box-shadow: var(--btn-primary-shadow), 0 0 0 var(--ombre-4) color-mix(in srgb, var(--btn-primary-surface) var(--part-18), transparent);
+  }
+  .app-shell .btn-secondary:hover:not(:disabled) {
+    box-shadow: var(--app-panel-shadow);
+  }
+}
+/* Les commandes ne se déplacent pas : l'appui se lit par une ombre rentrée. */
+.app-shell .btn {
+  transition: background-color var(--ease-fast), border-color var(--ease-fast), color var(--ease-fast), box-shadow var(--ease-fast);
+}
+.app-shell .btn:active:not(:disabled) {
+  box-shadow: inset 0 var(--ombre-2) var(--ombre-4) color-mix(in srgb, var(--slate-950) var(--part-20), transparent);
+}
+
+/* Fenêtres : fond flouté et arrivée douce. */
+.modal::backdrop {
+  backdrop-filter: blur(3px);
+}
+.modal[open] {
+  animation: modal-rise var(--duree-240) ease-out;
+}
+@keyframes modal-rise {
+  from { opacity: 0; transform: translateY(var(--ombre-12)) scale(0.985); }
+}
+
+/* Les panneaux arrivent en douceur à l'ouverture d'une page ; l'ordre de lecture ne change pas. */
+.app-shell main :is([data-ui-pattern~='panel'], .bv-card, .plan-zone-card, .plan-page-card, .plan-section-card, .journey-resume) {
+  animation: surface-rise var(--duree-320) ease-out backwards;
+}
+@keyframes surface-rise {
+  from { opacity: 0; transform: translateY(var(--ombre-8)); }
+}
+
+/* Vue d'ensemble BPM : les étapes de la chaîne et les projets de l'arbre réagissent au survol. */
+.app-shell main :is(.ov-stage, .ov-project) {
+  transition: box-shadow var(--duree-240) ease, transform var(--duree-240) ease;
+}
+@media (hover: hover) {
+  .app-shell main :is(.ov-stage, .ov-project):hover {
+    box-shadow: var(--card-hover-shadow);
+    transform: translateY(var(--card-lift));
+  }
+}
+
+/* La colonne de navigation se détache de la page par une ombre fine. */
+.app-shell .sidebar {
+  box-shadow: var(--ombre-8) 0 var(--ombre-24) calc(-1 * var(--ombre-16)) color-mix(in srgb, var(--slate-950) var(--part-25), transparent);
+}

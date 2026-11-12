@@ -92,8 +92,8 @@ describe('commandes contextuelles du bandeau BPM', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: BpmApi, useValue: bpm },
-        { provide: Api, useValue: { closures: async () => [] } },
+        { provide: BpmApi, useValue: { ...bpm, closures: async () => [] } },
+        { provide: Api, useValue: {} },
       ],
     });
     TestBed.overrideComponent(BpmPilotPage, { set: { template: '' } });
@@ -134,16 +134,17 @@ describe('commandes contextuelles du bandeau BPM', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: BpmApi, useValue: { summary: async () => summary() } },
         {
-          provide: Api,
+          provide: BpmApi,
           useValue: {
+            summary: async () => summary(),
             dashboard: async () => dashboard,
             closures: async () => [],
-            bpmCostCenters: async () => [],
+            costCenters: async () => [],
             configureCycle,
           },
         },
+        { provide: Api, useValue: {} },
       ],
     });
     TestBed.overrideComponent(BpmSettings, { set: { template: '' } });

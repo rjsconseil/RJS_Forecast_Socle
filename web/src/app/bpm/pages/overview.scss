@@ -483,9 +483,9 @@
   }
 }
 
-// Les quatre espaces de l'application sur une ligne (deux en largeur moyenne).
+// Les espaces de l'application sur une ligne pleine, quel que soit leur nombre (deux en largeur moyenne).
 .ov-spaces ::ng-deep .plan-page-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 @media (max-width: 1100px) {

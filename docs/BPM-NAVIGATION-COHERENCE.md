@@ -53,7 +53,7 @@ La version apportait deux nouveaux systèmes de repérage, le cadre du haut et l
 
 ## 3. La charte de navigation BPM
 
-Une règle unique : **le plan du site décide de tout**. Il est défini dans `shared/site-plan.ts` (zones → sections → pages → sous-pages → détails). Le menu, le fil d'Ariane, le bandeau, les onglets, le titre de l'onglet du navigateur et l'historique en sont **dérivés**. Aucune page ne les code elle-même.
+Une règle unique : **le plan du site décide de tout**. Il est défini dans `plan/site-plan.ts` (zones → sections → pages → sous-pages → détails). Le menu, le fil d'Ariane, le bandeau, les onglets, le titre de l'onglet du navigateur et l'historique en sont **dérivés**. Aucune page ne les code elle-même.
 
 - **R1. Une vue, une adresse.** Chaque vue a son adresse canonique. Les anciennes adresses (`?view=`, `#ancre`, routes en double) y conduisent par redirection en gardant la période, les filtres et l'ancre (`app.routes.ts` `canonical()`, `bpm/ui/legacy-view.ts`).
 - **R2. Le fil d'Ariane dit où l'on est :** Zone / Section / Page / Objet ouvert / Sous-page ou détail. Une page homonyme de sa section n'est pas répétée. Le dernier élément n'est pas un lien.
@@ -65,7 +65,7 @@ Une règle unique : **le plan du site décide de tout**. Il est défini dans `sh
   - Une page qui a des sous-pages montre sa vue principale (libellé `mainLabel`, par exemple « Suivi des plafonds ») et ses sous-pages, avec les libellés du menu.
   - Sur une fiche objet, les onglets sont « Vue d’ensemble » et les vues de l'objet (« Budget et décisions », « Tâches »).
   - Changer d'onglet garde la période et les filtres de lecture, jamais une saisie ouverte. Sur un écran étroit, l'onglet courant reste visible.
-- **R6. Un objet ouvert est nommé partout.** La page publie son nom par `PageObjectLabels` (`shared/plan-context.ts`). Le fil d'Ariane, le menu, l'historique et le titre affichent alors ce nom, par exemple « Cuisine · parcours complet » ou « Poste Loisirs », à la place d'un libellé générique.
+- **R6. Un objet ouvert est nommé partout.** La page publie son nom par `PageObjectLabels` (`plan/plan-context.ts`). Le fil d'Ariane, le menu, l'historique et le titre affichent alors ce nom, par exemple « Cuisine · parcours complet » ou « Poste Loisirs », à la place d'un libellé générique.
 - **R7. Un seul vocabulaire d'action.**
   - Le glyphe est toujours ＋. On écrit « ＋ Saisir une entrée », « ＋ Saisir une dépense », « ＋ Saisir une entrée ou une dépense », toujours dans l'ordre Entrée puis Dépense.
   - Pour un objet, on écrit « ＋ Créer un projet de la vie », « ＋ Créer un objectif daté », « ＋ Créer une catégorie » ; pour une récurrence, « ＋ Dépense récurrente ».
@@ -74,14 +74,14 @@ Une règle unique : **le plan du site décide de tout**. Il est défini dans `sh
 ## 4. Ce qui a été fait
 
 ### 4.1 Socle partagé (un seul calcul pour tout le cadre)
-- `shared/site-plan.ts` :
+- `plan/site-plan.ts` :
   - `planContext(url, nom)` calcule le fil d'Ariane, le surtitre, le parent, les onglets et le libellé de l'écran courant ;
   - `locate()` reconnaît une fiche projet ;
   - `pageChildren()` imbrique la fiche ouverte et ses vues dans le menu ;
   - ajout de `mainLabel`, des profondeurs de menu et de `projectLink()`.
-- `shared/plan-context.ts` (nouveau) contient `PageObjectLabels`, `injectCurrentUrl()` et `injectPlanContext()`.
-- `shared/page-tabs.component.ts` (nouveau) fournit les onglets du bandeau, partagés par les bandeaux BPM et `app-hero`.
-- `shared/page-workspace.ts` dérive le lien « ↑ » du plan.
+- `plan/plan-context.ts` (nouveau) contient `PageObjectLabels`, `injectCurrentUrl()` et `injectPlanContext()`.
+- `plan/page-tabs.component.ts` (nouveau) fournit les onglets du bandeau, partagés par les bandeaux BPM et `app-hero`.
+- `plan/page-workspace.ts` dérive le lien « ↑ » du plan.
 
 ### 4.2 Cadre
 - `app.ts` construit le fil d'Ariane à partir du plan et transmet le nom de l'objet ouvert au menu.
@@ -91,7 +91,7 @@ Une règle unique : **le plan du site décide de tout**. Il est défini dans `sh
   - affiche les onglets et le lien « ↑ Parent » ;
   - la barre d'outils d'une sous-page s'intitule « Outils · {sous-page} ».
 - `bpm/ui/heading.ts` et `app-hero` affichent le lien hiérarchique « ↑ … » ; le préfixe « Budget/Patrimoine · » disparaît.
-- `bpm/ui/navigation*.ts` : l'historique nomme les fiches et les postes ouverts, et se renomme quand le nom arrive.
+- `plan/journey*.ts` : l'historique nomme les fiches et les postes ouverts, et se renomme quand le nom arrive.
 
 ### 4.3 Pages
 - **Plafonds et catégories** et **Objectifs et avenir** :

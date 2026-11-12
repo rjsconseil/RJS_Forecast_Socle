@@ -2,7 +2,8 @@ import { NavigationLabel, NavigationSurfaceDirective } from '../navigation/navig
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RecetteContext } from '../core/api.service';
 import { RouterLink } from '@angular/router';
-import { PLAN_OVERVIEW_TONE, PLAN_ZONES, PlanSection, PlanZone, planZone, portalBands, sectionEntry, zoneHomeLink, zoneSections } from '../shared/site-plan';
+import { JourneyResume } from '../plan/journey-resume';
+import { PLAN_OVERVIEW_TONE, PLAN_ZONES, PlanSection, PlanZone, planZone, portalBands, sectionEntry, zoneHomeLink, zoneSections } from '../plan/site-plan';
 
 type PortalRow = ReturnType<typeof portalBands>[number];
 
@@ -13,7 +14,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
  */
 @Component({
   selector: 'app-home',
-  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink],
+  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink, JourneyResume],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div navigationSurface="portal" class="page plan-page plan-portal">
@@ -31,6 +32,8 @@ type PortalRow = ReturnType<typeof portalBands>[number];
           }
         </nav>
       </header>
+      <!-- Le parcours unifié (tous modules) : revenir d'un clic à la dernière étape de la séance. -->
+      @if (connected()) { <rjs-journey-resume /> }
 
       @for (group of groups; track $index) {
         <div [class.portal-ecosystem]="group.ecosystem" [class.portal-technical]="!group.ecosystem">
@@ -111,6 +114,7 @@ export class HomePage {
     return parts.length ? parts : null;
   }
   private readonly ctx = inject(RecetteContext);
+  protected readonly connected = this.ctx.connected;
   protected visibleSections(zone: PlanZone) {
     return zoneSections(zone, this.ctx.connected());
   }

@@ -39,7 +39,7 @@ const profile = () => ({
 describe('page dédiée Objectifs et avenir', () => {
   let harness: RouterTestingHarness;
   let bpm: Record<string, ReturnType<typeof vi.fn>>;
-  let api: { updateBpmPatrimoine: ReturnType<typeof vi.fn> };
+  let api: { updatePatrimoine: ReturnType<typeof vi.fn> };
   const element = <T extends HTMLElement>(selector: string) =>
     harness.routeNativeElement!.querySelector<T>(selector)!;
   async function settle() {
@@ -78,7 +78,7 @@ describe('page dédiée Objectifs et avenir', () => {
       createGoal: vi.fn().mockResolvedValue({ replayed: false, goal: { label: 'Voyage' } }),
       updateGoal: vi.fn().mockResolvedValue({}),
     };
-    api = { updateBpmPatrimoine: vi.fn().mockResolvedValue({}) };
+    api = { updatePatrimoine: vi.fn().mockResolvedValue({}) };
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
@@ -86,8 +86,8 @@ describe('page dédiée Objectifs et avenir', () => {
           { path: 'vision/projection', component: BpmObjectivesPage, data: { workspace: { key: 'vision-projection', parent: '/vision', title: 'Projection et hypothèses', lead: 'Préparer mon scénario.' } } },
           { path: 'vision/reperes', component: BpmObjectivesPage, data: { workspace: { key: 'vision-landmarks', parent: '/vision', title: 'Épargne et patrimoine', lead: 'Fixer mes repères.' } } },
         ]),
-        { provide: BpmApi, useValue: bpm },
-        { provide: Api, useValue: api },
+        { provide: BpmApi, useValue: { ...bpm, updatePatrimoine: api.updatePatrimoine } },
+        { provide: Api, useValue: {} },
       ],
     });
     harness = await RouterTestingHarness.create();
@@ -105,7 +105,7 @@ describe('page dédiée Objectifs et avenir', () => {
   it('modifie le cap patrimonial sans modifier le stock ni le budget', async () => {
     await fill('wealthTarget', '45 000,50');
     await submitFor('wealthTarget');
-    expect(api.updateBpmPatrimoine).toHaveBeenCalledWith({
+    expect(api.updatePatrimoine).toHaveBeenCalledWith({
       expectedRevision: 4,
       objective: 45000.5,
     });
@@ -126,13 +126,13 @@ describe('page dédiée Objectifs et avenir', () => {
       expectedRevision: 9,
       surplus: { target: 1200, periods: 6, startKey: '2026-11' },
     });
-    expect(api.updateBpmPatrimoine).not.toHaveBeenCalled();
+    expect(api.updatePatrimoine).not.toHaveBeenCalled();
   });
   it('refuse les montants invalides et conserve la saisie après un échec', async () => {
     await fill('wealthTarget', '-5');
     await submitFor('wealthTarget');
-    expect(api.updateBpmPatrimoine).not.toHaveBeenCalled();
-    api.updateBpmPatrimoine.mockRejectedValueOnce(new Error('Échec de connexion'));
+    expect(api.updatePatrimoine).not.toHaveBeenCalled();
+    api.updatePatrimoine.mockRejectedValueOnce(new Error('Échec de connexion'));
     await fill('wealthTarget', '42000');
     await submitFor('wealthTarget');
     expect(element<HTMLInputElement>('input[name="wealthTarget"]').value).toBe('42000');
@@ -219,7 +219,7 @@ describe('page dédiée Objectifs et avenir', () => {
     await harness.navigateByUrl('/vision/reperes');
     await settle();
     expect(element<HTMLInputElement>('input[name="wealthTarget"]').value).toBe('48000');
-    expect(api.updateBpmPatrimoine).not.toHaveBeenCalled();
+    expect(api.updatePatrimoine).not.toHaveBeenCalled();
   });
   it('ouvre le scénario depuis le bandeau et réutilise la saisie sans formulaire concurrent', async () => {
     await harness.navigateByUrl('/vision?q=etudes');
@@ -245,7 +245,7 @@ describe('page dédiée Objectifs et avenir', () => {
     await fill('wealthTarget', '49000');
     expect(element('.bpm-toolbar-focus').textContent).toContain('repère non enregistré');
     await click('Enregistrer le cap saisi');
-    expect(api.updateBpmPatrimoine).toHaveBeenCalledWith({ expectedRevision: 4, objective: 49000 });
+    expect(api.updatePatrimoine).toHaveBeenCalledWith({ expectedRevision: 4, objective: 49000 });
     expect(bpm['updateVision']).not.toHaveBeenCalled();
   });
 
@@ -283,7 +283,7 @@ describe('page dédiée Objectifs et avenir', () => {
     expect(element('.page-toolbar-scope').textContent).toContain('Cap patrimonial');
     await click('Enregistrer le cap saisi');
     await vi.waitFor(async () => { await settle(); expect(element('.page-toolbar-result').textContent).toContain('Cap patrimonial enregistré'); });
-    expect(api.updateBpmPatrimoine).toHaveBeenCalledWith({ expectedRevision: 4, objective: 51000 });
+    expect(api.updatePatrimoine).toHaveBeenCalledWith({ expectedRevision: 4, objective: 51000 });
     expect(bpm['updateVision']).not.toHaveBeenCalled();
   });
 

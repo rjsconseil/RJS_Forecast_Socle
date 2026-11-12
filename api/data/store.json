@@ -1,124 +1,8 @@
 {
   "schemaVersion": "socle-store/0.6",
-  "revision": 2531,
-  "updatedAt": "2026-11-12T13:07:50.456Z",
+  "revision": 2541,
+  "updatedAt": "2026-11-12T14:11:42.326Z",
   "journal": [
-    {
-      "at": "2026-11-06T11:50:44.817Z",
-      "command": "createOperation",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-de18b44e-0224-4772-a4d2-5ed0677528ac",
-      "created": [
-        "op_8aa40a41-f311-4d92-90d2-6d57f62c10b4"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:44.882Z",
-      "command": "requestTaskBudget",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-ff5a2524-d1a3-4b22-b05f-837309176d6c",
-      "created": [
-        "dmt_726808db-1fb8-4497-9f94-10a64404b677"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:44.955Z",
-      "command": "decideTaskBudget",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": null,
-      "created": [
-        "ovr_8eda892d-8005-4e7c-8f05-b40629794c79"
-      ],
-      "updated": [
-        "dmt_726808db-1fb8-4497-9f94-10a64404b677"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:45.025Z",
-      "command": "decideProjectOverrun",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": null,
-      "created": [],
-      "updated": [
-        "ovr_8eda892d-8005-4e7c-8f05-b40629794c79",
-        "dmt_726808db-1fb8-4497-9f94-10a64404b677"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:45.116Z",
-      "command": "requestTaskBudget",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-2b287536-a87a-4b11-ae9e-602f230035f6",
-      "created": [
-        "dmt_1bfcff88-031d-4fb0-a899-09f480dc3f90"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:45.202Z",
-      "command": "createBpmProject",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-2875342b-ca14-4cab-ae07-f6b5c44c25d8",
-      "created": [
-        "prj_d773e730-3630-4f66-9dc5-3e4f8a1a90c0",
-        "bud_6a9254ba-05ff-402f-8d7d-85d1f7303707"
-      ],
-      "updated": [
-        "bud_6a9254ba-05ff-402f-8d7d-85d1f7303707"
-      ],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:45.288Z",
-      "command": "createBpmTask",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-7f0763d3-77da-4ef4-b0b3-d5649e45fdb0",
-      "created": [
-        "tsk_61588aea-478e-4246-9788-f281d768004c"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:45.372Z",
-      "command": "createBpmTask",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-5da1f677-5e14-4d51-98c7-ed8a99fe7dc5",
-      "created": [
-        "tsk_28558027-949d-427e-8f55-0c7e33fde886"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:45.441Z",
-      "command": "createBpmTask",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-50eb1fba-e74a-42ad-b3d3-2d9aa1c5fd30",
-      "created": [
-        "tsk_8f0a643d-f55e-4905-b3c3-a6b319beaaab"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
-    {
-      "at": "2026-11-06T11:50:45.512Z",
-      "command": "createOperation",
-      "userId": "usr_e2bf7e89-b7f9-4213-b630-492f3d9d2e51",
-      "requestKey": "recette-bpm-270571a7-0163-41e4-a943-70ee3d182a2e",
-      "created": [
-        "op_eee8d102-ce5f-4666-a15a-cc774da3b03f"
-      ],
-      "updated": [],
-      "outcome": "committed"
-    },
     {
       "at": "2026-11-06T11:50:45.613Z",
       "command": "createOperation",
@@ -22631,6 +22515,116 @@
     },
     {
       "at": "2026-11-12T13:07:50.456Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:09:45.814Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:09:48.091Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:09:49.305Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:09:51.612Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:10:39.812Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:11:15.667Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:11:28.780Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:11:31.033Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:11:32.222Z",
+      "command": "configureNavigation",
+      "userId": null,
+      "requestKey": null,
+      "created": [],
+      "updated": [
+        "navigation.presentation"
+      ],
+      "outcome": "committed"
+    },
+    {
+      "at": "2026-11-12T14:11:42.326Z",
       "command": "configureNavigation",
       "userId": null,
       "requestKey": null,
@@ -551966,8 +551960,8 @@
         "scopes": {}
       },
       "isDefault": false,
-      "revision": 22,
-      "updatedAt": "2026-11-12T13:07:50.456Z",
+      "revision": 32,
+      "updatedAt": "2026-11-12T14:11:42.326Z",
       "history": [
         {
           "revision": 1,
@@ -552868,6 +552862,400 @@
             "scopes": {}
           },
           "at": "2026-11-12T13:07:50.456Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              },
+              "page:/vision": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 24
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "revision": 23,
+          "value": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "at": "2026-11-12T14:09:45.814Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {}
+          }
+        },
+        {
+          "revision": 24,
+          "value": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              }
+            }
+          },
+          "at": "2026-11-12T14:09:48.091Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "revision": 25,
+          "value": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              },
+              "page:/vision": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 24
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "at": "2026-11-12T14:09:49.305Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              }
+            }
+          }
+        },
+        {
+          "revision": 26,
+          "value": {
+            "version": 1,
+            "scopes": {}
+          },
+          "at": "2026-11-12T14:09:51.612Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              },
+              "page:/vision": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 24
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "revision": 27,
+          "value": {
+            "version": 1,
+            "scopes": {
+              "module:bpm": {
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              }
+            }
+          },
+          "at": "2026-11-12T14:10:39.812Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {}
+          }
+        },
+        {
+          "revision": 28,
+          "value": {
+            "version": 1,
+            "scopes": {}
+          },
+          "at": "2026-11-12T14:11:15.667Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {
+              "module:bpm": {
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              }
+            }
+          }
+        },
+        {
+          "revision": 29,
+          "value": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "at": "2026-11-12T14:11:28.780Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {}
+          }
+        },
+        {
+          "revision": 30,
+          "value": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              }
+            }
+          },
+          "at": "2026-11-12T14:11:31.033Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "revision": 31,
+          "value": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              },
+              "page:/vision": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 24
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "at": "2026-11-12T14:11:32.222Z",
+          "note": null,
+          "previous": {
+            "version": 1,
+            "scopes": {
+              "site": {
+                "styles": {
+                  "primary": {
+                    "section": {
+                      "size": 19
+                    }
+                  }
+                }
+              },
+              "module:bpm": {
+                "styles": {
+                  "primary": {
+                    "page": {
+                      "size": 21
+                    }
+                  }
+                },
+                "labels": {
+                  "/tableau-de-bord": "Mon budget quotidien"
+                }
+              }
+            }
+          }
+        },
+        {
+          "revision": 32,
+          "value": {
+            "version": 1,
+            "scopes": {}
+          },
+          "at": "2026-11-12T14:11:42.326Z",
           "note": null,
           "previous": {
             "version": 1,

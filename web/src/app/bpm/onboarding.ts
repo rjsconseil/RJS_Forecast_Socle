@@ -6,7 +6,7 @@ import { Api, newRequestKey, RecetteContext, toApiError, UserDirectory } from '.
 import { UserType } from '../core/models';
 import { euros, parseAmount, shortDate } from '../core/format';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 
 type Field = 'label' | 'userType' | 'openingStock' | 'openingDate' | 'objective' | 'anchorDay' | 'cycleStartDate';
 
@@ -545,7 +545,7 @@ export class BpmOnboarding implements OnInit {
       // Depuis « Démarrer un projet », le projet de vie créé se poursuit dans sa gestion, seul lieu de modification.
       await this.router.navigate([this.startLife() ? '/projet-de-vie' : '/app'], {
         state: {
-          bpmNotice: cycleReady
+          journeyNotice: cycleReady
             ? `Utilisateur « ${label} » créé avec son projet de vie.`
             : `Utilisateur « ${label} » créé avec son projet de vie. Réglez son cycle et son budget dans la gestion du projet de vie.`,
         },

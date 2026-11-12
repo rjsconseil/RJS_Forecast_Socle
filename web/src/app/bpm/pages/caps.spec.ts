@@ -16,6 +16,7 @@ const center = (ref: string, label: string, capCents: number | null): ReviewCent
   marginCents: capCents,
   usedPct: capCents === null ? null : 0,
   over: false,
+  near: false,
   lineCount: 0,
   chargeIds: [],
 });

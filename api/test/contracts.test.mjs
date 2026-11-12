@@ -229,10 +229,30 @@ test('aperçu d’une saisie : avant/après du solde attendu et du stock estimé
   const { ctx } = await camille(socle);
   await operation(socle, ctx, { direction: 'income', amount: 1000, date: '2026-11-01' });
   const rev = socle.state.revision;
-  const p = reads(socle).previewEntry(ctx, { direction: 'charge', amount: 50, cadence: 'weekly', firstDate: '2026-11-02' });
+  const p = reads(socle).previewEntry(ctx, { direction: 'charge', amount: 50, cadence: 'weekly', firstDate: '2026-11-02', costCenterRef: 'std:divers' });
   assert.deepEqual([p.before.expectedCents, p.after.expectedCents, p.before.stockEstimateCents, p.after.stockEstimateCents, p.mutation], [100000, 75000, 1300000, 1275000, false]);
   await rejects(async () => reads(socle).previewEntry(ctx, { direction: 'charge', amount: 50, date: '2026-02-30' }), 'VALIDATION');
   assert.equal(socle.state.revision, rev);
+});
+
+test('aperçu d’une saisie : même effet que l’écriture, y compris dans un projet sans enveloppe (ARCH-01)', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  await operation(socle, ctx, { direction: 'income', amount: 1000, date: '2026-11-01' });
+  const unfunded = await socle.modules.bpm.projects.createProject(ctx, { requestKey: key(), title: 'Plus tard', amount: null });
+  const entries = [
+    { direction: 'charge', label: 'Courses', amount: 80, date: '2026-11-10', costCenterRef: 'std:divers' },
+    { direction: 'charge', label: 'Loyer', amount: 50, cadence: 'weekly', firstDate: '2026-11-02', costCenterRef: 'std:divers' },
+    { direction: 'charge', label: 'Matériaux', amount: 100, date: '2026-11-12', budgetId: unfunded.budgetId, costCenterRef: 'std:divers' },
+  ];
+  for (const entry of entries) {
+    const rev = socle.state.revision;
+    const p = reads(socle).previewEntry(ctx, entry);
+    assert.equal(socle.state.revision, rev, 'aperçu sans écriture');
+    await socle.modules.budget.createEntry(ctx, { requestKey: key(), ...entry });
+    const f = reads(socle).summary(ctx).figures;
+    assert.deepEqual([p.after.expectedCents, p.after.netCents], [f['bpm.soldeAttendu'].valueCents, f['bpm.resultatPeriode'].valueCents], entry.label);
+  }
 });
 
 test('directives : « non calculable » avec raison, puis épargne et disponible avec hypothèses', async () => {
@@ -289,6 +309,17 @@ test('Partir de zéro (principal) : configuration en une commande rejouable, bud
   await bpm.setupProject(ctx, { requestKey: key('setup'), mode: 'principal', entries: [{ recurrenceId: salaire.id, amount: 2600 }] });
   assert.equal(Object.keys(socle.state.recurrences).length, 2, 'mise à jour sans recréation');
   assert.equal(socle.state.recurrences[salaire.id].amountCents, 260000);
+});
+
+test('Partir de zéro : une révision périmée du formulaire refuse toute la commande (ARCH-03)', async () => {
+  const { socle } = await makeSocle();
+  const { ctx, bundle } = await makeUser(socle, { label: 'Nouveau' });
+  const { patrimoineId } = bundle;
+  const seen = socle.state.patrimoines[patrimoineId].revision;
+  await socle.modules.bpm.setupProject(ctx, { requestKey: key('setup'), mode: 'principal', patrimoine: { openingStock: 5000 }, expectedRevisions: { [patrimoineId]: seen } });
+  const rev = socle.state.revision;
+  await rejects(socle.modules.bpm.setupProject(ctx, { requestKey: key('setup'), mode: 'principal', patrimoine: { openingStock: 9000 }, expectedRevisions: { [patrimoineId]: seen } }), 'STALE_VERSION');
+  assert.equal(socle.state.revision, rev, 'aucune écriture partielle');
 });
 
 test('Partir de zéro (branche) : Budget standard, racine propre, ≥ 1 tâche, aucun Patrimoine ; tout ou rien', async () => {

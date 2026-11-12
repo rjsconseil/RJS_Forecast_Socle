@@ -1,15 +1,15 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ModalComponent } from '../../shared/modal.component';
-import { BpmNavigationComponent } from './navigation';
+import { JourneyBar } from '../../plan/journey';
 
 /** Une fenêtre BPM reste une étape du parcours, avec les mêmes retours que la page. */
 @Component({
   selector: 'bpm-modal',
-  imports: [ModalComponent, BpmNavigationComponent],
+  imports: [ModalComponent, JourneyBar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rjs-modal [open]="open()" [title]="title()" [busy]="busy()" [wide]="wide()" [headed]="headed()" (closed)="closed.emit()">
-      <bpm-navigation class="modal-journey" [compact]="true" [blocked]="busy()" />
+      <rjs-journey class="modal-journey" [compact]="true" [blocked]="busy()" />
       <ng-content />
     </rjs-modal>
   `,

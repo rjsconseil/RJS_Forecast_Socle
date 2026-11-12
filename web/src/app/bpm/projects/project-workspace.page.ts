@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { injectPageWorkspace } from '../../shared/page-workspace';
+import { injectPageWorkspace } from '../../plan/page-workspace';
 import { TASK_STATUS_LABEL } from '../../core/models';
 import { BpmPageBanner, BpmPageContext, BpmPageFocus, bpmQueryState } from '../ui';
 import { BpmProjectManagementPage } from './management.page';
@@ -176,7 +176,7 @@ export class BpmProjectWorkspacePage extends BpmProjectManagementPage {
   protected projectCreated(project: { projectId: string; title: string }) {
     this.navigation.completeFlow((url) => /^\/app\/gestion-projet\/nouveau(?:[?#]|$)/.test(url));
     void this.workspaceRouter.navigate(['/app/gestion-projet', project.projectId], {
-      state: { bpmNotice: `Projet « ${project.title} » créé.` },
+      state: { journeyNotice: `Projet « ${project.title} » créé.` },
     });
   }
   protected assignTask(taskId: string) {

@@ -2,6 +2,7 @@ import { Component, computed, effect, ElementRef, inject, input, signal, untrack
 import { JsonPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Api, ApiError, RecetteContext, toApiError } from '../core/api.service';
+import { BpmApi } from '../core/bpm-api.service';
 import { FigureEvaluation, FormulaReference, MetricCatalog, MetricDefinitionRow, Period } from '../core/models';
 import { CalcTrace } from '../shared/calc-trace';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
@@ -192,6 +193,7 @@ import { functionDoc } from './metrics';
 export class MetricEditor {
   readonly key = input.required<string>();
   private api = inject(Api);
+  private bpm = inject(BpmApi);
   protected ctx = inject(RecetteContext);
   private editor = viewChild<ElementRef<HTMLTextAreaElement>>('editor');
 
@@ -265,7 +267,7 @@ export class MetricEditor {
     this.periodKey.set('');
     if (!userId) return;
     try {
-      const dash = await this.api.dashboard();
+      const dash = await this.bpm.dashboard();
       this.periods.set(dash.cycle?.periods ?? []);
     } catch {
       // Sans cycle configuré, l'aperçu porte sur la période courante calculée par l'API.

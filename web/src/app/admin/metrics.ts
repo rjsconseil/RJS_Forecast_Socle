@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Api, toApiError } from '../core/api.service';
 import { FormulaReference, MetricCatalog, MetricDefinitionRow } from '../core/models';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 
 /** Documentation d'une ligne des fonctions admises dans une formule. */
 export const FUNCTION_DOCS: Record<string, { signature: string; doc: string }> = {

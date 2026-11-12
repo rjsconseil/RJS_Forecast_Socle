@@ -21,9 +21,9 @@ describe('réglages BPM spécialisés', () => {
     dashboard = initial();
     api = {
       dashboard: vi.fn(async () => dashboard),
-      closures: vi.fn(async () => []), bpmCostCenters: vi.fn(async () => []),
+      closures: vi.fn(async () => []), costCenters: vi.fn(async () => []),
       configureCycle: vi.fn(async (body) => { dashboard = { ...dashboard, cycle: { ...dashboard.cycle, anchorDay: body.anchorDay, revision: 5 } }; return dashboard; }),
-      updateBpmPatrimoine: vi.fn(async (body) => { dashboard = { ...dashboard, patrimoine: { ...dashboard.patrimoine, openingStock: body.openingStock, revision: 4 } }; }),
+      updatePatrimoine: vi.fn(async (body) => { dashboard = { ...dashboard, patrimoine: { ...dashboard.patrimoine, openingStock: body.openingStock, revision: 4 } }; }),
       addCostCenter: vi.fn(async () => ({ costCenters: [{ ref: 'personal', standard: false, label: 'Honoraires', direction: 'income', directionLabel: 'Revenus' }] })),
     };
     const context = { user: { label: 'Profil test' }, budgets: [], period: null, calculationDate: '2026-11-07' };
@@ -34,7 +34,7 @@ describe('réglages BPM spécialisés', () => {
         { path: 'app/reglages/patrimoine', component: BpmSettings, data: { workspace: { key: 'settings-wealth', parent: '/app/reglages', title: 'Point de départ du patrimoine', lead: 'Définir le stock initial.' } } },
         { path: 'app/reglages/postes', component: BpmSettings, data: { workspace: { key: 'settings-centers', parent: '/app/reglages', title: 'Postes et revenus', lead: 'Organiser les saisies.' } } },
       ]),
-      { provide: Api, useValue: api }, { provide: BpmApi, useValue: { summary: async () => ({ context }) } },
+      { provide: Api, useValue: {} }, { provide: BpmApi, useValue: { ...api, summary: async () => ({ context }) } },
     ] });
     TestBed.inject(RecetteContext).select('settings-specialized-test', { remember: false });
     harness = await RouterTestingHarness.create();
@@ -50,7 +50,7 @@ describe('réglages BPM spécialisés', () => {
     for (const selector of visible) expect(dom().querySelector(selector)).toBeTruthy();
     for (const selector of absent) expect(dom().querySelector(selector)).toBeNull();
     expect(api['configureCycle']).not.toHaveBeenCalled();
-    expect(api['updateBpmPatrimoine']).not.toHaveBeenCalled();
+    expect(api['updatePatrimoine']).not.toHaveBeenCalled();
   });
 
   it('enregistre le patrimoine depuis sa vue sans proposer une saisie cachée du cycle', async () => {
@@ -63,7 +63,7 @@ describe('réglages BPM spécialisés', () => {
     expect(dom().querySelector('.bpm-toolbar-primary')!.textContent).not.toContain('Enregistrer le cycle');
     dom().querySelector('#bpm-wealth-settings')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
-    expect(api['updateBpmPatrimoine']).toHaveBeenCalledWith({ expectedRevision: 3, openingStock: 1250, openingDate: '2026-11-01', objective: null });
+    expect(api['updatePatrimoine']).toHaveBeenCalledWith({ expectedRevision: 3, openingStock: 1250, openingDate: '2026-11-01', objective: null });
     expect(api['configureCycle']).not.toHaveBeenCalled();
     expect(page.cAnchor()).toBe('5');
   });
@@ -78,7 +78,7 @@ describe('réglages BPM spécialisés', () => {
     await settle();
     expect(dom().querySelector<HTMLInputElement>('#bpm-wealth-settings input')!.value).toBe('1750');
     expect(dom().querySelector('.bpm-toolbar-primary')!.textContent).toContain('Enregistrer le patrimoine');
-    expect(api['updateBpmPatrimoine']).not.toHaveBeenCalled();
+    expect(api['updatePatrimoine']).not.toHaveBeenCalled();
   });
 
   it('ajoute une source personnelle dans la vue Postes avec la commande métier existante', async () => {

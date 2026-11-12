@@ -9,9 +9,9 @@ import {
 import { RouterLink } from '@angular/router';
 import { PageHeroDirective } from './page-hero.directive';
 import { PageFocus, PageResult, PageToolbar } from './page-toolbar.component';
-import { injectPageWorkspace, injectWorkspaceReturn } from './page-workspace';
-import { injectCurrentUrl, injectPlanContext } from './plan-context';
-import { PageTabs } from './page-tabs.component';
+import { injectPageWorkspace, injectWorkspaceReturn } from '../plan/page-workspace';
+import { injectCurrentUrl, injectPlanContext } from '../plan/plan-context';
+import { PageTabs } from '../plan/page-tabs.component';
 
 export interface HeroChip {
   label: string;

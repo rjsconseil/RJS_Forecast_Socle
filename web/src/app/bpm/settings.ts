@@ -1,8 +1,8 @@
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 import { BpmDrafts } from './ui/drafts';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Api, ApiError, newRequestKey, toApiError } from '../core/api.service';
+import { ApiError, newRequestKey, toApiError } from '../core/api.service';
 import { BpmDashboard, Closure, CostCenter, Direction } from '../core/models';
 import { BpmApi } from '../core/bpm-api.service';
 import { CentsPipe, euros, parseAmount, ShortDatePipe } from '../core/format';
@@ -671,7 +671,6 @@ export class BpmSettings implements OnInit {
   protected showCycle = computed(() => !this.workspace() || this.workspace()?.key === 'settings-cycle');
   protected showPatrimoine = computed(() => !this.workspace() || this.workspace()?.key === 'settings-wealth');
   protected showCenters = computed(() => !this.workspace() || this.workspace()?.key === 'settings-centers');
-  private api = inject(Api);
   private bpmApi = inject(BpmApi);
   /** Contexte du bandeau commun (user, périmètre, période, date de calcul), en lecture seule. */
   protected summary = bpmLoader(
@@ -825,9 +824,9 @@ export class BpmSettings implements OnInit {
     this.loadError.set(null);
     try {
       const [d, closures, centers] = await Promise.all([
-        this.api.dashboard(),
-        this.api.closures(),
-        this.api.bpmCostCenters(),
+        this.bpmApi.dashboard(),
+        this.bpmApi.closures(),
+        this.bpmApi.costCenters(),
       ]);
       this.dash.set(d);
       this.setClosures(closures);
@@ -904,7 +903,7 @@ export class BpmSettings implements OnInit {
     this.cycleSaving.set(true);
     this.cycleError.set(null);
     try {
-      const next = await this.api.configureCycle({
+      const next = await this.bpmApi.configureCycle({
         anchorDay,
         startDate: this.cStart() || null,
         expectedRevision: d.cycle.revision,
@@ -921,7 +920,7 @@ export class BpmSettings implements OnInit {
 
   async reloadCycle() {
     try {
-      const d = await this.api.dashboard();
+      const d = await this.bpmApi.dashboard();
       this.dash.set(d);
       this.fillCycle(d);
       this.cycleError.set(null);
@@ -950,13 +949,13 @@ export class BpmSettings implements OnInit {
     this.patSaving.set(true);
     this.patError.set(null);
     try {
-      await this.api.updateBpmPatrimoine({
+      await this.bpmApi.updatePatrimoine({
         expectedRevision: d.patrimoine.revision,
         openingStock: stock,
         openingDate: this.pDate() || null,
         objective,
       });
-      const fresh = await this.api.dashboard();
+      const fresh = await this.bpmApi.dashboard();
       this.dash.set(fresh);
       this.fillPatrimoine(fresh);
       this.patSaved.set(true);
@@ -969,7 +968,7 @@ export class BpmSettings implements OnInit {
 
   async reloadPatrimoine() {
     try {
-      const d = await this.api.dashboard();
+      const d = await this.bpmApi.dashboard();
       this.dash.set(d);
       this.fillPatrimoine(d);
       this.patError.set(null);
@@ -981,7 +980,7 @@ export class BpmSettings implements OnInit {
   /** Conserve la saisie et adopte seulement la nouvelle version comme base. */
   async rebasePatrimoine() {
     try {
-      this.dash.set(await this.api.dashboard());
+      this.dash.set(await this.bpmApi.dashboard());
       this.patError.set(null);
     } catch (err) {
       this.patError.set(toApiError(err));
@@ -997,7 +996,7 @@ export class BpmSettings implements OnInit {
     this.ccSaving.set(true);
     this.ccError.set(null);
     try {
-      const r = await this.api.addCostCenter({
+      const r = await this.bpmApi.addCostCenter({
         requestKey: this.ccRequestKey,
         label,
         direction: this.ccDirection(),

@@ -10,9 +10,10 @@ describe('plafonds de dépenses', () => {
     marginCents: capCents === null ? null : capCents - engagedCents,
     usedPct: capCents ? Math.round((engagedCents / capCents) * 1000) / 10 : null,
     over: capCents !== null && engagedCents > capCents,
+    near: capCents !== null && engagedCents <= capCents && engagedCents >= capCents * 0.85,
   });
 
-  it('classe un niveau : sans plafond, dans le plafond, proche (≥ 85 %), dépassé', () => {
+  it('classe un niveau selon les drapeaux du middleware : sans plafond, dans le plafond, proche, dépassé', () => {
     expect(capTone(m(null, 5000))).toBe('none');
     expect(capTone(m(10000, 5000))).toBe('ok');
     expect(capTone(m(10000, 8500))).toBe('near');

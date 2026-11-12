@@ -908,46 +908,26 @@ export function createReads(socle, h) {
 
   // ---------- aperçu d'une saisie (aucune mutation) ----------
 
+  /** Même constructeur Budget que l'écriture, sur une copie de l'état, puis mêmes métriques que la synthèse (audit ARCH-01). */
   function previewEntry(ctx, input = {}) {
     const b = base(ctx);
     if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période pour l’aperçu.');
-    const direction = oneOf('direction', input.direction, ['income', 'charge']);
     const cadence = oneOf('cadence', input.cadence, ['once', ...CADENCES], 'once');
-    const amountCents = money('amount', input.amount, { positive: true });
-    const { start, end } = b.period;
-    let plannedInPeriod = 0;
-    let realizedInPeriod = 0;
-    if (cadence === 'once') {
-      const d = date('date', input.date, { required: true });
-      const realized = input.status === 'realized';
-      const rd = realized ? date('realizedDate', input.realizedDate ?? d, { required: true }) : null;
-      if (rd && rd > today()) fail('FUTURE_REALIZATION', 'Date de réalisation dans le futur.', { field: 'realizedDate' });
-      const realCents = realized ? money('realizedAmount', input.realizedAmount ?? amountCents / 100, { positive: true }) : 0;
-      if (realized && rd >= start && rd <= end) realizedInPeriod = realCents;
-      else if (!realized && d >= start && d <= end) plannedInPeriod = amountCents;
-    } else {
-      const firstDate = date('firstDate', input.firstDate ?? input.date, { required: true });
-      const endDate = date('endDate', input.endDate);
-      const fake = { cadence, firstDate, endDate };
-      // Occurrences de la période : attendues tant qu'elles ne sont pas réglées.
-      plannedInPeriod = occurrenceDates(fake, start, end).length * amountCents;
-    }
-    const s = sign(direction);
-    const sm = summary(ctx);
-    const exp = sm.figures['bpm.soldeAttendu'].valueCents;
-    const net = sm.figures[RESULT].valueCents;
-    const stock = sm.figures['bpm.patrimoineConstitue'].valueCents;
-    const after = {
-      netCents: net === null ? null : net + s * realizedInPeriod,
-      expectedCents: exp === null ? null : exp + s * (realizedInPeriod + plannedInPeriod),
+    const entry = { ...input, label: input.label || 'Aperçu', budgetId: input.budgetId || b.comp.budgetId };
+    const { draft } = om.simulate('previewEntry', ctx, entry, (tx) => (cadence === 'once' ? budget().buildOperation(tx, entry) : budget().buildRecurrence(tx, entry)));
+    const keys = ['bpm.soldeAttendu', RESULT, 'bpm.patrimoineConstitue'];
+    const read = (state) => {
+      const { figures } = h.figuresFor(state, b.userId, keys, { periodKey: b.period.key });
+      const [expectedCents, netCents, stock] = keys.map((k) => cents(figures[k].value));
+      return { netCents, expectedCents, stockEstimateCents: stock === null || expectedCents === null ? null : stock + expectedCents };
     };
+    const before = read(b.state);
     return {
-      context: sm.context,
+      context: contextOf(b),
       mutation: false,
-      before: { netCents: net, expectedCents: exp, stockEstimateCents: stock === null || exp === null ? null : stock + exp },
-      after: { ...after, stockEstimateCents: stock === null || after.expectedCents === null ? null : stock + after.expectedCents },
-      effectInPeriod: { plannedCents: plannedInPeriod, realizedCents: realizedInPeriod },
-      note: stock === null ? 'Stock à renseigner : estimation du Patrimoine non calculable.' : null,
+      before,
+      after: read(draft),
+      note: before.stockEstimateCents === null && before.expectedCents !== null ? 'Stock à renseigner : estimation du Patrimoine non calculable.' : null,
     };
   }
 

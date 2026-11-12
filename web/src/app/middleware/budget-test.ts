@@ -5,7 +5,7 @@ import { Api, ApiError, newRequestKey, RecetteContext, toApiError } from '../cor
 import { BudgetObject, CostCenter, Direction, Operation } from '../core/models';
 import { EurosPipe, parseAmount } from '../core/format';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 
 interface OperationForm {
   budgetId: string;

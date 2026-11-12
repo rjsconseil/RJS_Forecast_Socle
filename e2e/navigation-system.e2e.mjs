@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { mkdir } from 'node:fs/promises';
-const { chromium } = createRequire(import.meta.url)('/usr/lib/chatgpt/resources/cua_node/lib/node_modules/playwright/index.js');
+// Playwright du poste d'abord, sinon celui de l'environnement d'origine (même repli que bpm-navigation).
+let playwright;
+try { playwright = await import('playwright'); }
+catch { playwright = createRequire(import.meta.url)('/usr/lib/chatgpt/resources/cua_node/lib/node_modules/playwright/index.js'); }
+const { chromium } = playwright;
 const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
-const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH ?? '/opt/google/chrome/chrome', args: ['--no-sandbox'] });
+const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH ?? (existsSync('/opt/google/chrome/chrome') ? '/opt/google/chrome/chrome' : undefined), args: ['--no-sandbox'] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
 page.setDefaultTimeout(10000);
@@ -48,9 +53,9 @@ try {
   assert.notEqual(headingSize, '21px', 'Le contenu ne doit pas adopter la taille de navigation');
   await page.locator('.section-page-link[href="/vision"]').click();
   await page.waitForURL('**/vision');
-  await page.locator('bpm-navigation .nav-back').first().click();
+  await page.locator('rjs-journey .nav-back').first().click();
   await page.waitForURL('**/tableau-de-bord');
-  await page.locator('bpm-navigation .nav-forward').first().click();
+  await page.locator('rjs-journey .nav-forward').first().click();
   await page.waitForURL('**/vision');
   assert.equal(await css('.section-page-link', 'font-size'), '24px');
   await open('/socle/budget');

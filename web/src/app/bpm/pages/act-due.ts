@@ -2,22 +2,19 @@ import { Component, computed, inject, input, OnInit, output, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import { ApiError, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
+import { CapAlert } from '../../core/bpm-caps.models';
 import { BpmDue, RegisterLine } from '../../core/bpm-models';
 import { Operation } from '../../core/models';
-import { cents, CentsPipe, parseAmount, shortDate, ShortDatePipe, SignedCentsPipe } from '../../core/format';
-import { BpmRefresh, BpmState, Loader, newRequestKey } from '../ui';
-
-/** Date locale du jour (AAAA-MM-JJ). */
-export function localToday() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
+import { localToday } from '../../calendar/calendar-dates';
+import { cents, CentsPipe, shortDate, ShortDatePipe, SignedCentsPipe } from '../../core/format';
+import { BpmRefresh, BpmState, capAlertText, Loader, Settlement } from '../ui';
 
 /** Dernier règlement fait depuis ce panneau : son annulation reste proposée selon les règles. */
 export interface SettledNotice {
   label: string;
   direction: 'income' | 'charge';
   operation: Operation;
+  capAlerts?: CapAlert[];
 }
 
 /**
@@ -49,13 +46,19 @@ export interface SettledNotice {
         <form class="settle" (ngSubmit)="settle()" [attr.aria-label]="'Régler : ' + line().label">
           <label class="field"><span>Date réelle</span><input type="date" name="d" [(ngModel)]="realDate" [max]="today" /></label>
           <label class="field"><span>Montant réel (€)</span><input name="a" inputmode="decimal" class="num" [(ngModel)]="realAmount" /></label>
-          <button type="submit" class="btn btn-primary small" [disabled]="busy()">{{ busy() ? '…' : line().direction === 'income' ? 'Reçu' : 'Payé' }}</button>
+          <button type="submit" class="btn btn-primary small" [disabled]="busy()">{{ busy() ? '…' : confirmation() ? 'Confirmer malgré l’alerte' : line().direction === 'income' ? 'Reçu' : 'Payé' }}</button>
         </form>
       }
       <button type="button" class="btn btn-secondary small" (click)="open.emit(line())">Détail</button>
     </div>
+    @if (!done() && message(); as m) {
+      <p class="bpm-feedback is-warning" [attr.role]="confirmation() ? 'alert' : 'status'">{{ m }}</p>
+    }
     @if (error(); as e) {
-      <p class="bpm-error" role="alert">{{ e.message }} Votre saisie est conservée.</p>
+      <p class="bpm-error" role="alert">
+        {{ e.message }} Votre saisie est conservée.
+        @if (fundable()) { <button type="button" class="btn btn-secondary small" (click)="open.emit(line())">Résoudre dans le détail</button> }
+      </p>
     }
   `,
   styles: `
@@ -68,59 +71,38 @@ export interface SettledNotice {
     .ops, .settle { display: flex; flex-wrap: wrap; gap: var(--ecart-8); align-items: flex-end; }
     .ops { grid-column: 1 / -1; justify-content: flex-end; }
     .settle .field { flex: 1 1 8rem; }
-    .bpm-error { grid-column: 1 / -1; }
+    .bpm-error, .bpm-feedback { grid-column: 1 / -1; }
     @media (max-width: 640px) { :host { grid-template-columns: minmax(0, 1fr) auto; } .bp-pending-date { grid-column: 1 / -1; } }
   `,
 })
 export class BpmActDueRow implements OnInit {
-  private bpm = inject(BpmApi);
-  private refresh = inject(BpmRefresh);
   readonly line = input.required<RegisterLine>();
   readonly open = output<RegisterLine>();
   readonly settled = output<SettledNotice>();
 
+  /** Même règlement que la fiche détaillée : alertes de plafond, confirmation et refus identiques. */
+  private readonly settlement = new Settlement(() => this.line().id);
   protected today = localToday();
-  protected realDate = signal(this.today);
-  protected realAmount = signal('');
-  protected busy = signal(false);
+  protected realDate = this.settlement.realDate;
+  protected realAmount = this.settlement.realAmount;
+  protected busy = this.settlement.busy;
+  protected message = this.settlement.message;
+  protected error = this.settlement.error;
+  protected confirmation = this.settlement.confirmation;
+  protected fundable = this.settlement.fundable;
   protected done = signal(false);
-  protected error = signal<ApiError | null>(null);
-  private key = newRequestKey('settle');
 
   ngOnInit() {
     this.realAmount.set(String(this.line().plannedCents / 100).replace('.', ','));
   }
 
   async settle() {
-    if (this.busy() || this.done()) return;
+    if (this.done()) return;
     const l = this.line();
-    const amount = parseAmount(this.realAmount());
-    if (typeof amount !== 'number' || amount <= 0) {
-      this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Montant réel positif attendu (ex. 120,50).' }));
-      return;
-    }
-    if (!this.realDate()) {
-      this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Date réelle attendue.' }));
-      return;
-    }
-    this.busy.set(true);
-    this.error.set(null);
-    try {
-      const body = { realizedDate: this.realDate(), realizedAmount: amount };
-      let op: Operation;
-      if (l.kind === 'occurrence' && l.recurrenceId && l.occurrenceDate) {
-        op = (await this.bpm.settleOccurrence(l.recurrenceId, { requestKey: this.key, occurrenceDate: l.occurrenceDate, ...body })).operation;
-      } else {
-        op = (await this.bpm.realizeOperation(l.operationId ?? l.id, { expectedRevision: l.revision ?? 0, ...body })).operation;
-      }
-      this.done.set(true);
-      this.settled.emit({ label: l.label, direction: l.direction, operation: op });
-      this.refresh.bump();
-    } catch (e) {
-      this.error.set(toApiError(e));
-    } finally {
-      this.busy.set(false);
-    }
+    const r = await this.settlement.settle(l);
+    if (!r) return;
+    this.done.set(true);
+    this.settled.emit({ label: l.label, direction: l.direction, operation: r.operation, capAlerts: r.capAlerts });
   }
 }
 
@@ -143,6 +125,7 @@ export class BpmActDueRow implements OnInit {
         @if (notice(); as n) {
           <p class="bv-saved" role="status">
             {{ n.direction === 'income' ? 'Entrée reçue' : 'Charge payée' }} : « {{ n.label }} », {{ amount(n.operation.realizedAmountCents) }} le {{ date(n.operation.realizedDate) }}.
+            @if (n.capAlerts?.length) { <strong>Attention, plafond dépassé — {{ alerts(n.capAlerts) }}. La dépense est bien enregistrée.</strong> }
             @if (!cancelled()) {
               <button type="button" class="bv-undo" (click)="cancel(n)" [disabled]="busy()">Annuler ce règlement</button>
             } @else {
@@ -202,6 +185,7 @@ export class BpmActDue {
   protected cancelError = signal<ApiError | null>(null);
   protected amount = cents;
   protected date = shortDate;
+  protected alerts = (list: CapAlert[] | undefined) => (list ?? []).map(capAlertText).join(' ; ');
 
   protected onSettled(n: SettledNotice) {
     this.notice.set(n);

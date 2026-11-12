@@ -1,9 +1,9 @@
-import { injectPageWorkspace } from '../../shared/page-workspace';
+import { injectPageWorkspace } from '../../plan/page-workspace';
 import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Api, newRequestKey, RecetteContext, toApiError } from '../../core/api.service';
+import { newRequestKey, RecetteContext, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { BpmLifeManagement, LifeHealth, LifeLine } from '../../core/bpm-life.models';
 import { CHARGE_NATURE_LABEL, ChargeNature, EntryInput, RegisterLine } from '../../core/bpm-models';
@@ -401,7 +401,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           <button class="btn btn-secondary" type="button" (click)="budgetTypeOpen.set(true)">Ouvrir le budget type</button>
         </section>
         <bpm-modal [open]="budgetTypeOpen()" [headed]="true" [wide]="true" title="Préparer mon budget type" (closed)="budgetTypeOpen.set(false)">
-          @if (budgetTypeLoaded()) { <bpm-act-budget-type [showCaps]="false" /> }
+          @if (budgetTypeLoaded()) { <bpm-act-budget-type /> }
           <button class="btn btn-secondary" type="button" (click)="budgetTypeOpen.set(false)">Fermer et conserver la saisie</button>
         </bpm-modal>
 
@@ -494,7 +494,7 @@ import { followCount, lifeVolets, VoletAction, VoletLink, VoletView } from './li
           </bpm-modal>
         }
         } @else if (workspace()?.key === 'life-budget') {
-          <bpm-act-budget-type [showCaps]="false" />
+          <bpm-act-budget-type />
         } @else if (workspace()?.key === 'life-closing') {
           <ng-container *ngTemplateOutlet="followContent; context: { $implicit: d }" />
         }
@@ -678,7 +678,6 @@ export class BpmLifeManagementPage {
   private bpm = inject(BpmApi);
   private funding = inject(ProjectFunding);
   protected readonly L = FUNDING;
-  private api = inject(Api);
   private route = inject(ActivatedRoute);
   protected workspace = injectPageWorkspace();
   protected budgetType = viewChild(BpmActBudgetType);
@@ -931,7 +930,7 @@ export class BpmLifeManagementPage {
     this.busy.set(true);
     this.notice.set(null);
     try {
-      const r = await this.api.closePeriod({ requestKey: this.closeKey, periodKey, expectedResultCents });
+      const r = await this.bpm.closePeriod({ requestKey: this.closeKey, periodKey, expectedResultCents });
       this.closeKey = newRequestKey();
       await this.load();
       this.notice.set({ text: `${r.closure.periodLabel} est clos : ${cents(Math.round(r.closure.result * 100))} capitalisés dans le patrimoine.`, error: false });

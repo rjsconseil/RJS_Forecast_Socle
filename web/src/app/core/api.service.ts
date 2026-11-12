@@ -3,14 +3,11 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   ApiErrorBody,
-  BpmDashboard,
   BudgetObject,
-  Closure,
   CostCenter,
   EffectiveParameter,
   FigureEvaluation,
   JournalEntry,
-  LifeProject,
   MetricCatalog,
   MetricDefinitionRow,
   ModuleDescription,
@@ -188,48 +185,6 @@ export class Api {
   }
   detachTask(id: string, expectedRevision: number) {
     return this.post<TaskMutationResult>(`/api/tasks/${encodeURIComponent(id)}/detach`, { expectedRevision });
-  }
-
-  // ---------- niveau 3 : application BPM ----------
-
-  dashboard(periodKey?: string) {
-    return this.get<BpmDashboard>(`/api/bpm/dashboard${periodKey ? `?period=${encodeURIComponent(periodKey)}` : ''}`);
-  }
-  /** Chiffre et explication de son calcul (formule, révision, valeurs, objets sources). */
-  figure(key: string, periodKey?: string) {
-    return this.get<FigureEvaluation>(`/api/bpm/figures/${encodeURIComponent(key)}${periodKey ? `?period=${encodeURIComponent(periodKey)}` : ''}`);
-  }
-  configureCycle(body: { anchorDay: number | null; startDate?: string | null; expectedRevision: number }) {
-    return this.put<BpmDashboard>('/api/bpm/cycle', body);
-  }
-  closures() {
-    return this.get<Closure[]>('/api/bpm/closures');
-  }
-  /** `expectedResultCents` : montant affiché à la confirmation ; refusé (CLOSING_PREVIEW_STALE) s'il a changé. */
-  closePeriod(body: { requestKey: string; periodKey: string; expectedResultCents: number }) {
-    return this.post<{ replayed: boolean; closure: Closure }>('/api/bpm/closures', body);
-  }
-  lifeProjects() {
-    return this.get<LifeProject[]>('/api/bpm/life-projects');
-  }
-  createLifeProject(body: { requestKey: string; name: string; project?: object; tasks: object[] }) {
-    return this.post<{ replayed: boolean; budgetId: string; coreProjectId: string; taskIds: string[] }>('/api/bpm/life-projects', body);
-  }
-  bpmCostCenters() {
-    return this.get<CostCenter[]>('/api/bpm/cost-centers');
-  }
-  addCostCenter(body: { requestKey: string; label: string; direction: 'income' | 'charge' }) {
-    return this.post<{ replayed: boolean; costCenterId: string; costCenters: CostCenter[] }>('/api/bpm/cost-centers', body);
-  }
-  /** Saisie applicative : l'opération va toujours au Budget « Projet de vie ». */
-  createBpmOperation(body: { requestKey: string; direction: 'income' | 'charge'; label: string; amount: number; date: string; status: 'planned' | 'realized'; costCenterRef: string; realizedAmount?: number; realizedDate?: string }) {
-    return this.post<{ replayed: boolean; operation: Operation }>('/api/bpm/operations', body);
-  }
-  realizeBpmOperation(id: string, body: { expectedRevision: number; realizedAmount?: number; realizedDate?: string }) {
-    return this.post<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}/realize`, body);
-  }
-  updateBpmPatrimoine(body: { expectedRevision: number; openingStock?: number | null; openingDate?: string | null; objective?: number | null }) {
-    return this.put<PatrimoineRead>('/api/bpm/patrimoine', body);
   }
 
   // ---------- niveau 2 : middlewares (interfaces de test) ----------

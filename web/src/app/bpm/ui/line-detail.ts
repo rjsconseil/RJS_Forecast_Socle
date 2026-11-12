@@ -2,14 +2,14 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ApiError, toApiError } from '../../core/api.service';
+import { toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { LineDetail, RegisterLine } from '../../core/bpm-models';
-import { cents, parseAmount, shortDate, signedCents } from '../../core/format';
+import { cents, shortDate, signedCents } from '../../core/format';
 import { BpmModal } from './modal';
-import { capAlertText, withCapAlerts } from './caps';
 import { FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from './project-funding';
-import { bpmLoader, BpmRefresh, newRequestKey } from './page-context';
+import { bpmLoader, BpmRefresh } from './page-context';
+import { settleDateWarnings, Settlement } from './settlement';
 import { BpmState } from './state';
 
 /**
@@ -282,14 +282,14 @@ export class BpmLineDetail {
     (k) => this.bpm.line(k.id, k.period),
   );
   protected d = computed(() => this.loader.data());
-  protected busy = signal(false);
-  protected message = signal<string | null>(null);
-  protected actionError = signal<ApiError | null>(null);
-  private refusedFor = signal<string | null>(null);
-  private settlementSignature() {
-    return JSON.stringify({ lineId: this.lineId(), date: this.realDate(), amount: this.realAmount() });
-  }
-  protected realDate = signal(new Date().toISOString().slice(0, 10));
+  /** Règlement partagé avec la ligne rapide des échéances : mêmes alertes, même confirmation, mêmes refus. */
+  private readonly settlement = new Settlement(() => this.lineId());
+  protected busy = this.settlement.busy;
+  protected message = this.settlement.message;
+  protected actionError = this.settlement.error;
+  protected realDate = this.settlement.realDate;
+  protected realAmount = this.settlement.realAmount;
+  protected settleConfirmation = this.settlement.confirmation;
 
   /** Avertissements avant règlement : cas acceptés mais rarement voulus (hors enveloppe, année probablement erronée). */
   protected settleWarnings(v: LineDetail): string[] {
@@ -300,13 +300,8 @@ export class BpmLineDetail {
     if (p && !p.funded && !p.taskFundingRequired) out.push(`« ${p.name} » n’a pas encore d’enveloppe : ce règlement restera dans l’historique du projet, hors budget de vie.`);
     else if (p?.allocationDate && d < p.allocationDate)
       out.push(`Date antérieure à l’attribution de l’enveloppe (${this.date(p.allocationDate)}) : ce règlement restera dans l’historique du projet, hors enveloppe et hors budget de vie.`);
-    const gap = (Date.parse(v.line.plannedDate) - Date.parse(d)) / 86400000;
-    if (gap > 90) out.push(`La date réelle précède de plus de trois mois la date prévue (${this.date(v.line.plannedDate)}) : vérifiez le jour, le mois et l’année.`);
-    return out;
+    return [...out, ...settleDateWarnings(v.line, d)];
   }
-  protected realAmount = signal('');
-  protected settleConfirmation = signal<string | null>(null);
-  private settleKey = newRequestKey('settle');
 
   protected c = cents;
   protected s = signedCents;
@@ -323,74 +318,13 @@ export class BpmLineDetail {
   }
 
   /** Règle l'échéance. `fund` : la part et le dépassement nécessaires sont accordés par le middleware dans la même écriture. */
-  async settle(v: LineDetail, fund?: { notice: string }) {
-    if (this.busy()) return;
-    const signatureAtStart = this.settlementSignature();
-    // Une autorisation proposée pour un montant ne vaut jamais pour une autre saisie.
-    const fundCurrent = !!fund && this.refusedFor() === signatureAtStart;
-    const amount = this.realAmount() ? parseAmount(this.realAmount()) : undefined;
-    if (amount === 'invalid' || (typeof amount === 'number' && amount <= 0)) {
-      this.actionError.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Montant réel positif attendu.' }));
-      return;
-    }
-    this.busy.set(true);
-    this.actionError.set(null);
-    try {
-      const body = { realizedDate: this.realDate(), ...(typeof amount === 'number' ? { realizedAmount: amount } : {}) };
-      if (v.line.direction === 'charge') {
-        const input = {
-          budgetId: v.line.budgetId, direction: v.line.direction, label: v.line.label,
-          amount: v.line.plannedCents / 100, date: v.line.plannedDate,
-          costCenterRef: v.line.costCenterRef ?? undefined, categoryId: v.line.categoryId,
-          settle: true, ...body,
-          ...(v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate
-            ? { recurrenceId: v.line.recurrenceId, occurrenceDate: v.line.occurrenceDate }
-            : { replaceId: v.line.operationId ?? v.line.id }),
-        };
-        const warnings = this.settleWarnings(v);
-        let signature: string | null = warnings.length ? JSON.stringify({ input, warnings }) : null;
-        if (warnings.length) this.message.set(warnings.join(' ') + ' Confirmez ce règlement si ces dates sont voulues.');
-        try {
-          const preview = await this.bpm.previewCaps(input);
-          if (preview.alerts.length) {
-            signature = JSON.stringify({ input, warnings, alerts: preview.alerts });
-            this.message.set(`${warnings.join(' ')} Attention avant paiement (${preview.period.label}) : ${preview.alerts.map(capAlertText).join(' ; ')}. Le paiement reste autorisé.`);
-          }
-        } catch {
-          signature = JSON.stringify({ input, unavailable: true });
-          this.message.set('Vérification des plafonds indisponible. Vous pouvez confirmer le paiement sans cette vérification.');
-        }
-        if (signature && signature !== this.settleConfirmation()) {
-          this.settleConfirmation.set(signature);
-          return;
-        }
-      }
-      if (signatureAtStart !== this.settlementSignature()) {
-        this.message.set('La saisie a changé pendant la vérification. Vérifiez la date et le montant, puis relancez le règlement.');
-        return;
-      }
-      const r =
-        v.line.kind === 'occurrence' && v.line.recurrenceId && v.line.occurrenceDate
-          ? await this.bpm.settleOccurrence(v.line.recurrenceId, { requestKey: this.settleKey, occurrenceDate: v.line.occurrenceDate, ...body, fund: fundCurrent })
-          : await this.bpm.realizeOperation(v.line.operationId ?? v.line.id, { expectedRevision: v.line.revision ?? 0, ...body, fund: fundCurrent });
-      // Un plafond dépassé est signalé, jamais bloquant : le règlement est enregistré.
-      const done = v.line.direction === 'income' ? 'Entrée marquée reçue.' : 'Charge marquée payée.';
-      this.message.set(withCapAlerts(fundCurrent ? `${fund!.notice} ${done}` : done, r.capAlerts));
-      this.settleConfirmation.set(null);
-      this.settleKey = newRequestKey('settle');
-      this.refresh.bump();
-    } catch (e) {
-      this.actionError.set(toApiError(e));
-      this.refusedFor.set(signatureAtStart);
-    } finally {
-      this.busy.set(false);
-    }
+  settle(v: LineDetail, fund?: { notice: string }) {
+    return this.settlement.settle(v.line, { warnings: this.settleWarnings(v), fund });
   }
 
   /** Refus « dépassement à autoriser » : le budget de vie peut l'accorder ici et enchaîner le règlement. */
   protected overrun = computed(() => {
-    if (this.refusedFor() !== this.settlementSignature()) return null;
-    const e = this.actionError();
+    const e = this.settlement.refusal();
     if (e?.body.code !== 'OVERRUN_AUTHORIZATION_REQUIRED') return null;
     const x = e.body.details as unknown as { budgetId: string; taskId: string | null; overrunCents: number };
     return x?.budgetId && x.overrunCents > 0 ? x : null;
@@ -402,8 +336,7 @@ export class BpmLineDetail {
 
   /** Refus « part de tâche insuffisante » (projet en mode strict) : la part peut être portée au montant nécessaire ici. */
   protected shareGap = computed(() => {
-    if (this.refusedFor() !== this.settlementSignature()) return null;
-    const e = this.actionError();
+    const e = this.settlement.refusal();
     const x = e?.body.details as unknown as ShareGap | undefined;
     return x?.reason === 'task-share' && x.budgetId && x.taskId ? x : null;
   });

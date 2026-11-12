@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Api, ApiError, toApiError, UserDirectory } from '../core/api.service';
 import { EffectiveParameter, JournalEntry, ModuleDescription, RecentError } from '../core/models';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
-import { injectPageWorkspace } from '../shared/page-workspace';
+import { injectPageWorkspace } from '../plan/page-workspace';
 
 type Tab = 'modules' | 'parameters' | 'metrics' | 'journal' | 'errors';
 

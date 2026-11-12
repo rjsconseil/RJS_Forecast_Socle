@@ -481,6 +481,7 @@ export default {
        * - `principal` configure l'ensemble existant (aucun deuxième projet de vie ni Patrimoine) ;
        * - `branch` crée un projet de la vie (Budget standard, racine noyau, ≥ 1 tâche), sans Patrimoine.
        * Les lignes du budget type portant un `recurrenceId` sont mises à jour, jamais recréées.
+       * `expectedRevisions` ({ id: révision }) protège les objets modifiés contre une écriture concurrente.
        */
       async setupProject(ctx, input = {}) {
         const r = await om.command(
@@ -495,6 +496,10 @@ export default {
             const project = input.project ?? {};
             let budgetId = comp.budgetId;
             const out = { mode, bpmCompositionId: comp.id, created: [], updated: [] };
+            // Révisions des objets que le formulaire modifie (audit ARCH-03) : même contrôle que les éditeurs directs.
+            for (const [id, revision] of Object.entries(input.expectedRevisions ?? {})) {
+              om.checkRevision(om.owned(tx.draft, socle.registry.kindOfId(id), id, tx.userId), revision);
+            }
 
             if (mode === 'principal') {
               const patch = {};

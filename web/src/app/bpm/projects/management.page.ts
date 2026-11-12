@@ -1,7 +1,7 @@
 import { BpmCycleSetup, BpmPageBanner, BpmPageFocus } from '../ui';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
-import { BpmNavigation } from '../ui/navigation';
+import { Journey } from '../../plan/journey';
 import {
   afterNextRender,
   Component,
@@ -872,7 +872,7 @@ export class BpmProjectManagementPage implements OnInit {
   protected readonly L = FUNDING;
   private api = inject(Api);
   private router = inject(Router);
-  protected navigation = inject(BpmNavigation);
+  protected navigation = inject(Journey);
   private sequence = 0;
   private document = inject(DOCUMENT);
   private injector = inject(Injector);
@@ -1066,7 +1066,7 @@ export class BpmProjectManagementPage implements OnInit {
     // La saisie de création est consommée : elle quitte le parcours avant d'ouvrir la fiche du projet.
     this.navigation.completeFlow((url) => new URL(url, 'http://local').searchParams.get('editProject') === 'new');
     void this.router.navigate(['/app/gestion-projet', project.projectId], {
-      state: { bpmNotice: `Projet « ${project.title} » créé.` },
+      state: { journeyNotice: `Projet « ${project.title} » créé.` },
     });
   }
   protected closeTask() {

@@ -1,5 +1,6 @@
 import { Component, DOCUMENT, ElementRef, effect, inject, input, OnDestroy, output, signal, untracked, viewChild } from '@angular/core';
-import { Api, toApiError } from '../core/api.service';
+import { toApiError } from '../core/api.service';
+import { BpmApi } from '../core/bpm-api.service';
 import { FigureEvaluation } from '../core/models';
 import { CalcTrace } from '../shared/calc-trace';
 import { presentFigure } from './figure-card';
@@ -138,7 +139,7 @@ export class FigureExplain implements OnDestroy {
   readonly periodKey = input<string | undefined>(undefined);
   readonly closed = output<void>();
 
-  private api = inject(Api);
+  private bpm = inject(BpmApi);
   private document = inject(DOCUMENT);
   private panel = viewChild<ElementRef<HTMLElement>>('panel');
   private closeBtn = viewChild<ElementRef<HTMLButtonElement>>('closeBtn');
@@ -192,7 +193,7 @@ export class FigureExplain implements OnDestroy {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const f = await this.api.figure(key, period);
+      const f = await this.bpm.figure(key, period);
       if (ticket === this.ticket) this.figure.set(f);
     } catch (err) {
       if (ticket === this.ticket) this.error.set(toApiError(err).message);

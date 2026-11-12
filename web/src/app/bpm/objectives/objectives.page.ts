@@ -1,5 +1,5 @@
 import { redirectLegacyView } from '../ui/legacy-view';
-import { injectPageWorkspace } from '../../shared/page-workspace';
+import { injectPageWorkspace } from '../../plan/page-workspace';
 import { NgTemplateOutlet } from '@angular/common';
 import { BpmPageContext } from '../ui/page-context';
 import { BpmDrafts } from '../ui/drafts';
@@ -8,7 +8,7 @@ import { Component, computed, DestroyRef, effect, inject, signal, untracked } fr
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Api, RecetteContext, toApiError } from '../../core/api.service';
+import { RecetteContext, toApiError } from '../../core/api.service';
 import { BpmApi } from '../../core/bpm-api.service';
 import { Cadence, LifeGoal, Vision } from '../../core/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, SignedCentsPipe } from '../../core/format';
@@ -47,7 +47,6 @@ const CADENCES = { weekly: 'semaine', monthly: 'mois', yearly: 'an' };
 export class BpmObjectivesPage {
   private ctx = inject(BpmPageContext);
   private bpm = inject(BpmApi);
-  private api = inject(Api);
   private refresh = inject(BpmRefresh);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -343,7 +342,7 @@ export class BpmObjectivesPage {
     this.wealthBusy.set(true);
     this.wealthError.set('');
     try {
-      await this.api.updateBpmPatrimoine({
+      await this.bpm.updatePatrimoine({
         expectedRevision: p.principal.patrimoine.revision,
         objective,
       });

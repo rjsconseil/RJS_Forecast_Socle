@@ -1,6 +1,8 @@
 import { Injectable, InjectionToken, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { NavigationEnd, Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, firstValueFrom, map } from 'rxjs';
 import { NavigationConfiguration, NavigationContext, NavigationEntry, effectiveLabel } from './navigation-model';
 export interface NavigationCatalog {
   entries: NavigationEntry[];
@@ -13,6 +15,9 @@ interface Parameter { value: NavigationConfiguration; revision: number }
 export class NavigationSystem {
   readonly catalog = inject(NAVIGATION_CATALOG);
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+  /** Adresse courante, partagée : libellés et styles se recalculent à chaque navigation aboutie. */
+  readonly url = toSignal(this.router.events.pipe(filter(e => e instanceof NavigationEnd), map(e => e.urlAfterRedirects)), { initialValue: this.router.url });
   readonly configuration = signal<NavigationConfiguration>({ version: 1, scopes: {} });
   readonly error = signal('');
   readonly ready = signal(false);

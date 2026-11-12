@@ -30,7 +30,7 @@ import {
 } from './bpm-models';
 import { BpmLifeManagement } from './bpm-life.models';
 import { CapAlert, CapsReview, ChargeCategory, SpendingCaps } from './bpm-caps.models';
-import { Operation } from './models';
+import { BpmDashboard, Closure, CostCenter, FigureEvaluation, LifeProject, Operation, PatrimoineRead } from './models';
 import { BpmProjectDetail, BpmProjectInput, BpmProjectsOverview, BpmTaskInput, BpmTasksOverview, CycleCheck, ProjectOverrun, ReturnCadence, TaskBudgetRequest } from './bpm-projects.models';
 
 type Query = Record<string, string | number | null | undefined>;
@@ -121,7 +121,7 @@ export class BpmApi {
     return this.get<SetupProfile>('/api/bpm/setup');
   }
   costCenters() {
-    return this.get<{ ref: string; label: string; direction: 'income' | 'charge'; directionLabel: string; standard: boolean }[]>('/api/bpm/cost-centers');
+    return this.get<CostCenter[]>('/api/bpm/cost-centers');
   }
 
   // ---------- aperçu (aucune mutation) ----------
@@ -161,7 +161,7 @@ export class BpmApi {
     return this.post<{ replayed: boolean; operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/settle`, body);
   }
   addCostCenter(body: { requestKey: string; label: string; direction: 'income' | 'charge' }) {
-    return this.post<{ replayed: boolean; costCenterId: string }>('/api/bpm/cost-centers', body);
+    return this.post<{ replayed: boolean; costCenterId: string; costCenters: CostCenter[] }>('/api/bpm/cost-centers', body);
   }
   /** Plafonds des centres (euros) ; `merge` ne change que les centres fournis (null retire le plafond). */
   setCaps(body: { expectedRevision: number; caps: Record<string, number | null>; merge?: boolean }) {
@@ -203,10 +203,10 @@ export class BpmApi {
     return this.post<SetupResult>('/api/bpm/setup', input);
   }
   closePeriod(body: { requestKey: string; periodKey: string; expectedResultCents: number }) {
-    return this.post<unknown>('/api/bpm/closures', body);
+    return this.post<{ replayed: boolean; closure: Closure }>('/api/bpm/closures', body);
   }
 
-  // ---------- projets de la vie (projets et tâches du noyau, budgets portés par BPM) ----------
+  // ---------- projets de la vie (projets et tâches du noyau, budgets portés par le middleware Budget) ----------
 
   projectsOverview() {
     return this.get<BpmProjectsOverview>('/api/bpm/projects');
@@ -263,5 +263,27 @@ export class BpmApi {
   /** Fin de cycle : facture au budget de vie les dépassements autorisés dont la date est atteinte. */
   billOverruns(budgetId?: string) {
     return this.post<{ projects: { budgetId: string; name: string; coreProjectId: string; allocationCents: number; billedOverrunCents: number; checks: CycleCheck[] }[] }>('/api/bpm/overruns/bill', budgetId ? { budgetId } : {});
+  }
+
+  // ---------- tableau de bord, chiffres, cycle et clôtures (contrats BPM, autrefois répartis dans Api) ----------
+
+  dashboard(periodKey?: string) {
+    return this.get<BpmDashboard>('/api/bpm/dashboard', { period: periodKey });
+  }
+  /** Chiffre et explication de son calcul (formule, révision, valeurs, objets sources). */
+  figure(key: string, periodKey?: string) {
+    return this.get<FigureEvaluation>(`/api/bpm/figures/${encodeURIComponent(key)}`, { period: periodKey });
+  }
+  configureCycle(body: { anchorDay: number | null; startDate?: string | null; expectedRevision: number }) {
+    return this.put<BpmDashboard>('/api/bpm/cycle', body);
+  }
+  closures() {
+    return this.get<Closure[]>('/api/bpm/closures');
+  }
+  lifeProjects() {
+    return this.get<LifeProject[]>('/api/bpm/life-projects');
+  }
+  updatePatrimoine(body: { expectedRevision: number; openingStock?: number | null; openingDate?: string | null; objective?: number | null }) {
+    return this.put<PatrimoineRead>('/api/bpm/patrimoine', body);
   }
 }
