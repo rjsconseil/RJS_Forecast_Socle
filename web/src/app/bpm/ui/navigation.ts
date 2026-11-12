@@ -1,3 +1,4 @@
+import { NavigationSurfaceDirective } from '../../navigation/navigation-ui';
 import { Location } from '@angular/common';
 import {
   Component,
@@ -269,15 +270,16 @@ export class BpmNavigation {
 
 @Component({
   selector: 'bpm-navigation',
+  imports: [NavigationSurfaceDirective],
   host: {
     '(document:click)': 'closeOutside($event)',
     '(document:keydown.escape)': 'closeTrail()',
   },
   template: `
-    <nav class="bpm-journey-navigation" [attr.aria-label]="compact() ? 'Parcours du formulaire' : 'Avancer et revenir dans mon parcours'">
+    <nav navigationSurface="tertiary" class="bpm-journey-navigation" [attr.aria-label]="compact() ? 'Parcours du formulaire' : 'Avancer et revenir dans mon parcours'">
       <button
         type="button"
-        class="nav-step nav-back"
+        data-navigation-level="detail" class="nav-step nav-back"
         (click)="navigation.back()"
         [disabled]="blocked() || navigation.pendingNavigation() || !navigation.previous()"
         [title]="navigation.previous()?.label ?? 'Début du parcours'"
@@ -291,7 +293,7 @@ export class BpmNavigation {
       </button>
       @if (!compact()) {
         <details class="nav-trail" #trail (toggle)="opened.set(trail.open)">
-          <summary
+          <summary data-navigation-level="page"
             [attr.aria-label]="
               'Mon parcours : étape ' + position() + ' sur ' + navigation.visits().length + ' · ' + (navigation.current()?.label ?? 'Mon parcours BPM')
             "
@@ -333,7 +335,7 @@ export class BpmNavigation {
       }
       <button
         type="button"
-        class="nav-step nav-forward"
+        data-navigation-level="detail" class="nav-step nav-forward"
         (click)="navigation.forward()"
         [disabled]="blocked() || navigation.pendingNavigation() || !navigation.next()"
         [title]="navigation.next()?.label ?? 'Aucune étape suivante visitée'"
@@ -345,7 +347,7 @@ export class BpmNavigation {
       @if (!compact() && navigation.ahead() > 1) {
         <button
           type="button"
-          class="nav-step nav-last"
+          data-navigation-level="detail" class="nav-step nav-last"
           (click)="go(navigation.visits().length - 1)"
           [disabled]="blocked() || navigation.pendingNavigation()"
           [title]="'Reprendre à la dernière étape : ' + navigation.last()?.label"

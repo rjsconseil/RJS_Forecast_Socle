@@ -1,6 +1,8 @@
+import { ResponsiveNavigationDirective } from './navigation/responsive-navigation';
+import { NavigationLabel, NavigationSurfaceDirective } from './navigation/navigation-ui';
 import { BpmNavigation, BpmNavigationComponent } from './bpm/ui/navigation';
 import { visitLabel } from './bpm/ui/navigation-model';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, Directive, effect, ElementRef, HostListener, inject, OnInit, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -28,45 +30,6 @@ import {
 } from './shared/site-plan';
 
 /**
- * Un seul menu (directive `responsive-navigation` de la référence) : colonne sur grand écran,
- * popover natif sous 820 px (`$rupture-820` de `_shell.scss`). Le navigateur gère l'appui extérieur,
- * Échap et le retour au bouton ouvrant.
- */
-@Directive({
-  selector: '[rjsResponsiveNavigation]',
-  exportAs: 'rjsNavigation',
-  host: {
-    '[attr.popover]': 'compact() ? "auto" : null',
-    '(toggle)': 'onToggle($event)',
-  },
-})
-export class ResponsiveNavigationDirective {
-  private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
-  private readonly media = typeof matchMedia === 'function' ? matchMedia('(max-width: 820px)') : null;
-  readonly compact = signal(this.media?.matches ?? false);
-  readonly opened = signal(false);
-
-  constructor() {
-    const resize = () => {
-      // Fermer dans le mode précédent avant de retirer l'attribut popover.
-      this.close();
-      this.compact.set(this.media?.matches ?? false);
-    };
-    this.media?.addEventListener('change', resize);
-    inject(DestroyRef).onDestroy(() => this.media?.removeEventListener('change', resize));
-  }
-
-  onToggle(event: Event): void {
-    this.opened.set((event as ToggleEvent).newState === 'open');
-  }
-
-  close(): void {
-    if (this.element.matches?.(':popover-open')) this.element.hidePopover();
-    this.opened.set(false);
-  }
-}
-
-/**
  * Coquille du site de référence (`app.ts` de rjsconseil/rjs-forecast, `_shell.scss`, `_zones.scss`) :
  * barre latérale (marque, utilisateur connecté, identité de la zone, sections, pages de la section, bas du menu),
  * barre du haut (fil d'Ariane Accueil / zone / section / page, date, utilisateur), zone principale et pied de page.
@@ -74,7 +37,7 @@ export class ResponsiveNavigationDirective {
  */
 @Component({
   selector: 'app-root',
-  imports: [SectionPageMenu, BpmNavigationComponent, RouterOutlet, RouterLink, AccountChipComponent, ResponsiveNavigationDirective, StickyPageHeroDirective],
+  imports: [NavigationLabel, NavigationSurfaceDirective, SectionPageMenu, BpmNavigationComponent, RouterOutlet, RouterLink, AccountChipComponent, ResponsiveNavigationDirective, StickyPageHeroDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a class="skip-link" href="#main">Aller au contenu</a>
@@ -88,7 +51,7 @@ export class ResponsiveNavigationDirective {
       [attr.data-overview]="isOverview() ? 'true' : null"
       [attr.data-page-tone]="location().page?.tone ?? location().section?.homeTone ?? null"
     >
-      <aside class="sidebar" aria-label="Navigation de RJS Forecast">
+      <aside navigationSurface="primary" class="sidebar" aria-label="Navigation de RJS Forecast">
         <div class="sidebar-mobile-head">
           <a class="mobile-brand" routerLink="/" aria-label="Accueil RJS Forecast">R<span>.</span> <small>FORECAST</small></a>
           @if (location().zone; as zone) {
@@ -121,10 +84,10 @@ export class ResponsiveNavigationDirective {
           <rjs-account-chip class="sidebar-account" variant="sidebar" [label]="activeUser()?.label ?? null" [typeLabel]="activeUser()?.userTypeLabel ?? ''" />
           @if (location().zone; as zone) {
             <div class="zone-identity" [attr.data-tone]="zone.tone">
-              <a class="zone-identity-head" [routerLink]="zoneHome(zone)" [attr.title]="zone.mission"
+              <a data-navigation-level="section" class="zone-identity-head" [routerLink]="zoneHome(zone)" [attr.title]="zone.mission"
                 ><span class="zone-mark" aria-hidden="true">{{ zone.acronym }}</span
                 ><span
-                  ><small>{{ zone.eyebrow }}</small><strong>{{ zone.label }}</strong></span
+                  ><small>{{ zone.eyebrow }}</small><strong>{{ zone.label | navigationLabel:("zone:" + zone.id) }}</strong></span
                 ></a
               >
               <a class="zone-identity-switch" routerLink="/">Changer de zone <span aria-hidden="true">↗</span></a>
@@ -135,7 +98,7 @@ export class ResponsiveNavigationDirective {
                 @let entry = entryOf(zone, section);
                 @let current = location().section?.id === section.id;
                 <a
-                  class="section-switch-entry"
+                  data-navigation-level="section" class="section-switch-entry"
                   [attr.data-tone]="section.tone ?? zone.tone"
                   [routerLink]="entry.link"
                   [queryParams]="entry.query"
@@ -143,7 +106,7 @@ export class ResponsiveNavigationDirective {
                   [attr.aria-current]="current ? 'true' : null"
                   ><span class="section-mark" aria-hidden="true">{{ section.acronym }}</span
                   ><span class="section-switch-text"
-                    ><strong>{{ section.label }}</strong><small>{{ section.intention }}</small></span
+                    ><strong>{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</strong><small>{{ section.intention }}</small></span
                   >
                   @if (current) {
                     <span class="section-selected" aria-hidden="true">✓</span>
@@ -153,7 +116,7 @@ export class ResponsiveNavigationDirective {
             </nav>
             @if (location().section; as section) {
               @if (pageMenu(section)) {
-                <div class="nav-label">{{ section.label }}</div>
+                <div class="nav-label">{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</div>
                 <nav class="section-pages" [attr.aria-label]="'Pages de ' + section.label">
                   @if (sectionHome(section)) {
                     <a
@@ -173,16 +136,16 @@ export class ResponsiveNavigationDirective {
             @if (location().kind === 'portal') {
               <ul class="portal-zone-labels" aria-label="Zones principales">
                 @for (zone of zones; track zone.id) {
-                  <li>{{ zone.label }}</li>
+                  <li><a data-navigation-level="section" [routerLink]="zoneHome(zone)">{{ zone.label | navigationLabel:("zone:" + zone.id) }}</a></li>
                 }
               </ul>
             } @else {
               <nav class="section-switch zone-switch" aria-label="Zones principales">
                 @for (zone of zones; track zone.id) {
-                  <a class="section-switch-entry" [attr.data-tone]="zone.tone" [routerLink]="zoneHome(zone)"
+                  <a data-navigation-level="section" class="section-switch-entry" [attr.data-tone]="zone.tone" [routerLink]="zoneHome(zone)"
                     ><span class="section-mark" aria-hidden="true">{{ zone.acronym }}</span
                     ><span class="section-switch-text"
-                      ><strong>{{ zone.label }}</strong><small>{{ visibleSections(zone).length }} sections</small></span
+                      ><strong>{{ zone.label | navigationLabel:("zone:" + zone.id) }}</strong><small>{{ visibleSections(zone).length }} sections</small></span
                     ></a
                   >
                 }
@@ -190,6 +153,15 @@ export class ResponsiveNavigationDirective {
             }
           }
 
+          <details class="navigation-module-switcher">
+            <summary>Tous les modules</summary>
+            <nav aria-label="Accès à tous les modules">
+              @for (zone of zones; track zone.id) {
+                <a data-navigation-level="section" [routerLink]="zoneHome(zone)" [attr.aria-current]="location().zone?.id === zone.id ? 'true' : null">{{ zone.label | navigationLabel:("zone:" + zone.id) }}</a>
+              }
+            </nav>
+          </details>
+          <a class="navigation-settings-link" data-navigation-level="detail" routerLink="/navigation">{{ "Réglages de navigation" | navigationLabel:"/navigation" }}</a>
           <div class="sidebar-tools">
             <div class="profile-switcher" aria-label="Utilisateur connecté" role="group">
               <span class="profile-switcher-mark" aria-hidden="true">{{ activeInitial() }}</span>
@@ -241,15 +213,15 @@ export class ResponsiveNavigationDirective {
 
       <div class="main-shell">
         <header class="topbar">
-          <nav class="topbar-context" aria-label="Fil d’Ariane">
+          <nav navigationSurface="tertiary" class="topbar-context" aria-label="Fil d’Ariane">
             <span class="topbar-square" aria-hidden="true"></span>
-            <a routerLink="/">Accueil</a>
+            <a data-navigation-level="section" routerLink="/">{{ "Accueil" | navigationLabel:"/" }}</a>
             @for (crumb of breadcrumb(); track $index) {
               <span class="topbar-separator" aria-hidden="true">/</span>
               @if (crumb.link) {
-                <a [routerLink]="crumb.link" [queryParams]="crumb.query ?? null">{{ crumb.label }}</a>
+                <a [routerLink]="crumb.link" [queryParams]="crumb.query ?? null" [attr.data-navigation-level]="crumb.link.startsWith('/zones/') ? 'section' : 'page'">{{ crumb.label | navigationLabel:crumb.navigationKey }}</a>
               } @else {
-                <span class="topbar-current" aria-current="page" [attr.title]="crumb.label">{{ crumb.label }}</span>
+                <span data-navigation-level="detail" class="topbar-current" aria-current="page" [attr.title]="crumb.label | navigationLabel:crumb.navigationKey">{{ crumb.label | navigationLabel:crumb.navigationKey }}</span>
               }
             }
           </nav>
@@ -346,13 +318,16 @@ export class App implements OnInit {
   protected breadcrumb = computed(() =>
     planContext(this.url(), this.objectLabel()).crumbs.map((crumb) => ({
       ...crumb,
+      navigationKey: crumb.label === this.location().zone?.label ? 'zone:' + this.location().zone!.id
+        : crumb.label === this.location().section?.label ? 'section:' + this.location().zone!.id + ':' + this.location().section!.id
+        : crumb.link ?? this.url(),
       query: crumb.link ? workspaceContextQuery(this.url(), crumb.link.startsWith('/zones/') ? '' : crumb.link) : null,
     })),
   );
   protected activeUser = computed(() => this.users().find((u) => u.id === this.ctx.userId()) ?? null);
   protected activeInitial = computed(() => this.activeUser()?.label.trim()[0]?.toUpperCase() ?? '·');
   /** Accueil, accueils de zone (hors BPM), utilisateurs, administration et Object Management restent consultables sans user. */
-  protected needsUser = computed(() => !/^\/($|utilisateurs|app\/bienvenue|admin|object-management|zones(?!\/bpm(\/|$)))/.test(this.path()));
+  protected needsUser = computed(() => !/^\/($|navigation|utilisateurs|app\/bienvenue|admin|object-management|zones(?!\/bpm(\/|$)))/.test(this.path()));
 
   private static readonly appearanceKey = 'rjs-forecast-appearance';
   // Le choix personnel du navigateur prime ; sinon la présentation classique.

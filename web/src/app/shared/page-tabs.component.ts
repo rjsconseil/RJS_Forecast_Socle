@@ -1,3 +1,4 @@
+import { NavigationLabel, NavigationSurfaceDirective } from '../navigation/navigation-ui';
 import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { workspaceContextQuery } from './page-workspace';
@@ -9,20 +10,20 @@ import { PlanTab } from './site-plan';
  */
 @Component({
   selector: 'rjs-page-tabs',
-  imports: [RouterLink],
+  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'rjs-page-tabs' },
   template: `
     @if (tabs().length > 1) {
-      <nav class="page-tabs" [attr.aria-label]="label()">
-        @for (tab of tabs(); track tab.link) {
+      <nav navigationSurface="secondary" class="page-tabs" [attr.aria-label]="label()">
+        @for (tab of tabs(); track tab.link; let first = $first) {
           <a
-            class="page-tab"
+            [attr.data-navigation-level]="first ? 'page' : 'detail'" class="page-tab"
             [routerLink]="tab.link"
             [queryParams]="query(tab)"
             [class.is-current]="tab.current"
             [attr.aria-current]="tab.current ? 'page' : null"
-            >{{ tab.label }}</a
+            >{{ tab.label | navigationLabel:tab.link }}</a
           >
         }
       </nav>

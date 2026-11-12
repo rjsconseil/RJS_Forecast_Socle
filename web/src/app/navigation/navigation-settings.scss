@@ -1,0 +1,23 @@
+:host { display: block; }
+.navigation-settings { max-width: 1200px; margin-inline: auto; }
+.navigation-settings header { margin-bottom: 24px; }
+.navigation-settings fieldset { margin-block: 24px; border: 1px solid var(--line, #ccd4df); border-radius: 12px; padding: 20px; min-width: 0; }
+.navigation-settings legend { font-weight: 700; padding-inline: 8px; }
+.navigation-settings label { display: grid; gap: 6px; }
+.navigation-settings input, .navigation-settings select { width: 100%; min-width: 0; }
+.navigation-settings-actions { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: var(--raised-surface, white); padding: 12px; border: 1px solid var(--line, #ccd4df); border-radius: 8px; }
+.navigation-settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.navigation-color { display: flex; gap: 8px; }
+.navigation-color input[type=color] { width: 48px; flex: 0 0 48px; padding: 3px; }
+.navigation-level-editor { margin-block: 24px; }
+.navigation-level-editor h2 { font-size: 1.1rem; }
+.navigation-preview { margin-top: 12px; padding-inline: 16px; border-radius: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+.navigation-preview span { padding: 6px 12px; border-radius: 6px; }
+.navigation-settings .navigation-label-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-block: 12px; border-bottom: 1px solid var(--line, #ccd4df); }
+.navigation-label-editor small { display: block; font-size: .8rem; overflow-wrap: anywhere; color: var(--muted, #566477); }
+@media(max-width: 650px) { .navigation-settings .navigation-label-editor { grid-template-columns: 1fr; gap: 6px; } }
+
+.navigation-settings button { padding: 9px 14px; border: 1px solid var(--line, #ccd4df); border-radius: 8px; background: var(--raised-surface, #fff); color: var(--ink, #24344b); font: inherit; cursor: pointer; }
+.navigation-settings-actions button:first-child { background: #284b72; border-color: #284b72; color: white; font-weight: 650; }
+.navigation-settings button:disabled { opacity: .5; cursor: default; }
+.navigation-settings button:focus-visible { outline: 2px solid #284b72; outline-offset: 3px; }

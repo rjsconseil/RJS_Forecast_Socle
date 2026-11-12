@@ -1,3 +1,4 @@
+import { NavigationLabel, NavigationSurfaceDirective } from '../navigation/navigation-ui';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RecetteContext } from '../core/api.service';
 import { RouterLink } from '@angular/router';
@@ -12,10 +13,10 @@ type PortalRow = ReturnType<typeof portalBands>[number];
  */
 @Component({
   selector: 'app-home',
-  imports: [RouterLink],
+  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="page plan-page plan-portal">
+    <div navigationSurface="portal" class="page plan-page plan-portal">
       <header class="plan-heading" data-ui-pattern="heading">
         <div class="page-hero-title">
           <h1 class="plan-portal-title" id="portal-title">Vos zones de travail</h1>
@@ -25,7 +26,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
         <nav class="cockpit-navigation portal-jumps" aria-label="Aller directement à une partie de l’accueil">
           @for (row of rows; track row.band?.id ?? row.zones[0].id; let index = $index) {
             @if (row.band; as band) {
-              <a routerLink="/" [fragment]="'portal-' + band.id"><span aria-hidden="true">{{ bandIndex(index) }}</span>{{ band.label }}</a>
+              <a data-navigation-level="detail" routerLink="/" [fragment]="'portal-' + band.id"><span aria-hidden="true">{{ bandIndex(index) }}</span>{{ band.label | navigationLabel:("anchor:portal:" + band.id) }}</a>
             }
           }
         </nav>
@@ -56,7 +57,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
                       <span class="plan-mark" aria-hidden="true">{{ zone.acronym }}</span>
                       <div>
                         <p class="plan-zone-eyebrow">{{ zone.eyebrow }}</p>
-                        <h3 [id]="'zone-' + zone.id"><a class="plan-zone-title-link" [routerLink]="zoneHome(zone)">{{ zone.label }}</a></h3>
+                        <h3 [id]="'zone-' + zone.id"><a data-navigation-level="section" class="plan-zone-title-link" [routerLink]="zoneHome(zone)">{{ zone.label | navigationLabel:("zone:" + zone.id) }}</a></h3>
                         <p class="plan-mission">{{ zone.mission }}</p>
                       </div>
                     </header>
@@ -74,9 +75,9 @@ type PortalRow = ReturnType<typeof portalBands>[number];
                     <nav class="plan-entries" [attr.aria-label]="'Sections de ' + zone.label">
                       @for (section of visibleSections(zone); track section.id) {
                         @let entry = entryOf(zone, section);
-                        <a class="plan-entry" [attr.data-tone]="section.tone ?? zone.tone" [routerLink]="entry.link" [queryParams]="entry.query"
+                        <a data-navigation-level="page" class="plan-entry" [attr.data-tone]="section.tone ?? zone.tone" [routerLink]="entry.link" [queryParams]="entry.query"
                           ><span class="plan-entry-mark" aria-hidden="true">{{ section.acronym }}</span
-                          ><span class="plan-entry-text"><strong>{{ section.label }}</strong><small>{{ section.intention }}</small></span></a
+                          ><span class="plan-entry-text"><strong>{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</strong><small>{{ section.intention }}</small></span></a
                         >
                       }
                     </nav>

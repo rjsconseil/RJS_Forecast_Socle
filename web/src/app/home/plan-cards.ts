@@ -1,3 +1,4 @@
+import { NavigationLabel, NavigationSurfaceDirective } from '../navigation/navigation-ui';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PlanCard, PlanZone, menuPages, sectionEntry, zoneSections } from '../shared/site-plan';
@@ -26,7 +27,7 @@ let planCardsId = 0;
  */
 @Component({
   selector: 'rjs-plan-cards',
-  imports: [RouterLink],
+  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (commonResult(); as result) {
@@ -35,10 +36,10 @@ let planCardsId = 0;
         <span>{{ result }}</span>
       </p>
     }
-    <div class="plan-page-grid" data-ui-pattern="journey">
+    <div navigationSurface="portal" class="plan-page-grid" data-ui-pattern="journey">
       @for (card of cards(); track card.id; let index = $index) {
         <a
-          class="plan-page-card plan-destination"
+          data-navigation-level="page" class="plan-page-card plan-destination"
           data-ui-pattern="panel"
           [attr.data-tone]="card.tone"
           [attr.data-page-tone]="card.pageTone"
@@ -57,7 +58,7 @@ let planCardsId = 0;
               <span class="plan-metric">{{ card.metric }} <small>éléments</small></span>
             }
           </header>
-          <h2 [id]="'journey-' + card.id">{{ card.label }}</h2>
+          <h2 [id]="'journey-' + card.id">{{ card.label | navigationLabel:card.link }}</h2>
           <p [id]="'journey-description-' + card.id">{{ card.description }}</p>
           @if (!commonResult()) {
             <div class="plan-result" [id]="'journey-result-' + card.id">

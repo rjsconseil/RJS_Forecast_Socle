@@ -4,7 +4,7 @@ import { PAGE_WORKSPACES } from './page-workspaces';
 
 describe('plan du site', () => {
   it('range les zones de l’accueil : BPM, Budget, Patrimoine, Noyau transverse, Administration', () => {
-    expect(PLAN_ZONES.map((z) => z.label)).toEqual(['Budget/Patrimoine Management', 'Budget management', 'Patrimoine Management', 'Noyau transverse', 'Administration du site']);
+    expect(PLAN_ZONES.map((z) => z.label)).toEqual(['Budget/Patrimoine Management', 'Budget management', 'Patrimoine Management', 'Noyau transverse', 'Administration du site', 'Navigation system']);
     expect(PLAN_ZONES.find((z) => z.id === 'bpm')!.assembles).toEqual(['budget', 'patrimoine']);
   });
 

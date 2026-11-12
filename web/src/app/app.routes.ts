@@ -17,6 +17,7 @@ const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.ge
 const visitorOnly: CanActivateFn = () => !inject(RecetteContext).connected() || inject(Router).createUrlTree(['/projet-de-vie']);
 
 const mainRoutes: Routes = [
+  { path: 'navigation', title: 'Navigation system — RJS Forecast', loadComponent: () => import('./navigation/navigation-settings.page').then(m => m.NavigationSettingsPage) },
   // Accueil : le portail des zones (Budget/Patrimoine Management, Budget, Patrimoine, Noyau transverse, Administration).
   { path: '', pathMatch: 'full', title: 'Accueil · RJS Forecast', loadComponent: () => import('./home/home').then((m) => m.HomePage) },
   // Accueils génériques du plan du site (`shared/site-plan.ts`) : accueil de zone, accueil de section.

@@ -1,3 +1,4 @@
+import { NavigationLabel } from '../navigation/navigation-ui';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { locate, menuPages, pageChildren, PlanPage, PlanSection } from './site-plan';
@@ -6,7 +7,7 @@ import { workspaceContextQuery } from './page-workspace';
 /** La même arborescence progressive pour chaque section, sur bureau et mobile. */
 @Component({
   selector: 'rjs-section-page-menu',
-  imports: [RouterLink],
+  imports: [NavigationLabel, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .section-subpages li.is-object > a { font-weight: 650; }
@@ -17,11 +18,11 @@ import { workspaceContextQuery } from './page-workspace';
     @for (group of groups(); track group.page.id) {
       <div class="section-page-group">
         <div class="section-page-row">
-          <a class="section-page-link" [attr.data-page-tone]="group.page.tone"
+          <a data-navigation-level="page" class="section-page-link" [attr.data-page-tone]="group.page.tone"
             [routerLink]="group.page.link" [queryParams]="query(group.page)"
             [class.active]="exact(group.page.link)" [class.is-ancestor]="isParent(group.page) && !exact(group.page.link)"
             [attr.aria-current]="exact(group.page.link) ? 'page' : null">
-            <span class="nav-icon" aria-hidden="true">{{ group.page.symbol }}</span><span>{{ group.page.label }}</span>
+            <span class="nav-icon" aria-hidden="true">{{ group.page.symbol }}</span><span>{{ group.page.label | navigationLabel:group.page.link }}</span>
           </a>
           @if (group.children.length) {
             <button class="section-page-toggle" type="button" [attr.aria-expanded]="opened(group.page)"
@@ -33,8 +34,8 @@ import { workspaceContextQuery } from './page-workspace';
         @if (group.children.length && opened(group.page)) {
           <ul class="section-subpages" [id]="'subpages-' + section().id + '-' + group.page.id">
             @for (child of group.children; track child.link) {
-              <li [class.is-object]="child.id === 'object'" [class.is-nested]="(child.depth ?? 1) > 1"><a [routerLink]="child.link" [queryParams]="query(group.page)" [attr.title]="child.description || null"
-                [class.active]="exact(child.link)" [attr.aria-current]="exact(child.link) ? 'page' : null">{{ child.label }}</a></li>
+              <li [class.is-object]="child.id === 'object'" [class.is-nested]="(child.depth ?? 1) > 1"><a data-navigation-level="detail" [routerLink]="child.link" [queryParams]="query(group.page)" [attr.title]="child.description || null"
+                [class.active]="exact(child.link)" [attr.aria-current]="exact(child.link) ? 'page' : null">{{ child.label | navigationLabel:child.link }}</a></li>
             }
           </ul>
         }

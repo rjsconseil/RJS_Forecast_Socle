@@ -491,7 +491,7 @@ test('T-DATA-01 exportDebug : lecture sans mutation, instantanÃ© stable, non exÃ
   for (const c of socle.registry.collections()) assert.ok(Array.isArray(a.objects[c]), c);
   for (const v of ['tachesProjets', 'projets', 'budgets', 'operations', 'capitalisations', 'assemblages', 'clotures']) assert.ok(Array.isArray(a.views[v]), v);
   assert.equal(a.views.assemblages[0].coreProjectShared, true);
-  assert.deepEqual(a.modules.map((m) => m.id), ['users', 'administration', 'object-management', 'calendar', 'core', 'budget', 'patrimoine', 'bpm']);
+  assert.deepEqual(a.modules.map((m) => m.id), ['navigation', 'users', 'administration', 'object-management', 'calendar', 'core', 'budget', 'patrimoine', 'bpm']);
   assert.ok(a.parameters.some((p) => p.key === 'metric.bpm.resultatPeriode'));
   assert.ok(a.relations.length > 0 && a.relations.some((r) => r.derived));
   assert.ok(a.creationReceipts.length > 0);

@@ -414,6 +414,14 @@ export const PLAN_ZONES: PlanZone[] = [
       },
     ],
   },
+  {
+    id: 'navigation', kind: 'zone', label: 'Navigation system', acronym: 'NS',
+    eyebrow: 'Module technique · niveau 0', mission: 'Régler la navigation commune à tous les modules.',
+    band: 'technical', size: 'medium', tone: 'nav-navy', module: 'navigation',
+    sections: [{ id: 'presentation', acronym: 'NS', label: 'Présentation et libellés', intention: 'Personnaliser les parcours',
+      description: 'Régler les menus, les onglets et les repères de navigation.', tone: 'nav-blue', home: 'direct', space: 'navigation',
+      pages: [{ id: 'navigation', label: 'Navigation system', link: '/navigation', symbol: '☷', description: 'Présentation et libellés par site, module ou page.', result: 'Une navigation cohérente et personnalisable.' }] }],
+  },
 ];
 
 export const planZone = (id: string | null | undefined): PlanZone | null => PLAN_ZONES.find((z) => z.id === id) ?? null;

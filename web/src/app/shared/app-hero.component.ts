@@ -1,3 +1,4 @@
+import { NavigationLabel, NavigationSurfaceDirective } from '../navigation/navigation-ui';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -32,7 +33,7 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
  */
 @Component({
   selector: 'rjs-app-hero',
-  imports: [RouterLink, PageToolbar, PageTabs],
+  imports: [NavigationLabel, NavigationSurfaceDirective, RouterLink, PageToolbar, PageTabs],
   hostDirectives: [PageHeroDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Les classes app-hero-* sont propres au bandeau : globales, elles habillent aussi les commandes projetées.
@@ -41,7 +42,7 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
   template: `
     <section class="app-hero" [attr.data-hero]="tone()" [attr.aria-labelledby]="headingId()">
       @if (parent(); as back) {
-        <a class="app-hero-parent" [routerLink]="back.link" [queryParams]="back.query" [attr.aria-label]="'Remonter à : ' + back.label"><span aria-hidden="true">↑</span> {{ back.label }}</a>
+        <a navigationSurface="tertiary" data-navigation-level="detail" class="app-hero-parent" [routerLink]="back.link" [queryParams]="back.query" [attr.aria-label]="'Remonter à : ' + (back.label | navigationLabel:back.link)"><span aria-hidden="true">↑</span> {{ back.label | navigationLabel:back.link }}</a>
       }
       <div class="app-hero-heading">
         @if (workspace()?.lead || lead()) {
@@ -82,15 +83,15 @@ export type HeroTone = 'indigo' | 'lagoon' | 'aurora';
         [result]="result()"
       >
         <div toolbarPrimary class="app-hero-primary"><ng-content select="[heroPrimary]" /></div>
-        <div toolbarActions class="app-hero-actions">
+        <div toolbarActions navigationSurface="secondary" class="app-hero-actions">
           @for (action of actions(); track action.label; let first = $first) {
             <a
-              class="app-hero-action"
+              data-navigation-level="page" class="app-hero-action"
               [class.is-secondary]="!first"
               [routerLink]="action.link"
               [queryParams]="action.query ?? null"
               [fragment]="action.fragment"
-              >{{ action.label }}</a
+              >{{ action.label | navigationLabel:action.link }}</a
             >
           }
           <ng-content select="[heroActions]" />

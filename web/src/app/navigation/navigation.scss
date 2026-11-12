@@ -1,0 +1,31 @@
+// Seules les propriétés administrées sont activées. Sans réglage, la présentation du module est conservée.
+// Les frontières @scope empêchent une zone imbriquée d'hériter des règles d'une autre zone.
+@scope (.navigation-system) to (.navigation-system) {
+  @each $level in section, page, detail {
+    @each $key, $property in (size: font-size, color: color, background: background-color, spacing: padding-block) {
+      :scope[data-navigation-#{$level}-#{$key}] [data-navigation-level='#{$level}'],
+      :scope[data-navigation-#{$level}-#{$key}][data-navigation-level='#{$level}'] {
+        #{$property}: var(--navigation-#{$level}-#{$key}) !important;
+        @if $key == size or $key == color {
+          strong, h2, .section-switch-text, .plan-entry-text { #{$property}: inherit !important; }
+        }
+      }
+    }
+    @each $key, $property in (activeColor: color, activeBackground: background-color) {
+      :scope[data-navigation-#{$level}-#{$key}] [data-navigation-level='#{$level}']:is([aria-current], .active, .is-current),
+      :scope[data-navigation-#{$level}-#{$key}][data-navigation-level='#{$level}']:is([aria-current], .active, .is-current) {
+        #{$property}: var(--navigation-#{$level}-#{$key}) !important;
+        @if $key == activeColor {
+          strong, h2, .section-switch-text, .plan-entry-text { color: inherit !important; }
+        }
+      }
+    }
+    [data-navigation-level='#{$level}'] { overflow-wrap: anywhere; }
+    [data-navigation-level='#{$level}']:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+  }
+}
+.navigation-system .navigation-module-switcher { margin: 12px 10px; }
+.navigation-system .navigation-module-switcher summary { padding: 10px 4px; cursor: pointer; font-weight: 650; }
+.navigation-system .navigation-module-switcher nav { display: grid; gap: 4px; }
+.navigation-system .navigation-module-switcher a, .navigation-system .navigation-settings-link { display: block; padding: 10px; border-radius: 6px; text-decoration: none; color: inherit; }
+.navigation-system .navigation-module-switcher a:hover, .navigation-system .navigation-settings-link:hover { background: color-mix(in srgb, currentColor 8%, transparent); }
