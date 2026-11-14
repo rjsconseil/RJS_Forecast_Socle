@@ -8,7 +8,7 @@ import { check } from '../../socle/object-management/inspect.mjs';
 import { today } from '../../socle/clock.mjs';
 import { date, expectedRevisionOf, integer, money, oneOf, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL, CADENCES, isOccurrence, occurrenceDates, occurrenceKey } from './recurrence.mjs';
-import { createFunding, fundingExtensions } from './funding.mjs';
+import { abandonedRefusal, createFunding, fundingExtensions, isAbandoned } from './funding.mjs';
 
 export const DIRECTIONS = ['income', 'charge'];
 const DIRECTION_LABEL = { income: 'Revenu', charge: 'Charge' };
@@ -104,7 +104,7 @@ export function budgetLines(state, budgetIds, { from, to, by = 'planned' }) {
   }
   if (by === 'planned') {
     for (const r of Object.values(state.recurrences ?? {})) {
-      if (!ids.has(r.budgetId)) continue;
+      if (!ids.has(r.budgetId) || r.cancelledAt) continue;
       for (const d of occurrenceDates(r, from, to)) if (!materialized.has(occurrenceKey(r.id, d))) out.push(lineOfOccurrence(r, d));
     }
   }
@@ -312,6 +312,12 @@ export default {
   extensions: {
     // Financement des projets : garde de rattachement d'une tâche, retour à sa complétion, validation d'un règlement.
     ...fundingExtensions,
+    /** Un projet renommé renomme le Budget dont il est la racine : listes, registre et alertes gardent le même nom. */
+    onCoreProjectChange(tx, { project }, socle) {
+      // Toute modification du projet réaligne le nom, ce qui rattrape aussi un renommage antérieur à cette règle.
+      for (const b of socle.om.list(tx.draft, "budget", (x) => x.coreProjectId === project.id && x.role === "standard" && x.name !== project.title))
+        socle.om.update(tx, b, { name: project.title });
+    },
     /** Enrichit les projets noyau qui servent de racine à un Budget. */
     coreProjectContext(state, projectId, socle) {
       const budgets = socle.om.list(state, 'budget', (b) => b.coreProjectId === projectId);
@@ -702,6 +708,7 @@ export default {
         const budgetId = input.budgetId ?? lifeBudgetOf(tx.draft, tx.userId)?.id;
         if (!budgetId) fail('REFERENCE_NOT_FOUND', 'Aucun Budget « Projet de vie » pour ce user.', { field: 'budgetId' });
         const budget = om.owned(tx.draft, 'budget', budgetId, tx.userId);
+        if (isAbandoned(budget)) abandonedRefusal(budget);
         const direction = oneOf('direction', input.direction, DIRECTIONS);
         const firstDate = date('firstDate', input.firstDate ?? input.date, { required: true });
         const endDate = date('endDate', input.endDate);
@@ -818,6 +825,94 @@ export default {
         return { replayed: r.replayed, operation: operationView(socle.state, socle.state.operations[r.operationId]) };
       },
 
+      /**
+       * Écarte une échéance attendue qui n'aura pas lieu (abonnement suspendu, loyer offert, doublon) : elle
+       * sort de toutes les sommes et la définition continue. Comme un règlement tardif, c'est permis pour une
+       * échéance d'une période close : le résultat clos ne compte que le réalisé, il ne change pas.
+       * Une échéance réglée s'écarte après l'annulation de son règlement. `restoreOccurrence` la rétablit.
+       */
+      async skipOccurrence(ctx, recurrenceId, input = {}) {
+        const r = await om.command(
+          'skipOccurrence',
+          ctx,
+          input,
+          (tx) => {
+            const rec = om.owned(tx.draft, 'recurrence', recurrenceId, tx.userId);
+            if (rec.cancelledAt) fail('FORBIDDEN_BY_RULE', 'Cette définition est supprimée.', { recurrenceId });
+            const occurrenceDate = date('occurrenceDate', input.occurrenceDate, { required: true });
+            if (!isOccurrence(rec, occurrenceDate)) fail('VALIDATION', "Cette date n'est pas une occurrence de la définition.", { field: 'occurrenceDate' });
+            const existing = om.list(tx.draft, 'operation', (o) => o.recurrenceId === rec.id && o.occurrenceDate === occurrenceDate)[0];
+            if (existing?.status === 'realized') fail('ALREADY_SETTLED', 'Cette échéance est réglée : annulez d’abord son règlement.', { operationId: existing.id });
+            if (existing?.status === 'cancelled') fail('FORBIDDEN_BY_RULE', 'Cette échéance est déjà écartée.', { operationId: existing.id });
+            const cancelReason = 'reason' in input ? note(input.reason) : null;
+            if (existing) {
+              om.update(tx, existing, { status: 'cancelled', cancelledFrom: existing.status, cancelReason });
+              return { operationId: existing.id };
+            }
+            const op = om.create(tx, 'operation', {
+              budgetId: rec.budgetId,
+              direction: rec.direction,
+              label: rec.label,
+              amountCents: rec.amountCents,
+              date: occurrenceDate,
+              status: 'cancelled',
+              cancelledFrom: 'planned',
+              cancelReason,
+              realizedAmountCents: null,
+              realizedDate: null,
+              recurrenceId: rec.id,
+              occurrenceDate,
+              note: rec.note ?? null,
+              taskId: rec.taskId ?? null,
+              standardCostCenter: rec.standardCostCenter,
+              costCenterId: rec.costCenterId,
+              categoryId: rec.categoryId ?? null,
+            });
+            return { operationId: op.id };
+          },
+          { creation: true },
+        );
+        return { replayed: r.replayed, operation: operationView(socle.state, socle.state.operations[r.operationId]) };
+      },
+
+      /** Rétablit une échéance écartée : elle redevient attendue, à sa date et à son montant prévus. */
+      async restoreOccurrence(ctx, recurrenceId, input = {}) {
+        let id;
+        await om.command('restoreOccurrence', ctx, input, (tx) => {
+          const rec = om.owned(tx.draft, 'recurrence', recurrenceId, tx.userId);
+          if (rec.cancelledAt) fail('FORBIDDEN_BY_RULE', 'Cette définition est supprimée.', { recurrenceId });
+          const occurrenceDate = date('occurrenceDate', input.occurrenceDate, { required: true });
+          const skipped = om.list(tx.draft, 'operation', (o) => o.recurrenceId === rec.id && o.occurrenceDate === occurrenceDate)[0];
+          if (skipped?.status !== 'cancelled') fail('FORBIDDEN_BY_RULE', "Cette échéance n'est pas écartée.", { occurrenceDate });
+          om.checkRevision(skipped, expectedRevisionOf(input));
+          om.update(tx, skipped, { status: 'planned', cancelledFrom: null, cancelReason: null });
+          id = skipped.id;
+          return { operationId: id };
+        });
+        return { operation: operationView(socle.state, socle.state.operations[id]) };
+      },
+
+      /**
+       * Supprime une définition saisie par erreur, tant qu'aucune de ses échéances n'est réglée : toutes ses
+       * échéances sortent des sommes et des listes ; elle reste dans la base, datée de sa suppression.
+       * Une définition déjà réglée ne se supprime pas : on la termine (dernière échéance), l'historique reste juste.
+       */
+      async cancelRecurrence(ctx, id, input = {}) {
+        await om.command('cancelRecurrence', ctx, input, (tx) => {
+          const rec = om.owned(tx.draft, 'recurrence', id, tx.userId);
+          om.checkRevision(rec, expectedRevisionOf(input));
+          if (rec.cancelledAt) fail('FORBIDDEN_BY_RULE', 'Cette définition est déjà supprimée.', { recurrenceId: id });
+          const materialized = om.list(tx.draft, 'operation', (o) => o.recurrenceId === id);
+          const settled = materialized.filter((o) => o.status === 'realized');
+          if (settled.length)
+            fail('FORBIDDEN_BY_RULE', 'Des échéances sont déjà réglées : annulez leurs règlements, ou terminez la définition par une dernière échéance.', { recurrenceId: id, settled: settled.length });
+          for (const o of materialized) if (o.status === 'planned') om.update(tx, o, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: 'Définition supprimée' });
+          om.update(tx, rec, { cancelledAt: today(), cancelReason: 'reason' in input ? note(input.reason) : null });
+          return { recurrenceId: id };
+        });
+        return { recurrence: recurrenceView(socle.state, socle.state.recurrences[id]) };
+      },
+
       patchCaps(tx, budgetId, input = {}) {
           const b = om.owned(tx.draft, 'budget', budgetId, tx.userId);
           // `merge` : seuls les centres fournis changent (null retire leur plafond) ; sinon la liste remplace tout.
@@ -848,7 +943,7 @@ export default {
         const state = socle.state;
         const userId = om.requireUser(state, ctx);
         return om
-          .list(state, 'recurrence', (r) => r.userId === userId && (!budgetId || r.budgetId === budgetId))
+          .list(state, 'recurrence', (r) => r.userId === userId && !r.cancelledAt && (!budgetId || r.budgetId === budgetId))
           .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
           .map((r) => recurrenceView(state, r));
       },

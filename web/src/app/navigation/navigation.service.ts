@@ -3,13 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { NavigationEnd, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, firstValueFrom, map } from 'rxjs';
-import { NavigationConfiguration, NavigationContext, NavigationEntry, effectiveLabel } from './navigation-model';
+import { NavigationConfiguration, NavigationContext, NavigationEntry, NavigationNode, effectiveLabel } from './navigation-model';
 export interface NavigationCatalog {
   entries: NavigationEntry[];
+  /** Les liens rangés par partie du site (accueil, puis chaque module) et par niveau. */
+  tree: NavigationNode[];
   modules: { id: string; label: string }[];
   context(url: string): NavigationContext;
 }
-export const NAVIGATION_CATALOG = new InjectionToken<NavigationCatalog>('Navigation catalog', { providedIn: 'root', factory: () => ({ entries: [], modules: [], context: url => ({ page: url.split(/[?#]/)[0] }) }) });
+export const NAVIGATION_CATALOG = new InjectionToken<NavigationCatalog>('Navigation catalog', { providedIn: 'root', factory: () => ({ entries: [], tree: [], modules: [], context: url => ({ page: url.split(/[?#]/)[0] }) }) });
 interface Parameter { value: NavigationConfiguration; revision: number }
 @Injectable({ providedIn: 'root' })
 export class NavigationSystem {
@@ -36,7 +38,8 @@ export class NavigationSystem {
   }
   label(key: string, fallback: string, url: string) {
     const path = key.split(/[?#]/)[0];
-    const entry = this.catalog.entries.find(e => e.key === path)
+    const entry = this.catalog.entries.find(e => e.key === key)
+      ?? this.catalog.entries.find(e => e.key === path)
       ?? this.catalog.entries.find(e => e.link === path)
       ?? this.catalog.entries.find(e => e.key === this.catalog.context(path).page);
     return effectiveLabel(this.configuration(), this.catalog.context(url), entry?.key ?? key, fallback);

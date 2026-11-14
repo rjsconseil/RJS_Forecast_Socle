@@ -1,9 +1,9 @@
 import { NavigationLabel, NavigationSurfaceDirective } from '../navigation/navigation-ui';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RecetteContext } from '../core/api.service';
 import { RouterLink } from '@angular/router';
 import { JourneyResume } from '../plan/journey-resume';
-import { PLAN_OVERVIEW_TONE, PLAN_ZONES, PlanSection, PlanZone, planZone, portalBands, sectionEntry, zoneHomeLink, zoneSections } from '../plan/site-plan';
+import { PLAN_OVERVIEW_TONE, orderedZones, PlanSection, PlanZone, planZone, portalBands, sectionEntry, zoneHomeLink, zoneSections } from '../plan/site-plan';
 
 type PortalRow = ReturnType<typeof portalBands>[number];
 
@@ -25,7 +25,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
         </div>
         <p>Votre budget au quotidien, votre patrimoine dans la durée. Un même parcours pour comprendre, agir et préparer l’avenir.</p>
         <nav class="cockpit-navigation portal-jumps" aria-label="Aller directement à une partie de l’accueil">
-          @for (row of rows; track row.band?.id ?? row.zones[0].id; let index = $index) {
+          @for (row of rows(); track row.band?.id ?? row.zones[0].id; let index = $index) {
             @if (row.band; as band) {
               <a data-navigation-level="detail" routerLink="/" [fragment]="'portal-' + band.id"><span aria-hidden="true">{{ bandIndex(index) }}</span>{{ band.label | navigationLabel:("anchor:portal:" + band.id) }}</a>
             }
@@ -35,7 +35,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
       <!-- Le parcours unifié (tous modules) : revenir d'un clic à la dernière étape de la séance. -->
       @if (connected()) { <rjs-journey-resume /> }
 
-      @for (group of groups; track $index) {
+      @for (group of groups(); track $index) {
         <div [class.portal-ecosystem]="group.ecosystem" [class.portal-technical]="!group.ecosystem">
           @for (item of group.items; track item.row.band?.id ?? item.row.zones[0].id) {
             @let row = item.row;
@@ -97,14 +97,14 @@ type PortalRow = ReturnType<typeof portalBands>[number];
 export class HomePage {
   protected readonly overviewTone = PLAN_OVERVIEW_TONE;
   /** Une rangée par bande déclarée, dans l'ordre du plan. */
-  protected readonly rows: PortalRow[] = portalBands(PLAN_ZONES);
+  protected readonly rows = computed<PortalRow[]>(() => portalBands(orderedZones()));
   /** Les bandes de l'écosystème (phare, modules réunis, socle) d'un côté, les modules techniques de l'autre. */
-  protected readonly groups = this.rows.reduce<{ ecosystem: boolean; items: { row: PortalRow; index: number }[] }[]>((groups, row, index) => {
+  protected readonly groups = computed(() => this.rows().reduce<{ ecosystem: boolean; items: { row: PortalRow; index: number }[] }[]>((groups, row, index) => {
     const ecosystem = ['flagship', 'assembled', 'core'].includes(row.band?.id ?? '');
     if (!groups.length || groups[groups.length - 1].ecosystem !== ecosystem) groups.push({ ecosystem, items: [] });
     groups[groups.length - 1].items.push({ row, index });
     return groups;
-  }, []);
+  }, []));
 
   protected bandIndex(index: number) {
     return String(index + 1).padStart(2, '0');

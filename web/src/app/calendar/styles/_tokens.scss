@@ -1,0 +1,33 @@
+/*
+ * Réglages du calendrier BPM. Tout ce qui se règle est ici : changer une valeur suffit, les feuilles
+ * `_square` (forme) et `_relief` (ombres, fondus) la lisent. Une page peut aussi redéfinir une variable
+ * sur `rjs-calendar` pour sa propre présentation.
+ */
+:host {
+  /* Forme : la bande de l'agenda à droite, l'arrondi des deux cartes. */
+  --bpm-calendar-agenda-width: 240px;
+  --bpm-calendar-radius: 20px;
+  /* Le carré se lit sur un module de 1/7 de côté. L'habillage s'en partage un : en-tête, initiales, légende
+     (0,44 + 0,28 + 0,28 = 1 module). Les six autres modules sont les six semaines : une case est carrée. */
+  --bpm-calendar-head-share: calc(0.44 / 7);
+  --bpm-calendar-weekdays-share: calc(0.28 / 7);
+  --bpm-calendar-legend-share: calc(0.28 / 7);
+  /* Relief : teinte des ombres. */
+  --bpm-calendar-shade: color-mix(in srgb, var(--app-accent) 55%, #10131c);
+  /* Trois forces d'ombre, de la plus légère à la plus marquée ; l'ombre portée des cartes les combine. */
+  --bpm-calendar-shadow-soft: color-mix(in srgb, var(--bpm-calendar-shade) 12%, transparent);
+  --bpm-calendar-shadow-mid: color-mix(in srgb, var(--bpm-calendar-shade) 40%, transparent);
+  --bpm-calendar-shadow-strong: color-mix(in srgb, var(--bpm-calendar-shade) 58%, transparent);
+  --bpm-calendar-lift:
+    0 1px 2px var(--bpm-calendar-shadow-soft),
+    0 14px 30px -14px var(--bpm-calendar-shadow-mid),
+    0 36px 70px -36px var(--bpm-calendar-shadow-mid);
+  /* Voile de fin de semaine. */
+  --bpm-calendar-weekend: color-mix(in srgb, var(--app-accent) 4%, transparent);
+  /* Fondus : apparition d'un jour, d'un mois de l'année, d'un aperçu ; estompe des jours voisins et vides. */
+  --bpm-calendar-fade-day: 240ms;
+  --bpm-calendar-fade-month: 320ms;
+  --bpm-calendar-fade-peek: 160ms;
+  --bpm-calendar-outside-opacity: 0.5;
+  --bpm-calendar-idle-tint: 7%;
+}

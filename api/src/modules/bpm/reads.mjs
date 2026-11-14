@@ -310,6 +310,13 @@ export function createReads(socle, h) {
     }
     if (!line) fail('NOT_FOUND', "Cette échéance n'existe pas (hors des dates de sa définition).", { lineId });
     const view = decorate(b, line);
+    // Échéances écartées de la définition : elles se rétablissent depuis n'importe quelle échéance de la série.
+    const skipped = rec
+      ? om
+          .list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'cancelled' && o.cancelReason !== 'Définition supprimée')
+          .sort((x, y) => x.occurrenceDate.localeCompare(y.occurrenceDate))
+          .map((o) => ({ operationId: o.id, occurrenceDate: o.occurrenceDate, plannedCents: o.amountCents, reason: o.cancelReason ?? null, revision: o.revision }))
+      : [];
     const settlements = rec
       ? om
           .list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'realized')
@@ -335,6 +342,7 @@ export function createReads(socle, h) {
       line: view,
       definition: rec ? budget().recurrenceView(state, rec) : null,
       settlements,
+      skipped,
       ids: { lineId, operationId: view.operationId, recurrenceId: view.recurrenceId, budgetId: view.budgetId, taskId: view.taskId },
       project: projectOfLine(state, view),
       timing: { plannedPeriod: timingPeriod(view.plannedDate), realizedPeriod: timingPeriod(view.realizedDate) },
@@ -344,6 +352,9 @@ export function createReads(socle, h) {
         canEdit,
         // Doublon ou erreur de saisie : une opération ponctuelle s'annule tant que ses dates ne sont pas closes.
         canCancelEntry: view.kind === 'operation' && !view.recurrenceId && !editClosure,
+        // Échéance d'une définition : elle s'écarte tant qu'elle n'est pas réglée ; la définition se supprime tant qu'aucune n'est réglée.
+        canSkipOccurrence: !!rec && !view.settled,
+        canDeleteDefinition: !!rec && !om.list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'realized').length,
         editReason: canEdit ? null : `La période ${editClosure.periodLabel ?? editClosure.periodKey} est close : cette opération est conservée dans son historique.`,
         settlementPolicy: 'Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
       },

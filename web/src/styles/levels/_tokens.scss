@@ -1,0 +1,75 @@
+/*
+ * Design par niveau hiérarchique — jetons.
+ *
+ * Le Navigation system connaît trois niveaux (`data-navigation-level`) : « section » (zones et
+ * sections), « page » et « detail » (sous-pages, fiches, saisies). Chaque niveau a ici UN jeu de
+ * variables ; toutes les surfaces du cadre (menu, onglets, fil d'Ariane, parcours, recherche,
+ * « Poursuivre ») les lisent. Changer l'allure d'un niveau se fait donc à un seul endroit.
+ *
+ * Les réglages de l'administration (`navigation.scss`, `--navigation-<niveau>-<clé>`) restent
+ * prioritaires : ils s'appliquent par-dessus ces valeurs par défaut.
+ */
+.app-shell[data-density] {
+  /* ── Niveau « section » : il situe (zone, section). ── */
+  --level-section-size: 13.5px;
+  --level-section-weight: 600;
+  --level-section-height: 40px;
+  --level-section-radius: 10px;
+  --level-section-mark: 28px;
+  --level-section-ink: var(--sidebar-ink);
+
+  /* ── Niveau « page » : il oriente (pages du menu, épingles). ── */
+  --level-page-size: 13px;
+  --level-page-weight: 500;
+  --level-page-height: 34px;
+  --level-page-radius: 8px;
+  --level-page-mark: 20px;
+  --level-page-ink: var(--sidebar-muted);
+
+  /* ── Niveau « detail » : il précise (sous-pages, fiches, saisies). ── */
+  --level-detail-size: 12.5px;
+  --level-detail-weight: 450;
+  --level-detail-height: 30px;
+  --level-detail-radius: 7px;
+  --level-detail-mark: 16px;
+  --level-detail-ink: var(--sidebar-faint);
+
+  /* États communs aux trois niveaux : la destination affichée est pleine, ses parents sont en encre forte. */
+  --level-hover-surface: color-mix(in srgb, var(--ink) 6%, transparent);
+  --level-press-surface: color-mix(in srgb, var(--ink) 10%, transparent);
+  --level-current-surface: var(--app-accent-soft);
+  --level-current-ink: var(--app-accent-hover);
+  --level-ancestor-surface: color-mix(in srgb, var(--app-accent) 6%, transparent);
+  --level-ancestor-ink: var(--sidebar-ink);
+  --level-guide: var(--sidebar-line);
+  --level-focus: var(--app-focus-ring);
+
+  /* Cadre : surfaces et traits fins communs. */
+  --frame-hairline: color-mix(in srgb, var(--ink) 9%, transparent);
+  --frame-kbd-surface: color-mix(in srgb, var(--ink) 5%, var(--raised-surface));
+  --frame-shadow-pop: 0 1px 2px rgb(15 23 42 / 0.06), 0 16px 40px -12px rgb(15 23 42 / 0.28);
+  --frame-shadow-rest: 0 1px 0 rgb(15 23 42 / 0.03), 0 1px 2px rgb(15 23 42 / 0.04);
+  --topbar-height: 52px;
+}
+
+/* Affichage dense : une échelle de texte et des hauteurs plus serrées, pour tous les niveaux à la fois. */
+.app-shell[data-density='compact'] {
+  --text-scale: 1;
+  --touch-target: 36px;
+  --control-height: 36px;
+  --control-compact-height: 30px;
+  --level-section-height: 34px;
+  --level-section-mark: 24px;
+  --level-page-height: 30px;
+  --level-detail-height: 26px;
+  --page-padding-top: 16px;
+  --topbar-height: 48px;
+}
+@media (pointer: coarse) {
+  .app-shell[data-density],
+  .app-shell[data-density='compact'] {
+    --level-section-height: 48px;
+    --level-page-height: 44px;
+    --level-detail-height: 44px;
+  }
+}

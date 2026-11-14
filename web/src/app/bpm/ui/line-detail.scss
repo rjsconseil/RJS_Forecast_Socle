@@ -15,3 +15,8 @@
 .bld-project { margin: 0 0 0.75rem; }
 .bld-overrun { margin: 0.5rem 0 1rem; padding: 0.75rem; border-radius: 8px; background: var(--status-warning-surface, var(--app-canvas)); }
 .bld-notice { margin: 0 0 0.5rem; font-weight: 600; }
+
+/* Échéances écartées d'une définition, chacune rétablissable. */
+.bld-skipped { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.bld-skipped li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.bld-skipped li span { color: var(--muted); }

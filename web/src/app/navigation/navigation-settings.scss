@@ -13,11 +13,62 @@
 .navigation-level-editor h2 { font-size: 1.1rem; }
 .navigation-preview { margin-top: 12px; padding-inline: 16px; border-radius: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
 .navigation-preview span { padding: 6px 12px; border-radius: 6px; }
-.navigation-settings .navigation-label-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding-block: 12px; border-bottom: 1px solid var(--line, #ccd4df); }
-.navigation-label-editor small { display: block; font-size: .8rem; overflow-wrap: anywhere; color: var(--muted, #566477); }
-@media(max-width: 650px) { .navigation-settings .navigation-label-editor { grid-template-columns: 1fr; gap: 6px; } }
 
 .navigation-settings button { padding: 9px 14px; border: 1px solid var(--line, #ccd4df); border-radius: 8px; background: var(--raised-surface, #fff); color: var(--ink, #24344b); font: inherit; cursor: pointer; }
 .navigation-settings-actions button:first-child { background: #284b72; border-color: #284b72; color: white; font-weight: 650; }
 .navigation-settings button:disabled { opacity: .5; cursor: default; }
 .navigation-settings button:focus-visible { outline: 2px solid #284b72; outline-offset: 3px; }
+
+/* Arbre des liens : une partie par zone du site, un retrait par niveau, une poignée par lien déplaçable. */
+.navigation-links-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-block: 12px; }
+.navigation-links-tools label { flex: 1 1 260px; }
+.navigation-links-note { color: var(--muted, #566477); font-size: .85rem; }
+.navigation-legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.navigation-legend li, .navigation-node-surfaces i { padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-style: normal; font-weight: 600; line-height: 1.6; color: var(--surface-ink, #284b72); background: color-mix(in srgb, var(--surface-ink, #284b72) 11%, transparent); }
+[data-surface='portal'] { --surface-ink: #8a5a12; }
+[data-surface='primary'] { --surface-ink: #284b72; }
+[data-surface='secondary'] { --surface-ink: #1f6f5c; }
+[data-surface='tertiary'] { --surface-ink: #6b4c8f; }
+.navigation-part { margin-block: 10px; border: 1px solid var(--line, #ccd4df); border-radius: 10px; background: var(--raised-surface, #fff); }
+.navigation-part > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 12px 14px; cursor: pointer; border-radius: 10px; }
+.navigation-part > summary:hover { background: color-mix(in srgb, currentColor 4%, transparent); }
+.navigation-part > summary small { color: var(--muted, #566477); font-size: .8rem; }
+.navigation-part > summary em { margin-left: auto; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-style: normal; font-weight: 650; color: #8a5a12; background: color-mix(in srgb, #8a5a12 12%, transparent); }
+.navigation-part[open] > summary { border-bottom: 1px solid var(--line, #ccd4df); border-radius: 10px 10px 0 0; }
+.navigation-tree { margin: 0; padding: 0; list-style: none; }
+.navigation-part > .navigation-tree { padding: 8px 10px 10px; }
+/* Le retrait suit la hiérarchie : un filet relie les enfants à leur parent. */
+.navigation-node > .navigation-tree { margin-left: 15px; padding-left: 14px; border-left: 1px solid var(--line, #ccd4df); }
+.navigation-node { list-style: none; border-radius: 8px; background: var(--raised-surface, #fff); }
+.navigation-row { display: grid; grid-template-columns: 30px minmax(0, 1.3fr) minmax(120px, 1fr) auto; align-items: center; gap: 10px; min-height: 44px; padding: 5px 6px; border-radius: 8px; transition: background-color 160ms ease; }
+.navigation-row:hover { background: color-mix(in srgb, currentColor 4%, transparent); }
+.navigation-node[data-level='section'] > .navigation-row .navigation-node-name { font-weight: 700; }
+.navigation-node[data-level='page'] > .navigation-row .navigation-node-name { font-weight: 600; }
+.navigation-node[data-level='detail'] > .navigation-row .navigation-node-name { font-weight: 450; }
+.navigation-node.is-fixed > .navigation-row .navigation-node-name { color: var(--muted, #566477); }
+.navigation-node-text { display: grid; gap: 2px; min-width: 0; }
+.navigation-node-text small { color: var(--muted, #566477); font-size: .78rem; overflow-wrap: anywhere; }
+.navigation-node-surfaces { display: flex; flex-wrap: wrap; gap: 4px; }
+.navigation-settings .navigation-grip { display: grid; place-items: center; width: 30px; height: 32px; padding: 0; border-color: transparent; background: transparent; color: var(--muted, #566477); font-size: 1rem; line-height: 1; cursor: grab; touch-action: none; }
+.navigation-settings .navigation-grip:hover:not(:disabled) { border-color: var(--line, #ccd4df); color: var(--ink, #24344b); }
+.navigation-settings .navigation-grip:active { cursor: grabbing; }
+.navigation-grip.is-fixed { cursor: default; }
+.navigation-moves { display: flex; gap: 4px; }
+.navigation-settings .navigation-moves button { width: 30px; height: 30px; padding: 0; line-height: 1; }
+/* Le lien déplacé s'éclaire puis s'estompe à sa nouvelle place. */
+.navigation-node.is-moved > .navigation-row { animation: navigation-moved 900ms ease-out; }
+@keyframes navigation-moved { from { background: color-mix(in srgb, #284b72 22%, transparent); } to { background: transparent; } }
+/* Glisser-déposer : l'aperçu flotte, l'emplacement d'arrivée reste marqué, les voisins s'écartent en douceur. */
+.navigation-node.cdk-drag-preview { box-shadow: 0 10px 28px rgb(20 32 50 / 0.22); border: 1px solid var(--line, #ccd4df); opacity: .96; }
+.navigation-node.cdk-drag-placeholder { opacity: 1; background: color-mix(in srgb, #284b72 8%, transparent); outline: 2px dashed color-mix(in srgb, #284b72 45%, transparent); outline-offset: -2px; }
+.navigation-node.cdk-drag-placeholder > * { visibility: hidden; }
+.navigation-node.cdk-drag-animating, .navigation-tree.cdk-drop-list-dragging > .navigation-node:not(.cdk-drag-placeholder) { transition: transform 180ms cubic-bezier(0.2, 0, 0, 1); }
+@media (prefers-reduced-motion: reduce) { .navigation-node.is-moved > .navigation-row { animation: none; } .navigation-node.cdk-drag-animating, .navigation-tree.cdk-drop-list-dragging > .navigation-node { transition: none; } }
+@media (max-width: 720px) {
+  .navigation-row { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .navigation-node-label { grid-column: 2 / -1; grid-row: 2; }
+  .navigation-node > .navigation-tree { margin-left: 8px; padding-left: 8px; }
+}
+.navigation-part-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px 0; }
+.navigation-settings .navigation-part-tools button, .navigation-settings .navigation-fold { padding: 3px 9px; font-size: .78rem; color: var(--muted, #566477); }
+.navigation-settings .navigation-fold { margin-left: 6px; padding: 0 7px; border-radius: 999px; font-weight: 600; font-variant-numeric: tabular-nums; vertical-align: 1px; }

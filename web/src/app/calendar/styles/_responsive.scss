@@ -1,0 +1,57 @@
+@media (max-width: 1100px) {
+  :host .calendar.is-360.is-bpm-calendar {
+    .calendar-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .calendar-month-wrap {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    .calendar-agenda {
+      grid-column: 1;
+      grid-row: 3;
+      position: static;
+      contain: none;
+      height: 460px;
+      max-height: none;
+    }
+    .calendar-360-content {
+      grid-row: 4;
+    }
+    .calendar-agenda-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+@media (max-width: 640px) {
+  :host .calendar.is-360.is-bpm-calendar {
+    .calendar-right-rail .calendar-control-row {
+      padding: 12px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .calendar-options,
+    .calendar-toolbar {
+      grid-column: 1;
+      width: 100%;
+    }
+    .calendar-toolbar {
+      justify-self: end;
+    }
+    .calendar-period-control {
+      gap: 10px;
+    }
+    .calendar-view-switch {
+      margin-left: auto;
+    }
+    .calendar-toolbar .btn {
+      padding: 11px 12px;
+    }
+    .calendar-agenda-list {
+      grid-template-columns: 1fr;
+    }
+    .calendar-agenda {
+      height: 420px;
+    }
+  }
+}

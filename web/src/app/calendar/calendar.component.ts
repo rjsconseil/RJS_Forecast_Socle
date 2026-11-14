@@ -1,3 +1,4 @@
+import { TopLayerDirective } from './top-layer.directive';
 import {
   ChangeDetectionStrategy,
   afterNextRender,
@@ -82,7 +83,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
  */
 @Component({
   selector: 'rjs-calendar',
-  imports: [FormsModule, NgTemplateOutlet],
+  imports: [FormsModule, NgTemplateOutlet, TopLayerDirective],
   styleUrl: './bpm-calendar.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -475,6 +476,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
             @if (activePeekDay() === day && activePeekStat(); as stat) {
               @let rows = statRows(events, stat);
               <aside
+                rjsTopLayer
                 class="calendar-peek-details"
                 [style.left.px]="peekDetailsPosition().left"
                 [style.top.px]="peekDetailsPosition().top"
@@ -665,6 +667,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                       @if (openDay.startsWith(yearMonth.key)) {
                         @let openEvents = byDay().get(openDay) ?? [];
                         <div
+                          rjsTopLayer
                           class="calendar-day-peek calendar-year-peek"
                           [class.is-expanded]="expandedYearPeekDay() === openDay"
                           role="region"
@@ -759,7 +762,9 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                             "
                             [attr.aria-pressed]="day === selectedDay()"
                             [attr.aria-expanded]="day === visibleMonthDay() && dayEvents.length > 0"
-                            (click)="selectDay(day)"
+                            [attr.aria-disabled]="idleDay(dayEvents.length) ? 'true' : null"
+                            [attr.tabindex]="idleDay(dayEvents.length) ? -1 : null"
+                            (click)="idleDay(dayEvents.length) || selectDay(day)"
                             (keydown)="onDayKeydown($event, day)"
                           >
                             {{ day.slice(-2) }}
@@ -837,6 +842,7 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
                         }
                         @if (dayEvents.length && visibleMonthDay() === day) {
                           <div
+                            rjsTopLayer
                             class="calendar-day-peek"
                             [class.is-expanded]="expandedDay() === day"
                             role="region"
@@ -1484,7 +1490,9 @@ export class CalendarComponent {
     const rect = peek.getBoundingClientRect();
     const margin = 12;
     const gap = 10;
-    const width = Math.min(340, window.innerWidth - 2 * margin);
+    // La fenêtre suit l'échelle du texte : sa largeur réelle sert au placement, pour ne pas mordre sur l'aperçu.
+    const scale = Number.parseFloat(getComputedStyle(peek).getPropertyValue('--text-scale')) || 1;
+    const width = Math.min(340 * scale, window.innerWidth - 2 * margin);
     const left =
       rect.right + gap + width + margin <= window.innerWidth
         ? rect.right + gap
@@ -1796,6 +1804,13 @@ export class CalendarComponent {
   }
 
   // ---------- navigation ----------
+  /**
+   * Calendrier BPM : un jour sans repère est une case inactive. Elle ne se choisit pas au clic et sort
+   * de l'ordre de tabulation ; les flèches la traversent encore et elle reçoit toujours un repère déposé.
+   */
+  protected idleDay(events: number) {
+    return this.bpm() && events === 0;
+  }
   protected focusCalendarGrid() {
     const day = this.selectedDay();
     const year = this.view() === 'year';

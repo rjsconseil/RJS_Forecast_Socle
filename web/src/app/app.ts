@@ -13,14 +13,17 @@ import { StickyPageHeroDirective } from './shared/sticky-page-hero.directive';
 import { SectionPageMenu } from './plan/section-page-menu.component';
 import { workspaceContextQuery } from './plan/page-workspace';
 import { PageObjectLabels } from './plan/plan-context';
+import { CommandPalette } from './plan/command-palette';
+import { contextLinks } from './plan/quick-nav';
+import { PinnedPages, ShellPreferences } from './plan/shell-preferences';
 import {
   hasPageMenu,
   hasSectionHome,
   locate,
   menuPages,
+  orderedZones,
   planContext,
   PLAN_OVERVIEW_TONE,
-  PLAN_ZONES,
   PlanSection,
   PlanZone,
   sectionEntry,
@@ -28,6 +31,8 @@ import {
   zoneHomeLink,
   zoneSections,
 } from './plan/site-plan';
+import { planOrder } from './plan/plan-order';
+import { NavigationSystem } from './navigation/navigation.service';
 
 /**
  * Coquille du site de référence (`app.ts` de rjsconseil/rjs-forecast, `_shell.scss`, `_zones.scss`) :
@@ -37,7 +42,7 @@ import {
  */
 @Component({
   selector: 'app-root',
-  imports: [NavigationLabel, NavigationSurfaceDirective, SectionPageMenu, JourneyBar, RouterOutlet, RouterLink, AccountChipComponent, ResponsiveNavigationDirective, StickyPageHeroDirective],
+  imports: [NavigationLabel, NavigationSurfaceDirective, SectionPageMenu, JourneyBar, RouterOutlet, RouterLink, AccountChipComponent, ResponsiveNavigationDirective, StickyPageHeroDirective, CommandPalette],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <a class="skip-link" href="#main">Aller au contenu</a>
@@ -45,6 +50,8 @@ import {
       class="app-shell"
       rjsStickyPageHero
       [class.editorial-style]="visualStyle() === 'editorial'"
+      [class.is-focus]="prefs.focus()"
+      [attr.data-density]="prefs.density()"
       [attr.data-module]="workspaceIdentity().module"
       [attr.data-space]="workspaceIdentity().space"
       [attr.data-section-tone]="sectionTone()"
@@ -80,6 +87,10 @@ import {
             <strong>Votre navigation</strong>
             <button type="button" popovertarget="workspace-navigation" popovertargetaction="hide">Fermer <span aria-hidden="true">×</span></button>
           </div>
+          <!-- Une seule entrée pour tout rejoindre : destinations du plan, vues voisines, épingles, parcours et actions. -->
+          <button type="button" class="quick-open" (click)="openPalette()" aria-keyshortcuts="Meta+K Control+K">
+            <span class="quick-open-icon" aria-hidden="true">⌕</span><span class="quick-open-text">Rechercher, aller à…</span><kbd>⌘K</kbd>
+          </button>
           <!-- Même identité sur bureau et dans le menu mobile, sans répétition au-dessus de la page. -->
           <rjs-account-chip class="sidebar-account" variant="sidebar" [label]="activeUser()?.label ?? null" [typeLabel]="activeUser()?.userTypeLabel ?? ''" />
           @if (location().zone; as zone) {
@@ -90,7 +101,7 @@ import {
                   ><small>{{ zone.eyebrow }}</small><strong>{{ zone.label | navigationLabel:("zone:" + zone.id) }}</strong></span
                 ></a
               >
-              <a class="zone-identity-switch" routerLink="/">Changer de zone <span aria-hidden="true">↗</span></a>
+              <a class="zone-identity-switch" routerLink="/" title="Changer de zone"><span class="visually-hidden">Changer de zone</span><span aria-hidden="true">⇄</span></a>
             </div>
             <div class="nav-label">Sections de la zone</div>
             <nav class="section-switch" [attr.aria-label]="'Sections de ' + zone.label">
@@ -135,13 +146,13 @@ import {
             <div class="nav-label">Zones principales</div>
             @if (location().kind === 'portal') {
               <ul class="portal-zone-labels" aria-label="Zones principales">
-                @for (zone of zones; track zone.id) {
+                @for (zone of zones(); track zone.id) {
                   <li><a data-navigation-level="section" [routerLink]="zoneHome(zone)">{{ zone.label | navigationLabel:("zone:" + zone.id) }}</a></li>
                 }
               </ul>
             } @else {
               <nav class="section-switch zone-switch" aria-label="Zones principales">
-                @for (zone of zones; track zone.id) {
+                @for (zone of zones(); track zone.id) {
                   <a data-navigation-level="section" class="section-switch-entry" [attr.data-tone]="zone.tone" [routerLink]="zoneHome(zone)"
                     ><span class="section-mark" aria-hidden="true">{{ zone.acronym }}</span
                     ><span class="section-switch-text"
@@ -153,12 +164,27 @@ import {
             }
           }
 
+          <!-- Les pages épinglées par l'utilisateur : niveau « page », quelle que soit la zone affichée. -->
+          @if (pins().length) {
+            <div class="nav-label">Épinglés</div>
+            <nav class="pinned-pages" aria-label="Pages épinglées">
+              @for (pin of pins(); track pin.link) {
+                <span class="pinned-row">
+                  <a data-navigation-level="page" class="pinned-link" [routerLink]="pin.link" [queryParams]="pin.query" [class.active]="pin.current" [attr.aria-current]="pin.current ? 'page' : null" [attr.title]="pin.hint"
+                    ><span class="nav-icon" aria-hidden="true">★</span><span class="pinned-text">{{ pin.label }}</span></a
+                  >
+                  <button type="button" class="pinned-remove" (click)="pinned.remove(pin.link)" [attr.aria-label]="'Retirer l’épingle : ' + pin.label" title="Retirer l’épingle">×</button>
+                </span>
+              }
+            </nav>
+          }
+
           <!-- Dans une zone, un accès direct aux autres modules ; sur le portail, la liste des zones suffit. -->
           @if (location().zone) {
           <details class="navigation-module-switcher">
             <summary>Tous les modules</summary>
             <nav aria-label="Accès à tous les modules">
-              @for (zone of zones; track zone.id) {
+              @for (zone of zones(); track zone.id) {
                 <a data-navigation-level="section" [routerLink]="zoneHome(zone)" [attr.aria-current]="location().zone?.id === zone.id ? 'true' : null">{{ zone.label | navigationLabel:("zone:" + zone.id) }}</a>
               }
             </nav>
@@ -190,6 +216,9 @@ import {
                 }
               </div>
             </div>
+            <!-- Préférences du navigateur, repliées : elles ne font pas partie de la navigation. -->
+            <details class="sidebar-settings">
+            <summary><span aria-hidden="true">⚙</span> Utilisateur et affichage</summary>
             <label class="appearance-picker">
               <span>Utilisateur actif</span>
               <select aria-label="Utilisateur actif" (change)="choose($any($event.target).value)" [disabled]="!users().length">
@@ -206,6 +235,14 @@ import {
                 <option value="editorial">Sombre éditorial</option>
               </select>
             </label>
+            <label class="appearance-picker">
+              <span>Densité de l’affichage</span>
+              <select aria-label="Densité de l’affichage" [value]="prefs.density()" (change)="prefs.setDensity($any($event.target).value === 'compact' ? 'compact' : 'comfortable')">
+                <option value="comfortable">Confortable</option>
+                <option value="compact">Dense</option>
+              </select>
+            </label>
+            </details>
             <div class="sidebar-bottom">
               <span class="local-indicator"></span>
               <div><strong>Espace local</strong><small>Enregistré sur cet ordinateur</small></div>
@@ -216,6 +253,10 @@ import {
 
       <div class="main-shell">
         <header class="topbar">
+          <button type="button" class="topbar-tool topbar-menu-toggle" (click)="prefs.toggleFocus()" [attr.aria-pressed]="prefs.focus()"
+            [attr.aria-label]="prefs.focus() ? 'Afficher le menu' : 'Masquer le menu'" [title]="prefs.focus() ? 'Afficher le menu (M)' : 'Masquer le menu (M)'"
+            ><span aria-hidden="true">{{ prefs.focus() ? '▤' : '◧' }}</span></button
+          >
           <nav navigationSurface="tertiary" class="topbar-context" aria-label="Fil d’Ariane">
             <span class="topbar-square" aria-hidden="true"></span>
             <a data-navigation-level="section" routerLink="/">{{ "Accueil" | navigationLabel:"/" }}</a>
@@ -229,6 +270,15 @@ import {
             }
           </nav>
           <div class="topbar-actions">
+            <button type="button" class="topbar-search" (click)="openPalette()" aria-label="Rechercher une page ou une action" title="Rechercher, aller à… (⌘K)">
+              <span aria-hidden="true">⌕</span><span class="topbar-search-text">Rechercher</span><kbd>⌘K</kbd>
+            </button>
+            @if (location().zone) {
+              <button type="button" class="topbar-tool topbar-pin" (click)="togglePin()" [attr.aria-pressed]="isPinned()"
+                [attr.aria-label]="isPinned() ? 'Retirer l’épingle de cette page' : 'Épingler cette page dans le menu'" [title]="isPinned() ? 'Retirer l’épingle (E)' : 'Épingler cette page (E)'"
+                ><span aria-hidden="true">{{ isPinned() ? '★' : '☆' }}</span></button
+              >
+            }
             <time class="topbar-date" [attr.datetime]="todayIso">{{ todayLabel }}</time>
             <a class="topbar-home" routerLink="/">RJS Forecast</a>
             <!-- En haut à droite, comme d'usage : l'utilisateur connecté, accueil compris. -->
@@ -264,6 +314,18 @@ import {
             <div class="page"><p class="muted">Chargement…</p></div>
           }
         </main>
+        <!-- Poursuivre : le niveau supérieur, les autres vues et les pages voisines du plan, avec la même lecture. -->
+        @if (dock().length) {
+          <nav navigationSurface="tertiary" class="context-dock" aria-label="Poursuivre depuis cette page">
+            <span class="context-dock-title">Poursuivre</span>
+            @for (link of dock(); track link.id) {
+              <a class="context-dock-link" [attr.data-navigation-level]="link.kind === 'view' ? 'detail' : 'page'" [attr.data-kind]="link.kind" [routerLink]="link.link" [queryParams]="link.query ?? null">
+                <span class="context-dock-mark" aria-hidden="true">{{ link.mark }}</span>
+                <span class="context-dock-text"><small>{{ link.hint }}</small><strong>{{ link.label | navigationLabel:(link.navigationKey ?? link.link) }}</strong></span>
+              </a>
+            }
+          </nav>
+        }
         @if (showBackToTop()) {
           <button class="back-to-top" type="button" (click)="backToTop()" aria-label="Revenir en haut de la page">↑ <span>Haut de page</span></button>
         }
@@ -271,6 +333,10 @@ import {
           <span>RJS Forecast · Budget/Patrimoine Management</span><span>Données locales · montants en euros</span>
         </footer>
       </div>
+      <!-- La palette se charge après le premier rendu : elle ne pèse pas sur l'ouverture du site. -->
+      @defer (on idle) {
+        <rjs-command-palette #palette />
+      }
     </div>
   `,
 })
@@ -283,7 +349,7 @@ export class App implements OnInit {
   protected users = this.directory.users;
   protected ready = signal(false);
   protected error = signal<string | null>(null);
-  protected readonly zones = PLAN_ZONES;
+  protected readonly zones = computed(() => orderedZones());
   protected readonly todayIso = new Date().toISOString().slice(0, 10);
   protected readonly todayLabel = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
   protected readonly showBackToTop = signal(false);
@@ -334,12 +400,40 @@ export class App implements OnInit {
   /** Accueil, accueils de zone (hors BPM), utilisateurs, administration et Object Management restent consultables sans user. */
   protected needsUser = computed(() => !/^\/($|navigation|utilisateurs|app\/bienvenue|admin|object-management|zones(?!\/bpm(\/|$)))/.test(this.path()));
 
+  protected readonly prefs = inject(ShellPreferences);
+  protected readonly pinned = inject(PinnedPages);
+  private readonly paletteView = viewChild<CommandPalette>('palette');
+  protected openPalette(mode: 'go' | 'help' = 'go'): void {
+    this.paletteView()?.open(mode);
+  }
+  /** Les épingles de l'utilisateur ; dans la zone affichée, elles gardent la période lue. */
+  protected readonly pins = computed(() => {
+    const url = this.url();
+    const zone = this.location().zone?.id;
+    const here = this.path().replace(/\/+$/, '') || '/';
+    return this.pinned.pins().map((pin) => {
+      const query = locate(pin.link).zone?.id === zone ? workspaceContextQuery(url) : {};
+      return { ...pin, query: Object.keys(query).length ? query : null, current: pin.link === here };
+    });
+  });
+  protected readonly isPinned = computed(() => this.pinned.has(this.url()));
+  /** « Poursuivre » : page précédente, niveau supérieur, autres vues, page suivante — dans l'ordre du plan. */
+  protected readonly dock = computed(() => {
+    if (!this.ready() || !this.location().zone || (this.users().length === 0 && this.needsUser())) return [];
+    const links = contextLinks(this.url(), this.objectLabel());
+    const of = (kind: string, mark?: string) => links.filter((link) => link.kind === kind && (!mark || link.mark === mark));
+    return [...of('sibling', '←'), ...of('up'), ...of('view').slice(0, 4), ...of('sibling', '→')];
+  });
+
   private static readonly appearanceKey = 'rjs-forecast-appearance';
   // Le choix personnel du navigateur prime ; sinon la présentation classique.
   private readonly personalStyle = signal<'classic' | 'editorial' | null>(App.readVisualStyle());
   protected readonly visualStyle = computed(() => this.personalStyle() ?? 'classic');
 
   constructor() {
+    // L'ordre des liens réglé dans Navigation system vaut pour toutes les listes que le plan projette.
+    const navigationSystem = inject(NavigationSystem);
+    effect(() => planOrder.set(navigationSystem.configuration().order ?? {}));
     // Une navigation referme le menu mobile.
     effect(() => {
       this.url();
@@ -352,6 +446,82 @@ export class App implements OnInit {
       const name = this.objectLabel();
       if (name) untracked(() => this.title.setTitle(`${visitLabel(url, name)} — RJS Forecast`));
     });
+    // Une fiche épinglée avant d'être nommée reprend son nom dès que la page le publie.
+    effect(() => {
+      const url = this.url();
+      const name = this.objectLabel();
+      const at = this.location();
+      if (name && !at.subpage && (at.object || at.kind === 'detail')) untracked(() => this.pinned.rename(url, name));
+    });
+  }
+
+  protected togglePin(): void {
+    const context = planContext(this.url(), this.objectLabel());
+    const { zone, section } = context.location;
+    if (!zone) return;
+    const hint = [zone.label, section && section.id !== 'ensemble' && section.label !== context.label ? section.label : null].filter(Boolean).join(' › ');
+    this.pinned.toggle(this.url(), context.label ?? zone.label, hint);
+  }
+
+  /**
+   * Raccourcis du cadre. ⌘K / Ctrl K ouvre la recherche partout ; les raccourcis à une touche
+   * (désactivables dans l'aide) ne valent que hors d'un champ de saisie et d'une fenêtre ouverte.
+   */
+  @HostListener('document:keydown', ['$event'])
+  protected shortcut(event: KeyboardEvent): void {
+    const key = event.key?.toLowerCase();
+    if (!key || event.defaultPrevented) return;
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && key === 'k') {
+      event.preventDefault();
+      this.paletteView()?.toggle();
+      return;
+    }
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest?.('input, textarea, select, [contenteditable], [role="textbox"], [role="combobox"], [role="listbox"], [role="grid"]') || document.querySelector('dialog[open], [popover]:popover-open')) return;
+    if (key === '/' || key === '?') {
+      event.preventDefault();
+      this.paletteView()?.open(key === '?' ? 'help' : 'go');
+      return;
+    }
+    if (!this.prefs.singleKeys() || event.shiftKey || event.repeat) return;
+    const url = this.url();
+    const context = planContext(url, this.objectLabel());
+    const go = (link: string | undefined, parent = link) => {
+      if (!link) return;
+      event.preventDefault();
+      void this.router.navigate([link], { queryParams: workspaceContextQuery(url, parent ?? '') });
+    };
+    const tab = (offset: number) => {
+      const index = context.tabs.findIndex((entry) => entry.current);
+      go(index < 0 ? undefined : context.tabs[index + offset]?.link);
+    };
+    if (key === 'h') go(context.up?.link);
+    else if (key === 'p') tab(-1);
+    else if (key === 'n') tab(1);
+    else if (key === 'j' || key === 'k') {
+      // Étape suivante / précédente du parcours : les pages de la section, dans l'ordre du menu.
+      const { section, page } = context.location;
+      const pages = section ? menuPages(section).filter((entry) => !entry.zoneOverview) : [];
+      const index = pages.findIndex((entry) => entry.link === page?.link);
+      go(index < 0 ? undefined : pages[index + (key === 'j' ? 1 : -1)]?.link, '');
+    } else if (key === 'g') {
+      // Les gestes de l'onglet affiché (saisir, créer, régler), sinon ceux du premier onglet qui en porte.
+      const more = document.querySelector<HTMLElement>('.page-tab-more.is-current') ?? document.querySelector<HTMLElement>('.page-tab-more');
+      if (more) {
+        event.preventDefault();
+        more.click();
+      }
+    } else if (key === 'e' && context.location.zone) this.togglePin();
+    else if (key === 'm') this.prefs.toggleFocus();
+    else if (key === 'r') this.journey.back();
+    else if (key === 's') this.journey.forward();
+    else if (key === 'd') this.journey.toStart();
+    else if (key === 'f') this.journey.resume();
+    else if (/^[1-9]$/.test(key) && context.location.zone) {
+      const section = this.visibleSections(context.location.zone)[Number(key) - 1];
+      if (section) go(sectionEntry(context.location.zone, section).link, '');
+    }
   }
 
   async ngOnInit() {

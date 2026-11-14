@@ -31,7 +31,7 @@ import {
 import { BpmLifeManagement } from './bpm-life.models';
 import { CapAlert, CapsReview, ChargeCategory, SpendingCaps } from './bpm-caps.models';
 import { BpmDashboard, Closure, CostCenter, FigureEvaluation, LifeProject, Operation, PatrimoineRead } from './models';
-import { BpmProjectDetail, BpmProjectInput, BpmProjectsOverview, BpmTaskInput, BpmTasksOverview, CycleCheck, ProjectOverrun, ReturnCadence, TaskBudgetRequest } from './bpm-projects.models';
+import { BpmProjectDetail, BpmProjectInput, BpmProjectsOverview, BpmTaskInput, BpmTasksOverview, CycleCheck, ProjectAbandonPreview, ProjectOverrun, ReturnCadence, TaskBudgetRequest } from './bpm-projects.models';
 
 type Query = Record<string, string | number | null | undefined>;
 
@@ -160,6 +160,18 @@ export class BpmApi {
   settleOccurrence(recurrenceId: string, body: { requestKey: string; occurrenceDate: string; realizedAmount?: number; realizedDate?: string; note?: string; fund?: boolean }) {
     return this.post<{ replayed: boolean; operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/settle`, body);
   }
+  /** Écarte une échéance qui n'aura pas lieu : elle sort des sommes, la définition continue. */
+  skipOccurrence(recurrenceId: string, body: { requestKey: string; occurrenceDate: string; reason?: string }) {
+    return this.post<{ replayed: boolean; operation: Operation }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/skip`, body);
+  }
+  /** Rétablit une échéance écartée : elle redevient attendue. */
+  restoreOccurrence(recurrenceId: string, body: { occurrenceDate: string; expectedRevision: number }) {
+    return this.post<{ operation: Operation }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/restore`, body);
+  }
+  /** Supprime une définition saisie par erreur, tant qu'aucune échéance n'est réglée. */
+  cancelRecurrence(id: string, expectedRevision: number, reason?: string) {
+    return this.post<{ recurrence: Recurrence }>(`/api/bpm/recurrences/${encodeURIComponent(id)}/cancel`, { expectedRevision, reason });
+  }
   addCostCenter(body: { requestKey: string; label: string; direction: 'income' | 'charge' }) {
     return this.post<{ replayed: boolean; costCenterId: string; costCenters: CostCenter[] }>('/api/bpm/cost-centers', body);
   }
@@ -243,6 +255,14 @@ export class BpmApi {
     return this.put<BpmProjectDetail & { overrunCents: number }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/shares/${encodeURIComponent(taskId)}`, { amount, expectedRevision, ...opts });
   }
   /** Tâche terminée : sa part non consommée revient à l'enveloppe. */
+  /** Abandonne un projet de la vie : enveloppe ramenée au réglé, prévu annulé, projet fermé aux écritures. */
+  abandonProject(budgetId: string, body: { expectedRevision: number; reason?: string }) {
+    return this.post<{ abandonment: ProjectAbandonPreview; detail: BpmProjectDetail }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/abandon`, body);
+  }
+  /** Reprend un projet abandonné : il reçoit de nouveau des écritures. */
+  resumeProject(budgetId: string, expectedRevision: number) {
+    return this.post<{ detail: BpmProjectDetail }>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/resume`, { expectedRevision });
+  }
   releaseTaskShare(budgetId: string, taskId: string, expectedRevision: number) {
     return this.post<BpmProjectDetail & { released: { releasedCents: number; shareCents: number | null; taskTitle: string } }>(
       `/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/shares/${encodeURIComponent(taskId)}/release`,

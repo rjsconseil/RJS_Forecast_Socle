@@ -1,0 +1,1384 @@
+{
+  "api": "http://localhost:3410",
+  "startedAt": "2026-11-13T16:54:04.420Z",
+  "users": [
+    {
+      "id": "usr_ff1b5943-5f51-4f49-8f61-1d7946e904c1",
+      "label": "UTILISATEURS · Paul Marchand",
+      "kind": "reprise",
+      "steps": [
+        {
+          "name": "lire les récurrences",
+          "ok": true
+        },
+        {
+          "name": "octobre · courses oubliées, saisies avant clôture",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "aperçu de clôture · octobre",
+          "ok": true
+        },
+        {
+          "name": "clôturer octobre (1165.1 €)",
+          "ok": true
+        },
+        {
+          "name": "refuser une correction dans octobre clos",
+          "ok": true
+        },
+        {
+          "name": "novembre · salaire reçu",
+          "ok": false,
+          "detail": {
+            "code": "ALREADY_SETTLED",
+            "status": 409,
+            "message": "Cette occurrence est déjà réglée."
+          }
+        },
+        {
+          "name": "novembre · cadeaux de fin d’année prévus",
+          "ok": true
+        },
+        {
+          "name": "novembre · courses réglées",
+          "ok": true
+        },
+        {
+          "name": "novembre · annuler le règlement des courses (erreur de compte)",
+          "ok": true
+        },
+        {
+          "name": "novembre · régler de nouveau les courses",
+          "ok": true
+        },
+        {
+          "name": "novembre · prime exceptionnelle reçue",
+          "ok": true
+        },
+        {
+          "name": "refuser une dépense sans montant",
+          "ok": true
+        },
+        {
+          "name": "refuser une dépense sans poste connu",
+          "ok": true
+        },
+        {
+          "name": "aperçu d’une saisie avant enregistrement",
+          "ok": true
+        },
+        {
+          "name": "l’aperçu signale le plafond des loisirs",
+          "ok": true
+        },
+        {
+          "name": "créer la récurrence « Salle de sport »",
+          "ok": true
+        },
+        {
+          "name": "écarter l’échéance de décembre (salle fermée)",
+          "ok": true
+        },
+        {
+          "name": "refuser d’écarter deux fois la même échéance",
+          "ok": true
+        },
+        {
+          "name": "rétablir l’échéance de décembre (réouverture annoncée)",
+          "ok": true
+        },
+        {
+          "name": "écarter de nouveau l’échéance de décembre",
+          "ok": true
+        },
+        {
+          "name": "saisir « Abonnement streaming » en double",
+          "ok": true
+        },
+        {
+          "name": "supprimer la définition saisie en double",
+          "ok": true
+        },
+        {
+          "name": "la définition supprimée sort de la liste des récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire le poste Loisirs",
+          "ok": true
+        },
+        {
+          "name": "plafonner les loisirs à 150 €",
+          "ok": true
+        },
+        {
+          "name": "créer la catégorie « Cantine des enfants » plafonnée à 120 €",
+          "ok": true
+        },
+        {
+          "name": "refuser une catégorie sans nom",
+          "ok": true
+        },
+        {
+          "name": "créer le projet « Vélo cargo pour la famille »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Demander trois devis »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Choisir l’artisan »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Acheter les matériaux »",
+          "ok": true
+        },
+        {
+          "name": "les trois tâches sont rattachées au projet",
+          "ok": true
+        },
+        {
+          "name": "lire la fiche du projet",
+          "ok": true
+        },
+        {
+          "name": "attribuer l’enveloppe du projet (2 400 €)",
+          "ok": true
+        },
+        {
+          "name": "donner une part à « Acheter les matériaux » (1 500 €)",
+          "ok": true
+        },
+        {
+          "name": "donner une part à « Demander trois devis » (100 €)",
+          "ok": true
+        },
+        {
+          "name": "refuser une part qui dépasse l’enveloppe sans autorisation",
+          "ok": true
+        },
+        {
+          "name": "relire la fiche du projet",
+          "ok": true
+        },
+        {
+          "name": "la tâche « Choisir l’artisan » demande 300 €",
+          "ok": true
+        },
+        {
+          "name": "relire avant décision",
+          "ok": true
+        },
+        {
+          "name": "accepter la demande de part",
+          "ok": true
+        },
+        {
+          "name": "payer les matériaux sur la part de la tâche",
+          "ok": true
+        },
+        {
+          "name": "relire après règlement",
+          "ok": true
+        },
+        {
+          "name": "demander un dépassement de 250 €",
+          "ok": true
+        },
+        {
+          "name": "accepter le dépassement",
+          "ok": true
+        },
+        {
+          "name": "refuser de facturer les dépassements avant la fin du cycle",
+          "ok": true
+        },
+        {
+          "name": "relire avant le retour attendu",
+          "ok": true
+        },
+        {
+          "name": "prévoir un retour au projet de vie (revente des chutes)",
+          "ok": true
+        },
+        {
+          "name": "lire la fiche finale du projet",
+          "ok": true
+        },
+        {
+          "name": "la fiche du projet porte son enveloppe et ses parts",
+          "ok": true
+        },
+        {
+          "name": "créer l’objectif « Fonds d’urgence » (6 000 € fin 2027)",
+          "ok": true
+        },
+        {
+          "name": "repousser l’objectif à mi-2028",
+          "ok": true
+        },
+        {
+          "name": "relire le profil pour la vision",
+          "ok": true
+        },
+        {
+          "name": "régler l’épargne visée (300 € par période)",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · synthèse · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · registre des flux · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · registre par poste · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · postes de dépense · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · entrées de la période · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · rapprochement · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · plafonds · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-08",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · tableau de bord · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · synthèse · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · registre des flux · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · registre par poste · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · postes de dépense · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · entrées de la période · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · rapprochement · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · plafonds · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-09",
+          "ok": false,
+          "detail": {
+            "code": "NOT_FOUND",
+            "status": 404,
+            "message": "Période inconnue pour ce cycle."
+          }
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · historique",
+          "ok": true
+        },
+        {
+          "name": "lire · budget type",
+          "ok": true
+        },
+        {
+          "name": "lire · échéances",
+          "ok": true
+        },
+        {
+          "name": "lire · événements",
+          "ok": true
+        },
+        {
+          "name": "lire · directives",
+          "ok": true
+        },
+        {
+          "name": "lire · projection",
+          "ok": true
+        },
+        {
+          "name": "lire · objectifs",
+          "ok": true
+        },
+        {
+          "name": "lire · récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · catégories",
+          "ok": true
+        },
+        {
+          "name": "lire · périodes",
+          "ok": true
+        },
+        {
+          "name": "lire · clôtures",
+          "ok": true
+        },
+        {
+          "name": "lire · projets",
+          "ok": true
+        },
+        {
+          "name": "lire · tâches",
+          "ok": true
+        },
+        {
+          "name": "lire · projets de la vie",
+          "ok": true
+        },
+        {
+          "name": "lire · postes",
+          "ok": true
+        },
+        {
+          "name": "lire · préparation",
+          "ok": true
+        },
+        {
+          "name": "lire · calendrier",
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire les récurrences",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "octobre · courses oubliées, saisies avant clôture",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "aperçu de clôture · octobre",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "clôturer octobre (1165.1 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "refuser une correction dans octobre clos",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "novembre · salaire reçu",
+      "ok": false,
+      "detail": {
+        "code": "ALREADY_SETTLED",
+        "status": 409,
+        "message": "Cette occurrence est déjà réglée."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "novembre · cadeaux de fin d’année prévus",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "novembre · courses réglées",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "novembre · annuler le règlement des courses (erreur de compte)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "novembre · régler de nouveau les courses",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "novembre · prime exceptionnelle reçue",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "refuser une dépense sans montant",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "refuser une dépense sans poste connu",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "aperçu d’une saisie avant enregistrement",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "l’aperçu signale le plafond des loisirs",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "créer la récurrence « Salle de sport »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "écarter l’échéance de décembre (salle fermée)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "refuser d’écarter deux fois la même échéance",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "rétablir l’échéance de décembre (réouverture annoncée)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "écarter de nouveau l’échéance de décembre",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "saisir « Abonnement streaming » en double",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "supprimer la définition saisie en double",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "la définition supprimée sort de la liste des récurrences",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · tableau de bord · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · synthèse · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre des flux · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre par poste · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · postes de dépense · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · entrées de la période · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · rapprochement · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · impact patrimonial · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · gestion du projet de vie · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · plafonds · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · revue des plafonds · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire le poste Loisirs",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "plafonner les loisirs à 150 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "créer la catégorie « Cantine des enfants » plafonnée à 120 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "refuser une catégorie sans nom",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "créer le projet « Vélo cargo pour la famille »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "créer la tâche « Demander trois devis »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "créer la tâche « Choisir l’artisan »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "créer la tâche « Acheter les matériaux »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "les trois tâches sont rattachées au projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire la fiche du projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "attribuer l’enveloppe du projet (2 400 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "donner une part à « Acheter les matériaux » (1 500 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "donner une part à « Demander trois devis » (100 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "refuser une part qui dépasse l’enveloppe sans autorisation",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "relire la fiche du projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "la tâche « Choisir l’artisan » demande 300 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "relire avant décision",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "accepter la demande de part",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "payer les matériaux sur la part de la tâche",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "relire après règlement",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "demander un dépassement de 250 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "accepter le dépassement",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "refuser de facturer les dépassements avant la fin du cycle",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "relire avant le retour attendu",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "prévoir un retour au projet de vie (revente des chutes)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire la fiche finale du projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "la fiche du projet porte son enveloppe et ses parts",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "créer l’objectif « Fonds d’urgence » (6 000 € fin 2027)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "repousser l’objectif à mi-2028",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "relire le profil pour la vision",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "régler l’épargne visée (300 € par période)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · tableau de bord · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · synthèse · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre des flux · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre par poste · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · postes de dépense · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · entrées de la période · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · rapprochement · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · impact patrimonial · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · gestion du projet de vie · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · plafonds · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · revue des plafonds · 2026-08",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · tableau de bord · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · synthèse · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre des flux · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre par poste · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · postes de dépense · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · entrées de la période · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · rapprochement · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · impact patrimonial · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · gestion du projet de vie · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · plafonds · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · revue des plafonds · 2026-09",
+      "ok": false,
+      "detail": {
+        "code": "NOT_FOUND",
+        "status": 404,
+        "message": "Période inconnue pour ce cycle."
+      }
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · historique",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · budget type",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · échéances",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · événements",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · directives",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · projection",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · objectifs",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · récurrences",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · catégories",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · périodes",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · clôtures",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · projets",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · tâches",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · projets de la vie",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · postes",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · préparation",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Paul Marchand",
+      "name": "lire · calendrier",
+      "ok": true
+    }
+  ],
+  "finishedAt": "2026-11-13T16:54:07.653Z",
+  "summary": {
+    "checks": 126,
+    "failed": 23
+  }
+}

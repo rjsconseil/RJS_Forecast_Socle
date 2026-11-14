@@ -144,7 +144,7 @@ describe('coordination des pages BPM', () => {
       'rjs-journey:user-B',
       JSON.stringify({
         visits: [
-          { id: 'liste', url: '/app/gestion-projet', label: 'Gestion de projet' },
+          { id: 'liste', url: '/app/gestion-projet', label: 'Projets et financement' },
           { id: 'fiche', url: '/app/gestion-projet/prj_1', label: 'Fiche du projet' },
         ],
         cursor: 1,

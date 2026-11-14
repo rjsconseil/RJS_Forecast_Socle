@@ -156,7 +156,11 @@ export default {
     return {
       patchProject(tx, id, input) {
         const p = om.owned(tx.draft, 'coreProject', id, tx.userId);
-        return om.update(tx, p, projectFields({ ...p, ...pick(input, PROJECT_FIELDS) }));
+        const before = { title: p.title };
+        const updated = om.update(tx, p, projectFields({ ...p, ...pick(input, PROJECT_FIELDS) }));
+        // Les niveaux supérieurs suivent le projet (le Budget dont il est la racine porte son nom).
+        for (const react of registry.extensions('onCoreProjectChange')) react(tx, { project: p, before }, socle);
+        return updated;
       },
       buildProject,
       buildTask,

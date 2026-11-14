@@ -6,6 +6,9 @@
  * Les libellés, sigles, symboles et tons reprennent ceux du registre ; les liens sont ceux de ce projet.
  */
 import { matchWorkspace, PAGE_WORKSPACES } from './page-workspaces';
+import { orderItems } from '../navigation/navigation-model';
+import { bandKey, objectKey, planOrder, PORTAL_KEY, sectionKey, zoneKey } from './plan-order';
+import { PlanTabLink, tabLinksKey, tabLinksOf } from './tab-links';
 
 export interface PlanPage {
   id: string;
@@ -157,38 +160,37 @@ export const PLAN_ZONES: PlanZone[] = [
         id: 'vision',
         acronym: '02',
         label: 'Ma vision budgétaire',
-        intention: 'Comprendre · agir · préparer l’avenir',
-        description: 'Comprendre la période, piloter le projet de vie, suivre les plafonds et préparer ses objectifs.',
+        intention: 'Comprendre · piloter · cadrer · préparer · régler',
+        description: 'Comprendre la période, piloter le projet de vie, suivre les plafonds, préparer ses objectifs et régler son cycle.',
         tone: 'nav-iris',
         homeTone: 'nav-lagoon',
         home: 'direct',
         module: 'bpm',
         space: 'bpm-parcours',
         pages: [
-          { id: 'tableau-de-bord', label: 'Tableau de bord', mainLabel: 'Vue de la période', link: '/tableau-de-bord', symbol: '◎', tone: 'nav-blue', description: 'Reçu, dépensé, reste et impact patrimonial : les entrées, charges et projets de votre période, avec le détail de chaque flux.', result: 'Lire votre budget et son impact sur votre patrimoine, puis agir depuis chaque montant.' },
-          { id: 'projet-de-vie', label: 'Gestion du projet de vie', mainLabel: 'Pilotage du cycle', link: '/projet-de-vie', symbol: '◫', tone: 'nav-indigo', description: 'Le projet unique qui englobe tous les autres : cycle en cours, charges indispensables et courantes, projets financés, résultats des cycles, objectif d’excédent et patrimoine.', result: 'Piloter d’un coup d’œil tout le budget du projet de vie et agir sur chaque volet.' },
-          { id: 'plafonds', label: 'Plafonds et catégories', mainLabel: 'Suivi des plafonds', link: '/plafonds', symbol: '⌈', tone: 'nav-cobalt', description: 'Suivre les marges et les dépassements, définir les plafonds des postes et organiser les catégories de dépenses.', result: 'Voir ce qui dépasse, au niveau du centre et de la catégorie, sans jamais bloquer une dépense.' },
+          { id: 'tableau-de-bord', label: 'Tableau de bord', mainLabel: 'Vue de la période', link: '/tableau-de-bord', symbol: '◎', tone: 'nav-blue', step: 'Comprendre', description: 'Reçu, dépensé, reste et impact patrimonial : les entrées, charges et projets de votre période, avec le détail de chaque flux.', result: 'Lire votre budget et son impact sur votre patrimoine, puis agir depuis chaque montant.' },
+          { id: 'projet-de-vie', label: 'Gestion du projet de vie', mainLabel: 'Pilotage du cycle', link: '/projet-de-vie', symbol: '◫', tone: 'nav-indigo', step: 'Piloter', description: 'Le projet unique qui englobe tous les autres : cycle en cours, charges indispensables et courantes, projets financés, résultats des cycles, objectif d’excédent et patrimoine.', result: 'Piloter d’un coup d’œil tout le budget du projet de vie et agir sur chaque volet.' },
+          { id: 'plafonds', label: 'Plafonds et catégories', mainLabel: 'Suivi des plafonds', link: '/plafonds', symbol: '⌈', tone: 'nav-cobalt', step: 'Cadrer', description: 'Suivre les marges et les dépassements, définir les plafonds des postes et organiser les catégories de dépenses.', result: 'Voir ce qui dépasse, au niveau du centre et de la catégorie, sans jamais bloquer une dépense.' },
           { id: 'piloter', hidden: true, label: 'Graphiques et chiffres', link: '/piloter', symbol: '◎', tone: 'nav-cobalt', exact: true, description: 'Le bilan de la période : chiffres, graphiques, réel face au prévu, postes et clôtures.', result: 'Comprendre le bilan chiffré de la période.' },
           { id: 'agir', hidden: true, label: 'Échéances à traiter', link: '/piloter/agir', symbol: '→', tone: 'nav-indigo', description: 'Les actions utiles de la période, classées par priorité.', result: 'Savoir quoi faire maintenant sur votre budget.' },
-          { id: 'vision', label: 'Objectifs et avenir', mainLabel: 'Mes objectifs datés', link: '/vision', symbol: '✦', tone: 'nav-iris', description: 'Vos objectifs et la projection des prochaines périodes.', result: 'Préparer l’avenir à partir des seules données saisies.' },
+          { id: 'vision', label: 'Objectifs et avenir', mainLabel: 'Mes objectifs datés', link: '/vision', symbol: '✦', tone: 'nav-iris', step: 'Préparer', description: 'Vos objectifs et la projection des prochaines périodes.', result: 'Préparer l’avenir à partir des seules données saisies.' },
+          { id: 'reglages', label: 'Cycle et réglages', mainLabel: 'Tous les réglages', link: '/app/reglages', symbol: '↻', tone: 'nav-blue', step: 'Régler', description: 'Le cycle budgétaire, le patrimoine, les périodes closes, les centres de coûts et les calculs.', result: 'Un cycle et des réglages explicites.' },
         ],
       },
       {
         id: 'projets-vie',
         acronym: '03',
         label: 'Mes projets de la vie',
-        intention: 'Projets, tâches, cycle et réglages',
-        description: 'Les projets de la vie de l’utilisateur et leurs tâches, le cycle budgétaire et ses réglages.',
+        intention: 'Financer ses projets · faire avancer leurs tâches',
+        description: 'Les projets de la vie de l’utilisateur, leur financement et leurs tâches.',
         tone: 'nav-petrol',
         homeTone: 'nav-lagoon',
         home: 'direct',
         module: 'bpm',
         space: 'bpm-parcours',
         pages: [
-          { id: 'projets', label: 'Projets de la vie', mainLabel: 'Projets par statut', link: '/app/projets', symbol: '▤', tone: 'nav-teal', description: 'Le projet de vie et ses projets de la vie par statut, avec le budget que le budget du projet de vie attribue à chacun.', result: 'Financer chaque projet, ventiler son budget sur ses tâches et suivre ses dépassements.' },
-          { id: 'gestion-projet', label: 'Gestion de projet', mainLabel: 'Parcours des projets', link: '/app/gestion-projet', symbol: '◫', tone: 'nav-teal', description: 'Créer un projet de la vie et ses tâches, attribuer son budget et piloter les demandes de montant.', result: 'Des projets financés, des tâches dotées de leur montant et un consommé suivi jusqu’au budget du projet de vie.' },
-          { id: 'taches', label: 'Tâches des projets', mainLabel: 'Tableau des tâches', link: '/app/taches', symbol: '☑', tone: 'nav-petrol', description: 'Les tâches des projets de la vie par statut, avec leur part de budget ; glisser une tâche change son état et celui de son projet.', result: 'Faire avancer les tâches et les rattacher aux projets, comme dans le noyau.' },
-          { id: 'reglages', label: 'Cycle et réglages', mainLabel: 'Tous les réglages', link: '/app/reglages', symbol: '↻', tone: 'nav-blue', description: 'Le cycle budgétaire, le patrimoine, les périodes closes, les centres de coûts et les calculs.', result: 'Un cycle et des réglages explicites.' },
+          { id: 'gestion-projet', label: 'Projets et financement', mainLabel: 'Parcours des projets', link: '/app/gestion-projet', symbol: '◫', tone: 'nav-teal', step: 'Financer', description: 'Tous vos projets de la vie en un seul lieu : les créer, les lire par statut, attribuer leur budget, décider les demandes et suivre leur consommation.', result: 'Des projets financés, des tâches dotées de leur montant et un consommé suivi jusqu’au budget du projet de vie.' },
+          { id: 'taches', label: 'Tâches des projets', mainLabel: 'Tableau des tâches', link: '/app/taches', symbol: '☑', tone: 'nav-petrol', step: 'Avancer', description: 'Les tâches des projets de la vie par statut, avec leur part de budget ; glisser une tâche change son état et celui de son projet.', result: 'Faire avancer les tâches et les rattacher aux projets, comme dans le noyau.' },
         ],
       },
       {
@@ -428,20 +430,37 @@ export const planZone = (id: string | null | undefined): PlanZone | null => PLAN
 
 /** Les sections d'une zone visibles pour ce public : `connected` = un user est connecté. */
 export function zoneSections(zone: PlanZone, connected: boolean): PlanSection[] {
-  return zone.sections.filter((section) => !section.audience || (section.audience === 'visitor') !== connected);
+  const sections = zone.sections.filter((section) => !section.audience || (section.audience === 'visitor') !== connected);
+  return orderItems(sections, (section) => sectionKey(zone.id, section.id), planOrder()[zoneKey(zone.id)]);
+}
+/** Les zones dans l'ordre réglé : bandes de l'accueil, puis zones de chaque bande. Sans réglage, l'ordre du plan. */
+export function orderedZones(): PlanZone[] {
+  const order = planOrder();
+  if (!order[PORTAL_KEY] && !PLAN_BANDS.some((band) => order[bandKey(band.id)])) return PLAN_ZONES;
+  const rows = orderItems(portalBands(PLAN_ZONES), (row) => bandKey(row.band?.id ?? ''), order[PORTAL_KEY]);
+  return rows.flatMap((row) => orderItems(row.zones, (zone) => zoneKey(zone.id), order[bandKey(row.band?.id ?? '')]));
+}
+const SECTION_ZONE = new WeakMap<PlanSection, string>();
+function zoneOf(section: PlanSection): string {
+  if (!SECTION_ZONE.has(section)) for (const zone of PLAN_ZONES) for (const entry of zone.sections) SECTION_ZONE.set(entry, zone.id);
+  return SECTION_ZONE.get(section) ?? '';
+}
+/** Les pages de menu dans l'ordre du plan : lui seul décide de la destination d'une section. */
+function planPages(section: PlanSection): PlanPage[] {
+  return section.pages.filter((page) => !page.hidden);
 }
 
-/** Les pages de menu d'une section : sans les pages seulement repérables. */
+/** Les pages de menu d'une section, dans l'ordre réglé : sans les pages seulement repérables. */
 export function menuPages(section: PlanSection): PlanPage[] {
-  return section.pages.filter((page) => !page.hidden);
+  return orderItems(planPages(section), (page) => page.link, planOrder()[sectionKey(zoneOf(section), section.id)]);
 }
 /** Une section à plusieurs pages montre ses pages sous son grand bouton. */
 export function hasPageMenu(section: PlanSection): boolean {
-  return menuPages(section).length > 1 || menuPages(section).some(page => PAGE_WORKSPACES.some(view => view.parent === page.link));
+  return planPages(section).length > 1 || planPages(section).some(page => PAGE_WORKSPACES.some(view => view.parent === page.link));
 }
 /** Une section à plusieurs pages a son accueil, sauf si elle s'ouvre sur sa page représentative. */
 export function hasSectionHome(section: PlanSection): boolean {
-  return menuPages(section).length > 1 && section.home !== 'direct';
+  return planPages(section).length > 1 && section.home !== 'direct';
 }
 /** Titre d'onglet des accueils génériques : « Section · Zone · RJS Forecast ». */
 export function planTitle(zoneId: string | null | undefined, sectionId?: string | null): string {
@@ -455,7 +474,7 @@ export const sectionHomeLink = (zone: PlanZone, section: PlanSection) => `/${PLA
 /** La destination d'une grande entrée de section : son accueil ou sa page utile. */
 export function sectionEntry(zone: PlanZone, section: PlanSection): { link: string; query: Record<string, string> | null } {
   if (hasSectionHome(section)) return { link: sectionHomeLink(zone, section), query: null };
-  const page = menuPages(section)[0] ?? section.pages[0];
+  const page = planPages(section)[0] ?? section.pages[0];
   return { link: page.link, query: null };
 }
 
@@ -574,11 +593,12 @@ export function pageChildren(page: PlanPage, url = '', objectLabel: string | nul
     id: view.key, label: view.label, link: `/${view.path.replace(':id', object?.id ?? '')}`,
     symbol: '↳', tone: page.tone, description: view.lead, result: view.lead, depth,
   });
-  const views = PAGE_WORKSPACES.filter(view => view.parent === page.link);
-  const children = views.filter(view => !view.path.includes(':id')).map(view => child(view));
+  const views = PAGE_WORKSPACES.filter(view => view.parent === page.link && view.menu !== false);
+  const sorted = (list: typeof views, parent: string) => orderItems(list, view => '/' + view.path, planOrder()[parent]);
+  const children = sorted(views.filter(view => !view.path.includes(':id')), page.link).map(view => child(view));
   if (object) {
     children.push({ id: 'object', label: objectLabel || OBJECT_FALLBACK, link: object.link, symbol: '◆', tone: page.tone, description: 'La fiche ouverte : sa vue principale.', result: '', depth: 1 });
-    children.push(...views.filter(view => view.path.includes(':id')).map(view => child(view, 2)));
+    children.push(...sorted(views.filter(view => view.path.includes(':id')), objectKey(page.link)).map(view => child(view, 2)));
   }
   if (current.kind === 'detail' && !current.object && current.page?.link === page.link && current.detailLabel)
     children.push({ id: 'current-detail', label: objectLabel || current.detailLabel, link: path, symbol: '↳', tone: page.tone, description: '', result: '', depth: 1 });
@@ -586,7 +606,8 @@ export function pageChildren(page: PlanPage, url = '', objectLabel: string | nul
 }
 
 export interface PlanCrumb { label: string; link?: string }
-export interface PlanTab { id: string; label: string; link: string; current: boolean }
+/** Un onglet du bandeau ; `links` : ses gestes, ouverts en liste verticale sous l'onglet. */
+export interface PlanTab { id: string; label: string; link: string; current: boolean; links: PlanTabLink[] }
 /**
  * Le contexte d'une adresse, lu par tout le cadre : surtitre et titre du bandeau, lien vers le
  * niveau supérieur, onglets des sous-pages et fil d'Ariane. Une seule règle pour toutes les pages.
@@ -635,16 +656,21 @@ export function planContext(url: string, objectLabel: string | null = null): Pla
     ? subpage ? { label: objectName, link: object.link } : page ? { label: page.label, link: page.link } : null
     : (kind === 'subpage' || kind === 'detail') && page ? { label: page.label, link: page.link } : null;
 
+  // Les gestes d'un onglet viennent du modèle de sa page (`:id` pour une fiche), dans l'ordre réglé.
+  const withLinks = (tab: { id: string; label: string; link: string }, model = tab.link): PlanTab => ({
+    ...tab, current: tab.link === path,
+    links: orderItems(tabLinksOf(model), link => link.key, planOrder()[tabLinksKey(model, tab.id === 'main')]),
+  });
   let tabs: PlanTab[] = [];
   if (object && page) {
-    const views = PAGE_WORKSPACES.filter(view => view.parent === page.link && view.path.includes(':id'));
+    const views = orderItems(PAGE_WORKSPACES.filter(view => view.parent === page.link && view.path.includes(':id')), view => '/' + view.path, planOrder()[objectKey(page.link)]);
     tabs = [{ id: 'object', label: 'Vue d’ensemble', link: object.link },
       ...views.map(view => ({ id: view.key, label: view.tabLabel ?? view.label, link: `/${view.path.replace(':id', object.id)}` }))]
-      .map(tab => ({ ...tab, current: tab.link === path }));
+      .map(tab => withLinks(tab, tab.id === 'object' ? objectKey(page.link) : '/' + (views.find(view => view.key === tab.id)?.path ?? '')));
   } else if (page && (kind === 'page' || kind === 'subpage')) {
     const children = pageChildren(page, url).filter(entry => entry.id !== 'current-detail' && entry.id !== 'object' && (entry.depth ?? 1) === 1);
     if (children.length) tabs = [{ id: 'main', label: page.mainLabel ?? 'Vue principale', link: page.link }, ...children.map(entry => ({ id: entry.id, label: entry.label, link: entry.link }))]
-      .map(tab => ({ ...tab, current: tab.link === path }));
+      .map(tab => withLinks(tab));
   }
   return { location, eyebrow, label, up, tabs, crumbs };
 }

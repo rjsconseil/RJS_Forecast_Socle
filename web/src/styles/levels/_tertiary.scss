@@ -1,0 +1,136 @@
+@use '../functions' as *;
+
+/*
+ * Surface tertiaire — les repères : fil d'Ariane et « Poursuivre ». Les trois niveaux y gardent une
+ * même taille ; c'est l'encre qui monte du plus large (zone) au plus précis (page affichée).
+ * Le parcours (« Mon parcours ») applique les mêmes niveaux dans `plan/journey.scss`.
+ */
+.app-shell[data-density] .topbar-context {
+  --level-section-size: 12.5px;
+  --level-section-weight: 500;
+  --level-section-radius: 6px;
+  --level-page-size: 12.5px;
+  --level-page-weight: 500;
+  --level-page-radius: 6px;
+  --level-detail-size: 12.5px;
+  --level-detail-weight: 650;
+  --level-detail-radius: 6px;
+  flex: 1;
+  gap: 2px;
+  padding-block: 2px;
+  color: var(--muted);
+  scrollbar-width: none;
+}
+.app-shell[data-density] .topbar-context .topbar-square {
+  display: none;
+}
+.app-shell[data-density] .topbar-context a {
+  padding: 3px 6px;
+  color: var(--muted);
+}
+.app-shell[data-density] .topbar-context a:hover {
+  background: var(--level-hover-surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+.app-shell[data-density] .topbar-context .topbar-separator {
+  color: color-mix(in srgb, var(--ink) 28%, transparent);
+  font-size: 12px;
+}
+.app-shell[data-density] .topbar-context .topbar-current {
+  max-width: 46ch;
+  padding: 3px 6px;
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+}
+
+/* Poursuivre : en bas de page, les destinations voisines dans l'ordre du plan. */
+.app-shell[data-density] .context-dock {
+  --level-page-size: 13px;
+  --level-page-weight: 600;
+  --level-page-radius: 10px;
+  --level-detail-size: 13px;
+  --level-detail-weight: 500;
+  --level-detail-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  margin: 24px var(--page-gutter) 0;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--frame-hairline);
+}
+.app-shell[data-density] .context-dock-title {
+  align-self: center;
+  margin-inline-end: 6px;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.app-shell[data-density] .context-dock-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 6px 14px 6px 8px;
+  border: 1px solid var(--frame-hairline);
+  background: var(--raised-surface);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: var(--frame-shadow-rest);
+}
+.app-shell[data-density] .context-dock-link:hover {
+  border-color: var(--app-accent-line);
+  color: var(--app-accent-hover);
+}
+.app-shell[data-density] .context-dock-mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--level-hover-surface);
+  color: var(--muted);
+  font-size: 13px;
+}
+.app-shell[data-density] .context-dock-link:hover .context-dock-mark {
+  background: var(--app-accent-soft);
+  color: var(--app-accent);
+}
+.app-shell[data-density] .context-dock-text {
+  display: grid;
+  min-width: 0;
+}
+.app-shell[data-density] .context-dock-text small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-shell[data-density] .context-dock-text strong {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1.3;
+}
+/* La page suivante ferme la rangée, à droite, comme le « Suivant » du parcours. */
+.app-shell[data-density] .context-dock-link[data-kind='sibling']:last-child {
+  flex-direction: row-reverse;
+  margin-inline-start: auto;
+  padding: 6px 8px 6px 14px;
+  text-align: end;
+}
+@media (max-width: 640px) {
+  .app-shell[data-density] .context-dock-link {
+    flex: 1 1 100%;
+  }
+  .app-shell[data-density] .context-dock-link[data-kind='sibling']:last-child {
+    margin-inline-start: 0;
+  }
+}

@@ -1,0 +1,1055 @@
+{
+  "api": "http://localhost:3410",
+  "startedAt": "2026-11-13T17:06:26.838Z",
+  "users": [
+    {
+      "id": "usr_8d2c2bf6-ee39-4c0a-b7e6-3acb8ef44ff5",
+      "label": "UTILISATEURS · Famille Lefèvre",
+      "kind": "reprise",
+      "steps": [
+        {
+          "name": "lire les récurrences",
+          "ok": true
+        },
+        {
+          "name": "octobre · courses oubliées, saisies avant clôture",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "aperçu de clôture · octobre",
+          "ok": true
+        },
+        {
+          "name": "clôturer octobre (1935.1 €)",
+          "ok": true
+        },
+        {
+          "name": "refuser une correction dans octobre clos",
+          "ok": true
+        },
+        {
+          "name": "refuser de régler deux fois le salaire de novembre",
+          "ok": true
+        },
+        {
+          "name": "novembre · cadeaux de fin d’année prévus",
+          "ok": true
+        },
+        {
+          "name": "novembre · courses réglées",
+          "ok": true
+        },
+        {
+          "name": "novembre · annuler le règlement des courses (erreur de compte)",
+          "ok": true
+        },
+        {
+          "name": "novembre · régler de nouveau les courses",
+          "ok": true
+        },
+        {
+          "name": "novembre · prime exceptionnelle reçue",
+          "ok": true
+        },
+        {
+          "name": "refuser une dépense sans montant",
+          "ok": true
+        },
+        {
+          "name": "refuser une dépense sans poste connu",
+          "ok": true
+        },
+        {
+          "name": "aperçu d’une saisie avant enregistrement",
+          "ok": true
+        },
+        {
+          "name": "l’aperçu signale le plafond des loisirs",
+          "ok": true
+        },
+        {
+          "name": "créer la récurrence « Salle de sport »",
+          "ok": true
+        },
+        {
+          "name": "écarter l’échéance de décembre (salle fermée)",
+          "ok": true
+        },
+        {
+          "name": "refuser d’écarter deux fois la même échéance",
+          "ok": true
+        },
+        {
+          "name": "rétablir l’échéance de décembre (réouverture annoncée)",
+          "ok": true
+        },
+        {
+          "name": "écarter de nouveau l’échéance de décembre",
+          "ok": true
+        },
+        {
+          "name": "saisir « Abonnement streaming » en double",
+          "ok": true
+        },
+        {
+          "name": "supprimer la définition saisie en double",
+          "ok": true
+        },
+        {
+          "name": "la définition supprimée sort de la liste des récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire le poste Loisirs",
+          "ok": true
+        },
+        {
+          "name": "plafonner les loisirs à 150 €",
+          "ok": true
+        },
+        {
+          "name": "créer la catégorie « Cantine des enfants » plafonnée à 120 €",
+          "ok": true
+        },
+        {
+          "name": "refuser une catégorie sans nom",
+          "ok": true
+        },
+        {
+          "name": "créer le projet « Vélo cargo pour la famille »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Demander trois devis »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Choisir l’artisan »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Acheter les matériaux »",
+          "ok": true
+        },
+        {
+          "name": "les trois tâches sont rattachées au projet",
+          "ok": true
+        },
+        {
+          "name": "lire la fiche du projet",
+          "ok": true
+        },
+        {
+          "name": "attribuer l’enveloppe du projet (2 400 €)",
+          "ok": true
+        },
+        {
+          "name": "donner une part à « Acheter les matériaux » (1 500 €)",
+          "ok": true
+        },
+        {
+          "name": "donner une part à « Demander trois devis » (100 €)",
+          "ok": true
+        },
+        {
+          "name": "refuser une part qui dépasse l’enveloppe sans autorisation",
+          "ok": true
+        },
+        {
+          "name": "relire la fiche du projet",
+          "ok": true
+        },
+        {
+          "name": "la tâche « Choisir l’artisan » demande 300 €",
+          "ok": true
+        },
+        {
+          "name": "relire avant décision",
+          "ok": true
+        },
+        {
+          "name": "accepter la demande de part",
+          "ok": true
+        },
+        {
+          "name": "payer les matériaux sur la part de la tâche",
+          "ok": true
+        },
+        {
+          "name": "relire après règlement",
+          "ok": true
+        },
+        {
+          "name": "demander un dépassement de 250 €",
+          "ok": true
+        },
+        {
+          "name": "accepter le dépassement",
+          "ok": true
+        },
+        {
+          "name": "refuser de facturer les dépassements avant la fin du cycle",
+          "ok": true
+        },
+        {
+          "name": "relire avant le retour attendu",
+          "ok": true
+        },
+        {
+          "name": "prévoir un retour au projet de vie (revente des chutes)",
+          "ok": true
+        },
+        {
+          "name": "lire la fiche finale du projet",
+          "ok": true
+        },
+        {
+          "name": "la fiche du projet porte son enveloppe et ses parts",
+          "ok": true
+        },
+        {
+          "name": "créer le projet « Week-end à la mer »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Réserver l’hébergement »",
+          "ok": true
+        },
+        {
+          "name": "donner 200 € à la réservation",
+          "ok": true
+        },
+        {
+          "name": "payer les arrhes (80 €)",
+          "ok": true
+        },
+        {
+          "name": "prévoir le solde de l’hébergement",
+          "ok": true
+        },
+        {
+          "name": "l’aperçu annonce 370 € rendus au budget de vie",
+          "ok": true
+        },
+        {
+          "name": "abandonner le projet (week-end annulé)",
+          "ok": true
+        },
+        {
+          "name": "l’enveloppe est ramenée aux 80 € réglés",
+          "ok": true
+        },
+        {
+          "name": "le solde prévu est annulé",
+          "ok": true
+        },
+        {
+          "name": "refuser une dépense sur un projet abandonné",
+          "ok": true
+        },
+        {
+          "name": "refuser une tâche dans un projet abandonné",
+          "ok": true
+        },
+        {
+          "name": "créer l’objectif « Fonds d’urgence » (6 000 € fin 2027)",
+          "ok": true
+        },
+        {
+          "name": "repousser l’objectif à mi-2028",
+          "ok": true
+        },
+        {
+          "name": "relire le profil pour la vision",
+          "ok": true
+        },
+        {
+          "name": "régler l’épargne visée (300 € par période)",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · historique",
+          "ok": true
+        },
+        {
+          "name": "lire · budget type",
+          "ok": true
+        },
+        {
+          "name": "lire · échéances",
+          "ok": true
+        },
+        {
+          "name": "lire · événements",
+          "ok": true
+        },
+        {
+          "name": "lire · directives",
+          "ok": true
+        },
+        {
+          "name": "lire · projection",
+          "ok": true
+        },
+        {
+          "name": "lire · objectifs",
+          "ok": true
+        },
+        {
+          "name": "lire · récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · catégories",
+          "ok": true
+        },
+        {
+          "name": "lire · périodes",
+          "ok": true
+        },
+        {
+          "name": "lire · clôtures",
+          "ok": true
+        },
+        {
+          "name": "lire · projets",
+          "ok": true
+        },
+        {
+          "name": "lire · tâches",
+          "ok": true
+        },
+        {
+          "name": "lire · projets de la vie",
+          "ok": true
+        },
+        {
+          "name": "lire · postes",
+          "ok": true
+        },
+        {
+          "name": "lire · préparation",
+          "ok": true
+        },
+        {
+          "name": "lire · calendrier",
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire les récurrences",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "octobre · courses oubliées, saisies avant clôture",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "aperçu de clôture · octobre",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "clôturer octobre (1935.1 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser une correction dans octobre clos",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser de régler deux fois le salaire de novembre",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "novembre · cadeaux de fin d’année prévus",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "novembre · courses réglées",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "novembre · annuler le règlement des courses (erreur de compte)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "novembre · régler de nouveau les courses",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "novembre · prime exceptionnelle reçue",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser une dépense sans montant",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser une dépense sans poste connu",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "aperçu d’une saisie avant enregistrement",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "l’aperçu signale le plafond des loisirs",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer la récurrence « Salle de sport »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "écarter l’échéance de décembre (salle fermée)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser d’écarter deux fois la même échéance",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "rétablir l’échéance de décembre (réouverture annoncée)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "écarter de nouveau l’échéance de décembre",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "saisir « Abonnement streaming » en double",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "supprimer la définition saisie en double",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "la définition supprimée sort de la liste des récurrences",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · tableau de bord · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · synthèse · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · registre des flux · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · registre par poste · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · postes de dépense · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · entrées de la période · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · rapprochement · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · impact patrimonial · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · gestion du projet de vie · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · plafonds · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · revue des plafonds · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire le poste Loisirs",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "plafonner les loisirs à 150 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer la catégorie « Cantine des enfants » plafonnée à 120 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser une catégorie sans nom",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer le projet « Vélo cargo pour la famille »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer la tâche « Demander trois devis »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer la tâche « Choisir l’artisan »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer la tâche « Acheter les matériaux »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "les trois tâches sont rattachées au projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire la fiche du projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "attribuer l’enveloppe du projet (2 400 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "donner une part à « Acheter les matériaux » (1 500 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "donner une part à « Demander trois devis » (100 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser une part qui dépasse l’enveloppe sans autorisation",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "relire la fiche du projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "la tâche « Choisir l’artisan » demande 300 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "relire avant décision",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "accepter la demande de part",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "payer les matériaux sur la part de la tâche",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "relire après règlement",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "demander un dépassement de 250 €",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "accepter le dépassement",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser de facturer les dépassements avant la fin du cycle",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "relire avant le retour attendu",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "prévoir un retour au projet de vie (revente des chutes)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire la fiche finale du projet",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "la fiche du projet porte son enveloppe et ses parts",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer le projet « Week-end à la mer »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer la tâche « Réserver l’hébergement »",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "donner 200 € à la réservation",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "payer les arrhes (80 €)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "prévoir le solde de l’hébergement",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "l’aperçu annonce 370 € rendus au budget de vie",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "abandonner le projet (week-end annulé)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "l’enveloppe est ramenée aux 80 € réglés",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "le solde prévu est annulé",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser une dépense sur un projet abandonné",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "refuser une tâche dans un projet abandonné",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "créer l’objectif « Fonds d’urgence » (6 000 € fin 2027)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "repousser l’objectif à mi-2028",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "relire le profil pour la vision",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "régler l’épargne visée (300 € par période)",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · historique",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · budget type",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · échéances",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · événements",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · directives",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · projection",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · objectifs",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · récurrences",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · catégories",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · périodes",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · clôtures",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · projets",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · tâches",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · projets de la vie",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · postes",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · préparation",
+      "ok": true
+    },
+    {
+      "user": "UTILISATEURS · Famille Lefèvre",
+      "name": "lire · calendrier",
+      "ok": true
+    }
+  ],
+  "finishedAt": "2026-11-13T17:06:30.908Z",
+  "summary": {
+    "checks": 115,
+    "failed": 0
+  }
+}

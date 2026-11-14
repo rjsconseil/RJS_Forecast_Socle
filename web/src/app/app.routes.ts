@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
+import { loadCalendarPage } from './calendar/calendar.route';
 import { RecetteContext } from './core/api.service';
 import { planTitle } from './plan/site-plan';
 import { PAGE_WORKSPACES } from './plan/page-workspaces';
@@ -49,9 +50,9 @@ const mainRoutes: Routes = [
   { path: 'app/operations', redirectTo: 'depenses' },
   { path: 'app/bienvenue', redirectTo: 'utilisateurs' },
   // Projets et tâches du budget de vie : tableaux par statut réimplémentés depuis le noyau, enrichis du budget des projets.
-  { path: 'app/gestion-projet', title: 'Gestion de projet — RJS Forecast', loadComponent: () => import('./bpm/projects/management.page').then((m) => m.BpmProjectManagementPage) },
+  { path: 'app/gestion-projet', title: 'Projets et financement — RJS Forecast', loadComponent: () => import('./bpm/projects/management.page').then((m) => m.BpmProjectManagementPage) },
   { path: 'app/gestion-projet/:id', title: 'Fiche du projet — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
-  { path: 'app/projets', title: 'Projets de la vie — RJS Forecast', loadComponent: () => import('./bpm/projects/projects.page').then((m) => m.BpmProjectsPage) },
+  { path: 'app/projets', title: 'Projets par statut — RJS Forecast', loadComponent: () => import('./bpm/projects/projects.page').then((m) => m.BpmProjectsPage) },
   // La fiche d'un projet a une seule adresse, sous la gestion de projet.
   { path: 'app/projets/:id', redirectTo: canonical((p) => ['/app/gestion-projet', p['id']]) },
   { path: 'app/taches', title: 'Tâches des projets — RJS Forecast', loadComponent: () => import('./bpm/projects/tasks.page').then((m) => m.BpmTasksPage) },
@@ -79,7 +80,7 @@ const mainRoutes: Routes = [
       groupsTitle: 'Projets de la période',
       groupKicker: 'Projet',
     },
-    loadComponent: () => import('./calendar/calendar.page').then((m) => m.CalendarPage),
+    loadComponent: loadCalendarPage,
   },
   {
     path: 'calendrier-budget',
@@ -93,7 +94,7 @@ const mainRoutes: Routes = [
       groupsTitle: 'Budgets de la période',
       groupKicker: 'Budget',
     },
-    loadComponent: () => import('./calendar/calendar.page').then((m) => m.CalendarPage),
+    loadComponent: loadCalendarPage,
   },
   {
     path: 'patrimoine/calendrier',
@@ -107,7 +108,7 @@ const mainRoutes: Routes = [
       groupsTitle: 'Patrimoine de la période',
       groupKicker: 'Patrimoine',
     },
-    loadComponent: () => import('./calendar/calendar.page').then((m) => m.CalendarPage),
+    loadComponent: loadCalendarPage,
   },
 
   // ---------- Socle : niveau 2 (middlewares, interfaces de test) ----------

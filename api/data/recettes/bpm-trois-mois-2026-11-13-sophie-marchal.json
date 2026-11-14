@@ -1,0 +1,966 @@
+{
+  "api": "http://localhost:3410",
+  "startedAt": "2026-11-13T16:54:38.049Z",
+  "users": [
+    {
+      "id": "usr_2dae46f2-61dc-408c-aa1b-a11a8e6a9a81",
+      "label": "ATELIER · Sophie Marchal",
+      "kind": "reprise",
+      "steps": [
+        {
+          "name": "lire les récurrences",
+          "ok": true
+        },
+        {
+          "name": "octobre · courses oubliées, saisies avant clôture",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "aperçu de clôture · octobre",
+          "ok": true
+        },
+        {
+          "name": "clôturer octobre (1085.1 €)",
+          "ok": true
+        },
+        {
+          "name": "refuser une correction dans octobre clos",
+          "ok": true
+        },
+        {
+          "name": "novembre · salaire reçu",
+          "ok": false,
+          "detail": {
+            "code": "FUTURE_REALIZATION",
+            "status": 422,
+            "message": "Date de réalisation dans le futur (2026-11-28) : une opération ne peut être réglée qu'à une date passée ou aujourd'hui."
+          }
+        },
+        {
+          "name": "novembre · cadeaux de fin d’année prévus",
+          "ok": true
+        },
+        {
+          "name": "novembre · courses réglées",
+          "ok": true
+        },
+        {
+          "name": "novembre · annuler le règlement des courses (erreur de compte)",
+          "ok": true
+        },
+        {
+          "name": "novembre · régler de nouveau les courses",
+          "ok": true
+        },
+        {
+          "name": "novembre · prime exceptionnelle reçue",
+          "ok": true
+        },
+        {
+          "name": "refuser une dépense sans montant",
+          "ok": true
+        },
+        {
+          "name": "refuser une dépense sans poste connu",
+          "ok": true
+        },
+        {
+          "name": "aperçu d’une saisie avant enregistrement",
+          "ok": true
+        },
+        {
+          "name": "l’aperçu signale le plafond des loisirs",
+          "ok": true
+        },
+        {
+          "name": "créer la récurrence « Salle de sport »",
+          "ok": true
+        },
+        {
+          "name": "écarter l’échéance de décembre (salle fermée)",
+          "ok": true
+        },
+        {
+          "name": "refuser d’écarter deux fois la même échéance",
+          "ok": true
+        },
+        {
+          "name": "rétablir l’échéance de décembre (réouverture annoncée)",
+          "ok": true
+        },
+        {
+          "name": "écarter de nouveau l’échéance de décembre",
+          "ok": true
+        },
+        {
+          "name": "saisir « Abonnement streaming » en double",
+          "ok": true
+        },
+        {
+          "name": "supprimer la définition saisie en double",
+          "ok": true
+        },
+        {
+          "name": "la définition supprimée sort de la liste des récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-11",
+          "ok": true
+        },
+        {
+          "name": "lire le poste Loisirs",
+          "ok": true
+        },
+        {
+          "name": "plafonner les loisirs à 150 €",
+          "ok": true
+        },
+        {
+          "name": "créer la catégorie « Cantine des enfants » plafonnée à 120 €",
+          "ok": true
+        },
+        {
+          "name": "refuser une catégorie sans nom",
+          "ok": true
+        },
+        {
+          "name": "créer le projet « Vélo cargo pour la famille »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Demander trois devis »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Choisir l’artisan »",
+          "ok": true
+        },
+        {
+          "name": "créer la tâche « Acheter les matériaux »",
+          "ok": true
+        },
+        {
+          "name": "les trois tâches sont rattachées au projet",
+          "ok": true
+        },
+        {
+          "name": "lire la fiche du projet",
+          "ok": true
+        },
+        {
+          "name": "attribuer l’enveloppe du projet (2 400 €)",
+          "ok": true
+        },
+        {
+          "name": "donner une part à « Acheter les matériaux » (1 500 €)",
+          "ok": true
+        },
+        {
+          "name": "donner une part à « Demander trois devis » (100 €)",
+          "ok": true
+        },
+        {
+          "name": "refuser une part qui dépasse l’enveloppe sans autorisation",
+          "ok": true
+        },
+        {
+          "name": "relire la fiche du projet",
+          "ok": true
+        },
+        {
+          "name": "la tâche « Choisir l’artisan » demande 300 €",
+          "ok": true
+        },
+        {
+          "name": "relire avant décision",
+          "ok": true
+        },
+        {
+          "name": "accepter la demande de part",
+          "ok": true
+        },
+        {
+          "name": "payer les matériaux sur la part de la tâche",
+          "ok": true
+        },
+        {
+          "name": "relire après règlement",
+          "ok": true
+        },
+        {
+          "name": "demander un dépassement de 250 €",
+          "ok": true
+        },
+        {
+          "name": "accepter le dépassement",
+          "ok": true
+        },
+        {
+          "name": "refuser de facturer les dépassements avant la fin du cycle",
+          "ok": true
+        },
+        {
+          "name": "relire avant le retour attendu",
+          "ok": true
+        },
+        {
+          "name": "prévoir un retour au projet de vie (revente des chutes)",
+          "ok": true
+        },
+        {
+          "name": "lire la fiche finale du projet",
+          "ok": true
+        },
+        {
+          "name": "la fiche du projet porte son enveloppe et ses parts",
+          "ok": true
+        },
+        {
+          "name": "créer l’objectif « Fonds d’urgence » (6 000 € fin 2027)",
+          "ok": true
+        },
+        {
+          "name": "repousser l’objectif à mi-2028",
+          "ok": true
+        },
+        {
+          "name": "relire le profil pour la vision",
+          "ok": true
+        },
+        {
+          "name": "régler l’épargne visée (300 € par période)",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · historique",
+          "ok": true
+        },
+        {
+          "name": "lire · budget type",
+          "ok": true
+        },
+        {
+          "name": "lire · échéances",
+          "ok": true
+        },
+        {
+          "name": "lire · événements",
+          "ok": true
+        },
+        {
+          "name": "lire · directives",
+          "ok": true
+        },
+        {
+          "name": "lire · projection",
+          "ok": true
+        },
+        {
+          "name": "lire · objectifs",
+          "ok": true
+        },
+        {
+          "name": "lire · récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · catégories",
+          "ok": true
+        },
+        {
+          "name": "lire · périodes",
+          "ok": true
+        },
+        {
+          "name": "lire · clôtures",
+          "ok": true
+        },
+        {
+          "name": "lire · projets",
+          "ok": true
+        },
+        {
+          "name": "lire · tâches",
+          "ok": true
+        },
+        {
+          "name": "lire · projets de la vie",
+          "ok": true
+        },
+        {
+          "name": "lire · postes",
+          "ok": true
+        },
+        {
+          "name": "lire · préparation",
+          "ok": true
+        },
+        {
+          "name": "lire · calendrier",
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire les récurrences",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "octobre · courses oubliées, saisies avant clôture",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "aperçu de clôture · octobre",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "clôturer octobre (1085.1 €)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "refuser une correction dans octobre clos",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "novembre · salaire reçu",
+      "ok": false,
+      "detail": {
+        "code": "FUTURE_REALIZATION",
+        "status": 422,
+        "message": "Date de réalisation dans le futur (2026-11-28) : une opération ne peut être réglée qu'à une date passée ou aujourd'hui."
+      }
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "novembre · cadeaux de fin d’année prévus",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "novembre · courses réglées",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "novembre · annuler le règlement des courses (erreur de compte)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "novembre · régler de nouveau les courses",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "novembre · prime exceptionnelle reçue",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "refuser une dépense sans montant",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "refuser une dépense sans poste connu",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "aperçu d’une saisie avant enregistrement",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "l’aperçu signale le plafond des loisirs",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "créer la récurrence « Salle de sport »",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "écarter l’échéance de décembre (salle fermée)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "refuser d’écarter deux fois la même échéance",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "rétablir l’échéance de décembre (réouverture annoncée)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "écarter de nouveau l’échéance de décembre",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "saisir « Abonnement streaming » en double",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "supprimer la définition saisie en double",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "la définition supprimée sort de la liste des récurrences",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · tableau de bord · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · synthèse · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · registre des flux · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · registre par poste · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · postes de dépense · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · entrées de la période · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · rapprochement · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · impact patrimonial · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · gestion du projet de vie · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · plafonds · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · revue des plafonds · 2026-11",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire le poste Loisirs",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "plafonner les loisirs à 150 €",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "créer la catégorie « Cantine des enfants » plafonnée à 120 €",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "refuser une catégorie sans nom",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "créer le projet « Vélo cargo pour la famille »",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "créer la tâche « Demander trois devis »",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "créer la tâche « Choisir l’artisan »",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "créer la tâche « Acheter les matériaux »",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "les trois tâches sont rattachées au projet",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire la fiche du projet",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "attribuer l’enveloppe du projet (2 400 €)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "donner une part à « Acheter les matériaux » (1 500 €)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "donner une part à « Demander trois devis » (100 €)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "refuser une part qui dépasse l’enveloppe sans autorisation",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "relire la fiche du projet",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "la tâche « Choisir l’artisan » demande 300 €",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "relire avant décision",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "accepter la demande de part",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "payer les matériaux sur la part de la tâche",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "relire après règlement",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "demander un dépassement de 250 €",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "accepter le dépassement",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "refuser de facturer les dépassements avant la fin du cycle",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "relire avant le retour attendu",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "prévoir un retour au projet de vie (revente des chutes)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire la fiche finale du projet",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "la fiche du projet porte son enveloppe et ses parts",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "créer l’objectif « Fonds d’urgence » (6 000 € fin 2027)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "repousser l’objectif à mi-2028",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "relire le profil pour la vision",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "régler l’épargne visée (300 € par période)",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · historique",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · budget type",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · échéances",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · événements",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · directives",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · projection",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · objectifs",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · récurrences",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · catégories",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · périodes",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · clôtures",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · projets",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · tâches",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · projets de la vie",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · postes",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · préparation",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Sophie Marchal",
+      "name": "lire · calendrier",
+      "ok": true
+    }
+  ],
+  "finishedAt": "2026-11-13T16:54:41.390Z",
+  "summary": {
+    "checks": 104,
+    "failed": 1
+  }
+}

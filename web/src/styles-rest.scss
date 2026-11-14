@@ -1,0 +1,39 @@
+// Seconde partie de la feuille globale : tout ce qui suit le calendrier dans l'ordre de la source de reference.
+// Les styles du calendrier (`styles-calendar.scss`) s'inserent juste avant cette feuille, a la demande.
+@use 'site-responsive';
+@use 'calendar-controls';
+@use 'forms';
+@use 'utilisateurs';
+@use 'interactions';
+@use 'zones';
+@use 'management';
+@use 'overview-theme';
+@use 'calendar-full-width';
+@use 'surface-language';
+@use 'bpm-presentation';
+
+@use 'app-tokens';
+@use 'app-base';
+@use 'app-controls';
+@use 'app-layout';
+@use 'app-components';
+@use 'app-shell';
+@use 'socle';
+@use 'calendar-module';
+@use 'bpm-projects';
+
+@use 'page-workspace';
+
+// Éclat commun des cadres du haut de page (en dernier : il habille tous les bandeaux).
+@use 'hero-glow';
+
+// Relief et effets communs : survol des cartes, halo des commandes, entrée des fenêtres.
+@use 'elevation';
+
+// Design par niveau hiérarchique (section, page, détail) : une feuille par niveau et par surface du cadre.
+@use 'levels';
+
+@use './app/navigation/navigation';
+
+// Design system final du module BPM : surfaces, navigation et contrôles communs.
+@use 'bpm-application';

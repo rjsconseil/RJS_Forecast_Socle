@@ -190,3 +190,46 @@ describe('règlement depuis une fiche d’échéance', () => {
     expect(page.settleConfirmation()).toBeNull();
   });
 });
+
+describe('corrections d’une échéance récurrente depuis sa fiche', () => {
+  const occurrence = {
+    line: { id: 'rec_test@2026-11-05', operationId: null, recurrenceId: 'rec_test', occurrenceDate: '2026-11-05', kind: 'occurrence', revision: null, direction: 'charge', budgetId: 'bud_life', label: 'Loyer', plannedDate: '2026-11-05', plannedCents: 89000, costCenterRef: 'std:logement', categoryId: null, settled: false },
+    definition: { id: 'rec_test', revision: 3, label: 'Loyer' },
+    settlements: [],
+    skipped: [{ operationId: 'op_skip', occurrenceDate: '2026-10-05', plannedCents: 89000, reason: 'Loyer offert', revision: 2 }],
+    ids: { lineId: 'rec_test@2026-11-05', operationId: null, recurrenceId: 'rec_test', budgetId: 'bud_life', taskId: null },
+    actions: { canSettle: true, canCancelSettlement: false, canEdit: true, settlementPolicy: '', canSkipOccurrence: true, canDeleteDefinition: true },
+  } as unknown as LineDetail;
+
+  async function open(bpm: Record<string, unknown>) {
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: BpmApi, useValue: { line: vi.fn().mockResolvedValue(occurrence), ...bpm } }] });
+    TestBed.overrideComponent(BpmLineDetail, { set: { template: '' } });
+    const f = TestBed.createComponent(BpmLineDetail);
+    f.componentRef.setInput('lineId', 'rec_test@2026-11-05');
+    f.detectChanges();
+    await f.whenStable();
+    const closed = vi.fn();
+    f.componentInstance.closed.subscribe(closed);
+    return { page: f.componentInstance as any, closed };
+  }
+
+  it('écarte l’échéance à sa date puis referme la fiche', async () => {
+    const skipOccurrence = vi.fn().mockResolvedValue({});
+    const { page, closed } = await open({ skipOccurrence });
+    await page.skipOccurrence(occurrence);
+    expect(skipOccurrence).toHaveBeenCalledWith('rec_test', expect.objectContaining({ occurrenceDate: '2026-11-05', requestKey: expect.any(String) }));
+    expect(closed).toHaveBeenCalled();
+  });
+
+  it('supprime la définition à sa révision et rétablit une échéance écartée', async () => {
+    const cancelRecurrence = vi.fn().mockResolvedValue({});
+    const restoreOccurrence = vi.fn().mockResolvedValue({});
+    const { page, closed } = await open({ cancelRecurrence, restoreOccurrence });
+    await page.restoreOccurrence(occurrence, occurrence.skipped![0]);
+    expect(restoreOccurrence).toHaveBeenCalledWith('rec_test', { occurrenceDate: '2026-10-05', expectedRevision: 2 });
+    expect(page.message()).toContain('rétablie');
+    await page.deleteDefinition(occurrence);
+    expect(cancelRecurrence).toHaveBeenCalledWith('rec_test', 3, expect.any(String));
+    expect(closed).toHaveBeenCalled();
+  });
+});

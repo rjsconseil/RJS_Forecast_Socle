@@ -1,0 +1,48 @@
+@use '../functions' as *;
+
+/*
+ * Un élément de navigation porte son niveau (`data-navigation-level`) : il reçoit ici les variables
+ * courtes `--lvl-*` de ce niveau. Les surfaces n'écrivent ensuite qu'une règle, valable aux trois niveaux.
+ */
+@each $level in section, page, detail {
+  .app-shell[data-density] [data-navigation-level='#{$level}'] {
+    --lvl-size: var(--level-#{$level}-size);
+    --lvl-weight: var(--level-#{$level}-weight);
+    --lvl-height: var(--level-#{$level}-height);
+    --lvl-radius: var(--level-#{$level}-radius);
+    --lvl-mark: var(--level-#{$level}-mark);
+    --lvl-ink: var(--level-#{$level}-ink);
+  }
+}
+
+/* Surfaces du cadre qui appliquent les niveaux (le portail garde ses cartes). */
+$level-surfaces: '.sidebar, .topbar-context, .journey-navigation, .page-tabs, .quick-palette, .context-dock';
+
+.app-shell[data-density] :is(#{$level-surfaces}) [data-navigation-level] {
+  font-size: scaled(var(--lvl-size));
+  font-weight: var(--lvl-weight);
+  border-radius: var(--lvl-radius);
+  transition:
+    background-color var(--ease-fast),
+    color var(--ease-fast),
+    box-shadow var(--ease-fast);
+}
+.app-shell[data-density] :is(#{$level-surfaces}) [data-navigation-level]:focus-visible {
+  outline: 2px solid var(--level-focus);
+  outline-offset: 2px;
+}
+
+/* Touches de clavier : même pastille dans le menu, la barre du haut et la recherche. */
+.app-shell[data-density] kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  padding: 1px 5px;
+  border: 1px solid var(--frame-hairline);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--frame-kbd-surface);
+  color: var(--muted);
+  font: 600 11px/1.4 var(--font-sans);
+  white-space: nowrap;
+}

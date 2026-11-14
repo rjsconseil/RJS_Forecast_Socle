@@ -56,7 +56,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
     <div class="page page-wide bpm-projects bpm-project-page bpm-management">
       <bpm-page-banner
         class="life-projects-banner"
-        title="Gestion de projet"
+        title="Projets et financement"
         lead="Préparez vos projets, attribuez leur enveloppe et arbitrez les demandes des tâches. Le bandeau vous propose la prochaine étape selon leur situation."
         [focus]="pageFocus()"
         [scope]="toolbarScope()"
@@ -256,7 +256,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
       }
       @if (error()) {
         <div class="empty-state" role="alert">
-          <h2>Gestion de projet indisponible</h2>
+          <h2>Projets et financement indisponibles</h2>
           <p>{{ error() }}</p>
           <button class="btn btn-secondary" type="button" (click)="load()">Réessayer</button>
         </div>
@@ -279,6 +279,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                 tabindex="-1"
                 [class.is-expanded]="expandedProjects().has(p.project.id)"
                 [attr.data-budget-state]="p.budget?.state"
+                [attr.data-abandoned]="p.budget?.abandoned ? '' : null"
                 [attr.aria-label]="'Projet ' + p.project.title"
               >
                 <div class="bpm-panel pm-project-overview">
@@ -286,8 +287,9 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                     <div class="bpm-project-links">
                       <span
                         class="status-value pm-project-status"
-                        [attr.data-status]="p.view.status"
-                        >{{ p.view.statusLabel }}</span
+                        [attr.data-status]="p.budget?.abandoned ? 'abandoned' : p.view.status"
+                        [attr.title]="p.budget?.abandoned?.reason || null"
+                        >{{ p.budget?.abandoned ? 'Abandonné' : p.view.statusLabel }}</span
                       ><span class="pm-project-priority" [attr.data-priority]="p.project.priority"
                         >Priorité {{ priority[p.project.priority].toLowerCase() }}</span
                       >
@@ -386,7 +388,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                     <button
                       class="btn btn-secondary"
                       type="button"
-                      [disabled]="busy()"
+                      [disabled]="busy() || !!p.budget?.abandoned"
                       (click)="openTask(p.project.id)"
                     >
                       ＋ Créer une tâche
@@ -591,7 +593,7 @@ import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
                       <button
                         type="button"
                         class="btn btn-secondary"
-                        [disabled]="busy()"
+                        [disabled]="busy() || !!p.budget?.abandoned"
                         (click)="openTask(p.project.id)"
                       >
                         ＋ Créer une tâche

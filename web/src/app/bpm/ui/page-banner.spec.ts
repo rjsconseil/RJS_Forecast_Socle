@@ -52,7 +52,7 @@ describe('bandeau commun et coordination', () => {
     // Une fiche garde son nom en titre ; la sous-page est l'onglet courant.
     expect(banner.querySelector('h1')?.textContent).toBe('Test du cadre');
     expect(banner.querySelector('.page-intro')?.textContent).toBe('Attribuez les moyens.');
-    expect(banner.querySelector('.eyebrow')?.textContent).toBe('Mes projets de la vie · Gestion de projet');
+    expect(banner.querySelector('.eyebrow')?.textContent).toBe('Mes projets de la vie · Projets et financement');
     const back = banner.querySelector('.bpm-banner-back') as HTMLAnchorElement;
     expect(back.getAttribute('href')).toBe('/app/gestion-projet/prj_42?period=2026-10&q=travaux');
     expect(back.textContent).toContain('Fiche du projet');

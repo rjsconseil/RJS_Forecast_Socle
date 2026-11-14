@@ -36,9 +36,15 @@ describe('plan du site', () => {
     expect(locate('/zones/inconnue')).toMatchObject({ kind: 'unknown' });
   });
 
-  it('expose les objectifs comme quatrième page de Ma vision budgétaire', () => {
+  it('range Ma vision budgétaire comme un parcours, des chiffres de la période aux réglages du cycle', () => {
     const section = planZone('bpm')!.sections.find((s) => s.id === 'vision')!;
-    expect(menuPages(section).map((p) => p.id)).toEqual(['tableau-de-bord', 'projet-de-vie', 'plafonds', 'vision']);
+    expect(menuPages(section).map((p) => p.id)).toEqual(['tableau-de-bord', 'projet-de-vie', 'plafonds', 'vision', 'reglages']);
+    expect(menuPages(section).map((p) => p.step)).toEqual(['Comprendre', 'Piloter', 'Cadrer', 'Préparer', 'Régler']);
+    // Un seul lieu pour les projets : le tableau par statut et le suivi en sont des vues, à leur adresse d'origine.
+    const projects = planZone('bpm')!.sections.find((s) => s.id === 'projets-vie')!;
+    expect(menuPages(projects).map((p) => p.label)).toEqual(['Projets et financement', 'Tâches des projets']);
+    expect(locate('/app/projets')).toMatchObject({ kind: 'subpage', page: { id: 'gestion-projet' }, subpage: { id: 'projects-status' } });
+    expect(planContext('/app/projets/suivi').tabs.map(t => t.label)).toEqual(['Parcours des projets', 'Projets par statut', 'Suivi des projets financés', 'Attribuer les enveloppes', 'Décider les financements']);
     expect(locate('/depenses/registre')).toMatchObject({ kind: 'subpage', page: { id: 'tableau-de-bord' }, subpage: { id: 'register' } });
   });
 
@@ -50,7 +56,8 @@ describe('plan du site', () => {
       expect(at.page?.link, path).toBe(view.parent);
       expect(at.page?.hidden, path).not.toBe(true);
       expect(at.subpage?.label, path).toBe(view.label);
-      expect(pageChildren(at.page!, path).some(child => child.link === path), path).toBe(true);
+      // Une vue ouverte par un bouton ou un geste garde son contexte, sans entrée de menu.
+      expect(pageChildren(at.page!, path).some(child => child.link === path), path).toBe(view.menu !== false);
     }
   });
 
@@ -107,19 +114,19 @@ describe('plan du site', () => {
   it('nomme la fiche ouverte et range ses sous-pages en onglets', () => {
     const fiche = planContext('/app/gestion-projet/prj_42?period=2026-10', 'Cuisine');
     expect(fiche.location.object).toEqual({ kind: 'project', id: 'prj_42', link: '/app/gestion-projet/prj_42' });
-    expect(fiche.crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Mes projets de la vie', 'Gestion de projet', 'Cuisine']);
-    expect(fiche.up).toEqual({ label: 'Gestion de projet', link: '/app/gestion-projet' });
+    expect(fiche.crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Mes projets de la vie', 'Projets et financement', 'Cuisine']);
+    expect(fiche.up).toEqual({ label: 'Projets et financement', link: '/app/gestion-projet' });
     expect(fiche.tabs.map(t => [t.label, t.current])).toEqual([['Vue d’ensemble', true], ['Budget et décisions', false], ['Tâches', false]]);
 
     const budget = planContext('/app/gestion-projet/prj_42/budget', 'Cuisine');
     expect(budget.up).toEqual({ label: 'Cuisine', link: '/app/gestion-projet/prj_42' });
     expect(budget.crumbs.map(c => c.label).slice(-2)).toEqual(['Cuisine', 'Budget du projet']);
-    expect(budget.eyebrow).toBe('Mes projets de la vie · Gestion de projet');
+    expect(budget.eyebrow).toBe('Mes projets de la vie · Projets et financement');
     expect(planContext('/app/gestion-projet/prj_42/budget').up?.label).toBe('Fiche du projet');
 
     const menu = pageChildren(locate('/app/gestion-projet').page!, '/app/gestion-projet/prj_42/taches', 'Cuisine');
     expect(menu.map(c => [c.label, c.depth])).toEqual([
-      ['Créer un projet de la vie', 1], ['Attribuer les enveloppes', 1], ['Décider les financements', 1],
+      ['Projets par statut', 1], ['Suivi des projets financés', 1], ['Attribuer les enveloppes', 1], ['Décider les financements', 1],
       ['Cuisine', 1], ['Budget du projet', 2], ['Tâches du projet', 2],
     ]);
   });

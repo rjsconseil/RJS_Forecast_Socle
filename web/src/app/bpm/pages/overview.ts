@@ -33,10 +33,10 @@ const pct = (part: number, whole: number | null | undefined) => (whole ? Math.ro
     <div class="page bpm-app bpm-overview" data-tone="budget">
       <header class="ov-hero">
         <p class="ov-kicker">{{ zone().label }} · Vue d’ensemble</p>
-        <h1>De l’argent qui entre <em>aux tâches qu’il finance</em></h1>
+        <h1>Vos finances et vos projets, <em>au même endroit.</em></h1>
         <p class="ov-lead">
-          Vos entrées et vos sorties alimentent le budget de votre <strong>projet de vie</strong>. Il attribue une enveloppe à
-          chacun de vos <strong>projets de la vie</strong>, qui en accordent une part — de 0 à 100 % — à leurs <strong>tâches</strong>.
+          Suivez votre budget, répartissez les enveloppes de vos projets et avancez vers vos objectifs.
+          Chaque montant reste relié aux opérations et aux tâches qui l’expliquent.
         </p>
         <div class="ov-hero-meta">
           @if (life.data(); as l) {
@@ -45,17 +45,16 @@ const pct = (part: number, whole: number | null | undefined) => (whole ? Math.ro
           }
         </div>
         <div class="ov-hero-actions">
-          <a class="btn ov-btn-light" routerLink="/tableau-de-bord">Lire la période →</a>
+          <a class="btn ov-btn-light" routerLink="/tableau-de-bord">Ouvrir mon tableau de bord →</a>
           <a class="btn ov-btn-ghost" routerLink="/app/gestion-projet" [queryParams]="{ editProject: 'new' }">＋ Créer un projet de la vie</a>
         </div>
       </header>
-      <rjs-journey-resume zone="bpm" title="Reprendre dans Budget/Patrimoine" />
 
       <bpm-state [loading]="loading()" [error]="error()" (retry)="reload()" />
 
       @if (view(); as v) {
         <section class="ov-chain" aria-labelledby="ov-chain-title">
-          <h2 id="ov-chain-title" class="ov-title">La chaîne de financement</h2>
+          <h2 id="ov-chain-title" class="ov-title">Votre budget en un coup d’œil</h2>
           <ol class="ov-stages">
             @for (s of v.stages; track s.key; let i = $index) {
               <li class="ov-stage" [attr.data-bpm-tone]="s.tone">
@@ -82,6 +81,8 @@ const pct = (part: number, whole: number | null | undefined) => (whole ? Math.ro
             <a class="ov-link" routerLink="/projet-de-vie">Piloter le projet de vie →</a>
           </p>
         </section>
+
+        <rjs-journey-resume zone="bpm" title="Reprendre mon activité" />
 
         <section class="ov-tree" aria-labelledby="ov-tree-title" data-bpm-tone="nav-petrol">
           <div class="ov-section-head">

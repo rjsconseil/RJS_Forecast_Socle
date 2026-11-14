@@ -129,7 +129,7 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
               </tr>
             } @empty {
               <tr>
-                <td [attr.colspan]="shown().length + 4">Aucun projet de la vie rattaché. Créez ou choisissez un projet à financer dans « Gestion de projet ».</td>
+                <td [attr.colspan]="shown().length + 4">Aucun projet de la vie rattaché. Créez ou choisissez un projet à financer dans « Projets et financement ».</td>
               </tr>
             }
           </tbody>

@@ -188,7 +188,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
                   <option [value]="t.id">{{ t.title }}</option>
                 }
               </select>
-              <small>{{ taskFundingRequired() && direction() === 'charge' ? 'Le règlement doit respecter le montant accordé à cette tâche dans Gestion de projet.' : 'Rattachement informatif : aucune allocation financière ne découle du temps de la tâche.' }}</small>
+              <small>{{ taskFundingRequired() && direction() === 'charge' ? 'Le règlement doit respecter le montant accordé à cette tâche dans Projets et financement.' : 'Rattachement informatif : aucune allocation financière ne découle du temps de la tâche.' }}</small>
             </label>
           }
           <label class="fe-wide"

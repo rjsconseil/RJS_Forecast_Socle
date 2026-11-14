@@ -211,7 +211,7 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
     key: 'projets',
     index: 4,
     title: p.label,
-    link: { label: 'Gestion de projet', link: '/app/gestion-projet' },
+    link: { label: 'Projets et financement', link: '/app/gestion-projet' },
     health: p.health,
     healthLabel: p.healthLabel,
     tag: `${p.fundedCount} / ${p.projectCount} financé${p.fundedCount > 1 ? 's' : ''}`,
@@ -247,7 +247,7 @@ function projectsVolet(d: BpmLifeManagement): VoletView {
       : decisions > 0
         ? { label: `Décider (${decisions})`, link: '/projet-de-vie', fragment: 'life-decisions' }
         : { label: 'Piloter les projets', link: '/app/gestion-projet' },
-    actions: !p.projectCount ? [{ label: 'Gestion de projet', link: '/app/gestion-projet' }] : [
+    actions: !p.projectCount ? [{ label: 'Projets et financement', link: '/app/gestion-projet' }] : [
       decisions > 0 ? { label: 'Piloter les projets', link: '/app/gestion-projet' } : { label: 'Décisions & facturation', link: '/projet-de-vie', fragment: 'life-decisions' },
       { label: 'Dépenses des projets à régler', link: '/projet-de-vie', fragment: 'life-due' },
       { label: 'Tableau des projets', link: '/app/projets' },

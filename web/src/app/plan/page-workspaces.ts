@@ -1,10 +1,13 @@
 import { Route } from '@angular/router';
 import { PageWorkspace } from './page-workspace';
+import { loadCalendarPage } from '../calendar/calendar.route';
 
 export interface WorkspaceDestination extends PageWorkspace {
   path: string;
   label: string;
   existing?: boolean;
+  /** Hors du menu et des onglets : la vue s'ouvre par un bouton ou un geste, pas comme une destination à part. */
+  menu?: false;
   /** Libellé court de l'onglet quand le bandeau rappelle déjà l'objet ouvert. */
   tabLabel?: string;
   loadComponent?: Route['loadComponent'];
@@ -28,11 +31,14 @@ export const PAGE_WORKSPACES: WorkspaceDestination[] = [
   view('plafonds/categories', '/plafonds', 'caps-categories', 'Organiser les catégories', 'Créez et rangez vos catégories dans leurs postes de dépense.', () => import('../bpm/pages/caps').then(m => m.BpmCapsPage)),
   view('vision/projection', '/vision', 'vision-projection', 'Projection patrimoniale', 'Ajustez vos hypothèses puis examinez la couverture de vos objectifs dans ce scénario.', () => import('../bpm/objectives/objectives.page').then(m => m.BpmObjectivesPage)),
   view('vision/reperes', '/vision', 'vision-landmarks', 'Épargne et cap patrimonial', 'Définissez vos repères d’épargne et le patrimoine que vous souhaitez construire.', () => import('../bpm/objectives/objectives.page').then(m => m.BpmObjectivesPage)),
-  view('app/projets/suivi', '/app/projets', 'projects-review', 'Suivi des projets financés', 'Examinez les enveloppes, les consommations et les projets qui demandent une attention.', () => import('../bpm/projects/projects.page').then(m => m.BpmProjectsPage)),
-  view('app/gestion-projet/nouveau', '/app/gestion-projet', 'project-create', 'Créer un projet de la vie', 'Précisez le projet et, si vous le connaissez, son budget de départ.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
+  // Un seul lieu pour les projets : le tableau par statut et le suivi sont des vues de « Projets et financement ».
+  view('app/projets', '/app/gestion-projet', 'projects-status', 'Projets par statut', 'Retrouvez le projet de vie et chaque projet de la vie selon son état, avec le budget qui lui est attribué.', undefined, true),
+  view('app/projets/suivi', '/app/gestion-projet', 'projects-review', 'Suivi des projets financés', 'Examinez les enveloppes, les consommations et les projets qui demandent une attention.', () => import('../bpm/projects/projects.page').then(m => m.BpmProjectsPage)),
+  // Les créations s'ouvrent par un bouton ou par le geste de l'onglet : elles ne doublent pas le menu.
+  { ...view('app/gestion-projet/nouveau', '/app/gestion-projet', 'project-create', 'Créer un projet de la vie', 'Précisez le projet et, si vous le connaissez, son budget de départ.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)), menu: false },
   view('app/gestion-projet/financement', '/app/gestion-projet', 'project-funding', 'Attribuer les enveloppes', 'Choisissez un projet puis attribuez les moyens nécessaires à ses tâches.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
   view('app/gestion-projet/decisions', '/app/gestion-projet', 'project-decisions', 'Décider les financements', 'Relisez les demandes de part et les autorisations de dépassement avant de décider.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
-  view('app/taches/nouvelle', '/app/taches', 'task-create', 'Créer une tâche', 'Préparez une tâche et choisissez son projet maintenant ou plus tard.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
+  { ...view('app/taches/nouvelle', '/app/taches', 'task-create', 'Créer une tâche', 'Préparez une tâche et choisissez son projet maintenant ou plus tard.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)), menu: false },
   view('app/taches/rattacher', '/app/taches', 'task-attach', 'Rattacher des tâches', 'Choisissez une tâche disponible et le projet auquel elle doit contribuer.', () => import('../bpm/projects/project-workspace.page').then(m => m.BpmProjectWorkspacePage)),
   { ...view('app/gestion-projet/:id/budget', '/app/gestion-projet', 'project-budget', 'Budget du projet', 'Attribuez l’enveloppe, répartissez les parts et examinez les décisions de ce projet.', () => import('../bpm/projects/project.page').then(m => m.BpmProjectPage)), tabLabel: 'Budget et décisions' },
   { ...view('app/gestion-projet/:id/taches', '/app/gestion-projet', 'project-tasks', 'Tâches du projet', 'Préparez et faites avancer les tâches de ce projet.', () => import('../bpm/projects/project.page').then(m => m.BpmProjectPage)), tabLabel: 'Tâches' },
@@ -60,10 +66,10 @@ export const PAGE_WORKSPACES: WorkspaceDestination[] = [
     ['calendrier', 'noyau', 'Calendrier du travail'],
     ['patrimoine/calendrier', 'patrimoine', 'Calendrier du patrimoine'],
   ].flatMap(([path, calendar]) => [
-    view(`${path}/agenda`, `/${path}`, 'calendar-agenda', 'Agenda des événements', 'Parcourez les repères datés, ouvrez leur détail et replanifiez ceux qui le permettent.', () => import('../calendar/calendar.page').then(m => m.CalendarPage)),
+    view(`${path}/agenda`, `/${path}`, 'calendar-agenda', 'Agenda des événements', 'Parcourez les repères datés, ouvrez leur détail et replanifiez ceux qui le permettent.', loadCalendarPage),
     // Le calendrier BPM porte ses sources dans le dépliant « Sources et affichage » de sa page (`/calendrier-budget#sources-et-affichage`).
     ...(calendar === 'budgetPatrimoine' ? [] : [
-      view(`${path}/sources`, `/${path}`, 'calendar-sources', 'Sources et affichage', 'Choisissez les sources et les informations utiles dans ce calendrier.', () => import('../calendar/calendar.page').then(m => m.CalendarPage)),
+      view(`${path}/sources`, `/${path}`, 'calendar-sources', 'Sources et affichage', 'Choisissez les sources et les informations utiles dans ce calendrier.', loadCalendarPage),
     ]),
   ]),
 ];

@@ -27,6 +27,7 @@ import {
   removeVisits,
   sameStep,
   TRAIL_LIMIT,
+  trailGroups,
   visitLabel,
 } from './journey-model';
 
@@ -54,8 +55,10 @@ const pathOf = (url: string) => url.split(/[?#]/)[0];
  * Le parcours de l'utilisateur dans tous les modules du site, par profil et par onglet : un seul fil
  * « Retour / Suivant / Mon parcours » structure la navigation de chaque zone du plan.
  *
- * - « ← Retour » et « Suivant → » se déplacent d'une étape ; la liste « Mon parcours » permet de
- *   rejoindre directement n'importe quelle étape, y compris la dernière atteinte.
+ * - « ← Retour » et « Suivant → » se déplacent d'une étape ; « ⇤ Début » revient à la première et
+ *   « Reprendre ⇥ » rejoint le point d'arrêt (la dernière étape). La liste « Mon parcours », rangée
+ *   par zone et section comme le menu, permet de rejoindre directement n'importe quelle étape.
+ * - Rien ne se perd : repartir d'une étape antérieure insère la nouvelle étape sans effacer la suite.
  * - Les boutons du navigateur suivent le même parcours : chaque entrée d'historique porte l'identité
  *   de son étape. Quand l'historique du navigateur ne correspond plus (étapes retirées, passage par
  *   une autre zone), le parcours rejoint l'étape visée par une navigation ordinaire.
@@ -79,7 +82,11 @@ export class Journey {
   readonly previous = computed(() => this.trail().visits[this.trail().cursor - 1] ?? null);
   readonly next = computed(() => this.trail().visits[this.trail().cursor + 1] ?? null);
   readonly current = computed(() => this.trail().visits[this.trail().cursor] ?? null);
+  readonly first = computed(() => this.trail().visits[0] ?? null);
+  /** Le point d'arrêt : la dernière étape du parcours, jamais effacée par un retour en arrière. */
   readonly last = computed(() => this.trail().visits.at(-1) ?? null);
+  readonly atStart = computed(() => this.trail().cursor <= 0);
+  readonly atEnd = computed(() => this.trail().cursor >= this.trail().visits.length - 1);
   /** Nombre d'étapes déjà parcourues en avant de l'étape affichée. */
   readonly ahead = computed(() => Math.max(0, this.trail().visits.length - 1 - this.trail().cursor));
   readonly notice = signal<string | null>(null);
@@ -160,6 +167,14 @@ export class Journey {
   forward() {
     const target = this.next();
     if (!this.busy() && target) this.reach(target, this.anchored && this.tags.nextId === target.id ? 'forward' : null);
+  }
+  /** Revenir à la première étape : tout le parcours reste disponible en avant. */
+  toStart() {
+    this.jump(0);
+  }
+  /** Reprendre là où l'on s'était arrêté : la dernière étape du parcours. */
+  resume() {
+    this.jump(this.visits().length - 1);
   }
   /** Rejoindre directement une étape du parcours, en arrière comme en avant. */
   jump(index: number) {
@@ -278,7 +293,19 @@ export class Journey {
     '(document:keydown.escape)': 'closeTrail()',
   },
   template: `
-    <nav navigationSurface="tertiary" class="journey-navigation" [attr.aria-label]="compact() ? 'Parcours du formulaire' : 'Avancer et revenir dans mon parcours'">
+    <nav navigationSurface="tertiary" class="journey-navigation" [class.is-compact]="compact()" [attr.aria-label]="compact() ? 'Parcours du formulaire' : 'Avancer et revenir dans mon parcours'">
+      @if (!compact()) {
+        <button
+          type="button"
+          data-navigation-level="section" class="nav-step nav-edge nav-first"
+          (click)="navigation.toStart()"
+          [disabled]="blocked() || navigation.pendingNavigation() || navigation.atStart()"
+          [title]="'Revenir au début du parcours' + (navigation.first() ? ' : ' + stepLabel(navigation.first()) : '')"
+          [attr.aria-label]="'Revenir au début du parcours' + (navigation.first() ? ' : ' + stepLabel(navigation.first()) : '')"
+        >
+          <span aria-hidden="true">⇤</span><span class="nav-edge-text">Début</span>
+        </button>
+      }
       <button
         type="button"
         data-navigation-level="detail" class="nav-step nav-back"
@@ -300,33 +327,56 @@ export class Journey {
               'Mon parcours : étape ' + position() + ' sur ' + navigation.visits().length + ' · ' + (navigation.current()?.label ?? 'Mon parcours')
             "
           >
+            @if (currentZone(); as zone) {
+              <span class="nav-trail-zone" [attr.data-tone]="zone.tone" [attr.title]="zone.label">{{ zone.acronym }}</span>
+            }
             <span class="nav-current" aria-live="polite">{{ navigation.current()?.label ?? 'Mon parcours' }}</span>
             @if (navigation.visits().length > 1) {
               <span class="nav-position">{{ position() }} / {{ navigation.visits().length }}</span>
             }
             <span class="nav-caret" aria-hidden="true">▾</span>
+            @if (navigation.visits().length > 1) {
+              <span class="nav-progress" aria-hidden="true"><span [style.width.%]="progress()"></span></span>
+            }
           </summary>
           @if (opened()) {
             <div class="nav-trail-panel">
-              <p class="nav-trail-title">Mon parcours <small>· toutes les étapes de cette séance</small></p>
+              <p class="nav-trail-title">Mon parcours <small>· {{ navigation.visits().length }} {{ navigation.visits().length > 1 ? 'étapes gardées' : 'étape gardée' }}, du début au point d’arrêt</small></p>
+              <div class="nav-trail-edges">
+                <button type="button" (click)="go(0)" [disabled]="navigation.atStart() || navigation.pendingNavigation()"><span aria-hidden="true">⇤</span> Revenir au début</button>
+                <button type="button" (click)="go(navigation.visits().length - 1)" [disabled]="navigation.atEnd() || navigation.pendingNavigation()">Reprendre au point d’arrêt <span aria-hidden="true">⇥</span></button>
+              </div>
+              <!-- Le parcours se lit comme le menu : zone et section en tête, pages puis détails en retrait. -->
               <ol class="nav-trail-list">
-                @for (visit of navigation.visits(); track visit.id; let i = $index) {
-                  <li [class.is-current]="i === navigation.cursor()" [class.is-ahead]="i > navigation.cursor()">
-                    <button
-                      type="button"
-                      (click)="go(i)"
-                      [disabled]="i === navigation.cursor() || navigation.pendingNavigation()"
-                      [attr.aria-current]="i === navigation.cursor() ? 'step' : null"
-                    >
-                      <span class="nav-trail-index">{{ i + 1 }}</span>
-                      <span class="nav-trail-zone" [attr.title]="zoneOf(visit.url)?.label">{{ zoneOf(visit.url)?.acronym }}</span>
-                      <span class="nav-trail-label">{{ visit.label }}</span>
-                      @if (i === navigation.cursor()) {
-                        <span class="nav-trail-tag">Vous êtes ici</span>
-                      } @else if (i === navigation.visits().length - 1) {
-                        <span class="nav-trail-tag">Dernière étape</span>
+                @for (group of groups(); track group.key) {
+                  <li class="nav-trail-group">
+                    <p data-navigation-level="section" class="nav-trail-place">
+                      <span class="nav-trail-zone" [attr.data-tone]="group.zone?.tone" [attr.title]="group.zone?.label">{{ group.zone?.acronym }}</span>
+                      <span>{{ group.zone?.label }}@if (group.section && group.section.id !== 'ensemble') { <span class="nav-trail-section"> › {{ group.section.label }}</span> }</span>
+                    </p>
+                    <ol>
+                      @for (step of group.steps; track step.visit.id) {
+                        <li [class.is-current]="step.index === navigation.cursor()" [class.is-ahead]="step.index > navigation.cursor()" [attr.data-level]="step.level">
+                          <button
+                            type="button"
+                            [attr.data-navigation-level]="step.level"
+                            (click)="go(step.index)"
+                            [disabled]="step.index === navigation.cursor() || navigation.pendingNavigation()"
+                            [attr.aria-current]="step.index === navigation.cursor() ? 'step' : null"
+                          >
+                            <span class="nav-trail-index">{{ step.index + 1 }}</span>
+                            <span class="nav-trail-label">{{ step.visit.label }}</span>
+                            @if (step.index === navigation.cursor()) {
+                              <span class="nav-trail-tag">Vous êtes ici</span>
+                            } @else if (step.index === navigation.visits().length - 1) {
+                              <span class="nav-trail-tag">Point d’arrêt</span>
+                            } @else if (step.index === 0) {
+                              <span class="nav-trail-tag is-quiet">Début</span>
+                            }
+                          </button>
+                        </li>
                       }
-                    </button>
+                    </ol>
                   </li>
                 }
               </ol>
@@ -347,16 +397,16 @@ export class Journey {
           >Suivant<span class="nav-destination"> · {{ stepLabel(navigation.next()) ?? '' }}</span></span
         ><span aria-hidden="true">→</span>
       </button>
-      @if (!compact() && navigation.ahead() > 1) {
+      @if (!compact()) {
         <button
           type="button"
-          data-navigation-level="detail" class="nav-step nav-last"
-          (click)="go(navigation.visits().length - 1)"
-          [disabled]="blocked() || navigation.pendingNavigation()"
-          [title]="'Reprendre à la dernière étape : ' + navigation.last()?.label"
-          [attr.aria-label]="'Reprendre à la dernière étape : ' + navigation.last()?.label"
+          data-navigation-level="section" class="nav-step nav-edge nav-last"
+          (click)="navigation.resume()"
+          [disabled]="blocked() || navigation.pendingNavigation() || navigation.atEnd()"
+          [title]="'Reprendre là où vous vous étiez arrêté' + (navigation.last() ? ' : ' + stepLabel(navigation.last()) : '')"
+          [attr.aria-label]="'Reprendre là où vous vous étiez arrêté' + (navigation.last() ? ' : ' + stepLabel(navigation.last()) : '')"
         >
-          <span>Dernière étape</span><span aria-hidden="true">⇥</span>
+          <span class="nav-edge-text">Reprendre</span><span aria-hidden="true">⇥</span>
         </button>
       }
     </nav>
@@ -382,6 +432,17 @@ export class JourneyBar {
   protected opened = signal(false);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected position = computed(() => this.navigation.cursor() + 1);
+  /** Le parcours rangé comme le plan : zone et section en tête, pages et détails en dessous. */
+  protected groups = computed(() => trailGroups(this.navigation.visits()));
+  protected currentZone = computed(() => {
+    const here = this.navigation.current();
+    return here ? locate(here.url).zone : null;
+  });
+  /** Où l'on se trouve entre le début et le point d'arrêt. */
+  protected progress = computed(() => {
+    const total = this.navigation.visits().length;
+    return total > 1 ? (this.navigation.cursor() / (total - 1)) * 100 : 100;
+  });
   /** Le parcours traverse les modules : chaque étape porte le sigle de sa zone. */
   protected zoneOf = (url: string) => locate(url).zone;
   /** Une étape d'une autre zone est nommée avec sa zone : « Noyau transverse · Projets ». */

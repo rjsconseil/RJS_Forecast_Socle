@@ -10,6 +10,25 @@ import { workspaceContextQuery } from './page-workspace';
   imports: [NavigationLabel, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
+    /* L'étape du parcours : discrète au repos, elle s'affirme sur la page affichée ou survolée. */
+    .section-page-text {
+      display: grid;
+      min-width: 0;
+    }
+    .section-page-step {
+      font-size: 0.62rem;
+      font-weight: 650;
+      letter-spacing: 0.07em;
+      line-height: 1.35;
+      text-transform: uppercase;
+      opacity: 0.55;
+      transition: opacity 160ms ease;
+    }
+    .section-page-link:hover .section-page-step,
+    .section-page-link.active .section-page-step,
+    .section-page-link.is-ancestor .section-page-step {
+      opacity: 0.9;
+    }
     .section-subpages li.is-object > a { font-weight: 650; }
     .section-subpages li.is-nested > a { padding-left: 1.6em; font-size: 0.94em; }
     .section-subpages li.is-nested > a::before { content: '↳ '; opacity: 0.6; }
@@ -22,7 +41,8 @@ import { workspaceContextQuery } from './page-workspace';
             [routerLink]="group.page.link" [queryParams]="query(group.page)"
             [class.active]="exact(group.page.link)" [class.is-ancestor]="isParent(group.page) && !exact(group.page.link)"
             [attr.aria-current]="exact(group.page.link) ? 'page' : null">
-            <span class="nav-icon" aria-hidden="true">{{ group.page.symbol }}</span><span>{{ group.page.label | navigationLabel:group.page.link }}</span>
+            <span class="nav-icon" aria-hidden="true">{{ group.page.symbol }}</span><!-- L'étape du parcours que la page représente coiffe son nom : le menu se lit comme un chemin. -->
+            <span class="section-page-text">@if (group.page.step; as step) { <small class="section-page-step">{{ step }}</small> }<span>{{ group.page.label | navigationLabel:group.page.link }}</span></span>
           </a>
           @if (group.children.length) {
             <button class="section-page-toggle" type="button" [attr.aria-expanded]="opened(group.page)"

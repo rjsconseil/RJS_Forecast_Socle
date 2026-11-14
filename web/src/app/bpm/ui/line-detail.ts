@@ -8,8 +8,9 @@ import { LineDetail, RegisterLine } from '../../core/bpm-models';
 import { cents, shortDate, signedCents } from '../../core/format';
 import { BpmModal } from './modal';
 import { FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from './project-funding';
-import { bpmLoader, BpmRefresh } from './page-context';
+import { bpmLoader, BpmRefresh, newRequestKey } from './page-context';
 import { settleDateWarnings, Settlement } from './settlement';
+
 import { BpmState } from './state';
 
 /**
@@ -197,6 +198,29 @@ interface PendingOverrun {
           } @else if (v.line.settled) {
             <p class="bpm-help">Règlement compris dans une période close : il n'est plus annulable.</p>
           }
+          <!-- Échéance d'une définition : elle s'écarte si elle n'aura pas lieu ; la définition se supprime si elle a été saisie par erreur. -->
+          @if (v.actions.canSkipOccurrence && v.ids.recurrenceId) {
+            <div class="bpm-actions">
+              @if (confirm() === 'skip') {
+                <p class="bpm-feedback is-warning" role="status">Cette échéance sortira des sommes et des listes (abonnement suspendu, loyer offert…). Les autres échéances restent attendues ; vous pourrez la rétablir.</p>
+                <button type="button" class="btn btn-danger" (click)="skipOccurrence(v)" [disabled]="busy()">Confirmer : écarter cette échéance</button>
+                <button type="button" class="btn btn-secondary" (click)="confirm.set(null)" [disabled]="busy()">Garder l’échéance</button>
+              } @else {
+                <button type="button" class="btn btn-secondary" (click)="confirm.set('skip')" [disabled]="busy()">Écarter cette échéance (elle n’aura pas lieu)</button>
+              }
+            </div>
+          }
+          @if (v.actions.canDeleteDefinition && v.definition) {
+            <div class="bpm-actions">
+              @if (confirm() === 'delete') {
+                <p class="bpm-feedback is-warning" role="status">Toutes les échéances de « {{ v.definition.label }} » sortiront des sommes et des listes (saisie en double, erreur). Elle reste dans l’historique de la base.</p>
+                <button type="button" class="btn btn-danger" (click)="deleteDefinition(v)" [disabled]="busy()">Confirmer la suppression de la définition</button>
+                <button type="button" class="btn btn-secondary" (click)="confirm.set(null)" [disabled]="busy()">Garder la définition</button>
+              } @else {
+                <button type="button" class="btn btn-secondary" (click)="confirm.set('delete')" [disabled]="busy()">Supprimer cette définition (saisie par erreur)</button>
+              }
+            </div>
+          }
           @if (v.actions.canCancelEntry && v.line.operationId) {
             <div class="bpm-actions">
               @if (confirmCancelEntry()) {
@@ -234,6 +258,19 @@ interface PendingOverrun {
               <p class="bpm-help">Aucun règlement enregistré.</p>
             }
           </section>
+          @if (v.skipped?.length) {
+            <section>
+              <h3>Échéances écartées</h3>
+              <ul class="bld-skipped">
+                @for (s of v.skipped; track s.operationId) {
+                  <li>
+                    <span>{{ date(s.occurrenceDate) }} · {{ c(s.plannedCents) }}@if (s.reason) { · {{ s.reason }} }</span>
+                    <button type="button" class="btn btn-secondary" (click)="restoreOccurrence(v, s)" [disabled]="busy()">Rétablir</button>
+                  </li>
+                }
+              </ul>
+            </section>
+          }
           <details class="bld-ids">
             <summary>Détails techniques</summary>
             <dl>
@@ -376,6 +413,42 @@ export class BpmLineDetail {
   }
 
   protected confirmCancelEntry = signal(false);
+  /** Confirmation en deux temps des corrections d'une définition récurrente. */
+  protected confirm = signal<'skip' | 'delete' | null>(null);
+  private skipKey = newRequestKey('skip');
+
+  async skipOccurrence(v: LineDetail) {
+    await this.correct(async () => {
+      await this.bpm.skipOccurrence(v.ids.recurrenceId!, { requestKey: this.skipKey, occurrenceDate: v.line.occurrenceDate ?? v.line.plannedDate, reason: 'Écartée depuis le détail de l’échéance' });
+      this.skipKey = newRequestKey('skip');
+      this.closed.emit();
+    });
+  }
+  async deleteDefinition(v: LineDetail) {
+    await this.correct(async () => {
+      await this.bpm.cancelRecurrence(v.definition!.id, v.definition!.revision, 'Supprimée depuis le détail de l’échéance');
+      this.closed.emit();
+    });
+  }
+  async restoreOccurrence(v: LineDetail, s: NonNullable<LineDetail['skipped']>[number]) {
+    await this.correct(async () => {
+      await this.bpm.restoreOccurrence(v.ids.recurrenceId!, { occurrenceDate: s.occurrenceDate, expectedRevision: s.revision });
+      this.message.set(`Échéance du ${this.date(s.occurrenceDate)} rétablie : elle est de nouveau attendue.`);
+    });
+  }
+  private async correct(action: () => Promise<void>) {
+    this.busy.set(true);
+    this.actionError.set(null);
+    try {
+      await action();
+      this.refresh.bump();
+    } catch (e) {
+      this.actionError.set(toApiError(e));
+    } finally {
+      this.busy.set(false);
+      this.confirm.set(null);
+    }
+  }
 
   async cancelEntry(v: LineDetail) {
     this.busy.set(true);

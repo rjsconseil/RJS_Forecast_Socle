@@ -737,3 +737,20 @@
   }
   .task-panel .task-charge > .bpm-note { grid-column: 1; }
 }
+
+/* Abandon d'un projet : l'aperçu de ce qui revient au budget de vie et de ce qui s'arrête, avant confirmation. */
+.project-abandon {
+  display: grid;
+  gap: 12px;
+  margin-block: 16px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--status-danger, #b42318) 35%, var(--outline));
+  border-left: 4px solid var(--status-danger, #b42318);
+  border-radius: 14px;
+  background: var(--raised-surface);
+  box-shadow: 0 12px 28px -18px rgb(20 32 50 / 0.45);
+}
+.project-abandon h2 { margin: 0; font-size: 1.1rem; }
+.project-abandon ul { display: grid; gap: 6px; margin: 0; padding-left: 1.2em; }
+.project-abandon label { display: grid; gap: 6px; max-width: 420px; font-weight: 600; }
+.project-abandon .bpm-help { margin: 0; }

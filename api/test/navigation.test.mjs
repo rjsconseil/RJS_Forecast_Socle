@@ -20,3 +20,9 @@ test('navigation settings persist globally and reject concurrent lost updates', 
   try { assert.deepEqual(next.modules.navigation.read().value, value); }
   finally { await next.close(); }
 });
+test('navigation order lists child keys per parent and nothing else', () => {
+  const config = order => ({ version: 1, scopes: {}, order });
+  validateNavigation(config({ 'zone:bpm': ['section:bpm:vision', 'section:bpm:ensemble'], '/plafonds': ['/plafonds/categories'] }));
+  for (const order of [[], { 'zone:bpm': 'section:bpm:vision' }, { 'zone:bpm': [] }, { 'zone:bpm': ['a', 'a'] }, { 'zone:bpm': [1] }, { 'zone:bpm': [''] }, { '': ['a'] }, { 'zone:bpm': [{ link: '/other' }] }])
+    assert.throws(() => validateNavigation(config(order)), { code: 'VALIDATION' });
+});

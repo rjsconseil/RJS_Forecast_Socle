@@ -1,4 +1,4 @@
-import { journeyAddress, emptyTrail, recordVisit, removeVisits, sameStep, TRAIL_LIMIT, visitLabel } from './journey-model';
+import { journeyAddress, emptyTrail, recordVisit, removeVisits, sameStep, TRAIL_LIMIT, trailGroups, visitLabel, visitLevel } from './journey-model';
 
 const visit = (id: string, url = `/creer?step=${id}`) => ({ id, url, label: id });
 
@@ -21,11 +21,49 @@ describe('historique du parcours BPM', () => {
     expect(trail.cursor).toBe(2);
     expect(trail.visits[trail.cursor + 1].id).toBe('4');
   });
-  it('une nouvelle direction après un retour remplace seulement le chemin à venir', () => {
-    let trail = recordVisit(recordVisit(emptyTrail(), visit('1')), visit('2'));
+  it('une nouvelle direction après un retour s’insère sans effacer le chemin déjà parcouru', () => {
+    let trail = emptyTrail();
+    for (const id of ['1', '2', '3']) trail = recordVisit(trail, visit(id));
     trail = recordVisit(trail, visit('1'), { restoredId: '1' });
     trail = recordVisit(trail, visit('nouveau', '/depenses/registre'));
-    expect(trail.visits.map((v) => v.id)).toEqual(['1', 'nouveau']);
+    expect(trail.visits.map((v) => v.id)).toEqual(['1', 'nouveau', '2', '3']);
+    expect(trail.cursor).toBe(1);
+    // « Retour » ramène à l'étape d'où l'on vient, « Suivant » reprend le chemin, jusqu'au point d'arrêt.
+    expect(trail.visits[trail.cursor - 1].id).toBe('1');
+    expect(trail.visits.at(-1)?.id).toBe('3');
+  });
+  it('revient au début puis reprend au point d’arrêt sans rien perdre', () => {
+    let trail = emptyTrail();
+    for (const id of ['1', '2', '3', '4']) trail = recordVisit(trail, visit(id));
+    trail = recordVisit(trail, visit('1'), { restoredId: '1' });
+    expect(trail.cursor).toBe(0);
+    trail = recordVisit(trail, visit('4'), { restoredId: '4' });
+    expect(trail.cursor).toBe(3);
+    expect(trail.visits.map((v) => v.id)).toEqual(['1', '2', '3', '4']);
+  });
+  it('garde l’étape affichée quand une insertion dépasse la limite du parcours', () => {
+    let trail = emptyTrail();
+    for (let i = 0; i < TRAIL_LIMIT; i++) trail = recordVisit(trail, visit(String(i)));
+    trail = recordVisit(trail, visit('0'), { restoredId: '0' });
+    trail = recordVisit(trail, visit('nouveau', '/depenses/registre'));
+    expect(trail.visits).toHaveLength(TRAIL_LIMIT);
+    expect(trail.visits[trail.cursor].id).toBe('nouveau');
+    expect(trail.visits.at(-1)?.id).toBe(String(TRAIL_LIMIT - 1));
+  });
+  it('range les étapes comme le plan : zone et section en tête, pages puis détails', () => {
+    expect(visitLevel('/zones/bpm')).toBe('section');
+    expect(visitLevel('/tableau-de-bord')).toBe('page');
+    expect(visitLevel('/plafonds/reglages')).toBe('detail');
+    expect(visitLevel('/tableau-de-bord?entry=new')).toBe('detail');
+    expect(visitLevel('/app/gestion-projet/prj_1')).toBe('detail');
+    const groups = trailGroups([
+      visit('a', '/tableau-de-bord'),
+      visit('b', '/plafonds/reglages'),
+      visit('c', '/app/gestion-projet'),
+      visit('d', '/vision'),
+    ]);
+    expect(groups.map((group) => `${group.zone?.id}/${group.section?.id}`)).toEqual(['bpm/vision', 'bpm/projets-vie', 'bpm/vision']);
+    expect(groups[0].steps.map((step) => `${step.index}:${step.level}`)).toEqual(['0:page', '1:detail']);
   });
   it('modifier les filtres remplace la visite courante sans ajouter une étape par caractère', () => {
     let trail = recordVisit(emptyTrail(), visit('liste', '/app/gestion-projet'));

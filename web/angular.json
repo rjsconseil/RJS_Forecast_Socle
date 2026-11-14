@@ -30,7 +30,9 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              { "input": "src/styles-calendar.scss", "bundleName": "calendar", "inject": false },
+              { "input": "src/styles-rest.scss", "bundleName": "styles-rest" }
             ],
             "stylePreprocessorOptions": {
               "includePaths": [

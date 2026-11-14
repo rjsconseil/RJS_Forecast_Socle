@@ -696,3 +696,15 @@
     cursor: default;
   }
 }
+
+/*
+ * Aperçu d'une journée et détail d'un indicateur promus au premier plan du navigateur (`rjsTopLayer`) :
+ * ils gardent la place que le calendrier leur calcule, mesurée depuis la fenêtre et non depuis l'aperçu.
+ * On retire seulement le centrage que le navigateur applique à un popover.
+ */
+.calendar-day-peek:popover-open,
+.calendar-peek-details:popover-open {
+  right: auto;
+  bottom: auto;
+  margin: 0;
+}

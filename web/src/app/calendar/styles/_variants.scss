@@ -1,0 +1,58 @@
+/* Les commandes BPM sont portées par le bandeau ; les repères gardent le même cadre. */
+:host .calendar.is-bpm-calendar.has-external-tools .calendar-control-row {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+/* Une seule surface de travail pour les étapes Agenda et Sources. */
+:host .calendar.is-360.is-specialized-calendar {
+  .calendar-layout,
+  .calendar-layout.is-year,
+  .calendar-layout.is-week {
+    display: block;
+    width: 100%;
+  }
+  .calendar-right-rail {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: none;
+  }
+  .calendar-right-rail .calendar-control-row {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0;
+    gap: 16px;
+  }
+  .calendar-agenda {
+    flex: 0 0 auto;
+    position: static;
+    width: 100%;
+    max-height: none;
+    min-height: 0;
+    height: auto;
+    contain: none;
+    overflow: visible;
+    margin: 0;
+  }
+  .calendar-agenda-list {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .calendar-agenda-item { max-width: none; }
+  .calendar-elements {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: 12px;
+  }
+  .calendar-element-toggle { min-height: 56px; }
+}

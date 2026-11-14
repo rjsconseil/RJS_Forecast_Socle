@@ -1,0 +1,39 @@
+/*
+ * Surface secondaire — les onglets du bandeau. La vue principale est de niveau « page », ses
+ * sous-vues de niveau « detail » : même bande, un filet les sépare et la graisse les distingue.
+ */
+.app-shell[data-density] .page-tabs {
+  --level-page-size: 13px;
+  --level-page-weight: 650;
+  --level-page-radius: 8px;
+  --level-detail-size: 13px;
+  --level-detail-weight: 500;
+  --level-detail-radius: 8px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 11px;
+}
+.app-shell[data-density] .page-tabs .page-tab {
+  position: relative;
+  min-height: 32px;
+  padding: 4px 12px;
+}
+.app-shell[data-density] .page-tabs :is(.page-tab[data-navigation-level='page'], .page-tab[data-navigation-level='page'] + .page-tab-more) + .page-tab[data-navigation-level='detail'] {
+  margin-inline-start: 9px;
+}
+.app-shell[data-density] .page-tabs :is(.page-tab[data-navigation-level='page'], .page-tab[data-navigation-level='page'] + .page-tab-more) + .page-tab[data-navigation-level='detail']::before {
+  position: absolute;
+  inset-block: 8px;
+  inset-inline-start: -6px;
+  width: 1px;
+  background: color-mix(in srgb, currentColor 28%, transparent);
+  content: '';
+}
+.app-shell[data-density] .page-tabs .page-tab.is-current {
+  font-weight: 650;
+}
+@media (max-width: 700px) {
+  .app-shell[data-density] .page-tabs .page-tab {
+    min-height: 40px;
+  }
+}

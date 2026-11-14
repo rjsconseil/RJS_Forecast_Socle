@@ -111,7 +111,9 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
             <a class="btn btn-primary" routerLink="/projet-de-vie/budget-type">Commencer la configuration</a>
           </section>
         } @else {
-          <bpm-journeys [periodQuery]="carry()" [initiallyOpen]="noOperation()" />
+          @if (noOperation()) {
+            <bpm-journeys [periodQuery]="carry()" [initiallyOpen]="true" />
+          }
           @let s = summary.data()!;
           @if (!s.context.period) {
             <p class="bpm-missing" role="note">
@@ -198,6 +200,10 @@ const longDate = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long
               }
               <a routerLink="/plafonds" [queryParams]="carry()">Voir les plafonds →</a>
             </p>
+          }
+
+          @if (!noOperation()) {
+            <bpm-journeys [periodQuery]="carry()" />
           }
 
           <!-- 2. Budget de la période : entrées, charges (avec le zoom sur les postes) et projets -->

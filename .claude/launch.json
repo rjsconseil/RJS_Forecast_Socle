@@ -3,14 +3,14 @@
   "configurations": [
     {
       "name": "api",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "api"],
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "PATH=\"$HOME/.local/node/bin:$PATH\" exec npm run api"],
       "port": 3410
     },
     {
       "name": "web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "web"],
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "PATH=\"$HOME/.local/node/bin:$PATH\" exec npm run web"],
       "port": 4300
     }
   ]

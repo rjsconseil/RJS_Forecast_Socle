@@ -1,0 +1,963 @@
+{
+  "api": "http://localhost:3410",
+  "startedAt": "2026-11-13T16:40:54.125Z",
+  "users": [
+    {
+      "id": "usr_cc43ba5e-00f0-45e4-b734-f8fe4c37f0c9",
+      "label": "Famille Durand",
+      "kind": "depart",
+      "steps": [
+        {
+          "name": "lire le tableau de bord avant réglage",
+          "ok": true
+        },
+        {
+          "name": "départ déjà joué : cycle réglé, mois précédents protégés",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · historique",
+          "ok": true
+        },
+        {
+          "name": "lire · budget type",
+          "ok": true
+        },
+        {
+          "name": "lire · échéances",
+          "ok": true
+        },
+        {
+          "name": "lire · événements",
+          "ok": true
+        },
+        {
+          "name": "lire · directives",
+          "ok": true
+        },
+        {
+          "name": "lire · projection",
+          "ok": true
+        },
+        {
+          "name": "lire · objectifs",
+          "ok": true
+        },
+        {
+          "name": "lire · récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · catégories",
+          "ok": true
+        },
+        {
+          "name": "lire · périodes",
+          "ok": true
+        },
+        {
+          "name": "lire · clôtures",
+          "ok": true
+        },
+        {
+          "name": "lire · projets",
+          "ok": true
+        },
+        {
+          "name": "lire · tâches",
+          "ok": true
+        },
+        {
+          "name": "lire · projets de la vie",
+          "ok": true
+        },
+        {
+          "name": "lire · postes",
+          "ok": true
+        },
+        {
+          "name": "lire · préparation",
+          "ok": true
+        },
+        {
+          "name": "lire · calendrier",
+          "ok": true
+        }
+      ]
+    },
+    {
+      "id": "usr_77b7a804-7301-4b6f-9a2a-a34513d6cf54",
+      "label": "ATELIER · Paul Durand",
+      "kind": "depart",
+      "steps": [
+        {
+          "name": "lire le tableau de bord avant réglage",
+          "ok": true
+        },
+        {
+          "name": "départ déjà joué : cycle réglé, mois précédents protégés",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-08",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-09",
+          "ok": true
+        },
+        {
+          "name": "lire · tableau de bord · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · synthèse · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre des flux · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · registre par poste · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · postes de dépense · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · entrées de la période · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · rapprochement · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · impact patrimonial · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · gestion du projet de vie · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · revue des plafonds · 2026-10",
+          "ok": true
+        },
+        {
+          "name": "lire · historique",
+          "ok": true
+        },
+        {
+          "name": "lire · budget type",
+          "ok": true
+        },
+        {
+          "name": "lire · échéances",
+          "ok": true
+        },
+        {
+          "name": "lire · événements",
+          "ok": true
+        },
+        {
+          "name": "lire · directives",
+          "ok": true
+        },
+        {
+          "name": "lire · projection",
+          "ok": true
+        },
+        {
+          "name": "lire · objectifs",
+          "ok": true
+        },
+        {
+          "name": "lire · récurrences",
+          "ok": true
+        },
+        {
+          "name": "lire · catégories",
+          "ok": true
+        },
+        {
+          "name": "lire · périodes",
+          "ok": true
+        },
+        {
+          "name": "lire · clôtures",
+          "ok": true
+        },
+        {
+          "name": "lire · projets",
+          "ok": true
+        },
+        {
+          "name": "lire · tâches",
+          "ok": true
+        },
+        {
+          "name": "lire · projets de la vie",
+          "ok": true
+        },
+        {
+          "name": "lire · postes",
+          "ok": true
+        },
+        {
+          "name": "lire · préparation",
+          "ok": true
+        },
+        {
+          "name": "lire · calendrier",
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "user": "Famille Durand",
+      "name": "lire le tableau de bord avant réglage",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "départ déjà joué : cycle réglé, mois précédents protégés",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · tableau de bord · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · synthèse · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · registre des flux · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · registre par poste · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · postes de dépense · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · entrées de la période · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · rapprochement · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · impact patrimonial · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · gestion du projet de vie · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · plafonds · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · revue des plafonds · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · tableau de bord · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · synthèse · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · registre des flux · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · registre par poste · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · postes de dépense · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · entrées de la période · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · rapprochement · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · impact patrimonial · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · gestion du projet de vie · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · plafonds · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · revue des plafonds · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · historique",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · budget type",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · échéances",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · événements",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · directives",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · projection",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · objectifs",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · récurrences",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · catégories",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · périodes",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · clôtures",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · projets",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · tâches",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · projets de la vie",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · postes",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · préparation",
+      "ok": true
+    },
+    {
+      "user": "Famille Durand",
+      "name": "lire · calendrier",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire le tableau de bord avant réglage",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "départ déjà joué : cycle réglé, mois précédents protégés",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · tableau de bord · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · synthèse · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · registre des flux · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · registre par poste · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · postes de dépense · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · entrées de la période · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · rapprochement · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · impact patrimonial · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · gestion du projet de vie · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · plafonds · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · revue des plafonds · 2026-08",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · tableau de bord · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · synthèse · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · registre des flux · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · registre par poste · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · postes de dépense · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · entrées de la période · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · rapprochement · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · impact patrimonial · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · gestion du projet de vie · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · plafonds · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · revue des plafonds · 2026-09",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · tableau de bord · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · synthèse · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · registre des flux · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · registre par poste · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · postes de dépense · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · entrées de la période · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · rapprochement · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · impact patrimonial · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · gestion du projet de vie · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · revue des plafonds · 2026-10",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · historique",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · budget type",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · échéances",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · événements",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · directives",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · projection",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · objectifs",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · récurrences",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · catégories",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · périodes",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · clôtures",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · projets",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · tâches",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · projets de la vie",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · postes",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · préparation",
+      "ok": true
+    },
+    {
+      "user": "ATELIER · Paul Durand",
+      "name": "lire · calendrier",
+      "ok": true
+    }
+  ],
+  "finishedAt": "2026-11-13T16:40:54.567Z",
+  "summary": {
+    "checks": 104,
+    "failed": 0
+  }
+}

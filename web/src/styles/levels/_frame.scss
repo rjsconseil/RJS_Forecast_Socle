@@ -1,0 +1,113 @@
+@use '../functions' as *;
+
+/*
+ * Le cadre de l'application : barre du haut, mode concentré (menu masqué) et palette de commandes.
+ * Rien ici ne décrit une page : seulement ce qui entoure toutes les pages.
+ */
+.app-shell[data-density] .topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--topbar-height);
+  padding-block: 6px;
+  border-bottom: 1px solid var(--frame-hairline);
+}
+.app-shell[data-density] .topbar-actions {
+  flex: none;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.app-shell[data-density] .topbar-home {
+  display: none;
+}
+.app-shell[data-density] .topbar-date {
+  padding-inline: 4px;
+  font-size: scaled(12px);
+  font-variant-numeric: tabular-nums;
+}
+.topbar-tool {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--ease-fast),
+    color var(--ease-fast),
+    border-color var(--ease-fast);
+}
+.topbar-tool:hover {
+  border-color: var(--frame-hairline);
+  background: var(--level-hover-surface);
+  color: var(--ink);
+}
+.topbar-tool:focus-visible,
+.topbar-search:focus-visible {
+  outline: 2px solid var(--level-focus);
+  outline-offset: 2px;
+}
+.topbar-pin[aria-pressed='true'] {
+  color: var(--status-warning);
+}
+.topbar-search {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 6px 0 10px;
+  border: 1px solid var(--frame-hairline);
+  border-radius: 8px;
+  background: var(--raised-surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: scaled(12.5px);
+  cursor: pointer;
+  box-shadow: var(--frame-shadow-rest);
+}
+.topbar-search:hover {
+  border-color: var(--app-accent-line);
+  color: var(--ink);
+}
+
+/* Mode concentré : le menu se retire, la recherche passe dans la barre du haut. */
+@media (min-width: 821px) {
+  .app-shell.is-focus {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-shell.is-focus .sidebar {
+    display: none;
+  }
+  .app-shell.is-focus .topbar-search {
+    display: inline-flex;
+  }
+}
+@media (max-width: 820px) {
+  .topbar-menu-toggle {
+    display: none;
+  }
+  .topbar-search {
+    display: inline-flex;
+  }
+  .topbar-search-text,
+  .topbar-search kbd {
+    display: none;
+  }
+  .topbar-search {
+    width: 36px;
+    height: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+  .app-shell[data-density] .topbar {
+    display: flex;
+  }
+}
+

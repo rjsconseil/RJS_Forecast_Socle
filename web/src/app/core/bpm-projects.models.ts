@@ -7,7 +7,7 @@ import { ProjectSummary, TaskView } from './models';
  * Montants en centimes entiers.
  */
 export type ProjectBudgetState = 'unallocated' | 'ok' | 'at-risk' | 'deficit';
-export type OverrunStatus = 'pending' | 'approved' | 'refused' | 'billed';
+export type OverrunStatus = 'pending' | 'approved' | 'refused' | 'billed' | 'cancelled';
 export type OverrunReason = 'ventilation' | 'reglement';
 export type ReturnCadence = 'once' | 'weekly' | 'monthly' | 'yearly';
 
@@ -162,7 +162,22 @@ export interface ProjectBudget {
   byTask: Record<string, { engagedCents: number; paidCents: number; unbounded: boolean }>;
   shares: Record<string, number>;
   returns: Record<string, TaskReturn>;
+  /** Projet abandonné : quand, pourquoi, et ce que l'abandon a rendu au budget de vie. */
+  abandoned: (ProjectAbandonPreview & { at: string; reason: string | null }) | null;
   life: LifeBudgetExtension | null;
+}
+
+/** Ce qu'abandonner un projet changerait (aperçu avant confirmation), ou ce qu'il a changé. */
+export interface ProjectAbandonPreview {
+  paidCents: number;
+  allocationBeforeCents: number | null;
+  allocationAfterCents: number | null;
+  releasedCents: number;
+  cancelledEntries: number;
+  stoppedRecurrences: number;
+  cancelledRequests: number;
+  cancelledOverruns: number;
+  toPayCents: number;
 }
 
 export const isLifeBudget = (b: ProjectBudget | null | undefined): b is ProjectBudget & { life: LifeBudgetExtension } => !!b && b.kind === 'life' && !!b.life;
@@ -271,6 +286,8 @@ export interface BpmProjectDetail {
   checks: CycleCheck[];
   requests: TaskBudgetRequest[];
   charges: ProjectChargeLine[];
+  /** Aperçu d'un abandon ; null pour le projet de vie ou un projet déjà abandonné. */
+  abandon?: ProjectAbandonPreview | null;
   life: (LifeSummary & { projects: { projectId: string; title: string; budget: ProjectBudget }[] }) | null;
   effects?: { module: string; kind: string; message: string; ids: string[] }[];
 }

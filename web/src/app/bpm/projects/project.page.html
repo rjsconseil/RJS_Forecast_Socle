@@ -4,7 +4,7 @@
       <h2>Projet indisponible</h2>
       <p>{{ error() }}</p>
       <button class="btn btn-secondary" (click)="load()">Réessayer</button
-      ><a routerLink="/app/gestion-projet">← Gestion de projet</a>
+      ><a routerLink="/app/gestion-projet">← Projets et financement</a>
     </div>
   } @else if (!data()) {
     <div class="empty-state" role="status"><h2>Chargement du projet…</h2></div>
@@ -30,6 +30,9 @@
       </div>
       <div actions>
         @if (d.role === 'standard' && d.budget; as b) {
+          @if (b.abandoned) {
+            <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="projectEditor.set(true)">Modifier le projet</button>
+          } @else {
           @if (d.tasks.length) {
             <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="createTask()">＋ Créer une tâche</button>
           }
@@ -38,6 +41,10 @@
             <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', d.project.project.id, 'budget']" queryParamsHandling="preserve">{{ b.regime ? 'Modifier l’enveloppe' : 'Attribuer l’enveloppe' }}</a>
           } @else if (b.regime) {
             <button type="button" class="btn btn-secondary" [disabled]="busy()" [attr.aria-expanded]="allocationEditing()" aria-controls="project-envelope-form" (click)="editAllocation()">Modifier l’enveloppe</button>
+          }
+          @if (d.abandon) {
+            <button type="button" class="btn btn-secondary project-abandon-toggle" [disabled]="busy()" [attr.aria-expanded]="abandonOpen()" aria-controls="project-abandon" (click)="abandonOpen.set(!abandonOpen())">Abandonner le projet</button>
+          }
           }
         } @else {
           @if (pendingDecisions().length) {
@@ -187,6 +194,30 @@
         }
       </div>
     </bpm-page-banner>
+
+    @if (abandonOpen() && d.abandon; as a) {
+      <section id="project-abandon" class="project-abandon" aria-labelledby="project-abandon-title">
+        <h2 id="project-abandon-title">Abandonner « {{ d.project.project.title }} » ?</h2>
+        <ul>
+          @if (a.allocationBeforeCents !== null) {
+            <li><strong>{{ a.releasedCents | cents }}</strong> reviennent au budget de vie : l’enveloppe passe de {{ a.allocationBeforeCents | cents }} à {{ a.allocationAfterCents | cents }}, ce qui a été réglé.</li>
+          } @else {
+            <li>Le projet n’a pas d’enveloppe : rien à rendre au budget de vie.</li>
+          }
+          <li>{{ a.cancelledEntries }} dépense(s) ou entrée(s) prévue(s) annulée(s), {{ a.stoppedRecurrences }} récurrence(s) arrêtée(s)@if (a.toPayCents) { — {{ a.toPayCents | cents }} ne resteront plus à payer}.</li>
+          @if (a.cancelledRequests || a.cancelledOverruns) {
+            <li>{{ a.cancelledRequests }} demande(s) de part et {{ a.cancelledOverruns }} dépassement(s) non facturé(s) annulé(s).</li>
+          }
+          <li>Les {{ a.paidCents | cents }} déjà réglés restent dans l’historique du projet et du budget de vie. Chaque part de tâche est ramenée à ce qu’elle a payé.</li>
+        </ul>
+        <label>Raison (facultatif)<input type="text" maxlength="200" placeholder="Ex. déménagement, projet reporté" [value]="abandonReason()" (input)="abandonReason.set($any($event.target).value)" /></label>
+        <p class="bpm-help">Le projet ne recevra plus de dépense tant qu’il n’est pas repris. Le reprendre ne rétablit pas l’enveloppe : vous la réattribuerez.</p>
+        <div class="bpm-actions">
+          <button type="button" class="btn btn-danger" [disabled]="busy()" (click)="abandonProject()">Confirmer l’abandon</button>
+          <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="abandonOpen.set(false)">Garder le projet</button>
+        </div>
+      </section>
+    }
     @if (d.project.project.description && d.project.project.description.length > 240) {
       <details class="bpm-project-description">
         <summary>Lire l’objectif et la description du projet</summary>
@@ -534,7 +565,7 @@
               {{ visibleTasks().length }} résultat(s) dans ce projet.
             </p>
           }
-          @if (!d.tasks.length) {
+          @if (!d.tasks.length && !d.budget?.abandoned) {
             <div class="project-first-task">
               <h3>La première étape de votre projet</h3>
               <p>Créez une tâche, estimez son temps puis demandez sa part de l’enveloppe.</p>

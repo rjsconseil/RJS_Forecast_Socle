@@ -944,6 +944,10 @@ export default {
       ['GET', '/api/bpm/recurrences', ({ ctx, query }) => budget.recurrences(ctx, { budgetId: query.get('budgetId') || undefined })],
       ['PUT', '/api/bpm/recurrences/:id', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.updateRecurrence(ctx, params.id, body))],
       ['POST', '/api/bpm/recurrences/:id/settle', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.settleOccurrence(ctx, params.id, body))],
+      // Une échéance qui n'aura pas lieu s'écarte (et se rétablit) ; une définition saisie par erreur se supprime.
+      ['POST', '/api/bpm/recurrences/:id/skip', ({ ctx, params, body }) => budget.skipOccurrence(ctx, params.id, body)],
+      ['POST', '/api/bpm/recurrences/:id/restore', ({ ctx, params, body }) => budget.restoreOccurrence(ctx, params.id, body)],
+      ['POST', '/api/bpm/recurrences/:id/cancel', ({ ctx, params, body }) => budget.cancelRecurrence(ctx, params.id, body)],
       ['PUT', '/api/bpm/operations/:id', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.updateOperation(ctx, params.id, body))],
       ['POST', '/api/bpm/operations/:id/cancel-realization', ({ ctx, params, body }) => budget.cancelRealization(ctx, params.id, body)],
       ['POST', '/api/bpm/operations/:id/cancel', ({ ctx, params, body }) => budget.cancelOperation(ctx, params.id, body)],
@@ -976,6 +980,9 @@ export default {
       ['POST', '/api/bpm/project-budgets/:id/shares/:taskId/release', ({ ctx, params, body }) => s.projects.releaseTaskShare(ctx, params.id, params.taskId, body)],
       ['PUT', '/api/bpm/project-budgets/:id/returns/:taskId', ({ ctx, params, body }) => s.projects.setTaskReturn(ctx, params.id, params.taskId, body)],
       ['POST', '/api/bpm/project-budgets/:id/overruns', ({ ctx, params, body }) => s.projects.requestOverrun(ctx, params.id, body)],
+      // Abandonner un projet de la vie rend son enveloppe non consommée au budget de vie ; le reprendre le rouvre.
+      ['POST', '/api/bpm/project-budgets/:id/abandon', ({ ctx, params, body }) => s.projects.abandonProject(ctx, params.id, body)],
+      ['POST', '/api/bpm/project-budgets/:id/resume', ({ ctx, params, body }) => s.projects.resumeProject(ctx, params.id, body)],
       ['POST', '/api/bpm/overruns/bill', ({ ctx, body }) => s.projects.billOverruns(ctx, body)],
       ['POST', '/api/bpm/overruns/:id/decision', ({ ctx, params, body }) => s.projects.decideOverrun(ctx, params.id, body)],
       ['POST', '/api/bpm/life-projects', ({ ctx, body }) => s.createLifeProject(ctx, body)],

@@ -1,4 +1,4 @@
-import { locate, OBJECT_FALLBACK } from './site-plan';
+import { locate, OBJECT_FALLBACK, PlanSection, PlanZone } from './site-plan';
 
 export interface JourneyVisit {
   id: string;
@@ -84,7 +84,9 @@ export function visitLabel(url: string, objectLabel: string | null = null): stri
  * - Revenir (bouton, navigateur) déplace le curseur sans rien perdre.
  * - Rejoindre l'étape voisine par un lien de la page (« Étape suivante », « ↑ parent ») déplace aussi
  *   le curseur : le chemin déjà parcouru en avant reste disponible jusqu'à la dernière étape atteinte.
- * - Seule une nouvelle direction remplace le chemin à venir, comme un navigateur.
+ * - Une nouvelle direction prise depuis une étape antérieure **s'insère** après elle : les étapes déjà
+ *   parcourues en avant restent dans le parcours. On peut revenir au début puis reprendre jusqu'à
+ *   l'endroit où l'on s'était arrêté (la dernière étape) sans rien perdre.
  */
 export function recordVisit(
   trail: JourneyTrail,
@@ -118,9 +120,10 @@ export function recordVisit(
   const current = trail.visits[trail.cursor];
   if (current && sameStep(current.url, visit.url))
     return { visits: trail.visits.map((v, i) => (i === trail.cursor ? { ...visit, id: v.id } : v)), cursor: trail.cursor };
-  const visits = [...trail.visits.slice(0, trail.cursor + 1), visit];
-  const overflow = Math.max(0, visits.length - TRAIL_LIMIT);
-  return { visits: visits.slice(overflow), cursor: visits.length - 1 - overflow };
+  const visits = [...trail.visits.slice(0, trail.cursor + 1), visit, ...trail.visits.slice(trail.cursor + 1)];
+  // Au-delà de la limite, les étapes les plus anciennes sortent ; l'étape affichée reste toujours.
+  const overflow = Math.min(Math.max(0, visits.length - TRAIL_LIMIT), trail.cursor + 1);
+  return { visits: visits.slice(overflow).slice(0, TRAIL_LIMIT), cursor: trail.cursor + 1 - overflow };
 }
 
 /**
@@ -135,4 +138,45 @@ export function removeVisits(trail: JourneyTrail, consumed: (url: string) => boo
     if (!consumed(trail.visits[i].url)) cursor = kept.indexOf(trail.visits[i]);
   if (cursor < 0 && kept.length) cursor = 0;
   return { visits: kept, cursor };
+}
+
+/** Le niveau hiérarchique d'une étape, celui du Navigation system : section, page ou détail. */
+export type JourneyLevel = 'section' | 'page' | 'detail';
+/**
+ * Une étape hérite du niveau de sa destination dans le plan : un accueil de zone ou de section est
+ * une « section », une page de menu une « page », et tout ce qui s'ouvre dans une page (sous-page,
+ * fiche, détail, saisie) un « détail ». Le parcours se dessine ainsi comme le menu.
+ */
+export function visitLevel(url: string): JourneyLevel {
+  const at = locate(url);
+  if (overlayLabel(new URL(url, 'http://local').searchParams)) return 'detail';
+  if (at.kind === 'zone' || at.kind === 'section') return 'section';
+  if (at.kind === 'subpage' || at.kind === 'detail' || at.object) return 'detail';
+  return 'page';
+}
+
+export interface JourneyStep {
+  index: number;
+  visit: JourneyVisit;
+  level: JourneyLevel;
+}
+/** Des étapes consécutives d'une même section : l'en-tête porte la zone et la section, une seule fois. */
+export interface JourneyGroup {
+  key: string;
+  zone: PlanZone | null;
+  section: PlanSection | null;
+  steps: JourneyStep[];
+}
+/** Le parcours rangé comme le plan : zone et section en tête, pages puis détails en dessous, dans l'ordre parcouru. */
+export function trailGroups(visits: readonly JourneyVisit[]): JourneyGroup[] {
+  const groups: JourneyGroup[] = [];
+  visits.forEach((visit, index) => {
+    const { zone, section } = locate(visit.url);
+    const place = `${zone?.id ?? ''}/${section?.id ?? ''}`;
+    const last = groups.at(-1);
+    const step: JourneyStep = { index, visit, level: visitLevel(visit.url) };
+    if (last && last.key.endsWith('@' + place)) last.steps.push(step);
+    else groups.push({ key: `${index}@${place}`, zone, section, steps: [step] });
+  });
+  return groups;
 }

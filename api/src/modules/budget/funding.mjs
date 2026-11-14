@@ -28,6 +28,7 @@ export const OVERRUN_STATUS = {
   approved: 'Autorisé · facturé au budget de vie en fin de cycle',
   refused: 'Refusé par le budget de vie',
   billed: 'Facturé au budget de vie',
+  cancelled: 'Annulé · projet abandonné',
 };
 const RETURN_CADENCES = ['once', ...CADENCES];
 /** Engagé d'une récurrence sans date de fin : ses occurrences des 12 prochains mois [P]. */
@@ -43,6 +44,12 @@ export const overrunsOf = (state, budgetId) => Object.values(state.projectOverru
 export const requestsOf = (state, budgetId) => Object.values(state.taskBudgetRequests ?? {}).filter((x) => x.budgetId === budgetId);
 export const openRequest = (x) => ['pending', 'awaiting-life'].includes(x.status);
 export const REQUEST_STATUS = { pending: 'À valider par le projet', 'awaiting-life': 'Autorisation du budget du projet de vie attendue', approved: 'Montant accordé', refused: 'Demande refusée', cancelled: 'Demande annulée' };
+
+/** Projet abandonné : son enveloppe est ramenée à ce qu'il a réglé, il ne reçoit plus d'écriture tant qu'il n'est pas repris. */
+export const isAbandoned = (b) => !!b?.abandonedAt;
+export function abandonedRefusal(b) {
+  fail('FORBIDDEN_BY_RULE', `Le projet « ${b.name} » est abandonné : reprenez-le avant d’y saisir une dépense ou de modifier son financement.`, { budgetId: b.id, reason: 'abandoned' });
+}
 
 export function requestView(state, x) {
   const b = state.budgets[x.budgetId];
@@ -70,8 +77,9 @@ export function chargeItems(state, b, now) {
   const items = [];
   const materialized = new Set();
   for (const o of Object.values(state.operations)) {
-    if (o.budgetId !== b.id || o.status === 'cancelled') continue;
+    if (o.budgetId !== b.id) continue;
     if (o.recurrenceId) materialized.add(`${o.recurrenceId}@${o.occurrenceDate}`);
+    if (o.status === 'cancelled') continue;
     if (isValidatedRefund(o, b)) items.push({ taskId: o.taskId ?? null, cents: -o.realizedAmountCents, paid: true, refund: true });
     if (o.direction !== 'charge') continue;
     if (o.status === 'realized') {
@@ -80,7 +88,7 @@ export function chargeItems(state, b, now) {
     } else items.push({ taskId: o.taskId ?? null, cents: o.amountCents, paid: false });
   }
   for (const r of Object.values(state.recurrences ?? {})) {
-    if (r.budgetId !== b.id || r.direction !== 'charge') continue;
+    if (r.budgetId !== b.id || r.direction !== 'charge' || r.cancelledAt) continue;
     const start = from && from > r.firstDate ? from : r.firstDate;
     for (const d of occurrenceDates(r, start, r.endDate ?? horizon)) {
       if (!materialized.has(`${r.id}@${d}`)) items.push({ taskId: r.taskId ?? null, cents: r.amountCents, paid: false, unbounded: !r.endDate });
@@ -169,6 +177,7 @@ export function fundingFigures(state, b, now = today()) {
     beforeByTask,
     shares: { ...shares },
     returns: structuredClone(returnsOf(b)),
+    abandoned: isAbandoned(b) ? { at: b.abandonedAt, reason: b.abandonReason ?? null, ...(b.abandonment ?? {}) } : null,
     life: null,
   };
 }
@@ -218,6 +227,80 @@ export function taskFunding(state, fig, taskId) {
   };
 }
 
+/**
+ * Ce qu'abandonner un projet changerait, sans rien écrire : lu par l'aperçu de la fiche et par la commande, qui
+ * appliquent la même règle [P].
+ * - L'enveloppe est ramenée à ce que le projet a réglé (jamais sous les dépassements déjà facturés) ; le reste,
+ *   avec les dépassements autorisés devenus inutiles, revient au budget de vie.
+ * - Les dépassements autorisés mais pas encore facturés ne sont gardés qu'à hauteur des règlements au-delà de
+ *   l'enveloppe ; les demandes de part et de dépassement en attente sont annulées.
+ * - Chaque part de tâche est ramenée à ce que la tâche a réglé ; les retours pas encore déclenchés sont retirés.
+ * - Les charges et entrées prévues non réglées sont annulées ; les récurrences s'arrêtent. Le réglé reste.
+ */
+export function abandonPlan(state, b, now = today()) {
+  const fig = fundingFigures(state, b, now);
+  const byDate = (x, y) => (x.decidedAt ?? x.requestedAt ?? '').localeCompare(y.decidedAt ?? y.requestedAt ?? '') || x.createdAt.localeCompare(y.createdAt);
+  const overruns = overrunsOf(state, b.id);
+  const approved = overruns.filter((x) => x.status === 'approved').sort(byDate);
+  let allocationAfterCents = null;
+  const keptOverruns = [];
+  const cancelledOverrunIds = [];
+  let trimmed = null;
+  if (fig.regime) {
+    allocationAfterCents = Math.min(b.allocationCents, Math.max(fig.paidCents, fig.billedOverrunCents));
+    let need = Math.max(0, fig.paidCents - allocationAfterCents);
+    for (const x of approved) {
+      if (need <= 0) cancelledOverrunIds.push(x.id);
+      else {
+        if (x.amountCents > need) trimmed = { id: x.id, amountCents: need };
+        keptOverruns.push(x.id);
+        need -= x.amountCents;
+      }
+    }
+  }
+  const keptOverrunCents = sum(approved.filter((x) => keptOverruns.includes(x.id)), (x) => (trimmed?.id === x.id ? trimmed.amountCents : x.amountCents));
+  const ceilingBefore = fig.regime ? fig.ceilingCents : 0;
+  const ceilingAfter = fig.regime ? allocationAfterCents + keptOverrunCents : 0;
+  const sharesAfter = Object.fromEntries(
+    Object.keys(sharesOf(b))
+      .map((taskId) => [taskId, fig.byTask[taskId]?.paidCents ?? 0])
+      .filter(([, cents]) => cents > 0),
+  );
+  const plannedIds = Object.values(state.operations).filter((o) => o.budgetId === b.id && o.status === 'planned').map((o) => o.id);
+  const recurrenceIds = Object.values(state.recurrences ?? {}).filter((r) => r.budgetId === b.id && !r.cancelledAt && (!r.endDate || r.endDate >= now)).map((r) => r.id);
+  const requestIds = requestsOf(state, b.id).filter(openRequest).map((x) => x.id);
+  const pendingOverrunIds = overruns.filter((x) => x.status === 'pending').map((x) => x.id);
+  return {
+    regime: fig.regime,
+    paidCents: fig.paidCents,
+    allocationBeforeCents: fig.regime ? b.allocationCents : null,
+    allocationAfterCents,
+    /** Ce qui revient au budget de vie : enveloppe non consommée et dépassements autorisés devenus inutiles. */
+    releasedCents: Math.max(0, ceilingBefore - ceilingAfter),
+    sharesAfter,
+    trimmedOverrun: trimmed,
+    cancelledOverrunIds,
+    pendingOverrunIds,
+    requestIds,
+    plannedIds,
+    recurrenceIds,
+    toPayCents: fig.toPayCents,
+  };
+}
+
+/** Aperçu d'un abandon, tel que la fiche le présente avant confirmation. */
+export const abandonPreview = (plan) => ({
+  paidCents: plan.paidCents,
+  allocationBeforeCents: plan.allocationBeforeCents,
+  allocationAfterCents: plan.allocationAfterCents,
+  releasedCents: plan.releasedCents,
+  cancelledEntries: plan.plannedIds.length,
+  stoppedRecurrences: plan.recurrenceIds.length,
+  cancelledRequests: plan.requestIds.length,
+  cancelledOverruns: plan.pendingOverrunIds.length + plan.cancelledOverrunIds.length,
+  toPayCents: plan.toPayCents,
+});
+
 export function pendingOf(state, fig) {
   const x = fig.pendingOverrun;
   if (!x) return null;
@@ -233,6 +316,12 @@ function pendingFor(state, fig, taskId, neededCents) {
 
 /** Extensions consommées par le noyau (rattachement, état d'une tâche) et par Budget lui-même (validation d'un règlement). */
 export const fundingExtensions = {
+  /** Toute écriture datée sur le budget d'un projet abandonné est refusée : il se reprend d'abord. */
+  operationGuard(state, { budgetId }) {
+    const b = state.budgets[budgetId];
+    if (isAbandoned(b)) abandonedRefusal(b);
+  },
+
   /** Une tâche qui porte des données du budget de son projet ne change pas de projet tant qu'elles existent. */
   taskMoveGuard(state, { task, fromProjectId }) {
     const b = fromProjectId ? standardOfProject(state, fromProjectId) : null;
@@ -311,11 +400,12 @@ export function createFunding(socle, { lifeBudgetOf }) {
   const { om } = socle;
 
   /** Budget standard du user, enfant de son budget de vie. */
-  function standardOf(state, userId, budgetId) {
+  function standardOf(state, userId, budgetId, { allowAbandoned = false } = {}) {
     const b = om.owned(state, 'budget', budgetId, userId);
     const life = lifeBudgetOf(state, userId);
     if (b.role === 'life' && b.id === life?.id) fail('FORBIDDEN_BY_RULE', 'Le budget de vie est non standard : ses ressources sont les entrées du cycle et il finance ses projets fils ; il ne reçoit ni enveloppe, ni part de tâche, ni dépassement.', { field: 'budgetId', budgetId, kind: 'life' });
     if (b.role !== 'standard' || b.parentBudgetId !== life?.id) fail('INCOMPATIBLE_REFERENCE', 'Ce Budget n’est pas un projet standard de votre budget de vie.', { field: 'budgetId', budgetId });
+    if (!allowAbandoned && isAbandoned(b)) abandonedRefusal(b);
     return b;
   }
 
@@ -686,5 +776,74 @@ export function createFunding(socle, { lifeBudgetOf }) {
     om.update(tx, b, { taskFundingRequired: true, taskSharesCents: {}, taskReturns: {}, ...(cents === null ? {} : { allocationCents: cents, allocationDate: today() }) });
   }
 
-  return { standardOf, taskOf, startTaskFunding, fundSettlement, requestTaskBudget, decideTaskBudget, allocate, setTaskShare, releaseTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns };
+  /**
+   * Abandon d'un projet de la vie (voir `abandonPlan`) : une seule écriture. Le projet garde son historique (règlements,
+   * dépassements facturés, tâches) et ne reçoit plus d'écriture tant qu'il n'est pas repris.
+   */
+  async function abandonProject(ctx, budgetId, input = {}) {
+    let preview = null;
+    await om.command('abandonProject', ctx, input, (tx) => {
+      const b = standardOf(tx.draft, tx.userId, budgetId, { allowAbandoned: true });
+      om.checkRevision(b, expectedRevisionOf(input));
+      if (isAbandoned(b)) fail('FORBIDDEN_BY_RULE', `Le projet « ${b.name} » est déjà abandonné.`, { budgetId });
+      const now = today();
+      const plan = abandonPlan(tx.draft, b, now);
+      const reason = text('reason', input.reason, { max: 1000 }) || null;
+      const why = `Projet « ${b.name} » abandonné`;
+      for (const id of plan.requestIds) om.update(tx, tx.draft.taskBudgetRequests[id], { status: 'cancelled', decidedAt: now });
+      for (const id of plan.pendingOverrunIds) om.update(tx, tx.draft.projectOverruns[id], { status: 'refused', decidedAt: now });
+      for (const id of plan.cancelledOverrunIds) om.update(tx, tx.draft.projectOverruns[id], { status: 'cancelled', cancelledAt: now });
+      if (plan.trimmedOverrun) om.update(tx, tx.draft.projectOverruns[plan.trimmedOverrun.id], { amountCents: plan.trimmedOverrun.amountCents });
+      for (const id of plan.plannedIds) om.update(tx, tx.draft.operations[id], { status: 'cancelled', cancelledFrom: 'planned', cancelReason: why });
+      // Une récurrence jamais réglée est supprimée ; une récurrence réglée s'arrête à sa dernière échéance réglée,
+      // et ses échéances antérieures restées attendues sont écartées.
+      for (const id of plan.recurrenceIds) {
+        const r = tx.draft.recurrences[id];
+        const ops = om.list(tx.draft, 'operation', (o) => o.recurrenceId === id);
+        const settled = ops.filter((o) => o.status === 'realized').map((o) => o.occurrenceDate).sort();
+        if (!settled.length) {
+          om.update(tx, r, { cancelledAt: now, cancelReason: why });
+          continue;
+        }
+        const endDate = settled.at(-1);
+        const known = new Set(ops.map((o) => o.occurrenceDate));
+        for (const d of occurrenceDates(r, r.firstDate, endDate)) {
+          if (known.has(d)) continue;
+          om.create(tx, 'operation', {
+            budgetId: r.budgetId, direction: r.direction, label: r.label, amountCents: r.amountCents, date: d, status: 'cancelled', cancelledFrom: 'planned', cancelReason: why,
+            realizedAmountCents: null, realizedDate: null, recurrenceId: r.id, occurrenceDate: d, note: r.note ?? null, taskId: r.taskId ?? null,
+            standardCostCenter: r.standardCostCenter, costCenterId: r.costCenterId, categoryId: r.categoryId ?? null,
+          });
+        }
+        om.update(tx, r, { endDate });
+      }
+      const current = tx.draft.budgets[budgetId];
+      const triggeredReturns = Object.fromEntries(Object.entries(returnsOf(current)).filter(([, ret]) => ret.entryId));
+      preview = abandonPreview(plan);
+      om.update(tx, current, {
+        ...(plan.regime ? { allocationCents: plan.allocationAfterCents } : {}),
+        taskSharesCents: plan.sharesAfter,
+        taskReturns: triggeredReturns,
+        abandonedAt: now,
+        abandonReason: reason,
+        abandonment: preview,
+      });
+      return { budgetId };
+    });
+    return { budgetId, abandonment: preview };
+  }
+
+  /** Reprise d'un projet abandonné : il reçoit de nouveau des écritures ; son enveloppe se réattribue au besoin. */
+  async function resumeProject(ctx, budgetId, input = {}) {
+    await om.command('resumeProject', ctx, input, (tx) => {
+      const b = standardOf(tx.draft, tx.userId, budgetId, { allowAbandoned: true });
+      om.checkRevision(b, expectedRevisionOf(input));
+      if (!isAbandoned(b)) fail('FORBIDDEN_BY_RULE', `Le projet « ${b.name} » n’est pas abandonné.`, { budgetId });
+      om.update(tx, b, { abandonedAt: null, abandonReason: null, abandonment: null });
+      return { budgetId };
+    });
+    return { budgetId };
+  }
+
+  return { standardOf, taskOf, startTaskFunding, fundSettlement, requestTaskBudget, decideTaskBudget, allocate, setTaskShare, releaseTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns, abandonProject, resumeProject };
 }

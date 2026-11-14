@@ -16,7 +16,7 @@ import { fail } from '../../socle/errors.mjs';
 import { money, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL } from '../budget/recurrence.mjs';
 import {
-  fmt, frDate, fundingFigures, inRegime, isValidatedCharge, isValidatedMove, projectMoveCents, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, sharesOf, standardOfProject, sum, taskFunding,
+  abandonPlan, abandonPreview, fmt, frDate, fundingFigures, inRegime, isAbandoned, isValidatedCharge, isValidatedMove, projectMoveCents, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, sharesOf, standardOfProject, sum, taskFunding,
 } from '../budget/funding.mjs';
 import { addDays, periodByIndex, periodContaining, today } from '../budget/periods.mjs';
 
@@ -112,6 +112,8 @@ export function lifeProjectBudget(state, comp, { figures, period, children, over
     beforeByTask: {},
     shares,
     returns: {},
+    // Le projet de vie ne s'abandonne pas : il porte le cycle et le patrimoine.
+    abandoned: null,
     life: {
       unique: true,
       compositionId: comp.id,
@@ -441,6 +443,8 @@ export function createProjects(socle, h) {
       checks: b ? cycleChecks(state, b, fig) : lifeChecks(state, fig, { toCloseCount: lf.cs ? lf.cs.current.index - lf.cs.firstOpen.index : 0, now }),
       requests: (b ? requestsOf(state, b.id) : standards.flatMap((x) => requestsOf(state, x.id))).sort((x, y) => y.createdAt.localeCompare(x.createdAt)).map((x) => requestView(state, x)),
       charges: [],
+      // Ce qu'un abandon changerait, présenté avant confirmation ; null pour le projet de vie ou un projet déjà abandonné.
+      abandon: b && !isAbandoned(b) ? abandonPreview(abandonPlan(state, b, now)) : null,
       life: null,
     };
     if (b) {
@@ -489,6 +493,7 @@ export function createProjects(socle, h) {
       if (projectId) {
         const b = standardOfProject(tx.draft, projectId);
         if (!b) fail('INCOMPATIBLE_REFERENCE', 'Choisissez un projet de la vie, ou préparez la tâche sans projet.', { field: 'projectId' });
+        if (isAbandoned(b)) fail('FORBIDDEN_BY_RULE', `Le projet « ${b.name} » est abandonné : reprenez-le avant d’y créer une tâche.`, { field: 'projectId', reason: 'abandoned' });
         standardOf(tx.draft, tx.userId, b.id);
       }
       return { taskId: core().buildTask(tx, { ...input, projectId }).id };
@@ -552,6 +557,15 @@ export function createProjects(socle, h) {
     const r = await funding().decideOverrun(ctx, id, input);
     return { ...r, detail: detailOf(ctx, r.overrun.budgetId) };
   }
+  /** Abandon d'un projet de la vie : enveloppe ramenée au réglé, prévu annulé ; rendu avec la fiche à jour. */
+  async function abandonProject(ctx, budgetId, input = {}) {
+    const r = await funding().abandonProject(ctx, budgetId, input);
+    return { abandonment: r.abandonment, detail: detailOf(ctx, budgetId) };
+  }
+  async function resumeProject(ctx, budgetId, input = {}) {
+    await funding().resumeProject(ctx, budgetId, input);
+    return { detail: detailOf(ctx, budgetId) };
+  }
   /** Fin de cycle : facturation par le middleware, puis contrôles de fin de cycle de chaque projet concerné. */
   async function billOverruns(ctx, input = {}) {
     const r = await funding().billOverruns(ctx, input);
@@ -565,5 +579,5 @@ export function createProjects(socle, h) {
     };
   }
 
-  return { overview, tasksOverview, projectDetail, createProject, createTask, requestTaskBudget, decideTaskBudget, adoptProject, allocate, setTaskShare, releaseTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns };
+  return { overview, tasksOverview, projectDetail, createProject, createTask, requestTaskBudget, decideTaskBudget, adoptProject, allocate, setTaskShare, releaseTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns, abandonProject, resumeProject };
 }

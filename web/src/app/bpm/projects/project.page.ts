@@ -30,7 +30,7 @@ import {
   TaskBudgetRequest,
 } from '../../core/bpm-projects.models';
 import { COLUMNS, TASK_STATUS_LABEL, TaskStatus } from '../../core/models';
-import { cents, CentsPipe, parseAmount, ShortDatePipe } from '../../core/format';
+import { cents, CentsPipe, parseAmount, shortDate, ShortDatePipe } from '../../core/format';
 import { FUNDING, FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from '../ui/project-funding';
 import { BpmEntryFlow } from '../ui/entry-flow';
 import { BpmLineDetail } from '../ui/line-detail';
@@ -229,6 +229,7 @@ export class BpmProjectPage {
   });
   protected nextActionLabel = computed(() => {
     const d = this.data();
+    if (d?.budget?.abandoned) return 'Reprendre le projet';
     if (!d?.budget?.regime) return 'Attribuer l’enveloppe';
     if (this.pendingDecisions().length || this.pendingTaskRequests().length)
       return 'Traiter les décisions de financement';
@@ -246,6 +247,15 @@ export class BpmProjectPage {
     if (!d) return { title: 'Lecture du projet…', tone: 'info' };
     if (this.error())
       return { title: 'L’actualisation du projet a échoué', detail: this.error()!, tone: 'danger' };
+    const gone = d.budget?.abandoned;
+    if (gone)
+      return {
+        title: `Projet abandonné le ${shortDate(gone.at)}${gone.reason ? ` · ${gone.reason}` : ''}`,
+        detail: gone.releasedCents
+          ? `${cents(gone.releasedCents)} sont revenus au budget de vie ; l’enveloppe garde ${cents(gone.allocationAfterCents ?? 0)}, ce qui a été réglé. Reprenez le projet pour y saisir de nouveau.`
+          : 'Ses dépenses réglées restent dans son historique. Reprenez le projet pour y saisir de nouveau.',
+        tone: 'info',
+      };
     if (d.role === 'standard' && !d.budget?.regime)
       return {
         title: 'L’enveloppe de ce projet reste à attribuer',
@@ -461,6 +471,10 @@ export class BpmProjectPage {
     return true;
   }
   protected runNextAction() {
+    if (this.data()?.budget?.abandoned) {
+      void this.resumeProject();
+      return;
+    }
     if (this.busy()) return;
     const d = this.data();
     if (!d) return;
@@ -926,6 +940,30 @@ export class BpmProjectPage {
       () => this.funding.decide(o, decision),
       (r) => r.message,
     );
+  }
+
+  /** Abandon en deux temps : l'aperçu dit ce qui revient au budget de vie et ce qui s'arrête, puis confirmation. */
+  protected abandonOpen = signal(false);
+  protected abandonReason = signal('');
+  protected abandonProject() {
+    const d = this.data();
+    if (!d?.budget) return;
+    const { budgetId, revision } = d.budget;
+    return this.run(
+      () => this.bpm.abandonProject(budgetId, { expectedRevision: revision, reason: this.abandonReason().trim() || undefined }),
+      (r) => {
+        this.abandonOpen.set(false);
+        this.abandonReason.set('');
+        return r.abandonment.releasedCents
+          ? `Projet abandonné : ${cents(r.abandonment.releasedCents)} reviennent au budget de vie.`
+          : 'Projet abandonné : ses dépenses réglées restent dans son historique.';
+      },
+    );
+  }
+  protected resumeProject() {
+    const d = this.data();
+    if (!d?.budget) return;
+    return this.run(() => this.bpm.resumeProject(d.budget!.budgetId, d.budget!.revision), 'Projet repris : il reçoit de nouveau des dépenses ; réattribuez son enveloppe au besoin.');
   }
 
   /** Exécute le geste proposé par un contrôle : l'enveloppe ramenée à ce qui a servi (règle et refus côté API). */

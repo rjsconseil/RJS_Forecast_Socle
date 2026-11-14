@@ -168,11 +168,13 @@ export interface LineDetail {
   line: RegisterLine;
   definition: Recurrence | null;
   settlements: { operationId: string; occurrenceDate: string | null; plannedCents: number; realizedCents: number; realizedDate: string; outsidePeriod: boolean }[];
+  /** Échéances écartées de la définition, rétablissables. */
+  skipped?: { operationId: string; occurrenceDate: string; plannedCents: number; reason: string | null; revision: number }[];
   ids: { lineId: string; operationId: string | null; recurrenceId: string | null; budgetId: string; taskId: string | null };
   /** Projet de la vie qui porte l'échéance ; null pour le budget de vie. */
   project?: { budgetId: string; coreProjectId: string; name: string; funded: boolean; taskFundingRequired?: boolean; allocationDate: string | null; taskTitle: string | null; inclusion?: 'included' | 'before-allocation' | 'unfunded' | 'pending' | 'income' } | null;
   timing?: { plannedPeriod: LinePeriod | null; realizedPeriod: LinePeriod | null };
-  actions: { canSettle: boolean; canCancelSettlement: boolean; canEdit: boolean; settlementPolicy: string; editReason?: string | null; canCancelEntry?: boolean };
+  actions: { canSettle: boolean; canCancelSettlement: boolean; canEdit: boolean; settlementPolicy: string; editReason?: string | null; canCancelEntry?: boolean; canSkipOccurrence?: boolean; canDeleteDefinition?: boolean };
 }
 
 export interface LinePeriod {

@@ -13,39 +13,5 @@
 @use 'components';
 @use 'workspace';
 @use 'home';
-@use 'calendar';
-@use 'calendar-budget-parity';
-@use 'site-responsive';
-@use 'calendar-controls';
-@use 'forms';
-@use 'utilisateurs';
-@use 'interactions';
-@use 'zones';
-@use 'management';
-@use 'overview-theme';
-@use 'calendar-full-width';
-@use 'surface-language';
-@use 'bpm-presentation';
-
-@use 'app-tokens';
-@use 'app-base';
-@use 'app-controls';
-@use 'app-layout';
-@use 'app-components';
-@use 'app-shell';
-@use 'socle';
-@use 'calendar-module';
-@use 'bpm-projects';
-
-// Identité applicative réservée aux parcours BPM.
-@use 'bpm-application';
-
-@use 'page-workspace';
-
-// Éclat commun des cadres du haut de page (en dernier : il habille tous les bandeaux).
-@use 'hero-glow';
-
-// Relief et effets communs : survol des cartes, halo des commandes, entrée des fenêtres.
-@use 'elevation';
-
-@use './app/navigation/navigation';
+// La suite (habillages, zones, BPM, niveaux) est dans `styles-rest.scss` ; entre les deux, `styles-calendar.scss`
+// se charge avec les pages calendrier, a sa place dans la cascade (voir `app/calendar/calendar.route.ts`).

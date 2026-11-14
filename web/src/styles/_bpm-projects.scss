@@ -743,6 +743,15 @@
   --pm-badge-surface: #ecfdf3;
   --pm-badge-line: #92d4ad;
 }
+/* Projet abandonné : sobre, il ne réclame plus rien. */
+.bpm-management-card .pm-project-status[data-status='abandoned'] {
+  --pm-badge-ink: #4b5563;
+  --pm-badge-surface: #f1f2f4;
+  --pm-badge-line: #c7ccd3;
+}
+.bpm-management-card[data-abandoned] {
+  opacity: 0.82;
+}
 /* Le noyau nomme « onHold » le statut affiché « En pause ». */
 .bpm-management-card .pm-project-status[data-status='onHold'] {
   --pm-badge-ink: #765300;

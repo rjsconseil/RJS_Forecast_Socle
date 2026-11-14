@@ -4,8 +4,16 @@ import { fail } from '../../socle/errors.mjs';
 export function validateNavigation(value) {
   const object = v => v !== null && typeof v === 'object' && !Array.isArray(v);
   const reject = () => fail('VALIDATION', 'Configuration de navigation invalide.');
-  if (!object(value) || Object.keys(value).some(k => !['version', 'scopes'].includes(k)) || value.version !== 1 || !object(value.scopes)) reject();
+  if (!object(value) || Object.keys(value).some(k => !['version', 'scopes', 'order'].includes(k)) || value.version !== 1 || !object(value.scopes)) reject();
   if (Object.keys(value.scopes).length > 500) reject();
+  // L'ordre ne nomme que des clés : pour chaque parent, ses enfants, chacun une seule fois.
+  if (value.order !== undefined) {
+    if (!object(value.order) || Object.keys(value.order).length > 500) reject();
+    for (const [parent, keys] of Object.entries(value.order)) {
+      if (!parent || parent.length > 240 || !Array.isArray(keys) || !keys.length || keys.length > 200 || new Set(keys).size !== keys.length) reject();
+      if (keys.some(key => typeof key !== 'string' || !key || key.length > 240)) reject();
+    }
+  }
   for (const [scope, settings] of Object.entries(value.scopes)) {
     if (!/^(site|module:[\w-]+|page:\/[^?#]*)$/.test(scope) || scope.length > 240 || !object(settings)) reject();
     if (Object.keys(settings).some(k => !['styles', 'labels'].includes(k))) reject();

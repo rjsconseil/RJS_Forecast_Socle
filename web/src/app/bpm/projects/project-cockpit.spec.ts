@@ -678,3 +678,35 @@ describe('repères budgétaires du projet et estimation de la tâche', () => {
   });
 
 });
+
+describe('abandon d’un projet de la vie', () => {
+  it('montre ce qui revient au budget de vie, confirme l’abandon puis propose la reprise', async () => {
+    const { fixture, page, bpm, state } = await setup(true);
+    const preview = { paidCents: 2000, allocationBeforeCents: 50000, allocationAfterCents: 2000, releasedCents: 48000, cancelledEntries: 1, stoppedRecurrences: 0, cancelledRequests: 0, cancelledOverruns: 0, toPayCents: 2000 };
+    (state as any).abandon = preview;
+    page.data.set({ ...state });
+    (bpm as any).abandonProject = vi.fn(async () => {
+      Object.assign(state.budget!, { abandoned: { ...preview, at: '2026-11-13', reason: 'Déménagement' }, allocationCents: 2000 });
+      (state as any).abandon = null;
+      return { abandonment: preview, detail: state };
+    });
+    (bpm as any).resumeProject = vi.fn(async () => ({ detail: state }));
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    const button = (label: string) => [...el.querySelectorAll('button')].find((b) => b.textContent?.trim() === label) as HTMLButtonElement | undefined;
+    button('Abandonner le projet')!.click();
+    fixture.detectChanges();
+    expect(el.querySelector('#project-abandon')?.textContent).toContain('480,00');
+    page.abandonReason.set('Déménagement');
+    await page.abandonProject();
+    fixture.detectChanges();
+    expect((bpm as any).abandonProject).toHaveBeenCalledWith('bud_1', { expectedRevision: 7, reason: 'Déménagement' });
+    expect(el.querySelector('#project-abandon')).toBeNull();
+    expect(page.nextActionLabel()).toBe('Reprendre le projet');
+    expect(page.pageFocus().title).toContain('Projet abandonné');
+    expect(button('＋ Créer une tâche')).toBeUndefined();
+    page.runNextAction();
+    await fixture.whenStable();
+    expect((bpm as any).resumeProject).toHaveBeenCalledWith('bud_1', 7);
+  });
+});
