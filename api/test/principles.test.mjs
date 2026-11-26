@@ -126,7 +126,7 @@ test('P5 · Données gérées : un schéma par module, une base SQLite rangée p
   const { ctx, bundle } = await camille(socle);
   const described = await socle.data.describe();
   assert.deepEqual(described.spaces, ['socle', 'application.bpm']);
-  assert.deepEqual(described.engines.map((e) => [e.id, e.coded, e.active]), [['sqlite', true, true], ['sgbd', false, false]]);
+  assert.deepEqual(described.engines.map((e) => [e.id, e.coded, e.active]), [['sqlite', true, true], ['sgbd', true, false]]);
   const schema = (name) => described.schemas.find((s) => s.name === name);
   assert.equal(schema('application.bpm').space, 'application.bpm');
   for (const name of ['technique.socle', 'technique.users', 'noyau.core', 'middleware.budget', 'middleware.patrimoine']) assert.equal(schema(name).space, 'socle', name);

@@ -29,7 +29,9 @@ export const DEFAULT_DATA_ENGINE = SqliteEngine.id;
 /** Partitions gardées en mémoire au plus (les moins récemment utilisées quittent le cache). */
 export const DEFAULT_PARTITION_CACHE = Number(process.env.SOCLE_PARTITION_CACHE) || 2000;
 /** Écritures rejouées au plus sur une partition modifiée entre-temps par une autre instance. */
-const MAX_ATTEMPTS = 4;
+const MAX_ATTEMPTS = 12;
+/** Attente avant de rejouer : croissante et tirée au hasard, pour que deux instances en conflit ne se recroisent pas. */
+const backoff = (attempt) => new Promise((r) => setTimeout(r, Math.random() * Math.min(200, 5 * 2 ** attempt)));
 /** Valeurs simples propres à chaque vue (calculées depuis les révisions des partitions). */
 const VIEW_SCALARS = new Set(['revision', 'updatedAt', 'journal']);
 
@@ -463,7 +465,7 @@ export class DataManager {
         try {
           await this.engine.commit(changes, this.catalog);
         } catch (err) {
-          if (err instanceof DomainError && err.code === 'PERSISTENCE_CONFLICT' && attempt < MAX_ATTEMPTS) { this.stats.retries += 1; continue; }
+          if (err instanceof DomainError && err.code === 'PERSISTENCE_CONFLICT' && attempt < MAX_ATTEMPTS) { this.stats.retries += 1; await backoff(attempt); continue; }
           if (err instanceof DomainError) throw err;
           throw new DomainError('PERSISTENCE_UNAVAILABLE', "L'enregistrement n'a pas pu être confirmé.", { cause: String(err.message) });
         }
