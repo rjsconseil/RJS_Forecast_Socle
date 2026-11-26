@@ -27,7 +27,7 @@ export interface LifeOverrunDecision {
   // Sans boîte propre : ses sections restent des enfants directs de la page pour la mise en page.
   host: { style: 'display: contents' },
   // Mêmes feuilles que la fiche projet : le rendu ne change pas (vérifié avec e2e/style-fingerprint.mjs).
-  styleUrls: ['./projects.page.scss', './project.page.scss', './project-command-center.scss'],
+  styleUrls: ['./projects.page.scss', './project.page.scss'],
 })
 export class BpmLifeProjectCockpit {
   readonly detail = input.required<BpmProjectDetail>();

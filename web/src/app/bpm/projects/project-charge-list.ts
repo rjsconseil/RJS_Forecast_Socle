@@ -24,7 +24,7 @@ export interface ChargeSettlement {
   templateUrl: './project-charge-list.html',
   // Sans boîte propre, mêmes feuilles que la fiche projet : le rendu ne change pas (e2e/style-fingerprint.mjs).
   host: { style: 'display: contents' },
-  styleUrls: ['./projects.page.scss', './project.page.scss', './project-command-center.scss'],
+  styleUrl: './project.page.scss',
 })
 export class BpmProjectChargeList {
   readonly charges = input<ProjectChargeLine[]>([]);

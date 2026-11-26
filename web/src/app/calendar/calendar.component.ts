@@ -1,6 +1,17 @@
 import { TopLayerDirective } from './top-layer.directive';
 import { MonthPeek, PeekHost, YearPeek } from './calendar-peeks';
 import {
+  type CalendarFormatDraft,
+  dayMostlyDone,
+  dayNeedsAttention,
+  dayNetAmount,
+  dominantElement,
+  formatDraftOf,
+  moveDraftField,
+  saveDraftInto,
+  toggleDraftField,
+} from './calendar-day-summary';
+import {
   ChangeDetectionStrategy,
   afterNextRender,
   Component,
@@ -176,7 +187,7 @@ export class CalendarComponent {
   /** Champs montrés sur chaque événement, dans l'ordre du format (le total est celui du jour, dans la case). */
   protected readonly eventFields = computed(() => this.format().fields.filter((f) => f !== 'total'));
   /** Format en cours de création ou de modification. */
-  protected readonly formatDraft = signal<{ id: string | null; label: string; layout: CalendarLayout; fields: CalendarFormatField[]; perCell: number | null } | null>(null);
+  protected readonly formatDraft = signal<CalendarFormatDraft | null>(null);
   /** Sources proposées au branchement, rangées par provenance. */
   protected readonly library = computed(() => {
     const groups = new Map<string, { label: string; sources: CalendarSourceOffer[] }>();
@@ -573,34 +584,14 @@ export class CalendarComponent {
     return this.indicators().find((i) => i.key === stat)?.label ?? stat;
   }
   /** Total signé des flux du jour (montants avec un sens), affiché dans la case. */
-  protected dayAmount(events: CalendarEvent[]): { text: string; sign: string } | null {
-    if (!this.showField('total')) return null;
-    const flows = events.filter((e) => e.direction && e.amountCents !== null);
-    if (!flows.length) return null;
-    const net = flows.reduce(
-      (s, e) => s + (e.direction === 'entree' ? 1 : -1) * (e.amountCents ?? 0),
-      0,
-    );
-    return {
-      text: formatAmount(net, net < 0 ? 'sortie' : 'entree'),
-      sign: net < 0 ? 'negative' : net > 0 ? 'positive' : 'zero',
-    };
+  protected dayAmount(events: CalendarEvent[]) {
+    return this.showField('total') ? dayNetAmount(events) : null;
   }
-  protected hasAttention(events: CalendarEvent[]) {
-    return (
-      events.filter((e) => !e.done && e.urgent === 'overdue').length >= 1 ||
-      events.filter((e) => !e.done).length >= 5
-    );
-  }
-  protected hasProgress(events: CalendarEvent[]) {
-    const done = events.filter((e) => e.done).length;
-    return done > 0 && done >= events.length - done;
-  }
+  protected readonly hasAttention = dayNeedsAttention;
+  protected readonly hasProgress = dayMostlyDone;
   /** Couleur dominante d'une journée (vue annuelle) : celle de l'élément le plus présent. */
   protected dominantTone(events: CalendarEvent[]) {
-    const counts = new Map<string, number>();
-    for (const e of events) counts.set(e.element, (counts.get(e.element) ?? 0) + 1);
-    const top = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0];
+    const top = dominantElement(events);
     return this.tone(top ? this.elementsById().get(top)?.tone : undefined);
   }
   protected yearDayLabel(day: string, count: number) {
@@ -648,41 +639,24 @@ export class CalendarComponent {
   /** Nouveau format, à partir de celui en cours ; ou modification d'un format créé par la personne. */
   protected editFormat(format: CalendarFormat | null = null) {
     if (!this.controlAllowed('fields')) return;
-    const base = format ?? this.format();
-    this.formatDraft.set({
-      id: format?.own ? format.id : null,
-      label: format?.own ? format.label : `Mon format`,
-      layout: base.layout,
-      fields: [...base.fields],
-      perCell: base.perCell,
-    });
+    this.formatDraft.set(formatDraftOf(format, this.format()));
   }
   protected updateDraft(change: Partial<{ label: string; layout: CalendarLayout; perCell: number | null }>) {
     this.formatDraft.update((d) => (d ? { ...d, ...change } : d));
   }
   protected toggleDraftField(field: CalendarFormatField) {
-    this.formatDraft.update((d) => d && { ...d, fields: d.fields.includes(field) ? d.fields.filter((f) => f !== field) : [...d.fields, field] });
+    this.formatDraft.update((d) => d && toggleDraftField(d, field));
   }
   /** Change l'ordre d'un champ dans le format (−1 : plus tôt, +1 : plus tard). */
   protected moveDraftField(field: CalendarFormatField, step: number) {
-    this.formatDraft.update((d) => {
-      if (!d) return d;
-      const fields = [...d.fields];
-      const at = fields.indexOf(field);
-      const to = at + step;
-      if (at < 0 || to < 0 || to >= fields.length) return d;
-      [fields[at], fields[to]] = [fields[to], fields[at]];
-      return { ...d, fields };
-    });
+    this.formatDraft.update((d) => d && moveDraftField(d, field, step));
   }
   protected saveFormat() {
     const draft = this.formatDraft();
     const label = draft?.label.trim();
     if (!draft || !label) return;
-    const own = this.ownFormats();
     const id = draft.id ?? newFormatId(label, this.formats());
-    const format: CalendarFormat = { id, label, layout: draft.layout, fields: draft.fields, perCell: draft.perCell, builtIn: false, own: true };
-    const next = draft.id ? own.map((f) => (f.id === id ? format : f)) : [...own, format];
+    const next = saveDraftInto(this.ownFormats(), draft, id);
     this.ownFormats.set(next);
     this.formatsChange.emit(next);
     this.formatDraft.set(null);
