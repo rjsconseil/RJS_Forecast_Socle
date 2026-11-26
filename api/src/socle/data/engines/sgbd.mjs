@@ -199,6 +199,108 @@ export class SgbdEngine {
           if (value === undefined) await client.query('DELETE FROM "SY_store" WHERE key = $1', [k]);
           else await client.query('INSERT INTO "SY_store" (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = excluded.value', [k, JSON.stringify(value)]);
         }
+        // Écritures groupées : une requête par table et par nature (création, mise à jour, suppression), et une pour
+        // le journal, au lieu d'une par objet. Le nombre de lignes touchées est vérifié comme avant, objet par objet.
+        const byTable = new Map();
+        const group = (collection) => {
+          const table = this.tables.get(collection);
+          if (!byTable.has(table)) byTable.set(table, { collection, inserts: [], updates: [], deletes: [] });
+          return byTable.get(table);
+        };
+        for (const [collection, id, object, isNew] of change.upserts ?? []) group(collection)[isNew ? 'inserts' : 'updates'].push([id, JSON.stringify(object)]);
+        for (const [collection, id] of change.deletes ?? []) if (this.tables.get(collection)) group(collection).deletes.push(id);
+        for (const [table, g] of byTable) {
+          if (g.inserts.length) {
+            const done = await client.query(`INSERT INTO ${q(table)} (id, user_id, revision, data)
+              SELECT v.id, $1, $2, v.data FROM unnest($3::text[], $4::text[]) WITH ORDINALITY AS v(id, data, n) ORDER BY v.n
+              ON CONFLICT (id) DO NOTHING RETURNING id`, [user, change.revision, g.inserts.map((x) => x[0]), g.inserts.map((x) => x[1])]);
+            if (done.rowCount !== g.inserts.length) {
+              const written = new Set(done.rows.map((r) => r.id));
+              const id = g.inserts.find((x) => !written.has(x[0]))?.[0];
+              throw conflict(`L'identifiant ${id} existe déjà dans « ${g.collection} » : écriture refusée.`, { partition: change.key, collection: g.collection, id });
+            }
+          }
+          if (g.updates.length) {
+            const done = await client.query(`UPDATE ${q(table)} AS t SET revision = $1, data = v.data
+              FROM unnest($2::text[], $3::text[]) AS v(id, data) WHERE t.id = v.id AND t.user_id IS NOT DISTINCT FROM $4 RETURNING t.id`,
+            [change.revision, g.updates.map((x) => x[0]), g.updates.map((x) => x[1]), user]);
+            if (done.rowCount !== g.updates.length) {
+              const written = new Set(done.rows.map((r) => r.id));
+              const id = g.updates.find((x) => !written.has(x[0]))?.[0];
+              throw conflict(`L'objet ${id} a disparu ou changé de partition : écriture refusée.`, { partition: change.key, collection: g.collection, id });
+            }
+          }
+          if (g.deletes.length) await client.query(`DELETE FROM ${q(table)} WHERE id = ANY($1::text[]) AND user_id IS NOT DISTINCT FROM $2`, [g.deletes, user]);
+        }
+        if (change.journalReset) await client.query('UPDATE "SY_partitions" SET journal_from = (SELECT COALESCE(MAX(seq), 0) FROM "SY_journal") WHERE user_id = $1', [change.key]);
+        const journal = change.journal ?? [];
+        if (journal.length) {
+          await client.query(`INSERT INTO "SY_journal" (at, command, user_id, outcome, data)
+            SELECT v.at, v.command, $1, v.outcome, v.data FROM unnest($2::text[], $3::text[], $4::text[], $5::text[]) WITH ORDINALITY AS v(at, command, outcome, data, n) ORDER BY v.n`,
+          [user, journal.map((e) => e?.at ?? null), journal.map((e) => e?.command ?? null), journal.map((e) => e?.outcome ?? null), journal.map((e) => JSON.stringify(e))]);
+        }
+      }
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
+    for (const r of objects.rows) (collections[r.c] ??= {})[r.id] = r.data && typeof r.data === 'object' ? r.data : JSON.parse(r.data);
+    const sc = {};
+    for (const r of scalars.rows) if (!r.key.startsWith('@') && !PARTITION_SCALARS.has(r.key)) sc[r.key] = JSON.parse(r.value);
+    const p = rev.rows[0];
+    return { key, revision: p ? Number(p.revision) : null, updatedAt: p?.updated_at ?? null, scalars: sc, collections, journal: journal.rows.map((r) => JSON.parse(r.data)) };
+  }
+
+  async findObject(collection, id) {
+    const table = this.tables.get(collection);
+    if (!table) return null;
+    const { rows } = await this.pool.query(`SELECT data FROM ${q(table)} WHERE id = $1`, [id]);
+    return rows[0] ? JSON.parse(rows[0].data) : null;
+  }
+
+  async findBy(collection, field, value, { unique = false } = {}) {
+    if (!/^[a-zA-Z]+$/.test(field)) throw new Error(`Champ de recherche invalide : ${field}`);
+    const table = await this.#ensureTable(collection, null);
+    await this.pool.query(`CREATE ${unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${q(`${table}_${field}`)} ON ${q(table)} (((data::jsonb) ->> '${field}'))`);
+    const { rows } = await this.pool.query(`SELECT data FROM ${q(table)} WHERE (data::jsonb) ->> '${field}' = $1 ORDER BY ord`, [value]);
+    return rows.map((r) => JSON.parse(r.data));
+  }
+
+  async directory() {
+    const table = this.tables.get('users');
+    if (!table) return [];
+    const { rows } = await this.pool.query(`SELECT data FROM ${q(table)} ORDER BY ord`);
+    return rows.map((r) => JSON.parse(r.data));
+  }
+
+  async counts() {
+    const out = {};
+    for (const [c, t] of this.tables) out[c] = Number((await this.pool.query(`SELECT COUNT(*) AS n FROM ${q(t)}`)).rows[0].n);
+    return out;
+  }
+
+  /** Changements de partitions en une transaction, tout ou rien, révisions attendues vérifiées (voir sqlite.mjs). */
+  async commit(changes, catalog) {
+    for (const change of changes) for (const [collection] of change.upserts ?? []) await this.#ensureTable(collection, catalog?.spaceOf?.(collection));
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const change of changes) {
+        const user = userParam(change.key);
+        if (change.expected === null) {
+          const done = await client.query('INSERT INTO "SY_partitions" (user_id, revision, updated_at) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO NOTHING', [change.key, change.revision, change.updatedAt]);
+          if (done.rowCount !== 1) throw conflict('Une partition nouvelle existe déjà : écriture refusée.', { partition: change.key });
+        } else {
+          const done = await client.query('UPDATE "SY_partitions" SET revision = $1, updated_at = $2 WHERE user_id = $3 AND revision = $4', [change.revision, change.updatedAt, change.key, change.expected]);
+          if (done.rowCount !== 1) throw conflict('La partition a été modifiée par un autre écrivain : écriture refusée, rien n’est écrasé.', { partition: change.key });
+        }
+        for (const [k, value] of change.scalars ?? []) {
+          if (value === undefined) await client.query('DELETE FROM "SY_store" WHERE key = $1', [k]);
+          else await client.query('INSERT INTO "SY_store" (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = excluded.value', [k, JSON.stringify(value)]);
+        }
         for (const [collection, id, object, isNew] of change.upserts ?? []) {
           const table = this.tables.get(collection);
           const json = JSON.stringify(object);

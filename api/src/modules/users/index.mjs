@@ -201,9 +201,12 @@ export default {
         return user ? summary(state, user) : null;
       },
 
-      /** L'annuaire : chaque user résumé dans la vue de sa propre partition (aucune vue complète). */
-      async listUsers() {
-        const users = [...(await socle.store.directory())].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      /**
+       * L'annuaire : chaque user résumé dans la vue de sa propre partition (aucune vue complète). Chaque résumé charge
+       * une partition : `{ offset, limit }` n'en charge qu'une page (l'annuaire lui-même se lit sans les charger).
+       */
+      async listUsers({ offset = 0, limit = Infinity } = {}) {
+        const users = [...(await socle.store.directory())].sort((a, b) => a.createdAt.localeCompare(b.createdAt)).slice(offset, offset + limit);
         const out = [];
         // Chaque user dans sa propre partition, chargée et revalidée (moteurs asynchrones compris).
         for (const u of users) out.push(await socle.store.within(u.id, () => summary(socle.store.viewOf(u.id), u)));
@@ -217,7 +220,14 @@ export default {
   routes(socle) {
     const s = socle.modules.users;
     return [
-      ['GET', '/api/users', () => s.listUsers()],
+      // `?limit=50&offset=100` : une page de l'annuaire, avec le total (administration d'un site à beaucoup de users).
+      ['GET', '/api/users', async ({ query }) => {
+        if (!query?.has('limit')) return s.listUsers();
+        const limit = Math.min(Math.max(Number(query.get('limit')) || 50, 1), 500);
+        const offset = Math.max(Number(query.get('offset')) || 0, 0);
+        const total = (await socle.store.directory()).length;
+        return { users: await s.listUsers({ offset, limit }), total, offset, limit };
+      }],
       ['GET', '/api/users/types', () => s.types()],
       ['POST', '/api/users', ({ body }) => s.createUser(body)],
       ['PUT', '/api/users/:id', ({ ctx, params, body }) => s.updateUser(ctx, params.id, body)],

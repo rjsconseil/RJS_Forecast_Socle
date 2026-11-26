@@ -124,3 +124,20 @@ test('sgbd · un service appelé hors requête entre de lui-même dans la partit
   assert.equal((await socle.modules.users.listUsers()).length, 1);
   await socle.close();
 });
+
+test('sgbd · limitation des essais de connexion commune à tous les serveurs (table SY_throttle)', { skip }, async () => {
+  await freshBase();
+  const { createThrottle } = await import('../src/socle/auth.mjs');
+  const one = await open();
+  const two = await open();
+  const a = createThrottle({ max: 3, windowMs: 60000, store: one.store.engine.throttleStore() });
+  const b = createThrottle({ max: 3, windowMs: 60000, store: two.store.engine.throttleStore() });
+  await a.failed(['login:x@example.org', 'ip:1']);
+  await b.failed(['login:x@example.org', 'ip:2']);
+  await a.failed(['login:x@example.org', 'ip:1']);
+  await assert.rejects(b.check(['login:x@example.org']), { code: 'AUTH_THROTTLED' });
+  await b.succeeded(['login:x@example.org']);
+  await a.check(['login:x@example.org']);
+  await one.close();
+  await two.close();
+});

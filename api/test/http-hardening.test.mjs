@@ -112,3 +112,20 @@ test('http · point de santé ouvert sans connexion, sans aucune donnée', async
     await socle.close();
   }
 });
+
+test('http · annuaire paginé : une page de users et le total, sans charger les autres partitions', async () => {
+  const { socle, dataFile } = await makeSocle();
+  const { camille } = await import('./helpers.mjs');
+  for (let i = 0; i < 5; i += 1) await camille(socle, { label: `User ${i}` });
+  const server = createServer(createHttpHandler(socle, { dataFile, authMode: 'local' }));
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  try {
+    const base = `http://127.0.0.1:${server.address().port}`;
+    const page = await (await fetch(`${base}/api/users?limit=2&offset=1`)).json();
+    assert.deepEqual([page.total, page.offset, page.limit, page.users.map((u) => u.label)], [5, 1, 2, ['User 1', 'User 2']]);
+    assert.equal((await (await fetch(`${base}/api/users`)).json()).length, 5, 'sans paramètre : tout l’annuaire, comme avant');
+  } finally {
+    server.close();
+    await socle.close();
+  }
+});
