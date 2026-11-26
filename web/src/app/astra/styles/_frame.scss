@@ -115,7 +115,7 @@
     flex: 1; display: flex; flex-direction: column; gap: var(--a-gap);
     > * { margin-block: 0; }
     > :empty:not(input, textarea, select, img, hr, iframe) { display: none; }
-    > :nth-last-child(1 of :not(:empty, rjs-page-banner, rjs-page-toolbar, rjs-app-hero, bpm-compass, script)) { flex-grow: 1; align-content: start; justify-content: flex-start; }
+    > :nth-last-child(1 of :not(:empty, rjs-page-banner, rjs-page-toolbar, rjs-app-hero, bpm-compass, script)) { flex-grow: 1; align-content: start; }
   }
   // Pages propres : elles remplissent l'écran jusqu'en bas.
   .astra-screen > :is(astra-overview, astra-goal, astra-wealth) { flex: 1; display: flex; flex-direction: column; }
