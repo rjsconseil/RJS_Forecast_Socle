@@ -189,7 +189,10 @@ export default {
       /** L'annuaire : chaque user résumé dans la vue de sa propre partition (aucune vue complète). */
       async listUsers() {
         const users = [...(await socle.store.directory())].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-        return users.map((u) => summary(socle.store.viewOf(u.id), u));
+        const out = [];
+        // Chaque user dans sa propre partition, chargée et revalidée (moteurs asynchrones compris).
+        for (const u of users) out.push(await socle.store.within(u.id, () => summary(socle.store.viewOf(u.id), u)));
+        return out;
       },
 
       types: () => userTypesOf(socle, socle.state),

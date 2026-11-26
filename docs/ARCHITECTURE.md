@@ -283,9 +283,10 @@ l'assemblage du socle, aux scripts et aux tests ; absente de la portée des modu
   - **Outils d'administration** (`socle/store.mjs`, réservés aux scripts) : `readStoredState` (lire l'état de la base, ou d'un
     stockage JSON pas encore repris), `snapshotStore` (copie d'un seul bloc, rouvrable telle quelle comme stockage),
     `removeStore` (effacer la base). Les scripts d'import et de jeux d'essai les utilisent.
-  - `sgbd` (PostgreSQL, pour un site hébergé à plusieurs) : **non codé**. Le contrat à suivre est celui du moteur SQLite partitionné (`open`, `meta`, `readPartition`, `revisions`, `allRevisions`, `commit`, `ensureTables`, `directory`, `findObject`, `counts`, `close`, `describe`, en asynchrone : `sync` faux) ; `sgbd.mjs` liste encore l'ancien contrat d'un seul bloc et sera revu avec le chantier 5 ; le choisir
-    lève `DATA_ENGINE_UNAVAILABLE`.
-- Non traités à ce stade : historique des objets, identité des utilisateurs (chantier 5, avant toute mise en ligne).
+  - `sgbd` (PostgreSQL, pour un site hébergé à plusieurs, `engines/sgbd.mjs`) : **en service depuis le 26 novembre 2026**
+    (§17). Même contrat que le moteur SQLite partitionné, en asynchrone (`sync` faux) : `SOCLE_DATA_ENGINE=sgbd` et
+    `SOCLE_PG_URL` ; pilote `pg`. Sans adresse ou sans pilote : `DATA_ENGINE_UNAVAILABLE`.
+- Non traité à ce stade : historique des objets. L'identité des utilisateurs est en place depuis le 26 novembre 2026 (§17).
   La copie mémoire de chaque collection lue par une commande est supprimée depuis le 26 novembre 2026 (§16.3).
 
 ### Limites connues
@@ -514,10 +515,50 @@ partition (copie superficielle de la collection publiée écrite, écriture SQLi
 
 ### 16.8 Limites et suite
 
-- **Avant toute mise en ligne (chantier 5)** : authentification des utilisateurs (aujourd'hui, le user est celui que le site
-  annonce dans l'en-tête `x-user-id`, sans preuve), puis le moteur PostgreSQL (`sgbd`), qui permet plusieurs serveurs sur une même base.
-  SQLite reste un écrivain par fichier : il suffit pour un poste, pas pour un site hébergé à grande échelle.
+- Authentification et moteur PostgreSQL : faits (§17).
 - La vue complète (`fullView`) et les contrôles de l'inspecteur parcourent toutes les partitions : réservés à
   l'administration et aux scripts.
 - Le journal en mémoire est limité aux 2 000 dernières entrées par partition (toute l'histoire reste en base) ; les
   actions du cycle qui le lisent en tiennent compte.
+
+## 17. Authentification et moteur PostgreSQL — 26 novembre 2026
+
+### 17.1 Comptes et sessions
+
+- **Comptes** (module `users`, nature `credential`, table `SY_credentials`, dans la partition de leur user) : adresse
+  e-mail unique sur tout le site (vérifiée avant l'écriture, garantie par un index unique de la base), empreinte scrypt
+  salée du mot de passe (au moins 10 caractères), rôle (`member`, `admin`), `sessionsFrom`. Aucune lecture des autres
+  modules ne voit ces objets. Commandes : `register` (user, composition initiale et compte en une écriture),
+  `setCredentials` (le mot de passe actuel est exigé s'il y en a un), `authenticate`, `revokeSessions`.
+- **Sessions** (`socle/auth.mjs`) : jeton `<charge>.<signature HMAC-SHA256>` (user, émission, expiration, 14 jours par
+  défaut, `SOCLE_SESSION_HOURS`), dans un cookie `rjs_session` HttpOnly, SameSite=Lax (Secure derrière HTTPS ou avec
+  `SOCLE_COOKIE_SECURE=1`) ou en `Authorization: Bearer`. Vérifié sans lire la base : plusieurs serveurs partagent le
+  secret `SOCLE_AUTH_SECRET` (sinon un secret tiré au hasard, gardé à côté de la base, lisible du seul propriétaire).
+  « Se déconnecter partout » refuse les jetons émis avant `sessionsFrom`.
+- **Protections** : 8 échecs par adresse ou par adresse IP sur 15 minutes bloquent la connexion (`AUTH_THROTTLED`, 429) ;
+  une adresse inconnue et un mot de passe faux reçoivent le même refus, au même coût (empreinte factice).
+
+### 17.2 Modes (`SOCLE_AUTH`) et couche HTTP (`api/src/http.mjs`)
+
+| Mode | Identité d'une requête | Annuaire `/api/users` | Administration (`/api/admin`, `/api/om`, `/api/_recette`) |
+|---|---|---|---|
+| `local` (défaut, poste de travail) | le jeton s'il y en a un, sinon l'en-tête `x-user-id` (choix du profil, comme avant) | tous les profils | ouverte |
+| `required` (site en ligne) | le jeton seul ; sans jeton : `AUTH_REQUIRED` (401) | son propre profil | rôle `admin` (`node api/scripts/make-admin.mjs <email>`) |
+
+Routes : `GET /api/auth/status`, `POST /api/auth/register`, `/login`, `/logout`, `/logout-all`, `/credentials`.
+Site : page `/connexion` (connexion et inscription), service `AuthSession` ; en mode `required`, toute page sans
+session mène à la connexion et le profil actif est celui du compte. Tests : `api/test/auth.test.mjs` (jetons falsifiés,
+expirés, d'une autre clé ; profil d'un autre inaccessible ; limitation ; déconnexion partout ; mode local).
+
+### 17.3 Moteur PostgreSQL (`engines/sgbd.mjs`)
+
+- Une table par collection (mêmes noms, rangés par section), colonnes `id`, `user_id`, `revision`, `data` (JSON tel
+  qu'écrit, relu à l'identique), `ord` (ordre d'écriture) ; `SY_partitions`, `SY_journal`, `SY_store`, `SY_tables`.
+- Une partition se lit en un aller-retour (UNION ALL de ses tables). Une écriture est une transaction qui vérifie la
+  révision attendue de chaque partition touchée (`UPDATE … WHERE revision = attendue`) : écrite ailleurs entre-temps →
+  relue puis rejouée par la couche de gestion (jusqu'à 12 fois, attente croissante tirée au hasard).
+- Reprise d'une base SQLite : `SOCLE_PG_URL=… node api/scripts/sqlite-to-pg.mjs [base.sqlite]` (base PostgreSQL vide).
+- Vérifié : `api/test/sgbd.test.mjs` sur PostgreSQL 17 (partitions, redémarrage, idempotence, deux serveurs écrivant la
+  même partition en même temps, comptes) ; la base réelle reprise dans PostgreSQL donne des réponses identiques
+  octet pour octet à SQLite (synthèse, registre, clôture, projets, bilans, annuaire) et le test d'interface Astra passe.
+
