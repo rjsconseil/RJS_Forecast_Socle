@@ -27,6 +27,7 @@ export function moduleScope(socle, mod) {
     /** Vue de la partition d'un user (lecture seule) et annuaire des users : ce qui passe à l'échelle. */
     viewOf: (userId) => socle.store.viewOf(userId),
     directory: () => socle.store.directory(),
+    findBy: (collection, field, value, options) => socle.store.findBy(collection, field, value, options),
     describe: () => socle.store.describe(),
   });
   return Object.create(socle, {

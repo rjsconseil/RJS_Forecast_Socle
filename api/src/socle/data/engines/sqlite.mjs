@@ -260,6 +260,18 @@ export class SqliteEngine {
     return row ? JSON.parse(row.data) : null;
   }
 
+  /**
+   * Objets d'une collection dont un champ vaut une valeur, quelle que soit leur partition (identifiant de connexion).
+   * Le champ est indexé à la première recherche ; `unique` : la base refuse deux objets de même valeur.
+   */
+  findBy(collection, field, value, { unique = false } = {}) {
+    if (!/^[a-zA-Z]+$/.test(field)) throw new Error(`Champ de recherche invalide : ${field}`);
+    const tables = tablesOf(this.db);
+    const table = ensureTable(this.db, tables, collection, null);
+    this.db.exec(`CREATE ${unique ? 'UNIQUE ' : ''}INDEX IF NOT EXISTS ${q(`${table}_${field}`)} ON ${q(table)} (json_extract(data, '$.${field}'))`);
+    return this.db.prepare(`SELECT data FROM ${q(table)} WHERE json_extract(data, '$.${field}') = ?`).all(value).map((r) => JSON.parse(r.data));
+  }
+
   /** L'annuaire des users, sans charger leurs partitions. */
   directory() {
     const table = tablesOf(this.db).get('users');

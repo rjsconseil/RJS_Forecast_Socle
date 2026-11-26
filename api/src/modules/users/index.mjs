@@ -3,6 +3,7 @@
 // composition initiale enregistrée par le niveau applicatif (BPM) : tout ou rien.
 import { fail } from '../../socle/errors.mjs';
 import { expectedRevisionOf, text } from '../../socle/validation.mjs';
+import { hashPassword, normalizeLogin, verifyDecoy, verifyPassword } from '../../socle/auth.mjs';
 
 const userTypesOf = (socle, state) => socle.parameters.value(state, 'users.types');
 
@@ -13,6 +14,9 @@ export default {
   dependsOn: [],
   kinds: {
     user: { collection: 'users', prefix: 'usr', label: 'User' },
+    // Identifiants de connexion : adresse e-mail (unique sur tout le site) et empreinte du mot de passe, jamais lus par
+    // les autres modules ; rangés dans la partition de leur user.
+    credential: { collection: 'credentials', prefix: 'crd', label: 'Identifiants de connexion', references: { userId: { kind: 'user', required: true } } },
   },
   parameters: [
     {
@@ -111,6 +115,67 @@ export default {
           }
           om.update(tx, u, patch);
           return { userId: u.id };
+        });
+      },
+
+      // ---------- comptes et connexion ----------
+
+      /** Les identifiants d'un user (dans sa partition), sans leur empreinte. */
+      accountOf(userId) {
+        const c = om.list(socle.store.viewOf(userId), 'credential', (x) => x.userId === userId)[0];
+        return c ? { email: c.login, role: c.role ?? 'member', sessionsFrom: c.sessionsFrom ?? 0 } : null;
+      },
+
+      /**
+       * Inscription : le user, sa composition initiale et ses identifiants, en une seule écriture. L'adresse e-mail est
+       * unique sur tout le site (vérifiée avant l'écriture ; la base la garantit aussi par un index unique).
+       */
+      async register(input = {}) {
+        const login = normalizeLogin(input.email);
+        const auth = hashPassword(input.password);
+        if ((await socle.store.findBy('credentials', 'login', login, { unique: true })).length) fail('UNIQUENESS_VIOLATION', 'Un compte existe déjà avec cette adresse e-mail.', { field: 'email' });
+        const { email, password, ...rest } = input;
+        return om.command('register', null, { ...rest, email: login }, (tx) => {
+          const compose = socle.registry.composition('initialUserBundle');
+          const result = compose ? compose(tx, rest, socle) : { userId: buildUser(tx, rest).id };
+          om.create(tx, 'credential', { login, auth, role: 'member', sessionsFrom: 0 }, { userId: result.userId });
+          return result;
+        }, { creation: true, anonymous: true });
+      },
+
+      /** Donne (ou change) l'adresse et le mot de passe d'un user existant ; le mot de passe actuel est exigé s'il y en a un. */
+      async setCredentials(ctx, input = {}) {
+        const login = normalizeLogin(input.email);
+        const auth = hashPassword(input.password);
+        const taken = await socle.store.findBy('credentials', 'login', login, { unique: true });
+        if (taken.some((c) => c.userId !== ctx?.userId)) fail('UNIQUENESS_VIOLATION', 'Un compte existe déjà avec cette adresse e-mail.', { field: 'email' });
+        return om.command('setCredentials', ctx, { email: login }, (tx) => {
+          const current = om.list(tx.draft, 'credential', (c) => c.userId === tx.userId)[0];
+          if (current) {
+            if (!verifyPassword(input.currentPassword, current.auth)) fail('AUTH_INVALID', 'Mot de passe actuel incorrect.', { field: 'currentPassword' });
+            om.update(tx, current, { login, auth, sessionsFrom: Date.now() });
+          } else om.create(tx, 'credential', { login, auth, role: 'member', sessionsFrom: 0 }, { userId: tx.userId });
+          return { userId: tx.userId, email: login };
+        });
+      },
+
+      /** Vérifie une adresse et un mot de passe ; rend le user, ou un refus identique quelle que soit l'erreur. */
+      async authenticate(email, password) {
+        let login;
+        try { login = normalizeLogin(email); } catch { verifyDecoy(password); fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.'); }
+        const [c] = await socle.store.findBy('credentials', 'login', login, { unique: true });
+        if (!c) { verifyDecoy(password); fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.'); }
+        if (!verifyPassword(String(password ?? ''), c.auth)) fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.');
+        return { userId: c.userId, role: c.role ?? 'member' };
+      },
+
+      /** Se déconnecter partout : tout jeton émis avant maintenant est refusé. */
+      revokeSessions(ctx) {
+        return om.command('revokeSessions', ctx, {}, (tx) => {
+          const c = om.list(tx.draft, 'credential', (x) => x.userId === tx.userId)[0];
+          if (!c) fail('NOT_FOUND', 'Ce profil n’a pas de compte de connexion.');
+          om.update(tx, c, { sessionsFrom: Date.now() });
+          return { userId: tx.userId };
         });
       },
 

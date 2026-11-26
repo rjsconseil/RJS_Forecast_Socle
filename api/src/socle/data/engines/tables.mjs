@@ -9,7 +9,7 @@ export const SECTIONS = {
   MB: { label: 'Mon budget', collections: ['budgets', 'recurrences', 'costCenters', 'chargeCategories'] },
   PT: { label: 'Patrimoine', collections: ['patrimoines', 'capitalizations', 'lifeGoals'] },
   CL: { label: 'Cycles', collections: ['cycleLinks', 'closures', 'bpmCompositions'] },
-  SY: { label: 'Système', collections: ['users', 'parameters', 'creationRequests'] },
+  SY: { label: 'Système', collections: ['users', 'credentials', 'parameters', 'creationRequests'] },
 };
 const SECTION_OF = new Map(Object.entries(SECTIONS).flatMap(([prefix, s]) => s.collections.map((c) => [c, prefix])));
 const snake = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();

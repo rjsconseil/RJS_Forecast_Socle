@@ -15,6 +15,8 @@ const canonical = (target: (params: Record<string, string>) => string[]): Redire
 const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.get('zone'), route.paramMap.get('section'));
 
 const mainRoutes: Routes = [
+  // Connexion et inscription (connexion exigée par le serveur, SOCLE_AUTH=required).
+  { path: 'connexion', title: 'Connexion · RJS Forecast', loadComponent: () => import('./core/login.page').then(m => m.LoginPage) },
   { path: 'navigation', canDeactivate: [navigationSettingsGuard], title: 'Navigation system — RJS Forecast', loadComponent: () => import('./navigation/navigation-settings.page').then(m => m.NavigationSettingsPage) },
   // L'application par défaut (la première du registre) s'ouvre à la racine, en gardant la lecture.
   { path: '', pathMatch: 'full', redirectTo: ({ queryParams }) => inject(Router).createUrlTree([defaultApplicationHome()], { queryParams }) },

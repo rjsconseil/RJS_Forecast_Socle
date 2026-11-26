@@ -10,6 +10,7 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { RecetteContext, toApiError, UserDirectory } from './core/api.service';
+import { AuthSession, LOGIN_PATH } from './core/auth-session';
 import { AccountChipComponent } from './shared/account-chip.component';
 import { StickyPageHeroDirective } from './shared/sticky-page-hero.directive';
 import { SectionPageMenu } from './plan/section-page-menu.component';
@@ -59,6 +60,9 @@ export class App implements OnInit {
   private readonly title = inject(Title);
   protected users = this.directory.users;
   protected ready = signal(false);
+  private auth = inject(AuthSession);
+  /** La page de connexion s'affiche seule, sans annuaire ni choix de profil. */
+  protected readonly onLoginPage = computed(() => this.url().startsWith(LOGIN_PATH));
   protected error = signal<string | null>(null);
   protected readonly zones = computed(() => orderedZones());
   protected readonly todayIso = new Date().toISOString().slice(0, 10);
@@ -157,6 +161,16 @@ export class App implements OnInit {
     // L'ordre des liens réglé dans Navigation system vaut pour toutes les listes que le plan projette.
     const navigationSystem = inject(NavigationSystem);
     effect(() => planOrder.set(navigationSystem.configuration().order ?? {}));
+    // Connexion exigée par le serveur et aucune session : toute page mène à la connexion.
+    const auth = this.auth;
+    effect(() => {
+      const url = this.url();
+      if (auth.required() && !auth.signedIn() && !url.startsWith(LOGIN_PATH)) {
+        // Avant la première navigation, l'adresse demandée est celle du navigateur.
+        const retour = url === '/' ? globalThis.location.pathname + globalThis.location.search : url;
+        untracked(() => void this.router.navigate([LOGIN_PATH], { queryParams: { retour } }));
+      }
+    });
     // Une navigation referme le menu mobile.
     effect(() => {
       this.url();
@@ -248,6 +262,9 @@ export class App implements OnInit {
   }
 
   async ngOnInit() {
+    // Connexion exigée et aucune session : seule la page de connexion s'affiche, l'annuaire attend la connexion.
+    await this.auth.refresh();
+    if (this.auth.required() && !this.auth.signedIn()) { this.ready.set(true); return; }
     try {
       const users = await this.directory.refresh();
       // Sans connexion mémorisée (ou user disparu), le site s'ouvre non connecté : seul « Démarrer un projet » est proposé.

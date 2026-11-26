@@ -291,7 +291,9 @@
 
         <main id="main" tabindex="-1">
           @if (ready()) {
-            @if (isAstra() && !ctx.connected()) {
+            @if (onLoginPage()) {
+              <router-outlet />
+            } @else if (isAstra() && !ctx.connected()) {
               @if (profilePicker(); as picker) { <ng-container *ngComponentOutlet="picker" /> }
             } @else if (users().length === 0 && needsUser()) {
               <div class="page plan-page">

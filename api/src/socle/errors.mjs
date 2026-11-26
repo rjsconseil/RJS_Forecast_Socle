@@ -34,6 +34,12 @@ export const ERROR_HTTP = {
   WRITE_OUTSIDE_DOMAIN: 500,
   UNTRACKED_WRITE: 500,
   DATA_ENGINE_UNAVAILABLE: 503,
+  // Authentification (socle/auth.mjs) : connexion requise, identifiants refusés, trop d'essais, droit manquant.
+  AUTH_REQUIRED: 401,
+  AUTH_INVALID: 401,
+  AUTH_THROTTLED: 429,
+  FORBIDDEN: 403,
+  WRITE_OUTSIDE_PARTITION: 500,
 };
 
 export class DomainError extends Error {

@@ -406,6 +406,11 @@ export class DataManager {
     return deepFreeze(await this.engine.directory());
   }
 
+  /** Objets dont un champ vaut une valeur, quelle que soit leur partition (par exemple un identifiant de connexion). */
+  async findBy(collection, field, value, options) {
+    return deepFreeze(await this.engine.findBy(collection, field, value, options));
+  }
+
   /** Un reçu de création par sa clé de demande, quelle que soit sa partition (idempotence). */
   async receipt(requestKey) {
     return (await this.engine.findObject('creationRequests', requestKey)) ?? null;
