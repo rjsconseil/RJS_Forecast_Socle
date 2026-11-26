@@ -630,8 +630,14 @@
                 <summary>Dépenses sans tâche ({{ unassignedCharges().length }})</summary>
                 <div class="cockpit-disclosure-body">
                   <p class="bpm-note">Historique des dépenses non rattachées à une tâche.</p>
-                  <ng-container
-                    *ngTemplateOutlet="chargeList; context: { $implicit: unassignedCharges() }"
+                  <bpm-project-charge-list
+                    [charges]="unassignedCharges()"
+                    [busy]="busy()"
+                    [settlingId]="settling()"
+                    [today]="today"
+                    (open)="openCharge($event)"
+                    (settle)="settle($event.charge, $event.fields, $event.draft)"
+                    (cancelSettle)="settling.set(null)"
                   />
                 </div>
               </details>
@@ -1030,8 +1036,14 @@
                     + {{ before | cents }} réglés avant l’attribution de l’enveloppe, hors part
                   </p>
                 }
-                <ng-container
-                  *ngTemplateOutlet="chargeList; context: { $implicit: taskCharges(t.task.id) }"
+                <bpm-project-charge-list
+                  [charges]="taskCharges(t.task.id)"
+                  [busy]="busy()"
+                  [settlingId]="settling()"
+                  [today]="today"
+                  (open)="openCharge($event)"
+                  (settle)="settle($event.charge, $event.fields, $event.draft)"
+                  (cancelSettle)="settling.set(null)"
                 />
               </section>
               <section class="task-panel-section">
@@ -1130,164 +1142,15 @@
         }
       </div>
     }
-    @if (d.role === 'life' && d.life; as l) {
-      <!-- Variante non standard : même cockpit qu'un projet standard, lu sur les ressources du cycle en cours. -->
-      @if (d.budget; as b) {
-        <section
-          class="project-cockpit life-project-cockpit"
-          aria-label="Chiffres clés du budget du projet de vie"
-        >
-          <div class="cockpit-body">
-            <div class="life-summary project-summary-band">
-              <section class="cockpit-progress" aria-labelledby="life-identity-title">
-                <div class="cockpit-section-heading">
-                  <h2 id="life-identity-title">Projet de vie</h2>
-                  <strong>{{ b.life?.period?.label ?? 'Cycle à configurer' }}</strong>
-                </div>
-                <dl class="cockpit-facts">
-                  <div>
-                    <dt>Projet de vie</dt>
-                    <dd>Projet principal unique</dd>
-                  </div>
-                  <div>
-                    <dt>Patrimoine</dt>
-                    <dd [bpmAmount]="b.life?.patrimoine?.stockCents">{{ b.life?.patrimoine?.stockCents | cents }}</dd>
-                  </div>
-                  <div>
-                    <dt>Projets de la vie</dt>
-                    <dd>
-                      {{ b.life?.fundedCount ?? 0 }} avec enveloppe sur {{ b.life?.childCount ?? 0 }}
-                    </dd>
-                  </div>
-                </dl>
-                <a class="text-link" routerLink="/projet-de-vie">Gestion du projet de vie →</a>
-              </section>
-              <dl
-                class="life-financial-stats"
-                aria-label="Chiffres essentiels du budget du projet de vie"
-              >
-                @for (tile of budgetTiles(); track tile.id) {
-                  <div class="life-financial-stat" [attr.data-tone]="tile.tone">
-                    <dt>{{ tile.label }}</dt>
-                    <dd>{{ tile.value }}</dd>
-                    <span>{{ tile.note }}</span>
-                  </div>
-                }
-              </dl>
-            </div>
-            <div class="cockpit-details">
-              <details [open]="workspaceKey() === 'project-budget'" class="cockpit-disclosure">
-                <summary>Ventilation vers les projets et cycle actuel</summary>
-                <div class="cockpit-disclosure-body">
-                  <dl class="cockpit-facts">
-                    <div>
-                      <dt>Accordé aux projets</dt>
-                      <dd [bpmAmount]="b.sharesCents" bpmTone="info">{{ b.sharesCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Budget initial du cycle</dt>
-                      <dd [bpmAmount]="b.availableCents">{{ b.availableCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Solde attendu</dt>
-                      <dd [bpmAmount]="b.life?.expectedCents">{{ b.life?.expectedCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Demandes de tâches en attente</dt>
-                      <dd [bpmAmount]="b.pendingRequestsCents" bpmTone="warning">{{ b.pendingRequestsCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Dépassements autorisés</dt>
-                      <dd [bpmAmount]="b.approvedOverrunCents" bpmTone="warning">{{ b.approvedOverrunCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Charges directes du projet de vie</dt>
-                      <dd [bpmAmount]="b.unsharedChargesCents">{{ b.unsharedChargesCents | cents }}</dd>
-                    </div>
-                  </dl>
-                  <p class="bpm-note">
-                    Le budget du projet de vie ne reçoit pas d’enveloppe : ses ressources sont les
-                    entrées du cycle. Il attribue une enveloppe à chacun de ses projets, décide de
-                    leurs dépassements. Ces décisions de moyens ne constituent pas des dépenses.
-                  </p>
-                </div>
-              </details>
-              @for (o of l.pendingRequests; track o.id) {
-                <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
-              }
-              <details [open]="workspaceKey() === 'project-budget'" class="cockpit-disclosure">
-                <summary>
-                  Contrôles et fin de cycle ({{ d.overruns.length }} dépassement{{
-                    d.overruns.length > 1 ? 's' : ''
-                  }})
-                </summary>
-                <div class="cockpit-disclosure-body">
-                  @if (d.overruns.length) {
-                    <div class="bpm-table-wrap">
-                      <table class="bpm-table">
-                        <thead>
-                          <tr>
-                            <th scope="col">Demandé le</th>
-                            <th scope="col">Projet</th>
-                            <th scope="col">Objet</th>
-                            <th scope="col" class="num">Montant</th>
-                            <th scope="col">Décision</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (o of d.overruns; track o.id) {
-                            <tr>
-                              <td>{{ o.requestedAt | shortDate }}</td>
-                              <td>{{ o.budgetName }}</td>
-                              <td>
-                                {{ o.reasonLabel }}
-                                @if (o.taskTitle) {
-                                  · {{ o.taskTitle }}
-                                }
-                              </td>
-                              <td class="num" [bpmAmount]="o.amountCents" bpmTone="warning">{{ o.amountCents | cents }}</td>
-                              <td>{{ o.statusLabel }}</td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                  } @else {
-                    <p class="bpm-note">Aucun dépassement demandé par ses projets.</p>
-                  }
-                  @if (d.checks.length) {
-                    <ul class="bpm-checks" aria-label="Contrôles de fin de cycle">
-                      @for (c of d.checks; track $index) {
-                        <li [attr.data-level]="c.level">{{ c.message }}</li>
-                      }
-                    </ul>
-                  }
-                </div>
-              </details>
-            </div>
-          </div>
-        </section>
-      }
-      <section class="bpm-section" aria-labelledby="life-title">
-        <header>
-          <h2 id="life-title">Financement des projets de la vie</h2>
-          <p>
-            Le budget du projet de vie porte tous les projets de la vie qui lui sont rattachés :
-            enveloppe de chacun, cycle où elle a été attribuée et montants remontés période par
-            période.
-          </p>
-        </header>
-        <bpm-life-funding
-          [funding]="d.budget?.life?.funding ?? null"
-          [highlight]="d.context.period?.key ?? null"
-        />
-        @if (d.tasks.length) {
-          <p class="bpm-note">
-            {{ d.tasks.length }} tâche(s) rattachée(s) directement au projet de vie. Vous pouvez les
-            rattacher à un projet de la vie depuis le tableau des tâches.
-          </p>
-        }
-      </section>
+    @if (d.role === 'life' && d.life) {
+      <!-- Variante non standard (projet de vie) : son cockpit dans son propre composant (life-project-cockpit.ts). -->
+      <bpm-life-project-cockpit
+        [detail]="d"
+        [tiles]="budgetTiles()"
+        [busy]="busy()"
+        [workspaceKey]="workspaceKey() ?? null"
+        (decide)="decide($event.overrun, $event.decision)"
+      />
     }
   }
 </div>
@@ -1439,99 +1302,6 @@
       {{ tb?.timeConsumedCents === null ? 'À estimer' : (tb?.timeConsumedCents ?? null | cents) }}
     </p>
     <p class="bpm-note">Le temps effectif retient le plus élevé du temps saisi et de l’équivalent temps des achats validés. Ils ne sont pas additionnés ; le reste peut être négatif.</p>
-  </div>
-</ng-template>
-<ng-template #chargeList let-charges>
-  <div class="task-charge-list">
-    @for (c of charges; track c.id) {
-      <article class="task-charge" [id]="'charge-' + c.id" tabindex="-1">
-        <div class="task-charge-heading">
-          <button
-            type="button"
-            class="text-link"
-            [disabled]="busy()"
-            (click)="openCharge(c)"
-            [attr.aria-label]="'Ouvrir la dépense ' + c.label"
-          >
-            {{ c.label }}
-          </button>
-          <span
-            class="bpm-charge-state"
-            [attr.data-state]="c.validated ? 'validated' : 'planned'"
-            >{{ chargeState(c) }}</span
-          >
-        </div>
-        <dl>
-          <div>
-            <dt>Prévu le {{ c.plannedDate | shortDate }}</dt>
-            <dd [bpmAmount]="c.plannedCents" [bpmFlow]="c.direction">{{ c.plannedCents | cents }}</dd>
-          </div>
-          @if (c.settled) {
-            <div>
-              <dt>{{ c.refund ? 'Reçu' : 'Réglé' }} le {{ c.realizedDate | shortDate }}</dt>
-              <dd [bpmAmount]="c.realizedCents" [bpmFlow]="c.direction">{{ c.realizedCents | cents }}</dd>
-            </div>
-          }
-        </dl>
-        <small>{{ c.cadenceLabel }}</small>
-        @if (c.refund) {
-          <p class="bpm-note">
-            Le gain reçu augmente les entrées du cycle d’imputation ou le patrimoine, selon la source choisie.
-          </p>
-        } @else if (c.beforeAllocation) {
-          <p class="bpm-note">
-            La date réelle précède l’enveloppe : ce règlement reste hors du Dépensé du projet de
-            vie.
-          </p>
-        } @else if (c.settled && !c.validated) {
-          <p class="bpm-note">
-            Projet sans enveloppe : ce règlement reste dans son historique, hors budget de vie.
-          </p>
-        } @else if (!c.settled) {
-          <p class="bpm-note">
-            Le flux est imputé au cycle ou au patrimoine lors de sa validation. Sa date réelle de paiement reste conservée.
-          </p>
-        }
-        <div class="task-charge-actions">
-          <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)">Détail et modification</button>
-          @if (!c.settled && settling() !== c.id) {
-            <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)">Valider le règlement</button>
-          }
-        </div>
-        @if (!c.settled) {
-          @if (settling() === c.id) {
-            <form [bpmFormDraft]="'settlement:' + c.id" #settlementDraft="bpmFormDraft" (submit)="$event.preventDefault(); settle(c, $any($event.target).elements, settlementDraft)">
-              <label
-                >Date réelle<input
-                  name="date"
-                  type="date"
-                  required
-                  [max]="today"
-                  [value]="defaultDate(c)"
-              /></label>
-              <label
-                >Montant réglé (€)<input
-                  name="amount"
-                  inputmode="decimal"
-                  required
-                  [value]="(c.plannedCents / 100).toString().replace('.', ',')"
-              /></label>
-              <button class="btn btn-primary" [disabled]="busy()">Valider le règlement</button
-              ><button
-                type="button"
-                class="text-link"
-                [disabled]="busy()"
-                (click)="settlementDraft.clear(); settling.set(null)"
-              >
-                Annuler
-              </button>
-            </form>
-          }
-        }
-      </article>
-    } @empty {
-      <p class="bpm-note">Aucune dépense sur les douze derniers et prochains mois.</p>
-    }
   </div>
 </ng-template>
 @if (budgetRef(); as ref) {

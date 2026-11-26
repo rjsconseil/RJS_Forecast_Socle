@@ -47,7 +47,8 @@ import { BpmEntryFlow } from '../ui/entry-flow';
 import { BpmLineDetail } from '../ui/line-detail';
 import { BpmOverflowDirective } from '../ui/overflow';
 import { BpmModal } from '../ui/modal';
-import { BpmLifeFundingComponent } from '../life/life-funding';
+import { BpmLifeProjectCockpit } from './life-project-cockpit';
+import { BpmProjectChargeList } from './project-charge-list';
 import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-parts';
 import {
   CdkDrag,
@@ -99,7 +100,8 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
     BpmDial,
     BpmLineDetail,
     BpmTaskRequestsComponent,
-    BpmLifeFundingComponent,
+    BpmLifeProjectCockpit,
+    BpmProjectChargeList,
     BpmProjectEditor,
     BpmTaskEditor,
     BpmOverflowDirective,
