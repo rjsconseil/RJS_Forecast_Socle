@@ -1,14 +1,13 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { mkdir } from 'node:fs/promises';
 // Playwright du poste d'abord, sinon celui de l'environnement d'origine (même repli que bpm-navigation).
-let playwright;
-try { playwright = await import('playwright'); }
-catch { playwright = createRequire(import.meta.url)('/usr/lib/chatgpt/resources/cua_node/lib/node_modules/playwright/index.js'); }
+// Playwright du dépôt (playwright-core) et le navigateur du poste, de l'image cloud ou de la CI.
+const playwright = await import('playwright-core');
+const CHROME = process.env.CHROMIUM_PATH ?? process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/opt/google/chrome/chrome', '/usr/bin/chromium'].find(existsSync);
 const { chromium } = playwright;
 const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
-const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH ?? (existsSync('/opt/google/chrome/chrome') ? '/opt/google/chrome/chrome' : undefined), args: ['--no-sandbox'] });
+const browser = await chromium.launch({ headless: true, executablePath: CHROME, args: ['--no-sandbox'] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
 page.setDefaultTimeout(10000);

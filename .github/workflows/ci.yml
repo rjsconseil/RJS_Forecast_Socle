@@ -64,8 +64,37 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci --prefix web
-      - name: Tests du site
-        run: npx ng test --watch=false
+      # Tests du site avec mesure de couverture : la CI échoue sous le plancher (scripts/coverage-threshold.mjs).
+      - name: Tests du site et couverture
+        run: npm run test:coverage
         working-directory: web
       - name: Build de production
         run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: web/dist/web/browser
+          retention-days: 3
+
+  e2e:
+    name: Interface (site construit, Chromium)
+    needs: web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: web/dist/web/browser
+      - name: Chromium
+        run: npx playwright-core install --with-deps chromium
+      # Site servi comme en production, API de recette et base temporaires, jeux d'essai, puis tests d'interface Astra.
+      - name: Tests d'interface
+        run: npm run e2e:ci

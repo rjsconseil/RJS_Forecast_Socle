@@ -134,14 +134,14 @@ const ui = {
     await open('/projects/new');
     await page.locator('[formcontrolname=title]').fill(title);
     await page.locator('[formcontrolname=description]').fill(`Cas d'essai de bout en bout : ${title}.`);
-    await page.locator('button[type=submit]').click();
+    await page.locator('form button[type=submit]').first().click();
     await page.waitForURL(/\/projects\/prj_[^/]+$/);
     const projectId = page.url().split('/').pop();
     const ids = {};
     for (const t of tasks) {
       await open(`/tasks/new?projectId=${projectId}`);
       await page.locator('[formcontrolname=title]').fill(t);
-      await page.locator('button[type=submit]').click();
+      await page.locator('form button[type=submit]').first().click();
       await page.waitForURL(new RegExp(`/projects/${projectId}$`));
       const all = await http.call('GET', '/api/tasks');
       ids[t] = all.find((x) => x.task.title === t && x.task.projectId === projectId)?.task.id;

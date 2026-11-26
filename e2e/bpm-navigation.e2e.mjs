@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,12 +8,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
 const userId = process.env.BPM_USER_ID;
 assert(userId, 'BPM_USER_ID doit désigner un profil de recette existant. Le site et ses données restent en place.');
-let playwright;
-try { playwright = await import('playwright'); }
-catch { playwright = createRequire(import.meta.url)('/usr/lib/chatgpt/resources/cua_node/lib/node_modules/playwright/index.js'); }
+// Playwright du dépôt (playwright-core) et le navigateur du poste, de l'image cloud ou de la CI.
+const playwright = await import('playwright-core');
+const CHROME = process.env.CHROMIUM_PATH ?? process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/opt/google/chrome/chrome', '/usr/bin/chromium'].find(existsSync);
 const browser = await playwright.chromium.launch({
   headless: true, args: ['--no-sandbox'],
-  executablePath: process.env.CHROMIUM_PATH ?? (existsSync('/opt/google/chrome/chrome') ? '/opt/google/chrome/chrome' : undefined),
+  executablePath: CHROME,
 });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 await context.addInitScript(id => localStorage.setItem('rjs.activeUserId', id), userId);
