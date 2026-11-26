@@ -19,7 +19,8 @@
     "e2e:bpm": "node e2e/bpm-navigation.e2e.mjs",
     "build": "npm --prefix web run build",
     "e2e:astra": "node e2e/astra.e2e.mjs",
-    "styles:audit": "node scripts/styles-audit.mjs"
+    "styles:audit": "node scripts/styles-audit.mjs",
+    "api:check": "node scripts/api-check.mjs"
   },
   "engines": {
     "node": ">=22"

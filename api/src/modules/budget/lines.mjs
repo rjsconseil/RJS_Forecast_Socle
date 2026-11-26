@@ -1,6 +1,5 @@
 // Lignes de Budget : opérations et occurrences ramenées à une même forme datée, sommes de période et rapport
 // des plafonds. Fonctions pures sur l'état, sans écriture ; Budget et ses lecteurs les partagent.
-import { date } from '../../socle/validation.mjs';
 import { occurrenceDates, occurrenceKey } from './recurrence.mjs';
 import { indexBy, memo, positions } from '../../socle/indexes.mjs';
 

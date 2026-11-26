@@ -105,7 +105,7 @@ const de = (label = '') => (/^[aeiouyàâéèêîïôûAEIOUYÀÂÉÈÊÎÏÔÛ]
 
 /**
  * Actions du cycle `period` pour `userId`, lues sur `state` (stockage ou brouillon d'écriture).
- * @param x { lifeBudgetId, projectBudgetIds, lineView, anchorDay, now }
+ * `x` : Budget de vie (`lifeBudgetId`), Budgets des projets (`projectBudgetIds`), `lineView`, `anchorDay`, `now`.
  */
 export function cycleActions(state, userId, period, x) {
   const owned = (o) => o && o.userId === userId;

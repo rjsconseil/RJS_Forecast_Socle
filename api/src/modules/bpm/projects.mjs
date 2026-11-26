@@ -14,7 +14,7 @@ import { fail } from '../../socle/errors.mjs';
 import { money, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL } from '../budget/api.mjs';
 import {
-  abandonPlan, abandonPreview, fmt, frDate, fundingFigures, inRegime, isAbandoned, isValidatedCharge, isValidatedMove, projectMoveCents, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, sharesOf, standardOfProject, sum, taskFunding,
+  abandonPlan, abandonPreview, fmt, fundingFigures, inRegime, isAbandoned, isValidatedMove, projectMoveCents, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, standardOfProject, sum, taskFunding,
 } from '../budget/api.mjs';
 import { addDays, periodByIndex, periodContaining, today } from '../budget/api.mjs';
 

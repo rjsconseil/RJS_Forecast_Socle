@@ -5,7 +5,7 @@ import { fail } from '../../socle/errors.mjs';
 import { today } from '../../socle/clock.mjs';
 import { expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
 import { objectsWith } from '../../socle/indexes.mjs';
-import { CADENCE_LABEL, CADENCES, occurrenceDates } from './recurrence.mjs';
+import { CADENCE_LABEL, occurrenceDates } from './recurrence.mjs';
 import { fmt, frDate, sum, OVERRUN_REASONS, RETURN_CADENCES, inRegime, FUNDING_SOURCES, fundingSourceOf, standardOfProject, sharesOf, returnsOf, overrunsOf, requestsOf, openRequest, isAbandoned, abandonedRefusal, requestView, isValidatedCharge, overrunView, fundingFigures } from './funding-rules.mjs';
 export * from './funding-rules.mjs';
 
