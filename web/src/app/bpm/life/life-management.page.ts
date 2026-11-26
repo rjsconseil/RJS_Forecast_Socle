@@ -116,12 +116,15 @@ export class BpmLifeManagementPage {
     if (this.workspace()?.key === 'life-funding') return {title: `${d.projects.pendingRequests.length + d.projects.taskRequestCount} demande(s) à examiner`, detail: 'Enveloppes, dépassements et parts demandées par les tâches : toutes les décisions de financement.', tone: 'info'};
     if (this.workspace()?.key === 'life-due') return {title: `${d.dueSoon.lateCount} échéance(s) en retard`, detail: 'Les échéances ouvertes à ce jour, indépendamment de la période consultée.', tone: d.dueSoon.lateCount ? 'warning' : 'info'};
     if (this.workspace()?.key === 'life-budget') return {
-      title: this.budgetType()?.pendingChanges() ? `${this.budgetType()!.pendingChanges()} modification(s) du budget type` : 'Préparez les prochaines périodes',
-      detail: 'Ajustez les lignes récurrentes puis enregistrez. Les montants déjà réglés restent conservés.', tone: this.budgetType()?.pendingChanges() ? 'warning' : 'info',
+      title: this.budgetType()?.pendingChanges() ? `${this.budgetType()!.pendingChanges()} modification(s) du budget type` : this.budgetType()?.editing() ? 'Budget récurrent en modification' : 'Budget récurrent figé',
+      detail: this.budgetType()?.editing()
+        ? 'Enregistrez chaque ligne avec son bouton, ou toutes ensemble en bas. Les montants déjà réglés restent conservés.'
+        : 'Les lignes sont celles enregistrées. « Modifier » ouvre l’édition ; rien ne change avant l’enregistrement.',
+      tone: this.budgetType()?.pendingChanges() ? 'warning' : 'info',
     };
     return null;
   });
-  protected priorityLabel = computed(() => this.budgetType()?.pendingChanges() ? `Enregistrer le budget type · ${this.budgetType()!.pendingChanges()} modification(s)` : '＋ Ajouter une dépense récurrente');
+  protected priorityLabel = computed(() => this.budgetType()?.pendingChanges() ? `Enregistrer tout · ${this.budgetType()!.pendingChanges()} modification(s)` : '＋ Ajouter une dépense récurrente');
   protected runPriority() {
     if (this.workspace()?.key === 'life-budget') {
       if (this.budgetType()?.pendingChanges()) void this.budgetType()?.saveAll();

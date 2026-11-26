@@ -378,6 +378,65 @@ rjs-metric-tiles { display: block; min-width: 0; }
   .spacer { display: none; }
 }
 
+
+// ---------- mode : lecture figée, puis « Modifier » ----------
+:host .bm-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.bt-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-inline-start: auto; }
+.bt-edit { display: inline-flex; align-items: center; gap: 8px; }
+.bt-edit svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bt-mode-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px;
+  color: var(--bt-accent-ink); background: color-mix(in srgb, var(--bt-accent) 10%, var(--bt-surface));
+  border: 1px solid color-mix(in srgb, var(--bt-accent) 35%, transparent);
+  font-size: 12.5px; font-weight: 650;
+}
+.bt-mode-chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+// Lecture : un tableau par groupe, en clair, sans champ ; le sens du flux en filet à gauche du groupe.
+.bt-read { display: grid; gap: 16px; min-width: 0; }
+.bt-group {
+  --bt-flow: var(--bt-charge);
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 14px 6px 17px;
+  border: 1px solid var(--bt-line);
+  border-radius: var(--bt-radius-sm);
+  background: var(--bt-surface);
+}
+.bt-group.bm-income { --bt-flow: var(--bt-income); }
+.bt-group::before { content: ''; position: absolute; inset: 12px auto 12px 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--bt-flow); }
+.bt-group h3 {
+  display: flex; align-items: baseline; gap: 10px; margin: 0;
+  color: var(--ink); font-size: 12.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+}
+.bt-group h3 span { color: var(--bt-muted); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.bt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.bt-table :is(th, td) { padding: 9px 10px; border-bottom: 1px solid var(--bt-line); text-align: start; vertical-align: middle; }
+.bt-table thead th { padding-block: 4px 8px; color: var(--bt-muted); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.bt-table tbody th { color: var(--ink); font-weight: 600; }
+.bt-table tbody tr:last-child :is(th, td) { border-bottom: 0; }
+.bt-table tbody tr:hover :is(th, td) { background: color-mix(in srgb, var(--bt-soft) 70%, transparent); }
+.bt-table .num { text-align: end; white-space: nowrap; font-family: inherit; }
+.bt-table td { color: var(--ink); }
+.bt-table tr.is-leaving :is(th, td) { color: var(--bt-muted); }
+.bt-table .chip { margin-inline-start: 8px; font-size: 11px; font-weight: 600; }
+.bt-empty { padding: 4px 0 8px; color: var(--bt-muted); font-size: 13px; }
+
+// Édition : enregistrer ou annuler une seule ligne, à droite de sa note.
+.bt-row-actions { display: inline-flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+
+@container budget-type (max-width: 700px) {
+  // Lecture étroite : chaque ligne devient un bloc (libellé, puis rythme · montant · moyenne).
+  .bt-table thead { display: none; }
+  .bt-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--bt-line); }
+  .bt-table tbody tr:last-child { border-bottom: 0; }
+  .bt-table :is(th, td) { padding: 0; border: 0; }
+  .bt-table tbody th { grid-column: 1 / -1; }
+  .bt-table tbody td { color: var(--bt-muted); font-size: 12.5px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bm-row, .bm-del, .bm-add { transition: none; }
 }

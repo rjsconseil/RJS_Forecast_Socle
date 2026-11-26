@@ -36,7 +36,7 @@
         }
         <div tools class="life-context-tools">
         @if (workspace()?.key === 'life-budget') {
-          <p>{{ budgetType()?.pendingChanges() ?? 0 }} modification(s) à enregistrer.</p>
+          @if (budgetType()?.editing()) { <p>{{ budgetType()?.pendingChanges() ?? 0 }} modification(s) à enregistrer.</p> }
         }
         </div>
       </rjs-page-banner>

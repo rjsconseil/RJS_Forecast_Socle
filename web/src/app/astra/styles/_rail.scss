@@ -46,7 +46,8 @@
     > div { display: grid; gap: 6px; padding: 0; margin: 0; }
     :is(a, button) { display: flex; justify-content: center; width: 100%; min-height: 34px; padding: 6px 12px; white-space: normal; text-align: center; font-size: 12.5px; }
   }
-  .astra-rail-slot :is(.page-toolbar-actions, .page-toolbar-filters)[hidden] { display: grid; }
+  // Repliées dans la barre de l'écran, elles s'ouvrent ici ; un module sans commande visible reste caché (règle plus bas).
+  .astra-rail-slot :is(.page-toolbar-actions, .page-toolbar-filters)[hidden]:has(a:not([data-astra-tab]), button, input, select) { display: grid; }
   // Filtres : tout tient dans le module, rien ne touche le bord.
   // Un groupe de commandes qui a sa propre disposition (attribut data-own-layout) n'est pas remis en colonne ici.
   .astra-rail-slot .page-toolbar-filters {
@@ -67,8 +68,8 @@
   // Une navigation a une seule place : un lien qui ouvre une page déjà en onglet (cadre, data-astra-tab) ne se répète pas ici.
   .astra-rail-slot .page-toolbar-actions [data-astra-tab] { display: none; }
   // Une commande vide ne s'affiche pas ; le module « vide » tient la place.
-  .astra-rail-slot .page-toolbar-actions:not(:has(a:not([data-astra-tab]), button)),
-  .astra-rail-slot .page-toolbar-filters:not(:has(input, select, button)) { display: none; }
+  .astra-rail-slot .page-toolbar-frame .page-toolbar-actions:not(:has(a:not([data-astra-tab]), button)),
+  .astra-rail-slot .page-toolbar-frame .page-toolbar-filters:not(:has(input, select, button)) { display: none; }
   &:has(.astra-rail-slot :is(.page-toolbar-focus, .page-toolbar-result)) [data-mod='focus'][data-empty],
   &:has(.astra-rail-slot .page-toolbar-actions :is(a:not([data-astra-tab]), button)) [data-mod='act'][data-empty],
   &:has(.astra-rail-slot .page-toolbar-filters :is(input, select, button)) [data-mod='refine'][data-empty] { display: none; }

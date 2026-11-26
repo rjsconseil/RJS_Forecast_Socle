@@ -67,7 +67,7 @@ describe('vues spécialisées du projet de vie', () => {
     const label = dom().querySelector<HTMLInputElement>('[aria-label="Libellé de la nouvelle ligne"]')!;
     label.value = 'Salaire préparé'; label.dispatchEvent(new Event('input'));
     await settle();
-    expect(dom().querySelector('.page-toolbar-primary')!.textContent).toContain('Enregistrer le budget type');
+    expect(dom().querySelector('.page-toolbar-primary')!.textContent).toContain('Enregistrer tout');
     await harness.navigateByUrl('/projet-de-vie/echeances');
     await settle();
     await harness.navigateByUrl('/projet-de-vie/budget-type');

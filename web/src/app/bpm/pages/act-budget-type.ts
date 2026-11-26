@@ -47,9 +47,10 @@ const toCents = (raw: string) => {
 };
 
 /**
- * Panneau « Budget type » du Budget du projet de vie : lignes récurrentes éditables (libellé, montant,
- * rythme) mises à jour sans recréation (révision attendue), ajout de nouvelles lignes, totaux moyens
- * enregistrés et plafonds facultatifs par centre. Rien n'est écrit avant « Enregistrer ».
+ * Panneau « Budget type » du Budget du projet de vie. À l'arrivée, le budget récurrent est figé : une lecture
+ * par groupe (entrées, charges). « Modifier » ouvre l'édition : libellé, montant et rythme des lignes (mis à jour
+ * sans recréation, révision attendue), ajout et suppression de lignes. Chaque ligne s'enregistre seule
+ * (« Enregistrer » sur la ligne) ou toutes ensemble (« Enregistrer tout », en bas). Rien n'est écrit avant.
  */
 @Component({
   selector: 'bpm-act-budget-type',
@@ -65,6 +66,18 @@ const toCents = (raw: string) => {
             <p class="bpm-help">{{ d.label }}. Totaux enregistrés : ils se mettent à jour après l'enregistrement.</p>
           }
         </div>
+        @if (bt.data()) {
+          <div class="bt-mode">
+            @if (!editing()) {
+              <button type="button" class="btn btn-secondary bt-edit" (click)="startEditing()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" /></svg>Modifier
+              </button>
+            } @else {
+              <span class="bt-mode-chip" role="status">Mode modification</span>
+              <button type="button" class="btn btn-secondary" (click)="stopEditing()" [disabled]="busy()">{{ pendingCount() ? 'Annuler les modifications' : 'Terminer' }}</button>
+            }
+          </div>
+        }
       </header>
 
       <bpm-state [loading]="bt.loading() && !bt.data()" [error]="bt.error()" (retry)="bt.reload()" />
@@ -73,10 +86,41 @@ const toCents = (raw: string) => {
 
         @if (message()) { <p class="bm-saved" role="status">{{ message() }}</p> }
 
-        @if (!rows().length && !news().length) {
+        @if (editing() && !rows().length && !news().length) {
           <p class="bpm-missing">Aucune ligne récurrente active dans le Budget du projet de vie.</p>
         }
 
+        @if (!editing()) {
+          <!-- Lecture figée : les lignes telles qu'enregistrées, sans champ à saisir. -->
+          <div class="bt-read">
+            @for (dir of directions; track dir) {
+              <section class="bt-group" [class.bm-income]="dir === 'income'" [attr.aria-labelledby]="'bt-' + dir">
+                <h3 [id]="'bt-' + dir">{{ dir === 'income' ? 'Entrées' : 'Charges' }}<span>{{ rowsOf(dir).length }} ligne{{ rowsOf(dir).length > 1 ? 's' : '' }}</span></h3>
+                @if (rowsOf(dir).length) {
+                  <table class="bt-table">
+                    <thead>
+                      <tr><th scope="col">Libellé</th><th scope="col">Rythme</th><th scope="col" class="num">Montant</th><th scope="col" class="num">Moyenne / mois</th><th scope="col">Poste</th><th scope="col">Depuis le</th></tr>
+                    </thead>
+                    <tbody>
+                      @for (r of rowsOf(dir); track r.id) {
+                        <tr [class.is-leaving]="isLeaving(r)">
+                          <th scope="row">{{ r.orig.label }}@if (isLeaving(r)) { <span class="chip warn">Retirée au prochain cycle</span> }</th>
+                          <td>{{ cadenceLabel[r.orig.cadence] }}</td>
+                          <td class="num">{{ r.orig.amountCents | cents }}</td>
+                          <td class="num"><strong [bpmAmount]="r.averageCents" [bpmFlow]="r.direction">{{ r.averageCents | cents }}</strong></td>
+                          <td>{{ r.centerLabel ?? 'À préciser' }}</td>
+                          <td>{{ r.firstDate | shortDate }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                } @else {
+                  <p class="bt-empty">Aucune {{ dir === 'income' ? 'entrée' : 'charge' }} récurrente. « Modifier » pour en ajouter.</p>
+                }
+              </section>
+            }
+          </div>
+        } @else {
         <div class="bm-form">
           @for (dir of directions; track dir) {
             @if (rowsOf(dir).length || newsOf(dir).length) {
@@ -126,6 +170,12 @@ const toCents = (raw: string) => {
                         } @else if (isDirty(r)) {
                           <span class="chip warn">modifiée</span>
                         }
+                        @if (isDirty(r)) {
+                          <span class="bt-row-actions">
+                            <button type="button" class="btn btn-secondary small" (click)="resetRow(r.id)" [disabled]="busy() || savingRow() === r.id">Annuler</button>
+                            <button type="button" class="btn btn-primary small" (click)="saveRow(r)" [disabled]="busy() || savingRow() === r.id" [attr.aria-label]="'Enregistrer la ligne ' + r.orig.label">{{ savingRow() === r.id ? 'Enregistrement…' : 'Enregistrer' }}</button>
+                          </span>
+                        }
                       </div>
                     </div>
                   }
@@ -152,6 +202,9 @@ const toCents = (raw: string) => {
                       <div role="cell" class="bm-row-note">
                         <span>Moyenne / mois : après enregistrement</span>
                         @if (n.error) { <span class="bpm-error" role="alert">{{ n.error }}</span> }
+                        <span class="bt-row-actions">
+                          <button type="button" class="btn btn-primary small" (click)="saveNewLine(n)" [disabled]="busy() || savingRow() === n.key" aria-label="Enregistrer la nouvelle ligne">{{ savingRow() === n.key ? 'Enregistrement…' : 'Enregistrer' }}</button>
+                        </span>
                       </div>
                     </div>
                   }
@@ -169,10 +222,11 @@ const toCents = (raw: string) => {
             }
             <span class="spacer"></span>
             @if (pendingCount()) { <span class="bpm-help">{{ pendingCount() }} changement(s) non enregistré(s)</span> }
-            <button type="button" class="btn btn-primary" (click)="saveAll()" [disabled]="busy() || !pendingCount()">{{ busy() ? 'Enregistrement…' : 'Enregistrer le budget type' }}</button>
+            <button type="button" class="btn btn-primary" (click)="saveAll()" [disabled]="busy() || !pendingCount()">{{ busy() ? 'Enregistrement…' : 'Enregistrer tout' }}</button>
           </div>
-          <p class="bpm-help">Chaque ligne existante est mise à jour en gardant son identité (pas de recréation). La portée porte sur les occurrences encore attendues ; les règlements déjà enregistrés ne changent pas. Le rythme et la première date sont figés dès qu'une occurrence est réglée. Pour une fin, une note ou un centre, ouvrez la ligne depuis le registre.</p>
+          <p class="bpm-help">Chaque ligne s'enregistre seule (« Enregistrer » sur la ligne) ou avec les autres (« Enregistrer tout »), en gardant son identité (pas de recréation). La portée porte sur les occurrences encore attendues ; les règlements déjà enregistrés ne changent pas. Le rythme et la première date sont figés dès qu'une occurrence est réglée. Pour une fin, une note ou un centre, ouvrez la ligne depuis le registre.</p>
         </div>
+        }
 
       }
     </section>
@@ -205,6 +259,9 @@ export class BpmActBudgetType {
   protected rows = signal<RowDraft[]>([]);
   protected news = signal<NewDraft[]>([]);
   protected busy = signal(false);
+  /** Mode d'édition : à l'arrivée le budget est figé ; « Modifier » l'ouvre. Une ligne en cours d'enregistrement seule. */
+  readonly editing = signal(false);
+  protected savingRow = signal<string | null>(null);
   protected message = signal<string | null>(null);
   /** Ligne dont la suppression attend sa confirmation, puis ligne en cours de suppression. */
   protected confirmRemove = signal<string | null>(null);
@@ -217,11 +274,25 @@ export class BpmActBudgetType {
   readonly feedback = computed(() => this.message());
   readonly ready = computed(() => !!this.bt.data());
   addRecurring(direction: Direction) { this.addLine(direction); }
+  startEditing() { this.message.set(null); this.editing.set(true); }
+  /** Quitte l'édition en abandonnant les brouillons : le budget revient à sa version enregistrée. */
+  stopEditing() {
+    const lines = this.bt.data()?.lines ?? [];
+    this.rows.set(lines.map((l) => this.fromLine(l)));
+    this.news.set([]);
+    this.confirmRemove.set(null);
+    this.editing.set(false);
+  }
 
   constructor() {
     inject(BpmDrafts).connect('budget-type',
       () => ({ rows: this.rows().filter(row => this.isDirty(row) || row.kept), news: this.news() }),
-      draft => { this.rows.set(draft.rows); this.news.set(draft.news); },
+      draft => {
+        this.rows.set(draft.rows);
+        this.news.set(draft.news);
+        // Des changements non enregistrés retrouvés : l'édition reprend où elle s'était arrêtée.
+        if (draft.rows.length || draft.news.length) this.editing.set(true);
+      },
       inject(DestroyRef));
     // Relecture : les lignes enregistrées remplacent les brouillons, sauf ceux conservés après un échec.
     effect(() => {
@@ -276,6 +347,7 @@ export class BpmActBudgetType {
     this.news.update((ns) => ns.filter((n) => n.key !== key));
   }
   protected addLine(direction: Direction) {
+    this.editing.set(true);
     this.news.update((ns) => [...ns, { key: newRequestKey('budget-type'), direction, label: '', amount: '', cadence: 'monthly', firstDate: localToday(), center: this.centersOf(direction)[0]?.ref ?? '', error: null }]);
   }
 
@@ -343,7 +415,75 @@ export class BpmActBudgetType {
     }
   }
 
-  /** Enregistre les lignes modifiées (mise à jour) puis les nouvelles (création rejouable). */
+  /** Met à jour une ligne existante modifiée. Vrai si elle est enregistrée ; sinon son brouillon reste, avec l'erreur. */
+  private async persistRow(r: RowDraft): Promise<boolean> {
+    const amountCents = toCents(r.amount);
+    if (amountCents === null || amountCents <= 0) {
+      this.patch(r.id, { error: 'Montant positif attendu (ex. 120,50).', kept: true });
+      return false;
+    }
+    const body: Record<string, unknown> & { expectedRevision: number } = { expectedRevision: r.revision };
+    if (r.label.trim() !== r.orig.label) body['label'] = r.label.trim();
+    if (amountCents !== r.orig.amountCents) body['amount'] = amountCents / 100;
+    if (r.cadence !== r.orig.cadence) body['cadence'] = r.cadence;
+    try {
+      const { recurrence } = await this.bpm.updateRecurrence(r.id, body);
+      this.patch(r.id, { error: null, kept: false, revision: recurrence?.revision ?? r.revision, orig: { label: r.label.trim(), amountCents, cadence: r.cadence } });
+      return true;
+    } catch (e) {
+      const err = toApiError(e);
+      this.patch(r.id, { error: err.isConflict ? 'Modifiée ailleurs entre-temps : reprenez la version enregistrée.' : err.message, kept: true });
+      return false;
+    }
+  }
+
+  /** Crée une nouvelle ligne (création rejouable par sa clé). Vrai si elle est enregistrée. */
+  private async persistNew(n: NewDraft): Promise<boolean> {
+    const amount = parseAmount(n.amount);
+    if (!n.label.trim() || typeof amount !== 'number' || amount <= 0 || !n.firstDate || !n.center) {
+      this.patchNew(n.key, { error: 'Libellé, montant positif, première date et centre requis.' });
+      return false;
+    }
+    try {
+      await this.bpm.createEntry({ requestKey: n.key, budgetId: this.life()?.id, direction: n.direction, label: n.label.trim(), amount, costCenterRef: n.center, cadence: n.cadence, firstDate: n.firstDate, endDate: null, status: 'planned' });
+      this.dropNew(n.key);
+      return true;
+    } catch (e) {
+      this.patchNew(n.key, { error: toApiError(e).message });
+      return false;
+    }
+  }
+
+  /** Enregistre une seule ligne modifiée (bouton « Enregistrer » de la ligne). */
+  async saveRow(r: RowDraft) {
+    if (this.busy() || this.savingRow()) return;
+    this.savingRow.set(r.id);
+    this.message.set(null);
+    const ok = await this.persistRow(r);
+    this.savingRow.set(null);
+    if (ok) {
+      this.refresh.bump();
+      this.message.set(`« ${r.label.trim()} » enregistrée.`);
+    }
+  }
+
+  /** Enregistre une seule nouvelle ligne. */
+  async saveNewLine(n: NewDraft) {
+    if (this.busy() || this.savingRow()) return;
+    this.savingRow.set(n.key);
+    this.message.set(null);
+    const ok = await this.persistNew(n);
+    this.savingRow.set(null);
+    if (ok) {
+      this.refresh.bump();
+      this.message.set(`« ${n.label.trim()} » ajoutée au budget récurrent.`);
+    }
+  }
+
+  /**
+   * Enregistre tout (bouton du bas) : les lignes modifiées (mise à jour) puis les nouvelles (création rejouable).
+   * Quand tout est enregistré, le budget redevient figé ; un échec garde l'édition ouverte sur son brouillon.
+   */
   async saveAll() {
     if (this.busy()) return;
     this.busy.set(true);
@@ -351,46 +491,11 @@ export class BpmActBudgetType {
     let updated = 0;
     let created = 0;
     let failed = 0;
-    for (const r of this.rows().filter((x) => this.isDirty(x))) {
-      const amountCents = toCents(r.amount);
-      if (amountCents === null || amountCents <= 0) {
-        this.patch(r.id, { error: 'Montant positif attendu (ex. 120,50).', kept: true });
-        failed++;
-        continue;
-      }
-      const body: Record<string, unknown> & { expectedRevision: number } = { expectedRevision: r.revision };
-      if (r.label.trim() !== r.orig.label) body['label'] = r.label.trim();
-      if (amountCents !== r.orig.amountCents) body['amount'] = amountCents / 100;
-      if (r.cadence !== r.orig.cadence) body['cadence'] = r.cadence;
-      try {
-        await this.bpm.updateRecurrence(r.id, body);
-        this.patch(r.id, { error: null, kept: false, orig: { label: r.label.trim(), amountCents, cadence: r.cadence } });
-        updated++;
-      } catch (e) {
-        const err = toApiError(e);
-        this.patch(r.id, { error: err.isConflict ? 'Modifiée ailleurs entre-temps : reprenez la version enregistrée.' : err.message, kept: true });
-        failed++;
-      }
-    }
-    const budgetId = this.life()?.id;
-    for (const n of this.news()) {
-      const amount = parseAmount(n.amount);
-      if (!n.label.trim() || typeof amount !== 'number' || amount <= 0 || !n.firstDate || !n.center) {
-        this.patchNew(n.key, { error: 'Libellé, montant positif, première date et centre requis.' });
-        failed++;
-        continue;
-      }
-      try {
-        await this.bpm.createEntry({ requestKey: n.key, budgetId, direction: n.direction, label: n.label.trim(), amount, costCenterRef: n.center, cadence: n.cadence, firstDate: n.firstDate, endDate: null, status: 'planned' });
-        this.dropNew(n.key);
-        created++;
-      } catch (e) {
-        this.patchNew(n.key, { error: toApiError(e).message });
-        failed++;
-      }
-    }
+    for (const r of this.rows().filter((x) => this.isDirty(x))) (await this.persistRow(r)) ? updated++ : failed++;
+    for (const n of this.news()) (await this.persistNew(n)) ? created++ : failed++;
     this.busy.set(false);
     if (updated || created) this.refresh.bump();
+    if (!failed) this.editing.set(false);
     this.message.set(
       [updated ? `${updated} ligne(s) mise(s) à jour` : '', created ? `${created} ligne(s) ajoutée(s)` : '', failed ? `${failed} non enregistrée(s) : brouillon conservé` : ''].filter(Boolean).join(' · ') || null,
     );

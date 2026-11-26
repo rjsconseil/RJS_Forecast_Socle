@@ -53,6 +53,8 @@ try {
       title: document.querySelector('.astra-titlebar h1')?.textContent.trim() ?? null,
       overflow: document.documentElement.scrollWidth - innerWidth,
       repeated: [...document.querySelectorAll('.astra-rail [data-astra-tab]')].filter(visible).length,
+      // Un module « Autres actions » ou « Affiner » affiché sans aucune commande visible.
+      emptyModules: [...document.querySelectorAll('.astra-rail-slot :is(.page-toolbar-actions, .page-toolbar-filters)')].filter(m => visible(m) && ![...m.querySelectorAll('a, button, input, select, textarea')].some(visible)).length,
       primary: [...document.querySelectorAll('.astra-bar-primary :is(a, button)')].filter(visible).map(e => e.textContent.trim()),
     };
   });
@@ -74,6 +76,7 @@ try {
       ownTabs ??= own;
       check(JSON.stringify(own) === JSON.stringify(ownTabs), `${where} : onglets de « ${part} » différents (${own.join(', ')})`);
       check(v.overflow <= 1, `${where} : débordement de côté de ${v.overflow}px`);
+      check(v.emptyModules === 0, `${where} : ${v.emptyModules} module(s) vide(s) dans la boîte à outils`);
       check(v.repeated === 0, `${where} : ${v.repeated} lien(s) de la boîte à outils répètent un onglet`);
       report.push(`${where.padEnd(24)} ${String(v.tabs.length).padStart(2)} onglets · action principale : ${v.primary.join(' / ') || '—'}`);
     }
