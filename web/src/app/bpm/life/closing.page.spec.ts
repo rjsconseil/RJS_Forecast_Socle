@@ -169,14 +169,15 @@ describe('page Clôture du cycle', () => {
   }
   beforeEach(() => sessionStorage.clear());
 
-  it('à l’ouverture : sections repliées, leurs encadrés et tableaux restent, avec le code couleur', async () => {
+  it('à l’ouverture : sections repliées (le compte rendu déplié), sans synthèse ; la clôture grisée tant qu’elle n’est pas débloquée', async () => {
     const scrolled: string[] = [];
     Element.prototype.scrollIntoView = function (this: Element) { scrolled.push(this.id); } as never;
     await open(journey(), { unfold: false });
-    expect(texts('.closing-fold')).toEqual(['Déplier', 'Déplier', 'Déplier', 'Déplier']);
+    expect(texts('.closing-fold')).toEqual(['Déplier', 'Déplier', 'Clôturer le cycle']);
+    expect(dom().querySelector<HTMLButtonElement>('.closing-open-close')!.disabled).toBe(true);
+    expect(dom().querySelector('.closing-summary, .closing-tiles, .closing-ring')).toBeNull();
     expect(texts('.closing-section-head h2')).toEqual(['Finaliser les points ouverts', 'Cohérence du cycle', 'Résultat de Novembre 2026 et cycle suivant', 'Clôturer Novembre 2026 et lancer Décembre 2026']);
     expect(texts('.closing-section-n')).toEqual(['1', '2', '3', '4']);
-    expect(texts('.closing-tile-head')).toEqual(['1À valider', '2Cohérence', '3Résultat et cycle suivant', '4Clôture']);
     expect(dom().querySelector('.closing-steps')).toBeNull();
     expect(dom().querySelector('bpm-closing-resolution')).toBeNull();
 
@@ -194,7 +195,11 @@ describe('page Clôture du cycle', () => {
 
     // 2. Résultat puis cycle suivant, chiffres mis en valeur.
     const result = section('closing-result');
-    expect(texts('.closing-sub', result)).toEqual(['Résultat de Novembre 2026', 'Ce que Novembre 2026 laisse à Décembre 2026']);
+    // Compte rendu toujours déplié : le résultat d'abord, ce qu'il laisse au cycle suivant en dernier.
+    const subs = texts('.closing-sub', result);
+    expect(subs[0]).toBe('Le résultat');
+    expect(subs.at(-1)).toBe('Ce que Novembre 2026 laisse à Décembre 2026');
+    expect(result.querySelector('.closing-fold')).toBeNull();
     expect(texts('.kb-label', result)).toEqual(['Reçu', 'Dépensé', 'Résultat', 'Épargne', 'Solde prévu de Décembre 2026', 'Versé au patrimoine', 'Budget récurrent', 'Reports et décisions']);
     expect(texts('.kb-value', result)[2]).toMatch(/^\+1\s300,00\s€$/);
     expect([...result.querySelectorAll('.kb-box')].map((b) => b.getAttribute('data-tone'))).toEqual(['ok', 'n1', 'ok', 'ok', 'ok', 'ok', 'n1', 'n2']);
@@ -212,13 +217,12 @@ describe('page Clôture du cycle', () => {
 
     // 4. Clôture : ses encadrés et, en clôture, son bouton.
     expect(texts('.kb-label', section('closing-final'))).toEqual(['État de la clôture', 'Conditions restantes', 'Ce qui sera figé']);
-    expect(button('Clôturer Novembre 2026 et lancer Décembre 2026').disabled).toBe(true);
+    expect(button('Clôturer Novembre 2026 et lancer Décembre 2026')).toBeUndefined();
 
-    // Synthèse : quatre tuiles colorées ; une tuile déplie sa section.
-    expect(texts('[data-tile="points"] .closing-urgent')).toEqual(['1 urgent']);
-    dom().querySelector<HTMLButtonElement>('[data-tile="checks"]')!.click();
+    // Une section se déplie par son bouton ; « Clôturer le cycle » reste grisé, même avec « Tout déplier ».
+    coherence.querySelector<HTMLButtonElement>('.closing-fold')!.click();
     await settle();
-    expect(scrolled).toEqual(['closing-checks-title']);
+    expect(scrolled).toEqual([]);
     expect(dom().querySelectorAll('.rs-card').length).toBe(2);
     button('Tout replier').click();
     await settle();
@@ -240,8 +244,7 @@ describe('page Clôture du cycle', () => {
       ],
       impacts: { ...journey().impacts!, capitalization: { resultCents: 130000, stockBefore: null, stockAfter: null, date: '2026-11-30', provisional: true }, deferred: { count: 0, incomeCents: 0, chargeCents: 0, intoNext: { count: 0, incomeCents: 0, chargeCents: 0 }, byCycle: [] }, opensEntries: false },
     }));
-    expect(dom().querySelector('.closing-ring-value')!.textContent).toContain('52 %');
-    expect(dom().querySelector('.closing-phase')!.textContent).toContain('Suivi du cycle');
+    expect(dom().querySelector('.closing-final-hint')!.textContent).toContain('se débloquera le');
     expect(dom().querySelector('.closing-lock.is-later')!.textContent).toContain('entrera en clôture');
     // 2 à valider dont 1 urgent : à surveiller ; le compte, bloquant, attend la fin du cycle (bleu).
     const path = section('closing-path');
@@ -258,8 +261,9 @@ describe('page Clôture du cycle', () => {
     expect(texts('.closing-mark[data-mark="inherited"]')).toEqual(['Reporté de Octobre 2026']);
     expect(texts('.closing-closed .closing-item strong')).toEqual(['Loyer']);
     expect(dom().querySelector('.closing-closed .closing-mark[data-mark="closed"]')!.textContent).toContain('Clos le 2 nov.');
-    expect(button('Clôturer Novembre 2026 et lancer').disabled).toBe(true);
-    expect(dom().querySelector('.closing-final-hint')!.textContent).toContain('La clôture s’ouvrira le');
+    expect(button('Clôturer Novembre 2026 et lancer')).toBeUndefined();
+    expect(dom().querySelector<HTMLButtonElement>('.closing-open-close')!.disabled).toBe(true);
+    expect(dom().querySelector('.closing-final-hint')!.textContent).toContain('La clôture se débloquera le');
     // « Régler le problème », à gauche du lien vers sa page, ouvre la fiche de l'échéance en fenêtre, sur cette page ;
     // le compte se compare déjà (sa confirmation attend la clôture).
     const actions = dom().querySelector('.closing-item .closing-actions')!;
@@ -308,7 +312,6 @@ describe('page Clôture du cycle', () => {
 
   it('en clôture : seuls les points ouverts se traitent, une échéance se revoit dans le cycle choisi', async () => {
     await open(journey());
-    expect(dom().querySelector('.closing-phase')!.textContent).toContain('En clôture');
     expect(dom().querySelector('.closing-lock[role="status"]')!.textContent).toContain('est en clôture : ses points sont figés');
     expect(dom().querySelector('.closing-final-hint')!.textContent).toContain('Encore : 1 charge à régler ou décider, 1 décision à prendre ou reporter, compte à vérifier.');
     expect(dom().querySelector('[data-impact="deferred"]')!.textContent).toContain('1 point revu en Février 2027');
@@ -426,7 +429,7 @@ describe('page Clôture du cycle', () => {
       account: { confirmedAt: '2026-12-02', netCents: 130000, note: null, stale: false },
       checks: { ...checks, items: checks.items.map((c) => ({ ...c, state: 'ok' as const })), ok: 3, warn: 0, fail: 0, blocking: [] },
     }));
-    expect(dom().querySelector('.closing-phase')!.textContent).toContain('Prêt à clôturer');
+    expect(dom().querySelector<HTMLButtonElement>('.closing-open-close')!.disabled).toBe(false);
     expect(texts('.closing-path .kb-value')).toEqual(['0', '5', '0']);
     expect(texts('.closing-path .kb-box:last-child small')).toEqual(['Aucun point bloquant', 'la clôture n’attend que les points à valider']);
     const final = button('Clôturer Novembre 2026 et lancer Décembre 2026');

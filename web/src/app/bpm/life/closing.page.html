@@ -19,84 +19,12 @@
   <a actions class="bpm-link" routerLink="/projet-de-vie/echeances">Échéances du cycle →</a>
   <a actions class="bpm-link" routerLink="/projet-de-vie/projets-finances">Décisions des projets →</a>
   <a actions class="bpm-link" routerLink="/projet-de-vie/budget-type">Budget récurrent du cycle suivant →</a>
-  <p tools class="closing-tools-note">La synthèse résume les quatre sections : 1 ce qui reste à valider, 2 le résultat et le cycle suivant, 3 la cohérence, 4 la clôture. Couleurs : vert pour ce qui est bon, puis bleu, jaune, orange et rouge selon la gravité.</p>
+  <p tools class="closing-tools-note">Quatre sections : 1 ce qui reste à valider, 2 la cohérence, 3 le compte rendu du résultat et du cycle suivant, 4 la clôture, qui s’ouvre quand toutes ses conditions sont réunies. Couleurs : vert pour ce qui est bon, puis bleu, jaune, orange et rouge selon la gravité.</p>
 
   <div class="closing-page">
     <bpm-state [loading]="read.loading() && !j()" [error]="read.error()" (retry)="read.reload()" />
 
     @if (j(); as v) {
-      <!-- Synthèse : l'état du cycle et le compte rendu de chaque section, pour savoir où aller -->
-      <section class="closing-summary" [attr.data-phase]="v.phase" [attr.data-ready]="v.canClose" aria-labelledby="closing-state-title">
-        <div class="closing-summary-main">
-          <div class="closing-ring" role="progressbar" aria-label="Complétude du cycle" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="v.percent">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="closing-ring-track" cx="60" cy="60" [attr.r]="ring.r" />
-              <circle class="closing-ring-fill" cx="60" cy="60" [attr.r]="ring.r" [attr.stroke-dasharray]="ringDash()" transform="rotate(-90 60 60)" />
-            </svg>
-            <div class="closing-ring-value"><strong>{{ v.percent }} %</strong><small>{{ v.done }} / {{ v.total }} points</small></div>
-          </div>
-          <div class="closing-summary-head">
-            <span class="closing-phase">{{ phaseLabel() }}</span>
-            <h2 id="closing-state-title">{{ v.period?.label ?? 'Cycle à configurer' }}@if (v.period) { · complété à {{ v.percent }} %}</h2>
-            <p>{{ phaseText() }}</p>
-            @if (v.period) {
-              <dl class="closing-facts">
-                <div><dt>Du</dt><dd>{{ v.period.start | shortDate }}</dd></div>
-                <div><dt>Au</dt><dd>{{ v.period.end | shortDate }}</dd></div>
-                @if (v.phase === 'running') {
-                  <div><dt>Jours restants</dt><dd>{{ v.days?.left }}</dd></div>
-                } @else {
-                  <div><dt>Cycle suivant</dt><dd>{{ v.next?.label }}</dd></div>
-                }
-              </dl>
-            }
-          </div>
-        </div>
-
-        @if (tiles().length) {
-          <ol class="closing-tiles" aria-label="Synthèse des sections de la page">
-            @for (t of tiles(); track t.key) {
-              <li>
-                <button type="button" class="closing-tile" [attr.data-tile]="t.key" [attr.data-tone]="t.tone" (click)="go(t)" [attr.aria-label]="t.n + '. ' + t.label + ' : ' + t.value + ', ' + t.caption + '. Aller à la section.'">
-                  <span class="closing-tile-head"><span class="closing-tile-n" aria-hidden="true">{{ t.n }}</span>{{ t.label }}<span class="closing-tile-dot" aria-hidden="true"></span></span>
-                  <strong class="closing-tile-value">{{ t.value }}</strong>
-                  <span class="closing-tile-graph" aria-hidden="true">
-                    @switch (t.key) {
-                      @case ('points') {
-                        @if (v.counts; as n) {
-                          <span class="closing-stack"><i data-k="closed" [style.flex-grow]="n.closed"></i><i data-k="deferred" [style.flex-grow]="n.deferred"></i><i data-k="open" [style.flex-grow]="n.open"></i><i data-k="later" [style.flex-grow]="n.later"></i></span>
-                        }
-                      }
-                      @case ('result') {
-                        @if (flowBars(); as f) { <span class="closing-flows"><i data-k="in" [style.width.%]="f.in"></i><i data-k="out" [style.width.%]="f.out"></i></span> }
-                      }
-                      @case ('checks') {
-                        <span class="closing-dots">@for (c of checkColumns(); track c.label) { <i [attr.data-tone]="c.tone"></i> }</span>
-                      }
-                      @case ('close') {
-                        <span class="closing-progress"><i [style.width.%]="v.percent"></i></span>
-                      }
-                    }
-                  </span>
-                  <small class="closing-tile-caption">
-                    @if (t.urgent !== null) { dont <b class="closing-urgent" [class.is-none]="!t.urgent">{{ plural(t.urgent, 'urgent') }}</b> } @else { {{ t.caption }} }
-                  </small>
-                </button>
-              </li>
-            }
-          </ol>
-        }
-
-        @if (v.closingMode.active && (v.backlog ?? 1) <= 1) {
-          <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.period!.label }} est en clôture : ses points sont figés, aucune nouvelle prévision n’y entre (une dépense ou une entrée déjà faite se saisit toujours). {{ v.next?.label }} démarrera à sa clôture : aucune entrée datée du {{ v.lock.from! | shortDate }} ou après n’est possible avant.</span></p>
-        } @else if (v.closingMode.active) {
-          <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.closingMode.message }} {{ v.lock.message }}</span></p>
-        } @else if (v.lock.active) {
-          <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.lock.message }}</span></p>
-        } @else if (v.phase === 'running' && v.lock.enabled && v.next) {
-          <p class="closing-lock is-later"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>Le {{ v.opensOn! | shortDate }}, {{ v.period!.label }} entrera en clôture : ses points seront figés et seuls ceux encore ouverts se traiteront, ici. {{ v.next.label }} attendra cette clôture pour recevoir des entrées.</span></p>
-        }
-      </section>
 
       @if (v.period) {
         <div class="closing-fold-all" role="group" aria-label="Replier ou déplier les sections">
@@ -261,88 +189,94 @@
           </section>
         }
 
-        <!-- 3. Le résultat du cycle et ce qu'il laisse au suivant -->
-        <section class="closing-result" [attr.data-phase]="v.phase" [attr.data-folded]="folded().result" aria-labelledby="closing-result-title">
+        <!-- 3. Compte rendu du cycle : toujours déplié, lu comme un rapport (résultat, dépenses, faits marquants, suite) -->
+        <section class="closing-result closing-report" [attr.data-phase]="v.phase" aria-labelledby="closing-result-title">
           <header class="closing-section-head">
             <span class="closing-section-n" aria-hidden="true">3</span>
             <div>
               <h2 id="closing-result-title">Résultat de {{ v.period.label }} et cycle suivant</h2>
-              @if (!folded().result) { <p>{{ bilan()?.source === 'provisoire' || !bilan() ? 'Bilan en cours de constitution, figé à la clôture ; puis tout ce que la clôture fera entrer dans ' + v.next?.label + '.' : 'Bilan figé à la clôture, et ce qu’il a laissé au cycle suivant.' }}</p> }
+              <p>Compte rendu {{ bilan()?.source === 'provisoire' || !bilan() ? 'provisoire, établi à ce jour et figé à la clôture' : 'figé à la clôture' }} : ce que le cycle a rapporté et dépensé, ce qui l’a marqué, et ce qu’il laisse à {{ v.next?.label }}.</p>
             </div>
             <a class="bpm-link" routerLink="/projet-de-vie/bilans" [queryParams]="{ period: v.period.key }">Tous les bilans →</a>
-            <button type="button" class="btn btn-secondary small closing-fold" [attr.aria-expanded]="!folded().result" (click)="toggle('result')">{{ folded().result ? 'Déplier' : 'Replier' }}</button>
           </header>
-          <h3 class="closing-sub">Résultat de {{ v.period.label }}</h3>
-          <bpm-closing-boxes [boxes]="resultBoxes()" [min]="160" />
-          @if (v.impacts; as im) {
-            <h3 class="closing-sub">Ce que {{ v.period.label }} laisse à {{ im.next.label }}</h3>
-            <bpm-closing-boxes [boxes]="nextBoxes()" [min]="160" />
-          }
-          @if (!folded().result) {
-            <bpm-state [loading]="bilanRead.loading() && !bilan()" [error]="bilanRead.error()" (retry)="bilanRead.reload()" />
+          <bpm-state [loading]="bilanRead.loading() && !bilan()" [error]="bilanRead.error()" (retry)="bilanRead.reload()" />
+          <ol class="closing-report-parts">
+            <li class="closing-report-part">
+              <h3 class="closing-sub">Le résultat</h3>
+              <bpm-closing-boxes [boxes]="resultBoxes()" [min]="160" />
+            </li>
             @if (bilan(); as b) {
               @if (b.natures.length) {
-                <ul class="closing-natures" aria-label="Dépenses par nature">
-                  @for (n of b.natures; track n.key) {
-                    <li [attr.data-nature]="n.key">
-                      <span class="closing-nature-label">{{ n.label }}</span>
-                      <span class="closing-nature-bar" aria-hidden="true"><span [style.width.%]="n.sharePct ?? 0"></span></span>
-                      <span class="closing-nature-value">{{ n.paidCents | cents }}@if (n.sharePct !== null) { · {{ pct(n.sharePct) }} %}</span>
-                    </li>
-                  }
-                </ul>
+                <li class="closing-report-part">
+                  <h3 class="closing-sub">Les dépenses, par nature</h3>
+                  <ul class="closing-natures" aria-label="Dépenses par nature">
+                    @for (n of b.natures; track n.key) {
+                      <li [attr.data-nature]="n.key">
+                        <span class="closing-nature-label">{{ n.label }}</span>
+                        <span class="closing-nature-bar" aria-hidden="true"><span [style.width.%]="n.sharePct ?? 0"></span></span>
+                        <span class="closing-nature-value">{{ n.paidCents | cents }}@if (n.sharePct !== null) { · {{ pct(n.sharePct) }} %}</span>
+                      </li>
+                    }
+                  </ul>
+                </li>
               }
-              @if (b.highlights.length) {
-                <details class="closing-highlights-wrap">
-                  <summary>{{ plural(b.highlights.length, 'fait marquant', 'faits marquants') }} du cycle</summary>
+              <li class="closing-report-part">
+                <h3 class="closing-sub">Les faits marquants</h3>
+                @if (b.highlights.length) {
                   <ul class="closing-highlights">
                     @for (h of b.highlights; track h.kind + h.title) {
                       <li [attr.data-tone]="h.tone"><strong>{{ h.title }}</strong><span>{{ h.text }}</span></li>
                     }
                   </ul>
-                </details>
-              }
+                } @else {
+                  <p class="closing-report-empty">Aucun fait marquant pour ce cycle.</p>
+                }
+              </li>
             }
             @if (v.impacts; as im) {
-              <ul class="closing-impact-list">
-                @for (cy of im.deferred.byCycle; track cy.key) {
-                  <li data-impact="deferred">
-                    <span class="closing-impact-label">{{ plural(cy.count, 'point revu', 'points revus') }} en {{ cy.label }}</span>
-                    <span class="closing-impact-text">@for (pt of cy.points; track pt.id; let last = $last) { {{ pt.label }}@if (pt.project) { ({{ pt.project }})}{{ last ? '' : ', ' }}} · inscrit{{ cy.count > 1 ? 's' : '' }} au {{ cy.start | shortDate }}, avec la marque de {{ v.period.label }}.</span>
-                    <strong>{{ (cy.incomeCents - cy.chargeCents) | signedCents }}</strong>
-                  </li>
-                }
-                @if (im.decisions.count) {
-                  <li data-impact="decisions">
-                    <span class="closing-impact-label">{{ plural(im.decisions.count, 'décision en attente', 'décisions en attente') }}</span>
-                    <span class="closing-impact-text">@for (d of im.decisions.points; track d.id; let last = $last) { {{ d.label }}@if (d.project) { ({{ d.project }})}{{ last ? '' : ', ' }}} · revue{{ im.decisions.count > 1 ? 's' : '' }} en {{ im.next.label }}.</span>
-                    <strong>{{ plural(im.decisions.count, 'point', 'points') }}</strong>
-                  </li>
-                }
-                @if (im.planned.count) {
-                  <li data-impact="planned">
-                    <span class="closing-impact-label">Prévisions déjà inscrites en {{ im.next.label }}</span>
-                    <span class="closing-impact-text">{{ plural(im.planned.count, 'échéance ponctuelle', 'échéances ponctuelles') }} : entrées {{ im.planned.incomeCents | cents }}, charges {{ im.planned.chargeCents | cents }}.</span>
-                    <strong>{{ (im.planned.incomeCents - im.planned.chargeCents) | signedCents }}</strong>
-                  </li>
-                }
-                @if (im.projects.count) {
-                  <li data-impact="projects">
-                    <span class="closing-impact-label">Flux des projets financés par le cycle</span>
-                    <span class="closing-impact-text">{{ plural(im.projects.count, 'flux prévu', 'flux prévus') }} en {{ im.next.label }}.</span>
-                    <strong>{{ (im.projects.incomeCents - im.projects.chargeCents) | signedCents }}</strong>
-                  </li>
-                }
-                @if (v.lock.enabled) {
-                  <li data-impact="lock">
-                    <span class="closing-impact-label">Entrées de {{ im.next.label }}</span>
-                    <span class="closing-impact-text">{{ im.opensEntries ? 'Elles s’ouvrent avec la clôture : le verrou du cycle suivant tombe.' : 'Elles s’ouvriront à la clôture de ' + v.period.label + '.' }}</span>
-                    <strong>{{ im.opensEntries ? 'Rouvertes' : 'À la clôture' }}</strong>
-                  </li>
-                }
-              </ul>
+              <li class="closing-report-part">
+                <h3 class="closing-sub">Ce que {{ v.period.label }} laisse à {{ im.next.label }}</h3>
+                <bpm-closing-boxes [boxes]="nextBoxes()" [min]="160" />
+                <ul class="closing-impact-list">
+                  @for (cy of im.deferred.byCycle; track cy.key) {
+                    <li data-impact="deferred">
+                      <span class="closing-impact-label">{{ plural(cy.count, 'point revu', 'points revus') }} en {{ cy.label }}</span>
+                      <span class="closing-impact-text">@for (pt of cy.points; track pt.id; let last = $last) { {{ pt.label }}@if (pt.project) { ({{ pt.project }})}{{ last ? '' : ', ' }}} · inscrit{{ cy.count > 1 ? 's' : '' }} au {{ cy.start | shortDate }}, avec la marque de {{ v.period.label }}.</span>
+                      <strong>{{ (cy.incomeCents - cy.chargeCents) | signedCents }}</strong>
+                    </li>
+                  }
+                  @if (im.decisions.count) {
+                    <li data-impact="decisions">
+                      <span class="closing-impact-label">{{ plural(im.decisions.count, 'décision en attente', 'décisions en attente') }}</span>
+                      <span class="closing-impact-text">@for (d of im.decisions.points; track d.id; let last = $last) { {{ d.label }}@if (d.project) { ({{ d.project }})}{{ last ? '' : ', ' }}} · revue{{ im.decisions.count > 1 ? 's' : '' }} en {{ im.next.label }}.</span>
+                      <strong>{{ plural(im.decisions.count, 'point', 'points') }}</strong>
+                    </li>
+                  }
+                  @if (im.planned.count) {
+                    <li data-impact="planned">
+                      <span class="closing-impact-label">Prévisions déjà inscrites en {{ im.next.label }}</span>
+                      <span class="closing-impact-text">{{ plural(im.planned.count, 'échéance ponctuelle', 'échéances ponctuelles') }} : entrées {{ im.planned.incomeCents | cents }}, charges {{ im.planned.chargeCents | cents }}.</span>
+                      <strong>{{ (im.planned.incomeCents - im.planned.chargeCents) | signedCents }}</strong>
+                    </li>
+                  }
+                  @if (im.projects.count) {
+                    <li data-impact="projects">
+                      <span class="closing-impact-label">Flux des projets financés par le cycle</span>
+                      <span class="closing-impact-text">{{ plural(im.projects.count, 'flux prévu', 'flux prévus') }} en {{ im.next.label }}.</span>
+                      <strong>{{ (im.projects.incomeCents - im.projects.chargeCents) | signedCents }}</strong>
+                    </li>
+                  }
+                  @if (v.lock.enabled) {
+                    <li data-impact="lock">
+                      <span class="closing-impact-label">Entrées de {{ im.next.label }}</span>
+                      <span class="closing-impact-text">{{ im.opensEntries ? 'Elles s’ouvrent avec la clôture : le verrou du cycle suivant tombe.' : 'Elles s’ouvriront à la clôture de ' + v.period.label + '.' }}</span>
+                      <strong>{{ im.opensEntries ? 'Rouvertes' : 'À la clôture' }}</strong>
+                    </li>
+                  }
+                </ul>
+              </li>
             }
-          }
+          </ol>
         </section>
 
         <!-- 4. Clôturer : figer le cycle (actions, contrôles, bilan, résultat) et lancer le suivant -->
@@ -351,18 +285,25 @@
             <span class="closing-section-n" aria-hidden="true">4</span>
             <div>
               <h2 id="life-closing-title">Clôturer {{ v.period.label }} et lancer {{ v.next?.label }}</h2>
-              @if (!folded().close) { <p>Une seule opération, possible à 100 % une fois le cycle terminé, et seulement si tout se tient.</p> }
+              <p>Une seule opération, possible à 100 % une fois le cycle terminé, et seulement si tout se tient.</p>
             </div>
-            <button type="button" class="btn btn-secondary small closing-fold" [attr.aria-expanded]="!folded().close" (click)="toggle('close')">{{ folded().close ? 'Déplier' : 'Replier' }}</button>
+            <!-- « Clôturer le cycle » s'ouvre seulement quand la clôture est débloquée (tous ses critères réunis). -->
+            <button type="button" class="btn btn-secondary small closing-fold closing-open-close" [disabled]="!v.canClose" [attr.aria-expanded]="!folded().close" [attr.title]="v.canClose ? null : 'La clôture se débloque quand toutes ses conditions sont réunies.'" (click)="toggle('close')">{{ folded().close ? 'Clôturer le cycle' : 'Replier' }}</button>
           </header>
-          <bpm-closing-boxes [boxes]="closeBoxes()" />
-          @if (v.phase === 'to_close') {
-            <div class="closing-final-actions">
-              <button class="btn btn-primary" type="button" [disabled]="!v.canClose || !!busy()" (click)="finalize()">{{ busy() === 'finalize' ? 'Clôture en cours…' : 'Clôturer ' + v.period.label + ' et lancer ' + v.next?.label }}</button>
-              @if (!v.canClose) { <p class="closing-final-hint">Encore : {{ (v.remaining ?? []).join(', ') }}.</p> }
-            </div>
+          @if (v.closingMode.active && (v.backlog ?? 1) <= 1) {
+            <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.period!.label }} est en clôture : ses points sont figés, aucune nouvelle prévision n’y entre (une dépense ou une entrée déjà faite se saisit toujours). {{ v.next?.label }} démarrera à sa clôture : aucune entrée datée du {{ v.lock.from! | shortDate }} ou après n’est possible avant.</span></p>
+          } @else if (v.closingMode.active) {
+            <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.closingMode.message }} {{ v.lock.message }}</span></p>
+          } @else if (v.lock.active) {
+            <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.lock.message }}</span></p>
+          } @else if (v.phase === 'running' && v.lock.enabled && v.next) {
+            <p class="closing-lock is-later"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>Le {{ v.opensOn! | shortDate }}, {{ v.period!.label }} entrera en clôture : ses points seront figés et seuls ceux encore ouverts se traiteront, ici. {{ v.next.label }} attendra cette clôture pour recevoir des entrées.</span></p>
           }
-          @if (!folded().close) {
+          <bpm-closing-boxes [boxes]="closeBoxes()" />
+          @if (!v.canClose) {
+            <p class="closing-final-hint">@if (v.phase === 'running') { La clôture se débloquera le {{ v.opensOn! | shortDate }}, à la fin du dernier jour du cycle, une fois toutes ses conditions réunies. } @else { Encore : {{ (v.remaining ?? []).join(', ') }}. }</p>
+          }
+          @if (!folded().close && v.canClose) {
             <ul class="closing-effects">
               <li>La cohérence du cycle est vérifiée une dernière fois : {{ checks() ? checks()!.ok + ' / ' + checks()!.total + ' contrôles bons aujourd’hui' : 'contrôles à lire' }}@if (checks()?.blocking?.length) {, bloquant : {{ checks()!.blocking.join(', ') }}}.</li>
               <li>{{ actions() ? 'Les ' + plural(actions()!.total, 'action', 'actions') : 'Les actions' }} du cycle sont figées dans son historique, avec les contrôles et la marque de chaque point non validé ici.</li>
@@ -376,15 +317,13 @@
               }
               <li>{{ v.next?.label }} est lancé : ses entrées s’ouvrent.</li>
             </ul>
-            @if (v.phase === 'running') {
-              <div class="closing-final-actions">
-                <button class="btn btn-primary" type="button" disabled>{{ 'Clôturer ' + v.period.label + ' et lancer ' + v.next?.label }}</button>
-                <p class="closing-final-hint">La clôture s’ouvrira le {{ v.opensOn! | shortDate }}, à la fin du dernier jour du cycle.</p>
-              </div>
-            }
-            @if (v.lastClosure; as lc) {
-              <p class="closing-last">Dernière clôture : {{ lc.periodLabel }}, {{ lc.resultCents | signedCents }} capitalisés@if (lc.deferredCount) {, {{ plural(lc.deferredCount, 'point revu', 'points revus') }} plus tard}. <a routerLink="/projet-de-vie/bilans" [queryParams]="{ period: lc.periodKey }">Relire son bilan →</a></p>
-            }
+            <!-- Ce que fera la clôture, puis le geste qui la lance. -->
+            <div class="closing-final-actions">
+              <button class="btn btn-primary" type="button" [disabled]="!!busy()" (click)="finalize()">{{ busy() === 'finalize' ? 'Clôture en cours…' : 'Clôturer ' + v.period.label + ' et lancer ' + v.next?.label }}</button>
+            </div>
+          }
+          @if (v.lastClosure; as lc) {
+            <p class="closing-last">Dernière clôture : {{ lc.periodLabel }}, {{ lc.resultCents | signedCents }} capitalisés@if (lc.deferredCount) {, {{ plural(lc.deferredCount, 'point revu', 'points revus') }} plus tard}. <a routerLink="/projet-de-vie/bilans" [queryParams]="{ period: lc.periodKey }">Relire son bilan →</a></p>
           }
         </section>
 

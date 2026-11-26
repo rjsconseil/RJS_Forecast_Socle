@@ -1,6 +1,5 @@
-// Clôture du cycle : la synthèse (état du cycle et une tuile par section), puis quatre sections du plus important au
-// moins crucial : 1 à valider, 2 résultat et cycle suivant, 3 cohérence, 4 clôturer ; les actions du cycle en ligne
-// dépliable. Code couleur d'alerte commun : vert (bon), bleu, jaune, orange, rouge (du moins au plus grave).
+// Clôture du cycle : quatre sections, 1 à valider, 2 cohérence, 3 compte rendu (résultat et cycle suivant, toujours
+// déplié), 4 clôturer (grisée tant que ses conditions ne sont pas réunies) ; les actions du cycle en ligne dépliable. Code couleur d'alerte commun : vert (bon), bleu, jaune, orange, rouge (du moins au plus grave).
 // Encadrés, tableaux, résolution des incohérences et journal ont leurs propres composants (closing-kit, -resolution, -journal).
 :host {
   display: block;
@@ -30,7 +29,7 @@
 
 .closing-page { display: flex; flex: 1; flex-direction: column; gap: var(--cl-gap); min-width: 0; container: closing / inline-size; }
 .closing-tools-note { margin: 0; color: var(--cl-muted); font-size: 12.5px; line-height: 1.5; }
-:is(.closing-summary, .closing-path, .closing-result, .closing-checks, .closing-final) {
+:is(.closing-path, .closing-result, .closing-checks, .closing-final) {
   min-width: 0; padding: var(--cl-pad-y) var(--cl-pad-x); border: 1px solid var(--cl-line); border-radius: var(--cl-radius); background: var(--cl-surface);
 }
 :is(.closing-path, .closing-result, .closing-checks, .closing-final) { display: grid; gap: 12px; scroll-margin-top: 140px; }
@@ -50,71 +49,7 @@
 .closing-fold[aria-expanded='true']::after { transform: translateY(1px) rotate(-135deg); }
 .closing-fold-all { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: -6px 4px; color: var(--cl-muted); font-size: 12px; > span { margin-right: auto; } }
 
-// ---------- synthèse ----------
-.closing-summary {
-  display: grid; grid-template-columns: minmax(320px, 1fr) minmax(0, 1.6fr); align-items: stretch; gap: 14px 22px;
-  background: linear-gradient(135deg, var(--cl-wash), var(--cl-surface) 55%);
-}
-.closing-summary-main { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px 18px; min-width: 0; }
-.closing-ring { position: relative; width: 112px; height: 112px; }
-.closing-ring svg { width: 100%; height: 100%; display: block; }
-.closing-ring circle { fill: none; stroke-width: 11; }
-.closing-ring-track { stroke: color-mix(in srgb, var(--cl-accent) 12%, var(--cl-soft)); }
-.closing-ring-fill { stroke: var(--cl-accent); stroke-linecap: round; transition: stroke-dasharray .5s cubic-bezier(.22, 1, .36, 1); }
-.closing-summary[data-phase='to_close'] .closing-ring-fill { stroke: var(--al-n3); }
-.closing-summary[data-ready='true'] .closing-ring-fill { stroke: var(--al-ok); }
-.closing-ring-value {
-  position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 2px;
-  strong { font-size: 23px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1; }
-  small { color: var(--cl-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
-}
-.closing-summary-head { display: grid; gap: 6px; min-width: 0; }
-.closing-summary-head h2 { margin: 0; font-size: 18px; line-height: 1.3; }
-.closing-summary-head p { margin: 0; color: var(--cl-muted); font-size: 13px; line-height: 1.5; }
-.closing-phase {
-  justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid currentColor;
-  color: var(--cl-accent-ink); background: var(--cl-wash); font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
-}
-.closing-phase::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.closing-summary[data-phase='to_close'] .closing-phase { color: var(--al-n3); }
-.closing-summary[data-ready='true'] .closing-phase { color: var(--al-ok); }
-.closing-facts {
-  display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 2px 0 0;
-  div { display: grid; gap: 1px; }
-  dt { color: var(--cl-muted); font-size: 10.5px; font-weight: 650; letter-spacing: .05em; text-transform: uppercase; }
-  dd { margin: 0; font-size: 13.5px; font-weight: 650; font-variant-numeric: tabular-nums; }
-}
-// Une tuile par section : couleur d'alerte, chiffre, graphe, légende ; un clic mène à la section et la déplie.
-.closing-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; min-width: 0; }
-.closing-tiles > li { display: flex; min-width: 0; }
-.closing-tile {
-  display: grid; grid-template-rows: auto auto 1fr auto; gap: 4px; width: 100%; min-width: 0; min-height: 94px; margin: 0; padding: 9px 12px;
-  border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--cl-line)); border-radius: var(--cl-radius-sm);
-  background: color-mix(in srgb, var(--tone) 5%, var(--cl-surface)); color: inherit; font: inherit; text-align: left; box-shadow: inset 4px 0 0 var(--tone); cursor: pointer;
-}
-.closing-tile:hover { border-color: var(--tone); }
-.closing-tile-head { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--cl-muted); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.closing-tile-n { display: grid; place-items: center; flex: none; width: 17px; height: 17px; border-radius: 5px; background: var(--cl-soft); font-size: 10.5px; letter-spacing: 0; }
-.closing-tile-dot { flex: none; width: 9px; height: 9px; margin-left: auto; border-radius: 50%; background: var(--tone); }
-.closing-tile-value { color: var(--tone); font-size: 19px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.closing-tile[data-tone='neutral'] .closing-tile-value { color: var(--ink, #222237); }
-.closing-tile-graph { display: flex; align-items: flex-end; min-height: 14px; min-width: 0; }
-.closing-tile-caption { color: var(--cl-muted); font-size: 12px; line-height: 1.35; }
-.closing-urgent { color: var(--al-n4); font-weight: 800; }
-.closing-urgent.is-none { color: var(--al-ok); }
-.closing-stack, .closing-progress { display: flex; width: 100%; height: 8px; overflow: hidden; border-radius: 999px; background: var(--cl-soft); }
-.closing-stack i, .closing-progress i { display: block; min-width: 0; height: 100%; }
-.closing-stack i[data-k='closed'] { background: var(--al-ok); }
-.closing-stack i[data-k='deferred'] { background: var(--al-n1); }
-.closing-stack i[data-k='open'] { background: var(--tone); }
-.closing-stack i[data-k='later'] { background: var(--cl-grey); }
-.closing-progress i { background: var(--tone); border-radius: inherit; }
-.closing-dots { display: flex; flex-wrap: wrap; gap: 4px; }
-.closing-dots i { width: 11px; height: 11px; border-radius: 3px; background: var(--tone); }
-.closing-flows { display: grid; gap: 3px; width: 100%; }
-.closing-flows i { display: block; height: 6px; border-radius: 999px; min-width: 2px; }
-.closing-flows i[data-k='in'] { background: var(--al-ok); }
-.closing-flows i[data-k='out'] { background: var(--al-n3); }
+// Messages de verrou de la clôture (section 4) : ce qui manque encore pour clôturer.
 .closing-lock {
   grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 8px 14px; border-radius: var(--cl-radius-sm);
   border: 1px solid color-mix(in srgb, var(--al-n3) 30%, transparent); background: color-mix(in srgb, var(--al-n3) 7%, var(--cl-surface)); font-size: 12.5px; line-height: 1.5;
@@ -189,7 +124,17 @@
 .closing-items.is-closed .closing-item-main strong { font-weight: 600; }
 .closing-item.is-fresh { border-color: var(--al-ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--al-ok) 20%, transparent); }
 
-// ---------- 2. résultat et cycle suivant (détail) ----------
+// ---------- 3. compte rendu : résultat et cycle suivant ----------
+// Des parties numérotées, l'une sous l'autre, séparées d'un filet : on lit le cycle comme un rapport.
+.closing-report-parts { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; counter-reset: report; }
+.closing-report-part {
+  display: grid; gap: 10px; min-width: 0; padding: 14px 0; border-top: 1px solid var(--cl-line); counter-increment: report;
+  &:first-child { padding-top: 4px; border-top: 0; }
+  &:last-child { padding-bottom: 0; }
+  > .closing-sub { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--ink, #222237); font-size: 12px; }
+  > .closing-sub::before { content: counter(report, upper-roman) '.'; color: var(--cl-accent-ink); font-weight: 800; letter-spacing: 0; }
+}
+.closing-report-empty { margin: 0; color: var(--cl-muted); font-size: 12.5px; font-style: italic; }
 .closing-natures { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .closing-natures li { display: grid; grid-template-columns: minmax(110px, 160px) minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: 13px; }
 .closing-nature-bar { height: 8px; border-radius: 999px; background: var(--cl-soft); overflow: hidden; }
@@ -197,7 +142,6 @@
 .closing-natures li[data-nature='indispensable'] .closing-nature-bar > span { background: var(--al-n1); }
 .closing-natures li[data-nature='projet'] .closing-nature-bar > span { background: var(--al-n2); }
 .closing-nature-value { color: var(--cl-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.closing-highlights-wrap > summary { cursor: pointer; color: var(--cl-accent); font-size: 13px; font-weight: 650; margin-bottom: 8px; }
 .closing-highlights { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .closing-highlights li { display: grid; gap: 2px; padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--cl-muted); background: var(--cl-soft); font-size: 12.5px; }
 .closing-highlights li span { color: var(--cl-muted); line-height: 1.5; }
@@ -215,6 +159,9 @@
 .closing-impact-list li[data-impact='deferred'] { border-style: dashed; border-color: color-mix(in srgb, var(--al-n1) 40%, var(--cl-line)); }
 
 // ---------- 4. clôturer ----------
+// « Clôturer le cycle » reste grisé tant que la clôture n'est pas débloquée.
+.closing-open-close:disabled { cursor: not-allowed; opacity: 1; color: var(--cl-muted); border-color: var(--cl-line); background: var(--cl-soft); }
+.closing-open-close:disabled::after { opacity: .5; }
 .closing-final[data-ready='true'] { border-color: var(--al-ok); box-shadow: inset 0 3px 0 var(--al-ok); }
 .closing-effects { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .closing-effects li { position: relative; padding-left: 20px; font-size: 13px; line-height: 1.5; }
@@ -237,11 +184,7 @@
 .closing-actions-line > bpm-closing-journal { padding: 12px var(--cl-pad-x); }
 
 // ---------- largeurs réduites ----------
-@container closing (max-width: 1020px) { .closing-summary { grid-template-columns: minmax(0, 1fr); } .closing-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@container closing (max-width: 760px) { .closing-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @container closing (max-width: 680px) {
-  .closing-summary-main { grid-template-columns: minmax(0, 1fr); justify-items: start; }
-  .closing-ring { width: 104px; height: 104px; }
   .closing-natures li { grid-template-columns: minmax(0, 1fr) auto; }
   .closing-nature-bar { grid-column: 1 / -1; grid-row: 2; }
   .closing-account { padding-left: 0; }
@@ -251,4 +194,3 @@
   .closing-defer label { flex-wrap: wrap; }
 }
 
-@media (prefers-reduced-motion: reduce) { .closing-ring-fill { transition: none; } }

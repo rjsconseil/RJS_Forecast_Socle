@@ -70,8 +70,6 @@ export class BpmClosingPage {
   protected readonly stepText = STEP_TEXT;
 
   // ---------- anneau de complétude ----------
-  protected readonly ring = { r: 52, c: 2 * Math.PI * 52 };
-  protected readonly ringDash = computed(() => `${((this.j()?.percent ?? 0) / 100) * this.ring.c} ${this.ring.c}`);
 
   // ---------- points ----------
   /** Points encore à traiter d'une étape (ouverts, reportés, ou pas encore ouverts), dans l'ordre du serveur. */
@@ -348,40 +346,6 @@ export class BpmClosingPage {
   });
 
   // ---------- synthèse : une tuile par section ----------
-  protected readonly flowBars = computed(() => {
-    const f = this.bilan()?.flows;
-    if (!f) return null;
-    const received = f.receivedCents ?? 0;
-    const spent = f.spentCents ?? 0;
-    const max = Math.max(1, received, spent);
-    return { in: (received * 100) / max, out: (spent * 100) / max };
-  });
-  protected readonly tiles = computed<SummaryTile[]>(() => {
-    const j = this.j();
-    if (!j?.period || !j.counts) return [];
-    const open = this.openPoints().length;
-    const urgent = this.urgentCount();
-    const c = j.checks ?? null;
-    const im = j.impacts;
-    const result = this.bilan()?.flows.resultCents ?? j.netCents;
-    const toSee = c ? c.items.filter((x) => x.level !== 'blocking' && x.state === 'warn').length : 0;
-    const blocking = c ? c.items.filter((x) => x.level === 'blocking' && (x.state === 'fail' || x.state === 'warn')).length : 0;
-    return [
-      { key: 'points', n: 1, label: 'À valider', target: 'closing-path-title', tone: this.openTone(), value: open ? this.plural(open, 'point', 'points') : 'Tout validé', caption: open ? `dont ${this.plural(urgent, 'urgent')}` : `${j.counts.closed} clos`, urgent: open ? urgent : null },
-      { key: 'checks', n: 2, label: 'Cohérence', target: 'closing-checks-title', tone: this.checksTone(), value: c ? `${c.ok} / ${c.total} bons` : '—', caption: `${toSee} à voir · ${this.plural(blocking, 'bloquant')}`, urgent: null },
-      { key: 'result', n: 3, label: 'Résultat et cycle suivant', target: 'closing-result-title', tone: this.resultTone(), value: signed(result), caption: im ? `${im.next.label} : ${signedCents(im.balanceCents)} prévus` : 'à ce jour', urgent: null },
-      {
-        key: 'close', n: 4, label: 'Clôture', target: 'life-closing-title', tone: this.closeTone(),
-        value: j.canClose ? 'Prête' : j.phase === 'to_close' ? `${j.percent} %` : `Le ${shortDay(j.opensOn!)}`,
-        caption: j.canClose ? 'tout est prêt à figer' : this.conditions().length ? this.plural(this.conditions().length, 'condition restante', 'conditions restantes') : 'conditions remplies', urgent: null,
-      },
-    ];
-  });
-  /** Aller à une section depuis la synthèse : elle se déplie. */
-  protected go(t: SummaryTile) {
-    this.unfold(TILE_SECTION[t.key]);
-    document.getElementById(t.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
   /** Aller à un endroit de la page (étape de résolution) : la section qui le porte se déplie. */
   protected goTo(id: string) {
     if (id.startsWith('closing-step') || id === 'closing-path-title') this.unfold('path');
@@ -389,32 +353,17 @@ export class BpmClosingPage {
   }
 
   // ---------- sections repliées : la page s'ouvre repliée ----------
+  // Le compte rendu (section 3) est toujours déplié ; la clôture (section 4) ne s'ouvre que débloquée.
   protected readonly folded = signal<Record<SectionKey, boolean>>(allSections(true));
-  protected readonly allOpen = computed(() => SECTIONS.every((k) => !this.folded()[k]));
-  protected readonly allFolded = computed(() => SECTIONS.every((k) => this.folded()[k]));
-  protected toggle(key: SectionKey) { this.folded.update((f) => ({ ...f, [key]: !f[key] })); }
-  protected foldAll(value: boolean) { this.folded.set(allSections(value)); }
+  private readonly foldable = computed<SectionKey[]>(() => SECTIONS.filter((k) => k !== 'close' || !!this.j()?.canClose));
+  protected readonly allOpen = computed(() => this.foldable().every((k) => !this.folded()[k]));
+  protected readonly allFolded = computed(() => this.foldable().every((k) => this.folded()[k]));
+  protected toggle(key: SectionKey) {
+    if (key === 'close' && !this.j()?.canClose) return;
+    this.folded.update((f) => ({ ...f, [key]: !f[key] }));
+  }
+  protected foldAll(value: boolean) { this.folded.update((f) => ({ ...f, ...Object.fromEntries(this.foldable().map((k) => [k, value])) })); }
   private unfold(key: SectionKey) { if (this.folded()[key]) this.folded.update((f) => ({ ...f, [key]: false })); }
-
-  protected readonly phaseLabel = computed(() => {
-    const j = this.j();
-    if (!j || j.phase === 'to_configure') return 'Cycle à configurer';
-    if (j.phase === 'running') return 'Suivi du cycle';
-    return j.canClose ? 'Prêt à clôturer' : 'En clôture';
-  });
-  /** Une phrase : où en est le cycle, ce qui reste, et la suite. */
-  protected readonly phaseText = computed(() => {
-    const j = this.j();
-    if (!j?.period) return 'Choisissez le jour de début de votre cycle : le suivi des actions et la clôture suivront.';
-    const open = this.openPoints().length;
-    const done = this.plural(j.actions?.total ?? 0, 'action enregistrée', 'actions enregistrées');
-    if (j.phase === 'running') {
-      const left = j.days?.left ?? 0;
-      return `${done} depuis le ${shortDay(j.period.start)} ; ${this.plural(open, 'point', 'points')} à valider, dont ${this.plural(this.urgentCount(), 'urgent')}. Clôture le ${shortDay(j.opensOn!)}, dans ${this.plural(left, 'jour')}.`;
-    }
-    if (!j.canClose) return `En clôture : ${this.plural(open, 'point', 'points')} à valider${this.blockingPoints().length ? `, ${this.plural(this.blockingPoints().length, 'point bloquant', 'points bloquants')}` : ''} ; la clôture figera ensuite les ${done} et lancera ${j.next!.label}.`;
-    return `Tout est traité et cohérent : la clôture figera les ${done} et lancera ${j.next!.label}.`;
-  });
 
   // ---------- actions (mode clôture seulement) ----------
   protected readonly busy = signal<string | null>(null);
@@ -638,20 +587,8 @@ const keep = <T>(xs: (T | false | null | undefined | 0 | '')[]) => xs.filter(Boo
 const CHECK_STATE: Record<string, string> = { ok: 'bon', warn: 'à voir', fail: 'bloque', later: 'après le cycle' };
 
 /** Sections de la page, du plus important au moins crucial. */
-type SectionKey = 'path' | 'result' | 'checks' | 'close';
-const SECTIONS: SectionKey[] = ['path', 'result', 'checks', 'close'];
+type SectionKey = 'path' | 'checks' | 'close';
+const SECTIONS: SectionKey[] = ['path', 'checks', 'close'];
 const allSections = (value: boolean) => Object.fromEntries(SECTIONS.map((k) => [k, value])) as Record<SectionKey, boolean>;
-const TILE_SECTION: Record<SummaryTile['key'], SectionKey> = { points: 'path', result: 'result', checks: 'checks', close: 'close' };
 
 /** Tuile de la synthèse : une section de la page, son niveau d'alerte, son chiffre, sa légende. */
-interface SummaryTile {
-  key: 'points' | 'result' | 'checks' | 'close';
-  n: number;
-  label: string;
-  target: string;
-  tone: AlertTone;
-  value: string;
-  caption: string;
-  /** Points urgents, en rouge dans la légende. */
-  urgent: number | null;
-}
