@@ -1,0 +1,323 @@
+/* BPM-Astra · écrans métier de BPM · cycle budgétaire et réglages (chargé par _application.scss).*/
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/*
+ * Cycle budgétaire : période ouverte, clôture et remise à zéro, patrimoine en
+ * valeur totale, graphique et prévisions. Les montants positifs et négatifs
+ * lisent les rôles de statut ; l'identité reste celle de l'espace Budget.
+ */
+.bc-page {
+  --bc-positive: var(--status-success);
+  --bc-positive-surface: var(--status-success-surface);
+  --bc-negative: var(--status-danger);
+  --bc-negative-surface: var(--status-danger-surface);
+  --bc-forecast: var(--app-accent-line);
+  display: grid;
+  gap: var(--ecart-24);
+}
+.bc-page [data-sign='positive'] {
+  color: var(--bc-positive);
+}
+.bc-page [data-sign='negative'] {
+  color: var(--bc-negative);
+}
+.bc-page [data-sign='unknown'] {
+  color: var(--muted);
+}
+.bc-kicker {
+  margin: 0 0 var(--ecart-6);
+  color: var(--app-accent);
+  font-family: var(--font-label);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--lettrage-0-08em);
+  text-transform: uppercase;
+}
+.bc-section-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-2xl));
+  line-height: var(--lh-snug);
+}
+.bc-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+  line-height: var(--lh-normal);
+}
+.bc-note-danger {
+  color: var(--bc-negative);
+  font-weight: var(--fw-semibold);
+}
+.bc-alert {
+  margin: 0;
+  padding: var(--ecart-14) var(--ecart-16);
+  border: var(--trait-1) solid var(--bc-negative);
+  border-radius: var(--rayon-8);
+  color: var(--bc-negative);
+  background: var(--bc-negative-surface);
+}
+.bc-loading {
+  color: var(--muted);
+}
+.bc-page :is(.bc-hero, .bc-wealth, .bc-history, .bc-empty) {
+  display: grid;
+  gap: var(--ecart-16);
+  padding: var(--ecart-28);
+}
+
+/* Liaisons */
+
+/* Période ouverte */
+.bc-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ecart-20);
+}
+.bc-hero-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(var(--texte-28), var(--texte-3vw), var(--texte-44));
+  line-height: var(--lh-tight);
+}
+.bc-subtitle {
+  margin: var(--ecart-8) 0 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-lg));
+}
+.bc-countdown {
+  display: grid;
+  justify-items: center;
+  min-width: var(--dim-140);
+  padding: var(--ecart-14) var(--ecart-20);
+  border: var(--trait-2) solid var(--app-accent-line);
+  border-radius: var(--card-radius);
+  background: var(--app-accent-soft);
+  text-align: center;
+}
+.bc-countdown strong {
+  color: var(--app-accent);
+  font-size: scaled(var(--fs-5xl));
+  line-height: var(--lh-none);
+}
+.bc-countdown span {
+  color: var(--ink);
+  font-weight: var(--fw-bold);
+}
+.bc-countdown small {
+  margin-top: var(--ecart-6);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+
+/* Passage de témoin */
+
+/* Patrimoine en valeur totale */
+.bc-wealth {
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1-5));
+  align-items: center;
+}
+.bc-wealth-main {
+  display: grid;
+  gap: var(--ecart-6);
+}
+.bc-wealth-main h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-lg));
+}
+.bc-wealth-total {
+  font-size: clamp(var(--texte-36), var(--texte-3-5vw), var(--texte-56));
+  line-height: var(--lh-none);
+  letter-spacing: calc(-1 * var(--lettrage-0-02em));
+}
+.bc-wealth-parts {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+  gap: var(--ecart-12);
+  margin: 0;
+}
+.bc-wealth-parts > div {
+  display: grid;
+  gap: var(--ecart-4);
+  padding: var(--ecart-14) var(--ecart-16);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-10);
+  background: var(--soft);
+}
+.bc-wealth-parts dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+}
+.bc-wealth-parts dd {
+  margin: 0;
+  font-size: scaled(var(--fs-xl));
+  font-weight: var(--fw-bold);
+}
+
+/* Graphique */
+
+/* Prévisions et tableaux */
+.bc-controls {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(var(--part-100), var(--dim-220)), var(--fr-1))
+  );
+  align-items: end;
+  gap: var(--ecart-16);
+}
+.bc-controls label {
+  display: grid;
+  gap: var(--ecart-8);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.bc-controls :is(select, input[type='range']) {
+  width: var(--part-100);
+  min-height: var(--dim-48);
+  accent-color: var(--app-accent);
+}
+.bc-controls .btn {
+  min-height: var(--dim-48);
+}
+.bc-table-wrap {
+  overflow-x: auto;
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-10);
+}
+.bc-table {
+  width: var(--part-100);
+  border-collapse: collapse;
+  font-size: scaled(var(--fs-sm));
+  font-variant-numeric: tabular-nums;
+}
+.bc-table :is(th, td) {
+  padding: var(--ecart-12) var(--ecart-14);
+  border-bottom: var(--trait-1) solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+.bc-table :is(thead th, tbody th) {
+  text-align: left;
+}
+.bc-table thead th {
+  position: sticky;
+  top: 0;
+  color: var(--muted);
+  background: var(--soft);
+  font-size: scaled(var(--fs-xs));
+  letter-spacing: var(--lettrage-0-04em);
+  text-transform: uppercase;
+}
+.bc-table td small {
+  display: block;
+  margin-top: var(--ecart-4);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  white-space: normal;
+}
+.bc-table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+.bc-table tr[data-state='open'] {
+  background: var(--app-accent-soft);
+}
+.bc-state {
+  display: inline-flex;
+  padding: var(--ecart-2) var(--ecart-10);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--rayon-999);
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+}
+.bc-state[data-state='closed'] {
+  border-color: var(--bc-positive);
+  color: var(--bc-positive);
+  background: var(--bc-positive-surface);
+}
+.bc-state[data-state='open'] {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+.bc-state[data-state='forecast'] {
+  border-style: dashed;
+}
+
+/* Mouvements, configuration et actions */
+.bc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-12);
+}
+.bc-actions .btn {
+  min-height: var(--dim-48);
+}
+
+/* État vide : expliquer le cycle avant de le configurer */
+.bc-empty h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-3xl));
+  line-height: var(--lh-tight);
+}
+.bc-empty > p {
+  max-width: var(--dim-75ch);
+  margin: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-lg));
+}
+.bc-steps {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
+  gap: var(--ecart-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bc-steps li {
+  display: grid;
+  gap: var(--ecart-8);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--app-accent-line);
+  border-radius: var(--rayon-12);
+  background: var(--app-accent-soft);
+}
+.bc-step-mark {
+  display: inline-grid;
+  place-items: center;
+  width: var(--dim-40);
+  height: var(--dim-40);
+  border-radius: var(--rayon-8);
+  color: var(--app-on-accent);
+  background: var(--app-accent);
+  font-family: var(--font-label);
+  font-weight: var(--fw-bold);
+}
+.bc-steps span:last-child {
+  color: var(--muted);
+}
+
+@media (max-width: $rupture-1000) {
+  .bc-wealth {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+@media (max-width: $rupture-640) {
+  .bc-page :is(.bc-hero, .bc-wealth, .bc-history, .bc-empty) {
+    padding: var(--ecart-16);
+  }
+  .bc-wealth-parts, .bc-steps {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .bc-countdown {
+    width: var(--part-100);
+  }
+}
+
+/* Panneaux intégrés dans Patrimoine */

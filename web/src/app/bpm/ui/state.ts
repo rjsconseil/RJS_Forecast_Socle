@@ -20,12 +20,12 @@ export function isCycleRefusal(e: ApiError | null | undefined): boolean {
   template: `
     @if (buttons()) {
       <span class="bpm-actions bpm-cycle-setup">
-        <a class="btn btn-primary" routerLink="/projet-de-vie">Configurer mon projet de vie</a>
+        <a class="btn btn-primary" routerLink="/projet-de-vie">Fixer mon cycle</a>
         <a class="btn btn-secondary" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
       </span>
     } @else {
       <span class="bpm-cycle-setup">
-        <a class="bm-action-link" routerLink="/projet-de-vie">Configurer mon projet de vie →</a>
+        <a class="bm-action-link" routerLink="/projet-de-vie">Fixer mon cycle →</a>
         <span aria-hidden="true"> · </span>
         <a class="bm-action-link" routerLink="/app/reglages/cycle">Régler seulement le cycle</a>
       </span>

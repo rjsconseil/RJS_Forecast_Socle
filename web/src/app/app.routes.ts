@@ -1,9 +1,11 @@
+import { navigationSettingsGuard } from './navigation/navigation-settings.guard';
 import { inject } from '@angular/core';
-import { CanActivateFn, RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
+import { RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
 import { loadCalendarPage } from './calendar/calendar.route';
 import { RecetteContext } from './core/api.service';
 import { planTitle } from './plan/site-plan';
 import { PAGE_WORKSPACES } from './plan/page-workspaces';
+import { APPLICATIONS, defaultApplicationHome, loadUserCreation } from './platform/applications';
 
 /** Une seule adresse par écran : les anciennes adresses y mènent en gardant la période et les filtres. */
 const canonical = (target: (params: Record<string, string>) => string[]): RedirectFunction => ({ params, queryParams, fragment }) =>
@@ -12,51 +14,18 @@ const canonical = (target: (params: Record<string, string>) => string[]): Redire
 /** Titre des accueils génériques du plan : « Section · Zone · RJS Forecast ». */
 const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.get('zone'), route.paramMap.get('section'));
 
-// Trois espaces : l'application BPM (niveau 3) en deux sections, la gestion des utilisateurs et le socle
-// (noyau, middlewares en interfaces de test, Object Management, Administration).
-/** « Démarrer un projet » est réservé au visiteur : un user connecté a déjà son projet de vie et le modifie dans sa gestion. */
-const visitorOnly: CanActivateFn = () => !inject(RecetteContext).connected() || inject(Router).createUrlTree(['/projet-de-vie']);
-
 const mainRoutes: Routes = [
-  { path: 'navigation', title: 'Navigation system — RJS Forecast', loadComponent: () => import('./navigation/navigation-settings.page').then(m => m.NavigationSettingsPage) },
-  // Accueil : le portail des zones (Budget/Patrimoine Management, Budget, Patrimoine, Noyau transverse, Administration).
-  { path: '', pathMatch: 'full', title: 'Accueil · RJS Forecast', loadComponent: () => import('./home/home').then((m) => m.HomePage) },
-  // Accueils génériques du plan du site (`plan/site-plan.ts`) : accueil de zone, accueil de section.
-  { path: 'zones/:zone', title: planRouteTitle, loadComponent: () => import('./home/zone-home').then((m) => m.ZoneHomePage) },
-  { path: 'zones/:zone/:section', title: planRouteTitle, loadComponent: () => import('./home/section-landing').then((m) => m.SectionLandingPage) },
-
-  // ---------- Application BPM (niveau 3) : Démarrer un projet ----------
-  { path: 'creer', title: 'Démarrer un projet — RJS Forecast', canActivate: [visitorOnly], loadComponent: () => import('./bpm/pages/start').then((m) => m.BpmStartPage) },
-
-  // ---------- Application BPM : Ma vision budgétaire ----------
-  { path: 'tableau-de-bord', title: 'Tableau de bord — RJS Forecast', loadComponent: () => import('./bpm/pages/dashboard').then((m) => m.BpmDashboard) },
-  { path: 'depenses', pathMatch: 'full', redirectTo: canonical(() => ['/depenses/registre']) },
-  { path: 'plafonds', title: 'Plafonds et catégories — RJS Forecast', loadComponent: () => import('./bpm/pages/caps').then((m) => m.BpmCapsPage) },
-  { path: 'piloter', title: 'Graphiques et chiffres — RJS Forecast', loadComponent: () => import('./bpm/pages/pilot').then((m) => m.BpmPilotPage) },
-  { path: 'piloter/agir', title: 'Échéances à traiter — RJS Forecast', loadComponent: () => import('./bpm/pages/act').then((m) => m.BpmActPage) },
-  { path: 'projet-de-vie', title: 'Gestion du projet de vie — RJS Forecast', loadComponent: () => import('./bpm/life/life-management.page').then((m) => m.BpmLifeManagementPage) },
-  { path: 'vision', title: 'Objectifs et avenir — RJS Forecast', loadComponent: () => import('./bpm/objectives/objectives.page').then((m) => m.BpmObjectivesPage) },
-
-  // ---------- Détails (atteints depuis les chiffres, graphes et listes) ----------
-  { path: 'argent/entrees', redirectTo: canonical(() => ['/tableau-de-bord/entrees']) },
-  { path: 'argent/postes/:poste', title: 'Détail du poste — RJS Forecast', loadComponent: () => import('./bpm/pages/center').then((m) => m.BpmCenterPage) },
-  { path: 'argent/reste', redirectTo: canonical(() => ['/tableau-de-bord/rapprochement']) },
-
+  // Connexion et inscription (connexion exigée par le serveur, SOCLE_AUTH=required).
+  { path: 'connexion', title: 'Connexion · RJS Forecast', loadComponent: () => import('./core/login.page').then(m => m.LoginPage) },
+  // Mon compte : adresse e-mail et mot de passe du profil actif (et déconnexion de toutes les sessions).
+  { path: 'compte', title: 'Mon compte · RJS Forecast', loadComponent: () => import('./core/account.page').then(m => m.AccountPage) },
+  { path: 'navigation', canDeactivate: [navigationSettingsGuard], title: 'Navigation system — RJS Forecast', loadComponent: () => import('./navigation/navigation-settings.page').then(m => m.NavigationSettingsPage) },
+  // L'application par défaut (la première du registre) s'ouvre à la racine, en gardant la lecture.
+  { path: '', pathMatch: 'full', redirectTo: ({ queryParams }) => inject(Router).createUrlTree([defaultApplicationHome()], { queryParams }) },
+  // Tous les modules : le portail des zones (applications, Budget, Patrimoine, Noyau transverse, Administration).
+  { path: 'modules', pathMatch: 'full', title: 'Tous les modules · RJS Forecast', loadComponent: () => import('./home/home').then((m) => m.HomePage) },
   // ---------- Utilisateurs (distinct de l'Administration) ----------
-  { path: 'utilisateurs', title: 'Utilisateurs — RJS Forecast', loadComponent: () => import('./bpm/onboarding').then((m) => m.BpmOnboarding) },
-
-  // ---------- Anciens liens : redirections et écrans conservés hors menu ----------
-  { path: 'app', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
-  { path: 'app/operations', redirectTo: 'depenses' },
-  { path: 'app/bienvenue', redirectTo: 'utilisateurs' },
-  // Projets et tâches du budget de vie : tableaux par statut réimplémentés depuis le noyau, enrichis du budget des projets.
-  { path: 'app/gestion-projet', title: 'Projets et financement — RJS Forecast', loadComponent: () => import('./bpm/projects/management.page').then((m) => m.BpmProjectManagementPage) },
-  { path: 'app/gestion-projet/:id', title: 'Fiche du projet — RJS Forecast', loadComponent: () => import('./bpm/projects/project.page').then((m) => m.BpmProjectPage) },
-  { path: 'app/projets', title: 'Projets par statut — RJS Forecast', loadComponent: () => import('./bpm/projects/projects.page').then((m) => m.BpmProjectsPage) },
-  // La fiche d'un projet a une seule adresse, sous la gestion de projet.
-  { path: 'app/projets/:id', redirectTo: canonical((p) => ['/app/gestion-projet', p['id']]) },
-  { path: 'app/taches', title: 'Tâches des projets — RJS Forecast', loadComponent: () => import('./bpm/projects/tasks.page').then((m) => m.BpmTasksPage) },
-  { path: 'app/reglages', title: 'Cycle et réglages — RJS Forecast', loadComponent: () => import('./bpm/settings').then((m) => m.BpmSettings) },
+  { path: 'utilisateurs', title: 'Utilisateurs — RJS Forecast', loadComponent: loadUserCreation },
 
   // ---------- Socle : niveau 1 (noyau) ----------
   { path: 'projects', title: 'Projets — Noyau', loadComponent: () => import('./projects/projects-board').then((m) => m.ProjectsBoard) },
@@ -73,6 +42,7 @@ const mainRoutes: Routes = [
     title: 'Calendrier — Noyau',
     data: {
       calendar: 'noyau',
+      offer: ['patrimoine'],
       eyebrow: 'Noyau transverse · Calendrier',
       title: 'Voir le travail',
       emphasis: 'dans son temps.',
@@ -83,24 +53,11 @@ const mainRoutes: Routes = [
     loadComponent: loadCalendarPage,
   },
   {
-    path: 'calendrier-budget',
-    title: 'Calendrier — Budget/Patrimoine',
-    data: {
-      calendar: 'budgetPatrimoine',
-      eyebrow: 'Budget/Patrimoine · Calendrier',
-      title: 'Le budget',
-      emphasis: 'dans le temps.',
-      intro: 'Revenus et dépenses, attendus ou réglés, fins de période et versements au patrimoine. Survolez un jour pour lire ses montants et ses repères.',
-      groupsTitle: 'Budgets de la période',
-      groupKicker: 'Budget',
-    },
-    loadComponent: loadCalendarPage,
-  },
-  {
     path: 'patrimoine/calendrier',
     title: 'Calendrier — Patrimoine',
     data: {
       calendar: 'patrimoine',
+      offer: ['noyau'],
       eyebrow: 'Patrimoine · Calendrier',
       title: 'Le patrimoine',
       emphasis: 'dans la durée.',
@@ -113,6 +70,7 @@ const mainRoutes: Routes = [
 
   // ---------- Socle : niveau 2 (middlewares, interfaces de test) ----------
   { path: 'socle/budget', title: 'Budget (test) — Middleware', loadComponent: () => import('./middleware/budget-test').then((m) => m.BudgetTest) },
+  { path: 'socle/cycle', title: 'Cycle et temps (test) — Middleware technique', loadComponent: () => import('./middleware/cycle-test').then((m) => m.CycleTest) },
   { path: 'socle/patrimoine', title: 'Patrimoine (test) — Middleware', loadComponent: () => import('./middleware/patrimoine-test').then((m) => m.PatrimoineTest) },
 
   // ---------- Socle : transverse ----------
@@ -120,17 +78,17 @@ const mainRoutes: Routes = [
   { path: 'admin', title: 'Administration — Socle', loadComponent: () => import('./admin/admin').then((m) => m.AdminPage) },
   { path: 'admin/calculs', title: 'Calculs — Administration', loadComponent: () => import('./admin/metrics').then((m) => m.AdminMetrics) },
   { path: 'admin/calculs/:key', title: 'Formule — Administration', loadComponent: () => import('./admin/metric-editor').then((m) => m.MetricEditor) },
+  // ---------- Applications : chaque déclaration apporte ses adresses (`platform/applications.ts`) ----------
+  ...APPLICATIONS.flatMap((application) => application.routes),
+  // Accueils génériques du plan du site (`plan/site-plan.ts`) : accueil de zone, accueil de section.
+  { path: 'zones/:zone', title: planRouteTitle, loadComponent: () => import('./home/zone-home').then((m) => m.ZoneHomePage) },
+  { path: 'zones/:zone/:section', title: planRouteTitle, loadComponent: () => import('./home/section-landing').then((m) => m.SectionLandingPage) },
 
-  // L'ancienne page des sources du calendrier BPM : ses réglages sont dans le dépliant de la page du calendrier.
-  {
-    path: 'calendrier-budget/sources',
-    redirectTo: ({ queryParams }) => inject(Router).createUrlTree(['/calendrier-budget'], { queryParams, fragment: 'sources-et-affichage' }),
-  },
   { path: '**', redirectTo: '' },
 ];
 
 // Les destinations spécialisées précèdent les identifiants dynamiques et partagent leur module.
-export const routes: Routes = [
+export const routes: Routes = ([
   ...PAGE_WORKSPACES.filter(view => !view.existing).map(view => {
     const parent = mainRoutes.find(route => route.path === view.parent.slice(1));
     return {
@@ -145,4 +103,4 @@ export const routes: Routes = [
     const workspace = PAGE_WORKSPACES.find(view => view.existing && view.path === route.path);
     return workspace ? { ...route, data: { ...route.data, workspace } } : route;
   }),
-];
+] as Routes);

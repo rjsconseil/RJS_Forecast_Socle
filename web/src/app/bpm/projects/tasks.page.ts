@@ -1,3 +1,6 @@
+import { BpmAmount } from '../ui/amount';
+import { BPM_CORE_LINKS } from '../ui/bpm-page-path';
+import { BpmCompass } from '../ui/compass';
 import { BpmPageBanner, BpmPageContext, BpmPageFocus, bpmQueryState } from '../ui';
 import { BpmTaskEditor } from './project-editors';
 import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
@@ -9,10 +12,11 @@ import {
   CdkDropListGroup,
 } from '@angular/cdk/drag-drop';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Api, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmTaskCard, BpmTasksOverview } from '../../core/bpm-projects.models';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BpmRouterLink } from '../ui/bpm-router-link';
+import { Api, newRequestKey, toApiError } from '../../core/api.service';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmTaskCard, BpmTasksOverview } from '../data/bpm-projects.models';
 import { COLUMNS, TASK_STATUS_LABEL, TaskMutationResult, TaskStatus } from '../../core/models';
 import { CentsPipe } from '../../core/format';
 import {
@@ -33,10 +37,10 @@ import {
 @Component({
   selector: 'app-bpm-tasks',
   providers: [BpmPageContext],
-  imports: [
+  imports: [BpmAmount, BpmCompass,
     BpmPageBanner,
     BpmTaskEditor,
-    RouterLink,
+    BpmRouterLink,
     CentsPipe,
     CdkDropListGroup,
     CdkDropList,
@@ -45,374 +49,10 @@ import {
     ItemSummaryComponent,
   ],
   styleUrl: './projects.page.scss',
-  template: `
-    <div class="page page-wide landing-page section-home bpm-projects bpm-tasks-page">
-      <bpm-page-banner
-        class="life-projects-banner"
-        title="Tâches des projets"
-        lead="Faites avancer vos projets en traitant leurs tâches. Filtrez les blocages, modifiez une tâche ou rattachez une tâche préparée séparément."
-        [focus]="pageFocus()"
-        [scope]="toolbarScope()"
-        [result]="toolbarResult()"
-        toolsLabel="Piloter les tâches"
-      >
-        <div primary>
-          @if (nextTask(); as next) {
-            @if (next.kind === 'funding') {
-              <a class="btn btn-primary" [routerLink]="['/app/gestion-projet', next.task.task.projectId]" [queryParams]="{ task: next.task.task.id }">Traiter le financement · {{ next.task.task.title }}</a>
-            } @else {
-              <button type="button" class="btn btn-primary" (click)="openEditor(next.task)">{{ next.kind === 'blocked' ? 'Revoir une tâche bloquée' : next.kind === 'late' ? 'Revoir une tâche en retard' : 'Poursuivre la tâche' }} · {{ next.task.task.title }}</button>
-            }
-          } @else {
-            <button type="button" class="btn btn-primary" [disabled]="!data()" (click)="openEditor()">＋ Créer une tâche</button>
-          }
-        </div>
-        <div actions>
-          @if (nextTask()) {
-            <button type="button" class="btn btn-secondary" [disabled]="!data()" (click)="openEditor()">＋ Créer une tâche</button>
-          }
-          @if (selectedProjectId()) {
-            <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', selectedProjectId()]">Piloter ce projet</a>
-          }
-        </div>
-        <div tools class="life-banner-tools" aria-label="Rechercher et filtrer les tâches">
-          <label class="life-filter"
-            >Projet<select
-              [value]="filter()"
-              (change)="
-                setFilter({
-                  project: $any($event.target).value === 'all' ? null : $any($event.target).value,
-                })
-              "
-            >
-              @for (option of filterOptions(); track option.value) {
-                <option [value]="option.value">{{ option.label }}</option>
-              }
-            </select></label
-          >
-          <label class="life-filter"
-            >Priorité de suivi
-            <select
-              [value]="attention()"
-              (change)="
-                setFilter({
-                  attention: $any($event.target).value === 'all' ? null : $any($event.target).value,
-                })
-              "
-            >
-              <option value="all">Toutes les tâches</option>
-              <option value="active">À poursuivre</option>
-              <option value="blocked">Bloquées</option>
-              <option value="late">Échéance dépassée</option>
-              <option value="funding">Financement à traiter</option>
-              <option value="done">Terminées</option>
-            </select>
-          </label>
-          <label class="life-search"
-            >Rechercher une tâche<input
-              type="search"
-              placeholder="Titre ou description…"
-              [value]="query()"
-              (input)="setFilter({ q: $any($event.target).value || null })"
-          /></label>
-          @if (query() || filter() !== 'all' || attention() !== 'all') {
-            <button
-              type="button"
-              class="btn btn-secondary"
-              (click)="setFilter({ project: null, q: null, attention: null })"
-            >
-              Réinitialiser la vue ({{ visible().length }})
-            </button>
-          }
-          @if (attachableTasks().length && standardProjects().length) {
-            <form
-              class="life-attach-task"
-              (submit)="
-                $event.preventDefault();
-                quickAttach(
-                  $any($event.target).elements.taskId.value,
-                  $any($event.target).elements.projectId.value
-                )
-              "
-            >
-              <label
-                >Tâche à rattacher<select name="taskId" required>
-                  <option value="">{{ attachableTasks().length }} tâche(s) disponible(s)…</option>
-                  @for (t of attachableTasks(); track t.task.id) {
-                    <option [value]="t.task.id" [disabled]="pending().has(t.task.id)">
-                      {{ t.task.title }}
-                    </option>
-                  }
-                </select></label
-              >
-              <label
-                >Projet destinataire<select
-                  name="projectId"
-                  required
-                  [value]="selectedStandardProject()"
-                >
-                  <option value="">Choisir un projet…</option>
-                  @for (p of standardProjects(); track p.projectId) {
-                    <option [value]="p.projectId">{{ p.title }}</option>
-                  }
-                </select></label
-              >
-              <button type="submit" class="btn btn-secondary" [disabled]="pending().size > 0">
-                Rattacher
-              </button>
-            </form>
-          }
-        </div>
-      </bpm-page-banner>
-      <rjs-item-summary
-        kind="task"
-        [remaining]="remaining()"
-        [counts]="counts()"
-        [progress]="progress()"
-      />
-
-      <div class="section-home-board">
-        @if (loading()) {
-          <div class="empty-state" role="status"><h2>Chargement des tâches…</h2></div>
-        } @else if (loadError() && !data()) {
-          <div class="empty-state" role="alert">
-            <h2>Tâches indisponibles</h2>
-            <p>{{ loadError() }}</p>
-            <button class="btn btn-secondary" type="button" (click)="load()">Réessayer</button>
-          </div>
-        } @else {
-          @if (query().trim()) {
-            <p class="board-result-count" role="status">
-              {{ visible().length }} résultat(s) pour « {{ query().trim() }} » dans le filtre
-              courant.
-            </p>
-          }
-          <p class="board-move-help" id="bpm-tasks-move-help">
-            Glissez une tâche par sa poignée ⠿ ou utilisez « Déplacer vers » pour changer son
-            statut. Échap annule le glissement.
-          </p>
-          <p
-            class="board-move-feedback"
-            [class.is-error]="notice()?.error"
-            [attr.role]="notice()?.error ? 'alert' : 'status'"
-            aria-live="polite"
-          >
-            {{ notice()?.text }}
-          </p>
-          <section
-            class="board"
-            cdkDropListGroup
-            aria-label="Tableau des tâches des projets de la vie"
-            aria-describedby="bpm-tasks-move-help"
-            [class.has-task-move]="dragActive()"
-            [attr.aria-busy]="pending().size > 0"
-          >
-            @for (col of columns; track col.id) {
-              <div
-                class="board-column"
-                [attr.data-column]="col.id"
-                [attr.data-task-drop]="col.id"
-                [class.is-drop-target]="dropTarget() === col.id"
-                cdkDropList
-                [cdkDropListData]="col.id"
-                (cdkDropListEntered)="dropTarget.set(col.id)"
-                (cdkDropListExited)="dropTarget.set(null)"
-                (cdkDropListDropped)="dropped($event)"
-              >
-                <div class="board-column-head">
-                  <div>
-                    <span class="status-dot" [attr.data-status]="col.id"></span>
-                    <h3 class="status-heading">{{ col.label }}</h3>
-                  </div>
-                  @if (col.id !== 'done') {
-                    <span class="count-badge">{{ byColumn()[col.id].length }}</span>
-                  }
-                </div>
-                <div class="board-column-content">
-                  @for (t of byColumn()[col.id]; track t.task.id) {
-                    @let done = t.task.status === 'done';
-                    <article
-                      class="card task-card"
-                      [attr.data-urgency]="urgency(t.task.dueDate, done)"
-                      [attr.data-budget-state]="t.budget?.over ? 'deficit' : null"
-                      [class.is-moving]="pending().has(t.task.id)"
-                      cdkDrag
-                      [cdkDragData]="t"
-                      [cdkDragStartDelay]="{ touch: 300, mouse: 0 }"
-                      [cdkDragDisabled]="pending().has(t.task.id)"
-                      (cdkDragStarted)="started()"
-                    >
-                      <h4>
-                        <span
-                          class="grip"
-                          cdkDragHandle
-                          title="Glisser pour changer de statut"
-                          aria-hidden="true"
-                          >⠿</span
-                        >
-                        <a
-                          class="task-title-link"
-                          [routerLink]="['/app/gestion-projet', t.task.projectId]"
-                          [attr.title]="t.task.title"
-                          >{{ t.task.title }}</a
-                        >
-                      </h4>
-                      <p class="task-card-description" [attr.title]="t.task.description || null">
-                        {{ t.task.description }}
-                      </p>
-                      @if (t.budget; as b) {
-                        <div class="bpm-task-budget">
-                          @if (b.shareCents !== null) {
-                            <span
-                              >Part <strong>{{ b.shareCents | cents }}</strong></span
-                            >
-                          } @else {
-                            <span>Sans part de budget</span>
-                          }
-                          <span [class.is-over]="b.over"
-                            >Réglé <strong>{{ b.paidCents | cents }}</strong></span
-                          >
-                          @if (b.engagedCents !== b.paidCents) {
-                            <span>Engagé {{ b.engagedCents | cents }}</span>
-                          }
-                          @if (b.return; as r) {
-                            <span [attr.title]="r.label"
-                              >Retour {{ r.amountCents | cents }} ·
-                              {{ r.entryId ? 'enregistré' : 'à la complétion' }}</span
-                            >
-                          }
-                        </div>
-                      }
-                      <div class="task-card-meta">
-                        <a
-                          class="task-card-badge"
-                          [routerLink]="['/app/gestion-projet', t.task.projectId]"
-                          [attr.title]="'Projet ' + t.projectTitle"
-                          >{{ t.projectTitle }} ↗</a
-                        >
-                        <span
-                          class="due-date"
-                          [attr.data-urgency]="urgency(t.task.dueDate, done)"
-                          [attr.title]="dueTitle(t.task.dueDate, done)"
-                          >{{ t.task.dueDate ? date(t.task.dueDate) : 'Sans échéance' }}</span
-                        >
-                      </div>
-                      <label class="status-change"
-                        >Déplacer vers
-                        <select
-                          [disabled]="pending().has(t.task.id)"
-                          (change)="changeStatus(t, $any($event.target).value, $any($event.target))"
-                        >
-                          @for (c of columns; track c.id) {
-                            <option [value]="c.id" [selected]="c.id === t.task.status">
-                              {{ c.label }}
-                            </option>
-                          }
-                        </select>
-                      </label>
-                      <details class="bpm-card-move">
-                        <summary>Changer de projet</summary>
-                        <label>
-                          <span class="visually-hidden">Projet de {{ t.task.title }}</span>
-                          <select
-                            [disabled]="pending().has(t.task.id)"
-                            (change)="move(t, $any($event.target).value, $any($event.target))"
-                          >
-                            @for (p of destinations(t); track p.projectId) {
-                              <option
-                                [value]="p.projectId"
-                                [selected]="p.projectId === t.task.projectId"
-                              >
-                                {{ p.title }}
-                              </option>
-                            }
-                            <option value="">Sans projet (détacher)</option>
-                          </select>
-                        </label>
-                      </details>
-                      <button
-                        type="button"
-                        class="text-link task-card-edit"
-                        [disabled]="pending().has(t.task.id)"
-                        (click)="openEditor(t)"
-                      >
-                        Modifier la tâche
-                      </button>
-                      @if (pending().has(t.task.id)) {
-                        <small class="field-hint" role="status">Enregistrement…</small>
-                      }
-                    </article>
-                  } @empty {
-                    <div class="board-empty">Aucune tâche ici</div>
-                  }
-                </div>
-              </div>
-            }
-          </section>
-
-          @if (attachableTasks().length) {
-            <section
-              class="bpm-section"
-              aria-labelledby="bpm-attach-title"
-              style="margin-top: var(--ecart-32)"
-            >
-              <header>
-                <h2 id="bpm-attach-title">Tâches disponibles pour rattachement</h2>
-                <p>
-                  Tâches sans projet ou d’un projet non financé : rattachez-les à un projet de la
-                  vie.
-                </p>
-              </header>
-              <ul class="bpm-attachable">
-                @for (t of attachableTasks(); track t.task.id) {
-                  <li>
-                    <span>
-                      <strong>{{ t.task.title }}</strong>
-                      <small>
-                        · {{ t.projectTitle ?? 'Sans projet' }} ·
-                        {{ statusLabel[t.task.status] }}</small
-                      >
-                    </span>
-                    <label class="bpm-inline-form">
-                      Rattacher à
-                      <select
-                        [disabled]="pending().has(t.task.id)"
-                        (change)="move(t, $any($event.target).value, $any($event.target))"
-                      >
-                        <option value="" selected>Choisir un projet…</option>
-                        @for (p of standardProjects(); track p.projectId) {
-                          <option [value]="p.projectId">{{ p.title }}</option>
-                        }
-                      </select>
-                    </label>
-                  </li>
-                }
-              </ul>
-            </section>
-          }
-        }
-        <nav class="board-nav" aria-label="Changer de section">
-          <a routerLink="/app/projets" class="text-link"
-            >Parcourir les projets de la vie <span aria-hidden="true">↗</span></a
-          >
-          <a routerLink="/tasks" class="text-link"
-            >Toutes les tâches du noyau <span aria-hidden="true">↗</span></a
-          >
-        </nav>
-      </div>
-    </div>
-    @if (taskEditor() && (taskEditor() === 'new' || editingTask())) {
-      <bpm-task-editor
-        [task]="editingTask()"
-        [projects]="taskProjectOptions()"
-        [defaultProjectId]="taskProject()"
-        (closed)="taskEditor.set('')"
-        (saved)="taskSaved($event)"
-      />
-    }
-  `,
+  templateUrl: './tasks.page.html',
 })
 export class BpmTasksPage implements OnInit {
+  protected readonly coreLinks = inject(BPM_CORE_LINKS);
   private api = inject(Api);
   private bpm = inject(BpmApi);
   private route = inject(ActivatedRoute);
@@ -438,7 +78,11 @@ export class BpmTasksPage implements OnInit {
   });
   protected query = computed(() => this.params().get('q') ?? '');
   protected filter = computed(() => this.params().get('project') || 'all');
-  protected selectedProjectId = computed(() => (this.filter() === 'all' ? null : this.filter()));
+  /** Le projet dont on regarde les tâches, quand la page est ouverte depuis sa carte. */
+  protected projectFilterLabel = computed(() => (this.filter() === 'all' ? null : this.data()?.projects.find((p) => p.projectId === this.filter())?.title ?? null));
+  protected selectedProjectId = computed(() =>
+    this.data()?.projects.find((p) => p.projectId === this.filter())?.projectId ?? null,
+  );
   protected attention = computed(() => this.params().get('attention') || 'all');
   protected selectedStandardProject = computed(
     () =>
@@ -450,11 +94,11 @@ export class BpmTasksPage implements OnInit {
   protected taskProjectOptions = computed(() =>
     (this.data()?.projects ?? []).map((p) => ({ projectId: p.projectId, title: p.title })),
   );
-  /** Le projet choisi est une destination : les tâches sans projet restent proposées si elles correspondent aux autres filtres. */
+  private availableTasks = computed(() =>
+    (this.data()?.attachable ?? []).filter((t) => t.pathways.canChangeProject),
+  );
   protected attachableTasks = computed(() =>
-    (this.data()?.attachable ?? []).filter(
-      (t) => t.pathways.canChangeProject && this.matchesQuery(t) && this.matchesAttention(t),
-    ),
+    this.availableTasks().filter((t) => this.matchesQuery(t) && this.matchesAttention(t)),
   );
   protected editingTask = computed(
     () =>
@@ -474,8 +118,8 @@ export class BpmTasksPage implements OnInit {
     return active ? { kind: 'active', task: active } : null;
   });
   protected toolbarScope = computed(() => {
-    const project = this.data()?.projects.find((p) => p.projectId === this.selectedProjectId())?.title ?? 'Tous les projets';
-    return `Sélection · ${project} · ${this.visible().length} / ${this.tasks().length} tâche(s)`;
+    const project = this.filter() === 'none' ? 'Sans projet' : this.projectFilterLabel() ?? 'Tous les projets';
+    return `Sélection · ${project} · ${this.visible().length} / ${this.allTasks().length} tâche(s)`;
   });
   protected pageFocus = computed<BpmPageFocus>(() => {
     if (this.loadError())
@@ -511,7 +155,7 @@ export class BpmTasksPage implements OnInit {
     if (this.attachableTasks().length)
       return {
         title: `${this.attachableTasks().length} tâche(s) disponible(s) pour rattachement`,
-        detail: 'Rattachez une tâche à son projet directement dans les outils du bandeau.',
+        detail: 'Choisissez « Sans projet » puis rattachez chaque tâche à son projet depuis sa carte.',
         tone: 'info',
       };
     if (
@@ -538,8 +182,14 @@ export class BpmTasksPage implements OnInit {
   protected standardProjects = computed(() =>
     (this.data()?.projects ?? []).filter((p) => p.role === 'standard'),
   );
+  /** Toutes les tâches de la vie : celles des projets de la vie, puis celles sans projet (pense-bête). */
+  private allTasks = computed(() => {
+    const seen = new Set(this.tasks().map((t) => t.task.id));
+    return [...this.tasks(), ...this.availableTasks().filter((t) => !seen.has(t.task.id))];
+  });
   protected filterOptions = computed<FilterOption[]>(() => [
-    { value: 'all', label: `Toutes les tâches des projets (${this.tasks().length})` },
+    { value: 'all', label: `Toutes les tâches de la vie (${this.allTasks().length})` },
+    { value: 'none', label: `Sans projet · pense-bête (${this.availableTasks().length})` },
     ...(this.data()?.projects ?? []).map((p) => ({
       value: p.projectId,
       label: `${p.title} (${this.tasks().filter((t) => t.task.projectId === p.projectId).length})`,
@@ -547,7 +197,8 @@ export class BpmTasksPage implements OnInit {
   ]);
   protected visible = computed(() => {
     const f = this.filter();
-    return this.tasks().filter(
+    if (f === 'none') return this.attachableTasks();
+    return this.allTasks().filter(
       (t) =>
         this.matchesQuery(t) && (f === 'all' || t.task.projectId === f) && this.matchesAttention(t),
     );
@@ -560,18 +211,18 @@ export class BpmTasksPage implements OnInit {
     for (const t of this.visible()) groups[t.task.status].push(t);
     return groups;
   });
-  protected remaining = computed(() => this.tasks().filter((t) => t.task.status !== 'done').length);
+  protected remaining = computed(() => this.allTasks().filter((t) => t.task.status !== 'done').length);
   protected progress = computed(() =>
-    this.tasks().length
+    this.allTasks().length
       ? Math.round(
-          (100 * this.tasks().filter((t) => t.task.status === 'done').length) / this.tasks().length,
+          (100 * this.allTasks().filter((t) => t.task.status === 'done').length) / this.allTasks().length,
         )
       : 0,
   );
   protected counts = computed(
     () =>
       Object.fromEntries(
-        COLUMNS.map((c) => [c.id, this.tasks().filter((t) => t.task.status === c.id).length]),
+        COLUMNS.map((c) => [c.id, this.allTasks().filter((t) => t.task.status === c.id).length]),
       ) as Record<TaskStatus, number>,
   );
 
@@ -611,6 +262,26 @@ export class BpmTasksPage implements OnInit {
     this.taskEditor.set('');
     await this.load();
     this.notice.set({ text: message, error: false });
+  }
+  protected capturing = signal(false);
+  /** Le projet affiché, s'il en est un : une tâche notée ici y est créée directement. */
+  protected captureProjectTitle = computed(() => this.standardProjects().find((p) => p.projectId === this.filter())?.title ?? null);
+  protected async capture(input: HTMLInputElement) {
+    const title = input.value.trim();
+    if (!title || this.capturing()) return;
+    this.capturing.set(true);
+    const projectId = this.standardProjects().some((p) => p.projectId === this.filter()) ? this.filter() : null;
+    try {
+      await this.bpm.createTask({ requestKey: newRequestKey(), title, projectId, status: 'todo' });
+      input.value = '';
+      await this.load();
+      this.notice.set({ text: projectId ? `« ${title} » créée dans « ${this.captureProjectTitle()} ».` : `« ${title} » notée sans projet : rattachez-la quand vous saurez où elle va.`, error: false });
+    } catch (err) {
+      this.notice.set({ text: `Non enregistré : ${toApiError(err).message}`, error: true });
+    } finally {
+      this.capturing.set(false);
+      input.focus();
+    }
   }
   protected quickAttach(taskId: string, projectId: string) {
     const task = this.attachableTasks().find((t) => t.task.id === taskId);
@@ -708,7 +379,7 @@ export class BpmTasksPage implements OnInit {
     );
   }
 
-  private isAttachable(t: BpmTaskCard) {
+  protected isAttachable(t: BpmTaskCard) {
     return !!this.data()?.attachable.some((x) => x.task.id === t.task.id);
   }
 

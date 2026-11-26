@@ -3,10 +3,9 @@
 // au moment de son règlement : définition, occurrence attendue et règlement effectif restent distincts.
 // Les occurrences d'une fenêtre sont calculées directement, sans énumérer depuis la première date.
 
-export const CADENCES = ['weekly', 'monthly', 'yearly'];
-export const CADENCE_LABEL = { once: 'Ponctuelle', weekly: 'Hebdomadaire', monthly: 'Mensuelle', yearly: 'Annuelle' };
-/** Fréquence annuelle d'une cadence (apport annuel = apport par période × fréquence). */
-export const PER_YEAR = { weekly: 52, monthly: 12, yearly: 1 };
+// Les cadences appartiennent au middleware technique « Cycle et temps ».
+import { CADENCES, CADENCE_LABEL, PER_YEAR, monthlyAverageCents } from '../cycle/api.mjs';
+export { CADENCES, CADENCE_LABEL, PER_YEAR, monthlyAverageCents };
 
 const pad = (n) => String(n).padStart(2, '0');
 const iso = (d) => `${String(d.getUTCFullYear()).padStart(4, '0')}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
@@ -65,4 +64,3 @@ export function occurrenceDates(rec, from, to) {
 export const isOccurrence = (rec, date) => occurrenceDates(rec, date, date).length === 1;
 
 /** Moyenne mensuelle d'un montant selon sa cadence (nommée comme une moyenne : elle ne remplace pas les échéances). */
-export const monthlyAverageCents = (amountCents, cadence) => Math.round((amountCents * PER_YEAR[cadence]) / 12);

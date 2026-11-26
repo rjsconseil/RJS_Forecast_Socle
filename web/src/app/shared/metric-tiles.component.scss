@@ -396,27 +396,17 @@ a.metric-tile:focus-visible {
   position: relative;
   inset: auto;
 }
-.metric-tile:is([data-symbol='income'], [data-symbol='expense']) > .metric-symbol::before {
-  content: '';
-  position: absolute;
-  left: var(--part-50);
-  top: var(--part-50);
-  width: var(--dim-20);
-  height: var(--dim-32);
-  background: currentColor;
-  clip-path: polygon(
-    50% 0,
-    100% 36%,
-    81% 50%,
-    63% 34%,
-    63% 100%,
-    37% 100%,
-    37% 34%,
-    19% 50%,
-    0 36%
-  );
-  transform: translate(-50%, -50%);
+/* Flèche du sens du flux : un SVG en trait (net à toute taille), centré par la grille de sa case. */
+.metric-arrow {
+  display: block;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.metric-tile[data-symbol='expense'] > .metric-symbol::before {
-  transform: translate(-50%, -50%) rotate(180deg);
+.metric-tile[data-symbol='expense'] .metric-arrow {
+  transform: rotate(180deg);
 }

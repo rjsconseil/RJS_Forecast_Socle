@@ -1,0 +1,88 @@
+/*
+ * Peau des EFFETS D'AFFICHAGE du calendrier : les primitives de mouvement qu'un effet choisit
+ * (`presentation/calendar-effects.ts`), réglées par ses variables `--cal-fx-*`. Elles ne s'appliquent
+ * que si l'effet les nomme : l'effet « standard » garde les fondus courts d'origine (`_relief.scss`).
+ * Aucune couleur ni forme ici : le design a sa peau. Tout s'efface si la personne demande moins
+ * d'animations.
+ *
+ *   data-fx-enter   apparition : fade · fade-up · fade-scale (cascade : --cal-i × --cal-fx-stagger)
+ *   data-fx-leave   disparition : fade · fade-down (classe `cal-fx-leaving`, posée par animate.leave)
+ *   data-fx-hover   survol : lift · glow
+ *   data-fx-period  changement de période : crossfade (classe `is-period-leaving`)
+ */
+@keyframes cal-fx-fade { from { opacity: 0; } }
+@keyframes cal-fx-fade-up { from { opacity: 0; transform: translateY(var(--cal-fx-distance, 6px)); } }
+@keyframes cal-fx-fade-scale { from { opacity: 0; transform: scale(0.965); } }
+@keyframes cal-fx-out-fade { to { opacity: 0; } }
+@keyframes cal-fx-out-down { to { opacity: 0; transform: translateY(var(--cal-fx-distance, 6px)); } }
+
+:host .calendar.is-360.is-canonical {
+  // ---------- apparition ----------
+  &:is([data-fx-enter='fade'], [data-fx-enter='fade-up'], [data-fx-enter='fade-scale']) {
+    :is(.calendar-frame .calendar-grid > .calendar-day, .calendar-frame[data-view='year'] .calendar-year-month, .calendar-agenda-day):not(.cal-fx-leaving) {
+      animation-duration: var(--cal-fx-enter);
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      // La cascade se calcule sur l'élément lui-même : son rang (--cal-i) est posé sur la case ou le jour.
+      animation-delay: calc(var(--cal-i, 0) * var(--cal-fx-stagger, 0ms));
+      animation-fill-mode: backwards;
+    }
+    :is(.calendar-event, .calendar-agenda-item):not(.cal-fx-leaving) {
+      animation-duration: var(--cal-fx-enter);
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      animation-delay: calc((var(--cal-i, 0) + 1) * var(--cal-fx-stagger, 0ms));
+      animation-fill-mode: backwards;
+    }
+    .calendar-day-peek {
+      animation-name: cal-fx-fade-scale;
+      animation-duration: var(--cal-fx-peek);
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      transform-origin: top center;
+    }
+  }
+  &[data-fx-enter='fade'] :is(.calendar-frame .calendar-grid > .calendar-day, .calendar-frame[data-view='year'] .calendar-year-month, .calendar-agenda-day, .calendar-event, .calendar-agenda-item):not(.cal-fx-leaving) { animation-name: cal-fx-fade; }
+  &[data-fx-enter='fade-up'] :is(.calendar-frame .calendar-grid > .calendar-day, .calendar-frame[data-view='year'] .calendar-year-month, .calendar-agenda-day, .calendar-event, .calendar-agenda-item):not(.cal-fx-leaving) { animation-name: cal-fx-fade-up; }
+  &[data-fx-enter='fade-scale'] :is(.calendar-frame .calendar-grid > .calendar-day, .calendar-frame[data-view='year'] .calendar-year-month, .calendar-agenda-day, .calendar-event, .calendar-agenda-item):not(.cal-fx-leaving) { animation-name: cal-fx-fade-scale; }
+
+  // ---------- disparition (l'élément reste le temps du fondu, puis il est retiré) ----------
+  // Les règles d'apparition ne visent pas un élément qui disparaît : son animation de sortie s'applique sans !important.
+  &[data-fx-leave='fade'] .cal-fx-leaving { animation: cal-fx-out-fade var(--cal-fx-leave) ease-in forwards; pointer-events: none; }
+  &[data-fx-leave='fade-down'] .cal-fx-leaving { animation: cal-fx-out-down var(--cal-fx-leave) ease-in forwards; pointer-events: none; }
+
+  // ---------- survol ----------
+  &:is([data-fx-hover='lift'], [data-fx-hover='glow']) :is(.calendar-event, .calendar-agenda-item) {
+    transition: box-shadow var(--cal-fx-hover) ease, transform var(--cal-fx-hover) ease, background-color var(--cal-fx-hover) ease;
+  }
+  &[data-fx-hover='lift'] :is(.calendar-event, .calendar-agenda-item):is(:hover, :focus-visible) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--event-tone, #4f46e5) 55%, transparent);
+  }
+  &[data-fx-hover='glow'] :is(.calendar-event, .calendar-agenda-item):is(:hover, :focus-visible) {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--event-tone, #4f46e5) 45%, transparent),
+      0 6px 20px -8px color-mix(in srgb, var(--event-tone, #4f46e5) 65%, transparent);
+  }
+
+  // ---------- changement de période : fondu enchaîné ----------
+  &[data-fx-period='crossfade'] :is(.calendar-frame, .calendar-agenda-list) {
+    transition: opacity var(--cal-fx-enter) ease-out;
+  }
+  &[data-fx-period='crossfade'].is-period-leaving :is(.calendar-frame, .calendar-agenda-list) {
+    opacity: 0;
+    transition: opacity var(--cal-fx-leave) ease-in;
+  }
+
+  // ---------- sans animation ----------
+  &.cal-fx-still {
+    --cal-fade-day: 0ms;
+    --cal-fade-month: 0ms;
+    --cal-fade-peek: 0ms;
+    * { animation: none !important; transition: none !important; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-fx-enter] *, &[data-fx-leave] *, &[data-fx-hover] *, &[data-fx-period] * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}

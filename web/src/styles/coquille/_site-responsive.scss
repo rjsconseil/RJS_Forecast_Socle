@@ -1,0 +1,108 @@
+@use 'contrat-ruptures' as *;
+/* Ajustements transversaux pour les colonnes étroites et le téléphone. */
+
+@media (max-width: $rupture-1100) {
+  .section-home-top-task, .budget-section-head {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+
+  .section-home-top-task .section-home-hero {
+    padding-bottom: var(--ecart-12);
+  }
+
+  .section-home-task-intro {
+    padding-bottom: var(--ecart-20);
+  }
+
+  .budget-section-head {
+    align-items: start;
+    gap: var(--ecart-12);
+  }
+}
+
+@media (max-width: $rupture-820) {
+  .sidebar,
+  .main-shell,
+  .main-shell main,
+  .page,
+  .budget-page {
+    min-width: 0;
+    max-width: var(--part-100);
+  }
+
+  .budget-form-inline input, .budget-form-inline select {
+    width: var(--part-100);
+    max-width: var(--part-100);
+  }
+
+  .budget-list-card h4, .budget-section-head h1, .budget-section-head h2 {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: $rupture-600) {
+  .topbar {
+    gap: var(--ecart-12);
+  }
+
+  .topbar-home {
+    white-space: normal;
+    text-align: right;
+  }
+
+  .project-select,
+  .project-select select {
+    min-width: 0;
+    max-width: var(--part-100);
+  }
+
+  .summary-band.summary-band-compact {
+    padding: var(--ecart-24) var(--ecart-20);
+  }
+
+  .summary-band-compact .summary-band-meter {
+    grid-template-columns: minmax(0, var(--fr-1)) auto;
+    justify-content: stretch;
+  }
+
+  .summary-band-compact .summary-band-meter .progress-track {
+    grid-column: 1 / -1;
+  }
+
+  .project-detail-actions {
+    justify-content: flex-start;
+    width: var(--part-100);
+    margin-left: 0;
+  }
+
+  .detail-task-body {
+    min-width: 0;
+    flex-basis: var(--part-100);
+  }
+
+  .budget-form-inline label {
+    flex: var(--flex-1) var(--flex-1) var(--part-100);
+  }
+
+  .budget-list-card > div:first-child {
+    overflow-wrap: anywhere;
+  }
+
+}
+
+@media (max-width: $rupture-440) {
+
+  .appearance-picker select {
+    width: var(--part-100);
+  }
+
+  .appearance-picker {
+    flex-wrap: wrap;
+  }
+
+  .section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+}

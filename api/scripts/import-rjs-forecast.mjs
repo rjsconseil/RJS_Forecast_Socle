@@ -20,7 +20,7 @@ import { SOCLE_MODULES } from '../src/modules/index.mjs';
 import { DEFAULT_PROJECTION } from '../src/modules/patrimoine/objectives.mjs';
 import { GOAL_TYPES } from '../src/modules/patrimoine/projection.mjs';
 import { isOccurrence } from '../src/modules/budget/recurrence.mjs';
-import { STORE_SCHEMA } from '../src/socle/store.mjs';
+import { STORE_SCHEMA, readStoredState, removeStore, snapshotStore } from '../src/socle/store.mjs';
 import { today } from '../src/socle/clock.mjs';
 
 const SOURCE = 'rjs-forecast';
@@ -133,7 +133,7 @@ async function open() {
 const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const exists = await access(DATA_FILE).then(() => true, () => false);
 if (exists && !REPLACE) {
-  const state = JSON.parse(await readFile(DATA_FILE, 'utf8'));
+  const state = await readStoredState(DATA_FILE);
   const already = Object.values(state.users ?? {}).find((u) => u.importRef?.source === SOURCE);
   if (already) refuse(`Les données de la référence sont déjà importées (user ${already.label}). Pour repartir des seules données de la référence, relancez avec --remplacer (l’ancien stockage sera sauvegardé).`);
 }
@@ -141,11 +141,11 @@ if (exists && !REPLACE) {
 if (exists) await (await open()).close();
 // Installation neuve : aucun stockage à sauvegarder, le socle le crée à la première écriture.
 const backup = exists ? join(DATA_FILE, '..', `store.before-${SOURCE}-${stamp}.json`) : null;
-if (backup) await copyFile(DATA_FILE, backup);
+if (backup) await snapshotStore(DATA_FILE, backup);
 else await mkdir(join(DATA_FILE, '..'), { recursive: true });
 report.backup = backup;
 if (backup && REPLACE) {
-  await unlink(DATA_FILE);
+  await removeStore(DATA_FILE);
   note(`Stockage précédent remplacé ; sauvegarde : ${backup}.`);
 }
 

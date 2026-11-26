@@ -38,15 +38,7 @@
   }
 }
 
-.life-header-actions {
-  grid-column: 2;
-  grid-row: 1;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-self: start;
-}
-.life-projects-banner > bpm-toolbar {
+.life-projects-banner > rjs-page-toolbar {
   grid-column: 1 / -1;
   min-width: 0;
 }
@@ -56,13 +48,6 @@
 bpm-project-overview-summary {
   display: block;
   margin-top: 20px;
-}
-
-.life-alert-count {
-  padding: 2px 7px;
-  border-radius: 20px;
-  background: var(--status-warning-surface);
-  color: var(--status-warning);
 }
 
 .life-banner-tools {
@@ -135,6 +120,7 @@ bpm-project-overview-summary {
 
   > span {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
     min-height: 32px;
@@ -257,10 +243,6 @@ bpm-project-overview-summary {
   .life-banner-copy .page-intro {
     font-size: 16px;
   }
-  .life-header-actions {
-    grid-column: 1;
-    grid-row: auto;
-  }
   .life-banner-copy h1,
   .life-banner-copy .eyebrow {
     max-width: none;
@@ -294,6 +276,12 @@ bpm-project-overview-summary {
   }
 }
 
+@media (max-width: 420px) {
+  .life-project-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .board-nav {
   gap: 20px;
   flex-wrap: wrap;
@@ -311,16 +299,6 @@ bpm-project-overview-summary {
 .life-financial-stat[data-tone='warning'] dd {
   color: var(--status-warning);
 }
-
-/* Les opérations rapides gardent les champs et leur validation dans le bandeau partagé. */
-.life-attach-task {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr)) auto;
-  align-items: end;
-  gap: 8px;
-  margin: 0;
-  min-width: 0;
-}
 .bpm-project-description {
   margin-block: 12px 20px;
   padding: 12px 16px;
@@ -332,8 +310,61 @@ bpm-project-overview-summary {
   cursor: pointer;
   font-weight: 600;
 }
-@media (max-width: 700px) {
-  .life-attach-task {
-    grid-template-columns: minmax(0, 1fr);
+
+/* Projets par statut : chaque carte ouvre les tâches du projet, rangées par statut.*/
+.project-task-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+.project-task-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--bpm-section-accent, var(--app-accent));
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
   }
+}
+
+/* Vision tâches : noter une idée d'un geste, sans choisir de projet.*/
+.task-capture {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px dashed var(--bpm-section-line, var(--line));
+  border-radius: 6px;
+  background: var(--bpm-section-soft, var(--soft));
+  input {
+    min-height: 40px;
+    min-width: 0;
+  }
+}
+.task-capture-hint {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+}
+.task-card-badge.is-loose {
+  border-style: dashed;
+  background: transparent;
+}
+button.task-title-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }

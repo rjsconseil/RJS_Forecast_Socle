@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { BpmApi } from '../../core/bpm-api.service';
+import { BpmApi } from '../data/bpm-api.service';
 import { ApiError } from '../../core/api.service';
-import { LineDetail } from '../../core/bpm-models';
+import { LineDetail } from '../data/bpm-models';
 import { BpmLineDetail } from './line-detail';
 
 @Component({
@@ -43,7 +43,6 @@ describe('règlement depuis une fiche d’échéance', () => {
         plannedDate: '2026-11-05',
         plannedCents: 10000,
         costCenterRef: 'std:loisirs',
-        categoryId: null,
       },
     } as LineDetail;
     const refusal = (neededCents: number) =>
@@ -151,7 +150,6 @@ describe('règlement depuis une fiche d’échéance', () => {
         plannedDate: '2026-11-05',
         plannedCents: 4000,
         costCenterRef: 'std:loisirs',
-        categoryId: null,
       },
       project: {
         coreProjectId: 'prj_test',
@@ -193,7 +191,7 @@ describe('règlement depuis une fiche d’échéance', () => {
 
 describe('corrections d’une échéance récurrente depuis sa fiche', () => {
   const occurrence = {
-    line: { id: 'rec_test@2026-11-05', operationId: null, recurrenceId: 'rec_test', occurrenceDate: '2026-11-05', kind: 'occurrence', revision: null, direction: 'charge', budgetId: 'bud_life', label: 'Loyer', plannedDate: '2026-11-05', plannedCents: 89000, costCenterRef: 'std:logement', categoryId: null, settled: false },
+    line: { id: 'rec_test@2026-11-05', operationId: null, recurrenceId: 'rec_test', occurrenceDate: '2026-11-05', kind: 'occurrence', revision: null, direction: 'charge', budgetId: 'bud_life', label: 'Loyer', plannedDate: '2026-11-05', plannedCents: 89000, costCenterRef: 'std:logement', settled: false },
     definition: { id: 'rec_test', revision: 3, label: 'Loyer' },
     settlements: [],
     skipped: [{ operationId: 'op_skip', occurrenceDate: '2026-10-05', plannedCents: 89000, reason: 'Loyer offert', revision: 2 }],

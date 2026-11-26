@@ -3,11 +3,10 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { BehaviorSubject, of } from 'rxjs';
 import { vi } from 'vitest';
 import { Api, ApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmProjectDetail, BpmTaskCard } from '../../core/bpm-projects.models';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmProjectDetail, BpmTaskCard } from '../data/bpm-projects.models';
 import { BpmProjectPage } from './project.page';
 import { BpmTaskEditor } from './project-editors';
-import { BpmProjectMetricsComponent } from './project-metrics';
 
 const task = (id: string, title: string, status = 'todo') =>
   ({
@@ -76,8 +75,9 @@ async function setup(render = false, workspaceKey?: string, initialQuery: Record
   const state = detail();
   const params = new BehaviorSubject(convertToParamMap({ id: 'prj_1' }));
   const query = new BehaviorSubject(convertToParamMap({ lifePeriod: '2026-09', ...initialQuery }));
-  const bpm = {
+  const bpm = { projectFlows: async () => null, financialOutlook: async () => null,
     projectDetail: vi.fn(async () => state),
+    bilans: vi.fn(async () => ({ bilans: [], projects: [], totals: { closedCount: 0, capitalizedCents: 0, projectsClosedCents: 0 } })),
     allocate: vi.fn(async (_id: string, amount: number, _revision: number) => {
       state.budget!.allocationCents = Math.round(amount * 100);
     }),
@@ -113,6 +113,76 @@ async function setup(render = false, workspaceKey?: string, initialQuery: Record
 }
 
 describe('cockpit du projet', () => {
+  it('expose les commandes de la tâche choisie et conserve son contexte pour une dépense ou un gain', async () => {
+    const { fixture, page, api, bpm } = await setup(true);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const cockpit = root.querySelector('.project-command-center')!;
+    const select = cockpit.querySelector<HTMLSelectElement>('#project-command-task')!;
+    select.value = 'tsk_2';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(page.commandTask().task.title).toBe('Commander les matériaux');
+    const button = (label: string) => [...cockpit.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent?.trim() === label)!;
+    button('Planifier / saisir le temps').click();
+    expect(page.taskEditorId()).toBe('tsk_2');
+    page.taskEditorId.set('');
+    button('＋ Dépense').click();
+    expect(page.expenseTaskId()).toBe('tsk_2');
+    expect(page.expenseDirection()).toBe('charge');
+    page.closeExpense();
+    button('＋ Gain / remboursement').click();
+    expect(page.expenseTaskId()).toBe('tsk_2');
+    expect(page.expenseDirection()).toBe('income');
+    expect(page.entryId()).toBe('new');
+    expect(api.changeTaskStatus).not.toHaveBeenCalled();
+    expect(bpm.allocate).not.toHaveBeenCalled();
+  });
+
+  it('recalcule la tâche du cockpit et les flux quand la sélection change, sans conserver une cible masquée', async () => {
+    const { page, state } = await setup();
+    state.tasks[0].task.status = 'blocked';
+    page.data.set({ ...state, charges: [
+      { id: 'one', taskId: 'tsk_1', plannedDate: '2026-11-01', settled: false },
+      { id: 'two', taskId: 'tsk_2', plannedDate: '2026-11-02', settled: false },
+      { id: 'legacy', taskId: null, plannedDate: '2026-10-01', settled: false },
+      { id: 'paid', taskId: 'tsk_1', plannedDate: '2026-10-02', settled: true },
+    ] });
+    page.commandTaskId.set('tsk_2');
+    page.focusTasks('blocked');
+    expect(page.commandStats().blocked).toBe(1);
+    expect(page.commandTask().task.id).toBe('tsk_1');
+    expect(page.commandCharges().map((c: any) => c.id)).toEqual(['one']);
+    page.query.set('introuvable');
+    expect(page.commandTask()).toBeNull();
+    expect(page.commandCharges()).toEqual([]);
+  });
+
+  it('change réellement le statut depuis le cockpit avec la révision de la tâche choisie', async () => {
+    const { fixture, api } = await setup(true);
+    fixture.detectChanges();
+    const status = fixture.nativeElement.querySelector('.project-command-center button[data-status="doing"]') as HTMLButtonElement;
+    status.click();
+    await fixture.whenStable();
+    expect(api.changeTaskStatus).toHaveBeenCalledExactlyOnceWith('tsk_1', 'doing', 3);
+  });
+
+  it('suspend le détail pendant la planification et retrouve ensuite la même tâche', async () => {
+    const { fixture, page, state } = await setup(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    page.openTaskId.set('tsk_1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Choisir le plan"]')).toBeTruthy();
+    page.editTask(state.tasks[0]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Choisir le plan"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Modifier la tâche"]')).toBeTruthy();
+    page.closeTask();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Choisir le plan"]')).toBeTruthy();
+  });
+
   it('reprend la bonne tâche depuis un lien direct et suit les retours de l’historique', async () => {
     const { fixture, page, query } = await setup(true, undefined, { editTask: 'tsk_2' });
     fixture.detectChanges();
@@ -190,7 +260,7 @@ describe('cockpit du projet', () => {
     expect(page.pageFocus().title).toContain('Acompte');
     page.runNextAction();
     expect(page.openTaskId()).toBe('tsk_1');
-    expect(page.settling()).toBe('first');
+    expect(page.lineId()).toBe('first');
     expect(api.changeTaskStatus).not.toHaveBeenCalled();
   });
 
@@ -233,6 +303,17 @@ describe('cockpit du projet', () => {
     page.entryId.set('');
     fixture.detectChanges();
     expect(root.querySelector('dialog[aria-label="Choisir le plan"]')).not.toBeNull();
+  });
+
+  it('exige une tâche pour ouvrir une dépense, et conserve son contexte pour les gains', async () => {
+    const { page } = await setup();
+    page.addExpense(null);
+    expect(page.editorOpen()).toBe(false);
+    expect(page.notice().text).toContain('Choisissez une tâche');
+    page.addRefund('tsk_1');
+    expect(page.expenseTaskId()).toBe('tsk_1');
+    expect(page.expenseDirection()).toBe('income');
+    expect(page.entryId()).toBe('new');
   });
 
   it('enregistre uniquement l’enveloppe et ferme son formulaire après succès', async () => {
@@ -475,7 +556,7 @@ describe('cockpit du projet', () => {
     fixture.detectChanges();
     const dialog = root.querySelector('dialog') as HTMLElement;
     expect(dialog.querySelectorAll('.task-charge').length).toBe(13);
-    expect(dialog.textContent).toContain('Dépenses de la tâche · 13');
+    expect(dialog.textContent).toContain('Dépenses et gains de la tâche · 13');
     // « Demander un montant » ouvre la même fenêtre, formulaire de part déjà déplié.
     page.closeTaskPanel();
     fixture.detectChanges();
@@ -624,60 +705,6 @@ describe('création depuis un projet', () => {
   });
 });
 
-describe('repères budgétaires du projet et estimation de la tâche', () => {
-  it.each([
-    { remaining: -100, label: 'Enveloppe dépassée', tone: 'red' },
-    { remaining: 0, label: 'Enveloppe épuisée', tone: 'red' },
-    { remaining: 1999, label: 'Budget presque épuisé', tone: 'red' },
-    { remaining: 2000, label: 'Budget à surveiller', tone: 'orange' },
-    { remaining: 5000, label: 'Budget disponible', tone: 'green' },
-    { remaining: null, label: 'Consommation à estimer', tone: 'unknown' },
-  ])('nomme correctement un reste de $remaining centimes', ({ remaining, label, tone }) => {
-    const f = TestBed.createComponent(BpmProjectMetricsComponent);
-    f.componentRef.setInput('budget', {
-      ...detail().budget,
-      regime: true,
-      ceilingCents: 10000,
-      remainingCents: remaining,
-    });
-    f.detectChanges();
-    const root: HTMLElement = f.nativeElement;
-    expect(root.querySelector('.pm-signal')?.textContent).toContain(label);
-    expect(root.querySelector('.pm-budget')?.getAttribute('data-tone')).toBe(tone);
-  });
-
-  it('distingue un dépassement estimé selon le temps des règlements réellement payés', () => {
-    const f = TestBed.createComponent(BpmProjectMetricsComponent);
-    const t = task('tsk_1', 'Finir');
-    f.componentRef.setInput('task', {
-      ...t,
-      budget: {
-        ...t.budget,
-        shareCents: 10000,
-        paidCents: 1000,
-        timeConsumedCents: 12000,
-        timeRemainingCents: -2000,
-        timeConsumptionPercent: 120,
-      },
-    });
-    f.detectChanges();
-    const root: HTMLElement = f.nativeElement;
-    expect(root.querySelector('.pm-signal')?.textContent).toContain(
-      'Estimation au-delà de la part',
-    );
-    expect(root.textContent).toContain('Estimation au prorata du temps saisi');
-    expect(root.querySelector('.pm-metric-caption')?.textContent).not.toContain(
-      'Réglé sur l’enveloppe',
-    );
-  });
-  it('rend le reliquat avec la révision lue sans avoir ouvert l’éditeur d’enveloppe', async () => {
-    const { page, bpm, state } = await setup();
-    await page.applyCheck('bud_1', 10000, 'Rendre le reliquat');
-    expect(bpm.allocate).toHaveBeenCalledWith('bud_1', 100, 7);
-    expect(state.budget!.allocationCents).toBe(10000);
-  });
-
-});
 
 describe('abandon d’un projet de la vie', () => {
   it('montre ce qui revient au budget de vie, confirme l’abandon puis propose la reprise', async () => {

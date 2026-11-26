@@ -37,6 +37,12 @@ const dayOf = (mo, day) => `${mo.key}-${pad(Math.min(Math.max(day, 1), mo.last))
 // ---------- réinitialisation ----------
 
 await call('POST', '/api/_recette/reset');
+// Les jeux d'essai saisissent trois mois passés puis le mois courant sans clôturer les cycles passés : le verrou du
+// cycle suivant (`bpm.verrouCycleSuivant`), qui refuserait les entrées du mois courant, est levé pour la recette.
+{
+  const lock = await call('GET', '/api/admin/parameters/bpm.verrouCycleSuivant');
+  await call('PUT', '/api/admin/parameters/bpm.verrouCycleSuivant', { value: false, expectedRevision: lock.revision ?? 0, note: 'Jeux d’essai : cycles passés laissés ouverts' });
+}
 
 // ---------- user 1 : Camille Martin (individuel, cycle au 1er, stock et objectif connus) ----------
 

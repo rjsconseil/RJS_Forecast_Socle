@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  min-width: 0;
+  --life-surface: var(--bpm-surface, var(--raised-surface));
+  --life-soft: var(--bpm-soft, var(--soft));
+  --life-space: clamp(16px, 2.3vw, 28px);
+}
+
+.life-summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; padding: var(--life-space); color: var(--ink); background: var(--life-surface); }
+.life-summary-heading { grid-row: 1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.life-summary-heading h2 { margin: 6px 0 0; }
+.life-eyebrow { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; font-weight: 650; color: var(--muted); }
+.life-period-label { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; color: var(--muted); background: var(--life-soft); }
+.life-financial-stats { grid-row: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; border: 0; }
+.life-financial-stat { display: grid; grid-template-rows: minmax(34px, auto) auto 1fr; align-content: start; gap: 10px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--life-soft); min-width: 0; }
+.life-financial-stat dt { font-size: 12px; color: var(--muted); font-weight: 600; align-self: start; }
+.life-financial-stat dd { margin: 0; font-size: clamp(22px, 2.3vw, 32px); line-height: 1.2; font-weight: 650; letter-spacing: -.04em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.life-financial-stat > span { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.life-financial-stat.life-available { background: var(--app-accent-soft); border-color: var(--app-accent-line); }
+.life-financial-stat.life-available dd { color: var(--app-accent); }
+.life-financial-stat.is-negative dd { color: var(--status-danger); }
+.life-project-stats { grid-row: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 18px 0 0; border-top: 1px solid var(--line); }
+.life-stat { display: flex; flex-direction: row; align-items: center; justify-content: start; gap: 10px; padding: 0; min-height: 0; }
+.life-stat > span { min-height: 0; font-size: 12px; }
+.life-stat strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+.life-progress { flex: 1 1 240px; display: grid; grid-template-columns: auto auto minmax(50px, 1fr); gap: 10px; margin-left: auto; }
+.life-progress .progress-track { grid-column: auto; }
+
+@media (max-width: 1100px) {
+  .life-financial-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .life-summary { gap: 16px; }
+  .life-summary-heading { align-items: start; }
+  .life-financial-stats { gap: 8px; }
+  .life-financial-stat { padding: 14px 12px; }
+  .life-financial-stat dd { font-size: 22px; }
+  .life-project-stats { gap: 14px 20px; }
+  .life-stat strong { font-size: 15px; }
+  .life-progress { flex-basis: 100%; }
+}

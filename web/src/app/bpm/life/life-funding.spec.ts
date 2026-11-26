@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LifeFunding, LifeFundingRow } from '../../core/bpm-projects.models';
+import { LifeFunding, LifeFundingRow } from '../data/bpm-projects.models';
 import { fundingMarks, fundingPeriodWindow } from './life-funding';
 
 const row = (o: Partial<LifeFundingRow> = {}): LifeFundingRow => ({

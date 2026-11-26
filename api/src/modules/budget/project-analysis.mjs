@@ -1,12 +1,13 @@
 import { check } from '../../socle/object-management/inspect.mjs';
 import { today } from '../../socle/clock.mjs';
+import { objectsWith } from '../../socle/indexes.mjs';
 // Contrôles financiers des projets. Le contexte de période est fourni par l'appelant ;
 // ce middleware ne dépend d'aucune composition ni d'aucun service BPM.
 import {
   fmt,
   frDate,
   fundingFigures,
-  inRegime,
+  inRegime, linkedProjectBudgets, projectFundingSource, projectAccountingDate,
   isValidatedMove,
   projectMoveCents,
   sum,
@@ -15,11 +16,11 @@ import {
 export const periodPaidCents = (state, budget, period) =>
   period
     ? sum(
-        Object.values(state.operations).filter(
+        objectsWith(state.operations, 'budgetId', budget?.id).filter(
           (o) =>
             isValidatedMove(o, budget) &&
-            o.realizedDate >= period.start &&
-            o.realizedDate <= period.end,
+            projectAccountingDate(o) >= period.start &&
+            projectAccountingDate(o) <= period.end,
         ),
         (o) => projectMoveCents(o, budget),
       )
@@ -41,11 +42,11 @@ export function projectChecks(
     message: `Réglé sur l’enveloppe depuis son attribution : ${fmt(fig.paidCents)} sur ${fmt(fig.ceilingCents)} (enveloppe et dépassements autorisés)${fig.paidBeforeAllocationCents ? ` ; ${fmt(fig.paidBeforeAllocationCents)} réglés avant, hors enveloppe` : ''}.`,
   });
   if (period) {
-    const charges = Object.values(state.operations).filter(
+    const charges = objectsWith(state.operations, 'budgetId', b?.id).filter(
       (o) =>
         isValidatedMove(o, b) &&
-        o.realizedDate >= period.start &&
-        o.realizedDate <= period.end,
+        projectAccountingDate(o) >= period.start &&
+        projectAccountingDate(o) <= period.end,
     );
     const unlinked = charges.filter(
       (o) => !o.taskId || state.tasks[o.taskId]?.projectId !== b.coreProjectId,
@@ -189,57 +190,74 @@ export function projectChecks(
   return out;
 }
 
+/** Mouvements validés des projets financés par le patrimoine, dans une fenêtre de dates réelles. */
+function patrimoineMoves(ctx, from, to) {
+  const lines = [];
+  for (const b of linkedProjectBudgets(ctx.state, ctx.budgetId))
+    for (const o of Object.values(ctx.state.operations))
+      if (isValidatedMove(o, b) && projectFundingSource(o, b) === 'patrimoine' && (!from || projectAccountingDate(o) >= from) && projectAccountingDate(o) <= to) lines.push({ o, b });
+  lines.sort((x, y) => projectAccountingDate(x.o).localeCompare(projectAccountingDate(y.o)));
+  return {
+    value: sum(lines, (l) => projectMoveCents(l.o, l.b)) / 100,
+    sources: lines.map(({ o, b }) => ({ id: o.id, kind: 'operation', label: `${o.label} · ${b.name}${o.direction === 'income' ? ' (remboursement)' : ''}`, amount: projectMoveCents(o, b) / 100, date: projectAccountingDate(o), status: 'realized' })),
+    note: lines.length ? null : 'Aucune dépense de projet financé par le patrimoine',
+  };
+}
+
+/** Flux de tâches imputés au cycle, revenus et dépenses lus séparément comme dans le budget de vie. */
+function cycleMoves(ctx, direction) {
+  if (!ctx.budgetId) return { value: null, sources: [], note: 'Aucun Budget dans le contexte' };
+  if (!ctx.period) return { value: null, sources: [], note: 'Aucune période : cycle à configurer' };
+  const lines = [];
+  for (const b of linkedProjectBudgets(ctx.state, ctx.budgetId)) {
+    for (const o of Object.values(ctx.state.operations)) {
+      const date = projectAccountingDate(o);
+      if (isValidatedMove(o, b) && o.direction === direction && projectFundingSource(o, b) === 'cycle' && date >= ctx.period.start && date <= ctx.period.end) lines.push({ o, b });
+    }
+  }
+  lines.sort((x, y) => projectAccountingDate(x.o).localeCompare(projectAccountingDate(y.o)));
+  return {
+    value: sum(lines, ({o}) => o.realizedAmountCents) / 100,
+    sources: lines.map(({o,b}) => ({ id: o.id, kind: 'operation', label: o.label + ' · ' + b.name, amount: o.realizedAmountCents / 100, date: projectAccountingDate(o), status: 'realized' })),
+    note: lines.length ? null : 'Aucun flux de projet validé dans la période',
+  };
+}
+
 export const projectVariables = [
   {
-    name: 'projets.chargesReglees',
-    label: 'Charges des projets validées',
-    unit: 'EUR',
-    description:
-      'Charges des projets de la vie validées comme réglées pour leurs besoins (opérations réglées des Budgets standards auxquels le budget de vie attribue un montant, depuis la date d’attribution), datées dans la période par leur date réelle. Une charge de projet non validée n’est pas comptée.',
+    name: 'projets.prelevementsCumules', label: 'Prélevé au total sur le patrimoine par les projets', unit: 'EUR',
+    description: 'Dépenses nettes validées des tâches imputées au patrimoine jusqu’à la date de lecture ; disponible même sans cycle configuré.',
     resolve(ctx) {
-      if (!ctx.budgetId)
-        return {
-          value: null,
-          sources: [],
-          note: 'Aucun Budget dans le contexte',
-        };
-      if (!ctx.period)
-        return {
-          value: null,
-          sources: [],
-          note: 'Aucune période : cycle à configurer',
-        };
-      const { start, end } = ctx.period;
-      const standards = Object.values(ctx.state.budgets).filter(
-        (b) => b.parentBudgetId === ctx.budgetId && inRegime(b),
-      );
-      const lines = [];
-      for (const b of standards) {
-        for (const o of Object.values(ctx.state.operations)) {
-          if (
-            isValidatedMove(o, b) &&
-            o.realizedDate >= start &&
-            o.realizedDate <= end
-          )
-            lines.push({ o, b });
-        }
-      }
-      lines.sort((x, y) => x.o.realizedDate.localeCompare(y.o.realizedDate));
-      return {
-        value: sum(lines, (l) => projectMoveCents(l.o, l.b)) / 100,
-        sources: lines.map(({ o, b }) => ({
-          id: o.id,
-          kind: 'operation',
-          label: `${o.label} · ${b.name}${o.direction === 'income' ? ' (remboursement)' : ''}`,
-          amount: projectMoveCents(o, b) / 100,
-          date: o.realizedDate,
-          status: 'realized',
-        })),
-        note: lines.length
-          ? null
-          : 'Aucune charge de projet validée dans la période',
-      };
+      if (!ctx.budgetId) return { value: null, sources: [], note: 'Aucun Budget dans le contexte' };
+      return patrimoineMoves(ctx, null, ctx.period?.end ?? today());
     },
+  },
+  {
+    name: 'projets.prelevementsPatrimoine', label: 'Prélevé sur le patrimoine par les projets', unit: 'EUR',
+    description: 'Dépenses validées des tâches imputées au patrimoine, à leur date de validation ; revenus déduits.',
+    resolve(ctx) {
+      if (!ctx.budgetId) return { value: null, sources: [], note: 'Aucun Budget dans le contexte' };
+      if (!ctx.period) return { value: null, sources: [], note: 'Aucune période : cycle à configurer' };
+      return patrimoineMoves(ctx, ctx.period.start, ctx.period.end);
+    },
+  },
+  {
+    name: 'projets.prelevementsAvant', label: 'Prélevé sur le patrimoine avant la période', unit: 'EUR',
+    description: 'Dépenses nettes validées des tâches imputées au patrimoine avant la période.',
+    resolve(ctx) {
+      if (!ctx.budgetId) return { value: null, sources: [], note: 'Aucun Budget dans le contexte' };
+      return patrimoineMoves(ctx, null, ctx.asOf);
+    },
+  },
+  {
+    name: 'projets.chargesReglees', label: 'Dépenses des tâches validées', unit: 'EUR',
+    description: 'Dépenses de tâches validées et imputées au cycle de leur date de validation. Les réservations d’enveloppe ou de part ne sont jamais comptées.',
+    resolve: ctx => cycleMoves(ctx, 'charge'),
+  },
+  {
+    name: 'projets.revenusRegles', label: 'Entrées des tâches validées', unit: 'EUR',
+    description: 'Revenus et remboursements de tâches validés et imputés au cycle de leur date de validation.',
+    resolve: ctx => cycleMoves(ctx, 'income'),
   },
 ];
 
@@ -274,10 +292,10 @@ export function fundingChecks(state, periodOf = () => null) {
           'PRJ-02',
           'pathway',
           'budget',
-          `Projet ${b.name} : dépassement autorisé à facturer au budget de vie`,
-          'facturé à la fin du cycle',
+          `Projet ${b.name} : autorisation à consolider dans l’enveloppe`,
+          'consolidation administrative facultative, sans mouvement financier',
           `${late.length} dépassement(s) dont la fin de cycle est passée`,
-          'warning',
+          'info',
           [b.id, ...late.map((x) => x.id)],
         ),
       );

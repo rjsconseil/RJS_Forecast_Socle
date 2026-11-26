@@ -1,8 +1,8 @@
 @use 'functions' as *;
 @use 'contrat-ruptures' as *;
 
-// États de lecture partagés (`bpm-state`) : extraits verbatim des feuilles de la référence
-// (bpm-pages.scss : aide, erreur, actions ; bpm-money.scss : état vide).
+/* États de lecture partagés (`bpm-state`) : extraits verbatim des feuilles de la référence*/
+/* (bpm-pages.scss : aide, erreur, actions ; bpm-money.scss : état vide).*/
 
 /* bpm-pages.scss — aide, erreur, manque, blocage */
 .bpm-help {
@@ -12,8 +12,7 @@
   line-height: var(--lh-normal);
 }
 .bpm-error,
-.bpm-missing,
-.bpm-blocked {
+.bpm-missing {
   margin: 0;
   padding: var(--ecart-12) var(--ecart-16);
   border-radius: var(--rayon-8);
@@ -28,13 +27,6 @@
   border: var(--trait-1) dashed var(--status-warning);
   color: var(--ink);
   background: var(--status-warning-surface);
-}
-.bpm-blocked {
-  display: grid;
-  justify-items: start;
-  gap: var(--ecart-12);
-  border: var(--trait-1) solid var(--app-accent-line);
-  background: var(--app-accent-soft);
 }
 
 /* bpm-pages.scss — rangée d'actions */

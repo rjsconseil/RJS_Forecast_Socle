@@ -107,8 +107,4 @@ export function newRequestKey(prefix: string) {
 }
 
 /** Clé de période voisine (AAAA-MM). */
-export function shiftPeriod(key: string, delta: number) {
-  const [y, m] = key.split('-').map(Number);
-  const i = y * 12 + (m - 1) + delta;
-  return `${Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}`;
-}
+export { shiftPeriod } from '../../shared/page-banner.component';

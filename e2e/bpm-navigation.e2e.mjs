@@ -67,7 +67,7 @@ try {
   await open('/projet-de-vie/cloture?period=2026-10');
   await page.getByRole('link', { name: 'Vérifier le compte avant la clôture', exact: true }).click();
   await page.waitForURL(url => url.pathname.endsWith('/rapprochement'));
-  const tools = page.locator('bpm-page-banner .bpm-toolbar-toggle');
+  const tools = page.locator('rjs-page-banner .bpm-toolbar-toggle');
   if (await tools.getAttribute('aria-expanded') === 'false') await tools.click();
   const balance = await api('/api/bpm/balance?period=2026-10');
   await page.locator('input[name=initial]').fill('2000');
@@ -88,7 +88,7 @@ try {
   const id = project.project.id;
   const projectPath = `/app/gestion-projet/${id}/taches`;
   await open(projectPath);
-  await page.locator('bpm-page-banner').getByRole('button', { name: /Créer (?:la première|une) tâche/ }).click();
+  await page.locator('rjs-page-banner').getByRole('button', { name: /Créer (?:la première|une) tâche/ }).click();
   await page.waitForURL(url => url.searchParams.get('editTask') === 'new');
   await page.locator('bpm-task-editor input[name=title]').fill('Brouillon de navigation · recette');
   await page.locator('bpm-task-editor input[name=plannedHours]').fill('2.5');
@@ -141,9 +141,9 @@ try {
   check('Agenda : événements accessibles, reprise de la date et commande stable');
 
   await open('/tableau-de-bord');
-  await page.locator('bpm-page-banner').getByRole('link', { name: 'Entrées de la période', exact: true }).click();
+  await page.locator('rjs-page-banner').getByRole('link', { name: 'Entrées de la période', exact: true }).click();
   await page.waitForURL(url => url.pathname.endsWith('/entrees'));
-  await page.locator('bpm-page-banner').getByRole('link', { name: 'Graphiques et chiffres', exact: true }).click();
+  await page.locator('rjs-page-banner').getByRole('link', { name: 'Graphiques et chiffres', exact: true }).click();
   await page.waitForURL(url => url.pathname === '/piloter');
   await page.locator('main > rjs-journey .nav-back').click();
   await page.waitForURL(url => url.pathname.endsWith('/entrees'));
@@ -159,9 +159,9 @@ try {
 
   for (const path of ['/tableau-de-bord', '/piloter/agir']) {
     await open(path);
-    const toggle = page.locator('bpm-page-banner .bpm-toolbar-toggle');
+    const toggle = page.locator('rjs-page-banner .bpm-toolbar-toggle');
     if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-    await page.locator('bpm-page-banner').getByRole('button', { name: '＋ Saisir une entrée', exact: true }).click();
+    await page.locator('rjs-page-banner').getByRole('button', { name: '＋ Saisir une entrée', exact: true }).click();
     await page.waitForURL(url => url.searchParams.get('entryDirection') === 'income');
     await page.locator('bpm-operation-editor input[name=label]').fill('Entrée en préparation · navigation');
     await page.locator('bpm-operation-editor input[name=amount]').fill('50');

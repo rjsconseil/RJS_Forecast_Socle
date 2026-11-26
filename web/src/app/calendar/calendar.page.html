@@ -1,0 +1,284 @@
+    <div
+      class="page page-wide calendar-360-page calendar-module-page"
+      [class]="page.pageClass ?? ''"
+      [class.calendar-module-compact]="compactCalendar"
+      [attr.data-tone]="page.tone ?? null"
+    >
+      <div #calendarTop class="calendar-360-top">
+        <ng-template #openPriority>
+          @if (priority(); as event) {
+            <button type="button" class="app-hero-action" [disabled]="tools()?.loading"
+              (click)="open(event)" [attr.aria-label]="'Ouvrir le repère · ' + event.title">Ouvrir</button>
+          }
+        </ng-template>
+          <rjs-page-banner
+            [title]="planLabel() ?? page.title + ' ' + page.emphasis"
+            [lead]="page.intro"
+            [focus]="focus()"
+            [scope]="readingScope()"
+            [result]="
+              tools()?.error
+                ? { message: tools()!.error!, tone: 'danger' }
+                : tools()?.feedback
+                  ? { message: tools()!.feedback, tone: 'success' }
+                  : null
+            "
+            toolsLabel="Période et affichage"
+          >
+            <ng-container primary>
+              <div class="cal-header-paging" [class.is-compact]="compactCalendar" role="group" aria-label="Changer de période">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [attr.aria-label]="tools()?.previous ?? 'Période précédente'"
+                  (click)="space()?.movePeriod(-1)"
+                >
+                  ←
+                </button>
+                <span aria-live="polite">{{ tools()?.period ?? 'Chargement…' }}</span>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  [attr.aria-label]="tools()?.next ?? 'Période suivante'"
+                  (click)="space()?.movePeriod(1)"
+                >
+                  →
+                </button>
+              </div>
+              @if (!compactCalendar) { <ng-container [ngTemplateOutlet]="openPriority" /> }
+            </ng-container>
+            <ng-container actions>
+              @if (compactCalendar) { <ng-container [ngTemplateOutlet]="openPriority" /> }
+              <button type="button" class="btn btn-secondary" (click)="space()?.goToday()">
+                Aujourd’hui
+              </button>
+              @if (settingsAvailable()) {
+              @if (presentation() === 'agenda') {
+                <a class="btn btn-secondary" [routerLink]="workspace()!.parent" [fragment]="settingsAnchor" queryParamsHandling="preserve">Choisir les sources</a>
+              } @else {
+              <button
+                type="button"
+                class="btn btn-primary"
+                [attr.aria-expanded]="space()?.settingsOpen()"
+                [attr.aria-controls]="settingsAnchor"
+                (click)="space()?.toggleSettings()"
+              >
+                Sources et affichage
+                <span aria-hidden="true">{{ space()?.settingsOpen() ? '−' : '+' }}</span>
+              </button>
+              }
+              }
+            </ng-container>
+            <div tools class="cal-header-filters">
+              @if (compactCalendar && data() && !tools()?.loading) {
+                @if (tools()?.sourceSummary; as counts) {
+                  <p class="calendar-tools-counts" role="status">
+                    <span><strong>{{ counts.visible }} / {{ counts.total }}</strong> sources</span>
+                    <span><strong>{{ counts.events }}</strong> {{ counts.events === 1 ? 'événement affiché' : 'événements affichés' }}</span>
+                  </p>
+                }
+              }
+              @if (priorities().length) {
+                <label
+                  ><span>Repère à suivre</span
+                  ><select [ngModel]="priority()?.key" (ngModelChange)="priorityKey.set($event)">
+                    @for (event of priorities(); track event.key) {
+                      <option [value]="event.key">{{ event.date }} · {{ event.title }}</option>
+                    }
+                  </select></label
+                >
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="locatePriority()"
+                  [disabled]="tools()?.loading"
+                >
+                  {{ presentation() === 'agenda' ? 'Retrouver dans l’agenda' : 'Voir dans le calendrier' }}
+                </button>
+              }
+
+              <label
+                ><span>Aller au jour</span
+                ><input
+                  type="date"
+                  [ngModel]="tools()?.day"
+                  (ngModelChange)="space()?.selectDay($event)"
+              /></label>
+              <div class="cal-view-choice" role="radiogroup" aria-label="Vue du calendrier"><span aria-hidden="true">Vue</span><div class="cal-view-options">@for (choice of viewChoices; track choice.value) {<label [class.is-active]="(tools()?.view ?? 'month') === choice.value"><input type="radio" name="cal-view" [value]="choice.value" [checked]="(tools()?.view ?? 'month') === choice.value" (change)="space()?.selectView(choice.value)" /><span>{{ choice.label }}</span></label>}</div></div>
+              <label
+                ><span>Regroupement</span
+                ><select
+                  [ngModel]="tools()?.group ?? 'all'"
+                  (ngModelChange)="space()?.selectGroup($event)"
+                >
+                  <option value="all">Tous les regroupements</option>
+                  @for (group of tools()?.groups ?? []; track group.key) {
+                    <option [value]="group.key">{{ group.label }}</option>
+                  }
+                </select></label
+              >
+              <label class="cal-header-completed" data-own-layout [class.is-compact]="compactCalendar"
+                ><input
+                  type="checkbox"
+                  [disabled]="!completedAllowed()" [ngModel]="tools()?.includeDone ?? true"
+                  (ngModelChange)="space()?.setIncludeDone($event)"
+                /><span>Terminés inclus</span></label
+              >
+            </div>
+          </rjs-page-banner>
+
+        <ng-template #periodStats>
+            <section class="summary-band calendar-360-stats" [class.calendar-360-flow-stats]="compactCalendar" aria-label="Chiffres de la période">
+              <h3 class="eyebrow calendar-360-stats-title">
+                Montants des sources affichées
+              </h3>
+              @if (!compactCalendar) {
+              <div class="summary-band-total">
+                <strong>{{ summary().markers }}</strong>
+                <span>{{ summary().markers === 1 ? 'événement affiché' : 'événements affichés' }}</span>
+              </div>
+              }
+              @if (summary().hasAmounts) {
+                <div class="summary-band-stat calendar-stat-amount" data-direction="entree">
+                  <strong>{{ money(summary().inCents, 'entree') }}</strong
+                  ><span>entrées affichées</span>
+                </div>
+                <div class="summary-band-stat calendar-stat-amount" data-direction="sortie">
+                  <strong>{{ money(summary().outCents, 'sortie') }}</strong
+                  ><span>sorties affichées</span>
+                </div>
+                <div
+                  class="summary-band-stat calendar-stat-amount"
+                  [attr.data-direction]="summary().netCents < 0 ? 'sortie' : 'entree'"
+                >
+                  <strong>{{
+                    money(summary().netCents, summary().netCents < 0 ? 'sortie' : 'entree')
+                  }}</strong
+                  ><span>écart des flux affichés</span>
+                </div>
+              } @else {
+                @for (n of naturesShown(); track n.nature) {
+                  <div class="summary-band-stat">
+                    <strong>{{ n.count }}</strong
+                    ><span>{{ n.label }}</span>
+                  </div>
+                }
+                <div class="summary-band-stat">
+                  <strong>{{ summary().toFollow }}</strong
+                  ><span>à suivre</span>
+                </div>
+              }
+            </section>
+        </ng-template>
+
+        @if (presentation() === 'calendar' && !compactCalendar) {
+        <section class="calendar-360-overview" aria-label="Synthèse de la période">
+          <div class="calendar-360-overview-body">
+            <ng-container [ngTemplateOutlet]="periodStats" />
+            <div class="calendar-360-heading">
+              <p class="eyebrow">Période affichée</p>
+              <h2 id="calendar-agenda-title">Du {{ date(bounds().start) }} au {{ date(bounds().end) }}</h2>
+              <small>{{ summary().markers }} {{ summary().markers === 1 ? 'repère daté' : 'repères datés' }}</small>
+            </div>
+          </div>
+        </section>
+        }
+
+        <rjs-calendar-space
+          [calendar]="page.calendar"
+          [externalTools]="true"
+          [showSourceSummary]="!compactCalendar"
+          [presentation]="presentation()"
+          [offer]="page.offer ?? []"
+          [compact]="compactCalendar"
+          (loaded)="onLoaded($event.data, $event.period)"
+          (displayedEventsChange)="displayedEvents.set($event)"
+        >
+          @if (presentation() === 'calendar') {
+          <section class="calendar-360-content" [attr.aria-label]="page.groupsTitle">
+            @if (compactCalendar) { <ng-container [ngTemplateOutlet]="periodStats" /> }
+            <div class="calendar-360-section-title">
+              <h2>{{ page.groupsTitle }}</h2>
+              <span>{{ groups().length }}</span>
+            </div>
+            <div class="calendar-360-projects">
+              @for (g of groups(); track g.label) {
+                <article class="calendar-360-project">
+                  <div class="calendar-360-project-head">
+                    <div>
+                      <span class="calendar-360-kicker">{{ page.groupKicker }}</span>
+                      <h3>{{ g.label }}</h3>
+                    </div>
+                    <span class="status-pill"
+                      >{{ g.events.length }}
+                      {{ g.events.length === 1 ? 'repère' : 'repères' }}</span
+                    >
+                  </div>
+                  <div class="calendar-360-meta">
+                    <span
+                      >Premier repère <strong>{{ date(g.events[0].date) }}</strong></span
+                    >
+                    <span
+                      >Dernier repère
+                      <strong>{{ date(g.events[g.events.length - 1].date) }}</strong></span
+                    >
+                    <span
+                      >À suivre <strong>{{ open_(g.events) }}</strong></span
+                    >
+                    @if (groupNet(g.events); as net) {
+                      <span
+                        >Écart des flux
+                        <strong class="calendar-amount" [attr.data-direction]="net.direction">{{
+                          net.text
+                        }}</strong></span
+                      >
+                    }
+                  </div>
+                  <div class="calendar-360-task-list">
+                    @for (event of g.events; track event.key) {
+                      <div
+                        class="calendar-360-task calendar-module-task"
+                        [class.is-done]="event.done"
+                      >
+                        <div>
+                          <button
+                            type="button"
+                            class="task-title-link"
+                            [disabled]="!event.link"
+                            (click)="open(event)"
+                          >
+                            {{ event.title }}
+                          </button>
+                          @if (event.details.length) {
+                            <p>{{ detailLine(event) }}</p>
+                          }
+                        </div>
+                        <span class="status-pill" [attr.data-status]="event.status">{{
+                          event.statusLabel ?? (event.done ? 'Terminé' : 'À suivre')
+                        }}</span>
+                        <span>{{ date(event.date) }}</span>
+                        <span>{{ elementLabel(event) }}</span>
+                        <span class="calendar-amount" [attr.data-direction]="event.direction">{{
+                          event.amountCents !== null
+                            ? money(event.amountCents, event.direction)
+                            : ''
+                        }}</span>
+                      </div>
+                    }
+                  </div>
+                </article>
+              } @empty {
+                <div class="empty-state">
+                  <h3>Aucun repère sur cette période</h3>
+                  <p>
+                    Avancez dans le calendrier, choisissez une autre vue, ou affichez d’autres
+                    éléments.
+                  </p>
+                </div>
+              }
+            </div>
+          </section>
+          }
+        </rjs-calendar-space>
+      </div>
+    </div>

@@ -1,420 +1,249 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { BpmApi } from '../../core/bpm-api.service';
-import { CapsReview, ChargeCategory, ReviewCenter, ReviewCharge } from '../../core/bpm-caps.models';
+import { BpmApi } from '../data/bpm-api.service';
+import { CenterCapRow, SpendingCaps } from '../data/bpm-caps.models';
 import { BpmCapsPage } from './caps';
+import { capLevel } from '../ui/caps';
 
-const center = (ref: string, label: string, capCents: number | null): ReviewCenter => ({
-  ref,
-  label,
-  capCents,
-  standard: true,
-  paidCents: 0,
-  toPayCents: 0,
-  engagedCents: 0,
-  marginCents: capCents,
-  usedPct: capCents === null ? null : 0,
-  over: false,
-  near: false,
-  lineCount: 0,
-  chargeIds: [],
-});
-const catalog: ChargeCategory[] = [
-  {
-    id: 'cat_cine',
-    label: 'Cinéma',
-    costCenterRef: 'std:loisirs',
-    costCenterLabel: 'Loisirs',
-    capCents: 4000,
-    revision: 3,
-    archived: false,
-  },
-  {
-    id: 'cat_old',
-    label: 'Ancienne catégorie',
-    costCenterRef: 'std:loisirs',
-    costCenterLabel: 'Loisirs',
-    capCents: 1000,
-    revision: 1,
-    archived: true,
-  },
-];
-const review: CapsReview = {
+/** Seuils rendus par Budget (`levels` des lectures). */
+const LEVELS = { mid: 50, high: 75, near: 90 };
+
+/** Un poste de dépenses mesuré sur le cycle, comme le rend le serveur (engagé = payé + à payer). */
+function center(ref: string, label: string, capCents: number | null, paidCents: number, toPayCents = 0): CenterCapRow {
+  const engagedCents = paidCents + toPayCents;
+  return {
+    ref, label, standard: true, paidCents, toPayCents, engagedCents, capCents,
+    marginCents: capCents === null ? null : capCents - engagedCents,
+    usedPct: capCents ? Math.round((engagedCents / capCents) * 1000) / 10 : null,
+    over: capCents !== null && engagedCents > capCents,
+    near: capCents !== null && engagedCents <= capCents && engagedCents >= capCents * 0.9,
+    level: capLevel({ capCents, engagedCents }, LEVELS),
+    lineCount: engagedCents ? 2 : 0,
+  };
+}
+
+const reading = (centers: CenterCapRow[]): SpendingCaps => ({
   context: {
-    user: { id: 'usr_test', label: 'Test', userType: 'individual' },
+    user: { id: 'usr_test', label: 'Camille', userType: 'individual' },
     scope: 'principal',
     scopeLabel: 'Budget du projet de vie',
     budgets: [],
-    period: null,
-    calculationDate: '2026-11-06',
+    period: { key: '2026-11', start: '2026-11-01', end: '2026-11-30', label: 'Novembre 2026', status: 'current', endExclusive: '2026-12-01' } as never,
+    calculationDate: '2026-11-22',
     revision: 1,
-    unit: 'EUR',
+    unit: 'centimes (EUR)',
   },
-  lifeBudget: { budgetId: 'bud_test', revision: 7, capsCents: { 'std:loisirs': 20000 } },
-  centers: [center('std:loisirs', 'Loisirs', 20000), center('std:transport', 'Transport', null)],
-  // Une catégorie retirée sans charge ne figure plus dans la revue mais reste au catalogue.
-  categories: [],
-  charges: {},
-  totals: {
-    cappedCount: 1,
-    overCount: 0,
-    toCompensateCents: 0,
-    headroomCents: 20000,
-    expectedCents: 20000,
-    initialCents: 0,
-  },
-};
+  lifeBudget: { budgetId: 'bud_vie', revision: 7, capsCents: { 'std:alimentation': 50000, 'std:logement': 120000, 'std:loisirs': 15000 } },
+  centers,
+  overCount: centers.filter((c) => c.over).length,
+  alerts: [],
+  levels: LEVELS,
+});
 
-describe('les trois espaces des plafonds BPM', () => {
+// Plafonds : la liste de tous les postes de dépenses, avec ou sans plafond, et la fenêtre qui fixe un plafond.
+describe('page Plafonds', () => {
   let harness: RouterTestingHarness;
-  let api: {
-    capsReview: ReturnType<typeof vi.fn>;
-    line: ReturnType<typeof vi.fn>;
-    categories: ReturnType<typeof vi.fn>;
-    setCaps: ReturnType<typeof vi.fn>;
-    updateCategory: ReturnType<typeof vi.fn>;
-    createCategory: ReturnType<typeof vi.fn>;
-  };
+  let api: { spendingCaps: ReturnType<typeof vi.fn>; setCaps: ReturnType<typeof vi.fn> };
   const dom = () => harness.routeNativeElement!;
-  const control = <T extends HTMLElement>(selector: string) => dom().querySelector<T>(selector)!;
+  const rows = () => [...dom().querySelectorAll<HTMLElement>('.caps-row')];
+  const rowOf = (label: string) => rows().find((r) => r.querySelector('.caps-name a')?.textContent?.trim() === label)!;
+  const dialog = () => dom().querySelector<HTMLElement>('bpm-cap-dialog');
   async function settle() {
+    for (let i = 0; i < 2; i++) { harness.detectChanges(); await harness.fixture.whenStable(); }
     harness.detectChanges();
-    await harness.fixture.whenStable();
+  }
+  function type(value: string) {
+    const input = dialog()!.querySelector<HTMLInputElement>('input[name="capAmount"]')!;
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
     harness.detectChanges();
   }
-  async function select(name: string, value: string) {
-    const el = control<HTMLSelectElement>(`select[name="${name}"]`);
-    el.value = value;
-    el.dispatchEvent(new Event('change'));
-    await settle();
+  /** Déplace le curseur (valeur en centimes) comme le ferait la souris ou le clavier. */
+  function slide(name: 'capSlider' | 'overSlider', cents: number) {
+    const range = dialog()!.querySelector<HTMLInputElement>(`input[name="${name}"]`)!;
+    range.value = String(cents);
+    range.dispatchEvent(new Event('input'));
+    harness.detectChanges();
   }
-  async function fill(name: string, value: string) {
-    const el = control<HTMLInputElement>(`input[name="${name}"]`);
-    el.value = value;
-    el.dispatchEvent(new Event('input'));
-    await settle();
-  }
-  async function submit(label: string) {
-    control<HTMLFormElement>(`form[aria-label="${label}"]`).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    );
-    await settle();
-  }
-  async function click(label: string) {
-    [...dom().querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.trim() === label)!.click();
-    await settle();
-  }
-  // Chaque vue a sa propre adresse : le suivi sur la page, les réglages et les catégories en sous-pages.
-  const VIEW_ROUTES: Record<string, string> = { suivi: '/plafonds', plafonds: '/plafonds/reglages', categories: '/plafonds/categories' };
-  async function open(view = 'plafonds') {
-    const page = await harness.navigateByUrl(VIEW_ROUTES[view], BpmCapsPage);
-    await settle();
-    return page;
-  }
+  const amount = () => dialog()!.querySelector<HTMLInputElement>('input[name="capAmount"]')!.value;
+  /** Chiffres recalculés de la fenêtre, « libellé montant » séparés par « | ». */
+  const result = () => [...dialog()!.querySelectorAll('.cd-result > div')].map((d) => [...d.children].map((x) => x.textContent!.trim()).join(' ')).join(' | ').replace(/\s+/g, ' ');
+  const button = (scope: ParentNode, text: string) => [...scope.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.trim() === text)!;
 
   beforeEach(async () => {
     api = {
-      capsReview: vi.fn().mockResolvedValue(review),
-      line: vi.fn().mockRejectedValue(new Error('Détail chargé par son service dédié')),
-      categories: vi.fn().mockResolvedValue(catalog),
+      spendingCaps: vi.fn().mockResolvedValue(reading([
+        center('std:logement', 'Logement', 120000, 90000),
+        center('std:alimentation', 'Alimentation', 50000, 21950, 57000),
+        center('std:loisirs', 'Loisirs', 15000, 13000),
+        center('std:transport', 'Transport', null, 9000, 8000),
+        center('std:sante', 'Santé', null, 4500),
+        center('std:divers', 'Divers', null, 0),
+      ])),
       setCaps: vi.fn().mockResolvedValue({}),
-      updateCategory: vi.fn().mockResolvedValue({}),
-      createCategory: vi
-        .fn()
-        .mockResolvedValue({ category: { label: 'Livres', costCenterLabel: 'Loisirs' } }),
     };
     TestBed.configureTestingModule({
-      providers: [
-        provideRouter([
-          { path: 'plafonds', component: BpmCapsPage },
-          { path: 'plafonds/reglages', component: BpmCapsPage, data: { workspace: { key: 'caps-settings', parent: '/plafonds', title: 'Définir mes plafonds', lead: 'Régler mes limites.' } } },
-          { path: 'plafonds/categories', component: BpmCapsPage, data: { workspace: { key: 'caps-categories', parent: '/plafonds', title: 'Organiser mes catégories', lead: 'Ranger mes dépenses.' } } },
-        ]),
-        { provide: BpmApi, useValue: api },
-      ],
+      providers: [provideRouter([{ path: 'plafonds', component: BpmCapsPage }]), { provide: BpmApi, useValue: api }],
     });
     harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/plafonds', BpmCapsPage);
+    await settle();
   });
 
-  it('propose tous les postes puis enregistre uniquement le plafond sélectionné', async () => {
-    await open();
-    expect(
-      control<HTMLButtonElement>('form[aria-label="Plafond d’un poste"] button[type="submit"]')
-        .disabled,
-    ).toBe(true);
-    expect(control('select[name="centerRef"]').textContent).toContain('Transport · sans plafond');
-    await select('centerRef', 'std:transport');
-    await fill('centerCap', '85,50');
-    await submit('Plafond d’un poste');
-    expect(api.setCaps).toHaveBeenCalledExactlyOnceWith({
-      expectedRevision: 7,
-      caps: { 'std:transport': 85.5 },
-      merge: true,
-    });
-    expect(api.updateCategory).not.toHaveBeenCalled();
+  it('liste tous les postes : avec plafond (dépassements d’abord), puis sans plafond (les plus dépensés d’abord)', () => {
+    const groups = [...dom().querySelectorAll<HTMLElement>('.caps-group')];
+    expect(groups.map((g) => g.querySelector('.caps-group-title')!.textContent!.replace(/\s+/g, ' ').trim())).toEqual(['Avec plafond 3', 'Sans plafond 3']);
+    const names = (g: HTMLElement) => [...g.querySelectorAll('.caps-name a')].map((a) => a.textContent!.trim());
+    expect(names(groups[0])).toEqual(['Alimentation', 'Loisirs', 'Logement']);
+    expect(names(groups[1])).toEqual(['Transport', 'Santé', 'Divers']);
+
+    // Dépassé : rouge et montant du dépassement ; dans la limite : ce qu'il reste ; sans plafond : le geste pour en fixer un.
+    // Couleur selon la part du plafond consommée : 158 % rouge, 87 % jaune, 75 % jaune, sans plafond neutre.
+    expect(rowOf('Alimentation').dataset['level']).toBe('over');
+    expect(rowOf('Alimentation').querySelector('.caps-chip')!.textContent).toContain('Dépassé de 289,50');
+    expect(rowOf('Loisirs').dataset['level']).toBe('high');
+    expect(rowOf('Logement').dataset['level']).toBe('high');
+    expect(rowOf('Transport').dataset['level']).toBe('none');
+    expect([...dom().querySelectorAll<HTMLElement>('.caps-legend li')].map((li) => li.dataset['level'])).toEqual(['low', 'mid', 'high', 'near', 'over', 'none']);
+    expect(rowOf('Logement').querySelector('.caps-chip')!.textContent).toContain('Reste 300,00');
+    expect(rowOf('Transport').querySelector('.caps-chip')!.textContent).toContain('Sans plafond');
+    expect(rowOf('Transport').querySelector('.caps-set')!.textContent).toContain('Fixer un plafond');
+    expect(rowOf('Logement').querySelector('.caps-set')).toBeNull();
+    expect(rowOf('Divers').querySelector('.caps-name small')!.textContent).toContain('Aucune dépense');
+
+    // Chiffres clés : postes plafonnés, dépassements, total des plafonds.
+    const tiles = dom().querySelector('rjs-metric-tiles')!.textContent!.replace(/\s+/g, ' ');
+    expect(tiles).toContain('3 sur 6');
+    expect(tiles).toContain('Alimentation');
+    expect(tiles).toContain('1 850,00');
+    // Les catégories sont abandonnées : la page n'en parle plus.
+    expect(dom().textContent).not.toMatch(/catégorie/i);
   });
 
-  it('permet de retirer un plafond et refuse un montant négatif sans écrire', async () => {
-    await open();
-    await select('centerRef', 'std:loisirs');
-    await fill('centerCap', '-2');
-    await submit('Plafond d’un poste');
+  it('fixe le plafond d’un poste qui n’en a pas : la fenêtre annonce l’effet puis n’écrit que ce poste', async () => {
+    rowOf('Transport').querySelector<HTMLButtonElement>('.caps-set')!.click();
+    await settle();
+    expect(dialog()).not.toBeNull();
+    expect(dialog()!.querySelector('select')).toBeNull();
+    expect(dialog()!.textContent).toContain('170,00');
+    expect(dialog()!.querySelector('.cd-impact')!.textContent).toContain('Sans plafond');
+    type('85,50');
+    expect(result()).toContain('Dépassement 84,50');
+    type('250');
+    expect(result()).toContain('Reste à dépenser 80,00');
+    expect(button(dialog()!, 'Retirer le plafond')).toBeUndefined();
+    button(dialog()!, 'Enregistrer le plafond').click();
+    await settle();
+    expect(api.setCaps).toHaveBeenCalledExactlyOnceWith({ expectedRevision: 7, caps: { 'std:transport': 250 }, merge: true });
+    expect(dialog()).toBeNull();
+    expect(api.spendingCaps).toHaveBeenCalledTimes(2);
+    expect(dom().textContent).toContain('Plafond du poste « Transport » : 250,00');
+  });
+
+  it('modifie ou retire un plafond ; un montant invalide n’écrit rien', async () => {
+    button(rowOf('Alimentation'), 'Modifier').click();
+    await settle();
+    expect(amount()).toBe('500');
+    type('-3');
+    button(dialog()!, 'Enregistrer le plafond').click();
+    await settle();
     expect(api.setCaps).not.toHaveBeenCalled();
-    expect(dom().textContent).toContain('Saisissez un montant positif');
-    await fill('centerCap', '');
-    await submit('Plafond d’un poste');
-    expect(api.setCaps).toHaveBeenCalledWith({
-      expectedRevision: 7,
-      caps: { 'std:loisirs': null },
-      merge: true,
-    });
-  });
-
-  it('modifie le plafond de catégorie indépendamment de son poste', async () => {
-    await open();
-    expect(control('select[name="categoryId"]').textContent).not.toContain('Ancienne catégorie');
-    await select('categoryId', 'cat_cine');
-    expect(control<HTMLInputElement>('input[name="categoryCap"]').value).toBe('40');
-    await fill('categoryCap', '50');
-    await submit('Plafond d’une catégorie');
-    expect(api.updateCategory).toHaveBeenCalledExactlyOnceWith('cat_cine', {
-      expectedRevision: 3,
-      cap: 50,
-    });
-    expect(api.setCaps).not.toHaveBeenCalled();
-  });
-
-  it('crée une catégorie sans plafond dans le poste choisi et conserve les catégories retirées', async () => {
-    await open('categories');
-    expect(api.categories).toHaveBeenCalledWith(true);
-    expect(dom().textContent).toContain('Ancienne catégorie');
-    expect(dom().textContent).toContain('Rétablir');
-    await select('newCenter', 'std:loisirs');
-    await fill('newLabel', ' Livres ');
-    await submit('Créer une catégorie');
-    expect(api.createCategory).toHaveBeenCalledWith({
-      requestKey: expect.any(String),
-      label: 'Livres',
-      costCenterRef: 'std:loisirs',
-    });
-    expect(control<HTMLInputElement>('input[name="newLabel"]').value).toBe('');
-    expect(api.setCaps).not.toHaveBeenCalled();
-    expect(api.updateCategory).not.toHaveBeenCalled();
-  });
-
-  it('renomme une catégorie sans modifier son plafond ni son rattachement', async () => {
-    await open('categories');
-    const row = [...dom().querySelectorAll<HTMLElement>('.caps-cat-row')].find((el) =>
-      el.textContent?.includes('Cinéma'),
-    )!;
-    [...row.querySelectorAll<HTMLButtonElement>('button')]
-      .find((button) => button.textContent?.trim() === 'Renommer')!
-      .click();
+    expect(dialog()!.querySelector('.cd-error')!.textContent).toContain('Montant positif attendu');
+    button(dialog()!, 'Retirer le plafond').click();
     await settle();
-    await fill('editLabel', ' Cinéma et spectacles ');
-    control<HTMLFormElement>('form.caps-cat-edit').dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    );
-    await settle();
-    expect(api.updateCategory).toHaveBeenCalledExactlyOnceWith('cat_cine', {
-      expectedRevision: 3,
-      label: 'Cinéma et spectacles',
-    });
-    expect(api.setCaps).not.toHaveBeenCalled();
+    expect(api.setCaps).toHaveBeenCalledExactlyOnceWith({ expectedRevision: 7, caps: { 'std:alimentation': null }, merge: true });
   });
 
-  it('retire puis rétablit une catégorie en conservant son plafond et ses données', async () => {
-    await open('categories');
-    const row = () =>
-      [...dom().querySelectorAll<HTMLElement>('.caps-cat-row')].find((el) =>
-        el.textContent?.includes('Cinéma'),
-      )!;
-    const action = (label: string) =>
-      [...row().querySelectorAll<HTMLButtonElement>('button')].find(
-        (button) => button.textContent?.trim() === label,
-      )!;
-    const retired = { ...catalog[0], archived: true, revision: 4 };
-    api.categories.mockResolvedValue([retired, catalog[1]]);
-    action('Retirer').click();
+  /** Place (0 à 1) d'un repère de la jauge : « used » (consommé, au-dessus) ou « cap » (plafond, au-dessous). */
+  const mark = (which: 'used' | 'cap') => dialog()!.querySelector<HTMLElement>(`.cd-marks-${which} .cd-mark`)!;
+  const at = (which: 'used' | 'cap') => Number(mark(which).dataset['p']);
+  const gauge = () => dialog()!.querySelector<HTMLElement>('.cd-gauge')!.dataset['state'];
+
+  it('un seul curseur, sans choix plafond / dépassement : il part du plafond, le dépassement se recalcule à chaque fois', async () => {
+    button(rowOf('Loisirs'), 'Modifier').click();
     await settle();
-    expect(api.updateCategory).toHaveBeenNthCalledWith(1, 'cat_cine', {
-      expectedRevision: 3,
-      archived: true,
-    });
-    await vi.waitFor(async () => {
-      await settle();
-      expect(row().textContent).toContain('Retirée des choix');
-    });
-    expect(row().textContent).toContain('Plafond');
-    expect(action('Rétablir')).toBeTruthy();
-    api.categories.mockResolvedValue([{ ...retired, archived: false, revision: 5 }, catalog[1]]);
-    action('Rétablir').click();
+    expect(dialog()!.querySelectorAll('[role="radio"]')).toHaveLength(0);
+    expect(dialog()!.querySelectorAll('input[type="range"]')).toHaveLength(1);
+    // Sous le plafond : le consommé à gauche, l'espace restant puis la place pour agrandir à droite.
+    expect(mark('used').textContent).toContain('Consommé 130,00');
+    expect(mark('cap').textContent).toContain('Plafond 150,00');
+    expect(at('used')).toBeLessThan(at('cap'));
+    expect(at('cap')).toBeLessThan(1);
+    expect(gauge()).toBe('under');
+    // La couleur suit la part consommée avec le plafond réglé : 87 % jaune, 108 % rouge, 65 % bleu, 43 % vert, 93 % orange.
+    const level = () => dialog()!.querySelector<HTMLElement>('.cd-gauge')!.dataset['level'];
+    expect(level()).toBe('high');
+    slide('capSlider', 12000);
+    expect(amount()).toBe('120');
+    expect(result()).toContain('Dépassement 10,00');
+    expect(level()).toBe('over');
+    expect(at('cap')).toBeLessThan(at('used'));
+    type('300');
+    expect(level()).toBe('low');
+    slide('capSlider', 14000);
+    expect(level()).toBe('near');
+    slide('capSlider', 20000);
+    expect(amount()).toBe('200');
+    expect(level()).toBe('mid');
+    expect(result()).toContain('Consommé 65 %');
+    expect(result()).toContain('Reste à dépenser 70,00');
+    button(dialog()!, 'Enregistrer le plafond').click();
     await settle();
-    expect(api.updateCategory).toHaveBeenNthCalledWith(2, 'cat_cine', {
-      expectedRevision: 4,
-      archived: false,
-    });
-    await vi.waitFor(async () => {
-      await settle();
-      expect(row().textContent).not.toContain('Retirée des choix');
-    });
-    expect(action('Retirer')).toBeTruthy();
-    expect(api.setCaps).not.toHaveBeenCalled();
+    expect(api.setCaps).toHaveBeenCalledExactlyOnceWith({ expectedRevision: 7, caps: { 'std:loisirs': 200 }, merge: true });
   });
 
-  it('signale un échec d’enregistrement et conserve la saisie pour réessayer', async () => {
-    api.setCaps.mockRejectedValueOnce(new Error('Conflit : actualisez la page'));
-    const page = await open();
-    await select('centerRef', 'std:transport');
-    await fill('centerCap', '90');
-    await page.saveCenter();
+  it('au-delà du plafond, le repère du plafond est à gauche du consommé ; le curseur l’agrandit ou le diminue', async () => {
+    button(rowOf('Alimentation'), 'Modifier').click();
     await settle();
-    expect(control<HTMLInputElement>('input[name="centerCap"]').value).toBe('90');
-    expect(control('[role="alert"]').textContent).toContain('Conflit : actualisez la page');
-    expect(
-      control<HTMLButtonElement>('form[aria-label="Plafond d’un poste"] button[type="submit"]')
-        .disabled,
-    ).toBe(false);
-  });
-
-  it('retire les anciennes données d’édition si le chargement de la nouvelle période échoue', async () => {
-    await harness.navigateByUrl('/plafonds/reglages?period=2026-10', BpmCapsPage);
+    expect(gauge()).toBe('over');
+    expect(at('cap')).toBeLessThan(at('used'));
+    expect(dialog()!.querySelector<HTMLInputElement>('input[name="capSlider"]')!.value).toBe('50000');
+    expect(result()).toContain('Dépassement 289,50');
+    // Agrandir le plafond au-delà du consommé : plus de dépassement, il reste 10,50 €.
+    slide('capSlider', 80000);
+    expect(amount()).toBe('800');
+    expect(result()).toContain('Reste à dépenser 10,50');
+    expect(at('used')).toBeLessThan(at('cap'));
+    // Le rediminuer : le dépassement revient, recalculé.
+    slide('capSlider', 78000);
+    expect(result()).toContain('Dépassement 9,50');
+    button(dialog()!, 'Enregistrer le plafond').click();
     await settle();
-    await select('centerRef', 'std:loisirs');
-    await select('categoryId', 'cat_cine');
-    expect(control<HTMLInputElement>('input[name="centerCap"]').value).toBe('200');
-    expect(control<HTMLInputElement>('input[name="categoryCap"]').value).toBe('40');
-    api.capsReview.mockRejectedValueOnce(new Error('Impossible de charger la période de novembre'));
-
-    await harness.navigateByUrl('/plafonds/reglages?period=2026-11', BpmCapsPage);
-    await vi.waitFor(async () => {
-      await settle();
-      expect(control('[role="alert"]').textContent).toContain(
-        'Impossible de charger la période de novembre',
-      );
-    });
-
-    expect(api.capsReview).toHaveBeenLastCalledWith('2026-11');
-    expect(dom().querySelector('form[aria-label="Plafond d’un poste"]')).toBeNull();
-    expect(dom().querySelector('form[aria-label="Plafond d’une catégorie"]')).toBeNull();
-    expect(api.setCaps).not.toHaveBeenCalled();
-    expect(api.updateCategory).not.toHaveBeenCalled();
+    expect(api.setCaps).toHaveBeenCalledExactlyOnceWith({ expectedRevision: 7, caps: { 'std:alimentation': 780 }, merge: true });
   });
 
-  it('préserve la période en passant du suivi au paramétrage par les onglets du bandeau', async () => {
-    await harness.navigateByUrl('/plafonds?period=2026-10', BpmCapsPage);
+  it('au niveau du plafond, consommé et plafond sont indiqués au même endroit', async () => {
+    button(rowOf('Logement'), 'Modifier').click();
     await settle();
-    expect(control('.page-tab[aria-current="page"]').textContent).toContain('Suivi des plafonds');
-    [...dom().querySelectorAll<HTMLAnchorElement>('.page-tab')].find(tab => tab.textContent?.includes('Définir les plafonds'))!.click();
+    type('900');
+    expect(gauge()).toBe('full');
+    expect(at('cap')).toBe(at('used'));
+    expect(mark('cap').style.left).toBe(mark('used').style.left);
+    expect(result()).toContain('Reste à dépenser 0,00');
+  });
+
+  it('sans plafond, le curseur part du consommé arrondi et ne fixe rien tant qu’on ne le bouge pas', async () => {
+    rowOf('Divers').querySelector<HTMLButtonElement>('.caps-set')!.click();
     await settle();
-    expect(TestBed.inject(Router).url).toBe('/plafonds/reglages?period=2026-10');
-    expect(control('.page-tab[aria-current="page"]').textContent).toContain('Définir les plafonds');
+    expect(amount()).toBe('');
+    expect(gauge()).toBe('none');
+    expect(mark('cap').textContent).toContain('Glissez pour fixer le plafond');
+    slide('capSlider', 5000);
+    expect(amount()).toBe('50');
+    expect(mark('cap').textContent).toContain('Plafond 50,00');
+    expect(result()).toContain('Reste à dépenser 50,00');
   });
 
-  it('conduit les anciens liens de réglages vers leur sous-page en gardant la période', async () => {
-    await harness.navigateByUrl('/plafonds?period=2026-10#reglages-categories');
-    await vi.waitFor(async () => {
-      await settle();
-      expect(TestBed.inject(Router).url).toBe('/plafonds/categories?period=2026-10#reglages-categories');
-    });
-    expect(control('.page-tab[aria-current="page"]').textContent).toContain('Organiser les catégories');
-    expect(control('form[aria-label="Créer une catégorie"]')).toBeTruthy();
-    [...dom().querySelectorAll<HTMLAnchorElement>('.page-tab')].find(tab => tab.textContent?.includes('Suivi des plafonds'))!.click();
+  it('la commande principale ouvre la fenêtre avec le choix du poste, les postes sans plafond d’abord', async () => {
+    const primary = button(dom(), 'Fixer un plafond');
+    expect(primary).toBeDefined();
+    primary.click();
     await settle();
-    expect(TestBed.inject(Router).url).toBe('/plafonds?period=2026-10');
-    await harness.navigateByUrl('/plafonds?period=2026-10&view=plafonds');
-    await vi.waitFor(async () => {
-      await settle();
-      expect(TestBed.inject(Router).url).toBe('/plafonds/reglages?period=2026-10');
-    });
-  });
-  it('reprend le plafond choisi dans un panneau depuis le bandeau et conserve une saisie refusée', async () => {
-    await open();
-    await select('centerRef', 'std:transport');
-    await fill('centerCap', '95');
-    await click('Relire le plafond choisi');
-    expect(control<HTMLInputElement>('input[name="quickCenterAmount"]').value).toBe('95');
-    expect(control('dialog[open]').textContent).toContain('Transport');
-    api.setCaps.mockRejectedValueOnce(new Error('Enregistrement momentanément indisponible'));
-    await click('Enregistrer ce plafond');
-    await vi.waitFor(async () => { await settle(); expect(control('dialog[open]').textContent).toContain('Enregistrement momentanément indisponible'); });
-    expect(control<HTMLInputElement>('input[name="quickCenterAmount"]').value).toBe('95');
-    expect(api.setCaps).toHaveBeenCalledWith({ expectedRevision: 7, caps: { 'std:transport': 95 }, merge: true });
-  });
-
-  it('enchaîne création contextualisée et préparation du plafond sans créer de limite automatiquement', async () => {
-    await open();
-    await select('centerRef', 'std:transport');
-    await click('Créer une catégorie dans ce poste');
-    expect(control<HTMLSelectElement>('select[name="quickNewCenter"]').value).toBe('std:transport');
-    const created = { ...catalog[0], id: 'cat_train', label: 'Train', costCenterRef: 'std:transport', costCenterLabel: 'Transport', capCents: null, revision: 1 };
-    api.createCategory.mockResolvedValue({ category: created });
-    api.categories.mockResolvedValue([...catalog, created]);
-    await fill('quickNewLabel', 'Train');
-    await click('Créer puis préparer son plafond');
-    expect(api.createCategory).toHaveBeenCalledWith(expect.objectContaining({ label: 'Train', costCenterRef: 'std:transport' }));
-    expect(control('dialog[open]').textContent).toContain('Train');
-    expect(control('input[name="quickCategoryAmount"]')).toBeTruthy();
-    expect(api.updateCategory).not.toHaveBeenCalled();
-    await fill('quickCategoryAmount', '60');
-    await vi.waitFor(async () => { await settle(); expect(control<HTMLButtonElement>('dialog[open] button[type="submit"]').disabled).toBe(false); });
-    await click('Enregistrer ce plafond');
-    expect(api.updateCategory).toHaveBeenCalledWith('cat_train', { expectedRevision: 1, cap: 60 });
-    expect(api.setCaps).not.toHaveBeenCalled();
-  });
-
-  it('ouvre une charge encore à payer du dépassement de catégorie, même si le poste reste sous sa limite', async () => {
-    const charge = (id: string, categoryId: string | null, engagedCents: number, engagedAs: 'paid' | 'toPay'): ReviewCharge => ({
-      id, categoryId, label: id, engagedCents, engagedAs, cadence: 'once', cadenceLabel: 'Ponctuelle',
-      plannedDate: '2026-11-08', plannedCents: engagedCents, status: 'pending', origin: '2026-11-08',
-      sinceMonths: 0, rank: null, perYearCents: null, monthlyCents: null, newThisPeriod: true,
-    }) as ReviewCharge;
-    const charges = [charge('already_paid', 'cat_cine', 4500, 'paid'), charge('still_planned', 'cat_cine', 1500, 'toPay'), charge('other_category', null, 9000, 'toPay')];
-    api.capsReview.mockResolvedValue({ ...review,
-      centers: [{ ...review.centers[0], engagedCents: 15000, paidCents: 4500, toPayCents: 10500, marginCents: 5000, chargeIds: charges.map(charge => charge.id) }],
-      categories: [{ ...catalog[0], paidCents: 4500, toPayCents: 1500, engagedCents: 6000, marginCents: -2000, usedPct: 150, over: true, lineCount: 2, chargeIds: ['already_paid', 'still_planned'] }],
-      charges: Object.fromEntries(charges.map(charge => [charge.id, charge])),
-      totals: { ...review.totals, overCount: 1 },
-    });
-    await open('suivi');
-    expect(control('.bpm-toolbar-focus').textContent).toContain('catégorie dépassé');
-    expect(control('.bpm-toolbar-focus').textContent).not.toContain('0,00');
-    await click('Revoir une charge avant paiement');
-    expect(TestBed.inject(Router).url).toContain('ligne=still_planned');
-    expect(api.line).toHaveBeenCalledWith('still_planned', undefined);
-    expect(api.setCaps).not.toHaveBeenCalled();
-    expect(api.updateCategory).not.toHaveBeenCalled();
-  });
-
-  it('donne priorité à la sauvegarde du plafond et conserve le résultat dans le bandeau', async () => {
-    await open();
-    await select('centerRef', 'std:transport');
-    await fill('centerCap', '75');
-    expect(control('.bpm-toolbar-primary').textContent).toContain('Enregistrer le poste modifié');
-    expect(control('.page-toolbar-scope').textContent).toContain('Transport');
-    expect(control('.page-toolbar-scope').textContent).toContain('toutes les périodes');
-    api.setCaps.mockRejectedValueOnce(new Error('Révision modifiée par un autre enregistrement'));
-    await click('Enregistrer le poste modifié');
-    await vi.waitFor(async () => { await settle(); expect(control('.page-toolbar-result').textContent).toContain('Révision modifiée'); });
-    expect(control('.page-toolbar-result').getAttribute('role')).toBe('alert');
-    expect(control<HTMLInputElement>('input[name="centerCap"]').value).toBe('75');
-  });
-
-  it('isole les catégories sur leur route puis rejoint le réglage du plafond choisi', async () => {
-    await harness.navigateByUrl('/plafonds/categories?period=2026-10');
-    await settle();
-    expect(dom().querySelector('.caps-workspaces')).toBeNull();
-    expect(dom().querySelector('.caps-review')).toBeNull();
-    expect(control('#caps-categories-title').textContent).toContain('catégories');
-    const row = [...dom().querySelectorAll<HTMLElement>('.caps-cat-row')].find(el => el.textContent?.includes('Cinéma'))!;
-    [...row.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.trim() === 'Définir le plafond')!.click();
-    await settle();
-    expect(TestBed.inject(Router).url).toContain('/plafonds/reglages');
-    expect(TestBed.inject(Router).url).toContain('period=2026-10');
-    expect(TestBed.inject(Router).url).toContain('target=category:cat_cine');
-    expect(dom().querySelector('.caps-review')).toBeNull();
-    expect(api.updateCategory).not.toHaveBeenCalled();
+    const options = [...dialog()!.querySelectorAll('select option')].map((o) => o.textContent!.trim());
+    expect(options.slice(0, 3)).toEqual(['Transport', 'Santé', 'Divers']);
+    expect(options[3]).toContain('Alimentation · plafond');
+    expect(dialog()!.querySelector<HTMLSelectElement>('select')!.value).toBe('std:transport');
   });
 
 });

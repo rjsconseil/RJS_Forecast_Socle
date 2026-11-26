@@ -4,12 +4,8 @@ const visit = (id: string, url = `/creer?step=${id}`) => ({ id, url, label: id }
 
 describe('historique du parcours BPM', () => {
   it('nomme les saisies et réglages pour distinguer chaque geste du parcours', () => {
-    expect(visitLabel('/vision?goal=new')).toBe('Créer un objectif daté');
-    expect(visitLabel('/vision?goal=obj_1')).toBe('Modifier un objectif daté');
-    expect(visitLabel('/vision/reperes?reglage=savings')).toBe('Régler l’épargne visée');
-    expect(visitLabel('/vision/projection?reglage=projection')).toBe('Ajuster les hypothèses');
-    expect(visitLabel('/app/gestion-projet/prj_1/taches?task=tsk_1&demande=tsk_1', 'Bureau')).toBe('Bureau · Tâches · Demander une part de budget');
-    expect(visitLabel('/app/gestion-projet/prj_1/taches?task=tsk_1&ligne=op_1', 'Bureau')).toBe('Bureau · Tâches · Détail d’une échéance');
+    expect(visitLabel('/bpm-astra/projets/prj_1/taches?task=tsk_1&demande=tsk_1', 'Bureau')).toBe('Bureau · Tâches · Demander une part de budget');
+    expect(visitLabel('/bpm-astra/projets/prj_1/taches?task=tsk_1&ligne=op_1', 'Bureau')).toBe('Bureau · Tâches · Détail d’une échéance');
   });
   it('revient de plusieurs étapes puis retrouve le même chemin en avant', () => {
     let trail = emptyTrail();
@@ -51,23 +47,24 @@ describe('historique du parcours BPM', () => {
     expect(trail.visits.at(-1)?.id).toBe(String(TRAIL_LIMIT - 1));
   });
   it('range les étapes comme le plan : zone et section en tête, pages puis détails', () => {
-    expect(visitLevel('/zones/bpm')).toBe('section');
-    expect(visitLevel('/tableau-de-bord')).toBe('page');
-    expect(visitLevel('/plafonds/reglages')).toBe('detail');
-    expect(visitLevel('/tableau-de-bord?entry=new')).toBe('detail');
-    expect(visitLevel('/app/gestion-projet/prj_1')).toBe('detail');
+    expect(visitLevel('/zones/bpm-astra/astra-1')).toBe('section');
+    expect(visitLevel('/bpm-astra/mouvements')).toBe('page');
+    expect(visitLevel('/bpm-astra/plafonds/reglages')).toBe('detail');
+    expect(visitLevel('/bpm-astra/mouvements?entry=new')).toBe('detail');
+    expect(visitLevel('/bpm-astra/projets/prj_1')).toBe('detail');
     const groups = trailGroups([
-      visit('a', '/tableau-de-bord'),
-      visit('b', '/plafonds/reglages'),
-      visit('c', '/app/gestion-projet'),
-      visit('d', '/vision'),
+      visit('a', '/bpm-astra/mouvements'),
+      visit('b', '/bpm-astra/plafonds/reglages'),
+      visit('c', '/bpm-astra/projets'),
+      visit('d', '/bpm-astra/objectif'),
     ]);
-    expect(groups.map((group) => `${group.zone?.id}/${group.section?.id}`)).toEqual(['bpm/vision', 'bpm/projets-vie', 'bpm/vision']);
-    expect(groups[0].steps.map((step) => `${step.index}:${step.level}`)).toEqual(['0:page', '1:detail']);
+    expect(groups.map((group) => `${group.zone?.id}/${group.section?.id}`)).toEqual(['bpm-astra/astra-0', 'bpm-astra/astra-2', 'bpm-astra/astra-1', 'bpm-astra/astra-3']);
+    expect(groups[0].steps.map((step) => `${step.index}:${step.level}`)).toEqual(['0:page']);
+    expect(groups[1].steps.map((step) => `${step.index}:${step.level}`)).toEqual(['1:detail']);
   });
   it('modifier les filtres remplace la visite courante sans ajouter une étape par caractère', () => {
-    let trail = recordVisit(emptyTrail(), visit('liste', '/app/gestion-projet'));
-    trail = recordVisit(trail, visit('filtre', '/app/gestion-projet?q=vacances'), {
+    let trail = recordVisit(emptyTrail(), visit('liste', '/projet-de-vie/projets'));
+    trail = recordVisit(trail, visit('filtre', '/projet-de-vie/projets?q=vacances'), {
       replace: true,
     });
     expect(trail.visits).toHaveLength(1);
@@ -84,7 +81,7 @@ describe('historique du parcours BPM', () => {
     expect(journeyAddress('//example.com')).toBe(false);
     expect(journeyAddress('/')).toBe(false);
     expect(journeyAddress('/socle/budget')).toBe(true);
-    expect(journeyAddress('/app/gestion-projet/prj_1?q=travaux')).toBe(true);
+    expect(journeyAddress('/bpm-astra/projets/prj_1?q=travaux')).toBe(true);
   });
   it('rejoindre l’étape suivante par un lien de la page garde le chemin jusqu’à la dernière étape atteinte', () => {
     let trail = emptyTrail();

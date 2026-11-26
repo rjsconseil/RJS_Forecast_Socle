@@ -30,9 +30,7 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
-              { "input": "src/styles-calendar.scss", "bundleName": "calendar", "inject": false },
-              { "input": "src/styles-rest.scss", "bundleName": "styles-rest" }
+              "src/styles.scss"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
@@ -45,8 +43,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "900kB",
-                  "maximumError": "2MB"
+                  "maximumWarning": "1.3MB",
+                  "maximumError": "1.5MB"
                 },
                 {
                   "type": "anyComponentStyle",

@@ -1,7 +1,8 @@
-import { Component, computed, inject, linkedSignal, output } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { BpmApi } from '../../core/bpm-api.service';
-import { Cadence } from '../../core/bpm-models';
+import { BpmAmount } from '../ui/amount';
+import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
+import { BpmRouterLink } from '../ui/bpm-router-link';
+import { BpmApi } from '../data/bpm-api.service';
+import { Cadence } from '../data/bpm-models';
 import { cents, CentsPipe, parseAmount, percentText, SignedCentsPipe } from '../../core/format';
 import { bpmLoader, BpmPageContext, BpmSeriesChart, BpmState, ChartSeries } from '../ui';
 
@@ -16,7 +17,7 @@ export interface SimulationAdoption { contributionCents: number; cadence: Exclud
  */
 @Component({
   selector: 'bpm-act-simulation',
-  imports: [RouterLink, BpmState, BpmSeriesChart, CentsPipe, SignedCentsPipe],
+  imports: [BpmAmount, BpmRouterLink, BpmState, BpmSeriesChart, CentsPipe, SignedCentsPipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss'],
   template: `
     <section class="bv-card" aria-labelledby="bp-sim-title" data-ui-pattern="panel">
@@ -43,7 +44,11 @@ export interface SimulationAdoption { contributionCents: number; cadence: Exclud
           @if (p.status === 'missing-hypothesis' || !p.keyFigures) {
             <p class="bpm-missing" role="status">
               Non calculable : {{ p.reason ?? 'hypothèses de projection incomplètes.' }}
-              <a routerLink="/vision/projection">Compléter dans Objectifs et avenir →</a>
+              @if (savingsProjection() && p.hypotheses.contributionCents === null) {
+                <a routerLink="/vision/reperes" [queryParams]="{ reglage: 'savings' }">Fixer l’objectif d’épargne →</a>
+              } @else {
+                <a routerLink="/vision/projection">Compléter dans Patrimoine et objectifs →</a>
+              }
             </p>
           } @else {
             @if (p.hypotheses.startCents === null) {
@@ -63,15 +68,15 @@ export interface SimulationAdoption { contributionCents: number; cadence: Exclud
                 <tbody>
                   <tr>
                     <th scope="row">Patrimoine futur en {{ horizonYear() }} (nominal)</th>
-                    <td>{{ p.baseline?.keyFigures?.nominalAtHorizonCents ?? null | cents }}</td>
-                    <td>{{ p.keyFigures.nominalAtHorizonCents | cents }}</td>
-                    <td [attr.data-sign]="sign(lastDiff()?.nominalCents ?? null)">{{ lastDiff()?.nominalCents ?? null | signedCents }}</td>
+                    <td [bpmAmount]="p.baseline?.keyFigures?.nominalAtHorizonCents ?? null">{{ p.baseline?.keyFigures?.nominalAtHorizonCents ?? null | cents }}</td>
+                    <td [bpmAmount]="p.keyFigures.nominalAtHorizonCents">{{ p.keyFigures.nominalAtHorizonCents | cents }}</td>
+                    <td [bpmAmount]="lastDiff()?.nominalCents" [attr.data-sign]="sign(lastDiff()?.nominalCents ?? null)">{{ lastDiff()?.nominalCents ?? null | signedCents }}</td>
                   </tr>
                   <tr>
-                    <th scope="row">En euros d’aujourd’hui</th>
-                    <td>{{ p.baseline?.rows?.at(-1)?.realCents ?? null | cents }}</td>
-                    <td>{{ p.rows.at(-1)?.realCents ?? null | cents }}</td>
-                    <td [attr.data-sign]="sign(lastDiff()?.realCents ?? null)">{{ lastDiff()?.realCents ?? null | signedCents }}</td>
+                    <th scope="row">{{ savingsProjection() ? 'En euros de départ' : 'En euros d’aujourd’hui' }}</th>
+                    <td [bpmAmount]="p.baseline?.rows?.at(-1)?.realCents ?? null">{{ p.baseline?.rows?.at(-1)?.realCents ?? null | cents }}</td>
+                    <td [bpmAmount]="p.rows.at(-1)?.realCents ?? null">{{ p.rows.at(-1)?.realCents ?? null | cents }}</td>
+                    <td [bpmAmount]="lastDiff()?.realCents" [attr.data-sign]="sign(lastDiff()?.realCents ?? null)">{{ lastDiff()?.realCents ?? null | signedCents }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -84,18 +89,18 @@ export interface SimulationAdoption { contributionCents: number; cadence: Exclud
                 <div><dt>Horizon</dt><dd>{{ p.hypotheses.horizonYears }} an(s)</dd></div>
                 <div><dt>Rendement annuel</dt><dd>{{ pct(p.hypotheses.ratePct) }}</dd></div>
                 <div><dt>Inflation</dt><dd>{{ pct(p.hypotheses.inflationPct) }} ({{ p.hypotheses.inflationSource }})</dd></div>
-                <div><dt>Apport de base</dt><dd>{{ p.hypotheses.contributionCents | signedCents }} par {{ cadenceText() }} — {{ p.hypotheses.contributionSource }}</dd></div>
-                <div><dt>Effort simulé</dt><dd>{{ (p.hypotheses.extraCents ?? 0) | signedCents }} par {{ cadenceText() }}</dd></div>
-                <div><dt>Stock de départ</dt><dd>{{ p.hypotheses.startCents === null ? 'À renseigner' : (p.hypotheses.startCents | cents) }}</dd></div>
+                <div><dt>Apport de base</dt><dd [bpmAmount]="p.hypotheses.contributionCents">{{ p.hypotheses.contributionCents | signedCents }} par {{ cadenceText() }} — {{ p.hypotheses.contributionSource }}</dd></div>
+                <div><dt>Effort simulé</dt><dd [bpmAmount]="(p.hypotheses.extraCents ?? 0)">{{ (p.hypotheses.extraCents ?? 0) | signedCents }} par {{ cadenceText() }}</dd></div>
+                <div><dt>Stock de départ</dt><dd [bpmAmount]="p.hypotheses.startCents">{{ p.hypotheses.startCents === null ? 'À renseigner' : (p.hypotheses.startCents | cents) }}</dd></div>
               </dl>
             </details>
 
-            <section class="adopt" aria-labelledby="bp-adopt-title">
+            @if (!savingsProjection()) { <section class="adopt" aria-labelledby="bp-adopt-title">
               <h3 id="bp-adopt-title">Retenir ce scénario</h3>
-              <p>Apport proposé : <strong>{{ (p.hypotheses.contributionCents ?? 0) + (p.hypotheses.extraCents ?? 0) | cents }}</strong> par {{ cadenceText() }}.</p>
+              <p>Apport proposé : <strong [bpmAmount]="(p.hypotheses.contributionCents ?? 0) + (p.hypotheses.extraCents ?? 0)">{{ (p.hypotheses.contributionCents ?? 0) + (p.hypotheses.extraCents ?? 0) | cents }}</strong> par {{ cadenceText() }}.</p>
               <p class="bpm-help">Relisez les hypothèses avant de les enregistrer. Cette action ajuste la projection ; elle ne crée ni dépense ni transfert.</p>
               <button type="button" class="btn btn-secondary" [disabled]="sim.loading() || !!sim.error()" (click)="adopt()">Reprendre cet apport dans les hypothèses</button>
-            </section>
+            </section> }
           }
         }
       }
@@ -113,6 +118,7 @@ export class BpmActSimulation {
   private bpm = inject(BpmApi);
   private ctx = inject(BpmPageContext);
   readonly adoptRequest = output<SimulationAdoption>();
+  readonly savingsProjection = input(false);
 
   /** Effort appliqué (euros, URL). */
   protected effort = computed(() => this.ctx.q('effort')());
@@ -130,11 +136,13 @@ export class BpmActSimulation {
   protected extraCents = computed(() => (this.extraEuros() === null ? null : Math.round(this.extraEuros()! * 100)));
 
   protected sim = bpmLoader(
-    () => this.extraEuros(),
-    (extra) => (extra === null || extra === 0 ? Promise.resolve(null) : this.bpm.projection({ extra })),
+    () => ({ extra: this.extraEuros(), savings: this.savingsProjection() }),
+    ({ extra, savings }) => extra === null || extra === 0
+      ? Promise.resolve(null)
+      : this.bpm.projection(savings ? { extra, basis: 'savings-goal' } : { extra }),
   );
 
-  protected cadenceText = computed(() => CADENCE_TEXT[this.sim.data()?.hypotheses.cadence ?? ''] ?? '');
+  protected cadenceText = computed(() => this.savingsProjection() ? 'cycle' : CADENCE_TEXT[this.sim.data()?.hypotheses.cadence ?? ''] ?? '');
   protected years = computed(() => (this.sim.data()?.rows ?? []).map((r) => String(r.year)));
   protected horizonYear = computed(() => this.sim.data()?.rows.at(-1)?.year ?? '');
   protected lastDiff = computed(() => this.sim.data()?.difference?.at(-1) ?? null);

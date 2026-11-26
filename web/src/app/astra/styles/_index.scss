@@ -1,0 +1,31 @@
+// BPM-Astra · couche de présentation, partie à part entière de l'application (comme astra-parts.ts pour la navigation).
+// L'ordre ci-dessous est l'ordre de la cascade : un fichier plus bas l'emporte à spécificité égale.
+//   1. bpm/ : les écrans métier de BPM que présente Astra (catalogue d'écrans), avec leur habillage :
+//      présentation commune → projets et tâches → système de l'application (+ cycle budgétaire) → finitions → sens des couleurs ;
+//   2. le cadre d'Astra : jetons → pictogrammes → accueil → coquille → teintes → cadre (squelette, barre, panneau)
+//      → écrans métier dans le cadre → pages propres → écrans étroits → Mouvements → fenêtres → alignements → chiffres.
+// Échelle d'espacement et règles de mise en page : voir _tokens.scss et la mémoire « Mise en page Astra ».
+// Avant tout changement : npm run styles:audit, puis node e2e/style-fingerprint.mjs save|compare.
+
+// 1. Écrans métier de BPM.
+@use 'bpm/presentation';
+@use 'bpm/projects';
+@use 'bpm/application';
+@use 'bpm/finitions';
+@use 'bpm/semantics';
+
+// 2. Cadre d'Astra.
+@use 'icons';
+@use 'home';
+@use 'shell';
+@use 'tones';
+@use 'frame';
+@use 'toolbar';
+@use 'rail';
+@use 'screens';
+@use 'pages';
+@use 'narrow';
+@use 'movements';
+@use 'dialogs';
+@use 'alignment';
+@use 'metrics';

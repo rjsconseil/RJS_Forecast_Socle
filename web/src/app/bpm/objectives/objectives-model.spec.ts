@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BpmProjection, LifeGoal } from '../../core/bpm-models';
+import { BpmProjection, LifeGoal } from '../data/bpm-models';
 import { objectiveRows, objectivesView } from './objectives-model';
 
 const goal: LifeGoal = { id: 'g1', label: 'Études', type: 'etudes', date: '2030-09-01', targetTodayCents: 100000, removed: false, revision: 1 };

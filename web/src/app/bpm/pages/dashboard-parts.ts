@@ -1,5 +1,6 @@
+import { BpmAmount } from '../ui/amount';
 import { Component, computed, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { BpmRouterLink } from '../ui/bpm-router-link';
 import { ApiError } from '../../core/api.service';
 import { cents, signedCents } from '../../core/format';
 
@@ -27,7 +28,7 @@ export function shade(token: string, i: number) {
 /** État explicite quand la lecture n'a pas de user ou d'ensemble principal prêt (cadre source `.bpm-empty`). */
 @Component({
   selector: 'bpm-setup-needed',
-  imports: [RouterLink],
+  imports: [BpmRouterLink],
   styleUrls: ['../ref-styles/bpm-pages.scss'],
   template: `
     <section class="bpm-empty bpm-card" data-ui-pattern="panel" role="status">
@@ -42,7 +43,7 @@ export function shade(token: string, i: number) {
         <h2>Espace BPM à préparer</h2>
         <p class="bpm-help">{{ message() }}</p>
         <p class="bpm-missing">Terminez la configuration du budget du projet de vie et du patrimoine pour retrouver vos chiffres ici.</p>
-        <div class="bpm-actions"><a class="btn btn-primary" routerLink="/projet-de-vie">Configurer mon projet de vie</a></div>
+        <div class="bpm-actions"><a class="btn btn-primary" routerLink="/projet-de-vie">Fixer mon cycle</a></div>
       }
     </section>
   `,
@@ -64,6 +65,7 @@ export class BpmSetupNeeded {
  */
 @Component({
   selector: 'bpm-dashboard-cap',
+  imports: [BpmAmount],
   template: `
     <figure class="cap">
       <figcaption>Cap patrimonial</figcaption>
@@ -80,16 +82,16 @@ export class BpmSetupNeeded {
                 }
                 <span class="target" [style.left.%]="scale().target" aria-hidden="true"></span>
               </span>
-              <span class="num val">{{ b.value === null ? 'Inconnu' : signed(b.value) }}</span>
+              <span class="num val" [bpmAmount]="b.value">{{ b.value === null ? 'Inconnu' : signed(b.value) }}</span>
             </div>
           }
         </div>
         <dl class="gaps">
-          <div><dt>Objectif de stock</dt><dd class="num">{{ money(target()) }}</dd></div>
+          <div><dt>Objectif de stock</dt><dd class="num" [bpmAmount]="target()" bpmTone="info">{{ money(target()) }}</dd></div>
           @for (b of bars(); track b.key) {
             <div>
               <dt>{{ b.gapLabel }}</dt>
-              <dd class="num" [class.pos]="b.gap !== null && b.gap >= 0" [class.neg]="b.gap !== null && b.gap < 0">{{ gapText(b.gap) }}</dd>
+              <dd class="num" [bpmAmount]="b.gap" [class.pos]="b.gap !== null && b.gap >= 0" [class.neg]="b.gap !== null && b.gap < 0">{{ gapText(b.gap) }}</dd>
             </div>
           }
         </dl>
@@ -173,7 +175,7 @@ export class BpmDashboardCap {
  */
 @Component({
   selector: 'bpm-dashboard-wealth',
-  imports: [RouterLink, BpmDashboardCap],
+  imports: [BpmAmount, BpmRouterLink, BpmDashboardCap],
   styleUrl: '../ref-styles/bpm-dashboard-wealth.component.scss',
   template: `
     <section class="dashboard-wealth" aria-labelledby="dashboard-wealth-title" data-ui-pattern="panel">
@@ -189,13 +191,13 @@ export class BpmDashboardCap {
       }
       <div class="wealth-overview">
         <div class="wealth-base">
-          <span class="wealth-label"><b class="wealth-step" aria-hidden="true">1</b>Notre point de départ</span>
-          <strong>{{ stock() === null ? 'À renseigner' : signed(stock()) }}</strong>
-          <p>Stock d'ouverture + résultats déjà capitalisés avant le début de la période.</p>
+          <span class="wealth-label"><b class="wealth-step" aria-hidden="true">1</b>Patrimoine disponible</span>
+          <strong [bpmAmount]="stock()">{{ stock() === null ? 'À renseigner' : signed(stock()) }}</strong>
+          <p>Stock d’ouverture + résultats déjà capitalisés − flux nets des tâches validés sur le patrimoine.</p>
         </div>
         <div class="wealth-contribution">
           <span class="wealth-label"><b class="wealth-step" aria-hidden="true">2</b>Effet signé de la période</span>
-          <strong class="wealth-contribution-value" [class.is-negative]="(effect() ?? 0) < 0">
+          <strong class="wealth-contribution-value" [bpmAmount]="effect()" [class.is-negative]="(effect() ?? 0) < 0">
             @if (effect() !== null) {
               <span class="flow-direction is-compact" [attr.data-flow]="effect()! < 0 ? 'expense' : 'income'" aria-hidden="true">{{ effect()! < 0 ? '↓' : '↑' }}</span>
             }
@@ -205,14 +207,14 @@ export class BpmDashboardCap {
         </div>
         <div class="wealth-total">
           <span class="wealth-label wealth-estimate-label"><b class="wealth-step" aria-hidden="true">3</b>{{ closed() ? 'Après clôture (enregistré)' : 'Après cette période' }}</span>
-          <strong [class.is-unknown]="after() === null">{{ after() === null ? (stock() === null ? 'À renseigner' : 'Inconnu') : signed(after()) }}</strong>
+          <strong [bpmAmount]="after()" [class.is-unknown]="after() === null">{{ after() === null ? (stock() === null ? 'À renseigner' : 'Inconnu') : signed(after()) }}</strong>
           <p>Stock enregistré + effet de la période, compté une seule fois.</p>
         </div>
         <div class="wealth-target">
           <div class="wealth-target-heading">
             <span class="wealth-label">Objectif de patrimoine</span>
           </div>
-          <strong>{{ objective() === null ? 'Objectif à renseigner' : money(objective()) }}</strong>
+          <strong [bpmAmount]="objective()" bpmTone="info">{{ objective() === null ? 'Objectif à renseigner' : money(objective()) }}</strong>
           @if (progress(); as p) {
             <div class="wealth-cap-comparison">
               <div class="wealth-cap-position">
@@ -222,7 +224,7 @@ export class BpmDashboardCap {
               <div class="wealth-cap-gap" [class.is-reached]="p.gap <= 0">
                 <span>{{ p.gap > 0 ? 'À constituer' : p.gap < 0 ? 'Au-delà de l’objectif' : 'Objectif atteint' }}</span>
                 @if (p.gap !== 0) {
-                  <strong>{{ money(p.gap < 0 ? -p.gap : p.gap) }}</strong>
+                  <strong [bpmAmount]="p.gap" [bpmTone]="p.gap < 0 ? 'warning' : 'success'">{{ money(p.gap < 0 ? -p.gap : p.gap) }}</strong>
                 }
               </div>
             </div>
@@ -236,15 +238,15 @@ export class BpmDashboardCap {
         <summary><span>Comprendre ce montant</span><span class="wealth-chevron" aria-hidden="true">›</span></summary>
         <div class="wealth-composition-body">
           <dl class="wealth-facts">
-            <div><dt>Stock enregistré avant la période</dt><dd>{{ stock() === null ? 'À renseigner' : signed(stock()) }}</dd></div>
-            <div><dt>Contribution de la période affichée</dt><dd [class.is-negative]="(effect() ?? 0) < 0">{{ effect() === null ? 'Inconnu' : signed(effect()) }}</dd></div>
-            <div><dt>{{ closed() ? 'Après clôture (enregistré)' : 'Estimation après la période' }}</dt><dd [class.is-negative]="(after() ?? 0) < 0">{{ after() === null ? 'Inconnu' : signed(after()) }}</dd></div>
-            <div><dt>Objectif de patrimoine</dt><dd>{{ objective() === null ? 'À renseigner' : money(objective()) }}</dd></div>
+            <div><dt>Patrimoine disponible après les validations</dt><dd [bpmAmount]="stock()">{{ stock() === null ? 'À renseigner' : signed(stock()) }}</dd></div>
+            <div><dt>Contribution de la période affichée</dt><dd [bpmAmount]="effect()" [class.is-negative]="(effect() ?? 0) < 0">{{ effect() === null ? 'Inconnu' : signed(effect()) }}</dd></div>
+            <div><dt>{{ closed() ? 'Après clôture (enregistré)' : 'Estimation après la période' }}</dt><dd [bpmAmount]="after()" [class.is-negative]="(after() ?? 0) < 0">{{ after() === null ? 'Inconnu' : signed(after()) }}</dd></div>
+            <div><dt>Objectif de patrimoine</dt><dd [bpmAmount]="objective()" bpmTone="info">{{ objective() === null ? 'À renseigner' : money(objective()) }}</dd></div>
           </dl>
-          <p>Stock enregistré avant la période, puis estimation avec le résultat de la période affichée, sans double compte.</p>
+          <p>Patrimoine disponible après les validations, puis estimation avec le résultat de la période affichée, sans double compte.</p>
           <bpm-dashboard-cap [stock]="stock()" [estimate]="after()" [target]="objective()" />
           <ul class="wealth-rules">
-            <li><strong>Stock enregistré</strong> = stock d'ouverture + résultats déjà capitalisés avant le début de la période. La période lue n'y est pas encore incluse.</li>
+            <li><strong>Stock enregistré</strong> = stock d’ouverture + résultats déjà capitalisés − dépenses nettes validées sur le patrimoine. Le résultat du cycle ouvert n’est pas encore capitalisé.</li>
             <li><strong>Effet signé de la période</strong> = reste réel (reçu − dépensé à date de règlement). Il peut être nul ou négatif.</li>
             <li><strong>Estimation après période</strong> = stock enregistré + effet de la période, compté une seule fois : une capitalisation déjà incluse dans le stock n'est jamais ajoutée une seconde fois.</li>
             <li>À la clôture, le résultat signé est capitalisé une seule fois, y compris s'il est nul ou négatif. Un Patrimoine négatif reste affiché tel quel.</li>

@@ -253,7 +253,8 @@ test('règlements : part obligatoire dans les nouveaux projets et refus des bais
   const p = await project(socle, ctx);
   const t = await task(socle, ctx, p);
   await rejects(operation(socle, ctx, p, t, 20), 'FORBIDDEN_BY_RULE');
-  await rejects(operation(socle, ctx, p, null, 20), 'FORBIDDEN_BY_RULE');
+  // Sans tâche, une dépense de projet est refusée dès la saisie : elle se fait depuis une tâche.
+  await rejects(operation(socle, ctx, p, null, 20), 'VALIDATION');
   await decide(socle, ctx, p, await request(socle, ctx, p, t, 60));
   const paid = await operation(socle, ctx, p, t, 40);
   const unfunded = await task(socle, ctx, p, 'Autre tâche sans part');
@@ -358,7 +359,8 @@ test('isolation : aucun projet, tâche ou demande d’un autre utilisateur ne pe
   const p = await project(socle, ctx);
   const t = await task(socle, ctx, p);
   const r = await request(socle, ctx, p, t, 60);
-  await rejects(projects(socle).createTask(other, { requestKey: key(), title: 'Intrusion', projectId: p.coreProjectId }), 'NOT_FOUND');
+  // Partitions par user : le projet d'un autre user n'existe pas pour celui-ci, il n'est pas un projet de la vie à choisir.
+  await rejects(projects(socle).createTask(other, { requestKey: key(), title: 'Intrusion', projectId: p.coreProjectId }), 'INCOMPATIBLE_REFERENCE');
   await rejects(projects(socle).requestTaskBudget(other, p.budgetId, t.task.id, { requestKey: key(), amount: 80 }), 'NOT_FOUND');
   await rejects(projects(socle).decideTaskBudget(other, r.id, { decision: 'approve', expectedRevision: r.revision }), 'NOT_FOUND');
   assert.equal(JSON.stringify(projects(socle).overview(other)).includes(r.id), false);
@@ -395,25 +397,35 @@ test('gestes en une écriture : part avec dépassement autorisé, dépassement d
   await rejects(projects(socle).releaseTaskShare(ctx, p.budgetId, a.task.id, { expectedRevision: rev() }), 'FORBIDDEN_BY_RULE');
 });
 
-test('règlement financé : part portée au nécessaire et dépassement autorisé dans la même écriture que le règlement', async () => {
+test('règlement financé : dépassement explicite sans augmenter la part initiale', async () => {
   const { socle } = await makeSocle();
   const { ctx } = await camille(socle);
   const p = await project(socle, ctx);
   const t = await task(socle, ctx, p);
-  // Sans part : refus explicite, qui dit aussi le dépassement qu'accorder la part demanderait.
-  await assert.rejects(operation(socle, ctx, p, t, 30), (e) => e.details?.reason === 'task-share' && e.details.grantOverrunCents === 0);
-  await operation(socle, ctx, p, t, 30, { fund: true });
-  let d = detail(socle, ctx, p);
-  assert.equal(d.budget.shares[t.task.id], 3000);
-  assert.equal(d.budget.paidCents, 3000);
-  assert.equal(d.overruns.length, 0);
-  // Au-delà de l'enveloppe (100 €) : la part monte à 120 €, dont 20 € autorisés en dépassement, et le règlement passe.
-  await assert.rejects(operation(socle, ctx, p, t, 90), (e) => e.details?.grantOverrunCents === 2000);
-  await operation(socle, ctx, p, t, 90, { fund: true });
-  d = detail(socle, ctx, p);
-  assert.equal(d.budget.shares[t.task.id], 12000);
-  assert.equal(d.budget.ceilingCents, 12000);
-  assert.equal(d.budget.paidCents, 12000);
-  assert.deepEqual(d.overruns.map((o) => [o.status, o.reason, o.amountCents]), [['approved', 'ventilation', 2000]]);
-  assert.equal(d.budget.state, 'deficit');
+  await assert.rejects(operation(socle, ctx, p, t, 30), (e) => e.details?.reason === 'task-share');
+  await projects(socle).setTaskShare(ctx,p.budgetId,t.task.id,{amount:100,expectedRevision:socle.state.budgets[p.budgetId].revision});
+  await operation(socle, ctx, p, t, 30);
+  await assert.rejects(operation(socle, ctx, p, t, 95), (e) => e.details?.reason === 'task-share');
+  await operation(socle, ctx, p, t, 95, { fund: true });
+  const d = detail(socle, ctx, p);
+  assert.equal(d.budget.shares[t.task.id], 10000);
+  assert.equal(d.budget.ceilingCents, 12500);
+  assert.equal(d.budget.paidCents, 12500);
+  assert.deepEqual([d.tasks[0].budget.remainingCents,d.tasks[0].budget.timeConsumptionPercent,d.tasks[0].budget.timeRemainingPct],[10000,0,100], 'le reste ne suit que le temps');
+  assert.equal(d.tasks[0].budget.cashRemainingCents, -2500, 'le dépassement d’achat reste visible à part');
+  assert.equal(d.tasks[0].task.spentHours,0, 'les achats ne remplacent pas les heures réellement saisies');
+  assert.deepEqual(d.overruns.map((o) => [o.status, o.reason, o.amountCents]), [['approved', 'reglement', 2500]]);
+});
+
+test('règlement financé : réservation initiale groupée sans dépense supplémentaire', async () => {
+  const { socle } = await makeSocle();
+  const { ctx } = await camille(socle);
+  const p = await project(socle, ctx);
+  const t = await task(socle, ctx, p);
+  await operation(socle, ctx, p, t, 30, {fund:true});
+  const d=detail(socle,ctx,p);
+  assert.equal(d.budget.shares[t.task.id],3000);
+  assert.equal(d.budget.paidCents,3000);
+  assert.equal(socle.modules.bpm.figure(ctx,'bpm.charges').value,30);
+  assert.equal(Object.values(socle.state.operations).filter(o=>o.budgetId===p.budgetId).length,1);
 });

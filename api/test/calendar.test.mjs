@@ -38,7 +38,7 @@ test('calendrier : trois calendriers livrés, chacun réglé par son paramètre 
 test('calendrier noyau : projets et tâches du user, entrées de survol, urgence et replanification décrites', async () => {
   const { socle, ctx, project, task, cal } = await setup();
   const r = cal.read(ctx, 'noyau', WINDOW);
-  assert.deepEqual(r.display, { view: 'month', perCell: 2, perPeek: 4, peekCloseDelayMs: 260 });
+  assert.deepEqual(r.display, { view: 'month', perCell: 2, perPeek: 4, peekCloseDelayMs: 260, format: 'standard', design: 'standard', effect: 'standard' });
   assert.deepEqual(r.indicators.map((i) => i.key), ['elements', 'dates', 'suivi']);
   assert.deepEqual(r.events.map((e) => [e.date, e.element, e.title]), [
     ['2026-11-02', 'projet-debut', 'Projet A'],
@@ -146,7 +146,7 @@ test('calendrier Budget/Patrimoine : revenus réglés à leur date réelle, réc
   assert.ok(planned.reschedule?.url.startsWith('/api/bpm/operations/'));
   assert.equal(r.events.find((e) => e.title === 'Loyer' && e.element === 'depense').reschedule, null);
   assert.equal(r.events.find((e) => e.element === 'depense-recurrente').reschedule, null);
-  assert.equal(r.events.find((e) => e.element === 'depense-recurrente').link, `/tableau-de-bord?ligne=${encodeURIComponent(rec.id + '@2026-09-05')}`);
+  assert.equal(r.events.find((e) => e.element === 'depense-recurrente').link, `/bpm-astra/mouvements/echeances?ligne=${encodeURIComponent(rec.id + '@2026-09-05')}`);
   assert.deepEqual(planned.details.map((d) => d.label), ['Montant', 'Statut', 'Centre de coût', 'Budget']);
   // Les montants suivent le format français (espaces insécables) : comparés après normalisation des espaces.
   assert.deepEqual(planned.details.map((d) => d.value.replace(/[\u00a0\u202f]/g, ' ')).slice(0, 3), ['−80,00 €', 'À payer', 'Divers']);
@@ -187,4 +187,33 @@ test('calendrier : répétitions — jour conservé et ramené à la fin du mois
   assert.equal(alignToDay('2026-08-15', 5), '2026-08-05');
   assert.equal(alignToDay('2026-01-03', 5), '2025-12-05');
   assert.deepEqual(repeatDates({ first: '2026-08-05', cadence: 'monthly', position: 'veilleSuivante' }, '2026-08-01', '2026-10-31'), ['2026-09-04', '2026-10-04']);
+});
+
+test('calendrier : indisponibilité exclut les données, masquage conserve une source proposée', async () => {
+  const { socle, ctx, cal } = await setup();
+  const config = structuredClone(socle.modules.administration.parameter('calendrier.noyau').value);
+  config.elements[0].disponible = false;
+  config.elements[1].affiche = false;
+  config.interaction = { access: 'hidden', controls: { sources: false }, fields: { status: true }, includeDone: false };
+  await setCalendar(socle, 'noyau', config);
+  const data = cal.read(ctx, 'noyau', WINDOW);
+  assert.ok(!data.elements.some(el => el.id === config.elements[0].id));
+  assert.ok(!data.events.some(el => el.element === config.elements[0].id));
+  assert.equal(data.elements.find(el => el.id === config.elements[1].id).visible, false);
+  assert.equal(data.interaction.access, 'hidden');
+  assert.equal(data.interaction.controls.sources, false);
+  assert.equal(data.interaction.fields, undefined, 'les informations par événement relèvent désormais des formats');
+  assert.equal(data.interaction.includeDone, false);
+  assert.equal(cal.read(ctx, 'budgetPatrimoine', WINDOW).interaction.access, 'collapsed');
+  await socle.close();
+});
+
+test('calendrier : contrat des commandes et sources validé avant sauvegarde', async () => {
+  const { socle } = await setup();
+  const original = socle.modules.administration.parameter('calendrier.noyau').value;
+  for (const interaction of [{ access: 'invalid' }, { controls: { sources: 'oui' } }, { fields: { unknown: true } }, { includeDone: 1 }]) {
+    assert.throws(() => socle.parameters.validate(socle.state, 'calendrier.noyau', { ...original, interaction }), /attendu|interaction/);
+  }
+  assert.throws(() => socle.parameters.validate(socle.state, 'calendrier.noyau', {...original, elements: original.elements.map(el => ({...el, disponible: 'oui'}))}), /booléen/);
+  await socle.close();
 });

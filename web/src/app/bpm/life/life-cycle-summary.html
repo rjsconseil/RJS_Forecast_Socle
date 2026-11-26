@@ -1,0 +1,44 @@
+<section class="life-summary" aria-label="Synthèse du cycle" [attr.aria-busy]="!data()">
+  <header class="life-summary-heading"><div><span class="life-eyebrow">Votre équilibre</span><h2 id="life-cycle-title">Le cycle en un regard</h2></div><span class="life-period-label">{{data()?.cycle?.period?.label ?? 'Cycle à configurer'}}</span></header>
+  <div class="life-project-stats" aria-label="Repères du cycle">
+      <div class="life-stat life-stat-total"><span>État du cycle</span><strong>{{ data()?.cycle?.period ? readingText().compact : 'À configurer' }}</strong></div>
+      <div class="life-stat"><span>Début</span><strong>{{ (data()?.cycle?.period?.start | shortDate) || '—' }}</strong></div>
+      <div class="life-stat"><span>Fin</span><strong>{{ (data()?.cycle?.period?.end | shortDate) || '—' }}</strong></div>
+      <div class="life-stat"><span>Jours restants</span><strong>{{ data()?.cycle?.days?.left ?? '—' }}</strong></div>
+    <div class="life-progress">
+      <span>Période écoulée</span><strong>{{ data()?.cycle?.days ? pct(data()!.cycle.days!.elapsedPct) : '—' }}</strong>
+      <div
+        class="progress-track"
+        role="progressbar"
+        aria-label="Part écoulée du cycle"
+        [attr.aria-valuenow]="data()?.cycle?.days?.elapsedPct ?? null"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <span [style.width.%]="data()?.cycle?.days?.elapsedPct ?? 0"></span>
+      </div>
+    </div>
+  </div>
+  <dl class="life-financial-stats" [attr.aria-label]="'Budget du cycle · ' + (data()?.cycle?.period?.label ?? '—')">
+    <div class="life-financial-stat life-allocated">
+      <dt>Reçu</dt>
+      <dd [bpmAmount]="data()?.cycle?.flows?.receivedCents" bpmFlow="income">{{ data() ? (data()!.cycle.flows?.receivedCents | cents) : '—' }}</dd>
+      <span>Entrées du cycle</span>
+    </div>
+    <div class="life-financial-stat life-paid">
+      <dt>Dépensé</dt>
+      <dd [bpmAmount]="data()?.cycle?.flows?.paidCents" bpmFlow="expense">{{ data() ? (data()!.cycle.flows?.paidCents | cents) : '—' }}</dd>
+      <span>Projets validés inclus</span>
+    </div>
+    <div class="life-financial-stat life-remaining" [class.is-negative]="(data()?.cycle?.flows?.netCents ?? 0) < 0">
+      <dt>{{ readingText().net }}</dt>
+      <dd [bpmAmount]="data()?.cycle?.flows?.netCents">{{ data() ? (data()!.cycle.flows?.netCents | signedCents) : '—' }}</dd>
+      <span>Reçu − dépensé</span>
+    </div>
+    <div class="life-financial-stat life-available" [class.is-negative]="(data()?.cycle?.flows?.expectedCents ?? 0) < 0">
+      <dt>{{ readingText().expected }}</dt>
+      <dd [bpmAmount]="reading() === 'closed' ? data()?.cycle?.closedResultCents : data()?.cycle?.flows?.expectedCents">{{ data() ? (reading() === 'closed' ? (data()!.cycle.closedResultCents | signedCents) : (data()!.cycle.flows?.expectedCents | signedCents)) : '—' }}</dd>
+      <span>{{ readingText().expectedNote }}</span>
+    </div>
+  </dl>
+</section>

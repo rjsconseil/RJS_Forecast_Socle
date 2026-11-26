@@ -3,207 +3,14 @@
 // registre, et produit des repères datés. Aucune règle propre à un module n'y figure : la configuration dit
 // quelle nature lire, quel champ sert de date, de titre, de montant, ce qui est terminé, ce qui se répète,
 // quelles entrées montrer au survol et quelle commande de l'API replanifie un repère.
-import { fail } from '../../socle/errors.mjs';
 import { isCalendarDate } from '../../socle/validation.mjs';
+import { MARKERS, VIEWS, INDICATORS, asList } from './constants.mjs';
+import { dayNumber, alignToDay, repeatDates } from './dates.mjs';
+import { formatsOf } from './config-validation.mjs';
+export * from './constants.mjs';
+export * from './dates.mjs';
+export * from './config-validation.mjs';
 
-export const TONES = ['bleu', 'indigo', 'violet', 'cyan', 'sarcelle', 'vert', 'ambre', 'orange', 'rouge', 'rose', 'ardoise'];
-export const MARKERS = { debut: 'start', echeance: 'due', ponctuel: 'point' };
-export const VIEWS = { semaine: 'week', mois: 'month', annee: 'year' };
-export const FORMATS = ['texte', 'date', 'heures', 'montant', 'montantSigne', 'nombre', 'pourcentage'];
-export const CADENCES = ['daily', 'weekly', 'monthly', 'yearly'];
-export const INDICATORS = {
-  elements: { label: 'Éléments', description: 'Objets distincts du jour, par nature (projets, tâches, opérations…).' },
-  dates: { label: 'Dates', description: 'Débuts et dates prévues face aux échéances du jour.' },
-  suivi: { label: 'Suivi', description: 'Repères à suivre face aux repères terminés.' },
-  flux: { label: 'Flux', description: 'Montant des entrées et des sorties du jour.' },
-  solde: { label: 'Solde', description: 'Entrées moins sorties du jour.' },
-};
-export const MAX_WINDOW_DAYS = 400;
-
-const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const isText = (v) => typeof v === 'string' && v.trim().length > 0;
-const asList = (v) => (Array.isArray(v) ? v : v === undefined || v === null ? [] : [v]);
-
-// ---------- dates ----------
-
-const pad = (n) => String(n).padStart(2, '0');
-const iso = (d) => `${String(d.getUTCFullYear()).padStart(4, '0')}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-const utc = (y, m, d) => {
-  const r = new Date(0);
-  r.setUTCFullYear(y, m, d);
-  return r;
-};
-const parts = (ymd) => ymd.split('-').map(Number);
-export const dayNumber = (ymd) => {
-  const [y, m, d] = parts(ymd);
-  return Math.round(utc(y, m - 1, d).getTime() / 86400000);
-};
-export const addDays = (ymd, n) => {
-  const [y, m, d] = parts(ymd);
-  return iso(utc(y, m - 1, d + n));
-};
-const daysInMonth = (y, m) => utc(y, m + 1, 0).getUTCDate();
-
-/** n-ième date (n ≥ 0) d'une répétition : le mois et l'année gardent le jour d'origine, ramené au dernier jour du mois. */
-export function nthDate(first, cadence, n) {
-  const [y, m, d] = parts(first);
-  if (cadence === 'daily') return iso(utc(y, m - 1, d + n));
-  if (cadence === 'weekly') return iso(utc(y, m - 1, d + 7 * n));
-  const months = m - 1 + n * (cadence === 'yearly' ? 12 : 1);
-  const year = y + Math.floor(months / 12);
-  const month = months - Math.floor(months / 12) * 12;
-  return iso(utc(year, month, Math.min(d, daysInMonth(year, month))));
-}
-
-/** Date du jour `day` du mois de `ymd`, ou du mois précédent si ce jour n'est pas encore atteint (ancrage d'un cycle). */
-export function alignToDay(ymd, day) {
-  if (!isCalendarDate(ymd) || !Number.isInteger(day) || day < 1 || day > 31) return ymd;
-  const [y, m, d] = parts(ymd);
-  const month = d >= day ? m - 1 : m - 2;
-  const year = y + Math.floor(month / 12);
-  const mm = month - Math.floor(month / 12) * 12;
-  return iso(utc(year, mm, Math.min(day, daysInMonth(year, mm))));
-}
-
-/** Rang de départ pour atteindre `from` sans énumérer depuis la première date (une marge de sécurité incluse). */
-function startRank(first, cadence, from) {
-  if (from <= first) return 0;
-  const days = dayNumber(from) - dayNumber(first);
-  if (cadence === 'daily') return Math.max(0, days - 1);
-  if (cadence === 'weekly') return Math.max(0, Math.floor(days / 7) - 1);
-  const [fy, fm] = parts(first);
-  const [y, m] = parts(from);
-  return Math.max(0, Math.floor(((y - fy) * 12 + (m - fm)) / (cadence === 'yearly' ? 12 : 1)) - 1);
-}
-
-/**
- * Dates d'une répétition comprises dans [from, to]. `position: 'veilleSuivante'` place chaque repère la veille
- * de l'occurrence suivante (la fin d'une période qui commence à l'occurrence).
- */
-export function repeatDates({ first, last, cadence, position = 'occurrence' }, from, to) {
-  if (!isCalendarDate(first) || !CADENCES.includes(cadence)) return [];
-  const out = [];
-  const dateOf = (n) => (position === 'veilleSuivante' ? addDays(nthDate(first, cadence, n + 1), -1) : nthDate(first, cadence, n));
-  for (let n = startRank(first, cadence, from), date = dateOf(n); date <= to; date = dateOf(++n)) {
-    if (last && nthDate(first, cadence, n) > last) break;
-    if (date >= from) out.push(date);
-    if (n > 5000) break;
-  }
-  return out;
-}
-
-// ---------- validation de la configuration ----------
-
-function validateCondition(cond, at) {
-  if (cond === undefined) return;
-  if (!isObj(cond)) fail('VALIDATION', `${at} : une condition { champ: [valeurs] } est attendue.`);
-  for (const [field, rule] of Object.entries(cond)) {
-    if (field === 'relies') {
-      if (!isObj(rule) || !isText(rule.nature) || !isText(rule.champ)) fail('VALIDATION', `${at}.relies : { nature, champ, tous } est attendu.`);
-      validateCondition(rule.tous, `${at}.relies.tous`);
-      continue;
-    }
-    if (!(Array.isArray(rule) || (isObj(rule) && Array.isArray(rule.sauf)))) fail('VALIDATION', `${at}.${field} : une liste de valeurs ou { sauf: [...] } est attendue.`);
-  }
-}
-
-function validateEntry(entry, at, natureOk) {
-  if (!isObj(entry)) fail('VALIDATION', `${at} : une entrée { libelle, champ… } est attendue.`);
-  if (entry.libelle !== undefined && !isText(entry.libelle)) fail('VALIDATION', `${at}.libelle : un texte est attendu.`);
-  const sources = ['champ', 'texte', 'relies'].filter((k) => entry[k] !== undefined);
-  if (!sources.length) fail('VALIDATION', `${at} : « champ », « texte » ou « relies » est attendu.`);
-  if (entry.champ !== undefined && !(isText(entry.champ) || (Array.isArray(entry.champ) && entry.champ.every(isText)))) fail('VALIDATION', `${at}.champ : un nom de champ (ou une liste) est attendu.`);
-  if (entry.texte !== undefined && !isText(entry.texte)) fail('VALIDATION', `${at}.texte : un modèle de texte est attendu.`);
-  if (entry.format !== undefined && !FORMATS.includes(entry.format)) fail('VALIDATION', `${at}.format : format inconnu « ${entry.format} ».`, { formats: FORMATS });
-  if (entry.valeurs !== undefined && !isObj(entry.valeurs)) fail('VALIDATION', `${at}.valeurs : une table { valeur: libellé } est attendue.`);
-  if (entry.reference !== undefined) {
-    if (!isObj(entry.reference) || !isText(entry.reference.nature) || !isText(entry.reference.champ)) fail('VALIDATION', `${at}.reference : { nature, champ } est attendu.`);
-    natureOk(entry.reference.nature, `${at}.reference`);
-  }
-  if (entry.parametre !== undefined && (!isObj(entry.parametre) || !isText(entry.parametre.cle) || !isText(entry.parametre.id) || !isText(entry.parametre.champ))) fail('VALIDATION', `${at}.parametre : { cle, id, champ } est attendu.`);
-  if (entry.relies !== undefined) {
-    if (!isObj(entry.relies) || !isText(entry.relies.nature) || !isText(entry.relies.champ)) fail('VALIDATION', `${at}.relies : { nature, champ, termine } est attendu.`);
-    natureOk(entry.relies.nature, `${at}.relies`);
-    validateCondition(entry.relies.termine, `${at}.relies.termine`);
-  }
-  if (entry.vide !== undefined && typeof entry.vide !== 'string') fail('VALIDATION', `${at}.vide : un texte est attendu.`);
-  if (entry.sinon !== undefined) validateEntry(entry.sinon, `${at}.sinon`, natureOk);
-}
-
-/** Contrôle complet d'une configuration de calendrier ; les natures doivent exister au registre. */
-export function validateConfiguration(config, registry) {
-  const natureOk = (nature, at) => {
-    if (!registry.kinds.has(nature)) fail('VALIDATION', `${at} : nature d'objet inconnue « ${nature} ».`, { natures: [...registry.kinds.keys()] });
-  };
-  if (!isObj(config)) fail('VALIDATION', 'Une configuration { libelle, elements… } est attendue.');
-  if (!isText(config.libelle)) fail('VALIDATION', 'La configuration a un libellé.');
-  if (config.vue !== undefined && !VIEWS[config.vue]) fail('VALIDATION', 'Vue attendue : semaine, mois ou annee.', { vues: Object.keys(VIEWS) });
-  for (const [k, min, max] of [['reperesParCase', 0, 8], ['reperesAuSurvol', 1, 30], ['delaiFermetureSurvol', 0, 3000]]) {
-    if (config[k] !== undefined && (!Number.isInteger(config[k]) || config[k] < min || config[k] > max)) fail('VALIDATION', `${k} : un entier entre ${min} et ${max} est attendu.`);
-  }
-  if (config.indicateurs !== undefined) {
-    if (!Array.isArray(config.indicateurs) || config.indicateurs.length < 1 || config.indicateurs.length > 4) fail('VALIDATION', 'Entre 1 et 4 indicateurs sont attendus.');
-    const seen = new Set();
-    for (const k of config.indicateurs) {
-      if (!INDICATORS[k]) fail('VALIDATION', `Indicateur inconnu « ${k} ».`, { indicateurs: Object.keys(INDICATORS) });
-      if (seen.has(k)) fail('VALIDATION', `Indicateur en double « ${k} ».`);
-      seen.add(k);
-    }
-  }
-  if (!Array.isArray(config.elements) || !config.elements.length) fail('VALIDATION', 'Au moins un élément est attendu.');
-  const ids = new Set();
-  config.elements.forEach((el, i) => {
-    const at = `elements[${i}]`;
-    if (!isObj(el)) fail('VALIDATION', `${at} : un objet est attendu.`);
-    if (!isText(el.id) || !/^[a-z0-9-]+$/i.test(el.id)) fail('VALIDATION', `${at}.id : identifiant en lettres, chiffres et tirets.`);
-    if (ids.has(el.id)) fail('VALIDATION', `${at}.id : « ${el.id} » figure deux fois.`);
-    ids.add(el.id);
-    if (!isText(el.libelle)) fail('VALIDATION', `${at}.libelle : un libellé est attendu.`);
-    if (!isText(el.nature)) fail('VALIDATION', `${at}.nature : une nature d'objet est attendue.`);
-    natureOk(el.nature, at);
-    if (!(isText(el.date) || (Array.isArray(el.date) && el.date.length && el.date.every(isText)))) fail('VALIDATION', `${at}.date : le champ date (ou une liste, le premier renseigné) est attendu.`);
-    if (!isText(el.titre)) fail('VALIDATION', `${at}.titre : un modèle de titre est attendu (ex. « {title} »).`);
-    if (el.repere !== undefined && !MARKERS[el.repere]) fail('VALIDATION', `${at}.repere : debut, echeance ou ponctuel.`);
-    if (el.couleur !== undefined && !TONES.includes(el.couleur)) fail('VALIDATION', `${at}.couleur : couleur inconnue « ${el.couleur} ».`, { couleurs: TONES });
-    if (el.affiche !== undefined && typeof el.affiche !== 'boolean') fail('VALIDATION', `${at}.affiche : true ou false.`);
-    if (el.urgence !== undefined && typeof el.urgence !== 'boolean') fail('VALIDATION', `${at}.urgence : true ou false.`);
-    if (el.objet !== undefined && !(Array.isArray(el.objet) && el.objet.length === 2 && el.objet.every(isText))) fail('VALIDATION', `${at}.objet : [singulier, pluriel] est attendu.`);
-    if (el.lien !== undefined && (!isText(el.lien) || !el.lien.startsWith('/'))) fail('VALIDATION', `${at}.lien : un chemin du site commençant par « / » est attendu.`);
-    validateCondition(el.filtre, `${at}.filtre`);
-    validateCondition(el.termine, `${at}.termine`);
-    if (el.statut !== undefined) validateEntry(el.statut, `${at}.statut`, natureOk);
-    if (el.groupe !== undefined) validateEntry(el.groupe, `${at}.groupe`, natureOk);
-    if (el.montant !== undefined) {
-      const m = el.montant;
-      if (!isObj(m) || !(isText(m.champ) || (Array.isArray(m.champ) && m.champ.every(isText)))) fail('VALIDATION', `${at}.montant : { champ, sens } est attendu (montant en centimes).`);
-      if (m.sens !== undefined && !(isObj(m.sens) && ((isText(m.sens.champ) && isObj(m.sens.valeurs)) || ['entree', 'sortie'].includes(m.sens.fixe)))) fail('VALIDATION', `${at}.montant.sens : { champ, valeurs: { valeur: "entree" | "sortie" } } ou { fixe: "entree" | "sortie" }.`);
-    }
-    if (el.repetition !== undefined) {
-      const r = el.repetition;
-      if (!isObj(r) || !isText(r.debut) || !(isText(r.cadence) || CADENCES.includes(r.cadenceFixe))) fail('VALIDATION', `${at}.repetition : { debut, fin?, cadence | cadenceFixe, ancrage?, position?, remplacePar? } est attendu.`, { cadences: CADENCES });
-      if (r.position !== undefined && !['occurrence', 'veilleSuivante'].includes(r.position)) fail('VALIDATION', `${at}.repetition.position : occurrence ou veilleSuivante.`);
-      if (r.ancrage !== undefined && !isText(r.ancrage)) fail('VALIDATION', `${at}.repetition.ancrage : le champ qui porte le jour du mois est attendu.`);
-      if (r.remplacePar !== undefined) {
-        if (!isObj(r.remplacePar) || !isText(r.remplacePar.nature) || !isText(r.remplacePar.champ) || !isText(r.remplacePar.date)) fail('VALIDATION', `${at}.repetition.remplacePar : { nature, champ, date } est attendu.`);
-        natureOk(r.remplacePar.nature, `${at}.repetition.remplacePar`);
-      }
-    }
-    if (el.replanifier !== undefined) {
-      const r = el.replanifier;
-      if (!isObj(r) || !['PUT', 'POST'].includes(r.methode) || !isText(r.route) || !r.route.startsWith('/api/') || !isText(r.champ)) fail('VALIDATION', `${at}.replanifier : { methode: PUT | POST, route: "/api/…/{id}", champ, si? } est attendu.`);
-      validateCondition(r.si, `${at}.replanifier.si`);
-    }
-    if (el.survol !== undefined) {
-      if (!Array.isArray(el.survol)) fail('VALIDATION', `${at}.survol : une liste d'entrées est attendue.`);
-      el.survol.forEach((entry, j) => {
-        validateEntry(entry, `${at}.survol[${j}]`, natureOk);
-        if (!isText(entry.libelle)) fail('VALIDATION', `${at}.survol[${j}].libelle : chaque entrée de survol a un libellé.`);
-      });
-    }
-  });
-}
-
-// ---------- lecture des données du user ----------
 
 const MONEY = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 const NUMBER = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 });
@@ -227,14 +34,19 @@ const firstOf = (obj, fields) => {
 
 /**
  * Contexte de lecture : objets du user par nature (index par id), paramètres effectifs, date du jour.
- * Les objets ne sont jamais modifiés ; seuls ceux du user du contexte sont visibles.
+ * Les objets ne sont jamais modifiés ; seuls ceux du user du contexte sont visibles. Une nature peut aussi
+ * être fournie par un module (`provided` : nature → lecture) : le moteur la lit comme une nature stockée.
  */
-export function readerFor(state, registry, parameters, userId, today) {
+export function readerFor(state, registry, parameters, userId, today, provided = new Map()) {
   const cache = new Map();
   const objectsOf = (nature) => {
     if (!cache.has(nature)) {
-      const def = registry.kind(nature);
-      cache.set(nature, Object.values(state[def.collection] ?? {}).filter((o) => o.userId === userId));
+      // Nature fournie par un module (lecture calculée pour la fenêtre et le user du contexte) ou nature stockée.
+      if (provided.has(nature)) cache.set(nature, provided.get(nature)());
+      else {
+        const def = registry.kind(nature);
+        cache.set(nature, Object.values(state[def.collection] ?? {}).filter((o) => o.userId === userId));
+      }
     }
     return cache.get(nature);
   };
@@ -403,8 +215,17 @@ export function eventsOf(el, reader, { from, to }) {
 }
 
 /** Lecture complète d'une configuration : éléments résolus, repères triés, réglages d'affichage. */
-export function readCalendar(config, reader, win) {
-  const elements = config.elements.map((el) => ({
+export function readCalendar(config, reader, win, { plugged = null, foreign = [], ownFormats = [] } = {}) {
+  const offered = [
+    ...config.elements.filter((el) => el.disponible !== false).map((el) => ({ el, origin: null })),
+    ...foreign,
+  ];
+  // Sans choix de la personne, les sources de la configuration (sauf `branche: false`) ; sinon, son choix.
+  const isPlugged = ({ el, origin }) => (plugged ? plugged.has(el.id) : !origin && el.branche !== false);
+  const available = offered.filter(isPlugged).map((x) => x.el);
+  const originOf = new Map(offered.map((x) => [x.el.id, x.origin]));
+  const describe = (el) => ({ id: el.id, label: el.libelle, nature: el.nature, tone: el.couleur ?? 'bleu', origin: originOf.get(el.id) ?? null });
+  const elements = available.map((el) => ({
     id: el.id,
     label: el.libelle,
     nature: el.nature,
@@ -414,20 +235,33 @@ export function readCalendar(config, reader, win) {
     objectLabel: { one: el.objet?.[0] ?? 'élément', many: el.objet?.[1] ?? 'éléments' },
     hover: (el.survol ?? []).map((s) => s.libelle),
     reschedulable: !!el.replanifier && !el.repetition,
+    origin: originOf.get(el.id) ?? null,
   }));
-  const order = new Map(config.elements.map((el, i) => [el.id, i]));
-  const events = config.elements
+  const order = new Map(offered.map((x, i) => [x.el.id, i]));
+  const events = available
     .flatMap((el) => eventsOf(el, reader, win))
     .sort((a, b) => a.date.localeCompare(b.date) || order.get(a.element) - order.get(b.element) || a.title.localeCompare(b.title, 'fr'));
   return {
+    interaction: {
+      access: config.interaction?.access ?? 'collapsed',
+      controls: { sources: true, fields: true, indicators: true, density: true, completed: true, appearance: true, ...config.interaction?.controls },
+      includeDone: config.interaction?.includeDone ?? true,
+    },
     display: {
       view: VIEWS[config.vue ?? 'mois'],
       perCell: config.reperesParCase ?? 2,
       perPeek: config.reperesAuSurvol ?? 4,
       peekCloseDelayMs: config.delaiFermetureSurvol ?? 260,
+      format: config.format ?? 'standard',
+      design: config.design ?? 'standard',
+      effect: config.effet ?? 'standard',
     },
+    formats: [...formatsOf(config), ...ownFormats.map((f) => ({ ...f, builtIn: false, own: true }))],
+    library: offered.filter((x) => !isPlugged(x)).map((x) => describe(x.el)),
+    plugged: plugged ? [...plugged].filter((id) => originOf.has(id)) : null,
     indicators: (config.indicateurs ?? ['elements', 'dates', 'suivi']).map((k) => ({ key: k, label: INDICATORS[k].label })),
     elements,
     events,
   };
 }
+

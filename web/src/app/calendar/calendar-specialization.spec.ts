@@ -34,9 +34,10 @@ async function setup(calendar: string, key?: string) {
 }
 
 describe('pages spécialisées du calendrier partagé', () => {
-  it('présente l’agenda du noyau dans le bandeau central sans synthèse ni grille', async () => {
+  it('présente l’agenda du noyau dans le même bandeau que tout calendrier, sans synthèse ni grille', async () => {
     const dom = await setup('noyau', 'calendar-agenda');
-    expect(dom.querySelector('rjs-app-hero h1')?.textContent).toContain('Agenda spécialisé');
+    expect(dom.querySelector('rjs-page-banner')).toBeTruthy();
+    expect(dom.querySelector('rjs-app-hero')).toBeNull();
     expect(dom.querySelector('.calendar-agenda')).toBeTruthy();
     expect(dom.querySelector('.calendar-360-overview')).toBeNull();
     expect(dom.querySelector('.calendar-360-content')).toBeNull();
@@ -44,16 +45,16 @@ describe('pages spécialisées du calendrier partagé', () => {
     expect(dom.querySelector('.calendar-elements')).toBeNull();
   });
 
-  it('place les préférences BPM dans le dépliant « Sources et affichage » de la page, une seule fois', async () => {
-    const dom = await setup('budgetPatrimoine');
+  it.each(['budgetPatrimoine', 'noyau'])('place les préférences du calendrier « %s » dans le dépliant « Sources et affichage », une seule fois', async (calendar) => {
+    const dom = await setup(calendar);
     const settings = dom.querySelector<HTMLDetailsElement>('details#sources-et-affichage')!;
     expect(settings.querySelector('summary')?.textContent).toContain('Sources et affichage');
     expect(settings.open).toBe(false);
-    expect(settings.querySelector('#bpm-calendar-personalization h3')?.textContent).toContain('Votre calendrier, vos repères');
-    expect(dom.querySelectorAll('#bpm-calendar-personalization')).toHaveLength(1);
+    expect(settings.querySelector('#cal-personalization h3')?.textContent).toContain('Votre calendrier, vos repères');
+    expect(dom.querySelectorAll('#cal-personalization')).toHaveLength(1);
     expect(dom.querySelector('.calendar-360-milestone')).toBeNull();
     expect(dom.textContent).not.toContain('Chronologie des événements');
-    const button = [...dom.querySelectorAll<HTMLButtonElement>('bpm-page-banner button')].find((b) => b.textContent?.includes('Sources et affichage'))!;
+    const button = [...dom.querySelectorAll<HTMLButtonElement>('rjs-page-banner button')].find((b) => b.textContent?.includes('Sources et affichage'))!;
     button.click();
     fixture.detectChanges();
     expect(settings.open).toBe(true);

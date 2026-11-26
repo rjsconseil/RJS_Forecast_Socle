@@ -12,7 +12,7 @@ export function lifeLines(t, lines) {
     let rank = 0;
     t.recurrence(
       name,
-      { direction, amount, center, cadence: o.cadence ?? "monthly", firstDate, endDate: o.endDate, category: o.category, label: o.label },
+      { direction, amount, center, cadence: o.cadence ?? "monthly", firstDate, endDate: o.endDate, label: o.label },
       {
         settle:
           o.settle ??
@@ -29,12 +29,6 @@ export function oneOffs(t, byCycle, direction = "charge") {
   for (const [i, list] of Object.entries(byCycle))
     for (const [name, amount, center, day, o = {}] of list)
       t.operation(name, { direction, amount, center, date: dayOf(t.cycles[i], day), ...o });
-}
-
-export async function category(t, name, def) {
-  const r = await t.B.createCategory(t.ctx, { requestKey: t.key(), label: def.label ?? name, costCenterRef: def.center, cap: def.cap ?? undefined });
-  t.categories[name] = r.category.id;
-  return r.category;
 }
 
 export async function caps(t, caps) {

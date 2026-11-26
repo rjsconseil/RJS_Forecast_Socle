@@ -8,7 +8,7 @@ import {
   oneOf,
   text,
 } from '../../socle/validation.mjs';
-import { CADENCES } from '../budget/recurrence.mjs';
+import { CADENCES } from '../cycle/api.mjs';
 import { GOAL_TYPES, project } from './projection.mjs';
 export const DEFAULT_PROJECTION = {
   horizonYears: 20,
@@ -211,7 +211,7 @@ export function createObjectives(socle) {
       const state = socle.state;
       const userId = om.requireUser(state, ctx);
       return goalsOf(state, userId).map((g) => ({
-        ...structuredClone(g),
+        ...g,
         typeLabel: GOAL_TYPES[g.type].label,
       }));
     },
@@ -227,7 +227,7 @@ export function createObjectives(socle) {
       );
       return {
         replayed: r.replayed,
-        goal: structuredClone(socle.state.lifeGoals[r.goalId]),
+        goal: socle.state.lifeGoals[r.goalId],
       };
     },
 
@@ -238,7 +238,7 @@ export function createObjectives(socle) {
         this.patchGoal(tx, id, input);
         return { goalId: id };
       });
-      return { goal: structuredClone(socle.state.lifeGoals[id]) };
+      return { goal: socle.state.lifeGoals[id] };
     },
 
     /** Retrait d'un objectif : conservé dans l'historique (traçabilité), exclu des projections. */

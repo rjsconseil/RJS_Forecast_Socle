@@ -80,10 +80,13 @@ test("renommer un projet de la vie renomme son budget dans les listes et le regi
   const { ctx } = await camille(socle);
   const P = socle.modules.bpm.projects;
   const p = await P.createProject(ctx, { requestKey: key(), title: "Salle de bain", amount: 500 });
+  const { task } = await P.createTask(ctx, { requestKey: key(), title: 'Pose', projectId: p.coreProjectId });
+  await socle.modules.budget.createOperation(ctx, { requestKey: key(), budgetId: p.budgetId, taskId: task.id, direction: 'charge', label: 'Matériaux', amount: 100, date: '2026-11-03', status: 'realized', costCenterRef: 'std:logement', fund: true });
   const project = socle.state.coreProjects[p.coreProjectId];
   await socle.modules.core.updateCoreProject(ctx, project.id, { expectedRevision: project.revision, title: "Rénovation de la cuisine" });
   assert.equal(socle.state.budgets[p.budgetId].name, "Rénovation de la cuisine");
   const lines = socle.modules.bpm.reads.register(ctx, { period: "2026-11", groupBy: "none" }).lines;
-  assert.ok(lines.some((l) => l.label === "Budget attribué · Rénovation de la cuisine"));
+  assert.ok(lines.some((l) => l.label === "Matériaux" && l.budgetName === "Rénovation de la cuisine"));
+  assert.ok(!lines.some(l => l.special));
   assert.ok(!lines.some((l) => l.label.includes("Salle de bain")));
 });

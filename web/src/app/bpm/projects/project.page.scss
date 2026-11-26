@@ -10,11 +10,6 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 28px;
 }
-.project-back {
-  display: inline-block;
-  margin-bottom: 8px;
-  font-size: 13px;
-}
 .project-detail-banner .life-banner-copy h1 {
   overflow-wrap: anywhere;
 }
@@ -27,50 +22,11 @@
   color: var(--muted);
   margin-bottom: 10px;
 }
-.project-description {
-  max-width: 933px;
-  position: relative;
-  padding-right: 120px;
-}
-.project-description p {
-  font-size: 18px;
-  line-height: 1.45;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  white-space: pre-line;
-}
-.project-description p.is-expanded {
-  display: block;
-}
-.project-description button {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  font-size: 12px;
-}
 .project-cockpit {
   min-width: 0;
   position: static;
   max-height: none;
   overflow: visible;
-}
-.cockpit-status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 0;
-}
-.cockpit-status .status-value {
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--field-surface);
-  color: var(--field-ink);
-  font-weight: 700;
-  font-size: 14px;
 }
 .cockpit-actions {
   display: grid;
@@ -159,6 +115,9 @@
 }
 .cockpit-facts > div {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  overflow-wrap: anywhere;
   align-content: start;
   gap: 8px;
 }
@@ -256,7 +215,7 @@
   flex-direction: column;
   height: var(--task-card-height);
   min-width: 0;
-  padding: 16px !important;
+  padding: 16px;
   font-weight: 400;
   overflow: hidden;
 }
@@ -434,30 +393,20 @@
 .task-card-actions .text-link {
   font-size: 12px;
 }
-.task-detail-body {
-  display: grid;
-  gap: 20px;
-  padding-top: 16px;
-  font-size: 13px;
-}
-.task-detail-body form,
 .task-funding-box form {
   display: grid;
   gap: 10px;
   margin-top: 12px;
 }
-.task-detail-body label,
 .task-funding-box label {
   display: grid;
   gap: 6px;
   font-size: 12px;
 }
-.task-detail-body :is(input, select),
 .task-funding-box input {
   width: 100%;
   min-width: 0;
 }
-.task-detail-body .btn,
 .task-funding-box .btn {
   font-size: 12px;
   min-height: 38px;
@@ -471,8 +420,7 @@
   background: var(--app-accent-soft);
   margin-bottom: 14px;
 }
-.task-funding-box p,
-.task-detail-body form p {
+.task-funding-box p {
   font-size: 12px;
   line-height: 1.6;
   margin: 0;
@@ -509,16 +457,6 @@
   }
 }
 @media (max-width: 700px) {
-  .project-description {
-    padding-right: 0;
-  }
-  .project-description button {
-    position: static;
-    margin-top: 6px;
-  }
-  .project-description p {
-    font-size: 16px;
-  }
   .cockpit-details {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -590,12 +528,6 @@
   font-weight: 600;
 }
 
-.project-back-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1.25rem;
-}
-
 /* Fenêtre d'une tâche : tout le détail que la carte de taille fixe ne montre pas. */
 .task-panel {
   display: grid;
@@ -625,7 +557,7 @@
   gap: 10px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
-  scroll-margin-top: 12px;
+  scroll-margin-top: 140px;
 }
 .task-panel-section h3 {
   margin: 0;
@@ -754,3 +686,11 @@
 .project-abandon ul { display: grid; gap: 6px; margin: 0; padding-left: 1.2em; }
 .project-abandon label { display: grid; gap: 6px; max-width: 420px; font-weight: 600; }
 .project-abandon .bpm-help { margin: 0; }
+
+/* La part d'une tâche se décide depuis son chiffre : « À demander » ou le montant ouvrent la fenêtre de part.*/
+.task-share-link {
+  padding: 0; border: 0; background: none; font: inherit; color: var(--astra-link, var(--bpm-link)); cursor: pointer;
+  text-decoration: underline; text-decoration-color: var(--astra-keyline, currentColor); text-underline-offset: 3px;
+  &:hover { text-decoration-color: currentColor; }
+  &.is-missing { font-weight: 650; }
+}

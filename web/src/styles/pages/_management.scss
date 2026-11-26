@@ -1,0 +1,78 @@
+@use 'contrat-ruptures' as *;
+
+.management-panel {
+  min-width: 0;
+  padding: var(--card-padding, var(--ecart-20));
+  margin-bottom: var(--ecart-20);
+  border: var(--card-border-width, var(--trait-2)) solid var(--card-border, var(--outline));
+  border-radius: var(--card-radius, var(--radius-sm));
+  background: var(--card-surface, var(--raised-surface));
+  color: var(--card-ink, var(--ink));
+}
+.management-totals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-16);
+}
+.management-columns {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1));
+  gap: var(--ecart-20);
+}
+.management-form,
+.management-form label {
+  display: grid;
+  gap: var(--ecart-8);
+}
+.management-form {
+  gap: var(--ecart-16);
+}
+.management-form input,
+.management-form select,
+.management-form textarea {
+  max-width: var(--part-100);
+  min-width: 0;
+}
+.management-records {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--ecart-12);
+}
+.management-records li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  padding: var(--ecart-12);
+  border-bottom: var(--trait-1) solid var(--outline);
+}
+/* Une prévision d'actif négative : l'état d'attention reste porté par le texte, pas par la couleur seule. */
+.management-records li > div {
+  display: grid;
+  gap: var(--ecart-8);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.management-totals > div {
+  flex: var(--flex-1);
+  min-width: 0;
+}
+.management-totals dd {
+  margin: 0;
+  font-size: var(--texte-24);
+  font-weight: var(--graisse-700);
+}
+.management-message {
+  padding: var(--ecart-16);
+  border: var(--trait-2) solid var(--outline);
+}
+@media (max-width: $rupture-820) {
+  .management-columns {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+
+/* Le premier centre reste dans le formulaire de son projet, sans colonne perdue. */

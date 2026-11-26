@@ -1,22 +1,23 @@
-import { Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { BpmAmount } from '../ui/amount';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { BpmRouterLink } from '../ui/bpm-router-link';
 import { publishObjectLabel } from '../../plan/plan-context';
-import { toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { EntryInput, RegisterLine } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { EntryInput, RegisterLine } from '../data/bpm-models';
 import { cents, CentsPipe, percentText, ShortDatePipe } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
-import { BpmCapChart, BpmCapGauge, BpmLineDetail, bpmLoader, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmState, capEuroText, capInput, CapRow, newRequestKey } from '../ui';
+import { BpmCapChart, BpmCapGauge, BpmLineDetail, bpmLoader, BpmEntryFlow, BpmPageContext, BpmPageFrame, BpmPageFocus, nextOpenLine, BpmState, CapRow, BpmQuickSettle } from '../ui';
+import { BpmCapDialog } from '../ui/cap-dialog';
 
 /** Page d'où l'on vient (`?from=`) : le lien du bandeau remonte vers elle, nommée comme dans le menu. */
 const ORIGINS: Record<string, { label: string; link: string }> = {
   'tableau-de-bord': { label: 'Tableau de bord', link: '/tableau-de-bord' },
-  piloter: { label: 'Graphiques et chiffres', link: '/piloter' },
-  depenses: { label: 'Registre des flux', link: '/depenses/registre' },
-  entrees: { label: 'Entrées de la période', link: '/tableau-de-bord/entrees' },
+  piloter: { label: 'Tableau de bord', link: '/tableau-de-bord' },
+  depenses: { label: 'Registre de flux', link: '/depenses/registre' },
+  entrees: { label: 'Registre de flux', link: '/tableau-de-bord/entrees' },
   'projet-de-vie': { label: 'Gestion du projet de vie', link: '/projet-de-vie' },
-  plafonds: { label: 'Plafonds et catégories', link: '/plafonds' },
+  plafonds: { label: 'Plafonds', link: '/plafonds' },
 };
 
 /**
@@ -27,7 +28,7 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
  */
 @Component({
   selector: 'bpm-page-center',
-  imports: [FormsModule, RouterLink, BpmPageFrame, BpmState, BpmCapChart, BpmCapGauge, BpmLineDetail, BpmEntryFlow, MetricTilesComponent, CentsPipe, ShortDatePipe],
+  imports: [BpmAmount, BpmQuickSettle, BpmRouterLink, BpmPageFrame, BpmState, BpmCapChart, BpmCapGauge, BpmCapDialog, BpmLineDetail, BpmEntryFlow, MetricTilesComponent, CentsPipe, ShortDatePipe],
   providers: [BpmPageContext],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-money.scss', '../ref-styles/bpm-money-detail.page.scss', './bpm-money-page.scss'],
   template: `
@@ -35,7 +36,7 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
       [back]="{ label: origin().label, link: origin().link, query: ctx.carry(), direct: true }"
       [title]="title()"
       pageClass="bpm-money bpm-money-detail"
-      [lead]="lead()" [focus]="pageFocus()" [result]="capNotice() ? { message: capNotice()!.text, tone: capNotice()!.error ? 'danger' : 'success' } : message() ? { message: message()!, tone: 'success' } : null" toolsLabel="Piloter ce poste"
+      [lead]="lead()" [focus]="pageFocus()" [result]="capNotice() ? { message: capNotice()!.text, tone: capNotice()!.error ? 'danger' : 'success' } : message() ? { message: message()!, tone: 'success' } : null" toolsLabel="Ouvrir le poste"
       [context]="read.data()?.context"
       [periodKey]="ctx.period()"
       [periodNav]="true"
@@ -43,13 +44,8 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
     >
       @if (nextLine(); as line) { <button primary type="button" class="app-hero-action" (click)="reviewNext()">Vérifier {{ isIncome() ? 'la réception' : 'le règlement' }} · {{ line.label }}</button> }
       <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!read.data()">＋ {{ isIncome() ? 'Saisir une entrée dans ce poste' : 'Saisir une dépense dans ce poste' }}</button>
-      @if (!isIncome() && read.data()) {
-        <form tools class="bpm-toolbar-search" (ngSubmit)="saveCap()" aria-label="Plafond du poste">
-          <label>Plafond de ce poste, par période (€)<input name="cap" inputmode="decimal" [(ngModel)]="capDraft" placeholder="Sans plafond" [disabled]="capBusy()" /></label>
-          <button type="submit" class="btn btn-primary" [disabled]="capBusy() || !capDirty()">{{ capBusy() ? 'Enregistrement…' : 'Enregistrer le plafond' }}</button>
-          @if (read.data()?.cap?.capCents !== null && read.data()?.cap?.capCents !== undefined) { <button type="button" class="btn btn-secondary" [disabled]="capBusy()" (click)="saveCap(null)">Retirer le plafond</button> }
-          @if (capNotice(); as n) { <p [attr.role]="n.error ? 'alert' : 'status'">{{ n.text }}</p> }
-        </form>
+      @if (!isIncome() && read.data()?.cap; as m) {
+        <button actions type="button" class="btn btn-secondary" (click)="capOpen.set(true)">{{ m.capCents === null ? 'Fixer un plafond' : 'Modifier le plafond' }}</button>
       }
 
       <div class="bpm-money bpm-money-body bpm-money-detail" data-tone="budget">
@@ -81,30 +77,7 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
               <bpm-cap-chart [rows]="capRows()" />
 
               <p class="bpm-help">Engagé = payé + encore prévu sur la période. Au-delà du plafond, le poste passe en rouge sans jamais bloquer une dépense ; un plafond n'est jamais converti en dépense.</p>
-
-              <h3 class="bmd-caps-sub">Catégories de ce poste <span class="bmd-count">({{ d.categories.length }})</span></h3>
-              @if (d.categories.length) {
-                <ul class="bmd-categories">
-                  @for (k of d.categories; track k.id) {
-                    <li>
-                      <span class="bmd-cat-name">
-                        <a [routerLink]="'/depenses/registre'" [queryParams]="categoryQuery(k.id)" [attr.aria-label]="'Dépenses de la catégorie ' + k.label">{{ k.label }}</a>
-                        <small>{{ k.engagedCents | cents }} engagés · {{ k.lineCount }} dépense(s){{ k.archived ? ' · retirée' : '' }}</small>
-                      </span>
-                      <bpm-cap-gauge [measure]="k" />
-                    </li>
-                  }
-                </ul>
-              } @else {
-                <p class="bm-empty">Aucune catégorie : créez-en une pour suivre une dépense précise de ce poste avec son propre plafond.</p>
-              }
-              <form class="bmd-cat-create" (ngSubmit)="createCategory()" aria-label="Nouvelle catégorie dans ce poste">
-                <label>Nouvelle catégorie <input name="catLabel" [(ngModel)]="catLabel" maxlength="120" placeholder="Ex. Cinéma, Abonnements…" [disabled]="capBusy()" /></label>
-                <label>Plafond (€, facultatif) <input name="catCap" inputmode="decimal" [(ngModel)]="catCap" placeholder="Sans plafond" [disabled]="capBusy()" /></label>
-                <button type="submit" class="btn btn-secondary" [disabled]="capBusy()">＋ Ajouter la catégorie</button>
-              </form>
-
-              <p class="bpm-help"><a routerLink="/plafonds" [queryParams]="ctx.carry()">Tous les plafonds et catégories →</a></p>
+              <p class="bpm-help"><a routerLink="/plafonds" [queryParams]="ctx.carry()">Les plafonds de tous les postes →</a></p>
             </section>
           }
 
@@ -125,10 +98,10 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
                       <time [attr.datetime]="l.realizedDate ?? l.plannedDate">{{ (l.realizedDate ?? l.plannedDate) | shortDate }}</time>
                       <span class="bmd-entry-title">
                         <strong>{{ l.label }}</strong>
-                        <small>{{ l.budgetRole === 'life' ? 'Budget du projet de vie' : l.budgetName }} · prévue le {{ l.plannedDate | shortDate }}@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }@if (l.categoryLabel) { · <span class="bmd-category-tag">{{ l.categoryLabel }}</span> } · prévu {{ l.plannedCents | cents }}</small>
+                        <small>{{ l.budgetRole === 'life' ? 'Budget du projet de vie' : l.budgetName }} · prévue le {{ l.plannedDate | shortDate }}@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} } · prévu <span [bpmAmount]="l.plannedCents" [bpmFlow]="l.direction">{{ l.plannedCents | cents }}</span></small>
                       </span>
-                      <span class="bmd-entry-amount">{{ l.realizedCents === null ? '—' : (l.realizedCents | cents) }}</span>
-                      <a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Voir le détail : ' + l.label">Voir le détail</a>
+                      <span class="bmd-entry-amount" [bpmAmount]="l.realizedCents" [bpmFlow]="l.direction">{{ l.realizedCents === null ? '—' : (l.realizedCents | cents) }}</span>
+                      <a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Ouvrir le détail : ' + l.label">Ouvrir le détail</a>
                     </div>
                     @if (l.note) {
                       <p class="bmd-entry-note"><span>Note ·</span> {{ l.note }}</p>
@@ -143,7 +116,7 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
             <section class="bm-statement" aria-labelledby="bmd-pending-title" data-ui-pattern="panel">
               <h2 id="bmd-pending-title">{{ isIncome() ? 'Encore attendu' : 'Encore prévu' }} d’ici la fin de la période <span class="bmd-count">({{ open().length }})</span></h2>
               <p class="bpm-help">
-                {{ open().length }} échéance(s) · restant prévu {{ d.center.remainingCents | cents }}.
+                {{ open().length }} échéance(s) · restant prévu <span [bpmAmount]="d.center.remainingCents" [bpmFlow]="isIncome() ? 'income' : 'charge'">{{ d.center.remainingCents | cents }}</span>.
                 Ces échéances suivent leur date prévue ; les règlements ci-dessus suivent leur date réelle.
               </p>
               <ul class="bmd-rest-lines">
@@ -151,7 +124,7 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
                   <li [attr.data-due]="l.status === 'late' || l.status === 'due' || null" [class.is-selected]="isSelected(l)">
                     <span>
                       {{ l.plannedDate | shortDate }} · {{ l.label }}
-                      <small>@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }@if (l.categoryLabel) { · <span class="bmd-category-tag">{{ l.categoryLabel }}</span> }@if (l.taskTitle) { · {{ l.taskTitle }} }</small>
+                      <small>@if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }@if (l.taskTitle) { · {{ l.taskTitle }} }</small>
                       @if (l.status === 'late' || l.status === 'due') {
                         <em class="bmd-late">{{ l.status === 'late' ? 'en retard' : 'aujourd’hui' }}</em>
                       } @else if (l.status === 'unrealized') {
@@ -159,8 +132,9 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
                       }
                     </span>
                     <span class="bmd-pending-end">
-                      {{ l.plannedCents | cents }}
-                      <a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Voir le détail : ' + l.label">Voir le détail</a>
+                      <span [bpmAmount]="l.plannedCents" [bpmFlow]="l.direction">{{ l.plannedCents | cents }}</span>
+                      <bpm-quick-settle [line]="l" (detail)="ctx.setQuery(lineQuery(l))" />
+                      <a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Ouvrir le détail : ' + l.label">Ouvrir le détail</a>
                     </span>
                   </li>
                 }
@@ -174,7 +148,7 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
               <p class="bpm-help">Ces échéances ne sont pas incluses dans le restant prévu de la période clôturée. Ouvrez leur détail pour consulter les actions encore disponibles.</p>
               <ul class="bmd-rest-lines">
                 @for (l of unrealized(); track l.id) {
-                  <li><span>{{ l.plannedDate | shortDate }} · {{ l.label }}<small>{{ l.statusLabel }}</small></span><span class="bmd-pending-end">{{ l.plannedCents | cents }}<a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Voir le détail : ' + l.label">Voir le détail</a></span></li>
+                  <li><span>{{ l.plannedDate | shortDate }} · {{ l.label }}<small>{{ l.statusLabel }}</small></span><span class="bmd-pending-end"><span [bpmAmount]="l.plannedCents" [bpmFlow]="l.direction">{{ l.plannedCents | cents }}</span><a class="bmd-precise-open" [routerLink]="[]" [queryParams]="lineQuery(l)" queryParamsHandling="merge" [attr.aria-label]="'Ouvrir le détail : ' + l.label">Ouvrir le détail</a></span></li>
                 }
               </ul>
             </section>
@@ -192,6 +166,9 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
     </bpm-page>
 
     @if (read.data(); as d) { <bpm-entry-flow [budgets]="d.context.budgets" [defaults]="defaults()" (saved)="onSaved($event)" /> }
+    @if (capOpen() && read.data()?.cap; as m) {
+      <bpm-cap-dialog [centers]="[m]" [initialRef]="m.ref" [revision]="read.data()!.lifeBudget.revision" [levels]="read.data()!.levels" [periodLabel]="read.data()!.context.period?.label ?? 'ce cycle'" (closed)="capOpen.set(false)" (saved)="onCapSaved($event)" />
+    }
     <!-- L'éditeur et le détail sont indépendants : le clic sur une ligne ouvre toujours son détail (audit A01). -->
     @if (selectedId()) {
       <bpm-line-detail [lineId]="selectedId()!" [period]="ctx.period()" (closed)="closeDetail()" (edit)="openEdit($event)" />
@@ -204,20 +181,6 @@ const ORIGINS: Record<string, { label: string; link: string }> = {
     .bmd-caps { display: grid; gap: var(--ecart-12); }
     .bmd-caps-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ecart-8); }
     .bmd-caps-head h2 { margin: 0; }
-    .bmd-cap-form, .bmd-cat-create { display: flex; flex-wrap: wrap; align-items: end; gap: var(--ecart-12); }
-    .bmd-cap-form label, .bmd-cat-create label { display: grid; gap: 4px; font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
-    .bmd-cap-form input { width: 10rem; min-height: 2.5rem; text-align: right; }
-    .bmd-cat-create input { min-height: 2.5rem; }
-    .bmd-cat-create { padding: var(--ecart-12); border: 1px dashed color-mix(in srgb, var(--app-accent) 35%, var(--line)); border-radius: var(--radius-sm); }
-    .bmd-caps-sub { margin: var(--ecart-8) 0 0; font-size: var(--fs-md, 1rem); }
-    .bmd-categories { display: grid; gap: var(--ecart-8); margin: 0; padding: 0; list-style: none; }
-    .bmd-categories li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ecart-8); padding: var(--ecart-8) var(--ecart-12); border: 1px solid var(--line); border-radius: var(--radius-sm); }
-    .bmd-cat-name { display: grid; }
-    .bmd-cat-name a { font-weight: var(--fw-semibold); }
-    .bmd-cat-name small { color: var(--muted); }
-    .bmd-category-tag { display: inline-block; padding: 0 var(--ecart-6); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--app-accent) 10%, var(--raised-surface)); color: var(--app-accent); font-weight: var(--fw-semibold); }
-    .bmd-cap-notice { margin: 0; padding: var(--ecart-8) var(--ecart-12); border-radius: var(--radius-sm); background: var(--status-success-surface); color: var(--status-success); font-weight: var(--fw-semibold); }
-    .bmd-cap-notice[data-state='danger'] { background: var(--status-danger-surface); color: var(--status-danger); }
   `,
 })
 export class BpmCenterPage {
@@ -258,9 +221,9 @@ export class BpmCenterPage {
   protected pageFocus = computed<BpmPageFocus | null>(() => {
     const d = this.read.data();
     if (!d) return null;
-    if (d.cap?.over) return { title: `Plafond dépassé de ${cents(-(d.cap.marginCents ?? 0))}`, detail: 'Relisez les échéances de ce poste et ajustez le plafond si votre budget a changé.', tone: 'warning' };
+    if (d.cap?.over) return { title: `Plafond dépassé de ${cents(-(d.cap.marginCents ?? 0))}`, detail: 'Relisez les échéances de ce poste et ajustez le plafond si votre budget a changé.', tone: 'danger' };
     const line = this.nextLine();
-    return { title: line ? `${this.open().length} échéance(s) à suivre sur ce poste` : 'Aucune échéance ouverte sur ce poste', detail: line ? `${line.label} · ${cents(line.plannedCents)} · ${line.statusLabel}.` : 'Ajoutez un flux dans ce poste ou ajustez son plafond.', tone: line?.status === 'late' ? 'warning' : 'info' };
+    return { title: line ? `${this.open().length} échéance(s) à suivre sur ce poste` : 'Aucune échéance ouverte sur ce poste', detail: line ? `${line.label} · ${cents(line.plannedCents)} · ${line.statusLabel}.` : 'Ajoutez un flux dans ce poste ou ajustez son plafond.', tone: line?.status === 'late' ? 'danger' : line?.status === 'due' ? 'warning' : 'info' };
   });
   protected reviewNext() {
     const line = this.nextLine();
@@ -274,63 +237,14 @@ export class BpmCenterPage {
     return c ? [{ key: c.ref, label: c.label, paidCents: c.paidCents, remainingCents: c.remainingCents, capCents: c.capCents }] : [];
   });
 
-  // ---------- plafond du poste et catégories du poste (jamais bloquants) ----------
+  // ---------- plafond du poste (jamais bloquant), réglé dans sa fenêtre ----------
 
-  protected capBusy = signal(false);
+  protected capOpen = signal(false);
   protected capNotice = signal<{ text: string; error: boolean } | null>(null);
-  /** Une relecture identique ne doit pas remplacer le plafond encore saisi dans les outils. */
-  private capSource = computed(() => {
-    const d = this.read.data();
-    return { key: `${d?.context.user.id ?? ''}:${d?.center.ref ?? ''}`, value: capEuroText(d?.cap?.capCents) };
-  }, { equal: (a, b) => a.key === b.key && a.value === b.value });
-  protected capDraft = linkedSignal(() => this.capSource().value);
-  protected capDirty = computed(() => this.capDraft().trim() !== capEuroText(this.read.data()?.cap?.capCents));
-  protected catLabel = signal('');
-  protected catCap = signal('');
-  private catKey = newRequestKey('category');
-
-  /** Plafond du seul poste lu (les autres plafonds restent) ; `null` le retire. */
-  async saveCap(value: string | null = this.capDraft()) {
-    const d = this.read.data();
-    if (!d || this.capBusy()) return;
-    const amount = value === null ? null : capInput(value);
-    if (amount === undefined) return this.capNotice.set({ text: 'Plafond : montant positif attendu (ex. 250 ou 120,50), ou vide pour aucun plafond.', error: true });
-    await this.capRun(async () => {
-      await this.bpm.setCaps({ expectedRevision: d.lifeBudget.revision, caps: { [d.center.ref]: amount }, merge: true });
-      return amount === null ? `Plafond du poste ${d.center.label} retiré.` : `Plafond du poste ${d.center.label} : ${cents(Math.round(amount * 100))} par période.`;
-    });
-  }
-
-  async createCategory() {
-    const d = this.read.data();
-    if (!d || this.capBusy()) return;
-    const cap = capInput(this.catCap());
-    if (!this.catLabel().trim()) return this.capNotice.set({ text: 'Nommez la catégorie.', error: true });
-    if (cap === undefined) return this.capNotice.set({ text: 'Plafond : montant positif attendu, ou vide pour aucun plafond.', error: true });
-    await this.capRun(async () => {
-      const r = await this.bpm.createCategory({ requestKey: this.catKey, label: this.catLabel().trim(), costCenterRef: d.center.ref, cap });
-      this.catKey = newRequestKey('category');
-      this.catLabel.set('');
-      this.catCap.set('');
-      return `Catégorie « ${r.category.label} » ajoutée : choisissez-la dans la saisie d'une dépense de ce poste.`;
-    });
-  }
-
-  private async capRun(fn: () => Promise<string>) {
-    this.capBusy.set(true);
-    this.capNotice.set(null);
-    try {
-      this.capNotice.set({ text: await fn(), error: false });
-      this.ctx.refresh.bump();
-    } catch (e) {
-      this.capNotice.set({ text: toApiError(e).message, error: true });
-    } finally {
-      this.capBusy.set(false);
-    }
-  }
-
-  protected categoryQuery(id: string) {
-    return { ...this.ctx.carry(), category: id, groupBy: 'category' };
+  protected onCapSaved(text: string) {
+    this.capOpen.set(false);
+    this.capNotice.set({ text, error: false });
+    this.ctx.refresh.bump();
   }
 
   /** Tuiles source : payé, encore prévu, montants, part, plafond du poste (marge en note). Inconnu n'est jamais zéro. */
@@ -340,8 +254,8 @@ export class BpmCenterPage {
     const c = d.center;
     const income = this.isIncome();
     const tiles: MetricTile[] = [
-      { id: 'total', label: income ? 'Reçu' : 'Payé', value: cents(c.paidCents), tone: income ? 'success' : null, emphasis: true, note: 'Selon la date réelle de règlement dans la période.' },
-      { id: 'planned', label: income ? 'Encore attendu' : 'Encore prévu', value: cents(c.remainingCents), note: 'Échéances de la période non réglées.' },
+      { id: 'total', label: income ? 'Reçu' : 'Payé', value: cents(c.paidCents), amountCents: c.paidCents, symbol: income ? 'income' : 'expense', tone: income ? 'success' : 'danger', emphasis: true, note: 'Selon la date réelle de règlement dans la période.' },
+      { id: 'planned', label: income ? 'Encore attendu' : 'Encore prévu', value: cents(c.remainingCents), amountCents: c.remainingCents, symbol: income ? 'income' : 'expense', note: 'Échéances de la période non réglées.' },
       { id: 'count', label: income ? 'Réceptions' : 'Paiements', value: String(this.settled().length), note: 'Règlements dont la date réelle appartient à la période.' },
     ];
     const basisText = income ? 'Part des entrées reçues' : d.basis.kind === 'received' ? 'Sur 100 € reçus dans la période' : 'Sur 100 € dépensés dans la période';
@@ -360,10 +274,11 @@ export class BpmCenterPage {
         id: 'limit',
         label: 'Plafond du poste',
         value: c.capCents === null ? 'Aucun plafond' : cents(c.capCents),
+        amountCents: c.capCents,
         tone: margin !== null && margin < 0 ? 'danger' : null,
         note:
           c.capCents === null
-            ? 'Facultatif : à définir ci-dessous, section « Plafond et marge ».'
+            ? 'Facultatif : « Fixer un plafond » dans les actions du poste.'
             : margin === null
               ? 'Marge non calculable.'
               : margin < 0

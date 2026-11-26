@@ -1,9 +1,10 @@
+import { BpmAmount } from '../ui/amount';
 import { Component, computed, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiError, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmDirectives, BpmSummary, SetupProfile, Vision } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmDirectives, BpmSummary, SetupProfile, Vision } from '../data/bpm-models';
 import { CentsPipe, PercentPipe, SignedCentsPipe, parseAmount, signedCents } from '../../core/format';
 import { BpmDrafts } from '../ui/drafts';
 import { BpmProgress, BpmRefresh, BpmState, Loader } from '../ui';
@@ -16,13 +17,13 @@ export function num(raw: string): number | null {
 export const euroText = (c: number | null) => (c === null ? '' : String(c / 100).replace('.', ','));
 
 /**
- * Les deux objectifs d'Objectifs et avenir, sur la structure source `rjs-bpm-objectives` : l'objectif
+ * Les deux objectifs d'Patrimoine et objectifs, sur la structure source `rjs-bpm-objectives` : l'objectif
  * budgétaire (épargne visée, objectif d'excédent cumulé et son formulaire) et le cap patrimonial
  * (stock enregistré face à l'objectif de stock). Deux cibles distinctes, jamais additionnées.
  */
 @Component({
   selector: 'bpm-vision-objectives',
-  imports: [FormsModule, RouterLink, BpmState, BpmProgress, CentsPipe, SignedCentsPipe, PercentPipe],
+  imports: [BpmAmount, FormsModule, RouterLink, BpmState, BpmProgress, CentsPipe, SignedCentsPipe, PercentPipe],
   host: { class: 'is-compact' },
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-objectives.component.scss'],
   template: `
@@ -36,7 +37,7 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
       <dl class="objectives-summary">
         <div>
           <dt>Épargne visée</dt>
-          <dd>{{ vision()?.savingsTargetCents === null || !vision() ? 'Non renseignée' : (vision()!.savingsTargetCents | cents) + ' / période' }}</dd>
+          <dd [bpmAmount]="vision()?.savingsTargetCents" bpmTone="info">{{ vision()?.savingsTargetCents === null || !vision() ? 'Non renseignée' : (vision()!.savingsTargetCents | cents) + ' / période' }}</dd>
         </div>
         <div>
           <dt>Apport par période (projection)</dt>
@@ -45,7 +46,7 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
         @if (surplus(); as sp) {
           <div>
             <dt>Cible cumulée</dt>
-            <dd>{{ sp.targetCents | cents }}</dd>
+            <dd [bpmAmount]="sp.targetCents" bpmTone="info">{{ sp.targetCents | cents }}</dd>
             <small>{{ sp.periods }} périodes dès {{ sp.startKey }}</small>
           </div>
         }
@@ -54,11 +55,11 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
         <dl class="objectives-metrics">
           <div>
             <dt>Excédent cumulé · {{ sp.closedPeriods }} clôture(s)</dt>
-            <dd>{{ sp.cumulatedCents | signedCents }}</dd>
+            <dd [bpmAmount]="sp.cumulatedCents">{{ sp.cumulatedCents | signedCents }}</dd>
           </div>
           <div>
             <dt>Effort nécessaire</dt>
-            <dd>{{ sp.perPeriodCents | cents }} / période</dd>
+            <dd [bpmAmount]="sp.perPeriodCents" bpmTone="info">{{ sp.perPeriodCents | cents }} / période</dd>
           </div>
           <div>
             <dt>Progression</dt>
@@ -70,7 +71,7 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
         <p class="objectives-callout">Aucun objectif d’excédent budgétaire défini. Son enregistrement ne modifie pas directement le stock patrimonial.</p>
       }
       <details class="objectives-settings" [open]="surplusOpen()" (toggle)="surplusOpen.set($any($event.target).open)">
-        <summary>{{ surplus() ? 'Modifier l’objectif d’excédent' : 'Définir un objectif d’excédent' }}</summary>
+        <summary>{{ surplus() ? 'Modifier l’objectif d’excédent' : 'Fixer un objectif d’excédent' }}</summary>
         @if (surplusError(); as e) {
           <p class="bpm-error" role="alert">{{ e.message }} Votre saisie est conservée.</p>
         }
@@ -124,7 +125,7 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
                   <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7"></circle><circle cx="12" cy="12" r="2"></circle></svg>
                 </span>Stock enregistré
               </dt>
-              <dd>{{ stock() === null ? 'À renseigner' : signed(stock()) }}</dd>
+              <dd [bpmAmount]="stock()">{{ stock() === null ? 'À renseigner' : signed(stock()) }}</dd>
               @if (stock() === null && stockReason()) { <small>{{ stockReason() }}</small> }
             </div>
             <div class="objectives-landmark objectives-landmark-target">
@@ -133,11 +134,11 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
                   <svg viewBox="0 0 24 24" fill="none"><path d="M6 21V4m0 0c4-4 8 4 12 0v9c-4 4-8-4-12 0"></path></svg>
                 </span>Objectif de stock
               </dt>
-              <dd>{{ objective() === null ? 'Non défini' : (objective() | cents) }}</dd>
+              <dd [bpmAmount]="objective()" bpmTone="info">{{ objective() === null ? 'Non défini' : (objective() | cents) }}</dd>
             </div>
             <div class="objectives-landmark-gap">
               <dt>{{ capGap() !== null && capGap()! < 0 ? 'Dépassement' : 'Manque' }}</dt>
-              <dd>{{ capGap() === null ? 'Non calculable' : (capGapAbs() | cents) }}</dd>
+              <dd [bpmAmount]="capGap() === null ? null : -capGap()!">{{ capGap() === null ? 'Non calculable' : (capGapAbs() | cents) }}</dd>
               @if (capReason()) { <small>{{ capReason() }}</small> }
             </div>
           </dl>
@@ -145,7 +146,7 @@ export const euroText = (c: number | null) => (c === null ? '' : String(c / 100)
         <dl class="objectives-summary">
           <div>
             <dt>Estimation après la période</dt>
-            <dd>{{ stockAfter() | signedCents }}</dd>
+            <dd [bpmAmount]="stockAfter()">{{ stockAfter() | signedCents }}</dd>
             <small>Estimation</small>
           </div>
         </dl>

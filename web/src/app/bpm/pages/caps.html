@@ -1,0 +1,104 @@
+<bpm-page
+  title="Plafonds"
+  lead="Vos postes de dépenses et leur plafond par cycle. Un plafond vous alerte, il ne bloque jamais une dépense."
+  pageClass="bpm-caps-page"
+  [context]="d()?.context"
+  [periodNav]="true"
+  [focus]="focus()"
+  [result]="result()"
+  toolsLabel="Lire les plafonds"
+>
+  <button primary class="btn btn-primary" type="button" [disabled]="!centers().length" (click)="openChooser()">{{ primaryLabel() }}</button>
+  <a actions class="btn btn-secondary" routerLink="/app/reglages/postes" [queryParams]="ctx.carry()">Ajouter un poste de dépenses</a>
+  <p tools class="caps-tools-note">Consommé = payé + à payer sur le cycle. Un poste passe en rouge au-delà de son plafond.</p>
+
+  <div class="caps-page">
+    <bpm-state [loading]="read.loading() && !d()" [error]="read.error()" (retry)="read.reload()" />
+
+    @if (d(); as v) {
+      @if (!centers().length) {
+        <section class="caps-board caps-board-empty" data-bpm-frame="form" aria-labelledby="caps-empty-title">
+          <h2 id="caps-empty-title">Aucun cycle à lire</h2>
+          <p>Les plafonds se suivent cycle par cycle : réglez d’abord le début de votre cycle budgétaire.</p>
+          <a class="btn btn-secondary" routerLink="/app/reglages/cycle">Régler le cycle</a>
+        </section>
+      } @else {
+        <rjs-metric-tiles class="caps-tiles" label="Plafonds du cycle" [tiles]="tiles()" />
+
+        <section class="caps-board" data-bpm-frame="form" aria-labelledby="caps-board-title">
+          <header class="caps-board-head">
+            <div>
+              <h2 id="caps-board-title">Postes de dépenses</h2>
+              <p>{{ periodLabel() }} · {{ centers().length }} postes · consommé = payé + à payer</p>
+            </div>
+            <ul class="caps-legend" aria-label="Couleur selon la part du plafond consommée">
+              @for (l of legend(); track l.level) { <li [attr.data-level]="l.level">{{ l.label }}</li> }
+              <li data-level="none">Sans plafond</li>
+            </ul>
+          </header>
+
+          @for (group of groups(); track group.key) {
+            <div class="caps-group" [attr.data-group]="group.key">
+              <h3 class="caps-group-title" [id]="'caps-group-' + group.key">{{ group.title }} <span class="caps-count">{{ group.rows.length }}</span></h3>
+              @if (!group.rows.length) {
+                <p class="caps-empty">{{ group.empty }}</p>
+              } @else {
+                <ul class="caps-rows" [attr.aria-labelledby]="'caps-group-' + group.key">
+                  @for (c of group.rows; track c.ref) {
+                    <li class="caps-row" [attr.data-level]="c.level">
+                      <div class="caps-name">
+                        <a [routerLink]="detailLink(c.ref)" [queryParams]="detailQuery()" [attr.aria-label]="'Ouvrir le poste ' + c.label">{{ c.label }}</a>
+                        <small>{{ spendText(c) }}</small>
+                      </div>
+
+                      <div class="caps-meter">
+                        @if (c.capCents !== null) {
+                          <span class="caps-bar" role="meter" aria-valuemin="0" [attr.aria-valuemax]="c.capCents" [attr.aria-valuenow]="c.engagedCents"
+                            [attr.aria-label]="c.label + ' : ' + (c.engagedCents | cents) + ' consommés sur ' + (c.capCents | cents)">
+                            <span class="caps-bar-fill" [style.width.%]="fill(c)"></span>
+                          </span>
+                          <span class="caps-meter-text">
+                            <strong>{{ c.engagedCents | cents }}</strong> consommés sur
+                            <button type="button" class="caps-cap-link" (click)="open(c.ref)" [attr.aria-label]="'Modifier le plafond de ' + c.label + ' : ' + (c.capCents | cents)">{{ c.capCents | cents }}</button>
+                            <em>{{ usedText(c) }}</em>
+                          </span>
+                        } @else {
+                          <span class="caps-meter-text"><strong>{{ c.engagedCents | cents }}</strong> consommés · aucun plafond</span>
+                        }
+                      </div>
+
+                      <span class="caps-chip" [attr.data-level]="c.level">{{ stateText(c) }}</span>
+
+                      <div class="caps-action">
+                        @if (c.capCents === null) {
+                          <button type="button" class="caps-set" (click)="open(c.ref)" [attr.aria-label]="'Fixer un plafond pour ' + c.label">＋ Fixer un plafond</button>
+                        } @else {
+                          <button type="button" class="caps-edit" (click)="open(c.ref)" [attr.aria-label]="'Modifier le plafond de ' + c.label">Modifier</button>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        </section>
+      }
+    }
+  </div>
+</bpm-page>
+
+@if (dialog(); as dlg) {
+  @if (d(); as v) {
+    <bpm-cap-dialog
+      [centers]="dlg.choose ? chooserCenters() : centers()"
+      [initialRef]="dlg.ref"
+      [choose]="dlg.choose"
+      [revision]="v.lifeBudget.revision"
+      [levels]="v.levels"
+      [periodLabel]="periodLabel()"
+      (closed)="dialog.set(null)"
+      (saved)="saved($event)"
+    />
+  }
+}

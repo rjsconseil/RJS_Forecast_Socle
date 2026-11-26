@@ -2,23 +2,27 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Component } from '@angular/core';
 import { routes } from './app.routes';
-import { PAGE_WORKSPACES } from './plan/page-workspaces';
 import { RecetteContext } from './core/api.service';
+import { BPM_LEGACY_PATHS } from './bpm/bpm.screens';
 
-// Destinations BPM adressables directement et redirections des anciens liens (spec §4).
-describe('routes BPM', () => {
+@Component({ template: '' })
+class Blank {}
+
+// BPM-Astra est l'application BPM du site et son module par défaut. Les anciennes adresses de BPM
+// mènent toutes à leur équivalent Astra, en gardant la lecture (période, filtres, fragment).
+describe('routes du site · BPM-Astra par défaut', () => {
   const find = (path: string) => routes.find((r) => r.path === path);
 
-  it('déclare chaque destination de la section Ma vision budgétaire et Démarrer un projet', () => {
-    for (const path of ['creer', 'tableau-de-bord', 'projet-de-vie', 'depenses/registre', 'plafonds', 'piloter', 'piloter/agir', 'vision', 'tableau-de-bord/entrees', 'argent/postes/:poste', 'tableau-de-bord/rapprochement', 'utilisateurs', 'app/gestion-projet', 'app/gestion-projet/:id']) {
-      const r = find(path);
-      expect(r, path).toBeTruthy();
-      expect(r!.loadComponent, path).toBeTypeOf('function');
-      expect(r!.title, path).toBeTruthy();
-    }
+  it('ouvre BPM-Astra à la racine et garde le portail des zones dans « Tous les modules »', async () => {
+    expect(find('modules')?.loadComponent).toBeTypeOf('function');
+    expect(find('**')?.redirectTo).toBe('');
+    TestBed.configureTestingModule({ providers: [provideRouter([find('')!, { path: 'bpm-astra', component: Blank }])] });
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?period=2026-10');
+    expect(router.url).toBe('/bpm-astra?period=2026-10');
   });
 
-  it('réserve « Démarrer un projet » au visiteur : un user connecté retrouve la gestion de son projet de vie', () => {
+  it('réserve « Démarrer un projet » au visiteur : un user connecté retrouve l’application par défaut', () => {
     for (const path of ['creer', 'creer/projet-de-vie']) {
       const guard = find(path)!.canActivate![0] as () => unknown;
       TestBed.resetTestingModule();
@@ -27,42 +31,48 @@ describe('routes BPM', () => {
       ctx.userId.set(null);
       expect(TestBed.runInInjectionContext(guard), path).toBe(true);
       ctx.userId.set('usr_1');
-      expect(String(TestBed.runInInjectionContext(guard)), path).toBe('/projet-de-vie');
+      expect(String(TestBed.runInInjectionContext(guard)), path).toBe('/');
     }
-    expect(find('creer/projet-de-la-vie'), 'plus de projet de la vie depuis Démarrer').toBeUndefined();
   });
 
-  it('ouvre l’accueil des zones à la racine', () => {
-    expect(find('')?.loadComponent).toBeTruthy();
-    expect(find('**')?.redirectTo).toBe('');
+  it('ne sert plus aucun écran à une ancienne adresse BPM : chacune est une redirection', () => {
+    for (const path of BPM_LEGACY_PATHS) {
+      const r = find(path);
+      expect(r, path).toBeTruthy();
+      expect(r!.loadComponent, path).toBeUndefined();
+      expect(r!.redirectTo, path).toBeTypeOf('function');
+    }
   });
 
-  it('enregistre chaque vue une seule fois avant les paramètres dynamiques', () => {
-    for (const view of PAGE_WORKSPACES) {
-      const registered = routes.filter(route => route.path === view.path);
-      expect(registered, view.path).toHaveLength(1);
-      expect(registered[0].data?.['workspace']?.key, view.path).toBe(view.key);
-      expect(registered[0].loadComponent, view.path).toBeTypeOf('function');
+  it('conduit les anciennes adresses à leur équivalent Astra en gardant la lecture', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([...BPM_LEGACY_PATHS.map((path) => find(path)!), { path: '**', component: Blank }])] });
+    const router = TestBed.inject(Router);
+    for (const [from, to] of [
+      ['/tableau-de-bord/entrees?period=2026-10&direction=income', '/bpm-astra/mouvements?period=2026-10&direction=income'],
+      ['/depenses?period=2026-10', '/bpm-astra/mouvements?period=2026-10'],
+      ['/argent/reste?period=2026-09#ecart', '/bpm-astra/cloture/compte?period=2026-09#ecart'],
+      ['/projet-de-vie?period=2026-09', '/bpm-astra?period=2026-09'],
+      ['/projet-de-vie/projets', '/bpm-astra/projets'],
+      ['/projet-de-vie/financement', '/bpm-astra/projets'],
+      ['/app/gestion-projet/prj_42?task=tsk_1', '/bpm-astra/projets/prj_42?task=tsk_1'],
+      ['/app/gestion-projet/prj_42/budget', '/bpm-astra/projets/prj_42/budget'],
+      ['/app/projets/prj_42', '/bpm-astra/projets/prj_42'],
+      ['/argent/postes/std:logement', '/bpm-astra/plafonds/std:logement'],
+      ['/vision', '/bpm-astra/objectif/echeances'],
+      ['/vision/projection', '/bpm-astra/objectif'],
+      ['/meteo/tendances', '/bpm-astra'],
+      ['/calendrier-budget/sources?vue=semaine', '/bpm-astra/calendrier?vue=semaine'],
+      ['/app/reglages/postes', '/bpm-astra/plafonds/postes'],
+      ['/zones/bpm', '/bpm-astra'],
+    ]) {
+      await router.navigateByUrl(from);
+      expect(router.url, from).toBe(to);
     }
-    for (const [specific, dynamic] of [['app/gestion-projet/nouveau', 'app/gestion-projet/:id'], ['projects/planning', 'projects/:id'], ['admin/calculs/references', 'admin/calculs/:key']])
-      expect(routes.indexOf(find(specific)!)).toBeLessThan(routes.indexOf(find(dynamic)!));
-    expect(routes.at(-1)?.path).toBe('**');
   });
 
   it('hérite de la configuration du bon calendrier', () => {
-    for (const parent of ['calendrier', 'calendrier-budget', 'patrimoine/calendrier'])
-      for (const mode of parent === 'calendrier-budget' ? ['agenda'] : ['agenda', 'sources']) expect(find(`${parent}/${mode}`)?.data?.['calendar']).toBe(find(parent)?.data?.['calendar']);
-  });
-
-  it('mène l’ancienne page des sources du calendrier BPM au dépliant « Sources et affichage »', async () => {
-    @Component({ template: '' })
-    class Empty {}
-    TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: 'calendrier-budget', component: Empty }, find('calendrier-budget/sources')!])],
-    });
-    const router = TestBed.inject(Router);
-    await router.navigateByUrl('/calendrier-budget/sources?vue=semaine');
-    expect(router.url).toBe('/calendrier-budget?vue=semaine#sources-et-affichage');
+    for (const parent of ['calendrier', 'patrimoine/calendrier'])
+      for (const mode of ['agenda', 'sources']) expect(find(`${parent}/${mode}`)?.data?.['calendar']).toBe(find(parent)?.data?.['calendar']);
   });
 
   it('déclare les accueils génériques de zone et de section', () => {
@@ -73,47 +83,7 @@ describe('routes BPM', () => {
     }
   });
 
-  it('redirige les anciens liens de l’application', () => {
-    expect(find('app')?.redirectTo).toBe('tableau-de-bord');
-    expect(find('app/operations')?.redirectTo).toBe('depenses');
-    expect(find('app/bienvenue')?.redirectTo).toBe('utilisateurs');
-  });
-
   it('garde le socle, Object Management et l’Administration distincts de l’espace métier', () => {
-    for (const path of ['projects', 'tasks', 'socle/budget', 'socle/patrimoine', 'object-management', 'admin']) expect(find(path), path).toBeTruthy();
-  });
-
-  it('donne une seule adresse à chaque écran et y conduit les anciennes en gardant la lecture', async () => {
-    @Component({ template: '' })
-    class Blank {}
-    const kept = ['depenses', 'argent/entrees', 'argent/reste', 'app/projets/:id'].map((path) => find(path)!);
-    for (const route of kept) expect(route.loadComponent, route.path).toBeUndefined();
-    TestBed.configureTestingModule({
-      providers: [provideRouter([
-        ...kept,
-        ...['depenses/registre', 'tableau-de-bord/entrees', 'tableau-de-bord/rapprochement', 'app/gestion-projet/:id'].map((path) => ({ path, component: Blank })),
-      ])],
-    });
-    const router = TestBed.inject(Router);
-    for (const [from, to] of [
-      ['/depenses?period=2026-10&direction=income', '/depenses/registre?period=2026-10&direction=income'],
-      ['/argent/entrees?period=2026-09', '/tableau-de-bord/entrees?period=2026-09'],
-      ['/argent/reste?period=2026-09#ecart', '/tableau-de-bord/rapprochement?period=2026-09#ecart'],
-      ['/app/projets/prj_42?task=tsk_1', '/app/gestion-projet/prj_42?task=tsk_1'],
-    ]) {
-      await router.navigateByUrl(from);
-      expect(router.url, from).toBe(to);
-    }
-  });
-
-  it('conserve les paramètres d’un ancien lien redirigé', async () => {
-    @Component({ template: '' })
-    class Blank {}
-    TestBed.configureTestingModule({
-      providers: [provideRouter([{ path: 'depenses', component: Blank }, { path: 'app/operations', redirectTo: 'depenses' }])],
-    });
-    const router = TestBed.inject(Router);
-    await router.navigateByUrl('/app/operations?period=2026-10&q=loyer');
-    expect(router.url).toBe('/depenses?period=2026-10&q=loyer');
+    for (const path of ['projects', 'tasks', 'socle/budget', 'socle/patrimoine', 'object-management', 'admin', 'utilisateurs']) expect(find(path), path).toBeTruthy();
   });
 });

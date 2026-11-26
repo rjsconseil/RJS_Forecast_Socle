@@ -1,0 +1,86 @@
+/* BPM-Astra · chiffres récapitulatifs (typographie et densité)*/
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens' as *;
+
+/* Typographie et densité des chiffres récapitulatifs de BPM-Astra.*/
+#{$frame} {
+  --astra-summary-size: clamp(16px, 1.25vw, 20px);
+  --astra-summary-line: 1.25;
+  --astra-summary-gap: 8px;
+
+  .astra-screen {
+    :is(.vision-net, .expense-center-total, .has-late, .summary-band-total, .summary-band-stat, .metric-tile, .life-stat, .life-financial-stat, .summary-covered, .summary-attention) :is(strong, dd, .metric-value), .vision-metrics article > strong, .topic-summary dl.amounts dd, .objectives-summary-band dd, .bc-wealth-total, .bc-wealth-parts dd, .bc-countdown strong {
+      font-size: var(--astra-summary-size);
+      line-height: var(--astra-summary-line);
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+
+    :is(.vision-metrics) { align-items: stretch; }
+
+    .vision-metrics {
+      gap: var(--astra-summary-gap);
+
+      > article {
+        gap: 4px;
+        padding: var(--a-tile-y) var(--a-tile-x);
+        justify-content: flex-start;
+      }
+
+      > article > p {
+        margin: 6px 0 0;
+        padding-top: 6px;
+        border-top: 1px solid var(--bpm-line);
+        line-height: 1.35;
+      }
+    }
+
+    .summary-band.calendar-360-flow-stats {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: var(--a-tile-y) var(--a-tile-x);
+
+      > div { padding: 4px; }
+      > div > strong { white-space: normal; }
+    }
+
+  }
+
+  .calendar-tools-counts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 10px;
+    margin: 0;
+    padding: 6px 8px;
+    border: 1px solid var(--astra-keyline);
+    border-radius: var(--a-radius-sm);
+    background: var(--astra-wash);
+    color: var(--astra-link);
+    font-size: 12px;
+    font-weight: 600;
+
+    strong { font-weight: 750; font-variant-numeric: tabular-nums; }
+  }
+
+  .astra-marks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--astra-summary-gap);
+    margin: 10px 0 0;
+
+    > div {
+      padding: var(--a-tile-y) var(--a-tile-x);
+      border-radius: 8px;
+      background: var(--bpm-soft);
+    }
+
+    dt { color: var(--bpm-muted); font-size: 11px; line-height: 1.35; }
+    dd { margin: 3px 0 0; font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  }
+
+  .astra-balance { font-size: clamp(26px, 2.2vw, 34px); }
+}
+

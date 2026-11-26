@@ -30,7 +30,7 @@ import { workspaceContextQuery } from './page-workspace';
       opacity: 0.9;
     }
     .section-subpages li.is-object > a { font-weight: 650; }
-    .section-subpages li.is-nested > a { padding-left: 1.6em; font-size: 0.94em; }
+    .section-subpages li.is-nested > a { padding-left: 16px; gap: 6px; }
     .section-subpages li.is-nested > a::before { content: '↳ '; opacity: 0.6; }
   `,
   template: `

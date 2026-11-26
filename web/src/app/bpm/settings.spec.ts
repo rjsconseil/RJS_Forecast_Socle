@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Api, RecetteContext } from '../core/api.service';
-import { BpmApi } from '../core/bpm-api.service';
+import { BpmApi } from './data/bpm-api.service';
 import { BpmSettings } from './settings';
 
 const initial = () => ({
@@ -59,8 +59,8 @@ describe('réglages BPM spécialisés', () => {
     page.cAnchor.set('5');
     page.pStock.set('1250');
     await settle();
-    expect(dom().querySelector('.bpm-toolbar-primary')!.textContent).toContain('Enregistrer le patrimoine');
-    expect(dom().querySelector('.bpm-toolbar-primary')!.textContent).not.toContain('Enregistrer le cycle');
+    expect(dom().querySelector('.page-toolbar-primary')!.textContent).toContain('Enregistrer le patrimoine');
+    expect(dom().querySelector('.page-toolbar-primary')!.textContent).not.toContain('Enregistrer le cycle');
     dom().querySelector('#bpm-wealth-settings')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
     expect(api['updatePatrimoine']).toHaveBeenCalledWith({ expectedRevision: 3, openingStock: 1250, openingDate: '2026-11-01', objective: null });
@@ -77,7 +77,7 @@ describe('réglages BPM spécialisés', () => {
     await harness.navigateByUrl('/app/reglages/patrimoine');
     await settle();
     expect(dom().querySelector<HTMLInputElement>('#bpm-wealth-settings input')!.value).toBe('1750');
-    expect(dom().querySelector('.bpm-toolbar-primary')!.textContent).toContain('Enregistrer le patrimoine');
+    expect(dom().querySelector('.page-toolbar-primary')!.textContent).toContain('Enregistrer le patrimoine');
     expect(api['updatePatrimoine']).not.toHaveBeenCalled();
   });
 
@@ -86,7 +86,7 @@ describe('réglages BPM spécialisés', () => {
     await settle();
     page.ccLabel.set('Honoraires'); page.ccDirection.set('income');
     await settle();
-    expect(dom().querySelector('.bpm-toolbar-primary')!.textContent).toContain('Ajouter « Honoraires »');
+    expect(dom().querySelector('.page-toolbar-primary')!.textContent).toContain('Ajouter « Honoraires »');
     dom().querySelector('#bpm-center-settings')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await settle();
     expect(api['addCostCenter']).toHaveBeenCalledWith({ requestKey: expect.any(String), label: 'Honoraires', direction: 'income' });

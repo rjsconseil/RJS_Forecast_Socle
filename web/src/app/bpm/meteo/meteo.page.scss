@@ -1,0 +1,228 @@
+// Météo BPM : sobre, mêmes surfaces que les bilans. La météo ne change que la couleur d'un filet et d'un symbole.
+:host {
+  display: block;
+  --mt-soleil: var(--status-success);
+  --mt-eclaircies: var(--status-warning);
+  --mt-nuages: var(--status-warning);
+  --mt-orage: var(--status-danger);
+}
+[data-weather='soleil'] { --mt-color: var(--mt-soleil); }
+[data-weather='eclaircies'] { --mt-color: var(--mt-eclaircies); }
+[data-weather='nuages'] { --mt-color: var(--mt-nuages); }
+[data-weather='orage'] { --mt-color: var(--mt-orage); }
+
+.mt-muted { margin: 0; color: var(--muted); font-size: 13px; }
+.mt-kick { margin: 0 0 3px; color: var(--bpm-section-deep, var(--ink)); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.mt-symbol {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--bpm-section-soft, var(--soft));
+  color: var(--mt-color, var(--ink));
+  font-size: 30px;
+  line-height: 1;
+  font-variant-emoji: text;
+  &.small { width: 32px; height: 32px; font-size: 18px; }
+}
+.mt-overall,
+.mt-detail-head,
+.mt-section,
+.mt-block,
+.mt-tile {
+  padding: 18px 20px;
+  background: var(--bpm-surface, #fff);
+  border: 1px solid var(--bpm-line, #e2e7ef);
+  border-radius: 6px;
+}
+.mt-overall,
+.mt-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-left: 4px solid var(--mt-color, var(--app-accent));
+  h2 { margin: 0 0 4px; font-size: 22px; }
+}
+
+// Les deux sections, côte à côte.
+.mt-sections { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.mt-section {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 12px;
+  border-top: 4px solid var(--mt-color, var(--bpm-section-accent));
+  header { display: flex; align-items: center; gap: 12px; }
+  h2 { margin: 0; font-size: 18px; }
+  footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+}
+.mt-number {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: var(--bpm-section-soft, var(--soft));
+  color: var(--bpm-section-deep, var(--ink));
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.mt-weather { margin: 2px 0 0; color: var(--mt-color, var(--ink)); font-weight: 700; span { font-variant-emoji: text; } }
+.mt-counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.mt-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--soft);
+  color: var(--ink);
+  &[data-health='ok'] { background: var(--status-success-surface); color: var(--status-success); }
+  &[data-health='watch'] { background: var(--status-warning-surface); color: var(--status-warning); }
+  &[data-health='alert'] { background: var(--status-danger-surface); color: var(--status-danger); }
+  &[data-health='unknown'] { background: var(--status-info-surface); color: var(--status-info); }
+}
+.mt-top {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: grid;
+    gap: 3px;
+    padding: 8px 10px;
+    border-left: 3px solid var(--muted);
+    background: var(--bpm-section-soft, var(--soft));
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    a { justify-self: start; font-weight: 600; }
+  }
+}
+[data-health='alert'] { --mt-health: var(--status-danger); }
+[data-health='watch'] { --mt-health: var(--status-warning); }
+[data-health='unknown'] { --mt-health: var(--status-info); }
+[data-health='ok'] { --mt-health: var(--status-success); }
+.mt-top li,
+.mt-signals li { border-left-color: var(--mt-health, var(--muted)); }
+.mt-link { font-size: 13px; font-weight: 600; }
+
+// Bandeau de tuiles : prévisions, tendance, horizons, décompte des météos.
+.mt-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.mt-tile {
+  display: grid;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+  border-left: 3px solid var(--mt-color, var(--mt-health, var(--bpm-section-accent, var(--app-accent))));
+  strong { font-size: 16px; font-variant-numeric: tabular-nums; span { font-variant-emoji: text; } }
+  span { font-size: 13px; }
+}
+a.mt-tile:hover { border-color: var(--bpm-section-accent, var(--app-accent)); }
+
+.mt-block { display: grid; gap: 12px; min-width: 0; h2 { margin: 0; font-size: 17px; } p { margin: 0; } }
+.mt-group { margin: 6px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+// Signaux détaillés : état, libellé et chiffre, explication, geste.
+.mt-signals {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--bpm-line, #e2e7ef);
+    border-left: 3px solid var(--muted);
+    border-radius: 4px;
+  }
+  .mt-chip { justify-self: start; }
+  strong { margin-right: 10px; }
+  p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+}
+.mt-figure { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--bpm-section-deep, var(--ink)); }
+
+.mt-table-wrap { min-width: 0; max-width: 100%; overflow-x: auto; &:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 4px; } }
+.mt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  th, td { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--bpm-line, #e2e7ef); text-align: left; vertical-align: baseline; }
+  thead th { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  tbody th { font-weight: 600; }
+  .num { padding-left: 10px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  [data-sign='negative'] { color: var(--status-danger); }
+  a { color: inherit; &:hover { color: var(--bpm-section-accent, var(--app-accent)); } }
+}
+.mt-weather-tag { color: var(--mt-color, var(--ink)); font-weight: 700; white-space: nowrap; span { font-variant-emoji: text; } }
+.mt-reason { display: block; font-size: 12px; }
+
+// Prévisions : une ligne par événement.
+.mt-timeline {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: grid;
+    grid-template-columns: 90px 90px minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bpm-line, #e2e7ef);
+    font-size: 13px;
+    &.is-late time { color: var(--status-danger); font-weight: 700; }
+    small { display: block; color: var(--muted); }
+    .num { font-variant-numeric: tabular-nums; font-weight: 700; &[data-sign='negative'] { color: var(--status-danger); } }
+  }
+  time { font-variant-numeric: tabular-nums; }
+}
+.mt-goals {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--bpm-line, #e2e7ef); font-size: 13px; }
+}
+
+// Lire la météo.
+.mt-rule {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li { display: grid; grid-template-columns: 32px 120px minmax(0, 1fr); align-items: center; gap: 12px; strong { color: var(--mt-color, var(--ink)); } }
+}
+.mt-health {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; align-items: baseline; font-size: 13px; }
+}
+.mt-sources {
+  display: grid;
+  margin: 0;
+  > div { display: grid; grid-template-columns: minmax(180px, 260px) minmax(0, 1fr); gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--bpm-line, #e2e7ef); font-size: 13px; }
+  dt { font-weight: 600; }
+  dd { margin: 0; color: var(--muted); }
+}
+
+@media (max-width: 900px) {
+  .mt-sections { grid-template-columns: minmax(0, 1fr); }
+  .mt-signals li { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .mt-timeline li { grid-template-columns: 80px minmax(0, 1fr) auto; .mt-chip, a { display: none; } }
+  .mt-sources > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+
+@media (max-width: 1200px) { .mt-sections { grid-template-columns: minmax(0, 1fr); } }

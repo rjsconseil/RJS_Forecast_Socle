@@ -5,17 +5,10 @@
 
 const STATUTS_TACHE = { todo: 'À faire', blocked: 'À prioriser', doing: 'En cours', done: 'Terminée' };
 const PRIORITES = { low: 'Basse', medium: 'Moyenne', high: 'Haute' };
-const CADENCES = { weekly: 'Hebdomadaire', monthly: 'Mensuelle', yearly: 'Annuelle' };
 const TYPES_OBJECTIF = { etudes: 'Études', retraite: 'Retraite', achat: 'Achat', securite: 'Sécurité', transmission: 'Transmission', autre: 'Autre' };
 
 const TACHES_DU_PROJET = { nature: 'task', champ: 'projectId', termine: { status: ['done'] } };
 const PROJET_DE_LA_TACHE = { champ: 'projectId', reference: { nature: 'coreProject', champ: 'title' }, vide: 'Sans projet' };
-const CENTRE = {
-  libelle: 'Centre de coût',
-  champ: 'costCenterId',
-  reference: { nature: 'costCenter', champ: 'label' },
-  sinon: { champ: 'standardCostCenter', parametre: { cle: 'budget.centresStandards', id: 'key', champ: 'label' } },
-};
 const BUDGET = { libelle: 'Budget', champ: 'budgetId', reference: { nature: 'budget', champ: 'name' } };
 const GROUPE_BUDGET = { champ: 'budgetId', reference: { nature: 'budget', champ: 'name' } };
 
@@ -84,63 +77,98 @@ export const CALENDAR_NOYAU = {
   ],
 };
 
-// ---------- Budget/Patrimoine : revenus, dépenses, périodes et versements au patrimoine ----------
+// ---------- Budget/Patrimoine (application BPM-Astra) ----------
+// Les règlements, tâches et rendez-vous viennent des natures fournies par BPM (`bpm/calendar-sources.mjs`) :
+// le calendrier montre exactement ce que BPM tient pour prévu, réglé, en retard ou non réalisé. Les liens
+// ouvrent les pages de BPM-Astra, l'application qui sert ce calendrier.
 
-function ligne(id, libelle, sens, couleur, statuts) {
-  const direction = sens === 'entree' ? 'income' : 'charge';
+const STATUTS_ENTREE = { settled: 'Reçu', due: 'Attendu ce jour', late: 'En retard', pending: 'Attendu', unrealized: 'Non réalisé' };
+const STATUTS_SORTIE = { settled: 'Payé', due: 'À payer ce jour', late: 'En retard', pending: 'À payer', unrealized: 'Non réalisé' };
+const STATUTS_LIGNE = { settled: 'Réglé', due: 'Du jour', late: 'En retard', pending: 'À venir', unrealized: 'Non réalisé' };
+const FINANCEMENT = { cycle: 'Cycle', patrimoine: 'Patrimoine' };
+const MONTANT_LIGNE = ['realizedCents', 'plannedCents'];
+// Seule une opération ponctuelle prévue se déplace ; la commande de l'API garde les périodes closes.
+const REPLANIFIER_LIGNE = { methode: 'PUT', route: '/api/bpm/operations/{id}', champ: 'date', si: { kind: ['operation'], settled: [false], recurrenceId: [null], status: { sauf: ['unrealized'] } } };
+
+function reglement(id, libelle, sens, couleur, { occurrence }) {
+  const statuts = sens === 'entree' ? STATUTS_ENTREE : STATUTS_SORTIE;
   return {
     id,
     libelle,
-    nature: 'operation',
+    nature: 'bpmReglement',
     objet: sens === 'entree' ? ['revenu', 'revenus'] : ['dépense', 'dépenses'],
-    filtre: { direction: [direction] },
+    filtre: { direction: [sens === 'entree' ? 'income' : 'charge'], kind: [occurrence ? 'occurrence' : 'operation'], projectCharge: { sauf: [true] }, special: { sauf: [true] } },
     // Réglée : à sa date de règlement ; attendue : à sa date prévue.
-    date: ['realizedDate', 'date'],
+    date: ['realizedDate', 'plannedDate'],
     titre: '{label}',
     repere: 'ponctuel',
     couleur,
     affiche: true,
     urgence: true,
-    termine: { status: ['realized'] },
+    termine: { settled: [true] },
     statut: { champ: 'status', valeurs: statuts },
-    montant: { champ: ['realizedAmountCents', 'amountCents'], sens: { fixe: sens } },
+    montant: { champ: MONTANT_LIGNE, sens: { fixe: sens } },
     groupe: GROUPE_BUDGET,
-    lien: '/tableau-de-bord?ligne={id}',
-    // Seule une opération ponctuelle attendue se déplace ; la commande de l'API garde les périodes closes.
-    replanifier: { methode: 'PUT', route: '/api/bpm/operations/{id}', champ: 'date', si: { status: ['planned'], recurrenceId: [null] } },
+    lien: occurrence ? '/bpm-astra/mouvements/echeances?ligne={id}' : '/bpm-astra/mouvements?ligne={id}',
+    ...(occurrence ? {} : { replanifier: REPLANIFIER_LIGNE }),
     survol: [
-      { libelle: 'Montant', champ: ['realizedAmountCents', 'amountCents'], format: 'montantSigne' },
+      { libelle: 'Montant', champ: MONTANT_LIGNE, format: 'montantSigne' },
       { libelle: 'Statut', champ: 'status', valeurs: statuts },
-      CENTRE,
+      { libelle: 'Centre de coût', champ: 'costCenterLabel', vide: 'Non classé' },
       BUDGET,
     ],
   };
 }
 
-function recurrence(id, libelle, sens, couleur) {
+const REGLEMENT_PROJET = {
+  id: 'reglement-projet',
+  libelle: 'Règlement de projet',
+  nature: 'bpmReglement',
+  objet: ['règlement de projet', 'règlements de projets'],
+  filtre: { projectCharge: [true], special: { sauf: [true] } },
+  date: ['realizedDate', 'plannedDate'],
+  titre: '{label}',
+  repere: 'ponctuel',
+  couleur: 'rose',
+  affiche: true,
+  urgence: true,
+  termine: { settled: [true] },
+  statut: { champ: 'status', valeurs: STATUTS_LIGNE },
+  montant: { champ: MONTANT_LIGNE, sens: { champ: 'direction', valeurs: { income: 'entree', charge: 'sortie' } } },
+  groupe: { champ: 'coreProjectId', texte: '{projectTitle}' },
+  lien: '/bpm-astra/projets/{coreProjectId}/budget?ligne={id}',
+  replanifier: REPLANIFIER_LIGNE,
+  survol: [
+    { libelle: 'Montant', champ: MONTANT_LIGNE, format: 'montantSigne' },
+    { libelle: 'Statut', champ: 'status', valeurs: STATUTS_LIGNE },
+    { libelle: 'Projet', champ: 'projectTitle', vide: 'Projet' },
+    { libelle: 'Tâche', champ: 'taskTitle', vide: 'Sans tâche' },
+    { libelle: 'Financement', champ: 'fundingSource', valeurs: FINANCEMENT, vide: 'Cycle' },
+  ],
+};
+
+function tacheDeProjet(id, libelle, champ, repere, couleur, branche) {
   return {
     id,
     libelle,
-    nature: 'recurrence',
-    objet: sens === 'entree' ? ['revenu', 'revenus'] : ['dépense', 'dépenses'],
-    filtre: { direction: [sens === 'entree' ? 'income' : 'charge'] },
-    date: 'firstDate',
-    // Les occurrences attendues se déroulent depuis la définition ; une occurrence réglée est une opération.
-    repetition: { debut: 'firstDate', fin: 'endDate', cadence: 'cadence', remplacePar: { nature: 'operation', champ: 'recurrenceId', date: 'occurrenceDate' } },
-    titre: '{label}',
-    repere: 'ponctuel',
+    nature: 'bpmTache',
+    objet: ['tâche', 'tâches'],
+    date: champ,
+    titre: '{title}',
+    repere,
     couleur,
     affiche: true,
-    urgence: true,
-    statut: { texte: 'Attendu' },
-    montant: { champ: 'amountCents', sens: { fixe: sens } },
-    groupe: GROUPE_BUDGET,
-    lien: '/tableau-de-bord?ligne={id}',
+    ...(branche ? {} : { branche: false }),
+    urgence: repere === 'echeance',
+    termine: { status: ['done'] },
+    statut: { champ: 'status', valeurs: STATUTS_TACHE },
+    groupe: { champ: 'projectId', texte: '{projectTitle}' },
+    lien: '/bpm-astra/projets/{projectId}?task={id}',
+    replanifier: { methode: 'PUT', route: '/api/tasks/{id}', champ },
     survol: [
-      { libelle: 'Montant', champ: 'amountCents', format: 'montantSigne' },
-      { libelle: 'Cadence', champ: 'cadence', valeurs: CADENCES },
-      CENTRE,
-      BUDGET,
+      { libelle: 'Projet', champ: 'projectTitle', vide: 'Sans projet' },
+      { libelle: 'Statut', champ: 'status', valeurs: STATUTS_TACHE },
+      { libelle: champ === 'dueDate' ? 'Début prévu' : 'Échéance', champ: champ === 'dueDate' ? 'startDate' : 'dueDate', format: 'date', vide: 'Non défini' },
     ],
   };
 }
@@ -159,7 +187,7 @@ const VERSEMENT = {
   statut: { texte: 'Capitalisé' },
   montant: { champ: 'amountCents' },
   groupe: { champ: 'patrimoineId', reference: { nature: 'patrimoine', champ: 'label' } },
-  lien: '/app/reglages',
+  lien: '/bpm-astra/patrimoine',
   survol: [
     { libelle: 'Montant', champ: 'amountCents', format: 'montant' },
     { libelle: 'Patrimoine', champ: 'patrimoineId', reference: { nature: 'patrimoine', champ: 'label' } },
@@ -167,18 +195,30 @@ const VERSEMENT = {
 };
 
 export const CALENDAR_BUDGET_PATRIMOINE = {
+  interaction: {
+    access: 'collapsed',
+    controls: { sources: true, fields: true, indicators: true, density: true, completed: true },
+    includeDone: true,
+  },
   libelle: 'Calendrier Budget/Patrimoine',
-  description: 'Les revenus et les dépenses des Budgets du user, les fins de période du cycle et les résultats versés au patrimoine.',
+  description: 'Les revenus et les dépenses du projet de vie, les règlements et les échéances des projets, les fins de période du cycle et les résultats versés au patrimoine.',
   vue: 'mois',
   reperesParCase: 2,
   reperesAuSurvol: 4,
   delaiFermetureSurvol: 260,
   indicateurs: ['flux', 'solde', 'suivi'],
+  format: 'standard',
+  formats: [
+    { id: 'montants', libelle: 'Montants et statut', disposition: 'ligne', champs: ['amount', 'status', 'total'], reperesParCase: 3 },
+  ],
   elements: [
-    ligne('revenu', 'Revenu', 'entree', 'vert', { planned: 'Attendu', realized: 'Reçu' }),
-    recurrence('revenu-recurrent', 'Revenu récurrent attendu', 'entree', 'cyan'),
-    ligne('depense', 'Dépense', 'sortie', 'rouge', { planned: 'À payer', realized: 'Payé' }),
-    recurrence('depense-recurrente', 'Dépense récurrente attendue', 'sortie', 'orange'),
+    reglement('revenu', 'Revenu', 'entree', 'vert', { occurrence: false }),
+    reglement('revenu-recurrent', 'Revenu récurrent attendu', 'entree', 'cyan', { occurrence: true }),
+    reglement('depense', 'Dépense', 'sortie', 'rouge', { occurrence: false }),
+    reglement('depense-recurrente', 'Dépense récurrente attendue', 'sortie', 'orange', { occurrence: true }),
+    REGLEMENT_PROJET,
+    tacheDeProjet('tache-echeance', 'Échéance de tâche', 'dueDate', 'echeance', 'ambre', true),
+    tacheDeProjet('tache-prevue', 'Date prévue de tâche', 'startDate', 'debut', 'bleu', false),
     {
       id: 'fin-periode',
       libelle: 'Fin de période',
@@ -194,11 +234,26 @@ export const CALENDAR_BUDGET_PATRIMOINE = {
       affiche: true,
       urgence: true,
       statut: { texte: 'Clôture à faire' },
-      lien: '/piloter',
+      lien: '/bpm-astra/cloture',
       survol: [
         { libelle: 'Jour de début des périodes', champ: 'anchorDay', format: 'nombre' },
         { libelle: 'À la clôture', texte: 'Le résultat de la période rejoint le patrimoine.' },
       ],
+    },
+    {
+      id: 'decision-enveloppes',
+      libelle: 'Décision d’enveloppe',
+      nature: 'bpmRendezVous',
+      objet: ['décision', 'décisions'],
+      date: 'date',
+      titre: '{label}',
+      repere: 'echeance',
+      couleur: 'ardoise',
+      affiche: true,
+      urgence: true,
+      statut: { texte: 'À décider' },
+      lien: '/bpm-astra/projets',
+      survol: [{ libelle: 'Décision', texte: 'Décision de moyens, sans charge sur le cycle ni prélèvement sur le patrimoine.' }],
     },
     VERSEMENT,
   ],
@@ -228,7 +283,7 @@ export const CALENDAR_PATRIMOINE = {
       termine: {},
       statut: { texte: 'Ouvert' },
       montant: { champ: 'openingStockCents' },
-      lien: '/app/reglages',
+      lien: '/bpm-astra/patrimoine',
       survol: [
         { libelle: 'Stock d’ouverture', champ: 'openingStockCents', format: 'montant', vide: 'Non renseigné' },
         { libelle: 'Objectif de stock', champ: 'objectiveCents', format: 'montant', vide: 'Non défini' },
@@ -247,7 +302,7 @@ export const CALENDAR_PATRIMOINE = {
       couleur: 'ambre',
       affiche: true,
       statut: { champ: 'type', valeurs: TYPES_OBJECTIF },
-      lien: '/vision',
+      lien: '/bpm-astra/objectif/echeances',
       survol: [
         { libelle: 'Type', champ: 'type', valeurs: TYPES_OBJECTIF },
         { libelle: 'Montant visé (valeur du jour)', champ: 'targetTodayCents', format: 'montant' },

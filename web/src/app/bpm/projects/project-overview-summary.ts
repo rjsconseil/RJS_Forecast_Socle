@@ -1,5 +1,6 @@
+import { BpmAmount } from '../ui/amount';
 import { Component, computed, input } from '@angular/core';
-import { BpmProjectsOverview } from '../../core/bpm-projects.models';
+import { BpmProjectsOverview } from '../data/bpm-projects.models';
 import { COLUMNS, TaskStatus } from '../../core/models';
 import { CentsPipe } from '../../core/format';
 import { FUNDING } from '../ui/project-funding';
@@ -7,7 +8,7 @@ import { FUNDING } from '../ui/project-funding';
 /** Même synthèse pour le tableau et la gestion, sur tous les projets du périmètre. */
 @Component({
   selector: 'bpm-project-overview-summary',
-  imports: [CentsPipe],
+  imports: [BpmAmount, CentsPipe],
   styleUrl: './projects.page.scss',
   template: `
     <section
@@ -49,12 +50,12 @@ import { FUNDING } from '../ui/project-funding';
       >
         <div class="life-financial-stat life-allocated">
           <dt>{{ L.envelopes }}</dt>
-          <dd>{{ data() ? (data()!.life.allocatedCents | cents) : '—' }}</dd>
-          <span>Aux projets financés</span>
+          <dd [bpmAmount]="data()?.life?.allocatedCents" bpmTone="info">{{ data() ? (data()!.life.allocatedCents | cents) : '—' }}</dd>
+          <span>Aux projets avec enveloppe</span>
         </div>
         <div class="life-financial-stat life-paid">
           <dt>{{ L.paidOnEnvelopes }}</dt>
-          <dd>{{ data() ? (data()!.life.paidCents | cents) : '—' }}</dd>
+          <dd [bpmAmount]="data()?.life?.paidCents" bpmFlow="expense">{{ data() ? (data()!.life.paidCents | cents) : '—' }}</dd>
           <span>Règlements validés depuis chaque attribution</span>
         </div>
         <div
@@ -62,7 +63,7 @@ import { FUNDING } from '../ui/project-funding';
           [class.is-negative]="(data()?.life?.remainingCents ?? 0) < 0"
         >
           <dt>{{ L.remaining }}</dt>
-          <dd>{{ data() ? (data()!.life.remainingCents | cents) : '—' }}</dd>
+          <dd [bpmAmount]="data()?.life?.remainingCents">{{ data() ? (data()!.life.remainingCents | cents) : '—' }}</dd>
           <span>Dépassements autorisés inclus</span>
         </div>
         <div
@@ -70,7 +71,7 @@ import { FUNDING } from '../ui/project-funding';
           [class.is-negative]="(data()?.life?.availableCents ?? 0) < 0"
         >
           <dt>{{ L.toShare }}</dt>
-          <dd>{{ data() ? (data()!.life.availableCents | cents) : '—' }}</dd>
+          <dd [bpmAmount]="data()?.life?.availableCents">{{ data() ? (data()!.life.availableCents | cents) : '—' }}</dd>
           <span>Enveloppes pas encore accordées en parts</span>
         </div>
       </dl>

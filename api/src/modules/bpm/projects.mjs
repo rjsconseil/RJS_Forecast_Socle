@@ -7,20 +7,20 @@
 // les rattache et change leur état par les commandes du noyau ; il ne duplique aucune donnée de financement. Les créations depuis BPM composent les builders du
 // noyau et du middleware Budget en une seule écriture Object Management.
 //
-// Charges de projet, charges spéciales [P] : le budget attribué figure dans le budget de vie comme une charge non
-// récurrente, mais elle n'entre pas dans les dépenses à leur date de facturation. Seules les charges du projet que
-// l'utilisateur a validées comme réglées (opérations réglées du Budget standard, depuis la date d'attribution)
-// comptent dans les dépenses du budget de vie, à leur date réelle (variable `projets.chargesReglees`).
-import { projectChecks, periodPaidCents } from '../budget/project-analysis.mjs';
+// L'attribution des enveloppes et des parts réserve des moyens sans opération financière.
+// Seuls les flux des tâches validés sont imputés au cycle ou au patrimoine, selon chaque opération.
+import { projectChecks, periodPaidCents } from '../budget/api.mjs';
 import { fail } from '../../socle/errors.mjs';
 import { money, text } from '../../socle/validation.mjs';
-import { CADENCE_LABEL } from '../budget/recurrence.mjs';
+import { CADENCE_LABEL } from '../budget/api.mjs';
 import {
-  abandonPlan, abandonPreview, fmt, frDate, fundingFigures, inRegime, isAbandoned, isValidatedCharge, isValidatedMove, projectMoveCents, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, sharesOf, standardOfProject, sum, taskFunding,
-} from '../budget/funding.mjs';
-import { addDays, periodByIndex, periodContaining, today } from '../budget/periods.mjs';
+  abandonPlan, abandonPreview, fmt, fundingFigures, inRegime, isAbandoned, isValidatedMove, projectMoveCents, openRequest, OVERRUN_STATUS, overrunsOf, overrunView, requestsOf, requestView, standardOfProject, sum, taskFunding,
+} from '../budget/api.mjs';
+import { addDays, periodByIndex, periodContaining, today } from '../budget/api.mjs';
 
-export { inRegime, isValidatedCharge, isValidatedRefund, isValidatedMove, projectMoveCents, OVERRUN_REASONS, OVERRUN_STATUS } from '../budget/funding.mjs';
+export { inRegime, isValidatedCharge, isValidatedRefund, isValidatedMove, projectMoveCents, OVERRUN_REASONS, OVERRUN_STATUS, countsInCycle, drawsOnPatrimoine, fundingSourceOf } from '../budget/api.mjs';
+import { countsInCycle, drawsOnPatrimoine, projectAccountingDate, projectFundingSource } from '../budget/api.mjs';
+import { objectsWith } from '../../socle/indexes.mjs';
 
 const compositionOf = (state, userId) => Object.values(state.bpmCompositions ?? {}).find((c) => c.userId === userId) ?? null;
 const cycleOf = (state, compositionId) => Object.values(state.cycleLinks ?? {}).find((c) => c.bpmCompositionId === compositionId) ?? null;
@@ -47,7 +47,7 @@ export const projectExtensions = {
 /** Métriques du cycle en cours lues pour la variante non standard (budget de vie). */
 export const LIFE_BUDGET_KEYS = [
   'bpm.revenusPrevus', 'bpm.chargesPrevues', 'bpm.resultatPrevu', 'bpm.charges', 'bpm.chargesProjets',
-  'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.patrimoineConstitue',
+  'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.patrimoineConstitue', 'bpm.patrimoineDisponible',
 ];
 
 /**
@@ -80,6 +80,9 @@ export function lifeProjectBudget(state, comp, { figures, period, children, over
   return {
     budgetId: lifeB.id,
     kind: 'life',
+    // Le budget de vie est le cycle lui-même : ses ressources et ses dépenses sont celles des cycles.
+    fundingSource: 'cycle',
+    fundingSourceLocked: true,
     nonStandard: true,
     name: 'Budget du projet de vie',
     coreProjectId: comp.coreProjectId,
@@ -119,7 +122,7 @@ export function lifeProjectBudget(state, comp, { figures, period, children, over
       compositionId: comp.id,
       lifeProjectId: comp.coreProjectId,
       patrimoineId: comp.patrimoineId,
-      patrimoine: { stockCents: c('bpm.patrimoineConstitue'), objectiveCents: pat?.objectiveCents ?? null, openingStockCents: pat?.openingStockCents ?? null },
+      patrimoine: { stockCents: c('bpm.patrimoineDisponible'), objectiveCents: pat?.objectiveCents ?? null, openingStockCents: pat?.openingStockCents ?? null },
       period: period ? { key: period.key, label: period.label, start: period.start, end: period.end } : null,
       expectedCents: expected,
       projectsPaidCents: regime ? projectsPaid : null,
@@ -190,9 +193,10 @@ export function lifeFunding(state, children, cs, { limit = 12 } = {}) {
   const rows = children.map((c) => {
     const b = state.budgets[c.budgetId];
     const byPeriod = Object.fromEntries(periods.map((p) => [p.key, 0]));
-    for (const o of Object.values(state.operations)) {
+    for (const o of objectsWith(state.operations, 'budgetId', b?.id)) {
       if (!isValidatedMove(o, b)) continue;
-      const k = keyOf(o.realizedDate);
+      if (projectFundingSource(o, b) !== 'cycle') continue;
+      const k = keyOf(projectAccountingDate(o));
       if (k) byPeriod[k] += projectMoveCents(o, b);
     }
     const overruns = overrunsOf(state, c.budgetId)
@@ -222,36 +226,14 @@ export function lifeFunding(state, children, cs, { limit = 12 } = {}) {
 }
 
 /** Projets standards du budget de vie auxquels un montant est attribué (régime des charges de projet). */
+/** Projets financés par le cycle : leurs dépenses validées comptent dans le cycle où elles sont réglées. */
+export const cycleStandardsOf = (state, lifeBudgetId) => Object.values(state.budgets).filter((b) => b.parentBudgetId === lifeBudgetId && countsInCycle(b));
+/** Projets financés par le patrimoine : leurs dépenses validées sont prélevées sur le patrimoine, hors cycle. */
+export const patrimoineStandardsOf = (state, lifeBudgetId) => Object.values(state.budgets).filter((b) => b.parentBudgetId === lifeBudgetId && drawsOnPatrimoine(b));
 export const fundedStandardsOf = (state, lifeBudgetId) => Object.values(state.budgets).filter((b) => b.parentBudgetId === lifeBudgetId && inRegime(b));
 
-/**
- * Charges spéciales du budget de vie liées aux projets, présentées dans le registre sans entrer dans les totaux :
- * le budget attribué (charge non récurrente, à sa date d'attribution) et les dépassements autorisés, facturés à la
- * fin du cycle (à leur date de facturation).
- */
-export function specialProjectLines(state, lifeBudgetId, { from, to }) {
-  const out = [];
-  for (const b of fundedStandardsOf(state, lifeBudgetId)) {
-    const fig = projectBudget(state, b);
-    if (b.allocationDate >= from && b.allocationDate <= to) {
-      out.push({ id: `alloc:${b.id}`, kind: 'projectAllocation', budget: b, label: `Budget attribué · ${b.name}`, date: b.allocationDate, cents: fig.initialAllocationCents, statusLabel: 'Charge de projet · comptée à la validation de ses dépenses' });
-    }
-    for (const x of overrunsOf(state, b.id)) {
-      if (!['approved', 'billed'].includes(x.status) || !x.billingDate || x.billingDate < from || x.billingDate > to) continue;
-      const task = x.taskId ? state.tasks[x.taskId]?.title : null;
-      out.push({
-        id: `overrun:${x.id}`,
-        kind: 'projectOverrun',
-        budget: b,
-        label: `Dépassement · ${b.name}${task ? ` · ${task}` : ''}`,
-        date: x.billingDate,
-        cents: x.amountCents,
-        statusLabel: x.status === 'billed' ? 'Dépassement facturé en fin de cycle' : 'Dépassement autorisé · facturé en fin de cycle',
-      });
-    }
-  }
-  return out;
-}
+/** Compatibilité de lecture : les réservations n'apparaissent plus parmi les flux. */
+export function specialProjectLines() { return []; }
 
 /** Variables des chiffres du budget de vie apportées par les projets. */
 /**
@@ -367,11 +349,7 @@ export function createProjects(socle, h) {
     const view = core().readTask({ userId: t.userId }, t.id);
     const fig = t.projectId ? figsByProject.get(t.projectId) : null;
     const f = fig ? taskFunding(state, fig, t.id) : null;
-    const share = f?.shareCents ?? null;
     const ret = fig?.returns[t.id] ?? null;
-    // Valorisation indicative de la part au prorata du temps. Elle n'écrit aucune opération financière.
-    const timeRatio = t.plannedHours > 0 ? t.spentHours / t.plannedHours : null;
-    const timeConsumedCents = share === null || timeRatio === null ? null : Math.round(share * timeRatio);
     return {
       ...view,
       projectRole: fig ? 'standard' : t.projectId && figsByProject.lifeRoot === t.projectId ? 'life' : null,
@@ -381,9 +359,6 @@ export function createProjects(socle, h) {
             ...f,
             return: ret ? { ...ret, cadenceLabel: CADENCE_LABEL[ret.cadence] } : null,
             request: requestsOf(state, fig.budgetId).filter((x) => x.taskId === t.id && openRequest(x)).map((x) => requestView(state, x))[0] ?? null,
-            timeConsumptionPercent: timeRatio === null ? null : Math.round(timeRatio * 1000) / 10,
-            timeConsumedCents,
-            timeRemainingCents: timeConsumedCents === null ? null : share - timeConsumedCents,
           }
         : null,
     };
@@ -454,7 +429,8 @@ export function createProjects(socle, h) {
         .filter((l) => l.direction === 'charge' || (l.direction === 'income' && l.kind === 'operation'))
         .map((l) => {
           const v = budgetModule().lineView(state, l);
-          return { ...v, refund: l.direction === 'income', validated: l.settled && inRegime(b) && l.realizedDate >= b.allocationDate, beforeAllocation: l.settled && inRegime(b) && l.realizedDate < b.allocationDate };
+          const validated = l.operationId ? isValidatedMove(state.operations[l.operationId], b) : false;
+          return { ...v, refund: l.direction === 'income', validated, beforeAllocation: l.settled && !validated && inRegime(b) && (l.accountingDate ?? l.realizedDate) < b.allocationDate };
         });
     } else {
       // Charges propres du budget de vie sur le cycle en cours (les projets fils gardent les leurs).
@@ -478,7 +454,7 @@ export function createProjects(socle, h) {
       const p = core().buildProject(tx, input);
       const b = budgetModule().buildStandardBudget(tx, { coreProjectId: p.id, parentBudgetId: comp.budgetId, name: p.title });
       // Les projets historiques restent lisibles ; les nouveaux parcours financent leurs dépenses par tâche.
-      funding().startTaskFunding(tx, b, money('amount', input.amount, { nullable: true }));
+      funding().startTaskFunding(tx, b, money('amount', input.amount, { nullable: true }), input.fundingSource ?? 'cycle');
       return { coreProjectId: p.id, budgetId: b.id };
     }, { creation: true });
     return { ...r, detail: projectDetail(ctx, r.coreProjectId) };
@@ -512,7 +488,7 @@ export function createProjects(socle, h) {
         if (!comp) fail('NOT_FOUND', 'Espace BPM à préparer avant de budgéter un projet.');
         const p = om.owned(tx.draft, 'coreProject', input.coreProjectId, tx.userId);
         if (p.id === comp.coreProjectId) fail('FORBIDDEN_BY_RULE', 'Le projet de vie est la racine du budget de vie : il ne devient pas un projet standard.', { field: 'coreProjectId' });
-        if (Object.values(tx.draft.patrimoines ?? {}).some((x) => x.coreProjectId === p.id)) fail('FORBIDDEN_BY_RULE', 'Ce projet est la racine d’un Patrimoine.', { field: 'coreProjectId' });
+        if (om.by(tx.draft, 'patrimoine', 'coreProjectId', p.id).length) fail('FORBIDDEN_BY_RULE', 'Ce projet est la racine d’un Patrimoine.', { field: 'coreProjectId' });
         const name = text('name', input.name, { max: 200 }) || p.title;
         const b = budgetModule().buildStandardBudget(tx, { coreProjectId: p.id, parentBudgetId: comp.budgetId, name });
         return { budgetId: b.id, coreProjectId: p.id };

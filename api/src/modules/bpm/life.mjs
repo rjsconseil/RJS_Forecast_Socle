@@ -6,16 +6,17 @@
 // lignes du registre (`budgetLines`) : Σ dépensé des natures + charges des projets = « Dépensé » (`bpm.charges`),
 // Σ « à payer » des natures = « À payer » (`bpm.resteAPayer`).
 // L'usage de l'excédent capitalisé (placements, affectations) n'est pas géré ici : il relève d'un module à venir.
-import { monthlyAverageCents } from '../budget/recurrence.mjs';
-import { isNearCap } from '../budget/index.mjs';
+import { linkedProjectBudgets, monthlyAverageCents } from '../budget/api.mjs';
+import { isNearCap } from '../budget/api.mjs';
 import { centerRefOf, essentialRefsOf, ESSENTIALS_PARAMETER, NATURE_LABEL, natureOf } from './natures.mjs';
-import { addDays, today } from '../budget/periods.mjs';
+import { addDays, today } from '../budget/api.mjs';
+import { cents, sum } from './format.mjs';
 
 const RESULT = 'bpm.resultatPeriode';
 const KEYS = [
-  'bpm.revenus', 'bpm.charges', 'bpm.chargesProjets', RESULT, 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu',
+  'bpm.revenus', 'bpm.charges', 'bpm.chargesProjets', 'bpm.revenusProjets', RESULT, 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu',
   'bpm.recuAvance', 'bpm.payeAvance', 'bpm.soldeAvecAvances', 'bpm.revenusPrevus',
-  'bpm.tauxEpargne', 'bpm.consommationCharges', 'bpm.patrimoineConstitue', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif',
+  'bpm.tauxEpargne', 'bpm.consommationCharges', 'bpm.patrimoineConstitue', 'bpm.patrimoineDisponible', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif',
 ];
 const OPEN = ['late', 'due', 'pending'];
 const EURO = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
@@ -30,8 +31,6 @@ const INITIAL_GAP_PCT = 2;
 const INITIAL_GAP_MIN_CENTS = 1000;
 export const SURPLUS_USE_NOTE = 'L’usage de l’excédent capitalisé (placements, affectations) relève d’un module à venir : cette page constate ce qui s’accumule et pilote ce qui l’alimente.';
 
-const cents = (v) => (v === null || v === undefined ? null : Math.round(v * 100));
-const sum = (xs, f) => xs.reduce((s, x) => s + (f(x) ?? 0), 0);
 const days = (from, to) => Math.round((Date.parse(to) - Date.parse(from)) / 86400000);
 const pct = (part, whole) => (whole > 0 && part !== null ? Math.round((part / whole) * 1000) / 10 : null);
 const pad = (n) => String(n).padStart(2, '0');
@@ -65,7 +64,10 @@ const lineOf = (l, essentials) => ({
  * @param reads   lectures communes (`reads.mjs`) : base, contextOf, decorate, budgetType, directives, visionOf, surplusProgress
  * @param projects lectures des projets de la vie (`projects.mjs`) : overview
  */
-export function createLife(socle, h, reads, projects) {
+/** Éléments du calendrier Budget/Patrimoine qui portent des règlements à faire. */
+const DUE_ELEMENTS = new Set(['revenu', 'revenu-recurrent', 'depense', 'depense-recurrente', 'reglement-projet']);
+
+export function createLife(socle, h, reads, projects, calendar = () => socle.modules.calendar) {
   const budget = () => socle.modules.budget;
 
   /**
@@ -94,23 +96,25 @@ export function createLife(socle, h, reads, projects) {
     const realized = period ? lifeLines(period.start, period.end, 'realized') : [];
     // Échéances ouvertes : en retard depuis la première période non close, et celles des 7 prochains jours.
     const openFrom = cs ? (cs.firstOpen.start < now ? cs.firstOpen.start : now) : now;
+    // Le calendrier dit quels règlements tombent dans la fenêtre (seule source des dates) ; BPM les décore.
+    const dueIds = new Set(calendar().events(ctx, 'budgetPatrimoine', { from: openFrom, to: addDays(now, 7) })
+      .filter((e) => DUE_ELEMENTS.has(e.element) && !e.done).map((e) => e.objectId));
     const open = lifeLines(openFrom, addDays(now, 7), 'planned')
-      .filter((l) => !l.settled)
+      .filter((l) => !l.settled && dueIds.has(l.id))
       .map((l) => reads.decorate(b, l))
       .filter((l) => OPEN.includes(l.status))
       .sort((x, y) => x.plannedDate.localeCompare(y.plannedDate) || x.label.localeCompare(y.label));
 
-    // Dépenses prévues des projets de la vie arrivées à échéance : réglées depuis le projet de vie sans ouvrir chaque projet.
-    const projectBudgets = Object.values(state.budgets).filter((x) => x.role === 'standard' && x.parentBudgetId === comp.budgetId);
+    // Dépenses et recettes des tâches à traiter depuis le projet de vie.
+    const projectBudgets = linkedProjectBudgets(state, comp.budgetId);
     const projectOpen = (projectBudgets.length ? budget().budgetLines(state, projectBudgets.map((x) => x.id), { from: openFrom, to: addDays(now, 7), by: 'planned' }) : [])
-      .filter((l) => !l.settled && l.direction === 'charge')
-      .map((l) => reads.decorate(b, l))
+      .filter((l) => !l.settled && dueIds.has(l.id))
+      .map((l) => reads.decorateProjectLine(b, l))
       .filter((l) => OPEN.includes(l.status))
       .map((l) => {
         const pb = state.budgets[l.budgetId];
         const funded = Number.isInteger(pb?.allocationCents) && typeof pb?.allocationDate === 'string';
-        const taskId = l.taskId ?? (l.operationId ? state.operations[l.operationId]?.taskId : null) ?? null;
-        return { ...lineOf(l, essentials), nature: null, project: { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, taskTitle: taskId ? state.tasks[taskId]?.title ?? null : null } };
+        return { ...lineOf(l, essentials), nature: null, project: { ...l.project, funded, taskTitle: l.taskTitle ?? null } };
       });
 
     // ---------- volet 1 : cycle en cours ----------
@@ -148,6 +152,7 @@ export function createLife(socle, h, reads, projects) {
             savingsRatePct: figures['bpm.tauxEpargne']?.value ?? null,
             consumptionPct: figures['bpm.consommationCharges']?.value ?? null,
             projectsPaidCents: f('bpm.chargesProjets'),
+            projectsIncomeCents: f('bpm.revenusProjets'),
             incomeCount: incomes.length,
             receivedCount: incomes.filter((l) => l.settled).length,
             // Reçu − prévu sur les entrées du cycle déjà reçues (facture payée en partie, salaire ajusté…).
@@ -217,8 +222,6 @@ export function createLife(socle, h, reads, projects) {
     const bt = reads.budgetType(ctx);
     const directives = Object.fromEntries(reads.directives(ctx).items.map((i) => [i.key, i]));
     const totalPaid = f('bpm.charges');
-    // Plafonds de catégorie (même mesure que la revue des plafonds) : un dépassement de catégorie compte dans le volet de sa nature.
-    const capCategories = period ? reads.capsReview(ctx, { period: period.key }).categories.filter((k) => k.capCents !== null) : [];
 
     function natureBlock(n) {
       const isN = (l) => l.direction === 'charge' && natureOf(l, essentials) === n;
@@ -254,18 +257,9 @@ export function createLife(socle, h, reads, projects) {
       const capped = rows.filter((r) => r.capCents !== null);
       const capCents = capped.length ? sum(capped, (r) => r.capCents) : null;
       const marginCents = capped.length ? sum(capped, (r) => r.marginCents) : null;
-      const categories = capCategories
-        .filter((k) => essentials.has(k.costCenterRef) === (n === 'indispensable'))
-        .map((k) => ({ id: k.categoryId ?? k.id ?? null, label: k.label, ref: k.costCenterRef, capCents: k.capCents, engagedCents: k.engagedCents ?? null, marginCents: k.marginCents, over: !!k.over, near: !!k.near }));
-      // Une catégorie dépassée n'ajoute rien si son poste, plafonné, est déjà compté au-delà.
-      const overCenters = new Set(capped.filter((r) => r.over).map((r) => r.ref));
-      const overCategories = categories.filter((k) => k.over && !overCenters.has(k.ref));
-      const overCount = overCenters.size + overCategories.length;
-      const nearCap = capped.some((r) => r.near) || categories.some((k) => k.near && !k.over);
-      const overText = (kind) => {
-        const parts = [overCenters.size ? `${overCenters.size} poste(s) ${kind}` : null, overCategories.length ? `${overCategories.length} catégorie(s) (${overCategories.map((k) => k.label).join(', ')})` : null].filter(Boolean);
-        return `${parts.join(' et ')} au-delà de leur plafond${isCurrent ? '' : ' sur cette période'}.`;
-      };
+      const overCount = capped.filter((r) => r.over).length;
+      const nearCap = capped.some((r) => r.near);
+      const overText = (kind) => `${overCount} poste(s) ${kind} au-delà de leur plafond${isCurrent ? '' : ' sur cette période'}.`;
       const paidCents = sum(paidLines, (l) => l.realizedCents);
       const plannedCents = sum(plannedLines, (l) => l.plannedCents);
       const next = openLines.filter((l) => ['due', 'pending'].includes(l.status)).sort((x, y) => x.plannedDate.localeCompare(y.plannedDate))[0] ?? null;
@@ -289,7 +283,6 @@ export function createLife(socle, h, reads, projects) {
         capCents,
         marginCents,
         overCount,
-        categories,
         monthlyAverageCents: sum(bt.lines.filter((r) => r.direction === 'charge' && essentials.has(r.costCenterRef) === (n === 'indispensable')), (r) => monthlyAverageCents(r.amountCents, r.cadence)),
         next: next ? lineOf(next, essentials) : null,
         rows,
@@ -345,6 +338,7 @@ export function createLife(socle, h, reads, projects) {
       status: p.view?.status ?? null,
       statusLabel: p.view?.statusLabel ?? null,
       regime: p.budget.regime,
+      fundingSource: p.budget.fundingSource,
       allocationCents: p.budget.allocationCents,
       paidCents: p.budget.paidCents,
       remainingCents: p.budget.remainingCents,
@@ -461,7 +455,7 @@ export function createLife(socle, h, reads, projects) {
     };
 
     // ---------- volet 6 : patrimoine du projet de vie ----------
-    const stock = f('bpm.patrimoineConstitue');
+    const stock = f('bpm.patrimoineDisponible');
     const after = f('bpm.patrimoineFinPeriode');
     const effect = period ? f(RESULT) : null;
     const patrimoineBlock = {
@@ -469,7 +463,7 @@ export function createLife(socle, h, reads, projects) {
       label: 'Patrimoine accumulé',
       patrimoineId: pat.id,
       stockCents: stock,
-      stockReason: figures['bpm.patrimoineConstitue']?.unavailableReason ?? null,
+      stockReason: figures['bpm.patrimoineDisponible']?.unavailableReason ?? null,
       effectCents: effect,
       afterCents: after,
       expectedAfterCents: stock === null || expected === null ? null : stock + expected,

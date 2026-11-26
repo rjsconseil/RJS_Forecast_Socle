@@ -1,0 +1,334 @@
+    <div class="page page-wide bpm-projects bpm-project-page bpm-management bpm-life-management" bpmFragmentNavigation [bpmFragmentReady]="!!data()">
+      <rjs-page-banner
+        [title]="(topic()?.key === 'cycle' ? topic()?.title : workspace()?.title) ?? 'Mon projet de vie'"
+        [lead]="workspace()?.lead ?? 'Votre budget, vos projets et votre patrimoine. Les repères pour décider, les outils pour agir.'"
+        [context]="data()?.context"
+        [periodNav]="true"
+        [focus]="pageFocus()"
+        [scope]="pageScope()"
+        [result]="pageResult()"
+        toolsLabel="Ouvrir le projet de vie"
+      >
+        @if (topic()?.key === 'cycle' && data()?.cycle?.status === 'to_configure') {
+          <a primary class="btn btn-primary" routerLink="/app/reglages/cycle">Fixer mon cycle</a>
+        } @else if (workspace()?.key === 'life-funding') {
+          <a primary class="btn btn-primary" routerLink="/projet-de-vie/projets">Ouvrir mes projets</a>
+        } @else if (workspace()?.key === 'life-due') {
+          <!-- Un seul élément racine par branche : le bloc entier est projeté dans l'emplacement de l'action principale. -->
+          <ng-container ngProjectAs="[primary]">
+            @if (nextDue(); as line) {<button class="btn btn-primary" type="button" (click)="openLine(line.id)">Régler · {{line.label}}</button>}
+            @else {<button class="btn btn-primary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une entrée ou une dépense</button>}
+          </ng-container>
+        } @else if (workspace()?.key === 'life-projets') {
+          <a primary class="btn btn-primary" routerLink="/projet-de-vie/projets" [queryParams]="{ editProject: 'new' }">＋ Créer un projet de la vie</a>
+        } @else if (workspace()?.key === 'life-budget') {
+          <button primary class="btn btn-primary" type="button" [disabled]="!data() || mutationBlocked() || (workspace()?.key === 'life-budget' && (!budgetType()?.ready() || budgetType()?.saving()))" (click)="runPriority()">{{ priorityLabel() }}</button>
+        }
+        @if (workspace()?.key === 'life-budget') {
+          <ng-container actions>
+          <button actions class="btn btn-secondary" type="button" [disabled]="!budgetType()?.ready() || budgetType()?.saving()" (click)="budgetType()?.addRecurring('income')">＋ Entrée récurrente</button>
+          @if (budgetType()?.pendingChanges()) { <button actions class="btn btn-secondary" type="button" [disabled]="budgetType()?.saving()" (click)="budgetType()?.addRecurring('charge')">＋ Dépense récurrente</button> }
+          <a actions class="bpm-link" routerLink="/projet-de-vie/echeances">Vérifier les échéances à régler →</a>
+          <a actions class="bpm-link" routerLink="/plafonds">Fixer mes plafonds →</a>
+          </ng-container>
+        } @else if (!topic() && !(workspace()?.key === 'life-due' && !nextDue())) {
+          <button actions class="btn btn-secondary" type="button" [disabled]="!budgets().length" (click)="openEntry()">＋ Saisir une entrée ou une dépense</button>
+        }
+        <div tools class="life-context-tools">
+        @if (workspace()?.key === 'life-budget') {
+          @if (budgetType()?.editing()) { <p>{{ budgetType()?.pendingChanges() ?? 0 }} modification(s) à enregistrer.</p> }
+        }
+        </div>
+      </rjs-page-banner>
+      <bpm-compass />
+
+      @if (reading() && reading() !== 'current') {
+        <p class="life-reading-note" role="status">
+          Vous consultez <strong>{{ data()!.cycle.period!.label }}</strong> ({{ readingText().status.toLowerCase() }}) : les repères
+          montrent cette période. Les échéances à régler, les décisions et la clôture restent celles d’aujourd’hui.
+          <a [routerLink]="[]" [queryParams]="{ period: null }">Revenir à la période en cours →</a>
+        </p>
+      }
+      @if (error()) {
+        <div class="empty-state" role="alert">
+          <h2>Gestion du projet de vie indisponible</h2>
+          <p>{{ error() }}</p>
+          <button class="btn btn-secondary" type="button" (click)="load()">Réessayer</button>
+        </div>
+      } @else if (!data()) {
+        <p role="status">Chargement du projet de vie…</p>
+      }
+
+      @if (data(); as d) {
+
+        @if (topic(); as v) {
+          <ng-template #topicSummary>
+            <bpm-life-topic-summary [volet]="v" [period]="period()" [canEnter]="!!budgets().length && !mutationBlocked()" (entry)="openEntry($event)" />
+          </ng-template>
+          @if (!prioritizeFundedProjects) {
+            <ng-container [ngTemplateOutlet]="topicSummary" />
+          }
+          <section class="bpm-section life-workspace-panel" [attr.data-topic-detail]="v.key" aria-labelledby="life-topic-detail">
+            <header [class.life-section-heading]="prioritizeFundedProjects">
+              <h2 id="life-topic-detail">{{ detailTitle() }}</h2>
+              @if (prioritizeFundedProjects && v.primary.link) {
+                <a class="btn btn-secondary small" [routerLink]="v.primary.link" [fragment]="v.primary.fragment"
+                  [queryParams]="{ period: period(), ...v.primary.queryParams }">{{ v.primary.label }}</a>
+              }
+            </header>
+            @switch (v.key) {
+              @case ('cycle') {
+                @if (d.cycle.flows; as f) {
+                  <div class="pm-project-finance">
+                    <p class="pm-detail-eyebrow">Du budget initial au solde prévu</p>
+                    <dl class="pm-finance-summary">
+                      <div>
+                        <dt>Budget initial</dt>
+                        <dd [bpmAmount]="f.initialBudgetCents">{{ f.initialBudgetCents | signedCents }}</dd>
+                        <small>Montants prévus du cycle</small>
+                      </div>
+                      <div>
+                        <dt>Écart au budget initial</dt>
+                        <dd [class.is-deficit]="(f.gapToInitialCents ?? 0) < 0" [bpmAmount]="f.gapToInitialCents">{{ f.gapToInitialCents | signedCents }}</dd>
+                        <small>Solde prévu − budget initial</small>
+                      </div>
+                      <div>
+                        <dt>Dépenses des tâches validées</dt>
+                        <dd [bpmAmount]="f.projectsPaidCents" bpmFlow="expense">{{ f.projectsPaidCents | cents }}</dd>
+                        <small>Imputées au Dépensé du cycle</small>
+                      </div>
+                      <div>
+                        <dt>Gains des tâches validés</dt>
+                        <dd [bpmAmount]="f.projectsIncomeCents" bpmFlow="income">{{ f.projectsIncomeCents == null ? '—' : (f.projectsIncomeCents | cents) }}</dd>
+                        <small>Imputés au Reçu du cycle</small>
+                      </div>
+                    </dl>
+                  </div>
+                  <ng-container *ngTemplateOutlet="lineTable; context: { $implicit: f.incomeLines, empty: 'Aucune entrée prévue dans le cycle.', caption: 'Entrées du cycle' }" />
+                } @else {
+                  <p class="bpm-note">Le cycle est à configurer : choisissez son jour d’ancrage dans <a routerLink="/app/reglages/cycle">les réglages du cycle</a>.</p>
+                }
+              }
+              @case ('indispensable') {
+                <p>Postes indispensables · {{ d.essentials.labels.join(', ') || 'Aucun poste défini' }}</p>
+                <ng-container *ngTemplateOutlet="natureDetail; context: { $implicit: d.natures.indispensable }" />
+              }
+              @case ('courante') {
+                <ng-container *ngTemplateOutlet="natureDetail; context: { $implicit: d.natures.courante }" />
+              }
+              @case ('projets') {
+                <div class="bpm-table-wrap" [class.life-envelopes-table]="prioritizeFundedProjects" role="region" aria-label="Projets de la vie financés" tabindex="0">
+                  <table class="bpm-table">
+                    <caption class="visually-hidden">Projets de la vie financés par le projet de vie</caption>
+                    <thead>
+                      <tr><th scope="col">Projet</th><th scope="col">Avancement</th><th scope="col" class="num">{{ L.envelope }}</th><th scope="col" class="num">{{ L.paidOnEnvelope }}</th><th scope="col" class="num">{{ L.remaining }}</th><th scope="col" class="num">Réglé ce cycle</th></tr>
+                    </thead>
+                    <tbody>
+                      @for (p of fundedProjects(); track p.budgetId) {
+                        <tr [attr.data-state]="p.state">
+                          <th scope="row"><a [routerLink]="['/app/gestion-projet', p.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}">{{ p.name }}</a>@if (p.pendingOverrun) { <small class="life-flag">Décision attendue</small> }</th>
+                          <td>{{ p.statusLabel ?? '—' }}</td>
+                          <td class="num" [bpmAmount]="p.regime ? p.allocationCents : null" bpmTone="info">{{ p.regime ? (p.allocationCents | cents) : 'À attribuer' }}</td>
+                          <td class="num" [bpmAmount]="p.paidCents" bpmFlow="expense">{{ p.paidCents | cents }}</td>
+                          <td class="num" [class.is-deficit]="(p.remainingCents ?? 0) < 0" [bpmAmount]="p.remainingCents">{{ p.remainingCents | cents }}</td>
+                          <td class="num" [bpmAmount]="p.periodPaidCents" bpmFlow="expense">{{ p.periodPaidCents | cents }}</td>
+                        </tr>
+                      } @empty {
+                        <tr><td colspan="6">Aucun projet de la vie n’est encore financé. <a routerLink="/projet-de-vie/financement" [queryParams]="{period:period(),filter:'unfunded'}">Attribuer une enveloppe</a>.</td></tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+              @case ('patrimoine') {
+                <p>Les clôtures alimentent le patrimoine. Les dépenses et les gains imputés directement au patrimoine modifient également le stock enregistré.</p>
+                <a routerLink="/app/reglages/patrimoine">Renseigner le stock de départ →</a>
+                <p class="bpm-note life-surplus-note">{{ d.patrimoine.surplusUseNote }}</p>
+              }
+            }
+          </section>
+          @if (prioritizeFundedProjects) {
+            <ng-container [ngTemplateOutlet]="topicSummary" />
+          }
+        } @else if (workspace()?.key === 'life-funding') {
+          <ng-container *ngTemplateOutlet="fundingContent; context: { $implicit: d }" />
+        } @else if (workspace()?.key === 'life-due') {
+          <ng-container *ngTemplateOutlet="dueContent; context: { $implicit: d }" />
+        } @else if (workspace()?.key === 'life-budget') {
+          <bpm-act-budget-type />
+        }
+      }
+    </div>
+
+    <ng-template #fundingContent let-d>
+        @if (d.projects.projectCount || d.projects.pendingRequests.length) {
+          @if (fundingActions().length) {
+            <section class="bpm-section life-workspace-panel" aria-labelledby="life-envelopes-title">
+              <header><div><span class="life-eyebrow">Attribuer vos moyens</span><h2 id="life-envelopes-title">Les enveloppes à examiner</h2></div><span class="count-badge">{{ fundingActions().length }}</span></header>
+              <p class="bpm-note">Déficits, enveloppes à risque, puis projets sans enveloppe. Ouvrez le projet pour ajuster ses moyens ou revoir ses dépenses.</p>
+              <div class="life-funding-actions">
+                @for (project of fundingActions(); track project.budgetId) {
+                  <article [attr.data-state]="project.state"><div><span class="life-eyebrow">{{ project.state === 'deficit' ? 'En déficit' : project.state === 'at-risk' ? 'Enveloppe à surveiller' : 'Sans enveloppe' }}</span><h3>{{ project.name }}</h3><p>{{ project.state === 'unallocated' ? 'Un budget à définir avant de financer ses tâches.' : 'Reste dans l’enveloppe' }} @if (project.state !== 'unallocated') { <strong [bpmAmount]="project.remainingCents">{{ project.remainingCents | cents }}</strong> }@if (project.pendingOverrun) { · Dépassement demandé }</p></div><a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', project.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}" [fragment]="project.state === 'unallocated' ? 'enveloppe' : 'budget-title'">{{ project.state === 'unallocated' ? 'Attribuer une enveloppe' : 'Réexaminer le budget' }} →</a></article>
+                }
+              </div>
+            </section>
+          }
+          <section class="bpm-section life-workspace-panel" id="life-funding" aria-labelledby="life-funding-title">
+            <header>
+              <h2 id="life-funding-title">Moyens des projets de la vie</h2>
+              <span class="count-badge">{{ d.projects.projectCount }}</span>
+            </header>
+            <p class="bpm-note">
+              Le projet de vie organise les enveloppes et leur répartition entre les tâches. Ces attributions ne modifient ni le cycle ni le patrimoine : seuls les dépenses et gains des tâches validés y sont imputés.
+              Pour chaque projet : son enveloppe, la période où elle a été attribuée, ses dépassements et ce qu’il a fait
+              remonter au budget du projet de vie à chaque cycle.
+            </p>
+            <bpm-life-funding [funding]="d.projects.funding" [highlight]="shownKey()" />
+          </section>
+
+          <section class="bpm-section life-workspace-panel" id="life-decisions" aria-labelledby="life-decisions-title">
+            <header>
+              <h2 id="life-decisions-title">Décisions attendues</h2>
+              <span class="count-badge">{{ d.projects.pendingRequests.length + d.projects.taskRequestCount }}</span>
+            </header>
+            <p class="bpm-note">
+              Les projets demandent des moyens : autoriser un dépassement d’enveloppe sans créer de charge et,
+              dans chaque projet, accorder les parts demandées par les tâches.
+            </p>
+            @for (o of d.projects.pendingRequests; track o.id) {
+              <bpm-overrun-request [overrun]="o" [busy]="mutationBlocked()" (decide)="decideOverrun(o, $event)" />
+              <p class="bpm-note"><a [routerLink]="['/app/gestion-projet', o.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}">Ouvrir le projet « {{ o.budgetName }} » →</a></p>
+            } @empty {
+              <p class="bpm-note">Aucune autorisation de dépassement en attente.</p>
+            }
+            @if (d.projects.taskRequests?.length) {
+              <ul class="life-task-requests">
+                @for (r of d.projects.taskRequests; track r.id) {
+                  <li>
+                    Part demandée pour « {{ r.taskTitle }} » ({{ r.budgetName }}) : {{ r.amountCents | cents }}
+                    @if (r.grantedCents) { <small>· {{ r.grantedCents | cents }} déjà accordés</small> }
+                    · <a [routerLink]="['/app/gestion-projet', r.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}" fragment="requests-title">Accorder ou refuser dans le projet →</a>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        } @else {
+          <!-- Sans projet de la vie : une seule section courte au lieu d'un tableau et d'une file de décisions vides. -->
+          <section class="bpm-section" id="life-funding" aria-labelledby="life-funding-title">
+            <header>
+              <h2 id="life-funding-title">Projets de la vie</h2>
+              <span class="count-badge">0</span>
+            </header>
+            <p class="bpm-note" id="life-decisions">
+              Aucun projet de la vie n’est rattaché : aucune enveloppe à suivre ni décision attendue. Un projet de la vie finance
+              une envie (voyage, travaux, formation…) par une enveloppe ; ses dépenses validées entrent alors dans le cycle.
+            </p>
+            <div class="bpm-actions"><a class="btn btn-primary" routerLink="/app/gestion-projet/nouveau">Créer un projet de la vie</a></div>
+          </section>
+        }
+
+    </ng-template>
+    <ng-template #dueContent let-d>
+        <section class="bpm-section life-workspace-panel" id="life-due" aria-labelledby="life-due-title">
+          <header>
+            <h2 id="life-due-title">Les prochains règlements</h2>
+            <button type="button" class="btn btn-secondary" [disabled]="!budgets().length || mutationBlocked()" (click)="openEntry()">Saisir un mouvement</button>
+            <span class="count-badge">{{ d.dueSoon.lines.length }}</span>
+          </header>
+          <p class="bpm-note">
+            Les retards depuis le {{ d.dueSoon.from | shortDate }} apparaissent en premier, suivis des échéances des sept prochains jours. Les filtres couvrent les mouvements du quotidien et ceux des projets.
+          </p>
+          <div class="life-due-filters" role="group" aria-label="Filtrer les échéances">
+            <button type="button" [attr.aria-pressed]="dueFilter() === 'all'" (click)="dueFilter.set('all')"><span>Toutes</span><strong>{{ dueQueue().length }}</strong><small>Échéances ouvertes</small></button>
+            <button type="button" [attr.aria-pressed]="dueFilter() === 'late'" (click)="dueFilter.set('late')" [class.has-late]="dueStats().late > 0"><span>En retard</span><strong>{{ dueStats().late }}</strong><small>À vérifier en priorité</small></button>
+            <button type="button" [attr.aria-pressed]="dueFilter() === 'income'" (click)="dueFilter.set('income')"><span>À recevoir</span><strong [bpmAmount]="dueStats().incomeCents" bpmFlow="income">{{ dueStats().incomeCents | cents }}</strong><small>{{ dueStats().incomeCount }} entrée(s) attendue(s)</small></button>
+            <button type="button" [attr.aria-pressed]="dueFilter() === 'charge'" (click)="dueFilter.set('charge')"><span>À payer</span><strong [bpmAmount]="dueStats().chargeCents" bpmFlow="expense">{{ dueStats().chargeCents | cents }}</strong><small>{{ dueStats().chargeCount }} dépense(s) prévue(s)</small></button>
+          </div>
+          <div class="life-due-search"><label>Retrouver une échéance<input type="search" placeholder="Libellé, projet ou poste…" [value]="dueSearch()" (input)="dueSearch.set($any($event.target).value)" /></label><p role="status">{{ filteredDue().length }} sur {{ dueQueue().length }} échéances · retards en premier</p>@if (dueFilter() !== 'all' || dueSearch()) { <button class="btn btn-secondary small" type="button" (click)="clearDueFilters()">Tout afficher</button> }</div>
+          <p class="bpm-note">« Reçu » ou « Payé » utilise la date du jour et le montant prévu. Pour corriger une date, un montant ou un rattachement, cliquez sur le libellé.</p>
+          <ng-container *ngTemplateOutlet="lineTable; context: { $implicit: filteredDue(), empty: dueQueue().length ? 'Aucune échéance ne correspond à ces filtres.' : 'Aucune échéance ouverte dans cette fenêtre.', caption: 'Échéances à régler', nature: true }" />
+        </section>
+
+    </ng-template>
+    <ng-template #natureDetail let-x>
+      <dl class="life-limit-strip">
+        <div><dt>Plafonds des postes</dt><dd [bpmAmount]="x.capCents" bpmTone="info">{{ x.capCents === null ? 'Non définis' : (x.capCents | cents) }}</dd></div>
+        <div><dt>Marge disponible</dt><dd [bpmAmount]="x.marginCents">{{ x.marginCents === null ? 'Non calculable' : (x.marginCents | signedCents) }}</dd></div>
+        <div><dt>Dépassements</dt><dd [class.is-deficit]="x.overCount > 0">{{ x.overCount }}</dd></div>
+      </dl>
+      @if (x.overCount) { <a routerLink="/plafonds" [queryParams]="{period:period(), show:'over'}">Ouvrir les plafonds dépassés →</a> }
+      <div class="bpm-table-wrap" role="region" [attr.aria-label]="x.label + ' par poste'" tabindex="0">
+        <table class="bpm-table life-nature-table">
+          <caption class="visually-hidden">{{ x.label }} par poste</caption>
+          <thead>
+            <tr><th scope="col">Poste</th><th scope="col" class="num">Réglé</th><th scope="col" class="num">À payer</th><th scope="col" class="num">Plafond</th><th scope="col" class="num">Marge</th></tr>
+          </thead>
+          <tbody>
+            @for (r of x.rows; track r.ref) {
+              <tr [class.is-over]="r.over">
+                <th><a [routerLink]="['/argent/postes', centerKey(r.ref)]" [queryParams]="{period:period()}">{{ r.label }}</a>@if (r.lateCount) { <small class="life-flag">{{ r.lateCount }} en retard</small> }</th>
+                <td [bpmAmount]="r.paidCents" bpmFlow="expense">{{ r.paidCents | cents }}</td>
+                <td [bpmAmount]="r.toPayCents" bpmFlow="expense">{{ r.toPayCents | cents }}</td>
+                <td [bpmAmount]="r.capCents" bpmTone="info">{{ r.capCents === null ? 'Sans plafond' : (r.capCents | cents) }}</td>
+                <td [class.is-deficit]="(r.marginCents ?? 0) < 0" [bpmAmount]="r.marginCents">{{ r.marginCents === null ? '—' : (r.marginCents | signedCents) }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5">Aucune charge sur ces postes pendant le cycle.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <h3>Échéances du cycle</h3>
+      <ng-container *ngTemplateOutlet="lineTable; context: { $implicit: x.lines, empty: 'Aucune échéance prévue dans le cycle.', caption: 'Échéances du cycle' }" />
+    </ng-template>
+
+    <ng-template #lineTable let-lines let-empty="empty" let-caption="caption" let-nature="nature">
+      <div class="bpm-table-wrap" role="region" [attr.aria-label]="caption" tabindex="0">
+        <table class="bpm-table life-line-table">
+          <caption class="visually-hidden">{{ caption }}</caption>
+          <thead>
+            <tr>
+              <th>Date prévue</th>
+              <th>Échéance</th>
+              @if (nature) {
+                <th>Nature</th>
+              }
+              <th>Poste</th>
+              <th scope="col" class="num">Montant</th>
+              <th>État</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of lines; track l.id) {
+              <tr [attr.data-status]="l.status">
+                <td>{{ l.plannedDate | shortDate }}</td>
+                <th><button type="button" class="text-link" (click)="openLine(l.id)">{{ l.label }}</button></th>
+                @if (nature) {
+                  <td>
+                    @if (l.project; as p) {
+                      <a class="text-link" [routerLink]="['/app/gestion-projet', p.coreProjectId]" [queryParams]="shownKey() ? { lifePeriod: shownKey() } : {}" [title]="'Ouvrir le projet ' + p.name">Projet · {{ p.name }}</a>
+                      @if (p.taskTitle) { <small class="life-line-task">{{ p.taskTitle }}</small> }
+                      @if (!p.funded) { <small class="life-line-task">Sans budget attribué · hors budget de vie</small> }
+                    } @else {
+                      {{ natureLabel(l) }}
+                    }
+                  </td>
+                }
+                <td>{{ l.costCenterLabel ?? 'À préciser' }}</td>
+                <td class="num" [bpmAmount]="amountOf(l)" [bpmFlow]="l.direction">{{ amountOf(l) | cents }}</td>
+                <td><span class="life-line-status" [attr.data-status]="l.status">{{ l.statusLabel }}</span>@if (l.carriedFrom; as cf) { <small class="life-line-carried" title="Non validée dans un cycle clôturé : elle se revoit dans ce cycle.">Reportée · prévue le {{ cf.date | shortDate }}</small> }</td>
+                <td class="life-line-action">@if (!loading() && !error()) { <bpm-quick-settle [line]="l" (detail)="openLine(l.id)" (settled)="settlementDone(l)" /> }</td>
+              </tr>
+            } @empty {
+              <tr><td [attr.colspan]="nature ? 7 : 6">{{ empty }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </ng-template>
+
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="entryDefaults()" [clearOnClose]="['entryDirection']" (saved)="saved($event)" /> @if (lineId() && !ctx.q('entry')()) {
+      <bpm-line-detail [lineId]="lineId()!" (closed)="closeLine()" (edit)="editLine($event)" />
+    }

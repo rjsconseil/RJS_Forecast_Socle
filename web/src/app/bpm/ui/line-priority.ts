@@ -1,4 +1,4 @@
-import { RegisterLine } from '../../core/bpm-models';
+import { RegisterLine } from '../data/bpm-models';
 
 /** Échéance à relire : retard, aujourd'hui, puis prochaine date. Aucune écriture implicite. */
 export function nextOpenLine(lines: readonly RegisterLine[]): RegisterLine | null {

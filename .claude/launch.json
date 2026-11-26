@@ -4,14 +4,38 @@
     {
       "name": "api",
       "runtimeExecutable": "/bin/sh",
-      "runtimeArgs": ["-c", "PATH=\"$HOME/.local/node/bin:$PATH\" exec npm run api"],
+      "runtimeArgs": [
+        "-c",
+        "PATH=\"$HOME/.local/node/bin:$PATH\" exec npm run api"
+      ],
       "port": 3410
     },
     {
       "name": "web",
       "runtimeExecutable": "/bin/sh",
-      "runtimeArgs": ["-c", "PATH=\"$HOME/.local/node/bin:$PATH\" exec npm run web"],
+      "runtimeArgs": [
+        "-c",
+        "PATH=\"$HOME/.local/node/bin:$PATH\" exec npm run web"
+      ],
       "port": 4300
+    },
+    {
+      "name": "api-essai",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "PATH=\"$HOME/.local/node/bin:$PATH\" J1_API_PORT=3411 J1_DATA_FILE=/private/tmp/claude-501/-Users-rjsdesign-Documents-Claude-RJS-Forecast-Socle/aea87673-2818-4f16-8bab-7353832e51aa/scratchpad/essai/store.json J1_ENABLE_RECETTE_RESET=1 exec node api/src/server.mjs"
+      ],
+      "port": 3411
+    },
+    {
+      "name": "web-essai",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": [
+        "-c",
+        "cd web && PATH=\"$HOME/.local/node/bin:$PATH\" exec npx ng serve --port 4301 --proxy-config /private/tmp/claude-501/-Users-rjsdesign-Documents-Claude-RJS-Forecast-Socle/aea87673-2818-4f16-8bab-7353832e51aa/scratchpad/essai/proxy.json"
+      ],
+      "port": 4301
     }
   ]
 }

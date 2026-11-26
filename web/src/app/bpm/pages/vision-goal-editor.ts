@@ -3,8 +3,8 @@ import { BpmFormActions } from '../ui/form-actions';
 import { Component, computed, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiError, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { GoalType, LifeGoal } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { GoalType, LifeGoal } from '../data/bpm-models';
 import { parseAmount } from '../../core/format';
 import { BpmModal } from '../ui/modal';
 import { BpmRefresh, newRequestKey } from '../ui';
@@ -17,7 +17,7 @@ export interface GoalTypeOption {
 }
 
 /**
- * Éditeur d'objectif de projection (fenêtre `rjs-modal` d'Objectifs et avenir, formulaire source `.bv-form`) : création rejouable (clé de
+ * Éditeur d'objectif de projection (fenêtre `rjs-modal` d'Patrimoine et objectifs, formulaire source `.bv-form`) : création rejouable (clé de
  * commande unique par brouillon) ou modification avec révision attendue. Un objectif ne crée ni
  * Budget, ni tâche, ni paiement. En cas d'erreur, la saisie est conservée.
  */

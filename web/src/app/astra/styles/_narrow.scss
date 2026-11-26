@@ -1,0 +1,87 @@
+// BPM-Astra · écrans étroits et animations
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens' as *;
+
+// ---------- 7. Écrans plus étroits ----------
+#{$frame} {
+  @media (max-width: 1180px) {
+    .astra-body { grid-template-columns: minmax(0, 1fr); gap: var(--a-gap); }
+    .astra-rail {
+      position: static;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      max-height: none;
+      overflow: visible;
+      margin-top: 0;
+      scroll-margin-block-start: var(--a-sticky-top);
+    }
+    .astra-tools-jump {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-height: 34px;
+      padding-inline: 8px;
+      border: 1px solid var(--bpm-line);
+      border-radius: var(--a-radius-sm);
+      background: var(--bpm-surface);
+      color: var(--astra-link);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .astra-mod[data-empty] { display: none; }
+    .astra-cap { grid-template-columns: repeat(2, minmax(0, 1fr)); > div:nth-of-type(odd) { border-left: 0; } > div:nth-of-type(n + 3) { border-top: 1px solid var(--astra-keyline); } }
+    .astra-bar-primary :is(a, button) { max-width: 200px; }
+  }
+  @media (max-width: 1100px) {
+    .astra-goal-grid, .astra-wealth-hero, .astra-wealth-grid { grid-template-columns: minmax(0, 1fr); }
+    .astra-wealth-after-block, .astra-wealth-target { border-left: 0; border-top: 1px solid var(--astra-keyline); }
+  }
+  @media (max-width: 1000px) {
+    .astra-cycle-grid.astra-cycle-flows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .astra-board { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  }
+  @media (max-width: 760px) {
+    --astra-head-h: auto;
+    .astra-part-id small { display: none; }
+    .astra-part-steps {
+      gap: 2px;
+      .astra-step-dot { width: 12px; }
+      .is-current .astra-step-dot { width: 18px; }
+      .is-current .astra-step-label { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); }
+    }
+    .astra-titlebar { position: static; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'title' 'tools' 'tabs'; }
+    .astra-titlebar-title { height: auto; padding: 8px var(--a-tile-x) 4px; border-right: 1px solid var(--bpm-line); border-radius: var(--a-radius) var(--a-radius) 0 0; h1 { white-space: normal; } p { display: none; } }
+    .astra-tools { height: auto; padding: 4px var(--a-tile-x) 6px; gap: 6px; border-left: 1px solid var(--bpm-line); border-radius: 0; box-shadow: none; flex-wrap: wrap; }
+    .astra-bar-primary {
+      flex: 1 1 140px;
+
+      :is(a, button) { max-width: none; flex: 1; }
+      :is(a, button):not(:has(> *)) {
+        display: block;
+        text-align: start;
+        line-height: 32px;
+      }
+    }
+    .astra-cap { grid-template-columns: minmax(0, 1fr); > div + div { border-left: 0; border-top: 1px solid var(--astra-keyline); } }
+    .astra-projection-reader { grid-template-columns: minmax(0, 1fr); }
+    .astra-closure-list a { grid-template-columns: minmax(0, 1fr) auto; .astra-closure-bar { display: none; } }
+  }
+  @media (max-width: 600px) {
+    .astra-part-band { column-gap: 6px; }
+    .astra-part-id b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .astra-tools-jump > span:last-child, .astra-new-button kbd { display: none; }
+    .astra-tools-jump { min-width: 34px; margin-inline-start: auto; }
+    .astra-period .astra-period-label { padding-inline: 4px; font-size: 12px; }
+    .astra-tool-icon { min-width: 26px; padding-inline: 4px; }
+    .astra-rail { grid-template-columns: minmax(0, 1fr); }
+    .astra-toast { left: 16px; right: 16px; bottom: 16px; }
+  }
+}
+
+@keyframes astra-pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+@keyframes astra-rise { from { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) { #{$app} :is(.astra-new-menu, .astra-toast) { animation: none; } }
+

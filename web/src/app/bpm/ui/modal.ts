@@ -9,12 +9,13 @@ import { JourneyBar } from '../../plan/journey';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <rjs-modal [open]="open()" [title]="title()" [busy]="busy()" [wide]="wide()" [headed]="headed()" (closed)="closed.emit()">
-      <rjs-journey class="modal-journey" [compact]="true" [blocked]="busy()" />
+      <rjs-journey class="modal-journey" [class.has-heading]="headed()" [compact]="true" [blocked]="busy()" />
       <ng-content />
     </rjs-modal>
   `,
   styles: `
     .modal-journey { display: block; position: sticky; top: 0; z-index: 3; background: var(--raised-surface, white); border-bottom: 1px solid var(--line); }
+    .modal-journey.has-heading { position: static; }
   `,
 })
 export class BpmModal {

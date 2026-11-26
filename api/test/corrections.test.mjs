@@ -210,7 +210,7 @@ test('C06 user créé sans BPM puis BPM activé : diagnostic précis, aucune ini
   assert.match(bpm01.observed, /Budget « Projet de vie », Patrimoine, Composition BPM/);
   const err = await rejects(async () => s2.modules.bpm.dashboard(ctx), 'FORBIDDEN_BY_RULE');
   assert.equal(err.details.preparation.status, 'to-prepare');
-  assert.equal(s2.modules.users.listUsers()[0].bpmPreparation, 'to-prepare');
+  assert.equal((await s2.modules.users.listUsers())[0].bpmPreparation, 'to-prepare');
   assert.equal(s2.state.revision, rev, 'aucune écriture pendant le diagnostic');
 
   const requestKey = key('prep');
@@ -311,18 +311,24 @@ test('C10 cycle de janvier 2026 lu en janvier 2078 : période courante en 2078, 
 
 // ---------- C11 : un seul écrivain, aucun écrasement silencieux ----------
 
-test('C11 deux instances sur le même fichier : la seconde est refusée (même processus et autre processus)', async () => {
+test('C11 deux instances sur la même base : chacune écrit, rien n’est perdu ni écrasé (partitions par user)', async () => {
   const { socle, dataFile } = await makeSocle();
-  await rejects(createSocle({ dataFile, modules: SOCLE_MODULES }), 'STORE_LOCKED');
-  const script = `import('${new URL('../src/socle/index.mjs', import.meta.url).href}').then(async ({ createSocle }) => {
-    const { SOCLE_MODULES } = await import('${new URL('../src/modules/index.mjs', import.meta.url).href}');
-    try { await createSocle({ dataFile: ${JSON.stringify(dataFile)}, modules: SOCLE_MODULES }); console.log('OPENED'); process.exit(0); }
-    catch (e) { console.log(e.code); process.exit(0); }
-  });`;
-  const { stdout } = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', script]);
-  assert.equal(stdout.trim(), 'STORE_LOCKED');
+  const { ctx } = await camille(socle);
+  const second = await createSocle({ dataFile, modules: SOCLE_MODULES });
+  // Les deux instances écrivent la même partition en alternance : chacune relit ce que l'autre a écrit avant d'écrire.
+  for (let i = 0; i < 5; i += 1) {
+    await operation(socle, ctx, { direction: 'charge', amount: 10 + i, date: '2026-11-01' });
+    await operation(second, ctx, { direction: 'charge', amount: 20 + i, date: '2026-11-01' });
+  }
+  // Et en même temps : la révision de la partition détecte l'écriture concurrente, la transaction est rejouée.
+  await Promise.all([
+    ...Array.from({ length: 5 }, (_, i) => operation(socle, ctx, { direction: 'charge', amount: 30 + i, date: '2026-11-01' })),
+    ...Array.from({ length: 5 }, (_, i) => operation(second, ctx, { direction: 'charge', amount: 40 + i, date: '2026-11-01' })),
+  ]);
+  await second.close();
   await socle.close();
   const reopened = await createSocle({ dataFile, modules: SOCLE_MODULES });
+  assert.equal(Object.keys(reopened.state.operations).length, 20);
   await reopened.close();
 });
 
@@ -339,22 +345,30 @@ test('C11 écritures concurrentes dans une instance : toutes sérialisées, aucu
   await s2.close();
 });
 
-test('C11 fichier modifié par un autre écrivain : écriture refusée, rien n’est écrasé', async () => {
+test('C11 partition modifiée par un autre écrivain : relue puis écriture rejouée, rien n’est écrasé', async () => {
+  const { DatabaseSync } = await import('node:sqlite');
   const { socle, dataFile } = await makeSocle();
   const { ctx } = await camille(socle);
-  const foreign = JSON.parse(await readFile(dataFile, 'utf8'));
-  foreign.updatedAt = 'modifié ailleurs';
-  await writeFile(dataFile, JSON.stringify(foreign) + '\n'.repeat(3));
-  await rejects(operation(socle, ctx, { direction: 'charge', amount: 1, date: '2026-11-01' }), 'PERSISTENCE_CONFLICT');
-  assert.equal(JSON.parse(await readFile(dataFile, 'utf8')).updatedAt, 'modifié ailleurs');
+  const foreign = new DatabaseSync(dataFile.replace(/\.json$/, '.sqlite'));
+  const row = foreign.prepare('SELECT data FROM SY_users WHERE id = ?').get(ctx.userId);
+  const user = { ...JSON.parse(row.data), label: 'Modifié ailleurs' };
+  foreign.prepare('UPDATE SY_users SET data = ? WHERE id = ?').run(JSON.stringify(user), ctx.userId);
+  foreign.prepare('UPDATE SY_partitions SET revision = revision + 1 WHERE user_id = ?').run(ctx.userId);
+  await operation(socle, ctx, { direction: 'charge', amount: 1, date: '2026-11-01' });
+  assert.equal(JSON.parse(foreign.prepare('SELECT data FROM SY_users WHERE id = ?').get(ctx.userId).data).label, 'Modifié ailleurs');
+  assert.equal(foreign.prepare("SELECT count(*) n FROM MQ_operations WHERE user_id = ?").get(ctx.userId).n, 1);
+  foreign.close();
   await socle.close();
 });
 
 // ---------- migration explicite des données existantes ----------
 
 test('migration j1-store/0.2 → socle-store/0.6 : IDs conservés, changements enregistrés, rejouable', async () => {
+  const { removeStore } = await import('../src/socle/store.mjs');
   const { socle, dataFile } = await makeSocle();
   await socle.close();
+  await removeStore(dataFile);
+  // Un ancien stockage JSON : repris dans la base au premier démarrage, puis migré.
   await copyFile(new URL('./fixtures/j1-store-0.2.json', import.meta.url), dataFile);
   const legacy = JSON.parse(await readFile(dataFile, 'utf8'));
   const legacyIds = ['users', 'coreProjects', 'tasks', 'budgets', 'patrimoines', 'bpmCompositions'].flatMap((c) => Object.keys(legacy[c]));

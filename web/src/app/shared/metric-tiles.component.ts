@@ -14,6 +14,8 @@ export interface MetricTile {
   id: string;
   label: string;
   value: string;
+  /** Valeur source facultative : la présentation du signe ne se déduit jamais d'un texte formaté. */
+  amountCents?: number | null;
   suffix?: string;
   note?: string;
   tone?: MetricTone | null;
@@ -87,9 +89,12 @@ export interface MetricTile {
     </div>
     <ng-template #body let-tile>
       @if (tile.symbol) {
-        <span class="metric-symbol" aria-hidden="true">{{
-          tile.symbol === 'income' ? '↑' : tile.symbol === 'expense' ? '↓' : '='
-        }}</span>
+        <span class="metric-symbol" aria-hidden="true">
+          @if (tile.symbol === 'balance') { = } @else {
+            <!-- Flèche dessinée (tracé net à toute taille) : vers le haut pour une entrée, vers le bas pour une sortie. -->
+            <svg class="metric-arrow" viewBox="0 0 24 24" focusable="false"><path d="M12 19.5V4.5" /><path d="M5.5 11 12 4.5 18.5 11" /></svg>
+          }
+        </span>
       }
       @if (tile.detailsPlacement === 'between') {
         <div class="metric-flow-layout">
@@ -141,7 +146,7 @@ export interface MetricTile {
     </ng-template>
     <ng-template #headline let-tile>
       <small class="metric-label">{{ tile.label }}</small>
-      <strong class="metric-value"
+      <strong class="metric-value" [attr.data-value-tone]="valueTone(tile)"
         >{{ tile.value }}
         @if (tile.suffix) {
           <span>{{ tile.suffix }}</span>
@@ -179,6 +184,13 @@ export interface MetricTile {
   `,
 })
 export class MetricTilesComponent {
+  protected valueTone(tile: MetricTile): MetricTone | null {
+    if (tile.amountCents === null || tile.amountCents === 0 || (tile.amountCents !== undefined && !Number.isFinite(tile.amountCents))) return 'neutral';
+    if (tile.tone) return tile.tone;
+    if (tile.amountCents === undefined) return tile.symbol === 'income' ? 'success' : tile.symbol === 'expense' ? 'danger' : null;
+    const value = tile.amountCents * (tile.symbol === 'expense' ? -1 : 1);
+    return value > 0 ? 'success' : value < 0 ? 'danger' : 'neutral';
+  }
   readonly fragmentSelected = output<string>();
   protected selectFragment(fragment?: string) {
     if (fragment) this.fragmentSelected.emit(fragment);

@@ -1,15 +1,15 @@
 /*
- * Carré du calendrier BPM. Mois et année occupent le même carré : son côté ne dépend ni de la vue ni du
+ * Carré du calendrier. Mois et année occupent le même carré : son côté ne dépend ni de la vue ni du
  * mois affiché. Il prend toute la largeur de la page, moins la bande de l'agenda à droite.
  * Les proportions viennent de `_tokens` : un module (1/7 du côté) d'habillage, six modules de semaines.
  * En vue année, le même corps range douze mois en 4 × 3, chacun avec ses cases carrées.
  */
-:host .calendar.is-360.is-bpm-calendar {
+:host .calendar.is-360.is-canonical {
   /* ---------- le carré : même côté pour le mois et pour l'année ---------- */
   @media (min-width: 701px) {
     .calendar-layout {
       /* Toute la largeur de la page : l'agenda garde une bande de 240 px, le calendrier prend le reste. */
-      grid-template-columns: minmax(0, 1fr) var(--bpm-calendar-agenda-width);
+      grid-template-columns: minmax(0, 1fr) var(--cal-agenda-width);
     }
     .calendar-month-wrap {
       width: 100%;
@@ -17,11 +17,11 @@
       aspect-ratio: 1;
     }
     .calendar-grid-head {
-      flex: 0 0 calc(var(--bpm-calendar-head-share) * 100%);
+      flex: 0 0 calc(var(--cal-head-share) * 100%);
       min-height: 0;
     }
     .calendar-legend-inset {
-      flex: 0 0 calc(var(--bpm-calendar-legend-share) * 100%);
+      flex: 0 0 calc(var(--cal-legend-share) * 100%);
       min-height: 0;
     }
     .calendar-frame[data-view='month'] .calendar-grid-scroll {
@@ -31,7 +31,7 @@
       min-width: 0;
       /* La part des initiales, rapportée au corps du cadre (le côté moins l'en-tête et la légende). */
       grid-template-rows:
-        calc(var(--bpm-calendar-weekdays-share) / (1 - var(--bpm-calendar-head-share) - var(--bpm-calendar-legend-share)) * 100%)
+        calc(var(--cal-weekdays-share) / (1 - var(--cal-head-share) - var(--cal-legend-share)) * 100%)
         minmax(0, 1fr);
     }
     /* L'année garde la hauteur d'initiales du mois pour son en-tête de grille : douze mois, mêmes cases. */

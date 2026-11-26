@@ -3,31 +3,29 @@ import { hasPageMenu, hasSectionHome, locate, menuPages, pageChildren, planConte
 import { PAGE_WORKSPACES } from './page-workspaces';
 
 describe('plan du site', () => {
-  it('range les zones de l’accueil : BPM, Budget, Patrimoine, Noyau transverse, Administration', () => {
-    expect(PLAN_ZONES.map((z) => z.label)).toEqual(['Budget/Patrimoine Management', 'Budget management', 'Patrimoine Management', 'Noyau transverse', 'Administration du site', 'Navigation system']);
-    expect(PLAN_ZONES.find((z) => z.id === 'bpm')!.assembles).toEqual(['budget', 'patrimoine']);
+  it('range les zones : BPM-Astra d’abord, puis le socle et l’administration', () => {
+    expect(PLAN_ZONES.map((z) => z.label)).toEqual(['BPM-Astra', 'Budget management', 'Patrimoine Management', 'Cycle et temps', 'Noyau transverse', 'Administration du site', 'Navigation system']);
+    expect(planZone('bpm'), 'l’ancienne application BPM n’existe plus').toBeNull();
   });
 
   it('situe une page, un détail et l’accueil', () => {
     expect(locate('/')).toMatchObject({ kind: 'portal', zone: null });
-    expect(locate('/piloter/agir')).toMatchObject({ kind: 'subpage', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'projet-de-vie' }, subpage: { id: 'actions' } });
-    expect(locate('/piloter')).toMatchObject({ page: { id: 'tableau-de-bord' }, subpage: { id: 'analysis' } });
-    expect(locate('/projet-de-vie')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'projet-de-vie' } });
-    expect(locate('/plafonds')).toMatchObject({ kind: 'page', zone: { id: 'bpm' }, section: { id: 'vision' }, page: { id: 'plafonds', label: 'Plafonds et catégories' } });
-    expect(locate('/argent/postes/std%3Alogement')).toMatchObject({ kind: 'detail', section: { id: 'vision' } });
+    expect(locate('/bpm-astra')).toMatchObject({ kind: 'page', zone: { id: 'bpm-astra' }, section: { id: 'astra-0' }, page: { link: '/bpm-astra' } });
+    expect(locate('/bpm-astra/mouvements/echeances')).toMatchObject({ kind: 'subpage', section: { id: 'astra-0' }, page: { link: '/bpm-astra/mouvements' }, subpage: { id: 'life-due' } });
+    expect(locate('/bpm-astra/plafonds/std%3Alogement')).toMatchObject({ kind: 'detail', section: { id: 'astra-2' }, page: { link: '/bpm-astra/plafonds' } });
+    expect(locate('/bpm-astra/projets/prj_1')).toMatchObject({ kind: 'detail', section: { id: 'astra-1' }, page: { link: '/bpm-astra/projets' } });
+    expect(locate('/bpm-astra/cloture/compte')).toMatchObject({ kind: 'subpage', section: { id: 'astra-4' }, page: { link: '/bpm-astra/cloture' }, subpage: { id: 'reconciliation' } });
+    expect(locate('/piloter').kind).toBe('none');
     expect(locate('/tasks')).toMatchObject({ zone: { id: 'noyau' }, section: { id: 'taches' } });
     expect(locate('/projects/abc')).toMatchObject({ kind: 'detail', detailLabel: 'Détail du projet' });
     expect(locate('/admin/calculs')).toMatchObject({ page: { id: 'calculs' } });
-    expect(locate('/app/gestion-projet')).toMatchObject({ zone: { id: 'bpm' }, section: { id: 'projets-vie' }, page: { id: 'gestion-projet' } });
-    expect(locate('/app/gestion-projet/prj_1')).toMatchObject({ section: { id: 'projets-vie' }, page: { id: 'gestion-projet' } });
   });
 
   it('ouvre chaque zone sur son accueil et chaque section sur son accueil ou sa page utile', () => {
-    const bpm = planZone('bpm')!;
-    expect(zoneHomeLink(bpm)).toBe('/zones/bpm');
-    expect(locate('/zones/bpm')).toMatchObject({ kind: 'zone', zone: { id: 'bpm' }, section: { id: 'ensemble' } });
-    expect(sectionEntry(bpm, bpm.sections.find((s) => s.id === 'ensemble')!).link).toBe('/zones/bpm');
-    expect(sectionEntry(bpm, bpm.sections.find((s) => s.id === 'vision')!).link).toBe('/tableau-de-bord');
+    const astra = planZone('bpm-astra')!;
+    expect(zoneHomeLink(astra)).toBe('/bpm-astra');
+    expect(astra.sections.map((s) => sectionEntry(astra, s).link)).toEqual(['/bpm-astra', '/bpm-astra/projets', '/bpm-astra/budget', '/bpm-astra/objectif', '/bpm-astra/cloture']);
+    expect(zoneSections(astra, true).map((s) => s.id)).toEqual(['astra-0', 'astra-1', 'astra-2', 'astra-3', 'astra-4']);
     const admin = planZone('administration')!;
     const parametres = admin.sections.find((s) => s.id === 'parametres')!;
     expect(hasSectionHome(parametres)).toBe(true);
@@ -36,22 +34,16 @@ describe('plan du site', () => {
     expect(locate('/zones/inconnue')).toMatchObject({ kind: 'unknown' });
   });
 
-  it('range Ma vision budgétaire comme un parcours, des chiffres de la période aux réglages du cycle', () => {
-    const section = planZone('bpm')!.sections.find((s) => s.id === 'vision')!;
-    expect(menuPages(section).map((p) => p.id)).toEqual(['tableau-de-bord', 'projet-de-vie', 'plafonds', 'vision', 'reglages']);
-    expect(menuPages(section).map((p) => p.step)).toEqual(['Comprendre', 'Piloter', 'Cadrer', 'Préparer', 'Régler']);
-    // Un seul lieu pour les projets : le tableau par statut et le suivi en sont des vues, à leur adresse d'origine.
-    const projects = planZone('bpm')!.sections.find((s) => s.id === 'projets-vie')!;
-    expect(menuPages(projects).map((p) => p.label)).toEqual(['Projets et financement', 'Tâches des projets']);
-    expect(locate('/app/projets')).toMatchObject({ kind: 'subpage', page: { id: 'gestion-projet' }, subpage: { id: 'projects-status' } });
-    expect(planContext('/app/projets/suivi').tabs.map(t => t.label)).toEqual(['Parcours des projets', 'Projets par statut', 'Suivi des projets financés', 'Attribuer les enveloppes', 'Décider les financements']);
-    expect(locate('/depenses/registre')).toMatchObject({ kind: 'subpage', page: { id: 'tableau-de-bord' }, subpage: { id: 'register' } });
-  });
+
+
+
 
   it('rattache chaque vue spécialisée à une page principale visible du même plan', () => {
     for (const view of PAGE_WORKSPACES) {
       const path = '/' + view.path.replace(':id', 'prj_test');
       const at = locate(path + '?period=2026-10');
+      // Navigation system v2 : une route déclarée comme page est une page du plan, pas une sous-page.
+      if (view.page) { expect(at.kind, path).toBe('page'); continue; }
       expect(at.kind, path).toBe('subpage');
       expect(at.page?.link, path).toBe(view.parent);
       expect(at.page?.hidden, path).not.toBe(true);
@@ -62,10 +54,9 @@ describe('plan du site', () => {
   });
 
   it('propose le détail courant sans exposer un identifiant de projet non résolu', () => {
-    const page = locate('/app/gestion-projet').page!;
+    const page = locate('/bpm-astra/projets').page!;
     expect(pageChildren(page).some(child => child.link.includes(':id'))).toBe(false);
-    expect(pageChildren(page, '/app/gestion-projet/nouveau').some(child => child.id === 'project-budget')).toBe(false);
-    expect(pageChildren(page, '/app/projets/prj_42').find(child => child.id === 'project-budget')?.link).toBe('/app/gestion-projet/prj_42/budget');
+    expect(pageChildren(page, '/bpm-astra/projets/prj_42').find(child => child.id === 'project-budget')?.link).toBe('/bpm-astra/projets/prj_42/budget');
     expect(pageChildren(locate('/projects').page!, '/projects/prj_42/edit').at(-1)?.link).toBe('/projects/prj_42/edit');
   });
 
@@ -84,57 +75,38 @@ describe('plan du site', () => {
   });
 
   it('donne à chaque adresse le même contexte : surtitre, niveau supérieur, onglets et fil', () => {
-    const page = planContext('/plafonds?period=2026-10');
-    expect(page.eyebrow).toBe('Ma vision budgétaire');
+    const page = planContext('/bpm-astra/plafonds?period=2026-10');
+    expect(page.eyebrow).toBe('Mon budget');
     expect(page.up).toBeNull();
-    expect(page.tabs.map(t => [t.label, t.current])).toEqual([['Suivi des plafonds', true], ['Définir les plafonds', false], ['Organiser les catégories', false]]);
-    expect(page.crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Ma vision budgétaire', 'Plafonds et catégories']);
+    expect(page.tabs.map(t => [t.label, t.current])).toEqual([['Vue principale', true], ['Postes et revenus', false]]);
+    expect(page.crumbs.map(c => c.label)).toEqual(['BPM-Astra', 'Mon budget', 'Plafonds']);
     expect(page.crumbs.at(-1)!.link).toBeUndefined();
-
-    const sub = planContext('/plafonds/categories');
-    expect(sub.eyebrow).toBe('Ma vision budgétaire · Plafonds et catégories');
-    expect(sub.up).toEqual({ label: 'Plafonds et catégories', link: '/plafonds' });
-    expect(sub.tabs.find(t => t.current)?.label).toBe('Organiser les catégories');
-    expect(sub.label).toBe('Organiser les catégories');
+    const sub = planContext('/bpm-astra/plafonds/postes');
+    expect(sub.eyebrow).toBe('Mon budget · Plafonds');
+    expect(sub.up).toEqual({ label: 'Plafonds', link: '/bpm-astra/plafonds' });
+    expect(sub.tabs.find(t => t.current)?.label).toBe('Postes et revenus');
   });
 
-  it('ne répète pas une page qui porte le nom de sa section', () => {
-    expect(planContext('/creer').crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Démarrer un projet']);
-    expect(planContext('/creer/projet-de-vie').crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Démarrer un projet', 'Créer mon projet de vie']);
-    expect(planContext('/creer/projet-de-vie').eyebrow).toBe('Démarrer un projet');
-  });
 
-  it('ne montre « Démarrer un projet » qu’au visiteur non connecté', () => {
-    const bpm = planZone('bpm')!;
-    expect(zoneSections(bpm, false).map(s => s.id)).toContain('demarrer');
-    expect(zoneSections(bpm, true).map(s => s.id)).not.toContain('demarrer');
-    expect(zoneSections(bpm, true).map(s => s.id)).toEqual(['ensemble', 'vision', 'projets-vie', 'calendrier']);
-  });
 
   it('nomme la fiche ouverte et range ses sous-pages en onglets', () => {
-    const fiche = planContext('/app/gestion-projet/prj_42?period=2026-10', 'Cuisine');
-    expect(fiche.location.object).toEqual({ kind: 'project', id: 'prj_42', link: '/app/gestion-projet/prj_42' });
-    expect(fiche.crumbs.map(c => c.label)).toEqual(['Budget/Patrimoine Management', 'Mes projets de la vie', 'Projets et financement', 'Cuisine']);
-    expect(fiche.up).toEqual({ label: 'Projets et financement', link: '/app/gestion-projet' });
+    const fiche = planContext('/bpm-astra/projets/prj_42?period=2026-10', 'Cuisine');
+    expect(fiche.location.object).toMatchObject({ kind: 'project', id: 'prj_42', link: '/bpm-astra/projets/prj_42' });
+    expect(fiche.crumbs.map(c => c.label)).toEqual(['BPM-Astra', 'Mes projets', 'Projets de la vie', 'Cuisine']);
+    expect(fiche.up).toEqual({ label: 'Projets de la vie', link: '/bpm-astra/projets' });
     expect(fiche.tabs.map(t => [t.label, t.current])).toEqual([['Vue d’ensemble', true], ['Budget et décisions', false], ['Tâches', false]]);
-
-    const budget = planContext('/app/gestion-projet/prj_42/budget', 'Cuisine');
-    expect(budget.up).toEqual({ label: 'Cuisine', link: '/app/gestion-projet/prj_42' });
+    const budget = planContext('/bpm-astra/projets/prj_42/budget', 'Cuisine');
+    expect(budget.up).toEqual({ label: 'Cuisine', link: '/bpm-astra/projets/prj_42' });
     expect(budget.crumbs.map(c => c.label).slice(-2)).toEqual(['Cuisine', 'Budget du projet']);
-    expect(budget.eyebrow).toBe('Mes projets de la vie · Projets et financement');
-    expect(planContext('/app/gestion-projet/prj_42/budget').up?.label).toBe('Fiche du projet');
-
-    const menu = pageChildren(locate('/app/gestion-projet').page!, '/app/gestion-projet/prj_42/taches', 'Cuisine');
-    expect(menu.map(c => [c.label, c.depth])).toEqual([
-      ['Projets par statut', 1], ['Suivi des projets financés', 1], ['Attribuer les enveloppes', 1], ['Décider les financements', 1],
-      ['Cuisine', 1], ['Budget du projet', 2], ['Tâches du projet', 2],
-    ]);
+    expect(budget.eyebrow).toBe('Mes projets · Projets de la vie');
+    const menu = pageChildren(locate('/bpm-astra/projets').page!, '/bpm-astra/projets/prj_42/taches', 'Cuisine');
+    expect(menu.map(c => [c.label, c.depth])).toEqual([['Règlements par cycle', 1], ['Cuisine', 1], ['Budget du projet', 2], ['Tâches du projet', 2]]);
   });
 
   it('rattache un détail à sa page et donne le chemin de retour', () => {
-    const detail = planContext('/argent/postes/std%3Aloisirs');
-    expect(detail.up).toEqual({ label: 'Tableau de bord', link: '/tableau-de-bord' });
+    const detail = planContext('/bpm-astra/plafonds/std%3Aloisirs');
+    expect(detail.up).toEqual({ label: 'Plafonds', link: '/bpm-astra/plafonds' });
     expect(detail.tabs).toEqual([]);
-    expect(detail.crumbs.at(-1)!.label).toBe('Détail d’un poste');
+    expect(detail.crumbs.at(-1)!.label).toBe('Détail du poste');
   });
 });

@@ -14,28 +14,28 @@ describe('navigation hiérarchique commune', () => {
   }
 
   it('ouvre les enfants du parent actif et distingue le parent du détail consulté', () => {
-    const fixture = setup('/tableau-de-bord/rapprochement?period=2026-10&q=loyer&entry=new');
+    const fixture = setup('/bpm-astra/cloture/compte?period=2026-10&q=loyer&entry=new');
     const dom = fixture.nativeElement as HTMLElement;
     expect(dom.querySelectorAll('.section-subpages')).toHaveLength(1);
     const active = dom.querySelector('.section-subpages [aria-current="page"]') as HTMLAnchorElement;
-    expect(active.textContent).toContain('Rapprocher avec mon compte');
+    expect(active.textContent).toContain('Vérifier le compte');
     expect(active.getAttribute('href')).toContain('period=2026-10');
     expect(active.getAttribute('href')).not.toContain('entry=');
     expect(dom.querySelector('.section-page-link.is-ancestor')?.getAttribute('aria-current')).toBeNull();
     expect(dom.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
-    const other = dom.querySelector('.section-page-link[href^="/vision"]') as HTMLAnchorElement;
+    const other = dom.querySelector('.section-page-link[href^="/bpm-astra/bilans"]') as HTMLAnchorElement;
     expect(other.getAttribute('href')).not.toContain('q=');
   });
 
   it('laisse développer les autres pages sans quitter la page courante', () => {
-    const fixture = setup('/vision/projection');
+    const fixture = setup('/bpm-astra/budget');
     const dom = fixture.nativeElement as HTMLElement;
-    const toggle = dom.querySelector('button[aria-label="Afficher les pages de Plafonds et catégories"]') as HTMLButtonElement;
+    const toggle = dom.querySelector('button[aria-label="Afficher les pages de Plafonds"]') as HTMLButtonElement;
     toggle.click(); fixture.detectChanges();
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     const target = dom.querySelector('#' + toggle.getAttribute('aria-controls'))!;
-    expect(target.textContent).toContain('Organiser les catégories');
-    expect(dom.querySelector('[aria-current="page"]')?.textContent).toContain('Projection patrimoniale');
+    expect(target.textContent).toContain('Postes et revenus');
+    expect(dom.querySelector('[aria-current="page"]')?.textContent).toContain('Budget récurrent');
   });
 
   it('reste utilisable dans une section à une seule page et conserve le budget sélectionné', () => {

@@ -28,8 +28,8 @@ test("annuler une saisie en double : elle sort des sommes, pas d'une période cl
   assert.equal(socle.state.operations[old.id].status, "realized");
 });
 
-// Remboursement reçu par un projet financé : il se déduit de ses charges réglées et du Dépensé du budget de vie.
-test("remboursement d'un projet : déduit de sa tâche, du projet et du Dépensé du budget de vie", async (t) => {
+// Remboursement de tâche : entrée du cycle, réduction du coût net du projet et de sa tâche.
+test("remboursement d'un projet : revenu du cycle et réduction du coût net de sa tâche", async (t) => {
   const { socle } = await makeSocle();
   t.after(() => socle.close());
   const { ctx } = await camille(socle);
@@ -45,12 +45,13 @@ test("remboursement d'un projet : déduit de sa tâche, du projet et du Dépens�
   const before = spent();
   await operation(socle, ctx, { budgetId: b.id, taskId: task.id, direction: "income", label: "Remboursement bateau", amount: 90, date: "2026-11-03", costCenterRef: "std:autresRevenus" });
   const after = spent();
-  assert.equal(after.projectsPaidCents, before.projectsPaidCents - 9000);
-  assert.equal(after.paidCents, before.paidCents - 9000);
-  assert.equal(after.receivedCents, before.receivedCents, "le remboursement n'est pas un revenu du budget de vie");
+  assert.equal(after.projectsPaidCents, before.projectsPaidCents, "les dépenses validées restent séparées des revenus");
+  assert.equal(after.paidCents, before.paidCents);
+  assert.equal(after.receivedCents, before.receivedCents + 9000, "le remboursement est une entrée, comme tout gain du budget de vie");
+  assert.equal(after.netCents, before.netCents + 9000);
   const d = P.projectDetail(ctx, p.coreProjectId);
   assert.equal(d.budget.paidCents, 0);
   assert.equal(d.tasks.find((x) => (x.task?.id ?? x.id) === task.id).budget.paidCents, 0);
   const loisirs = socle.modules.bpm.reads.capsReview(ctx, { period: "2026-11" }).centers.find((c) => c.ref === "std:loisirs");
-  assert.equal(loisirs?.engagedCents ?? 0, 0, "le remboursement revient sur le poste de la charge remboursée");
+  assert.equal(loisirs?.engagedCents ?? 0, 9000, "un revenu est classé sur son poste de revenu, sans annuler la dépense du poste loisirs");
 });

@@ -1,16 +1,18 @@
+import { BpmAmount } from './amount';
 import { BpmDrafts, DraftHandle } from './drafts';
 import { BpmFormActions } from './form-actions';
 import { Component, computed, DestroyRef, effect, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { BpmRouterLink } from './bpm-router-link';
 import { Api, ApiError, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmBudgetRef, Cadence, Direction, EntryInput, EntryPreview, RegisterLine } from '../../core/bpm-models';
-import { CapPreview, ChargeCategory } from '../../core/bpm-caps.models';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmBudgetRef, Cadence, Direction, EntryInput, EntryPreview, RegisterLine } from '../data/bpm-models';
+import { CapPreview } from '../data/bpm-caps.models';
 import { CentsPipe, parseAmount, signedCents } from '../../core/format';
 import { BpmModal } from './modal';
 import { capAlertText, withCapAlerts } from './caps';
 import { BpmRefresh, newRequestKey } from './page-context';
+import { BpmPostingImpact } from './posting-impact';
 
 let editorId = 0;
 
@@ -18,7 +20,7 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
 
 /**
  * Éditeur d'opération partagé par toutes les pages BPM : Budget cible, entrée/charge, libellé,
- * montant, centre, catégorie facultative (charges), date, cadence, fin facultative, note et tâche éventuelle d'une branche.
+ * montant, poste, date, cadence, fin facultative, note et tâche éventuelle d'une branche.
  * Création : opération ponctuelle ou définition récurrente, avec aperçu sans mutation.
  * Modification : conserve l'identité de l'opération (ou de la définition récurrente, avec sa portée).
  * Le brouillon est conservé en cas d'erreur ou de conflit.
@@ -27,258 +29,9 @@ type CenterOption = { ref: string; label: string; direction: Direction; standard
  */
 @Component({
   selector: 'bpm-operation-editor',
-  imports: [BpmFormActions, FormsModule, RouterLink, CentsPipe, BpmModal],
+  imports: [BpmAmount, BpmPostingImpact, BpmFormActions, FormsModule, BpmRouterLink, CentsPipe, BpmModal],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss', '../ref-styles/bpm-flow-editor.component.scss', './operation-editor.scss'],
-  template: `
-    <bpm-modal [open]="true" [headed]="true" [title]="heading()" [busy]="busy()" (closed)="close()">
-      <form class="fe-form" data-bpm-frame="form" (ngSubmit)="save()" (input)="draft?.save()" (change)="draft?.save()" novalidate>
-        @if (draft?.restored) { <p class="bpm-help" role="status">Votre brouillon a été repris.</p> }
-        <p class="bpm-help">Une date, un montant, un poste. Voyez l’effet avant d’enregistrer.</p>
-        @if (error(); as e) {
-          <div [class]="e.isConflict ? 'bpm-missing' : 'bpm-error'" role="alert">
-            <p>{{ e.message }}</p>
-            @if (e.isConflict) {
-              <p><small>Votre saisie est conservée. Fermez puis rouvrez l'éditeur pour repartir de la version enregistrée.</small></p>
-            } @else {
-              <p><small>Rien n'a été enregistré ; votre saisie est conservée.</small></p>
-            }
-          </div>
-          @if (fundingIssue(); as f) {
-            <section class="fe-impact" aria-label="Financer et enregistrer le règlement">
-              <h3>Financer cette dépense ici</h3>
-              <p>Cette action accorde la part nécessaire à la tâche, autorise le dépassement indiqué et enregistre le paiement. Vérifiez le montant avant de confirmer.</p>
-              @if (f.overrunCents > 0) { <p class="bpm-error">Dépassement à autoriser : {{ f.overrunCents | cents }}.</p> }
-              <div class="bpm-actions">
-                <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save(true)">Accorder le nécessaire et enregistrer le paiement</button>
-                <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="realized.set(false); error.set(null)">Garder comme dépense prévue</button>
-              </div>
-            </section>
-          }
-        }
-        @if (scopeNote()) {
-          <p class="bpm-missing" role="status">{{ scopeNote() }}</p>
-        }
-
-        <h3 class="fe-section-title"><span>01</span>Choisir le projet</h3>
-        <div class="fe-selectors">
-          <label
-            >Projet concerné
-            <select name="budgetId" [(ngModel)]="budgetId" [disabled]="editing()">
-              @for (b of budgets(); track b.id) {
-                <option [value]="b.id">{{ b.role === 'life' ? 'Budget du projet de vie' : b.name + ' (projet de la vie)' }}</option>
-              }
-            </select></label
-          >
-        </div>
-
-        <h3 class="fe-section-title"><span>02</span>Renseigner l’opération</h3>
-        <div class="fe-controls">
-          <div class="bp-toggle" role="radiogroup" aria-label="Sens de l’opération">
-            <label [class.is-selected]="direction() === 'income'"
-              ><input type="radio" name="direction" value="income" [checked]="direction() === 'income'" [disabled]="editing()" (change)="setDirection('income')" />↑ Entrée</label
-            ><label [class.is-selected]="direction() === 'charge'"
-              ><input type="radio" name="direction" value="charge" [checked]="direction() === 'charge'" [disabled]="editing()" (change)="setDirection('charge')" />↓ Charge</label
-            >
-          </div>
-          <div class="bp-flow-mode">
-            <span [class.is-selected]="cadence() === 'once'">Ponctuel</span
-            ><button
-              type="button"
-              role="switch"
-              class="bp-recurrence-switch"
-              aria-label="Répéter cette opération automatiquement"
-              [attr.aria-checked]="cadence() !== 'once'"
-              [disabled]="editing()"
-              (click)="toggleCadence()"
-            ></button
-            ><span [class.is-selected]="cadence() !== 'once'">Récurrent</span>
-          </div>
-        </div>
-        @if (editing() && !isRecurrence()) {
-          <p class="fe-explanation">Une opération ponctuelle garde sa nature ; pour un rythme régulier, créez une nouvelle opération récurrente.</p>
-        } @else if (isRecurrence()) {
-          <p class="fe-explanation">Les règlements déjà enregistrés sont conservés. Un nouveau montant récurrent concerne seulement les échéances non réalisées.</p>
-        }
-        <div class="fe-fields">
-          <label
-            >Libellé
-            <input
-              name="label"
-              [(ngModel)]="label"
-              maxlength="200"
-              required
-              [placeholder]="direction() === 'income' ? 'Ex. salaire, remboursement, prime' : 'Ex. loyer, courses, assurance'"
-              [attr.aria-invalid]="fieldErr('label') ? 'true' : null"
-            />
-            @if (fieldErr('label')) {
-              <small class="fe-field-error">{{ fieldErr('label') }}</small>
-            }
-          </label>
-          <label
-            >{{ cadence() === 'once' ? 'Date prévue' : 'Première échéance' }}
-            <input name="date" type="date" [(ngModel)]="date" [attr.aria-invalid]="fieldErr('date') || fieldErr('firstDate') ? 'true' : null" />
-            @if (fieldErr('date') || fieldErr('firstDate')) {
-              <small class="fe-field-error">{{ fieldErr('date') || fieldErr('firstDate') }}</small>
-            }
-          </label>
-          <label
-            >{{ cadence() === 'once' ? 'Montant prévu (€)' : 'Montant par échéance (€)' }}
-            <input name="amount" inputmode="decimal" [(ngModel)]="amount" [attr.aria-invalid]="fieldErr('amount') ? 'true' : null" />
-            @if (fieldErr('amount')) {
-              <small class="fe-field-error">{{ fieldErr('amount') }}</small>
-            }
-          </label>
-          @if (cadence() !== 'once') {
-            <label
-              >Répétition
-              <select name="cadence" [(ngModel)]="cadence">
-                <option value="weekly">Chaque semaine</option>
-                <option value="monthly">Chaque mois</option>
-                <option value="yearly">Chaque année</option>
-              </select></label
-            >
-            <label
-              >Dernière échéance (facultatif)
-              <input name="endDate" type="date" [(ngModel)]="endDate" [min]="date()" />
-              @if (fieldErr('endDate')) {
-                <small class="fe-field-error">{{ fieldErr('endDate') }}</small>
-              }
-            </label>
-          }
-          <label
-            >Poste (centre de coûts)
-            <select name="center" [(ngModel)]="center" [attr.aria-invalid]="fieldErr('costCenterRef') ? 'true' : null">
-              @for (c of centerOptions(); track c.ref) {
-                <option [value]="c.ref">{{ c.label }}{{ c.standard ? '' : ' (personnel)' }}</option>
-              }
-              <option value="__new__">＋ Nouveau poste personnel…</option>
-            </select>
-            @if (fieldErr('costCenterRef')) {
-              <small class="fe-field-error">{{ fieldErr('costCenterRef') }}</small>
-            }
-          </label>
-          @if (direction() === 'charge' && center() !== '__new__') {
-            <div class="fe-category-field">
-              <label>Catégorie (facultatif)
-                <select name="categoryId" [(ngModel)]="categoryId" [attr.aria-invalid]="fieldErr('categoryId') ? 'true' : null">
-                  <option value="">Sans catégorie</option>
-                  @for (k of categoryOptions(); track k.id) {
-                    <option [value]="k.id">{{ k.label }}{{ k.archived ? ' (retirée)' : k.capCents === null ? '' : ' · plafond ' + (k.capCents | cents) }}</option>
-                  }
-                </select>
-              </label>
-              @if (fieldErr('categoryId')) { <small class="fe-field-error">{{ fieldErr('categoryId') }}</small> }
-              <small>{{ categoryOptions().length ? 'Son plafond est suivi indépendamment et ne bloque jamais la dépense.' : 'Aucune catégorie dans ce poste.' }}</small>
-              <a class="btn btn-secondary" routerLink="/plafonds/categories">Gérer les catégories</a>
-            </div>
-          }
-          @if (center() === '__new__') {
-            <label
-              >Nom du nouveau centre
-              <input name="newCenter" [(ngModel)]="newCenter" maxlength="80" />
-              <small>Ajouté à votre liste personnelle uniquement, pas au catalogue global.</small>
-            </label>
-          }
-          @if (branchTasks().length || taskFundingRequired()) {
-            <label
-              >{{ taskFundingRequired() && direction() === 'charge' ? 'Tâche du projet' : 'Tâche du projet (facultatif)' }}
-              <select name="taskId" [(ngModel)]="taskId">
-                <option value="">{{ taskFundingRequired() && direction() === 'charge' ? 'Choisir une tâche' : 'Sans tâche' }}</option>
-                @for (t of branchTasks(); track t.id) {
-                  <option [value]="t.id">{{ t.title }}</option>
-                }
-              </select>
-              <small>{{ taskFundingRequired() && direction() === 'charge' ? 'Le règlement doit respecter le montant accordé à cette tâche dans Projets et financement.' : 'Rattachement informatif : aucune allocation financière ne découle du temps de la tâche.' }}</small>
-            </label>
-          }
-          <label class="fe-wide"
-            >Note (facultatif)
-            <textarea name="note" rows="2" [(ngModel)]="note" maxlength="500"></textarea>
-          </label>
-          @if (!editing() && cadence() === 'once') {
-            <label class="bp-check fe-wide"
-              ><input type="checkbox" name="realized" [ngModel]="realized()" (ngModelChange)="setRealized($event)" /> Déjà {{ direction() === 'income' ? 'reçue' : 'payée' }}</label
-            >
-            @if (realized()) {
-              <label
-                >Date réelle
-                <input name="realizedDate" type="date" [(ngModel)]="realizedDate" [attr.aria-invalid]="fieldErr('realizedDate') ? 'true' : null" />
-                @if (fieldErr('realizedDate')) {
-                  <small class="fe-field-error">{{ fieldErr('realizedDate') }}</small>
-                }
-              </label>
-              <label
-                >Montant réel (€, si différent)
-                <input name="realizedAmount" inputmode="decimal" [(ngModel)]="realizedAmount" [placeholder]="amount()" />
-              </label>
-              <p class="fe-schedule-note fe-wide">Une date réelle future est refusée : saisissez alors l'opération comme prévision.</p>
-            }
-          }
-        </div>
-        <p class="fe-schedule-note">
-          {{ cadence() === 'once' ? 'Une seule opération à la date choisie.' : 'Le montant se répète à chaque échéance, à partir de la première date.' }}
-        </p>
-
-        @if (!editing()) {
-          <section class="fe-impact" aria-live="polite" [attr.aria-labelledby]="impactId">
-            <h3 [id]="impactId" class="fe-section-title"><span>03</span>Vérifier l’impact</h3>
-            <p class="fe-impact-rule">Comparez le solde et le patrimoine avant / après cette opération.</p>
-            @if (previewLoading()) { <p class="fe-impact-rule" role="status">Calcul de l’impact de votre saisie…</p> }
-            @else if (preview(); as p) {
-              <div class="fe-impact-grid">
-                <article>
-                  <h4>Solde prévu à la clôture</h4>
-                  <span>Avant · {{ sc(p.before.expectedCents) }}</span><strong>{{ sc(p.after.expectedCents) }}</strong><small>Après la saisie</small>
-                </article>
-                <article>
-                  <h4>Reste réel</h4>
-                  <span>Avant · {{ sc(p.before.netCents) }}</span><strong>{{ sc(p.after.netCents) }}</strong><small>Après la saisie</small>
-                </article>
-                <article>
-                  <h4>Stock estimé après période</h4>
-                  <span>Avant · {{ stock(p.before.stockEstimateCents) }}</span><strong>{{ stock(p.after.stockEstimateCents) }}</strong><small>Après la saisie</small>
-                </article>
-              </div>
-              @if (p.note) {
-                <p class="fe-impact-rule">{{ p.note }}</p>
-              }
-              <p class="fe-impact-rule">Aperçu calculé sans aucune écriture.</p>
-            } @else if (previewError()) {
-              <p class="bpm-missing">Aperçu indisponible : {{ previewError() }}</p>
-            } @else {
-              <p class="fe-impact-rule">Renseignez libellé, montant et date pour voir l'effet sur la période.</p>
-            }
-          </section>
-        }
-        @if (capPreview(); as cp) {
-          @if (direction() === 'charge') {
-            <section class="fe-impact" aria-live="polite" aria-label="Impact sur les plafonds">
-              <h3 class="fe-section-title">Plafonds · {{ cp.period.label }}</h3>
-              @for (row of [cp.after.center, cp.after.category]; track $index) {
-                @if (row && row.capCents !== null) {
-                  <p [class.bpm-error]="row.over">
-                    <strong>{{ $index === 0 ? 'Centre' : 'Catégorie' }} · {{ row.label }}</strong> :
-                    {{ row.engagedCents | cents }} engagés sur {{ row.capCents | cents }}.
-                    {{ row.over ? 'Dépassement' : 'Disponible après cette saisie' }} : {{ abs(row.marginCents ?? 0) | cents }}.
-                  </p>
-                }
-              }
-              @if (cp.alerts.length) {
-                <p class="bpm-error" role="alert">{{ capWarning(cp) }} La dépense reste autorisée. Vous pouvez modifier le montant ou enregistrer malgré le dépassement.</p>
-              }
-              @if (cp.note) { <p>{{ cp.note }}</p> }
-            </section>
-          }
-        }
-        @if (capPreviewError()) {
-          <p class="bpm-error" role="alert">{{ capPreviewError() }} Vous pouvez réessayer ou enregistrer sans cette vérification.</p>
-        }
-        <bpm-form-actions [busy]="busy()"
-          [label]="capConfirmation() ? (capPreviewError() ? 'Enregistrer sans vérification' : 'Enregistrer malgré le dépassement') : editing() ? 'Enregistrer les modifications' : 'Enregistrer'"
-          (cancel)="close()" />
-      </form>
-    </bpm-modal>
-  `,
+  templateUrl: './operation-editor.html',
 })
 export class BpmOperationEditor implements OnInit {
   private drafts = inject(BpmDrafts);
@@ -308,13 +61,14 @@ export class BpmOperationEditor implements OnInit {
   protected endDate = signal('');
   protected note = signal('');
   protected taskId = signal('');
-  protected categoryId = signal('');
   protected realized = signal(false);
   protected realizedDate = signal('');
   protected realizedAmount = signal('');
+  protected accountingDate = signal('');
+  protected fundingSource = signal<'cycle' | 'patrimoine'>('cycle');
+  protected projectBudget = computed(() => this.budgets().find(b => b.id === this.budgetId())?.role === 'standard');
 
   protected centers = signal<CenterOption[]>([]);
-  protected categories = signal<ChargeCategory[]>([]);
   private tasks = signal<{ id: string; title: string; projectId: string | null }[]>([]);
   protected busy = signal(false);
   protected error = signal<ApiError | null>(null);
@@ -342,8 +96,6 @@ export class BpmOperationEditor implements OnInit {
   protected isRecurrence = computed(() => !!this.line()?.recurrenceId);
   protected heading = computed(() => (this.editing() ? (this.isRecurrence() ? 'Modifier l’opération récurrente' : 'Modifier l’opération') : this.direction() === 'income' ? 'Saisir une entrée' : 'Saisir une dépense'));
   protected centerOptions = computed(() => this.centers().filter((c) => c.direction === this.direction()));
-  /** Catégories actives du centre choisi ; la catégorie actuelle d'une ligne reste proposée même retirée. */
-  protected categoryOptions = computed(() => this.categories().filter((k) => k.costCenterRef === this.center() && (!k.archived || k.id === this.line()?.categoryId)));
   protected branchTasks = computed(() => {
     const b = this.budgets().find((x) => x.id === this.budgetId());
     return b && b.role === 'standard' ? this.tasks().filter((t) => t.projectId === b.coreProjectId) : [];
@@ -398,6 +150,7 @@ export class BpmOperationEditor implements OnInit {
     const l = this.line();
     const life = this.budgets().find((b) => b.role === 'life');
     this.budgetId.set(l?.budgetId ?? d.budgetId ?? life?.id ?? this.budgets()[0]?.id ?? '');
+    this.fundingSource.set(l?.fundingSource ?? d.fundingSource ?? this.budgets().find(b => b.id === this.budgetId())?.fundingSource ?? 'cycle');
     this.direction.set(l?.direction ?? d.direction ?? 'charge');
     this.label.set(l?.label ?? d.label ?? '');
     this.amount.set(l ? String(l.plannedCents / 100).replace('.', ',') : d.amount ? String(d.amount) : '');
@@ -406,12 +159,12 @@ export class BpmOperationEditor implements OnInit {
     this.endDate.set(l?.endDate ?? '');
     this.note.set(l?.note ?? d.note ?? '');
     this.taskId.set(l?.taskId ?? d.taskId ?? '');
-    this.categoryId.set(l?.categoryId ?? d.categoryId ?? '');
+    // Saisie d'un mouvement déjà réglé (un mouvement manquant relevé au rapprochement) : « Déjà payée » cochée d'emblée.
+    if (!l && d.status === 'realized') this.setRealized(true);
     this.revision = l?.revision ?? null;
     try {
-      const [centers, tasks, categories] = await Promise.all([this.bpm.costCenters(), this.api.tasks().catch(() => []), this.bpm.categories(true).catch(() => [] as ChargeCategory[])]);
+      const [centers, tasks] = await Promise.all([this.bpm.costCenters(), this.api.tasks().catch(() => [])]);
       this.centers.set(centers);
-      this.categories.set(categories);
       this.tasks.set(tasks.map((t) => ({ id: t.task.id, title: t.task.title, projectId: t.task.projectId })));
       const wanted = l?.costCenterRef ?? d.costCenterRef;
       this.center.set(wanted && centers.some((c) => c.ref === wanted) ? wanted : (this.centerOptions()[0]?.ref ?? '__new__'));
@@ -419,6 +172,7 @@ export class BpmOperationEditor implements OnInit {
         const detail = await this.bpm.line(l.id);
         this.recurrenceRevision = detail.definition?.revision ?? null;
         if (detail.definition) {
+          this.fundingSource.set(detail.definition.plannedFundingSource ?? this.selectedBudget()?.fundingSource ?? 'cycle');
           this.amount.set(String(detail.definition.amountCents / 100).replace('.', ','));
           this.date.set(detail.definition.firstDate);
           this.endDate.set(detail.definition.endDate ?? '');
@@ -431,7 +185,7 @@ export class BpmOperationEditor implements OnInit {
     } catch (e) {
       this.error.set(toApiError(e));
     }
-    this.draft = this.drafts.fields(`entry:${l?.id ?? 'new'}:${l?.revision ?? 0}:${d.budgetId ?? life?.id ?? ''}:${d.taskId ?? ''}:${d.direction ?? 'charge'}:${d.costCenterRef ?? ''}:${d.categoryId ?? ''}`, this, ['budgetId', 'direction', 'label', 'amount', 'center', 'newCenter', 'cadence', 'date', 'endDate', 'note', 'taskId', 'categoryId', 'realized', 'realizedDate', 'realizedAmount', 'requestKey', 'centerKey'], this.destroy);
+    this.draft = this.drafts.fields(`entry:${l?.id ?? 'new'}:${l?.revision ?? 0}:${d.budgetId ?? life?.id ?? ''}:${d.taskId ?? ''}:${d.direction ?? 'charge'}:${d.costCenterRef ?? ''}`, this, ['budgetId', 'direction', 'label', 'amount', 'center', 'newCenter', 'cadence', 'date', 'endDate', 'note', 'taskId', 'realized', 'realizedDate', 'realizedAmount', 'accountingDate', 'fundingSource', 'requestKey', 'centerKey'], this.destroy);
   }
 
   /** Bascule ponctuel / récurrent de la référence : une récurrence part sur un rythme mensuel. */
@@ -443,8 +197,20 @@ export class BpmOperationEditor implements OnInit {
   protected setDirection(d: Direction) {
     this.direction.set(d);
     if (!this.centerOptions().some((c) => c.ref === this.center())) this.center.set(this.centerOptions()[0]?.ref ?? '__new__');
-    if (d !== 'charge') this.categoryId.set('');
   }
+
+  protected selectBudget(id: string) {
+    this.budgetId.set(id);
+    this.taskId.set('');
+    this.fundingSource.set(this.budgets().find(b => b.id === id)?.fundingSource ?? 'cycle');
+    this.accountingDate.set('');
+  }
+  protected readonly selectedBudget = computed(() => this.budgets().find(b => b.id === this.budgetId()));
+  protected readonly selectedTask = computed(() => this.branchTasks().find(t => t.id === this.taskId()));
+  protected readonly impactAmount = computed(() => {
+    const amount = parseAmount(this.realized() && this.realizedAmount() ? this.realizedAmount() : this.amount());
+    return typeof amount === 'number' && Number.isFinite(amount) ? Math.round(amount * 100) : null;
+  });
 
   protected fieldErr(name: string) {
     const e = this.error();
@@ -463,18 +229,17 @@ export class BpmOperationEditor implements OnInit {
       costCenterRef: this.center(),
       cadence: this.cadence(),
       ...(once ? { date: this.date() } : { firstDate: this.date(), endDate: this.endDate() || null }),
-      ...(once && this.realized() ? { status: 'realized' as const, realizedDate: this.realizedDate() || this.date(), ...(typeof realizedAmount === 'number' ? { realizedAmount } : {}) } : { status: 'planned' as const }),
+      ...(this.projectBudget() ? { fundingSource: this.fundingSource() } : {}),
+      ...(once && this.realized() ? {
+        status: 'realized' as const,
+        realizedDate: this.realizedDate() || this.date(),
+        ...(this.projectBudget() ? { accountingDate: this.accountingDate() || this.realizedDate() || this.date() } : {}),
+        ...(typeof realizedAmount === 'number' ? { realizedAmount } : {}),
+      } : { status: 'planned' as const }),
       note: this.note().trim() || null,
       taskId: this.branchTasks().length ? this.taskId() || null : undefined,
-      categoryId: this.categoryValue(),
     };
   });
-
-  /** Catégorie envoyée : seulement pour une charge et si elle appartient au centre choisi. */
-  private categoryValue() {
-    const id = this.categoryId();
-    return this.direction() === 'charge' && id && this.categoryOptions().some((k) => k.id === id) ? id : null;
-  }
 
   protected close() {
     this.draft?.clear();
@@ -508,8 +273,9 @@ export class BpmOperationEditor implements OnInit {
       this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'La saisie a changé. Enregistrez à nouveau pour vérifier le financement nécessaire avant de le confirmer.' }));
       return;
     }
-    if (this.taskFundingRequired() && this.direction() === 'charge' && !this.taskId()) {
-      this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: 'Choisissez la tâche qui porte cette dépense. Créez une tâche dans le projet si nécessaire.', details: { field: 'taskId' } }));
+    if ((this.projectBudget() || this.taskFundingRequired()) && !this.branchTasks().some(t => t.id === this.taskId())) {
+      const movement = this.direction() === 'income' ? 'cette entrée' : 'cette dépense';
+      this.error.set(new ApiError(400, { code: 'VALIDATION', action: null, message: `Choisissez la tâche qui porte ${movement}. Créez une tâche dans le projet si nécessaire.`, details: { field: 'taskId' } }));
       return;
     }
     const amount = parseAmount(this.amount());
@@ -566,12 +332,12 @@ export class BpmOperationEditor implements OnInit {
         const r = await this.bpm.createEntry({ ...submittedInput, requestKey: this.requestKey, ...(fund ? { fund: true } : {}) });
         message = withCapAlerts(r.recurrence ? `Opération récurrente « ${r.recurrence.label} » enregistrée (${r.recurrence.cadenceLabel}).` : `Opération « ${r.operation?.label} » enregistrée.`, r.capAlerts);
       } else if (l.recurrenceId) {
-        const body = { expectedRevision: this.recurrenceRevision ?? 0, label: this.label().trim(), amount, costCenterRef: centerRef, note: this.note().trim() || null, endDate: this.endDate() || null, categoryId: this.categoryValue(), ...(this.cadence() !== this.original?.cadence ? { cadence: this.cadence() } : {}), ...(this.date() !== this.original?.firstDate ? { firstDate: this.date() } : {}), ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
-        const r = await this.bpm.updateRecurrence(l.recurrenceId, body);
+        const body = { expectedRevision: this.recurrenceRevision ?? 0, label: this.label().trim(), amount, costCenterRef: centerRef, note: this.note().trim() || null, endDate: this.endDate() || null, ...(this.cadence() !== this.original?.cadence ? { cadence: this.cadence() } : {}), ...(this.date() !== this.original?.firstDate ? { firstDate: this.date() } : {}), ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
+        const r = await this.bpm.updateRecurrence(l.recurrenceId, { ...body, ...(this.projectBudget() ? { fundingSource: this.fundingSource() } : {}) });
         message = withCapAlerts(`Définition modifiée : ${r.scope.appliesTo}` + (r.scope.settledUntouched ? ` ${r.scope.settledUntouched} règlement(s) déjà effectué(s) inchangé(s).` : ''), r.capAlerts);
       } else {
-        const body = { expectedRevision: this.revision ?? 0, label: this.label().trim(), amount, date: this.date(), costCenterRef: centerRef, note: this.note().trim() || null, categoryId: this.categoryValue(), ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
-        const r = await this.bpm.updateOperation(l.operationId ?? l.id, body);
+        const body = { expectedRevision: this.revision ?? 0, label: this.label().trim(), amount, date: this.date(), costCenterRef: centerRef, note: this.note().trim() || null, ...(this.branchTasks().length ? { taskId: this.taskId() || null } : {}) };
+        const r = await this.bpm.updateOperation(l.operationId ?? l.id, { ...body, ...(this.projectBudget() && !l.settled ? { fundingSource: this.fundingSource() } : {}) });
         message = withCapAlerts('Opération modifiée.', r.capAlerts);
       }
       this.refresh.bump();

@@ -171,7 +171,6 @@ export class Case {
         firstDate,
         endDate: spec.endDate ?? undefined,
         costCenterRef: def.center,
-        categoryId: def.category ? this.categories[def.category] : undefined,
       });
       entry.id = r.recurrence.id;
     }, 0.5);
@@ -228,15 +227,12 @@ export class Case {
         realizedDate: realized ? realizedDate : undefined,
         realizedAmount: realized ? def.realizedAmount : undefined,
         costCenterRef: def.center,
-        categoryId: def.category ? this.categories[def.category] : undefined,
         fund: p && realized ? (def.fund ?? true) : undefined,
       });
       this.ops[name] = r.operation;
       if (realized && !def.excluded) this.book(scope, record.direction, cents(def.realizedAmount ?? def.amount), realizedDate);
     });
   }
-
-  categories = {};
 
   // ————— Projets de la vie —————
   project(name, def) {

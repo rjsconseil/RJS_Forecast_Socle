@@ -240,10 +240,11 @@ test('aperçu d’une saisie : même effet que l’écriture, y compris dans un 
   const { ctx } = await camille(socle);
   await operation(socle, ctx, { direction: 'income', amount: 1000, date: '2026-11-01' });
   const unfunded = await socle.modules.bpm.projects.createProject(ctx, { requestKey: key(), title: 'Plus tard', amount: null });
+  const task = await socle.modules.bpm.projects.createTask(ctx, { requestKey: key(), projectId: unfunded.coreProjectId, title: 'Achats futurs' });
   const entries = [
     { direction: 'charge', label: 'Courses', amount: 80, date: '2026-11-10', costCenterRef: 'std:divers' },
     { direction: 'charge', label: 'Loyer', amount: 50, cadence: 'weekly', firstDate: '2026-11-02', costCenterRef: 'std:divers' },
-    { direction: 'charge', label: 'Matériaux', amount: 100, date: '2026-11-12', budgetId: unfunded.budgetId, costCenterRef: 'std:divers' },
+    { direction: 'charge', label: 'Matériaux', amount: 100, date: '2026-11-12', budgetId: unfunded.budgetId, taskId: task.task.id, costCenterRef: 'std:divers' },
   ];
   for (const entry of entries) {
     const rev = socle.state.revision;

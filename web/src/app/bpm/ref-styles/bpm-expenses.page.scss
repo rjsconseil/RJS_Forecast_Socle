@@ -1,6 +1,5 @@
 @use 'contrat-ruptures' as *;
-.expense-filters,
-.expense-facts {
+.expense-filters {
   display: grid;
   grid-template-columns: repeat(
     auto-fit,
@@ -25,8 +24,7 @@
   justify-self: start;
   align-self: end;
 }
-.expense-group,
-.expense-body {
+.expense-group {
   display: grid;
   gap: var(--ecart-16);
 }
@@ -51,6 +49,9 @@
 }
 .expense-main {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  overflow-wrap: anywhere;
   gap: var(--ecart-4);
 }
 .expense-main small,
@@ -67,55 +68,11 @@
   background: var(--soft);
   font-size: var(--fs-xs);
 }
-.expense-body {
-  padding: var(--ecart-20);
-  border-block-start: var(--trait-1) solid var(--card-border);
-}
-.expense-body h3,
-.expense-body p {
-  margin: 0;
-}
-.expense-body section {
-  display: grid;
-  gap: var(--ecart-12);
-}
-.expense-facts {
-  margin: 0;
-}
-.expense-facts dt {
-  color: var(--muted);
-  font-size: var(--fs-sm);
-}
-.expense-facts dd {
-  margin: var(--ecart-4) 0 0;
-  font-weight: var(--fw-semibold);
-}
-.expense-prose {
-  white-space: pre-wrap;
-  font-weight: var(--fw-regular);
-}
 .expense-note {
   padding: var(--ecart-16);
   border-inline-start: var(--trait-3) solid var(--app-accent);
   border-radius: var(--rayon-12);
   background: var(--app-accent-soft);
-}
-.expense-history {
-  max-height: var(--dim-320);
-  overflow: auto;
-}
-.expense-history li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-8);
-  margin-block: var(--ecart-8);
-}
-.expense-body footer {
-  display: grid;
-  gap: var(--ecart-16);
-}
-.expense-body footer a {
-  justify-self: start;
 }
 @media (max-width: $rupture-640) {
   .expense-row > summary,
@@ -127,51 +84,6 @@
     grid-column: 1 / -1;
     justify-self: start;
   }
-}
-
-.expense-projects {
-  display: grid;
-  gap: var(--ecart-12);
-}
-.expense-row > .expense-project-summary {
-  grid-template-columns: minmax(0, var(--fr-1)) auto;
-}
-.expense-project-summary > span {
-  font-size: var(--fs-sm);
-}
-.expense-project-list {
-  margin: 0;
-  padding-inline-start: var(--ecart-20);
-  display: grid;
-  gap: var(--ecart-12);
-}
-.expense-project-list li > a,
-.expense-project-list li {
-  overflow-wrap: anywhere;
-}
-.expense-project-list span,
-.expense-project-list small {
-  display: block;
-}
-@media (max-width: $rupture-640) {
-  .expense-row > .expense-project-summary {
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
-}
-
-.expense-project-cue {
-  color: var(--app-accent);
-  justify-self: end;
-}
-
-.expense-project-list a {
-  color: var(--app-accent);
-  text-decoration: underline;
-  text-underline-offset: var(--trait-3);
-}
-.funding-total {
-  font-size: var(--fs-2xl);
-  font-variant-numeric: tabular-nums;
 }
 .expense-date small {
   display: block;
@@ -199,34 +111,6 @@
 
 [data-project-life] {
   padding: var(--ecart-20);
-}
-.expense-project-list li {
-  display: grid;
-  gap: var(--ecart-4);
-}
-
-.expense-cost-sections {
-  display: grid;
-  gap: var(--ecart-24);
-}
-.expense-period-scroll {
-  max-height: var(--dim-320);
-  overflow: auto;
-  scrollbar-gutter: stable;
-  list-style: none;
-  padding: 0 var(--ecart-12) 0 0;
-}
-.expense-project-origin {
-  color: var(--muted);
-  font-weight: var(--fw-semibold);
-}
-
-/* Même grille de lecture pour le relevé et les charges du tableau de bord. */
-.expense-project-list a.expense-charge-summary {
-  display: grid;
-  color: inherit;
-  text-decoration: none;
-  min-width: 0;
 }
 .expense-charge-summary .expense-main {
   min-width: 0;
@@ -290,6 +174,8 @@
   white-space: normal;
   font-weight: var(--fw-regular);
 }
+/* Échéance reportée d'un cycle clôturé : elle garde sa marque et se revoit ici.*/
+.expense-carried { display: block; color: var(--status-warning, #945b09); font-size: 11px; font-weight: 600; }
 .expense-state {
   font-weight: var(--fw-semibold);
   text-align: center;
@@ -302,50 +188,6 @@
   color: var(--status-warning);
   background: color-mix(in srgb, var(--status-warning) var(--part-10), var(--raised-surface));
 }
-.expense-project-totals {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-12);
-  color: var(--muted);
-}
-.expense-project-totals strong {
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-.expense-definition-list {
-  list-style: none;
-  padding: 0;
-}
-.expense-definition-list > li {
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--rayon-12);
-  background: var(--raised-surface);
-}
-.expense-definition-list > li > :first-child {
-  font-weight: var(--fw-semibold);
-}
-.expense-body > :is(h3, .expense-prose, .expense-note, .expense-facts, footer) {
-  grid-column: 1 / -1;
-}
-.expense-body > section:has(.expense-period-scroll) {
-  grid-column: 1 / -1;
-}
-.expense-body > section:has(.expense-project-list:not(.expense-definition-list)) {
-  grid-column: 1 / -1;
-}
-.expense-body h3 {
-  font-size: var(--fs-md);
-}
-.expense-history {
-  padding-inline-start: 0;
-  list-style: none;
-}
-.expense-history li {
-  justify-content: space-between;
-  padding-block: var(--ecart-8);
-  border-bottom: var(--trait-1) solid var(--line);
-}
 @media (max-width: $rupture-640) {
   .expense-amount {
     white-space: normal;
@@ -354,101 +196,6 @@
     padding: var(--ecart-12);
     padding-inline-end: var(--ecart-32);
   }
-  .expense-project-totals {
-    display: grid;
-  }
-  .expense-project-cue {
-    justify-self: start;
-  }
-}
-.expense-project .record-details > section {
-  grid-column: 1 / -1;
-}
-.expense-definition-list:not(:has(.expense-charge-summary)) {
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--part-100), var(--dim-280)), var(--fr-1))
-  );
-}
-.expense-definition-list .expense-charge-summary {
-  padding: 0;
-}
-
-.expense-project > .expense-project-summary.expense-project-removable {
-  grid-template-columns: minmax(0, var(--fr-1)) auto auto;
-}
-.expense-project-removable .expense-main {
-  grid-column: 1;
-  grid-row: 1;
-}
-.expense-project-removable .expense-amount {
-  grid-column: 2;
-  grid-row: 1;
-}
-.expense-project-removable .expense-project-totals {
-  grid-column: 1;
-  grid-row: 2;
-}
-.expense-project-removable .expense-project-cue {
-  grid-column: 2;
-  grid-row: 2;
-}
-.expense-project-removable .expense-project-remove {
-  grid-column: 3;
-  grid-row: 1 / span 2;
-  justify-self: end;
-}
-.expense-project-remove {
-  padding: var(--ecart-8) var(--ecart-12);
-  min-height: var(--dim-44);
-  border: var(--trait-1) solid var(--status-danger);
-  border-radius: var(--rayon-10);
-  background: var(--raised-surface);
-  color: var(--status-danger);
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-}
-.expense-project-remove:hover {
-  background: var(--status-danger-surface);
-}
-.expense-project-remove:focus-visible {
-  outline: var(--trait-3) solid var(--status-danger);
-  outline-offset: var(--ecart-4);
-}
-@media (max-width: $rupture-820) {
-  .expense-project > .expense-project-summary.expense-project-removable {
-    grid-template-columns: minmax(0, var(--fr-1)) auto;
-  }
-  .expense-project-removable .expense-main {
-    grid-column: 1 / -1;
-  }
-  .expense-project-removable .expense-amount {
-    grid-column: 1;
-    grid-row: 2;
-    text-align: start;
-  }
-  .expense-project-removable .expense-project-totals {
-    grid-column: 1;
-    grid-row: 3;
-  }
-  .expense-project-removable .expense-project-cue {
-    grid-column: 1;
-    grid-row: 4;
-  }
-  .expense-project-removable .expense-project-remove {
-    grid-column: 2;
-    grid-row: 2 / span 3;
-    justify-self: end;
-  }
-}
-.expense-projects-prominent > header {
-  padding: var(--ecart-24);
-  border-inline-start-width: var(--trait-6);
-}
-.expense-projects-prominent > header :is(h2, h3) {
-  font-size: var(--fs-2xl);
-  line-height: var(--lh-tight);
-  margin: 0;
 }
 
 /* Le sens et la couleur des flux se renforcent ; les badges gardent leur état. */
@@ -480,71 +227,8 @@
 .expense-amount[data-flow='expense'] > strong {
   color: var(--status-danger);
 }
-.expense-flow-sign {
-  display: inline;
-  color: inherit;
-}
-.expense-projects-prominent > header {
-  display: grid;
-  gap: var(--ecart-12);
-}
-.expense-projects-prominent > header h3 {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-16);
-}
-.expense-project-mark {
-  color: var(--app-accent);
-  font-size: var(--fs-3xl);
-}
 
 /* Une famille fermée conserve son nom, son montant global et ses états. */
-.expense-category {
-  display: block;
-  border: var(--trait-1) solid var(--section-heading-line);
-  border-radius: var(--card-radius);
-  overflow: hidden;
-}
-.expense-category > .expense-center-heading {
-  position: relative;
-  padding-inline-end: var(--ecart-48);
-  border: 0;
-  border-radius: 0;
-  border-inline-start: var(--trait-4) solid var(--section-heading-ink);
-  list-style: none;
-  cursor: pointer;
-}
-.expense-category > summary::-webkit-details-marker {
-  display: none;
-}
-.expense-category > summary::after {
-  content: '⌄';
-  position: absolute;
-  inset-inline-end: var(--ecart-20);
-  inset-block-start: var(--ecart-20);
-  color: var(--section-heading-ink);
-  font-size: var(--fs-xl);
-  font-weight: var(--fw-bold);
-}
-.expense-category[open] > summary::after {
-  transform: rotate(var(--angle-180));
-}
-.expense-category > summary:hover {
-  background: color-mix(
-    in srgb,
-    var(--section-heading-ink) var(--part-10),
-    var(--section-heading-surface)
-  );
-}
-.expense-category > summary:focus-visible {
-  outline: var(--trait-3) solid var(--section-heading-ink);
-  outline-offset: calc(-1 * var(--trait-3));
-}
-.expense-category-body {
-  display: grid;
-  gap: var(--ecart-16);
-  padding: var(--ecart-16);
-}
 
 /* Une charge se lit de gauche à droite : objet, date, montant, état. */
 .expense-row > summary:has(.expense-date) {
@@ -601,15 +285,6 @@
 .expense-pending-total strong {
   color: var(--status-warning);
 }
-.expense-body > footer {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ecart-12) var(--ecart-24);
-}
-.expense-body > footer > details {
-  width: var(--part-100);
-}
 @media (max-width: $rupture-820) {
   .expense-row > summary:has(.expense-date) {
     grid-template-columns: minmax(0, var(--fr-1)) auto;
@@ -629,15 +304,6 @@
     grid-column: 2;
     grid-row: 2;
     justify-self: end;
-  }
-}
-.expense-category h4 {
-  margin: 0;
-  font-size: var(--fs-lg);
-}
-@media (max-width: $rupture-640) {
-  .expense-category-body {
-    padding: var(--ecart-12);
   }
 }
 
@@ -732,18 +398,34 @@
     margin-block-start: var(--ecart-16);
   }
   .expense-group {
+    --expense-balance-ink: var(--muted);
+    --expense-balance-surface: var(--soft);
     gap: 0;
     border: var(--trait-1) solid var(--card-border);
     border-radius: var(--card-radius);
     overflow: hidden;
     background: var(--raised-surface);
   }
+  .expense-group[data-balance='pos'] {
+    --expense-balance-ink: var(--status-success);
+    --expense-balance-surface: var(--status-success-surface);
+  }
+  .expense-group[data-balance='neg'] {
+    --expense-balance-ink: var(--status-danger);
+    --expense-balance-surface: var(--status-danger-surface);
+  }
   .expense-group > .expense-center-heading {
     padding: var(--ecart-20) var(--ecart-24);
     border: 0;
-    border-inline-start: var(--trait-4) solid var(--status-danger);
+    border-inline-start: var(--trait-4) solid var(--expense-balance-ink);
     border-radius: 0;
-    background: var(--status-danger-surface);
+    background: var(--expense-balance-surface);
+  }
+  .expense-group[data-balance] > .expense-center-heading {
+    border-inline-start-color: var(--expense-balance-ink);
+  }
+  .expense-group[data-balance] .expense-center-total strong {
+    color: var(--expense-balance-ink);
   }
   .expense-group > .expense-row {
     border: 0;
@@ -754,17 +436,28 @@
     padding-block: var(--ecart-20);
     padding-inline-start: var(--ecart-24);
   }
-  .expense-detail-heading {
-    padding-block-end: var(--ecart-12);
-    border-block-end: var(--trait-1) solid var(--card-border);
-  }
-  .expense-body > .expense-facts {
-    padding: var(--ecart-16);
-    background: var(--soft);
-    border-radius: var(--rayon-12);
-  }
-  .expense-body .expense-secondary > p {
-    margin-block-start: var(--ecart-12);
+  details.expense-group {
+    display: block;
+    > summary {
+      position: relative;
+      padding-inline-end: var(--ecart-48);
+      list-style: none;
+      cursor: pointer;
+    }
+    > summary::-webkit-details-marker { display: none; }
+    > summary::after {
+      content: '›';
+      position: absolute;
+      inset-inline-end: var(--ecart-20);
+      inset-block-start: var(--ecart-20);
+      font-size: var(--fs-2xl);
+      color: var(--app-accent);
+    }
+    &[open] > summary::after { transform: rotate(90deg); }
+    > summary:focus-visible {
+      outline: var(--trait-2) solid var(--app-accent);
+      outline-offset: calc(-1 * var(--trait-2));
+    }
   }
   .expense-filters {
     grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1)) auto auto;
@@ -805,8 +498,7 @@
     gap: var(--ecart-12);
     padding-block-start: var(--ecart-12);
   }
-  .expense-list-heading,
-  .expense-detail-heading {
+  .expense-list-heading {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -845,22 +537,6 @@
   }
   .expense-pending-total strong {
     color: var(--status-warning);
-  }
-  .expense-body > :is(.expense-detail-heading, section, .expense-secondary) {
-    grid-column: 1 / -1;
-  }
-  .expense-secondary {
-    padding: var(--ecart-12) var(--ecart-16);
-    border: var(--trait-1) solid var(--card-border);
-    border-radius: var(--card-radius);
-    background: var(--soft);
-  }
-  .expense-secondary > summary {
-    font-weight: var(--fw-semibold);
-    cursor: pointer;
-  }
-  .expense-secondary > .expense-facts {
-    padding-block-start: var(--ecart-16);
   }
   .expense-filters > .bpm-link {
     grid-column: 4;

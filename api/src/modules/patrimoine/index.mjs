@@ -22,7 +22,10 @@ export default {
   id: 'patrimoine',
   label: 'Patrimoine Management',
   level: 2,
-  dependsOn: ['core', 'budget'],
+  role: 'metier',
+  dependsOn: ['users', 'core', 'cycle'],
+  // P4 · Lecture déclarée.
+  reads: ['user'],
   kinds: {
     lifeGoal: { collection: 'lifeGoals', prefix: 'obj', label: 'Objectif de projection', references: { patrimoineId: { kind: 'patrimoine', required: true }, coreProjectId: { kind: 'coreProject', required: true } } },
     patrimoine: {
@@ -89,6 +92,10 @@ export default {
   ],
 
   extensions: {
+    /** Les objets de ce middleware qui tiennent ce projet noyau pour racine (consommé par Budget, BUD-BR-01). */
+    rootHolders(state, projectId, socle) {
+      return socle.om.list(state, 'patrimoine', (x) => x.coreProjectId === projectId).map((x) => x.id);
+    },
     coreProjectContext(state, projectId, socle) {
       const p = socle.om.list(state, 'patrimoine', (x) => x.coreProjectId === projectId)[0];
       return p ? { enrichment: { patrimoineId: p.id } } : {};
@@ -120,8 +127,8 @@ export default {
       const caps = capitalizationsOf(state, socle, p.id);
       const capitalizedCents = caps.reduce((s, c) => s + c.amountCents, 0);
       return {
-        patrimoine: { ...structuredClone(p), openingStock: toEuros(p.openingStockCents), objective: toEuros(p.objectiveCents) },
-        capitalizations: caps.map((c) => ({ ...structuredClone(c), amount: toEuros(c.amountCents) })),
+        patrimoine: { ...p, openingStock: toEuros(p.openingStockCents), objective: toEuros(p.objectiveCents) },
+        capitalizations: caps.map((c) => ({ ...c, amount: toEuros(c.amountCents) })),
         // Lecture brute de test ; les chiffres présentés à l'utilisateur passent par les métriques BPM.
         raw: { openingStock: toEuros(p.openingStockCents), capitalized: capitalizedCents / 100 },
       };
@@ -134,8 +141,9 @@ export default {
       /** Patrimoine unique du user (PAT-01) : même racine noyau que le Budget « Projet de vie ». */
       buildPatrimoine(tx, { coreProjectId, principalBudgetId, openingStock, openingDate, objective }) {
         if (patrimoineOf(tx.draft, tx.userId)) fail('UNIQUENESS_VIOLATION', 'Ce user possède déjà son Patrimoine.', { userId: tx.userId });
-        const budget = om.owned(tx.draft, 'budget', principalBudgetId, tx.userId);
-        if (budget.role !== 'life' || budget.coreProjectId !== coreProjectId) {
+        // Indépendance des middlewares : l'ancre de vie est fournie par extension, Patrimoine ne lit pas Budget.
+        const anchor = socle.registry.extensions('lifeAnchor').map((find) => find(tx.draft, tx.userId, socle)).find(Boolean);
+        if (!anchor || anchor.id !== principalBudgetId || anchor.coreProjectId !== coreProjectId) {
           fail('INCOMPATIBLE_REFERENCE', 'Le Patrimoine partage la racine noyau du Budget « Projet de vie ».', { principalBudgetId });
         }
         return om.create(tx, 'patrimoine', {
@@ -184,13 +192,13 @@ export default {
     };
   },
 
-  checks(state) {
+  checks(state, socle) {
     const out = [];
     for (const u of Object.values(state.users)) {
       const pats = Object.values(state.patrimoines).filter((p) => p.userId === u.id);
       const p = pats[0];
-      const b = p ? state.budgets[p.principalBudgetId] : null;
-      const shared = !p || (b?.role === 'life' && b.coreProjectId === p.coreProjectId);
+      const anchor = p ? socle.registry.extensions('lifeAnchor').map((find) => find(state, u.id, socle)).find(Boolean) : null;
+      const shared = !p || (anchor?.id === p.principalBudgetId && anchor.coreProjectId === p.coreProjectId);
       out.push(check('PAT-01', 'integrity', 'patrimoine', `Patrimoine unique pour ${u.label}, racine partagée avec le Budget « Projet de vie »`, '≤ 1 Patrimoine ; racine commune', `${pats.length} Patrimoine ; racine ${p ? (shared ? 'commune' : 'différente') : 'sans objet'}`, pats.length <= 1 && shared ? 'passed' : 'failed', pats.map((x) => x.id)));
     }
     for (const g of Object.values(state.lifeGoals ?? {})) {

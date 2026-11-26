@@ -5,7 +5,8 @@
 // Usage : API arrêtée (un seul écrivain), puis
 //   npm run seed:projets -- [--nom "TEST PROJETS · Famille Laurent"] [--data <store.json>]
 // Le stockage existant est sauvegardé à côté avant l'écriture ; les autres users ne sont pas touchés.
-import { access, copyFile } from 'node:fs/promises';
+import { access } from 'node:fs/promises';
+import { snapshotStore } from '../src/socle/store.mjs';
 import { join, resolve } from 'node:path';
 import { createSocle } from '../src/socle/index.mjs';
 import { SOCLE_MODULES } from '../src/modules/index.mjs';
@@ -41,7 +42,7 @@ try {
   if (Object.values(socle.state.users).some((u) => u.label === LABEL)) refuse(`Un user « ${LABEL} » existe déjà. Choisissez un autre nom : npm run seed:projets -- --nom "TEST PROJETS · autre foyer"`);
   if (await access(DATA_FILE).then(() => true, () => false)) {
     const backup = join(DATA_FILE, '..', `store.before-seed-projets-${now.toISOString().replace(/[:.]/g, '-')}.json`);
-    await copyFile(DATA_FILE, backup);
+    await snapshotStore(DATA_FILE, backup);
     console.log(`Sauvegarde : ${backup}`);
   }
   const r = await runProjectScenarios(socle, { start, until, label: LABEL });

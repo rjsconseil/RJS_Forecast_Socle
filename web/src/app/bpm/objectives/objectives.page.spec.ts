@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { lifeLinkApiStub } from '../life/life-projects-link.testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Api, RecetteContext } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
+import { BpmApi } from '../data/bpm-api.service';
 import { BpmObjectivesPage } from './objectives.page';
 
 const goal = {
@@ -86,7 +87,7 @@ describe('page dédiée Objectifs et avenir', () => {
           { path: 'vision/projection', component: BpmObjectivesPage, data: { workspace: { key: 'vision-projection', parent: '/vision', title: 'Projection et hypothèses', lead: 'Préparer mon scénario.' } } },
           { path: 'vision/reperes', component: BpmObjectivesPage, data: { workspace: { key: 'vision-landmarks', parent: '/vision', title: 'Épargne et patrimoine', lead: 'Fixer mes repères.' } } },
         ]),
-        { provide: BpmApi, useValue: { ...bpm, updatePatrimoine: api.updatePatrimoine } },
+        { provide: BpmApi, useValue: { projectFlows: async () => null, financialOutlook: async () => null, ...lifeLinkApiStub(), ...bpm, updatePatrimoine: api.updatePatrimoine } },
         { provide: Api, useValue: {} },
       ],
     });
@@ -243,7 +244,7 @@ describe('page dédiée Objectifs et avenir', () => {
     await harness.navigateByUrl('/vision/reperes');
     await settle();
     await fill('wealthTarget', '49000');
-    expect(element('.bpm-toolbar-focus').textContent).toContain('repère non enregistré');
+    expect(element('.page-toolbar-focus').textContent).toContain('repère non enregistré');
     await click('Enregistrer le cap saisi');
     expect(api.updatePatrimoine).toHaveBeenCalledWith({ expectedRevision: 4, objective: 49000 });
     expect(bpm['updateVision']).not.toHaveBeenCalled();
@@ -252,7 +253,7 @@ describe('page dédiée Objectifs et avenir', () => {
   it('propose de revoir l’objectif en retard avant une intention future', async () => {
     bpm['goals'].mockResolvedValue([{ ...goal, id: 'past', label: 'Ancien achat', date: '2026-09-01' }, goal]);
     await click('Actualiser');
-    expect(element('.bpm-toolbar-focus').textContent).toContain('Échéance passée : Ancien achat');
+    expect(element('.page-toolbar-focus').textContent).toContain('Échéance passée : Ancien achat');
     await click('Revoir Ancien achat');
     expect(element<HTMLInputElement>('input[name="label"]').value).toBe('Ancien achat');
   });
@@ -263,8 +264,8 @@ describe('page dédiée Objectifs et avenir', () => {
     await click('Actualiser');
     await harness.navigateByUrl('/vision?q=etudes');
     await settle();
-    expect(element('.bpm-toolbar-primary').textContent).toContain('Revoir Études');
-    expect(element('.bpm-toolbar-primary').textContent).not.toContain('Ancien achat');
+    expect(element('.page-toolbar-primary').textContent).toContain('Revoir Études');
+    expect(element('.page-toolbar-primary').textContent).not.toContain('Ancien achat');
     expect(element('.page-toolbar-scope').textContent).toContain('1 affiché(s) sur 2');
     await click('Revoir Études');
     expect(element<HTMLInputElement>('input[name="label"]').value).toBe('Études');
@@ -279,7 +280,7 @@ describe('page dédiée Objectifs et avenir', () => {
     await fill('wealthTarget', '51000');
     await harness.navigateByUrl('/vision');
     await settle();
-    expect(element('.bpm-toolbar-primary').textContent).toContain('Enregistrer le cap saisi');
+    expect(element('.page-toolbar-primary').textContent).toContain('Enregistrer le cap saisi');
     expect(element('.page-toolbar-scope').textContent).toContain('Cap patrimonial');
     await click('Enregistrer le cap saisi');
     await vi.waitFor(async () => { await settle(); expect(element('.page-toolbar-result').textContent).toContain('Cap patrimonial enregistré'); });
@@ -310,7 +311,7 @@ describe('page dédiée Objectifs et avenir', () => {
     await harness.navigateByUrl('/vision/projection');
     await settle();
     expect(element<HTMLInputElement>('input[name="rate"]').value).toBe('6,5');
-    expect(element('.bpm-toolbar-primary').textContent).toContain('Enregistrer le scénario saisi');
+    expect(element('.page-toolbar-primary').textContent).toContain('Enregistrer le scénario saisi');
     expect(bpm['updateVision']).not.toHaveBeenCalled();
   });
 

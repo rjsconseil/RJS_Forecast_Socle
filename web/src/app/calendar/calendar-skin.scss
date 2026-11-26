@@ -1,0 +1,13 @@
+/*
+ * Présentation canonique du calendrier (la même pour chaque calendrier), une feuille par rôle. L'ordre compte :
+ * chaque feuille complète la précédente.
+ *   tokens           les réglages : largeur de l'agenda, arrondi, proportions du carré, ombres, fondus
+ *   base             commandes, grille et agenda
+ *   relief           ombres, fondus, survol, cases sans repère
+ *   square           le carré commun au mois et à l'année
+ *   responsive, variants, personalization   adaptations, variantes et personnalisation, en dernier
+ */
+@use './styles/tokens';
+@use './styles/base';
+@use './styles/relief';
+@use './styles/square';

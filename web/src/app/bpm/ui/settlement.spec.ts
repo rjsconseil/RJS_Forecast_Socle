@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { RegisterLine } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { RegisterLine } from '../data/bpm-models';
 import { Settlement } from './settlement';
 
 describe('règlement partagé (ligne rapide et fiche détaillée)', () => {

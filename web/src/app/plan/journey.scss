@@ -314,6 +314,12 @@
     .nav-edge {
       padding-inline: 12px;
     }
+    .nav-trail > summary { gap: 4px; padding-inline: 4px; }
+    .nav-position { padding-inline: 4px; }
+    .nav-trail-zone { min-width: 0; }
+  }
+  @media (max-width: 400px) {
+    .nav-trail > summary :is(.nav-trail-zone, .nav-position) { display: none; }
   }
 }
 

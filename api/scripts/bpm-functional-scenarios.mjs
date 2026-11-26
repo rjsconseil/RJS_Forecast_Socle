@@ -728,17 +728,11 @@ export async function runBpmFunctionalScenarios(
           );
         },
       );
-      await scenario("F09 Plafonds indépendants et catégorie", async () => {
+      await scenario("F09 Plafond par poste, jamais bloquant", async () => {
         const budget = B.lifeBudgetOf(socle.state, funding.ctx.userId);
         await B.setCaps(funding.ctx, budget.id, {
           expectedRevision: budget.revision,
           caps: { "std:alimentation": 40, "std:loisirs": 300 },
-        });
-        const cat = await B.createCategory(funding.ctx, {
-          requestKey: key(),
-          label: "Courses de recette",
-          costCenterRef: "std:alimentation",
-          cap: 30,
         });
         await B.createOperation(funding.ctx, {
           requestKey: key(),
@@ -748,16 +742,15 @@ export async function runBpmFunctionalScenarios(
           date: until,
           status: "realized",
           costCenterRef: "std:alimentation",
-          categoryId: cat.category.id,
         });
         const review = socle.modules.bpm.reads.capsReview(funding.ctx);
         check(
-          "F09 Centre et catégorie tous deux dépassés",
+          "F09 Poste dépassé, l'autre dans son plafond",
           [
             review.centers.find((r) => r.ref === "std:alimentation").over,
-            review.categories.find((r) => r.id === cat.category.id).over,
+            review.centers.find((r) => r.ref === "std:loisirs").over,
           ],
-          [true, true],
+          [true, false],
         );
       });
     }

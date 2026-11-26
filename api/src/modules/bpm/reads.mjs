@@ -4,35 +4,23 @@
 // Les sommes passent par `budgetLines` (middleware Budget) ou par les métriques administrées :
 // un même montant n'est jamais recalculé avec une autre formule. Aucune lecture n'écrit.
 import { fail } from '../../socle/errors.mjs';
-import { date, money, oneOf } from '../../socle/validation.mjs';
-import { CADENCES, PER_YEAR, monthlyAverageCents, occurrenceDates, parseOccurrenceKey } from '../budget/recurrence.mjs';
-import { addDays, today, periodContaining } from '../budget/periods.mjs';
-import { GOAL_TYPES } from '../patrimoine/projection.mjs';
-import { percent } from '../patrimoine/objectives.mjs';
-import { fundedStandardsOf, isValidatedCharge, specialProjectLines } from './projects.mjs';
-import { essentialRefsOf, NATURES, NATURE_LABEL, natureOf } from './natures.mjs';
-
-const RESULT = 'bpm.resultatPeriode';
-const SUMMARY_KEYS = ['bpm.revenus', 'bpm.charges', RESULT, 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu', 'bpm.tauxEpargne', 'bpm.patrimoineConstitue', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif'];
-const STATUS_LABEL = { settled: 'Réglé', due: 'Du jour', late: 'En retard', pending: 'À venir', unrealized: 'Non réalisé' };
-const NATURE_ORDER = ['entrees', ...NATURES];
-/** Groupe et filtre des dépenses sans catégorie personnalisée. */
-const NO_CATEGORY = '__none__';
-
-const cents = (v) => (v === null || v === undefined ? null : Math.round(v * 100));
-const sum = (lines, f) => lines.reduce((s, l) => s + (f(l) ?? 0), 0);
-const sign = (direction) => (direction === 'income' ? 1 : -1);
-
-/** Montant venant d'une adresse (texte « 12,50 » ou « 12.50 ») : converti à la frontière, puis validé en centimes. */
-const queryMoney = (field, value, opts) => money(field, typeof value === 'string' && value.trim() !== '' ? Number(value.replace(',', '.').replace(/\s/g, '')) : value, opts);
-
+import { date } from '../../socle/validation.mjs';
+import { addDays, today, periodContaining } from '../budget/api.mjs';
+import { GOAL_TYPES } from '../patrimoine/api.mjs';
+import { linkedProjectBudgets, isValidatedMove, projectAccountingDate, projectFundingSource } from '../budget/api.mjs';
+import { createCapsReads } from './reads-caps.mjs';
+import { cents } from './format.mjs';
+import { SUMMARY_KEYS, STATUS_LABEL, WITH_PROJECTS, SCOPE_LABELS } from './reads-shared.mjs';
+import { createRegisterReads } from './reads-register.mjs';
+import { createCenterReads } from './reads-centers.mjs';
+import { createOutlookReads } from './reads-outlook.mjs';
 
 /**
  * @param socle socle complet
  * @param h     helpers du module BPM : requireComposition, metricContext, cycleState, figuresFor, closuresOf
  */
 export function createReads(socle, h) {
-  const { om, metrics } = socle;
+  const { om } = socle;
   const budget = () => socle.modules.budget;
 
   // ---------- contexte commun ----------
@@ -45,7 +33,7 @@ export function createReads(socle, h) {
     const budgets = om
       .list(state, 'budget', (b) => b.userId === userId)
       .sort((a, b) => (a.role === b.role ? a.createdAt.localeCompare(b.createdAt) : a.role === 'life' ? -1 : 1))
-      .map((b) => ({ id: b.id, name: b.role === 'life' ? 'Budget du projet de vie' : b.name, role: b.role, coreProjectId: b.coreProjectId, capsCents: b.capsCents ?? {}, revision: b.revision }));
+      .map((b) => ({ id: b.id, name: b.role === 'life' ? 'Budget du projet de vie' : b.name, role: b.role, coreProjectId: b.coreProjectId, fundingSource: b.fundingSource ?? 'cycle', capsCents: b.capsCents ?? {}, revision: b.revision }));
     return { state, userId, comp, cycle, cs, mctx, period: mctx.period, budgets };
   }
 
@@ -54,11 +42,12 @@ export function createReads(socle, h) {
     return {
       user: { id: user.id, label: user.label, userType: user.userType },
       scope,
-      scopeLabel: scope === 'principal' ? 'Budget du projet de vie' : 'Tous les Budgets du user (chaque Budget une fois ; aucun flux père/enfant calculé)',
+      scopeLabel: SCOPE_LABELS[scope],
       budgets: b.budgets,
       period: b.period ? { ...b.period, endExclusive: addDays(b.period.end, 1) } : null,
       // Bornes de navigation : de la première période du cycle à la période courante (seules lisibles).
       periods: b.cs ? { firstKey: b.cs.first.key, currentKey: b.cs.current.key } : null,
+      cycleAnchorDay: b.cycle?.anchorDay ?? null,
       calculationDate: today(),
       revision: b.state.revision,
       unit: 'centimes (EUR)',
@@ -81,6 +70,22 @@ export function createReads(socle, h) {
     return { ...v, status, statusLabel: STATUS_LABEL[status], centerKnown: !String(v.costCenterLabel ?? '').endsWith('(retiré)') && v.costCenterLabel !== null };
   };
 
+  function decorateProjectLine(b, line) {
+    const view = decorate(b, line);
+    const pb = b.state.budgets[line.budgetId];
+    if (pb?.role !== 'standard') return view;
+    const operation = b.state.operations[line.operationId];
+    const fundingSource = projectFundingSource(operation ?? line, pb);
+    const posted = operation && isValidatedMove(operation, pb);
+    // Une échéance imputable au patrimoine reste ouverte même après la fin du cycle de sa date prévue.
+    const status = !line.settled && fundingSource === 'patrimoine' ? statusOf(b.state, null, line) : view.status;
+    return {
+      ...view, status, statusLabel: STATUS_LABEL[status], fundingSource,
+      project: { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: b.state.coreProjects[pb.coreProjectId]?.title ?? pb.name },
+      projectPosting: posted ? 'validated' : line.settled ? 'historical' : 'planned',
+    };
+  }
+
   /** Fenêtre de lecture : période du cycle, ou vue libre semaine/mois/année (n'altère pas le cycle). */
   function windowOf(b, q) {
     if (q.from || q.to) {
@@ -89,83 +94,45 @@ export function createReads(socle, h) {
       if (to < from) fail('VALIDATION', 'La fin de la fenêtre précède son début.', { field: 'to' });
       return { from, to, kind: 'custom' };
     }
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
+    if (!b.period) {
+      if (q.scope !== WITH_PROJECTS) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
+      const month = periodContaining(today(), 1);
+      return { from: month.start, to: month.end, kind: 'custom' };
+    }
     return { from: b.period.start, to: b.period.end, kind: 'period' };
   }
 
-  /**
-   * Charges des projets de la vie validées comme réglées (Budgets standards financés par le budget de vie, réglées
-   * depuis l'attribution) : elles comptent dans les dépenses du budget de vie, jamais avant leur validation.
-   */
-  // Un remboursement reçu par le projet se lit comme une charge négative, sur le poste de la dernière charge de sa tâche :
-  // les mêmes lignes donnent le Dépensé, les natures et les plafonds, sans écart avec `projets.chargesReglees`.
-  const validatedProjectLines = (b, { from, to, by }) =>
-    fundedStandardsOf(b.state, b.comp.budgetId).flatMap((sb) =>
-      budget()
-        .budgetLines(b.state, [sb.id], { from, to, by })
-        .filter((l) => l.kind === 'operation' && l.settled && l.realizedDate >= sb.allocationDate)
-        .map((l) => (l.direction === 'income' ? refundLine(b.state, sb, l) : l)),
-    );
-  function refundLine(state, sb, l) {
-    const charge = Object.values(state.operations)
-      .filter((o) => o.budgetId === sb.id && o.direction === 'charge' && o.status !== 'cancelled' && (!l.taskId || o.taskId === l.taskId) && o.date <= (l.realizedDate ?? l.plannedDate))
-      .sort((x, y) => y.date.localeCompare(x.date))[0];
-    return {
-      ...l,
-      direction: 'charge',
-      refund: true,
-      realizedCents: -l.realizedCents,
-      plannedCents: -l.plannedCents,
-      standardCostCenter: charge ? charge.standardCostCenter : 'divers',
-      costCenterId: charge ? charge.costCenterId : null,
-      categoryId: charge?.categoryId ?? null,
-    };
+  /** Les montants du cycle suivent l'imputation validée ; la date bancaire reste visible. */
+  function projectLinesOf(source) {
+    return (b, { from, to, by }) => linkedProjectBudgets(b.state, b.comp.budgetId).flatMap(sb => {
+      const operations = Object.values(b.state.operations).filter(o => isValidatedMove(o, sb) && projectFundingSource(o, sb) === source &&
+        (by === 'planned' ? o.date : projectAccountingDate(o)) >= from && (by === 'planned' ? o.date : projectAccountingDate(o)) <= to);
+      if (!operations.length) return [];
+      const ids = new Set(operations.map(o => o.id));
+      const dates = operations.map(o => o.date).sort();
+      return budget().budgetLines(b.state, [sb.id], { from: dates[0], to: dates.at(-1), by: 'planned' })
+        .filter(l => ids.has(l.operationId))
+        .map(l => ({ ...l, accountingDate: projectAccountingDate(b.state.operations[l.operationId]), fundingSource: source }));
+    });
   }
-
-  /** Charge spéciale du budget de vie (budget attribué, dépassement facturé) : présentée, jamais totalisée. */
-  const specialLine = (b, sp) => ({
-    id: sp.id,
-    kind: sp.kind,
-    operationId: null,
-    recurrenceId: null,
-    occurrenceDate: null,
-    occurrenceKey: null,
-    budgetId: b.comp.budgetId,
-    userId: b.userId,
-    direction: 'charge',
-    label: sp.label,
-    plannedDate: sp.date,
-    plannedCents: sp.cents,
-    realizedDate: null,
-    realizedCents: null,
-    settled: false,
-    standardCostCenter: null,
-    costCenterId: null,
-    costCenterRef: 'projects',
-    costCenterLabel: 'Charges des projets de la vie',
-    centerKnown: true,
-    budgetName: 'Budget du projet de vie',
-    budgetRole: 'life',
-    cadence: 'once',
-    cadenceLabel: 'Ponctuelle',
-    firstDate: null,
-    endDate: null,
-    note: null,
-    taskId: null,
-    taskTitle: null,
-    revision: null,
-    differenceCents: null,
-    status: 'project',
-    statusLabel: sp.statusLabel,
-    special: true,
-    project: { budgetId: sp.budget.id, coreProjectId: sp.budget.coreProjectId, name: sp.budget.name },
-  });
+  const validatedProjectLines = projectLinesOf('cycle');
+  const patrimoineProjectLines = projectLinesOf('patrimoine');
+  /** Paiements notifiés dans cette période, imputés ailleurs : mémoire bancaire sans seconde charge. */
+  function paymentTrace(b, { from, to }, by = 'realized') {
+    return linkedProjectBudgets(b.state, b.comp.budgetId).flatMap(sb => budget().budgetLines(b.state, [sb.id], { from, to, by })
+      .filter(l => {
+        const o = b.state.operations[l.operationId];
+        const accounting = o && projectAccountingDate(o);
+        return o && isValidatedMove(o, sb) && projectFundingSource(o, sb) === 'cycle' && (accounting < from || accounting > to);
+      }).map(l => ({ ...decorate(b, l), projectCharge: true, fundingSource: 'cycle', accountingDate: projectAccountingDate(b.state.operations[l.operationId]) })));
+  }
 
   const budgetIdsOf = (b, q) => {
     if (q.budgetId) {
       if (!b.budgets.some((x) => x.id === q.budgetId)) fail('NOT_FOUND', 'Budget inconnu pour ce user.', { field: 'budgetId' });
       return [q.budgetId];
     }
+    if (q.scope === WITH_PROJECTS) return [b.comp.budgetId, ...linkedProjectBudgets(b.state, b.comp.budgetId).map(x => x.id)];
     return q.scope === 'consolidated' ? b.budgets.map((x) => x.id) : [b.comp.budgetId];
   };
 
@@ -184,767 +151,17 @@ export function createReads(socle, h) {
     return { context: contextOf(b), figures: out, comparison: compared, closed: b.period?.status === 'closed' };
   }
 
-  // ---------- registre ----------
-
-  function register(ctx, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    const win = windowOf(b, q);
-    const dateBasis = oneOf('dateBasis', q.dateBasis, ['planned', 'realized'], 'planned');
-    const all = budget().budgetLines(b.state, budgetIdsOf(b, q), { from: win.from, to: win.to, by: dateBasis }).map((l) => decorate(b, l));
-    // Budget du projet de vie : ses charges de projet validées comptent ; ses charges spéciales sont présentées à part.
-    if (!q.budgetId && q.scope !== 'consolidated') {
-      for (const l of validatedProjectLines(b, { from: win.from, to: win.to, by: dateBasis })) all.push({ ...decorate(b, l), projectCharge: true });
-      if (dateBasis === 'planned') for (const sp of specialProjectLines(b.state, b.comp.budgetId, win)) all.push(specialLine(b, sp));
-    }
-    const selectedDate = (line) => dateBasis === 'realized' ? line.realizedDate : line.plannedDate;
-    all.sort((x, y) => selectedDate(x).localeCompare(selectedDate(y)) || x.label.localeCompare(y.label));
-    // Nature d'une charge (indispensable, courante, projet) : paramètre `bpm.chargesIndispensables` [P].
-    const essentials = essentialRefsOf(socle, b.state);
-    for (const l of all) l.nature = natureOf(l, essentials);
-    const nature = q.nature ? oneOf('nature', q.nature, NATURES) : null;
-    const needle = q.q?.trim().toLowerCase();
-    const lines = all.filter(
-      (l) =>
-        (!q.direction || l.direction === q.direction) &&
-        (!nature || l.nature === nature) &&
-        (!q.status || l.status === q.status) &&
-        (!q.center || (q.center === '__none__' ? !l.centerKnown : l.costCenterRef === q.center)) &&
-        (!q.category || (q.category === NO_CATEGORY ? !l.categoryId : l.categoryId === q.category)) &&
-        (!q.taskId || l.taskId === q.taskId) &&
-        (!needle || [l.label, l.note, l.costCenterLabel, l.categoryLabel].some((t) => (t ?? '').toLowerCase().includes(needle))),
-    );
-    const groupBy = oneOf('groupBy', q.groupBy, ['center', 'category', 'project', 'nature', 'date', 'none'], 'center');
-    const keyOf = {
-      center: (l) => [l.costCenterRef, l.costCenterLabel ?? 'Centre à préciser'],
-      category: (l) => (l.categoryId ? [l.categoryId, l.categoryLabel ?? 'Catégorie retirée'] : [NO_CATEGORY, 'Sans catégorie']),
-      project: (l) => [l.budgetId, l.budgetRole === 'life' ? 'Budget du projet de vie' : l.budgetName],
-      nature: (l) => (l.nature ? [l.nature, NATURE_LABEL[l.nature]] : ['entrees', 'Entrées']),
-      date: (l) => [selectedDate(l), selectedDate(l)],
-      none: () => ['all', 'Toutes les lignes'],
-    }[groupBy];
-    const groups = new Map();
-    for (const l of lines) {
-      const [k, label] = keyOf(l);
-      if (!groups.has(k)) groups.set(k, { key: k, label, plannedCents: 0, paidCents: 0, toPayCents: 0, specialCents: 0, lineIds: [] });
-      const g = groups.get(k);
-      g.lineIds.push(l.id);
-      // Charges spéciales des projets : présentées, jamais totalisées (comptées à la validation de leurs dépenses).
-      if (l.special) {
-        g.specialCents += l.plannedCents;
-        continue;
-      }
-      g.plannedCents += l.plannedCents;
-      g.paidCents += l.settled ? l.realizedCents : 0;
-      g.toPayCents += ['late', 'due', 'pending'].includes(l.status) ? l.plannedCents : 0;
-    }
-    const open = (l) => ['late', 'due', 'pending'].includes(l.status);
-    const counted = lines.filter((l) => !l.special);
-    // Plafonds de la période (budget du projet de vie seulement) : état de chaque centre et de chaque catégorie.
-    const principal = !q.budgetId && q.scope !== 'consolidated';
-    const caps = principal && win.kind === 'period' ? capsBrief(capsRead(b)) : null;
-    const ordered = [...groups.values()];
-    return {
-      context: contextOf(b, q.budgetId ? 'budget' : q.scope === 'consolidated' ? 'consolidated' : 'principal'),
-      window: win,
-      dateBasis,
-      selection: dateBasis === 'realized'
-        ? 'Les règlements sont sélectionnés par leur date réelle, comme les montants reçu et dépensé du tableau de bord. Les dates prévues restent visibles pour expliquer les décalages.'
-        : 'Les lignes sont sélectionnées par leur date prévue ; le réalisé des synthèses suit la date réelle de règlement.',
-      filters: { q: q.q ?? null, direction: q.direction ?? null, nature, status: q.status ?? null, center: q.center ?? null, category: q.category ?? null, taskId: q.taskId ?? null, budgetId: q.budgetId ?? null, groupBy, dateBasis },
-      totals: {
-        followsFilters: true,
-        paidCents: sum(counted.filter((l) => l.settled), (l) => l.realizedCents),
-        toPayCents: sum(counted.filter(open), (l) => l.plannedCents),
-        unrealizedCents: sum(counted.filter((l) => l.status === 'unrealized'), (l) => l.plannedCents),
-        plannedCents: sum(counted, (l) => l.plannedCents),
-        specialCents: sum(lines.filter((l) => l.special), (l) => l.plannedCents),
-        // Vue « Tout » : entrées et charges séparées, et net signé (reçu − payé ; prévu entrées − prévu charges).
-        byDirection: Object.fromEntries(
-          ['income', 'charge'].map((d) => {
-            const ls = counted.filter((l) => l.direction === d);
-            return [d, { settledCents: sum(ls.filter((l) => l.settled), (l) => l.realizedCents), openCents: sum(ls.filter(open), (l) => l.plannedCents), plannedCents: sum(ls, (l) => l.plannedCents), lineCount: ls.length }];
-          }),
-        ),
-        netSettledCents: sum(counted.filter((l) => l.settled), (l) => (l.direction === 'income' ? l.realizedCents : -l.realizedCents)),
-        netPlannedCents: sum(counted, (l) => (l.direction === 'income' ? l.plannedCents : -l.plannedCents)),
-        lineCount: lines.length,
-        unfilteredCount: all.length,
-      },
-      // Par nature : entrées, puis indispensables, courantes et projets ; par catégorie : « Sans catégorie » en dernier.
-      groups:
-        groupBy === 'nature'
-          ? ordered.sort((x, y) => NATURE_ORDER.indexOf(x.key) - NATURE_ORDER.indexOf(y.key))
-          : groupBy === 'category'
-            ? ordered.sort((x, y) => (x.key === NO_CATEGORY) - (y.key === NO_CATEGORY))
-            : ordered,
-      caps,
-      lines,
-    };
-  }
-
-  /** Détail d'une ligne (opération ou occurrence attendue) : définition, règlements et identifiants. */
-  /** Projet de la vie qui porte une échéance (null pour le budget de vie) : de quoi prévenir avant un règlement hors enveloppe. */
-  function projectOfLine(state, view) {
-    const pb = state.budgets[view.budgetId];
-    if (pb?.role !== 'standard') return null;
-    const funded = Number.isInteger(pb.allocationCents) && typeof pb.allocationDate === 'string';
-    const operation = view.operationId ? state.operations[view.operationId] : null;
-    const inclusion = view.direction === 'income' ? 'income' : !funded ? 'unfunded' : !view.settled ? 'pending' : operation && isValidatedCharge(operation, pb) ? 'included' : 'before-allocation';
-    return { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, taskFundingRequired: !!pb.taskFundingRequired, allocationDate: funded ? pb.allocationDate : null, taskTitle: view.taskId ? state.tasks[view.taskId]?.title ?? null : null, inclusion };
-  }
-
-  function lineDetail(ctx, lineId, { periodKey } = {}) {
-    const b = base(ctx, { periodKey });
-    const state = b.state;
-    const occ = parseOccurrenceKey(lineId);
-    let line;
-    let rec = null;
-    if (occ) {
-      rec = om.owned(state, 'recurrence', occ.recurrenceId, b.userId);
-      const settled = om.list(state, 'operation', (o) => o.recurrenceId === rec.id && o.occurrenceDate === occ.date)[0];
-      line = budget().budgetLines(state, [rec.budgetId], { from: occ.date, to: occ.date, by: 'planned' }).find((l) => l.occurrenceKey === lineId || l.operationId === settled?.id);
-    } else {
-      const o = om.owned(state, 'operation', lineId, b.userId);
-      rec = o.recurrenceId ? state.recurrences[o.recurrenceId] : null;
-      line = budget().budgetLines(state, [o.budgetId], { from: o.date, to: o.date, by: 'planned' }).find((l) => l.operationId === o.id);
-    }
-    if (!line) fail('NOT_FOUND', "Cette échéance n'existe pas (hors des dates de sa définition).", { lineId });
-    const view = decorate(b, line);
-    // Échéances écartées de la définition : elles se rétablissent depuis n'importe quelle échéance de la série.
-    const skipped = rec
-      ? om
-          .list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'cancelled' && o.cancelReason !== 'Définition supprimée')
-          .sort((x, y) => x.occurrenceDate.localeCompare(y.occurrenceDate))
-          .map((o) => ({ operationId: o.id, occurrenceDate: o.occurrenceDate, plannedCents: o.amountCents, reason: o.cancelReason ?? null, revision: o.revision }))
-      : [];
-    const settlements = rec
-      ? om
-          .list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'realized')
-          .sort((x, y) => y.realizedDate.localeCompare(x.realizedDate))
-          .map((o) => ({ operationId: o.id, occurrenceDate: o.occurrenceDate, plannedCents: o.amountCents, realizedCents: o.realizedAmountCents, realizedDate: o.realizedDate, outsidePeriod: !b.period || o.realizedDate < b.period.start || o.realizedDate > b.period.end }))
-      : view.settled
-        ? [{ operationId: view.operationId, occurrenceDate: null, plannedCents: view.plannedCents, realizedCents: view.realizedCents, realizedDate: view.realizedDate, outsidePeriod: !b.period || view.realizedDate < b.period.start || view.realizedDate > b.period.end }]
-        : [];
-    // Même portée que la garde d'écriture BPM : le budget de vie, ou les dates depuis
-    // l'attribution d'un projet financé. Un règlement antérieur reste hors de cette enveloppe.
-    const pb = state.budgets[view.budgetId];
-    const protectedClosure = (ymd) => ymd && (view.budgetId === b.comp.budgetId || Number.isInteger(pb?.allocationCents) && pb?.allocationDate && ymd >= pb.allocationDate) ? closedPeriodOf(state, b.cycle, ymd) : null;
-    const editClosure = protectedClosure(view.plannedDate) ?? protectedClosure(view.realizedDate);
-    const canEdit = view.kind === 'occurrence' || !editClosure;
-    const timingPeriod = (ymd) => {
-      if (!ymd || b.cycle?.state !== 'active') return null;
-      const p = periodContaining(ymd, b.cycle.anchorDay);
-      const status = closedPeriodOf(state, b.cycle, ymd) ? 'closed' : p.end < today() ? 'ended' : p.start > today() ? 'future' : 'current';
-      return { key: p.key, label: p.label, start: p.start, end: p.end, status };
-    };
-    return {
-      context: contextOf(b),
-      line: view,
-      definition: rec ? budget().recurrenceView(state, rec) : null,
-      settlements,
-      skipped,
-      ids: { lineId, operationId: view.operationId, recurrenceId: view.recurrenceId, budgetId: view.budgetId, taskId: view.taskId },
-      project: projectOfLine(state, view),
-      timing: { plannedPeriod: timingPeriod(view.plannedDate), realizedPeriod: timingPeriod(view.realizedDate) },
-      actions: {
-        canSettle: !view.settled && !(view.direction === 'charge' && pb?.taskFundingRequired && !Number.isInteger(pb.allocationCents)),
-        canCancelSettlement: view.settled && !protectedClosure(view.realizedDate),
-        canEdit,
-        // Doublon ou erreur de saisie : une opération ponctuelle s'annule tant que ses dates ne sont pas closes.
-        canCancelEntry: view.kind === 'operation' && !view.recurrenceId && !editClosure,
-        // Échéance d'une définition : elle s'écarte tant qu'elle n'est pas réglée ; la définition se supprime tant qu'aucune n'est réglée.
-        canSkipOccurrence: !!rec && !view.settled,
-        canDeleteDefinition: !!rec && !om.list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'realized').length,
-        editReason: canEdit ? null : `La période ${editClosure.periodLabel ?? editClosure.periodKey} est close : cette opération est conservée dans son historique.`,
-        settlementPolicy: 'Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
-      },
-    };
-  }
-
-  // ---------- centres et entrées ----------
-
-  function centersRead(b, direction, budgetIds) {
-    const { start, end } = b.period;
-    const realized = budget().budgetLines(b.state, budgetIds, { from: start, to: end, by: 'realized' });
-    // Budget du projet de vie : les charges de projet validées font partie du dépensé, réparties sur leurs centres.
-    if (budgetIds.length === 1 && budgetIds[0] === b.comp.budgetId) realized.push(...validatedProjectLines(b, { from: start, to: end, by: 'realized' }));
-    const planned = budget().budgetLines(b.state, budgetIds, { from: start, to: end, by: 'planned' });
-    const caps = b.state.budgets[b.comp.budgetId].capsCents ?? {};
-    const centers = budget().costCentersOf(b.state, b.userId).filter((c) => c.direction === direction);
-    const refOf = (l) => l.costCenterId ?? `std:${l.standardCostCenter}`;
-    const known = new Set(centers.map((c) => c.ref));
-    const extra = [...new Set([...realized, ...planned].filter((l) => l.direction === direction && !known.has(refOf(l))).map(refOf))].map((ref) => ({ ref, label: `${ref.replace('std:', '')} (retiré)`, direction }));
-    const receivedCents = sum(realized.filter((l) => l.direction === 'income'), (l) => l.realizedCents);
-    const spentCents = sum(realized.filter((l) => l.direction === 'charge'), (l) => l.realizedCents);
-    // Base des parts : les entrées si elles sont positives et couvrent les dépenses ; sinon les dépenses.
-    const baseKind = receivedCents > 0 && receivedCents >= spentCents ? 'received' : 'spent';
-    const baseCents = direction === 'income' ? receivedCents : baseKind === 'received' ? receivedCents : spentCents;
-    const rows = [...centers, ...extra].map((c) => {
-      const paidCents = sum(realized.filter((l) => l.direction === direction && refOf(l) === c.ref), (l) => l.realizedCents);
-      const remainingCents = sum(planned.filter((l) => l.direction === direction && refOf(l) === c.ref && !l.settled && statusOf(b.state, b.cycle, l) !== 'unrealized'), (l) => l.plannedCents);
-      const capCents = direction === 'charge' ? caps[c.ref] ?? null : null;
-      return {
-        ref: c.ref,
-        key: c.ref.replace(/^std:/, ''),
-        label: c.label,
-        standard: c.ref.startsWith('std:'),
-        paidCents,
-        remainingCents,
-        capCents,
-        marginCents: capCents === null ? null : capCents - paidCents - remainingCents,
-        sharePct: baseCents > 0 ? Math.round((paidCents / baseCents) * 1000) / 10 : null,
-      };
-    });
-    return { rows, receivedCents, spentCents, baseKind: direction === 'income' ? 'received' : baseKind, baseCents };
-  }
-
-  function centers(ctx, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
-    const direction = oneOf('direction', q.direction, ['charge', 'income'], 'charge');
-    const r = centersRead(b, direction, [b.comp.budgetId]);
-    const rows = r.rows.filter((x) => x.paidCents || x.remainingCents || x.capCents !== null || q.all === 'true');
-    const restCents = r.baseKind === 'received' && direction === 'charge' ? r.receivedCents - r.spentCents : null;
-    return {
-      context: contextOf(b),
-      direction,
-      basis: {
-        kind: r.baseKind,
-        label: r.baseCents > 0 ? (r.baseKind === 'received' ? 'Sur 100 € reçus' : 'Sur 100 € dépensés') : 'Aucune base : pas de part calculée',
-        baseCents: r.baseCents,
-        receivedCents: r.receivedCents,
-        spentCents: r.spentCents,
-        // Reste positif : segment « non dépensé » du parcours de chaque euro (jamais un secteur négatif).
-        restCents: restCents !== null && restCents > 0 ? restCents : null,
-        restSharePct: restCents !== null && restCents > 0 && r.baseCents > 0 ? Math.round((restCents / r.baseCents) * 1000) / 10 : null,
-      },
-      rows,
-    };
-  }
-
   // ---------- plafonds de dépenses : centres de coût et catégories ----------
+  const { capsBrief, capsRead, capsReview, spendingCaps, capAlertsFor, previewCaps } = createCapsReads(socle, h, { budget, base, contextOf, statusOf, decorate, validatedProjectLines });
 
-  /** Résumé d'un plafond pour les listes (registre) : plafond, engagé, marge, consommation, dépassement. */
-  const capBrief = (r) => ({ capCents: r.capCents, engagedCents: r.engagedCents, marginCents: r.marginCents, usedPct: r.usedPct, over: r.over, near: r.near });
-  const capsBrief = (report) => ({
-    centers: Object.fromEntries(report.centers.map((c) => [c.ref, capBrief(c)])),
-    categories: Object.fromEntries(report.categories.map((k) => [k.id, { ...capBrief(k), label: k.label, costCenterRef: k.costCenterRef, archived: k.archived }])),
-    overCount: report.overCount,
-  });
-
-  // Une échéance non réglée d'une période close reste dans l'historique, mais n'est
-  // plus un engagement à payer. Même sélection que les postes et les flux de période.
-  const capPlannedLines = (b, lines) => lines.filter((l) => statusOf(b.state, b.cycle, l) !== 'unrealized');
-
-  /** Plafonds de la période lue : même périmètre que les centres (budget de vie + charges de projet validées). */
-  function capsRead(b, { withLines = false } = {}) {
-    const { start, end } = b.period;
-    const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'realized' }), ...validatedProjectLines(b, { from: start, to: end, by: 'realized' })];
-    const planned = capPlannedLines(b, budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'planned' }));
-    const life = b.state.budgets[b.comp.budgetId];
-    return budget().capReport({
-      centers: budget().costCentersOf(b.state, b.userId),
-      caps: life.capsCents ?? {},
-      categories: budget().categoriesOf(b.state, b.userId, { archived: true }),
-      realized,
-      planned,
-      withLines,
-    });
-  }
-
-  /** Mois entiers écoulés entre deux dates (AAAA-MM-JJ), jamais négatif. */
-  const monthsBetween = (from, to) => {
-    const [fy, fm, fd] = from.split('-').map(Number);
-    const [ty, tm, td] = to.split('-').map(Number);
-    return Math.max(0, (ty - fy) * 12 + (tm - fm) - (td < fd ? 1 : 0));
-  };
-
-  /**
-   * Revue des plafonds de la période : chaque poste et chaque catégorie avec son plafond, et les charges qui,
-   * ensemble, forment son engagé (même calcul que les alertes). Chaque charge porte sa récurrence et son
-   * antériorité, pour décider de ce qu'on peut retirer — la décision reste à l'utilisateur.
-   */
-  function capsReview(ctx, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
-    const report = capsRead(b, { withLines: true });
-    const life = b.state.budgets[b.comp.budgetId];
-    const { start, end } = b.period;
-    const now = today();
-    const projectIds = new Set(validatedProjectLines(b, { from: start, to: end, by: 'realized' }).map((l) => l.id));
-    const charges = new Map();
-    const chargeOf = (c) => {
-      const l = c.line;
-      if (!charges.has(l.id)) {
-        const v = decorate(b, l);
-        const rec = l.recurrenceId ? b.state.recurrences[l.recurrenceId] : null;
-        const origin = rec?.firstDate ?? l.plannedDate;
-        const project = projectIds.has(l.id) ? b.budgets.find((x) => x.id === l.budgetId) ?? null : null;
-        charges.set(l.id, {
-          ...v,
-          projectCharge: !!project,
-          project: project ? { budgetId: project.id, coreProjectId: project.coreProjectId, name: project.name } : null,
-          engagedCents: c.engagedCents,
-          engagedDate: c.engagedDate,
-          engagedAs: c.engagedAs,
-          origin,
-          sinceMonths: monthsBetween(origin, now < origin ? origin : now),
-          newThisPeriod: origin >= start && origin <= end,
-          rank: rec ? occurrenceDates(rec, rec.firstDate, l.occurrenceDate ?? l.plannedDate).length : null,
-          perYearCents: rec ? rec.amountCents * PER_YEAR[rec.cadence] : null,
-          monthlyCents: rec ? monthlyAverageCents(rec.amountCents, rec.cadence) : null,
-        });
-      }
-      return l.id;
-    };
-    const row = ({ lines, ...r }) => ({ ...r, chargeIds: lines.sort((x, y) => y.engagedCents - x.engagedCents).map(chargeOf) });
-    const centers = report.centers.map(row);
-    const categories = report.categories.filter((k) => !k.archived || k.lineCount).map(row);
-    const overOf = (r) => (r.over ? -r.marginCents : 0);
-    // À compenser sur les autres postes : le dépassement du poste plafonné ; sans plafond de poste, celui de ses catégories.
-    const toCompensateCents = centers.reduce(
-      (t, c) => t + (c.capCents !== null ? overOf(c) : categories.filter((k) => k.costCenterRef === c.ref).reduce((s, k) => s + overOf(k), 0)),
-      0,
-    );
-    const capped = [...centers, ...categories].filter((r) => r.capCents !== null);
-    const { figures } = h.figuresFor(b.state, b.userId, ['bpm.soldeAttendu', 'bpm.resultatPrevu'], { periodKey: b.period.key });
-    return {
-      context: contextOf(b),
-      lifeBudget: { budgetId: life.id, revision: life.revision, capsCents: life.capsCents ?? {} },
-      centers,
-      categories,
-      charges: Object.fromEntries(charges),
-      totals: {
-        cappedCount: capped.length,
-        overCount: report.overCount,
-        toCompensateCents,
-        // Marge restante sous les plafonds respectés (postes seulement : une catégorie est comprise dans son poste).
-        headroomCents: centers.filter((c) => c.capCents !== null && !c.over).reduce((t, c) => t + c.marginCents, 0),
-        expectedCents: cents(figures['bpm.soldeAttendu'].value),
-        initialCents: cents(figures['bpm.resultatPrevu'].value),
-        // Lecture d'une période terminée ou close : un bilan, plus un budget à piloter (messages au passé, aucun nouvel achat).
-        reading: b.period.status ?? 'current',
-        closedResultCents: b.period.closureId ? (b.state.closures[b.period.closureId]?.resultCents ?? null) : null,
-      },
-    };
-  }
-
-  /** Lecture des plafonds de la période (deux niveaux indépendants, jamais bloquants). */
-  function spendingCaps(ctx, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    const life = b.state.budgets[b.comp.budgetId];
-    const report = b.period ? capsRead(b) : { centers: [], categories: [], overCount: 0, alerts: [] };
-    return {
-      context: contextOf(b),
-      lifeBudget: { budgetId: life.id, revision: life.revision, capsCents: life.capsCents ?? {} },
-      ...report,
-      // Catégories retirées : visibles seulement si des dépenses de la période y sont encore rangées.
-      categories: report.categories.filter((k) => !k.archived || k.lineCount),
-    };
-  }
-
-  /**
-   * Alertes de plafond touchées par une dépense, dans la période de sa date (lecture après écriture).
-   * Les périodes futures sont calculées directement ; aucune limite de pagination historique.
-   */
-  function capAlertsFor(ctx, { date: d, costCenterRef, categoryId, direction }) {
-    if (direction !== 'charge' || !d) return [];
-    const b = base(ctx);
-    if (!b.cs) return [];
-    const period = periodContaining(d, b.cycle.anchorDay);
-    if (period.index < b.cs.first.index) return [];
-    const report = capsRead({ ...b, period });
-    return report.alerts.filter((a) => (a.level === 'center' && a.ref === costCenterRef) || (a.level === 'category' && a.id === categoryId));
-  }
-
-  /** Simulation en mémoire : mêmes lignes Budget et mêmes plafonds, aucune écriture ni ID créé. */
-  function previewCaps(ctx, input = {}) {
-    const b = base(ctx);
-    if (!b.cs) fail('FORBIDDEN_BY_RULE', 'Configurez le cycle avant de consulter les plafonds.');
-    const direction = oneOf('direction', input.direction, ['income', 'charge']);
-    const cadence = oneOf('cadence', input.cadence, ['once', ...CADENCES], 'once');
-    const recurring = cadence !== 'once';
-    const kind = recurring ? 'recurrence' : 'operation';
-    const original = input.replaceId ? om.owned(b.state, kind, input.replaceId, b.userId) : null;
-    const recurrence = input.settle && input.recurrenceId ? om.owned(b.state, 'recurrence', input.recurrenceId, b.userId) : null;
-    const budgetId = original?.budgetId ?? recurrence?.budgetId ?? input.budgetId ?? b.comp.budgetId;
-    om.owned(b.state, 'budget', budgetId, b.userId);
-    const category = input.categoryId ? om.owned(b.state, 'chargeCategory', input.categoryId, b.userId) : null;
-    const ref = input.costCenterRef ?? category?.costCenterRef ?? 'std:divers';
-    const amountCents = money('amount', input.amount, { positive: true });
-    const d = date(recurring ? 'firstDate' : 'date', recurring ? input.firstDate : input.date, { required: true });
-    const item = {
-      ...recurrence, ...original, id: original?.id ?? '__preview__', userId: b.userId, budgetId,
-      direction, label: input.label || 'Aperçu', amountCents,
-      costCenterId: ref.startsWith('std:') ? null : ref,
-      standardCostCenter: ref.startsWith('std:') ? ref.slice(4) : null,
-      categoryId: category?.id ?? null,
-    };
-    if (recurring) Object.assign(item, { cadence, firstDate: d, endDate: date('endDate', input.endDate) });
-    else Object.assign(item, {
-      date: d, status: original?.status ?? input.status ?? 'planned',
-      realizedDate: original?.realizedDate ?? (input.status === 'realized' ? date('realizedDate', input.realizedDate ?? d, { required: true }) : null),
-      realizedAmountCents: original?.realizedAmountCents ?? (input.status === 'realized' ? money('realizedAmount', input.realizedAmount ?? input.amount, { positive: true }) : null),
-    });
-    if (input.settle) {
-      item.status = 'realized';
-      item.realizedDate = date('realizedDate', input.realizedDate ?? d, { required: true });
-      item.realizedAmountCents = money('realizedAmount', input.realizedAmount ?? input.amount, { positive: true });
-      if (recurrence) Object.assign(item, { recurrenceId: recurrence.id, occurrenceDate: date('occurrenceDate', input.occurrenceDate, { required: true }) });
-    }
-    // Une définition récurrente passée est évaluée sur la période actuelle ; une saisie future sur sa première période.
-    const effectiveDate = recurring ? (d > b.cs.current.start ? d : b.cs.current.start) : item.realizedDate ?? d;
-    const period = periodContaining(effectiveDate, b.cycle.anchorDay);
-    const table = recurring ? 'recurrences' : 'operations';
-    const state = { ...b.state, [table]: { ...b.state[table], [item.id]: item } };
-    const before = capsRead({ ...b, period });
-    let after = capsRead({ ...b, state, period });
-    // Pour un projet, anticiper la charge avant sa validation dans le budget de vie.
-    if (budgetId !== b.comp.budgetId) {
-      const window = { from: period.start, to: period.end };
-      const candidate = l => recurring ? l.recurrenceId === item.id : l.operationId === item.id;
-      const keep = l => !candidate(l);
-      const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'realized' }), ...validatedProjectLines(b, { ...window, by: 'realized' }).filter(keep), ...budget().budgetLines(state, [budgetId], { ...window, by: 'realized' }).filter(candidate)];
-      const planned = capPlannedLines({ ...b, state }, [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'planned' }), ...budget().budgetLines(state, [budgetId], { ...window, by: 'planned' }).filter(candidate)]);
-      after = budget().capReport({ centers: budget().costCentersOf(state, b.userId), categories: budget().categoriesOf(state, b.userId, { archived: true }), caps: state.budgets[b.comp.budgetId].capsCents ?? {}, realized, planned });
-    }
-    const relevant = r => ({
-      center: r.centers.find(c => c.ref === ref) ?? null,
-      category: r.categories.find(c => c.id === category?.id) ?? null,
-    });
-    return { mutation: false, period, before: relevant(before), after: relevant(after),
-      alerts: direction === 'charge' ? after.alerts.filter(a => a.level === 'center' ? a.ref === ref : a.id === category?.id) : [],
-      note: budgetId !== b.comp.budgetId ? 'Impact estimé après validation de la charge du projet.' : null };
-  }
-
-  /** Flux d'une période : réalisé à sa date réelle, échéances non réglées à leur date prévue.
-   * Le registre garde sa sélection par date prévue ; ces listes expliquent les chiffres des postes et revenus.
-   */
-  function periodFlow(b, { direction, center } = {}) {
-    const { start, end } = b.period;
-    const keep = (l) => (!direction || l.direction === direction) && (!center || (l.costCenterId ?? `std:${l.standardCostCenter}`) === center);
-    const paid = budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'realized' }).map((l) => decorate(b, l));
-    paid.push(...validatedProjectLines(b, { from: start, to: end, by: 'realized' }).map((l) => ({ ...decorate(b, l), projectCharge: true })));
-    const unsettled = budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'planned' }).filter((l) => !l.settled).map((l) => decorate(b, l));
-    const settledLines = paid.filter(keep);
-    const pendingLines = unsettled.filter((l) => keep(l) && l.status !== 'unrealized');
-    const unrealizedLines = unsettled.filter((l) => keep(l) && l.status === 'unrealized');
-    const lines = [...settledLines, ...pendingLines, ...unrealizedLines].sort((a, z) => (a.realizedDate ?? a.plannedDate).localeCompare(z.realizedDate ?? z.plannedDate) || a.label.localeCompare(z.label));
-    const essentials = essentialRefsOf(socle, b.state);
-    for (const l of lines) l.nature = natureOf(l, essentials);
-    return {
-      lines, settledLines, pendingLines, unrealizedLines,
-      selection: 'Les règlements suivent leur date réelle dans la période ; les échéances encore attendues suivent leur date prévue. Les échéances non réalisées d’une période close sont présentées séparément.',
-      totals: {
-        followsFilters: true,
-        paidCents: sum(settledLines, (l) => l.realizedCents),
-        toPayCents: sum(pendingLines, (l) => l.plannedCents),
-        unrealizedCents: sum(unrealizedLines, (l) => l.plannedCents),
-        plannedCents: sum(lines, (l) => l.plannedCents),
-        specialCents: 0,
-        lineCount: lines.length,
-        unfilteredCount: lines.length,
-      },
-    };
-  }
-
-  function centerDetail(ctx, ref, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    const c = budget().costCentersOf(b.state, b.userId).find((x) => x.ref === ref || x.ref === `std:${ref}`);
-    if (!c) fail('NOT_FOUND', 'Centre inconnu pour ce user.', { ref });
-    const read = centers(ctx, { period: q.period, direction: c.direction, all: 'true' });
-    const row = read.rows.find((x) => x.ref === c.ref);
-    // Périmètre du budget de vie, avec ses charges de projet validées (mêmes lignes que le dépensé du poste).
-    const flow = periodFlow(b, { center: c.ref });
-    // Plafonds du poste : celui du centre et ceux de ses catégories, lus indépendamment (jamais bloquants).
-    const report = c.direction === 'charge' ? capsRead(b) : null;
-    const life = b.state.budgets[b.comp.budgetId];
-    return {
-      context: read.context,
-      center: { ...c, ...row },
-      basis: read.basis,
-      ...flow,
-      cap: report?.centers.find((x) => x.ref === c.ref) ?? null,
-      categories: report ? report.categories.filter((k) => k.costCenterRef === c.ref && (!k.archived || k.lineCount)) : [],
-      lifeBudget: { budgetId: life.id, revision: life.revision },
-    };
-  }
-
-  function incomes(ctx, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    const read = centers(ctx, { period: q.period, direction: 'income' });
-    const flow = periodFlow(b, { direction: 'income' });
-    return {
-      context: read.context,
-      receivedCents: read.basis.receivedCents,
-      expectedCents: sum(flow.pendingLines, (l) => l.plannedCents),
-      sources: read.rows.map((r) => ({ ref: r.ref, label: r.label, receivedCents: r.paidCents, expectedCents: r.remainingCents, sharePct: r.sharePct })),
-      ...flow,
-    };
-  }
-
-  // ---------- solde et rapprochement ----------
-
-  function balance(ctx, q = {}) {
-    const s = summary(ctx, { periodKey: q.period });
-    const b = base(ctx, { periodKey: q.period });
-    const pat = b.state.patrimoines[b.comp.patrimoineId];
-    const f = s.figures;
-    const net = f[RESULT].valueCents;
-    let reconciliation = null;
-    if (q.initial !== undefined && q.current !== undefined && q.initial !== '' && q.current !== '') {
-      const initialCents = queryMoney('initial', q.initial, { signed: true });
-      const currentCents = queryMoney('current', q.current, { signed: true });
-      const variationCents = currentCents - initialCents;
-      const gapCents = net === null ? null : variationCents - net;
-      reconciliation = {
-        initialCents,
-        currentCents,
-        variationCents,
-        netCents: net,
-        gapCents,
-        formula: 'écart = (solde actuel − solde initial) − net calculé',
-        suggestion: gapCents === null ? 'Net inconnu : écart non calculable.' : gapCents === 0 ? 'Aucun écart.' : gapCents < 0 ? 'Écart négatif : une dépense est peut-être manquante. Relisez avant toute saisie.' : 'Écart positif : une entrée est peut-être manquante. Relisez avant toute saisie.',
-        createsOperation: false,
-      };
-    }
-    return {
-      context: s.context,
-      closed: s.closed,
-      receivedCents: f['bpm.revenus'].valueCents,
-      paidCents: f['bpm.charges'].valueCents,
-      netCents: net,
-      toReceiveCents: f['bpm.resteARecevoir'].valueCents,
-      toPayCents: f['bpm.resteAPayer'].valueCents,
-      expectedCents: f['bpm.soldeAttendu'].valueCents,
-      initialBudgetCents: f['bpm.resultatPrevu'].valueCents,
-      closingDate: s.context.period?.end ?? null,
-      patrimoine: { stockCents: f['bpm.patrimoineConstitue'].valueCents, effectCents: net, afterCents: f['bpm.patrimoineFinPeriode'].valueCents, objectiveCents: pat?.objectiveCents ?? null },
-      figures: f,
-      reconciliation,
-    };
-  }
-
-  // ---------- historique et impact ----------
-
-  function history(ctx, { before, limit = 6 } = {}) {
-    const b = base(ctx);
-    if (!b.cs) return { context: contextOf(b), rows: [], total: 0, nextBefore: null };
-    const page = b.cs.page({ before: before === undefined || before === null || before === '' ? undefined : Number(before), limit: Math.min(Math.max(Number(limit) || 6, 1), 120) });
-    const rows = page.periods.map((p) => {
-      const { figures } = h.figuresFor(b.state, b.userId, ['bpm.revenus', 'bpm.charges', RESULT, 'bpm.patrimoineFinPeriode', 'bpm.soldeAttendu'], { periodKey: p.key });
-      const c = p.closureId ? b.state.closures[p.closureId] : null;
-      return {
-        periodKey: p.key,
-        index: p.index,
-        label: p.label,
-        start: p.start,
-        end: p.end,
-        status: p.status,
-        recorded: !!c,
-        receivedCents: cents(figures['bpm.revenus'].value),
-        spentCents: cents(figures['bpm.charges'].value),
-        netCents: cents(figures[RESULT].value),
-        expectedCents: c ? null : cents(figures['bpm.soldeAttendu'].value),
-        patrimoineCents: cents(figures['bpm.patrimoineFinPeriode'].value),
-        patrimoineKind: c ? 'après clôture (enregistré)' : 'estimation',
-        capitalizedCents: c ? c.resultCents : null,
-        closureId: c?.id ?? null,
-      };
-    });
-    return { context: contextOf(b), rows, total: page.total, nextBefore: page.nextBefore };
-  }
-
-  function impact(ctx, { period } = {}) {
-    const b = base(ctx, { periodKey: period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
-    const { start, end } = b.period;
-    const rows = b.budgets.map((x) => {
-      const real = budget().budgetLines(b.state, [x.id], { from: start, to: end, by: 'realized' });
-      const plan = budget().budgetLines(b.state, [x.id], { from: start, to: end, by: 'planned' }).filter((l) => !l.settled);
-      const inc = sum(real.filter((l) => l.direction === 'income'), (l) => l.realizedCents);
-      const chg = sum(real.filter((l) => l.direction === 'charge'), (l) => l.realizedCents);
-      const toRec = sum(plan.filter((l) => l.direction === 'income'), (l) => l.plannedCents);
-      const toPay = sum(plan.filter((l) => l.direction === 'charge'), (l) => l.plannedCents);
-      return { budgetId: x.id, name: x.name, role: x.role, receivedCents: inc, spentCents: chg, netCents: inc - chg, toReceiveCents: toRec, toPayCents: toPay, expectedNetCents: inc - chg + toRec - toPay };
-    });
-    return {
-      context: contextOf(b, 'consolidated'),
-      rows,
-      consolidated: { status: 'not-defined', reason: 'Financement père/enfants non défini (choix ouvert) : chaque Budget est présenté une fois, sans total consolidé.' },
-    };
-  }
-
-  // ---------- budget type, échéances, événements, directives ----------
-
-  function budgetType(ctx) {
-    const b = base(ctx);
-    const now = today();
-    const recs = budget()
-      .recurrences(ctx, { budgetId: b.comp.budgetId })
-      .filter((r) => !r.endDate || r.endDate >= now);
-    const avg = (dir) => sum(recs.filter((r) => r.direction === dir), (r) => monthlyAverageCents(r.amountCents, r.cadence));
-    const income = avg('income');
-    const charge = avg('charge');
-    return {
-      context: contextOf(b),
-      label: 'Moyennes mensuelles des opérations récurrentes actives (une moyenne ne remplace pas les échéances réelles)',
-      lines: recs.map((r) => ({ ...r, monthlyAverageCents: monthlyAverageCents(r.amountCents, r.cadence) })),
-      averageIncomeCents: income,
-      averageChargeCents: charge,
-      averageNetCents: income - charge,
-      empty: recs.length === 0,
-    };
-  }
-
-  function due(ctx) {
-    const b = base(ctx);
-    const now = today();
-    // Les échéances non réglées des périodes closes (douze derniers mois) restent visibles, à part :
-    // elles ne comptent pas dans le solde net à traiter, qui ne porte que sur les périodes ouvertes.
-    const open = b.cs ? b.cs.firstOpen.start : addDays(now, -366);
-    const from = open < addDays(now, -366) ? open : addDays(now, -366);
-    const lines = budget()
-      .budgetLines(b.state, b.budgets.map((x) => x.id), { from: from < addDays(now, -730) ? addDays(now, -730) : from, to: now, by: 'planned' })
-      .filter((l) => !l.settled)
-      .map((l) => decorate(b, l));
-    const pending = lines.filter((l) => l.status !== 'unrealized');
-    const unrealized = lines.filter((l) => l.status === 'unrealized');
-    return {
-      context: contextOf(b, 'consolidated'),
-      lines,
-      totalCents: sum(pending, (l) => sign(l.direction) * l.plannedCents),
-      unrealizedCount: unrealized.length,
-      unrealizedNetCents: sum(unrealized, (l) => sign(l.direction) * l.plannedCents),
-    };
-  }
-
-  const visionOf = (comp) => ({ ...socle.modules.patrimoine.projectionSettingsOf(socle.state, comp.patrimoineId), ...socle.modules.budget.objectivesOf(socle.state, comp.budgetId) });
-  const goalsOf = (state, userId) => socle.modules.patrimoine.goalsOf(state, userId);
-  function events(ctx) {
-    const b = base(ctx);
-    const v = visionOf(b.comp);
-    const now = today();
-    return {
-      context: contextOf(b),
-      assumptions: [`Inflation ${v.inflationPct} % par an (${v.inflationSource})`, 'Provision = coût futur ÷ périodes mensuelles restantes'],
-      rows: socle.modules.patrimoine.goalProvisions(goalsOf(b.state, b.userId), v.inflationPct, now),
-    };
-  }
-
-  function surplusProgress(b, v) {
-    if (!v.surplus) return null;
-    return socle.modules.budget.surplusProgress(h.closuresOf(b.state, b.cycle?.id), v.surplus);
-  }
-
-  function directives(ctx) {
-    const s = summary(ctx);
-    const b = base(ctx);
-    const v = visionOf(b.comp);
-    const ev = events(ctx);
-    const surplus = surplusProgress(b, v);
-    const caps = Object.values(b.state.budgets[b.comp.budgetId].capsCents ?? {});
-    const expected = s.figures['bpm.soldeAttendu'].valueCents;
-    const savings = surplus ? surplus.perPeriodCents : v.savingsTargetCents;
-    const provisions = ev.rows.length ? sum(ev.rows, (r) => r.provisionPerPeriodCents) : 0;
-    const available = expected === null || savings === null ? null : expected - savings - provisions;
-    const end = s.context.period?.end;
-    const daysLeft = end ? Math.max(1, Math.round((Date.parse(end) - Date.parse(today())) / 86400000) + 1) : null;
-    const weeks = daysLeft ? Math.max(1, Math.ceil(daysLeft / 7)) : null;
-    const item = (key, label, value, reason, assumptions) => ({ key, label, valueCents: value, computable: value !== null, reason: value === null ? reason : null, assumptions });
-    return {
-      context: s.context,
-      items: [
-        item('savings', 'Épargne nécessaire par période', savings ?? null, 'Aucun objectif d’excédent ni épargne visée renseignés', surplus ? [`Objectif d’excédent ${surplus.targetCents / 100} € sur ${surplus.periods} périodes`] : ['Épargne visée saisie']),
-        item('provisions', 'Provisions indicatives par période', provisions, null, ev.assumptions),
-        item('cap', 'Plafond de dépenses (somme des plafonds)', caps.length ? caps.reduce((a, c) => a + c, 0) : null, 'Aucun plafond par centre renseigné', ['Plafonds facultatifs par centre']),
-        item('available', 'Disponible sur la période', available, expected === null ? 'Solde attendu inconnu' : 'Épargne nécessaire inconnue', ['Disponible = solde attendu − épargne nécessaire − provisions']),
-        item('weekly', 'Montant indicatif par semaine', available === null ? null : Math.floor(available / weeks), 'Disponible non calculable', [`${weeks ?? '?'} semaine(s) restantes dans la période`]),
-      ],
-      surplus,
-    };
-  }
-
-  // ---------- projection et simulation ----------
-
-  function hypotheses(b, q = {}) {
-    const v = visionOf(b.comp);
-    const bt = budgetType({ userId: b.userId });
-    const stock = metrics.evaluate(h.metricContext(b.state, b.userId, {}), 'bpm.patrimoineConstitue');
-    const horizonYears = q.horizon !== undefined && q.horizon !== '' ? Math.min(Math.max(Math.round(Number(q.horizon)), 1), 80) : v.horizonYears;
-    const ratePct = q.rate !== undefined && q.rate !== '' ? percent('rate', q.rate, { min: -50, max: 50 }) : v.annualReturnPct;
-    const inflationPct = q.inflation !== undefined && q.inflation !== '' ? percent('inflation', q.inflation, { min: -20, max: 50 }) : v.inflationPct;
-    let contributionCents = v.contributionCents;
-    let contributionSource = 'Apport saisi';
-    let cadence = v.contributionCadence ?? 'monthly';
-    if (q.contribution !== undefined && q.contribution !== '') {
-      contributionCents = queryMoney('contribution', q.contribution, { signed: true });
-      contributionSource = 'Apport de la simulation';
-    } else if (contributionCents === null) {
-      contributionCents = bt.empty ? 0 : bt.averageNetCents;
-      contributionSource = bt.empty ? 'Aucun apport : budget type vide' : 'Moyenne mensuelle du budget type';
-      cadence = 'monthly';
-    }
-    return { horizonYears, ratePct, inflationPct, inflationSource: v.inflationSource, contributionCents, contributionSource, cadence, perYear: PER_YEAR[cadence], startCents: cents(stock.value), stockReason: stock.unavailableReason ?? null };
-  }
-
-  function projection(ctx, q = {}) {
-    const b = base(ctx);
-    const hy = hypotheses(b, q);
-    const goals = goalsOf(b.state, b.userId).map((g) => ({ id: g.id, label: g.label, type: g.type, date: g.date, targetTodayCents: g.targetTodayCents }));
-    const startYear = Number(today().slice(0, 4));
-    if (hy.ratePct === null) {
-      return { context: contextOf(b), hypotheses: hy, status: 'missing-hypothesis', reason: 'Rendement annuel à renseigner (Objectifs et avenir › Hypothèses).', rows: [], goals: [] };
-    }
-    const extraCents = q.extra !== undefined && q.extra !== '' ? queryMoney('extra', q.extra, { signed: true }) : 0;
-    const run = (contribution) => socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: contribution, perYear: hy.perYear, goals });
-    const result = run(hy.contributionCents + extraCents);
-    const out = { context: contextOf(b), hypotheses: { ...hy, extraCents }, label: 'Estimation', ...result };
-    if (extraCents) {
-      const baseline = run(hy.contributionCents);
-      out.baseline = { rows: baseline.rows, keyFigures: baseline.keyFigures };
-      out.difference = result.rows.map((r, i) => ({ year: r.year, nominalCents: r.nominalCents - baseline.rows[i].nominalCents, realCents: r.realCents - baseline.rows[i].realCents }));
-    }
-    // Comparaison des apports : moyenne réelle des clôtures (≥ 2), mêmes autres hypothèses.
-    const closures = h.closuresOf(b.state, b.cycle?.id);
-    if (closures.length >= 2 && hy.contributionSource !== 'Moyenne réelle des clôtures') {
-      const avg = Math.round(sum(closures, (c) => c.resultCents) / closures.length);
-      const alt = socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: avg, perYear: 12, goals });
-      out.comparison = { label: 'Apport fondé sur la moyenne réelle des clôtures', contributionCents: avg, closures: closures.length, rows: alt.rows, keyFigures: alt.keyFigures };
-    } else {
-      out.comparison = { label: 'Comparaison indisponible', reason: 'Au moins deux clôtures sont nécessaires.' };
-    }
-    return out;
-  }
-
-  // ---------- aperçu d'une saisie (aucune mutation) ----------
-
-  /** Même constructeur Budget que l'écriture, sur une copie de l'état, puis mêmes métriques que la synthèse (audit ARCH-01). */
-  function previewEntry(ctx, input = {}) {
-    const b = base(ctx);
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période pour l’aperçu.');
-    const cadence = oneOf('cadence', input.cadence, ['once', ...CADENCES], 'once');
-    const entry = { ...input, label: input.label || 'Aperçu', budgetId: input.budgetId || b.comp.budgetId };
-    const { draft } = om.simulate('previewEntry', ctx, entry, (tx) => (cadence === 'once' ? budget().buildOperation(tx, entry) : budget().buildRecurrence(tx, entry)));
-    const keys = ['bpm.soldeAttendu', RESULT, 'bpm.patrimoineConstitue'];
-    const read = (state) => {
-      const { figures } = h.figuresFor(state, b.userId, keys, { periodKey: b.period.key });
-      const [expectedCents, netCents, stock] = keys.map((k) => cents(figures[k].value));
-      return { netCents, expectedCents, stockEstimateCents: stock === null || expectedCents === null ? null : stock + expectedCents };
-    };
-    const before = read(b.state);
-    return {
-      context: contextOf(b),
-      mutation: false,
-      before,
-      after: read(draft),
-      note: before.stockEstimateCents === null && before.expectedCents !== null ? 'Stock à renseigner : estimation du Patrimoine non calculable.' : null,
-    };
-  }
+  const kit = { budget, base, contextOf, closedPeriodOf, statusOf, decorate, decorateProjectLine, windowOf, validatedProjectLines, patrimoineProjectLines, paymentTrace, budgetIdsOf, capsBrief, capsRead, summary };
+  const { projectFlows, financialOutlook, register, lineDetail } = createRegisterReads(socle, h, kit);
+  const { centers, centerDetail, incomes, balance } = createCenterReads(socle, h, kit);
+  const { history, impact, budgetType, due, visionOf, goalsOf, events, surplusProgress, directives, projection, previewEntry } = createOutlookReads(socle, h, kit);
 
   return {
-    summary, register, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, previewCaps, incomes, balance, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
-    // Outils partagés avec la gestion du projet de vie (`life.mjs`) : même contexte, mêmes états, mêmes lignes.
-    base, contextOf, decorate, validatedProjectLines,
+    summary, register, projectFlows, financialOutlook, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, previewCaps, incomes, balance, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
+    // Outils partagés avec la gestion du projet de vie (`life.mjs`) et la clôture : même contexte, mêmes états, mêmes lignes.
+    base, contextOf, decorate, decorateProjectLine, validatedProjectLines, patrimoineProjectLines, capsRead,
   };
 }

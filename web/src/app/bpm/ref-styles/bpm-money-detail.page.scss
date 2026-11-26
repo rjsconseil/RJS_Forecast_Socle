@@ -2,26 +2,7 @@
 @use 'contrat-ruptures' as *;
 
 /* La page dédiée : un retour visible, puis le détail d'une seule ligne du parcours. */
-.bmd-back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ecart-6);
-  justify-self: start;
-  min-height: var(--dim-44);
-  padding: 0 var(--ecart-16);
-  border: var(--trait-1) solid var(--app-accent-line);
-  border-radius: var(--rayon-999);
-  color: var(--ink);
-  background: var(--raised-surface);
-  font-weight: var(--fw-semibold);
-  text-decoration: none;
-}
-.bmd-back:hover {
-  background: var(--app-accent-soft);
-}
-.bmd-back:focus-visible,
-.bmd-precise-open:focus-visible,
-.bmd-primary:focus-visible {
+.bmd-precise-open:focus-visible {
   outline: var(--trait-3) solid var(--app-accent);
   outline-offset: var(--decalage-2);
 }
@@ -51,35 +32,6 @@
 .bm-statement h3 {
   margin: var(--ecart-8) 0 0;
   font-size: scaled(var(--fs-md));
-}
-.bmd-rest,
-.bmd-sums {
-  width: var(--part-100);
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
-}
-.bmd-rest :is(th, td),
-.bmd-sums :is(th, td) {
-  padding: var(--ecart-8) var(--ecart-4);
-  border-block-end: var(--trait-1) solid var(--card-border);
-  text-align: start;
-  font-weight: var(--fw-regular);
-}
-.bmd-rest td,
-.bmd-sums td {
-  font-family: var(--font-label);
-  text-align: end;
-  white-space: nowrap;
-}
-.bmd-sums thead th {
-  color: var(--muted);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-bold);
-  text-transform: uppercase;
-}
-.bmd-rest tr.is-total :is(th, td) {
-  border-block-start: var(--trait-2) solid var(--ink);
-  font-weight: var(--fw-bold);
 }
 .bmd-rest-lines {
   display: grid;
@@ -146,9 +98,7 @@
 .bmd-entry-note span {
   font-weight: var(--fw-bold);
 }
-.bmd-precise-open,
-.bmd-actions button,
-.bmd-primary {
+.bmd-precise-open {
   min-height: var(--dim-36);
   padding: 0 var(--ecart-14);
   border: var(--trait-1) solid var(--app-accent-line);
@@ -159,52 +109,8 @@
   font-weight: var(--fw-semibold);
   cursor: pointer;
 }
-.bmd-primary {
-  border-color: var(--app-accent);
-  color: var(--app-on-accent);
-  background: var(--app-accent);
-}
-.bmd-primary:disabled {
-  opacity: var(--opacite-0-6);
-  cursor: progress;
-}
-.bmd-precise,
-.bmd-add {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-200)), var(--fr-1)));
-  align-items: end;
-  gap: var(--ecart-10) var(--ecart-12);
-}
-.bmd-precise {
-  padding: var(--ecart-12);
-  border-radius: var(--rayon-12);
-  background: var(--soft);
-}
-.bmd-precise > :is(.bmd-precise-title, .bpm-help, .bmd-actions) {
-  grid-column: 1 / -1;
-  margin: 0;
-}
 .bmd-precise-title {
   font-weight: var(--fw-bold);
-}
-.bmd-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-8);
-}
-.bmd-field {
-  display: grid;
-  gap: var(--ecart-4);
-  min-width: 0;
-}
-.bmd-field span {
-  color: var(--muted);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-bold);
-}
-.bmd-field :is(input, select) {
-  min-height: var(--dim-40);
-  min-width: 0;
 }
 @media (max-width: $rupture-640) {
   .bmd-entry-main {
@@ -235,8 +141,3 @@
   gap: var(--ecart-8);
 }
 
-.bmd-check-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-200)), var(--fr-1)));
-  gap: var(--ecart-12);
-}

@@ -18,3 +18,5 @@ export * from './query-state';
 export * from './page-banner';
 export * from './page-focus';
 export * from './line-priority';
+export * from './quick-settle';
+export * from './lexicon';

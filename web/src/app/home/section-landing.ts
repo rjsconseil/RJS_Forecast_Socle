@@ -38,7 +38,7 @@ import { PlanCardsComponent } from './plan-cards';
         <section class="plan-empty" data-ui-pattern="empty">
           <h1>Destination introuvable</h1>
           <p>Cette section n’existe pas dans le plan du site.</p>
-          <a class="plan-action" routerLink="/">Retour à l’accueil →</a>
+          <a class="plan-action" routerLink="/modules">Retour à l’accueil →</a>
         </section>
       </div>
     }

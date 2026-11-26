@@ -1,0 +1,41 @@
+// BPM-Astra · jetons de la couche de présentation : teintes des cinq parties (clair et sombre), portées.
+// Rien n'est émis ici : chaque fichier de la couche lit ces jetons avec `@use 'tokens' as *`.
+@use 'sass:list';
+@use 'sass:map';
+
+// BPM-Astra — les trois parties et le cadre d'application.
+// La teinte vient de la déclaration du plan (data-section-tone) et remplace l'accent d'Astra sur toute la page.
+// Mon quotidien : vert. Mes projets : bleu. Mon budget : violet. Patrimoine : or. Cycles : framboise.
+//
+// Une seule échelle d'espacement (sur astra-part) :
+//   --a-gap      16px  entre deux blocs, deux cartes, deux modules
+//   --a-pad-y/x  14/18 à l'intérieur d'un cadre (carte, barre, bandeau, section d'écran)
+//   --a-tile-y/x 10/14 à l'intérieur d'une tuile, d'un module du panneau, d'une cellule de tableau
+// Aucun texte n'est à moins de 14px du bord de son cadre ; les cartes d'une rangée finissent à la même ligne.
+
+$parts: (
+  //               accent    lien      survol    lavis     filet     focus     menu (sur fond nuit)
+  'astra-quotidien': (#0d7a5f, #0a654f, #08563f, #e5f3ed, #b8ddcd, #3fae8a, #6fd6b0),
+  'astra-projets':   (#2f5bd0, #2449ad, #1d3c92, #e9eefc, #c5d3f6, #5f86ea, #9ab7ff),
+  'astra-budget':    (#6a46c4, #5838a8, #482d8c, #f0ebfb, #d6c9f3, #8f6fe0, #c1a9ff),
+  'astra-patrimoine': (#8f5e00, #7a4f00, #664100, #fbf2dd, #ebd59f, #c8952b, #f0c56b),
+  'astra-cycles':    (#a83c66, #8f3156, #772847, #fbebf1, #efc6d6, #d0628d, #f39abb),
+);
+$parts-dark: (
+  'astra-quotidien': (#1f9c79, #85dfbf, #26b38c, #173229, #2e5a4b),
+  'astra-projets':   (#3d68d8, #a7c0ff, #4c78e6, #1d2747, #35487c),
+  'astra-budget':    (#7b58d6, #c6b2ff, #8a69e2, #261d42, #463777),
+  'astra-patrimoine': (#a7720c, #f2c873, #bb8516, #382d16, #6a5427),
+  'astra-cycles':    (#c04f7a, #f5a9c6, #d0608a, #3a1a27, #6e3149),
+);
+
+/// Les cinq parties, dans l'ordre du menu.
+$part-keys: quotidien, projets, budget, patrimoine, cycles;
+/// Teinte d'une partie : 1 accent, 2 lien, 3 survol, 4 lavis, 5 filet, 6 focus, 7 menu.
+@function part($key, $i) { @return list.nth(map.get($parts, "astra-" + $key), $i); }
+
+/// Portées : l'application, sa zone de contenu, le cadre de partie (astra-part).
+$app: ".app-shell[data-application='bpm-astra']";
+$app-dense: ".app-shell[data-density][data-application='bpm-astra']";
+$main: "#{$app} #main";
+$frame: "#{$main} astra-part";

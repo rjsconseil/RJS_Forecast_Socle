@@ -1,0 +1,2992 @@
+{
+ "register": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-11",
+    "index": 24322,
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "label": "Novembre 2026",
+    "status": "current",
+    "closureId": null,
+    "endExclusive": "2026-12-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "window": {
+   "from": "2026-11-01",
+   "to": "2026-11-30",
+   "kind": "period"
+  },
+  "paymentTrace": [],
+  "announcementTrace": [],
+  "dateBasis": "planned",
+  "selection": "Les lignes sont sélectionnées par leur date prévue ; le réalisé des synthèses suit l’imputation validée des tâches et la date réelle des autres flux.",
+  "filters": {
+   "q": null,
+   "direction": null,
+   "nature": null,
+   "status": null,
+   "center": null,
+   "taskId": null,
+   "budgetId": null,
+   "groupBy": "center",
+   "dateBasis": "planned"
+  },
+  "totals": {
+   "followsFilters": true,
+   "paidCents": 18000,
+   "toPayCents": 366000,
+   "unrealizedCents": 0,
+   "plannedCents": 384000,
+   "specialCents": 0,
+   "byDirection": {
+    "income": {
+     "settledCents": 0,
+     "openCents": 260000,
+     "plannedCents": 260000,
+     "lineCount": 1
+    },
+    "charge": {
+     "settledCents": 18000,
+     "openCents": 106000,
+     "plannedCents": 124000,
+     "lineCount": 3
+    }
+   },
+   "netSettledCents": -18000,
+   "netPlannedCents": 136000,
+   "lineCount": 4,
+   "unfilteredCount": 4
+  },
+  "groups": [
+   {
+    "key": "std:logement",
+    "label": "Logement",
+    "plannedCents": 106000,
+    "paidCents": 0,
+    "toPayCents": 106000,
+    "specialCents": 0,
+    "lineIds": [
+     "rec_006@2026-11-05",
+     "op_007"
+    ]
+   },
+   {
+    "key": "std:alimentation",
+    "label": "Alimentation",
+    "plannedCents": 18000,
+    "paidCents": 18000,
+    "toPayCents": 0,
+    "specialCents": 0,
+    "lineIds": [
+     "op_008"
+    ]
+   },
+   {
+    "key": "std:salaires",
+    "label": "Salaires et revenus d'activité",
+    "plannedCents": 260000,
+    "paidCents": 0,
+    "toPayCents": 260000,
+    "specialCents": 0,
+    "lineIds": [
+     "rec_009@2026-11-28"
+    ]
+   }
+  ],
+  "caps": {
+   "centers": {
+    "std:logement": {
+     "capCents": null,
+     "engagedCents": 106000,
+     "marginCents": null,
+     "usedPct": null,
+     "over": false,
+     "near": false,
+     "level": "none"
+    },
+    "std:alimentation": {
+     "capCents": null,
+     "engagedCents": 18000,
+     "marginCents": null,
+     "usedPct": null,
+     "over": false,
+     "near": false,
+     "level": "none"
+    },
+    "std:transport": {
+     "capCents": null,
+     "engagedCents": 0,
+     "marginCents": null,
+     "usedPct": null,
+     "over": false,
+     "near": false,
+     "level": "none"
+    },
+    "std:sante": {
+     "capCents": null,
+     "engagedCents": 0,
+     "marginCents": null,
+     "usedPct": null,
+     "over": false,
+     "near": false,
+     "level": "none"
+    },
+    "std:loisirs": {
+     "capCents": null,
+     "engagedCents": 0,
+     "marginCents": null,
+     "usedPct": null,
+     "over": false,
+     "near": false,
+     "level": "none"
+    },
+    "std:divers": {
+     "capCents": null,
+     "engagedCents": 0,
+     "marginCents": null,
+     "usedPct": null,
+     "over": false,
+     "near": false,
+     "level": "none"
+    }
+   },
+   "overCount": 0,
+   "levels": {
+    "mid": 50,
+    "high": 75,
+    "near": 90
+   }
+  },
+  "lines": [
+   {
+    "id": "rec_006@2026-11-05",
+    "kind": "occurrence",
+    "operationId": null,
+    "recurrenceId": "rec_006",
+    "occurrenceDate": "2026-11-05",
+    "occurrenceKey": "rec_006@2026-11-05",
+    "budgetId": "bud_002",
+    "userId": "usr_001",
+    "direction": "charge",
+    "label": "Loyer",
+    "plannedDate": "2026-11-05",
+    "plannedCents": 90000,
+    "realizedDate": null,
+    "fundingSource": null,
+    "realizedCents": null,
+    "settled": false,
+    "standardCostCenter": "logement",
+    "costCenterId": null,
+    "categoryId": null,
+    "note": null,
+    "taskId": null,
+    "revision": null,
+    "costCenterRef": "std:logement",
+    "costCenterLabel": "Logement",
+    "categoryLabel": null,
+    "budgetName": "Projet de vie",
+    "budgetRole": "life",
+    "cadence": "monthly",
+    "cadenceLabel": "Mensuelle",
+    "firstDate": "2026-08-05",
+    "endDate": null,
+    "taskTitle": null,
+    "differenceCents": null,
+    "status": "pending",
+    "statusLabel": "À venir",
+    "centerKnown": true,
+    "nature": "indispensable"
+   },
+   {
+    "id": "op_008",
+    "kind": "operation",
+    "operationId": "op_008",
+    "recurrenceId": null,
+    "occurrenceDate": null,
+    "occurrenceKey": null,
+    "budgetId": "bud_002",
+    "userId": "usr_001",
+    "direction": "charge",
+    "label": "Courses",
+    "plannedDate": "2026-11-07",
+    "plannedCents": 18000,
+    "realizedDate": "2026-11-07",
+    "accountingDate": "2026-11-07",
+    "fundingSource": null,
+    "realizedCents": 18000,
+    "settled": true,
+    "standardCostCenter": "alimentation",
+    "costCenterId": null,
+    "categoryId": null,
+    "note": null,
+    "taskId": null,
+    "revision": 1,
+    "costCenterRef": "std:alimentation",
+    "costCenterLabel": "Alimentation",
+    "categoryLabel": null,
+    "budgetName": "Projet de vie",
+    "budgetRole": "life",
+    "cadence": "once",
+    "cadenceLabel": "Ponctuelle",
+    "firstDate": null,
+    "endDate": null,
+    "taskTitle": null,
+    "differenceCents": 0,
+    "status": "settled",
+    "statusLabel": "Réglé",
+    "centerKnown": true,
+    "nature": "indispensable"
+   },
+   {
+    "id": "op_007",
+    "kind": "operation",
+    "operationId": "op_007",
+    "recurrenceId": null,
+    "occurrenceDate": null,
+    "occurrenceKey": null,
+    "budgetId": "bud_002",
+    "userId": "usr_001",
+    "direction": "charge",
+    "label": "Électricien",
+    "plannedDate": "2026-11-25",
+    "plannedCents": 16000,
+    "realizedDate": null,
+    "accountingDate": null,
+    "fundingSource": null,
+    "realizedCents": null,
+    "settled": false,
+    "standardCostCenter": "logement",
+    "costCenterId": null,
+    "categoryId": null,
+    "note": null,
+    "taskId": null,
+    "revision": 1,
+    "costCenterRef": "std:logement",
+    "costCenterLabel": "Logement",
+    "categoryLabel": null,
+    "budgetName": "Projet de vie",
+    "budgetRole": "life",
+    "cadence": "once",
+    "cadenceLabel": "Ponctuelle",
+    "firstDate": null,
+    "endDate": null,
+    "taskTitle": null,
+    "differenceCents": null,
+    "status": "pending",
+    "statusLabel": "À venir",
+    "centerKnown": true,
+    "nature": "indispensable"
+   },
+   {
+    "id": "rec_009@2026-11-28",
+    "kind": "occurrence",
+    "operationId": null,
+    "recurrenceId": "rec_009",
+    "occurrenceDate": "2026-11-28",
+    "occurrenceKey": "rec_009@2026-11-28",
+    "budgetId": "bud_002",
+    "userId": "usr_001",
+    "direction": "income",
+    "label": "Salaire",
+    "plannedDate": "2026-11-28",
+    "plannedCents": 260000,
+    "realizedDate": null,
+    "fundingSource": null,
+    "realizedCents": null,
+    "settled": false,
+    "standardCostCenter": "salaires",
+    "costCenterId": null,
+    "categoryId": null,
+    "note": null,
+    "taskId": null,
+    "revision": null,
+    "costCenterRef": "std:salaires",
+    "costCenterLabel": "Salaires et revenus d'activité",
+    "categoryLabel": null,
+    "budgetName": "Projet de vie",
+    "budgetRole": "life",
+    "cadence": "monthly",
+    "cadenceLabel": "Mensuelle",
+    "firstDate": "2026-08-28",
+    "endDate": null,
+    "taskTitle": null,
+    "differenceCents": null,
+    "status": "pending",
+    "statusLabel": "À venir",
+    "centerKnown": true,
+    "nature": null
+   }
+  ]
+ },
+ "costCenters": [
+  {
+   "ref": "std:salaires",
+   "key": "salaires",
+   "label": "Salaires et revenus d'activité",
+   "direction": "income",
+   "directionLabel": "Revenu",
+   "standard": true
+  },
+  {
+   "ref": "std:autresRevenus",
+   "key": "autresRevenus",
+   "label": "Autres revenus",
+   "direction": "income",
+   "directionLabel": "Revenu",
+   "standard": true
+  },
+  {
+   "ref": "std:logement",
+   "key": "logement",
+   "label": "Logement",
+   "direction": "charge",
+   "directionLabel": "Charge",
+   "standard": true
+  },
+  {
+   "ref": "std:alimentation",
+   "key": "alimentation",
+   "label": "Alimentation",
+   "direction": "charge",
+   "directionLabel": "Charge",
+   "standard": true
+  },
+  {
+   "ref": "std:transport",
+   "key": "transport",
+   "label": "Transport",
+   "direction": "charge",
+   "directionLabel": "Charge",
+   "standard": true
+  },
+  {
+   "ref": "std:sante",
+   "key": "sante",
+   "label": "Santé",
+   "direction": "charge",
+   "directionLabel": "Charge",
+   "standard": true
+  },
+  {
+   "ref": "std:loisirs",
+   "key": "loisirs",
+   "label": "Loisirs",
+   "direction": "charge",
+   "directionLabel": "Charge",
+   "standard": true
+  },
+  {
+   "ref": "std:divers",
+   "key": "divers",
+   "label": "Divers",
+   "direction": "charge",
+   "directionLabel": "Charge",
+   "standard": true
+  }
+ ],
+ "tasks": [
+  {
+   "task": {
+    "id": "tsk_010",
+    "kind": "task",
+    "userId": "usr_001",
+    "revision": 1,
+    "createdAt": "2026-11-26T09:00:00.000Z",
+    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "provenance": {
+     "command": "createBpmTask",
+     "requestKey": "req-recette",
+     "at": "2026-11-26T09:00:00.000Z"
+    },
+    "title": "Plan de travail",
+    "description": "",
+    "status": "todo",
+    "plannedHours": 6,
+    "spentHours": 0,
+    "startDate": null,
+    "dueDate": null,
+    "projectId": "prj_005"
+   },
+   "projectTitle": "Cuisine",
+   "qualification": {
+    "code": "budgetedProjectTask",
+    "label": "Tâche d'un projet budgétisé",
+    "budgetIdDerived": "bud_004"
+   },
+   "pathways": {
+    "canChangeProject": true
+   }
+  }
+ ],
+ "budgetType": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-11",
+    "index": 24322,
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "label": "Novembre 2026",
+    "status": "current",
+    "closureId": null,
+    "endExclusive": "2026-12-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "label": "Moyennes mensuelles des opérations récurrentes actives (une moyenne ne remplace pas les échéances réelles)",
+  "lines": [
+   {
+    "id": "rec_006",
+    "kind": "recurrence",
+    "userId": "usr_001",
+    "revision": 1,
+    "createdAt": "2026-11-26T09:00:00.000Z",
+    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "provenance": {
+     "command": "createRecurrence",
+     "requestKey": "req-recette",
+     "at": "2026-11-26T09:00:00.000Z"
+    },
+    "budgetId": "bud_002",
+    "direction": "charge",
+    "label": "Loyer",
+    "amountCents": 90000,
+    "cadence": "monthly",
+    "firstDate": "2026-08-05",
+    "endDate": null,
+    "note": null,
+    "taskId": null,
+    "standardCostCenter": "logement",
+    "costCenterId": null,
+    "categoryId": null,
+    "enteredOn": "2026-11-20",
+    "amount": 900,
+    "cadenceLabel": "Mensuelle",
+    "directionLabel": "Charge",
+    "costCenterRef": "std:logement",
+    "costCenterLabel": "Logement",
+    "categoryLabel": null,
+    "budgetName": "Projet de vie",
+    "settlementIds": [],
+    "monthlyAverageCents": 90000
+   },
+   {
+    "id": "rec_009",
+    "kind": "recurrence",
+    "userId": "usr_001",
+    "revision": 1,
+    "createdAt": "2026-11-26T09:00:00.000Z",
+    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "provenance": {
+     "command": "createRecurrence",
+     "requestKey": "req-recette",
+     "at": "2026-11-26T09:00:00.000Z"
+    },
+    "budgetId": "bud_002",
+    "direction": "income",
+    "label": "Salaire",
+    "amountCents": 260000,
+    "cadence": "monthly",
+    "firstDate": "2026-08-28",
+    "endDate": null,
+    "note": null,
+    "taskId": null,
+    "standardCostCenter": "salaires",
+    "costCenterId": null,
+    "categoryId": null,
+    "enteredOn": "2026-11-20",
+    "amount": 2600,
+    "cadenceLabel": "Mensuelle",
+    "directionLabel": "Revenu",
+    "costCenterRef": "std:salaires",
+    "costCenterLabel": "Salaires et revenus d'activité",
+    "categoryLabel": null,
+    "budgetName": "Projet de vie",
+    "settlementIds": [],
+    "monthlyAverageCents": 260000
+   }
+  ],
+  "averageIncomeCents": 260000,
+  "averageChargeCents": 90000,
+  "averageNetCents": 170000,
+  "empty": false
+ },
+ "lifeManagement": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-11",
+    "index": 24322,
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "label": "Novembre 2026",
+    "status": "current",
+    "closureId": null,
+    "endExclusive": "2026-12-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "lifeProject": {
+   "coreProjectId": "prj_003",
+   "title": "Projet de vie",
+   "description": "Racine noyau commune au Budget « Projet de vie » et au Patrimoine.",
+   "budgetId": "bud_002",
+   "patrimoineId": "pat_011",
+   "compositionId": "bpm_012"
+  },
+  "pilot": {
+   "volets": [
+    {
+     "key": "cycle",
+     "label": "Cycle en cours",
+     "health": "watch",
+     "healthLabel": "À surveiller",
+     "alert": "1 entrée(s) attendue(s) en retard."
+    },
+    {
+     "key": "indispensable",
+     "label": "Charges indispensables",
+     "health": "alert",
+     "healthLabel": "À traiter",
+     "alert": "1 charge(s) indispensable(s) en retard de paiement."
+    },
+    {
+     "key": "courante",
+     "label": "Charges courantes",
+     "health": "ok",
+     "healthLabel": "En règle",
+     "alert": null
+    },
+    {
+     "key": "projets",
+     "label": "Projets financés",
+     "health": "ok",
+     "healthLabel": "En règle",
+     "alert": null
+    },
+    {
+     "key": "resultats",
+     "label": "Résultats des cycles",
+     "health": "alert",
+     "healthLabel": "À traiter",
+     "alert": "1 période(s) terminée(s) à clôturer : leur résultat n’est pas encore capitalisé."
+    },
+    {
+     "key": "patrimoine",
+     "label": "Patrimoine accumulé",
+     "health": "watch",
+     "healthLabel": "À surveiller",
+     "alert": "Ce cycle fait baisser le patrimoine à ce jour."
+    }
+   ],
+   "counts": {
+    "ok": 2,
+    "watch": 2,
+    "alert": 2,
+    "unknown": 0
+   }
+  },
+  "cycle": {
+   "key": "cycle",
+   "label": "Cycle en cours",
+   "reading": "current",
+   "closedResultCents": null,
+   "status": "active",
+   "anchorDay": 1,
+   "startDate": "2026-08-01",
+   "period": {
+    "key": "2026-11",
+    "label": "Novembre 2026",
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "status": "current"
+   },
+   "days": {
+    "total": 30,
+    "elapsed": 3,
+    "left": 27,
+    "elapsedPct": 10
+   },
+   "closedCount": 2,
+   "toCloseCount": 1,
+   "flows": {
+    "receivedCents": 0,
+    "toReceiveCents": 260000,
+    "paidCents": 18000,
+    "toPayCents": 106000,
+    "netCents": -18000,
+    "expectedCents": 136000,
+    "initialBudgetCents": 136000,
+    "gapToInitialCents": 0,
+    "savingsRatePct": null,
+    "consumptionPct": 15,
+    "projectsPaidCents": 0,
+    "projectsIncomeCents": 0,
+    "incomeCount": 1,
+    "receivedCount": 0,
+    "incomeGapCents": 0,
+    "advanceReceivedCents": 0,
+    "advanceReceivedCount": 0,
+    "advancePaidCents": 0,
+    "balancedCents": 136000,
+    "unrealizedIncomeCents": 0,
+    "unrealizedIncomeCount": 0,
+    "unrealizedChargeCents": 0,
+    "unrealizedChargeCount": 0,
+    "lateIncomeCents": 260000,
+    "lateIncomeCount": 1,
+    "nextIncome": {
+     "id": "rec_009@2026-11-28",
+     "label": "Salaire",
+     "direction": "income",
+     "nature": null,
+     "plannedDate": "2026-11-28",
+     "plannedCents": 260000,
+     "realizedDate": null,
+     "realizedCents": null,
+     "settled": false,
+     "status": "pending",
+     "statusLabel": "À venir",
+     "costCenterRef": "std:salaires",
+     "costCenterLabel": "Salaires et revenus d'activité",
+     "cadenceLabel": "Mensuelle"
+    },
+    "incomeLines": [
+     {
+      "id": "rec_009@2026-11-28",
+      "label": "Salaire",
+      "direction": "income",
+      "nature": null,
+      "plannedDate": "2026-11-28",
+      "plannedCents": 260000,
+      "realizedDate": null,
+      "realizedCents": null,
+      "settled": false,
+      "status": "pending",
+      "statusLabel": "À venir",
+      "costCenterRef": "std:salaires",
+      "costCenterLabel": "Salaires et revenus d'activité",
+      "cadenceLabel": "Mensuelle"
+     }
+    ]
+   },
+   "health": "watch",
+   "healthLabel": "À surveiller",
+   "alert": "1 entrée(s) attendue(s) en retard."
+  },
+  "natures": {
+   "indispensable": {
+    "key": "indispensable",
+    "label": "Charges indispensables",
+    "centers": [
+     {
+      "ref": "std:logement",
+      "label": "Logement"
+     },
+     {
+      "ref": "std:alimentation",
+      "label": "Alimentation"
+     },
+     {
+      "ref": "std:transport",
+      "label": "Transport"
+     },
+     {
+      "ref": "std:sante",
+      "label": "Santé"
+     }
+    ],
+    "paidCents": 18000,
+    "toPayCents": 106000,
+    "plannedCents": 124000,
+    "consumedPct": 14.5,
+    "realizationGapCents": 0,
+    "otherCyclePaidCents": 0,
+    "shareOfPaidPct": 100,
+    "lateCents": 90000,
+    "lateCount": 1,
+    "dueTodayCount": 0,
+    "settledCount": 1,
+    "lineCount": 3,
+    "capCents": null,
+    "marginCents": null,
+    "overCount": 0,
+    "monthlyAverageCents": 90000,
+    "next": {
+     "id": "rec_006@2026-11-05",
+     "label": "Loyer",
+     "direction": "charge",
+     "nature": "indispensable",
+     "plannedDate": "2026-11-05",
+     "plannedCents": 90000,
+     "realizedDate": null,
+     "realizedCents": null,
+     "settled": false,
+     "status": "pending",
+     "statusLabel": "À venir",
+     "costCenterRef": "std:logement",
+     "costCenterLabel": "Logement",
+     "cadenceLabel": "Mensuelle"
+    },
+    "rows": [
+     {
+      "ref": "std:logement",
+      "label": "Logement",
+      "paidCents": 0,
+      "toPayCents": 106000,
+      "plannedCents": 106000,
+      "capCents": null,
+      "marginCents": null,
+      "over": false,
+      "near": false,
+      "lateCount": 1,
+      "lineCount": 2
+     },
+     {
+      "ref": "std:alimentation",
+      "label": "Alimentation",
+      "paidCents": 18000,
+      "toPayCents": 0,
+      "plannedCents": 18000,
+      "capCents": null,
+      "marginCents": null,
+      "over": false,
+      "near": false,
+      "lateCount": 0,
+      "lineCount": 1
+     }
+    ],
+    "lines": [
+     {
+      "id": "rec_006@2026-11-05",
+      "label": "Loyer",
+      "direction": "charge",
+      "nature": "indispensable",
+      "plannedDate": "2026-11-05",
+      "plannedCents": 90000,
+      "realizedDate": null,
+      "realizedCents": null,
+      "settled": false,
+      "status": "pending",
+      "statusLabel": "À venir",
+      "costCenterRef": "std:logement",
+      "costCenterLabel": "Logement",
+      "cadenceLabel": "Mensuelle"
+     },
+     {
+      "id": "op_008",
+      "label": "Courses",
+      "direction": "charge",
+      "nature": "indispensable",
+      "plannedDate": "2026-11-07",
+      "plannedCents": 18000,
+      "realizedDate": "2026-11-07",
+      "realizedCents": 18000,
+      "settled": true,
+      "status": "settled",
+      "statusLabel": "Réglé",
+      "costCenterRef": "std:alimentation",
+      "costCenterLabel": "Alimentation",
+      "cadenceLabel": "Ponctuelle"
+     },
+     {
+      "id": "op_007",
+      "label": "Électricien",
+      "direction": "charge",
+      "nature": "indispensable",
+      "plannedDate": "2026-11-25",
+      "plannedCents": 16000,
+      "realizedDate": null,
+      "realizedCents": null,
+      "settled": false,
+      "status": "pending",
+      "statusLabel": "À venir",
+      "costCenterRef": "std:logement",
+      "costCenterLabel": "Logement",
+      "cadenceLabel": "Ponctuelle"
+     }
+    ],
+    "health": "alert",
+    "healthLabel": "À traiter",
+    "alert": "1 charge(s) indispensable(s) en retard de paiement."
+   },
+   "courante": {
+    "key": "courante",
+    "label": "Charges courantes",
+    "centers": [
+     {
+      "ref": "std:loisirs",
+      "label": "Loisirs"
+     },
+     {
+      "ref": "std:divers",
+      "label": "Divers"
+     }
+    ],
+    "paidCents": 0,
+    "toPayCents": 0,
+    "plannedCents": 0,
+    "consumedPct": null,
+    "realizationGapCents": 0,
+    "otherCyclePaidCents": 0,
+    "shareOfPaidPct": 0,
+    "lateCents": 0,
+    "lateCount": 0,
+    "dueTodayCount": 0,
+    "settledCount": 0,
+    "lineCount": 0,
+    "capCents": null,
+    "marginCents": null,
+    "overCount": 0,
+    "monthlyAverageCents": 0,
+    "next": null,
+    "rows": [],
+    "lines": [],
+    "availableCents": null,
+    "availableReason": "Épargne nécessaire inconnue",
+    "weeklyCents": null,
+    "health": "ok",
+    "healthLabel": "En règle",
+    "alert": null
+   }
+  },
+  "projects": {
+   "key": "projets",
+   "label": "Projets financés",
+   "projectCount": 1,
+   "fundedCount": 1,
+   "unfundedCount": 0,
+   "allocatedCents": 120000,
+   "paidCents": 45000,
+   "remainingCents": 75000,
+   "availableCents": 75000,
+   "approvedOverrunCents": 0,
+   "periodPaidCents": 0,
+   "pendingRequests": [],
+   "taskRequestCount": 0,
+   "taskRequests": [],
+   "billable": [],
+   "billableCents": 0,
+   "nextBillingDate": null,
+   "deficitCount": 0,
+   "projects": [
+    {
+     "budgetId": "bud_004",
+     "coreProjectId": "prj_005",
+     "name": "Cuisine",
+     "status": "planned",
+     "statusLabel": "À faire",
+     "regime": true,
+     "fundingSource": "cycle",
+     "allocationCents": 120000,
+     "paidCents": 45000,
+     "remainingCents": 75000,
+     "periodPaidCents": 0,
+     "state": "ok",
+     "pendingOverrun": false
+    }
+   ],
+   "funding": {
+    "periods": [
+     {
+      "key": "2026-08",
+      "label": "Août 2026",
+      "start": "2026-08-01",
+      "end": "2026-08-31",
+      "status": "closed"
+     },
+     {
+      "key": "2026-09",
+      "label": "Septembre 2026",
+      "start": "2026-09-01",
+      "end": "2026-09-30",
+      "status": "closed"
+     },
+     {
+      "key": "2026-10",
+      "label": "Octobre 2026",
+      "start": "2026-10-01",
+      "end": "2026-10-31",
+      "status": "ended"
+     },
+     {
+      "key": "2026-11",
+      "label": "Novembre 2026",
+      "start": "2026-11-01",
+      "end": "2026-11-30",
+      "status": "current"
+     }
+    ],
+    "rows": [
+     {
+      "budgetId": "bud_004",
+      "coreProjectId": "prj_005",
+      "name": "Cuisine",
+      "regime": true,
+      "state": "ok",
+      "allocationCents": 120000,
+      "initialAllocationCents": 120000,
+      "allocationDate": "2026-09-05",
+      "allocationPeriodKey": "2026-09",
+      "approvedOverrunCents": 0,
+      "billedOverrunCents": 0,
+      "pendingOverrunCents": 0,
+      "paidCents": 45000,
+      "remainingCents": 75000,
+      "byPeriod": {
+       "2026-08": 0,
+       "2026-09": 45000,
+       "2026-10": 0,
+       "2026-11": 0
+      },
+      "overruns": []
+     }
+    ],
+    "totals": {
+     "byPeriod": {
+      "2026-08": 0,
+      "2026-09": 45000,
+      "2026-10": 0,
+      "2026-11": 0
+     },
+     "paidCents": 45000,
+     "allocatedCents": 120000
+    }
+   },
+   "health": "ok",
+   "healthLabel": "En règle",
+   "alert": null
+  },
+  "results": {
+   "key": "resultats",
+   "label": "Résultats des cycles",
+   "rows": [
+    {
+     "closureId": "clo_013",
+     "periodKey": "2026-09",
+     "periodLabel": "Septembre 2026",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "resultCents": -71000,
+     "closedAt": "2026-11-26T09:00:00.000Z",
+     "targetCents": null,
+     "meetsTarget": null
+    },
+    {
+     "closureId": "clo_014",
+     "periodKey": "2026-08",
+     "periodLabel": "Août 2026",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "resultCents": -22000,
+     "closedAt": "2026-11-26T09:00:00.000Z",
+     "targetCents": null,
+     "meetsTarget": null
+    }
+   ],
+   "count": 2,
+   "positiveCount": 0,
+   "negativeCount": 2,
+   "zeroCount": 0,
+   "metCount": 0,
+   "totalCents": -93000,
+   "averageCents": -46500,
+   "best": {
+    "closureId": "clo_014",
+    "periodKey": "2026-08",
+    "periodLabel": "Août 2026",
+    "periodStart": "2026-08-01",
+    "periodEnd": "2026-08-31",
+    "resultCents": -22000,
+    "closedAt": "2026-11-26T09:00:00.000Z",
+    "targetCents": null,
+    "meetsTarget": null
+   },
+   "worst": {
+    "closureId": "clo_013",
+    "periodKey": "2026-09",
+    "periodLabel": "Septembre 2026",
+    "periodStart": "2026-09-01",
+    "periodEnd": "2026-09-30",
+    "resultCents": -71000,
+    "closedAt": "2026-11-26T09:00:00.000Z",
+    "targetCents": null,
+    "meetsTarget": null
+   },
+   "last": {
+    "closureId": "clo_013",
+    "periodKey": "2026-09",
+    "periodLabel": "Septembre 2026",
+    "periodStart": "2026-09-01",
+    "periodEnd": "2026-09-30",
+    "resultCents": -71000,
+    "closedAt": "2026-11-26T09:00:00.000Z",
+    "targetCents": null,
+    "meetsTarget": null
+   },
+   "savingsTargetCents": null,
+   "surplus": null,
+   "current": {
+    "periodKey": "2026-11",
+    "expectedCents": 136000,
+    "targetCents": null,
+    "meetsTarget": null
+   },
+   "toCloseCount": 1,
+   "firstOpen": {
+    "key": "2026-10",
+    "label": "Octobre 2026",
+    "start": "2026-10-01",
+    "end": "2026-10-31",
+    "status": "ended"
+   },
+   "closing": {
+    "possible": true,
+    "reason": null,
+    "preview": {
+     "periodKey": "2026-10",
+     "periodLabel": "Octobre 2026",
+     "capitalizationDate": "2026-10-31",
+     "resultCents": -24000,
+     "result": -240,
+     "formula": "bpm.revenus - bpm.charges",
+     "parameter": {
+      "key": "metric.bpm.resultatPeriode",
+      "revision": 0,
+      "origin": "défaut du code",
+      "updatedAt": null,
+      "isDefault": true
+     },
+     "explanation": "0 − 240 = -240",
+     "stockBefore": 11070,
+     "stockAfter": 10830,
+     "conditions": [
+      "Période terminée",
+      "Périodes précédentes closes",
+      "Résultat connu",
+      "Capitalisation unique, même si le résultat est nul ou négatif"
+     ]
+    }
+   },
+   "surplusUseNote": "L’usage de l’excédent capitalisé (placements, affectations) relève d’un module à venir : cette page constate ce qui s’accumule et pilote ce qui l’alimente.",
+   "health": "alert",
+   "healthLabel": "À traiter",
+   "alert": "1 période(s) terminée(s) à clôturer : leur résultat n’est pas encore capitalisé."
+  },
+  "patrimoine": {
+   "key": "patrimoine",
+   "label": "Patrimoine accumulé",
+   "patrimoineId": "pat_011",
+   "stockCents": 1107000,
+   "stockReason": null,
+   "effectCents": -18000,
+   "afterCents": 1089000,
+   "expectedAfterCents": 1243000,
+   "objectiveCents": 5000000,
+   "progressPct": 22,
+   "remainingCents": 3893000,
+   "openingStockCents": 1200000,
+   "openingDate": "2026-11-20",
+   "capitalizedCents": -93000,
+   "capitalizationCount": 2,
+   "surplusUseNote": "L’usage de l’excédent capitalisé (placements, affectations) relève d’un module à venir : cette page constate ce qui s’accumule et pilote ce qui l’alimente.",
+   "health": "watch",
+   "healthLabel": "À surveiller",
+   "alert": "Ce cycle fait baisser le patrimoine à ce jour."
+  },
+  "budgetType": {
+   "empty": false,
+   "averageIncomeCents": 260000,
+   "averageChargeCents": 90000,
+   "averageNetCents": 170000,
+   "byNature": {
+    "indispensable": 90000,
+    "courante": 0
+   }
+  },
+  "directives": {
+   "savingsCents": null,
+   "provisionsCents": 0,
+   "availableCents": null,
+   "weeklyCents": null
+  },
+  "dueSoon": {
+   "from": "2026-10-01",
+   "to": "2026-11-10",
+   "lines": [
+    {
+     "id": "rec_006@2026-10-05",
+     "label": "Loyer",
+     "direction": "charge",
+     "nature": "indispensable",
+     "plannedDate": "2026-10-05",
+     "plannedCents": 90000,
+     "realizedDate": null,
+     "realizedCents": null,
+     "settled": false,
+     "status": "late",
+     "statusLabel": "En retard",
+     "costCenterRef": "std:logement",
+     "costCenterLabel": "Logement",
+     "cadenceLabel": "Mensuelle"
+    },
+    {
+     "id": "rec_009@2026-10-28",
+     "label": "Salaire",
+     "direction": "income",
+     "nature": null,
+     "plannedDate": "2026-10-28",
+     "plannedCents": 260000,
+     "realizedDate": null,
+     "realizedCents": null,
+     "settled": false,
+     "status": "late",
+     "statusLabel": "En retard",
+     "costCenterRef": "std:salaires",
+     "costCenterLabel": "Salaires et revenus d'activité",
+     "cadenceLabel": "Mensuelle"
+    },
+    {
+     "id": "rec_006@2026-11-05",
+     "label": "Loyer",
+     "direction": "charge",
+     "nature": "indispensable",
+     "plannedDate": "2026-11-05",
+     "plannedCents": 90000,
+     "realizedDate": null,
+     "realizedCents": null,
+     "settled": false,
+     "status": "pending",
+     "statusLabel": "À venir",
+     "costCenterRef": "std:logement",
+     "costCenterLabel": "Logement",
+     "cadenceLabel": "Mensuelle"
+    }
+   ],
+   "lateCount": 2,
+   "projectCount": 0
+  },
+  "essentials": {
+   "parameter": "bpm.chargesIndispensables",
+   "refs": [
+    "std:logement",
+    "std:alimentation",
+    "std:transport",
+    "std:sante",
+    "std:enfants"
+   ],
+   "labels": [
+    "Logement",
+    "Alimentation",
+    "Transport",
+    "Santé"
+   ]
+  }
+ },
+ "bilans": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-11",
+    "index": 24322,
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "label": "Novembre 2026",
+    "status": "current",
+    "closureId": null,
+    "endExclusive": "2026-12-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "bilans": [
+   {
+    "period": {
+     "key": "2026-11",
+     "label": "Novembre 2026",
+     "start": "2026-11-01",
+     "end": "2026-11-30"
+    },
+    "status": "current",
+    "source": "provisoire",
+    "closedAt": null,
+    "receivedCents": 0,
+    "spentCents": 18000,
+    "resultCents": -18000,
+    "projectsCents": 0,
+    "withdrawnCents": 0,
+    "stockAfterCents": 1089000,
+    "highlights": [
+     {
+      "kind": "result",
+      "tone": "negative",
+      "title": "Cycle déficitaire à ce jour",
+      "text": "−180,00 € à retirer du patrimoine : les dépenses ont dépassé les entrées."
+     },
+     {
+      "kind": "biggest",
+      "tone": "neutral",
+      "title": "Plus grosse dépense",
+      "text": "« Courses », 180,00 €."
+     },
+     {
+      "kind": "open",
+      "tone": "warning",
+      "title": "Échéances encore ouvertes",
+      "text": "3 échéance(s) à régler avant la clôture (+1 540,00 € au net)."
+     }
+    ],
+    "highlightCount": 3
+   },
+   {
+    "period": {
+     "key": "2026-10",
+     "label": "Octobre 2026",
+     "start": "2026-10-01",
+     "end": "2026-10-31"
+    },
+    "status": "ended",
+    "source": "provisoire",
+    "closedAt": null,
+    "receivedCents": 0,
+    "spentCents": 24000,
+    "resultCents": -24000,
+    "projectsCents": 0,
+    "withdrawnCents": 0,
+    "stockAfterCents": 1083000,
+    "highlights": [
+     {
+      "kind": "result",
+      "tone": "negative",
+      "title": "Cycle déficitaire à ce jour",
+      "text": "−240,00 € à retirer du patrimoine : les dépenses ont dépassé les entrées."
+     },
+     {
+      "kind": "biggest",
+      "tone": "neutral",
+      "title": "Plus grosse dépense",
+      "text": "« Courses », 240,00 €."
+     },
+     {
+      "kind": "open",
+      "tone": "warning",
+      "title": "Échéances encore ouvertes",
+      "text": "2 échéance(s) à régler avant la clôture (+1 700,00 € au net)."
+     }
+    ],
+    "highlightCount": 3
+   },
+   {
+    "period": {
+     "key": "2026-09",
+     "label": "Septembre 2026",
+     "start": "2026-09-01",
+     "end": "2026-09-30"
+    },
+    "status": "closed",
+    "source": "enregistré",
+    "closedAt": "2026-11-26T09:00:00.000Z",
+    "receivedCents": 0,
+    "spentCents": 71000,
+    "resultCents": -71000,
+    "projectsCents": 45000,
+    "withdrawnCents": 0,
+    "stockAfterCents": 1107000,
+    "highlights": [
+     {
+      "kind": "result",
+      "tone": "negative",
+      "title": "Cycle déficitaire",
+      "text": "−710,00 € retirés du patrimoine : les dépenses ont dépassé les entrées."
+     },
+     {
+      "kind": "projects",
+      "tone": "neutral",
+      "title": "Ce que les projets ont coûté au cycle",
+      "text": "450,00 € réglés pour vos projets de la vie (63,4 % du dépensé), dont 450,00 € pour « Cuisine ». Sans eux, le patrimoine aurait reçu 450,00 € de plus."
+     },
+     {
+      "kind": "allocation",
+      "tone": "neutral",
+      "title": "Enveloppe attribuée",
+      "text": "1 200,00 € réservés pour « Cuisine » le 05/09/2026."
+     }
+    ],
+    "highlightCount": 4
+   },
+   {
+    "period": {
+     "key": "2026-08",
+     "label": "Août 2026",
+     "start": "2026-08-01",
+     "end": "2026-08-31"
+    },
+    "status": "closed",
+    "source": "enregistré",
+    "closedAt": "2026-11-26T09:00:00.000Z",
+    "receivedCents": 0,
+    "spentCents": 22000,
+    "resultCents": -22000,
+    "projectsCents": 0,
+    "withdrawnCents": 0,
+    "stockAfterCents": 1178000,
+    "highlights": [
+     {
+      "kind": "result",
+      "tone": "negative",
+      "title": "Cycle déficitaire",
+      "text": "−220,00 € retirés du patrimoine : les dépenses ont dépassé les entrées."
+     },
+     {
+      "kind": "biggest",
+      "tone": "neutral",
+      "title": "Plus grosse dépense",
+      "text": "« Courses », 220,00 €."
+     }
+    ],
+    "highlightCount": 2
+   }
+  ],
+  "totals": {
+   "closedCount": 2,
+   "capitalizedCents": -93000,
+   "projectsClosedCents": 45000,
+   "withdrawnCents": 0
+  },
+  "projects": [
+   {
+    "budgetId": "bud_004",
+    "coreProjectId": "prj_005",
+    "name": "Cuisine",
+    "fundingSource": "cycle",
+    "allocationCents": 120000,
+    "closedCents": 45000,
+    "provisionalCents": 0,
+    "cycles": [
+     {
+      "periodKey": "2026-09",
+      "label": "Septembre 2026",
+      "paidCents": 45000,
+      "status": "closed"
+     }
+    ]
+   }
+  ]
+ },
+ "bilan": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-09",
+    "index": 24320,
+    "start": "2026-09-01",
+    "end": "2026-09-30",
+    "label": "Septembre 2026",
+    "status": "closed",
+    "closureId": "clo_013",
+    "endExclusive": "2026-10-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "bilan": {
+   "version": 1,
+   "period": {
+    "key": "2026-09",
+    "label": "Septembre 2026",
+    "start": "2026-09-01",
+    "end": "2026-09-30"
+   },
+   "flows": {
+    "receivedCents": 0,
+    "spentCents": 71000,
+    "resultCents": -71000,
+    "savingsRatePct": null,
+    "plannedResultCents": 144000,
+    "savingsTargetCents": null,
+    "receivedCount": 0,
+    "paidCount": 2
+   },
+   "natures": [
+    {
+     "key": "indispensable",
+     "label": "Charges indispensables",
+     "paidCents": 26000,
+     "count": 1,
+     "sharePct": 36.6
+    },
+    {
+     "key": "courante",
+     "label": "Charges courantes",
+     "paidCents": 0,
+     "count": 0,
+     "sharePct": 0
+    },
+    {
+     "key": "projet",
+     "label": "Charges des projets de la vie",
+     "paidCents": 45000,
+     "count": 1,
+     "sharePct": 63.4
+    }
+   ],
+   "projects": [
+    {
+     "fundingSource": "cycle",
+     "budgetId": "bud_004",
+     "coreProjectId": "prj_005",
+     "name": "Cuisine",
+     "paidCents": 45000,
+     "paymentCount": 1,
+     "allocationCents": 120000,
+     "allocationDate": "2026-09-05",
+     "allocatedInPeriod": true,
+     "paidToDateCents": 45000
+    }
+   ],
+   "paymentTrace": [],
+   "announcementTrace": [],
+   "centers": [
+    {
+     "ref": "std:alimentation",
+     "label": "Alimentation",
+     "paidCents": 26000
+    }
+   ],
+   "projectCenters": [
+    {
+     "ref": "std:logement",
+     "label": "Logement",
+     "paidCents": 45000,
+     "projects": [
+      "Cuisine"
+     ]
+    }
+   ],
+   "caps": {
+    "overCount": 0,
+    "over": []
+   },
+   "deadlines": {
+    "unrealizedCount": 0,
+    "unrealizedCents": 0,
+    "openCount": 2,
+    "openCents": 170000
+   },
+   "biggest": {
+    "label": "Plan de travail",
+    "cents": 45000,
+    "date": "2026-09-20",
+    "project": "Cuisine"
+   },
+   "decisions": {
+    "sharesGranted": 0,
+    "sharesGrantedCents": 0,
+    "sharesRefused": 0,
+    "overrunsApproved": 0,
+    "overrunsApprovedCents": 0,
+    "overrunsBilledCents": 0
+   },
+   "patrimoine": {
+    "stockBeforeCents": 1178000,
+    "capitalizedCents": -71000,
+    "stockAfterCents": 1107000,
+    "objectiveCents": 5000000,
+    "progressBeforePct": 23.6,
+    "progressAfterPct": 22.1,
+    "projectsCents": 45000,
+    "withdrawnCents": 0
+   },
+   "highlights": [
+    {
+     "kind": "result",
+     "tone": "negative",
+     "title": "Cycle déficitaire",
+     "text": "−710,00 € retirés du patrimoine : les dépenses ont dépassé les entrées."
+    },
+    {
+     "kind": "projects",
+     "tone": "neutral",
+     "title": "Ce que les projets ont coûté au cycle",
+     "text": "450,00 € réglés pour vos projets de la vie (63,4 % du dépensé), dont 450,00 € pour « Cuisine ». Sans eux, le patrimoine aurait reçu 450,00 € de plus."
+    },
+    {
+     "kind": "allocation",
+     "tone": "neutral",
+     "title": "Enveloppe attribuée",
+     "text": "1 200,00 € réservés pour « Cuisine » le 05/09/2026."
+    },
+    {
+     "kind": "biggest",
+     "tone": "neutral",
+     "title": "Plus grosse dépense",
+     "text": "« Plan de travail », 450,00 € pour le projet « Cuisine »."
+    }
+   ],
+   "recordedAt": "2026-11-03",
+   "status": "closed",
+   "source": "enregistré",
+   "closureId": "clo_013",
+   "closedAt": "2026-11-26T09:00:00.000Z"
+  }
+ },
+ "projectDetail": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "lifeBudget": {
+    "budgetId": "bud_002",
+    "name": "Budget du projet de vie",
+    "coreProjectId": "prj_003"
+   },
+   "period": {
+    "key": "2026-11",
+    "label": "Novembre 2026",
+    "start": "2026-11-01",
+    "end": "2026-11-30"
+   },
+   "cycleState": "active",
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "role": "standard",
+  "project": {
+   "project": {
+    "id": "prj_005",
+    "kind": "coreProject",
+    "userId": "usr_001",
+    "revision": 1,
+    "createdAt": "2026-11-26T09:00:00.000Z",
+    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "provenance": {
+     "command": "createBpmProject",
+     "requestKey": "req-recette",
+     "at": "2026-11-26T09:00:00.000Z"
+    },
+    "title": "Cuisine",
+    "description": "Refaire la cuisine",
+    "priority": "medium",
+    "startDate": null,
+    "dueDate": null
+   },
+   "view": {
+    "projectId": "prj_005",
+    "status": "planned",
+    "statusLabel": "À faire",
+    "column": "todo",
+    "columnLabel": "À faire",
+    "explanation": "1 tâche à faire : À faire",
+    "taskIds": [
+     "tsk_010"
+    ],
+    "countsByStatus": {
+     "todo": 1,
+     "blocked": 0,
+     "doing": 0,
+     "done": 0
+    },
+    "doneCount": 0,
+    "completionPercent": 0,
+    "time": {
+     "taskCount": 1,
+     "estimatedTaskCount": 1,
+     "missingEstimateCount": 0,
+     "plannedHoursKnown": 6,
+     "plannedIsPartial": false,
+     "spentHoursTotal": 0,
+     "spentToPlannedPercent": 0
+    }
+   },
+   "enrichment": {
+    "kind": "standard",
+    "label": "Racine de branche (projet de la vie)",
+    "budgetId": "bud_004",
+    "budgetName": "Cuisine",
+    "parentBudgetId": "bud_002",
+    "parentBudgetName": "Projet de vie",
+    "financial": {
+     "status": "not-implemented",
+     "note": "Provision et consommation monétaires des projets : contexte C05 ouvert."
+    },
+    "bpmCompositionId": "bpm_012",
+    "lifeProjectId": "prj_003",
+    "patrimoineId": "pat_011"
+   },
+   "pathways": {
+    "canAddTask": true,
+    "isTaskDestination": true,
+    "tasksCanChangeProject": true,
+    "note": "Projet de la vie budgétisé : une tâche qui porte une part de budget, une dépense ou un retour ne change de projet qu’une fois ces données retirées."
+   }
+  },
+  "budget": {
+   "fundingSource": "cycle",
+   "fundingSourceLocked": true,
+   "budgetId": "bud_004",
+   "kind": "standard",
+   "nonStandard": false,
+   "name": "Cuisine",
+   "coreProjectId": "prj_005",
+   "parentBudgetId": "bud_002",
+   "revision": 3,
+   "regime": true,
+   "taskFundingRequired": true,
+   "allocationCents": 120000,
+   "allocationDate": "2026-09-05",
+   "initialAllocationCents": 120000,
+   "approvedOverrunCents": 0,
+   "billedOverrunCents": 0,
+   "pendingOverrun": null,
+   "ceilingCents": 120000,
+   "sharesCents": 45000,
+   "availableCents": 75000,
+   "engagedCents": 45000,
+   "paidCents": 45000,
+   "remainingCents": 75000,
+   "toPayCents": 0,
+   "uncommittedCents": 75000,
+   "pendingRequestsCents": 0,
+   "paidBeforeAllocationCents": 0,
+   "unsharedChargesCents": 0,
+   "state": "ok",
+   "deficit": false,
+   "nextBillingDate": null,
+   "byTask": {
+    "tsk_010": {
+     "engagedCents": 45000,
+     "paidCents": 45000,
+     "unbounded": false
+    }
+   },
+   "beforeByTask": {},
+   "shares": {
+    "tsk_010": 45000
+   },
+   "returns": {},
+   "abandoned": null,
+   "life": null,
+   "periodPaidCents": 0
+  },
+  "tasks": [
+   {
+    "task": {
+     "id": "tsk_010",
+     "kind": "task",
+     "userId": "usr_001",
+     "revision": 1,
+     "createdAt": "2026-11-26T09:00:00.000Z",
+     "updatedAt": "2026-11-26T09:00:00.000Z",
+     "provenance": {
+      "command": "createBpmTask",
+      "requestKey": "req-recette",
+      "at": "2026-11-26T09:00:00.000Z"
+     },
+     "title": "Plan de travail",
+     "description": "",
+     "status": "todo",
+     "plannedHours": 6,
+     "spentHours": 0,
+     "startDate": null,
+     "dueDate": null,
+     "projectId": "prj_005"
+    },
+    "projectTitle": "Cuisine",
+    "qualification": {
+     "code": "budgetedProjectTask",
+     "label": "Tâche d'un projet budgétisé",
+     "budgetIdDerived": "bud_004"
+    },
+    "pathways": {
+     "canChangeProject": true
+    },
+    "projectRole": "standard",
+    "budgetId": "bud_004",
+    "budget": {
+     "timeRemainingPct": 100,
+     "timeRemainingCents": 45000,
+     "timeConsumptionPercent": 0,
+     "timeConsumedCents": 0,
+     "workConsumptionPercent": 0,
+     "purchaseConsumptionPercent": 100,
+     "purchaseEquivalentHours": 6,
+     "cashRemainingCents": 0,
+     "shareCents": 45000,
+     "engagedCents": 45000,
+     "paidCents": 45000,
+     "openCents": 0,
+     "remainingCents": 45000,
+     "over": false,
+     "unbounded": false,
+     "paidBeforeCents": 0,
+     "unusedCents": 0,
+     "return": null,
+     "request": null
+    }
+   }
+  ],
+  "attachable": [],
+  "overruns": [],
+  "checks": [
+   {
+    "code": "paid-ceiling",
+    "level": "ok",
+    "taskId": null,
+    "message": "Réglé sur l’enveloppe depuis son attribution : 450,00 € sur 1 200,00 € (enveloppe et dépassements autorisés)."
+   },
+   {
+    "code": "period-reconciliation",
+    "level": "ok",
+    "taskId": null,
+    "message": "Cycle du 01/11/2026 au 30/11/2026 : 0,00 € remontés au budget du projet de vie (remboursements déduits) ; toutes les charges sont reliées aux tâches du projet."
+   },
+   {
+    "code": "shares",
+    "level": "warning",
+    "taskId": null,
+    "message": "750,00 € de l’enveloppe ne sont encore répartis sur aucune tâche (parts : 450,00 € sur 1 200,00 €)."
+   },
+   {
+    "code": "engaged",
+    "level": "ok",
+    "taskId": "tsk_010",
+    "message": "« Plan de travail » : charges planifiées égales à sa part (450,00 €)."
+   }
+  ],
+  "requests": [],
+  "charges": [
+   {
+    "id": "op_015",
+    "kind": "operation",
+    "operationId": "op_015",
+    "recurrenceId": null,
+    "occurrenceDate": null,
+    "occurrenceKey": null,
+    "budgetId": "bud_004",
+    "userId": "usr_001",
+    "direction": "charge",
+    "label": "Plan de travail",
+    "plannedDate": "2026-09-20",
+    "plannedCents": 45000,
+    "realizedDate": "2026-09-20",
+    "accountingDate": "2026-09-20",
+    "fundingSource": "cycle",
+    "realizedCents": 45000,
+    "settled": true,
+    "standardCostCenter": "logement",
+    "costCenterId": null,
+    "categoryId": null,
+    "note": null,
+    "taskId": "tsk_010",
+    "revision": 1,
+    "costCenterRef": "std:logement",
+    "costCenterLabel": "Logement",
+    "categoryLabel": null,
+    "budgetName": "Cuisine",
+    "budgetRole": "standard",
+    "cadence": "once",
+    "cadenceLabel": "Ponctuelle",
+    "firstDate": null,
+    "endDate": null,
+    "taskTitle": "Plan de travail",
+    "differenceCents": 0,
+    "refund": false,
+    "validated": true,
+    "beforeAllocation": false
+   }
+  ],
+  "abandon": {
+   "paidCents": 45000,
+   "allocationBeforeCents": 120000,
+   "allocationAfterCents": 45000,
+   "releasedCents": 75000,
+   "cancelledEntries": 0,
+   "stoppedRecurrences": 0,
+   "cancelledRequests": 0,
+   "cancelledOverruns": 0,
+   "toPayCents": 0
+  },
+  "life": null
+ },
+ "line": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-11",
+    "index": 24322,
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "label": "Novembre 2026",
+    "status": "current",
+    "closureId": null,
+    "endExclusive": "2026-12-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "line": {
+   "id": "rec_006@2026-11-05",
+   "kind": "occurrence",
+   "operationId": null,
+   "recurrenceId": "rec_006",
+   "occurrenceDate": "2026-11-05",
+   "occurrenceKey": "rec_006@2026-11-05",
+   "budgetId": "bud_002",
+   "userId": "usr_001",
+   "direction": "charge",
+   "label": "Loyer",
+   "plannedDate": "2026-11-05",
+   "plannedCents": 90000,
+   "realizedDate": null,
+   "fundingSource": null,
+   "realizedCents": null,
+   "settled": false,
+   "standardCostCenter": "logement",
+   "costCenterId": null,
+   "categoryId": null,
+   "note": null,
+   "taskId": null,
+   "revision": null,
+   "costCenterRef": "std:logement",
+   "costCenterLabel": "Logement",
+   "categoryLabel": null,
+   "budgetName": "Projet de vie",
+   "budgetRole": "life",
+   "cadence": "monthly",
+   "cadenceLabel": "Mensuelle",
+   "firstDate": "2026-08-05",
+   "endDate": null,
+   "taskTitle": null,
+   "differenceCents": null,
+   "status": "pending",
+   "statusLabel": "À venir",
+   "centerKnown": true
+  },
+  "definition": {
+   "id": "rec_006",
+   "kind": "recurrence",
+   "userId": "usr_001",
+   "revision": 1,
+   "createdAt": "2026-11-26T09:00:00.000Z",
+   "updatedAt": "2026-11-26T09:00:00.000Z",
+   "provenance": {
+    "command": "createRecurrence",
+    "requestKey": "req-recette",
+    "at": "2026-11-26T09:00:00.000Z"
+   },
+   "budgetId": "bud_002",
+   "direction": "charge",
+   "label": "Loyer",
+   "amountCents": 90000,
+   "cadence": "monthly",
+   "firstDate": "2026-08-05",
+   "endDate": null,
+   "note": null,
+   "taskId": null,
+   "standardCostCenter": "logement",
+   "costCenterId": null,
+   "categoryId": null,
+   "enteredOn": "2026-11-20",
+   "amount": 900,
+   "cadenceLabel": "Mensuelle",
+   "directionLabel": "Charge",
+   "costCenterRef": "std:logement",
+   "costCenterLabel": "Logement",
+   "categoryLabel": null,
+   "budgetName": "Projet de vie",
+   "settlementIds": []
+  },
+  "settlements": [],
+  "skipped": [],
+  "ids": {
+   "lineId": "rec_006@2026-11-05",
+   "operationId": null,
+   "recurrenceId": "rec_006",
+   "budgetId": "bud_002",
+   "taskId": null
+  },
+  "project": null,
+  "timing": {
+   "plannedPeriod": {
+    "key": "2026-11",
+    "label": "Novembre 2026",
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "status": "current"
+   },
+   "realizedPeriod": null,
+   "accountingPeriod": null
+  },
+  "actions": {
+   "canSettle": true,
+   "canCancelSettlement": false,
+   "canEdit": true,
+   "canCancelEntry": false,
+   "canSkipOccurrence": true,
+   "canDeleteDefinition": true,
+   "editReason": null,
+   "settlementPolicy": "Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos."
+  }
+ },
+ "closing": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-11",
+    "index": 24322,
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "label": "Novembre 2026",
+    "status": "current",
+    "closureId": null,
+    "endExclusive": "2026-12-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "phase": "to_close",
+  "period": {
+   "key": "2026-10",
+   "label": "Octobre 2026",
+   "start": "2026-10-01",
+   "end": "2026-10-31",
+   "status": "ended"
+  },
+  "next": {
+   "key": "2026-11",
+   "label": "Novembre 2026",
+   "start": "2026-11-01",
+   "end": "2026-11-30"
+  },
+  "opensOn": "2026-11-01",
+  "days": {
+   "total": 31,
+   "elapsed": 31,
+   "left": 0
+  },
+  "backlog": 1,
+  "lock": {
+   "enabled": false,
+   "active": false,
+   "from": null,
+   "message": null
+  },
+  "closingMode": {
+   "active": false,
+   "message": null
+  },
+  "percent": 0,
+  "done": 0,
+  "total": 3,
+  "counts": {
+   "total": 3,
+   "open": 3,
+   "closed": 0,
+   "deferred": 0,
+   "later": 0,
+   "inherited": 0
+  },
+  "criteria": [
+   {
+    "key": "income",
+    "label": "Entrées reçues",
+    "done": 0,
+    "total": 1,
+    "state": "todo",
+    "remaining": "1 entrée à recevoir ou décider"
+   },
+   {
+    "key": "charges",
+    "label": "Charges réglées",
+    "done": 0,
+    "total": 1,
+    "state": "todo",
+    "remaining": "1 charge à régler ou décider"
+   },
+   {
+    "key": "projects",
+    "label": "Flux des projets imputés au cycle",
+    "done": 0,
+    "total": 0,
+    "state": "none",
+    "remaining": null
+   },
+   {
+    "key": "decisions",
+    "label": "Décisions de financement",
+    "done": 0,
+    "total": 0,
+    "state": "none",
+    "remaining": null
+   },
+   {
+    "key": "account",
+    "label": "Compte vérifié",
+    "done": 0,
+    "total": 1,
+    "state": "todo",
+    "remaining": "compte à vérifier"
+   }
+  ],
+  "points": [
+   {
+    "id": "rec_006@2026-10-05",
+    "lineId": "rec_006@2026-10-05",
+    "kind": "line",
+    "group": "charges",
+    "blocking": false,
+    "lineKind": "occurrence",
+    "operationId": null,
+    "recurrenceId": "rec_006",
+    "occurrenceDate": "2026-10-05",
+    "revision": null,
+    "label": "Loyer",
+    "detail": "Logement",
+    "direction": "charge",
+    "plannedDate": "2026-10-05",
+    "plannedCents": 90000,
+    "realizedDate": null,
+    "realizedCents": null,
+    "costCenterLabel": "Logement",
+    "cadenceLabel": "Mensuelle",
+    "project": null,
+    "status": "late",
+    "statusLabel": "En retard",
+    "state": "open",
+    "openedOn": "2026-11-20",
+    "closedAt": null,
+    "closedOn": null,
+    "outcome": null,
+    "outcomeLabel": null,
+    "inheritedFrom": null,
+    "deferTo": null
+   },
+   {
+    "id": "rec_009@2026-10-28",
+    "lineId": "rec_009@2026-10-28",
+    "kind": "line",
+    "group": "income",
+    "blocking": false,
+    "lineKind": "occurrence",
+    "operationId": null,
+    "recurrenceId": "rec_009",
+    "occurrenceDate": "2026-10-28",
+    "revision": null,
+    "label": "Salaire",
+    "detail": "Salaires et revenus d'activité",
+    "direction": "income",
+    "plannedDate": "2026-10-28",
+    "plannedCents": 260000,
+    "realizedDate": null,
+    "realizedCents": null,
+    "costCenterLabel": "Salaires et revenus d'activité",
+    "cadenceLabel": "Mensuelle",
+    "project": null,
+    "status": "late",
+    "statusLabel": "En retard",
+    "state": "open",
+    "openedOn": "2026-11-20",
+    "closedAt": null,
+    "closedOn": null,
+    "outcome": null,
+    "outcomeLabel": null,
+    "inheritedFrom": null,
+    "deferTo": null
+   },
+   {
+    "id": "account",
+    "lineId": null,
+    "kind": "account",
+    "group": "account",
+    "blocking": true,
+    "label": "Vérification du compte",
+    "detail": "Sa variation vaut les entrées reçues moins les sorties payées du cycle.",
+    "status": "late",
+    "statusLabel": "À vérifier",
+    "state": "open",
+    "stale": false,
+    "openedOn": "2026-11-01",
+    "closedAt": null,
+    "closedOn": null,
+    "outcome": null,
+    "outcomeLabel": null,
+    "inheritedFrom": null,
+    "deferTo": null
+   }
+  ],
+  "targets": [
+   {
+    "key": "2026-11",
+    "label": "Novembre 2026",
+    "start": "2026-11-01"
+   },
+   {
+    "key": "2026-12",
+    "label": "Décembre 2026",
+    "start": "2026-12-01"
+   },
+   {
+    "key": "2027-01",
+    "label": "Janvier 2027",
+    "start": "2027-01-01"
+   },
+   {
+    "key": "2027-02",
+    "label": "Février 2027",
+    "start": "2027-02-01"
+   },
+   {
+    "key": "2027-03",
+    "label": "Mars 2027",
+    "start": "2027-03-01"
+   },
+   {
+    "key": "2027-04",
+    "label": "Avril 2027",
+    "start": "2027-04-01"
+   },
+   {
+    "key": "2027-05",
+    "label": "Mai 2027",
+    "start": "2027-05-01"
+   },
+   {
+    "key": "2027-06",
+    "label": "Juin 2027",
+    "start": "2027-06-01"
+   },
+   {
+    "key": "2027-07",
+    "label": "Juillet 2027",
+    "start": "2027-07-01"
+   },
+   {
+    "key": "2027-08",
+    "label": "Août 2027",
+    "start": "2027-08-01"
+   },
+   {
+    "key": "2027-09",
+    "label": "Septembre 2027",
+    "start": "2027-09-01"
+   },
+   {
+    "key": "2027-10",
+    "label": "Octobre 2027",
+    "start": "2027-10-01"
+   },
+   {
+    "key": "2027-11",
+    "label": "Novembre 2027",
+    "start": "2027-11-01"
+   },
+   {
+    "key": "2027-12",
+    "label": "Décembre 2027",
+    "start": "2027-12-01"
+   },
+   {
+    "key": "2028-01",
+    "label": "Janvier 2028",
+    "start": "2028-01-01"
+   },
+   {
+    "key": "2028-02",
+    "label": "Février 2028",
+    "start": "2028-02-01"
+   },
+   {
+    "key": "2028-03",
+    "label": "Mars 2028",
+    "start": "2028-03-01"
+   },
+   {
+    "key": "2028-04",
+    "label": "Avril 2028",
+    "start": "2028-04-01"
+   },
+   {
+    "key": "2028-05",
+    "label": "Mai 2028",
+    "start": "2028-05-01"
+   },
+   {
+    "key": "2028-06",
+    "label": "Juin 2028",
+    "start": "2028-06-01"
+   },
+   {
+    "key": "2028-07",
+    "label": "Juillet 2028",
+    "start": "2028-07-01"
+   },
+   {
+    "key": "2028-08",
+    "label": "Août 2028",
+    "start": "2028-08-01"
+   },
+   {
+    "key": "2028-09",
+    "label": "Septembre 2028",
+    "start": "2028-09-01"
+   },
+   {
+    "key": "2028-10",
+    "label": "Octobre 2028",
+    "start": "2028-10-01"
+   }
+  ],
+  "netCents": -24000,
+  "account": null,
+  "closing": {
+   "possible": true,
+   "reason": null,
+   "preview": {
+    "periodKey": "2026-10",
+    "periodLabel": "Octobre 2026",
+    "capitalizationDate": "2026-10-31",
+    "resultCents": -24000,
+    "result": -240,
+    "formula": "bpm.revenus - bpm.charges",
+    "parameter": {
+     "key": "metric.bpm.resultatPeriode",
+     "revision": 0,
+     "origin": "défaut du code",
+     "updatedAt": null,
+     "isDefault": true
+    },
+    "explanation": "0 − 240 = -240",
+    "stockBefore": 11070,
+    "stockAfter": 10830,
+    "conditions": [
+     "Période terminée",
+     "Périodes précédentes closes",
+     "Résultat connu",
+     "Capitalisation unique, même si le résultat est nul ou négatif"
+    ]
+   }
+  },
+  "canClose": false,
+  "remaining": [
+   "1 entrée à recevoir ou décider",
+   "1 charge à régler ou décider",
+   "compte à vérifier"
+  ],
+  "impacts": {
+   "next": {
+    "key": "2026-11",
+    "label": "Novembre 2026",
+    "start": "2026-11-01",
+    "end": "2026-11-30"
+   },
+   "capitalization": {
+    "resultCents": -24000,
+    "stockBefore": 11070,
+    "stockAfter": 10830,
+    "date": "2026-10-31",
+    "provisional": false
+   },
+   "recurring": {
+    "count": 2,
+    "incomeCents": 260000,
+    "chargeCents": 90000
+   },
+   "planned": {
+    "count": 1,
+    "incomeCents": 0,
+    "chargeCents": 16000
+   },
+   "projects": {
+    "count": 0,
+    "incomeCents": 0,
+    "chargeCents": 0
+   },
+   "deferred": {
+    "count": 0,
+    "incomeCents": 0,
+    "chargeCents": 0,
+    "intoNext": {
+     "count": 0,
+     "incomeCents": 0,
+     "chargeCents": 0
+    },
+    "byCycle": []
+   },
+   "decisions": {
+    "count": 0,
+    "points": []
+   },
+   "balanceCents": 154000,
+   "opensEntries": false
+  },
+  "actions": {
+   "total": 3,
+   "entries": 3,
+   "lastAt": "2026-11-26T09:00:00.000Z",
+   "firstAt": "2026-11-26T09:00:00.000Z",
+   "source": {
+    "journalFrom": "2026-11-26T09:00:00.000Z",
+    "complete": false
+   },
+   "categories": [
+    {
+     "key": "daily",
+     "label": "Argent du quotidien",
+     "part": "quotidien",
+     "text": "Dépenses et entrées saisies, prévisions, règlements, échéances écartées et annulations du budget du projet de vie.",
+     "count": 1,
+     "entries": 1,
+     "realizedCents": -24000,
+     "lastAt": "2026-11-26T09:00:00.000Z",
+     "items": [
+      {
+       "category": "daily",
+       "command": "createOperation",
+       "verb": "Dépense payée saisie",
+       "at": "2026-11-26T09:00:00.000Z",
+       "source": "journal",
+       "objectId": "op_016",
+       "label": "Courses",
+       "detail": "Alimentation · payée le 9 oct. 2026",
+       "amountCents": 24000,
+       "direction": "charge",
+       "effect": "realized",
+       "target": {
+        "kind": "line",
+        "id": "op_016",
+        "coreProjectId": null
+       },
+       "count": 1,
+       "firstAt": "2026-11-26T09:00:00.000Z"
+      }
+     ]
+    },
+    {
+     "key": "projects",
+     "label": "Projets de la vie",
+     "part": "projets",
+     "text": "Flux des projets, enveloppes attribuées, parts et retours des tâches, demandes, dépassements et décisions.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    },
+    {
+     "key": "recurring",
+     "label": "Budget récurrent",
+     "part": "quotidien",
+     "text": "Échéances récurrentes définies, modifiées ou supprimées dont des occurrences tombent dans le cycle.",
+     "count": 2,
+     "entries": 2,
+     "realizedCents": 0,
+     "lastAt": "2026-11-26T09:00:00.000Z",
+     "items": [
+      {
+       "category": "recurring",
+       "command": "createRecurrence",
+       "verb": "Échéance récurrente définie",
+       "at": "2026-11-26T09:00:00.000Z",
+       "source": "journal",
+       "objectId": "rec_009",
+       "label": "Salaire",
+       "detail": "Mensuelle · Salaires et revenus d'activité · 1 échéance dans le cycle",
+       "amountCents": 260000,
+       "direction": "income",
+       "effect": "planned",
+       "target": {
+        "kind": "recurring",
+        "id": "rec_009",
+        "coreProjectId": null
+       },
+       "count": 1,
+       "firstAt": "2026-11-26T09:00:00.000Z"
+      },
+      {
+       "category": "recurring",
+       "command": "createRecurrence",
+       "verb": "Échéance récurrente définie",
+       "at": "2026-11-26T09:00:00.000Z",
+       "source": "journal",
+       "objectId": "rec_006",
+       "label": "Loyer",
+       "detail": "Mensuelle · Logement · 1 échéance dans le cycle",
+       "amountCents": 90000,
+       "direction": "charge",
+       "effect": "planned",
+       "target": {
+        "kind": "recurring",
+        "id": "rec_006",
+        "coreProjectId": null
+       },
+       "count": 1,
+       "firstAt": "2026-11-26T09:00:00.000Z"
+      }
+     ]
+    },
+    {
+     "key": "caps",
+     "label": "Plafonds et postes",
+     "part": "quotidien",
+     "text": "Plafonds des postes, catégories et postes personnels en vigueur pendant le cycle.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    },
+    {
+     "key": "wealth",
+     "label": "Cap et patrimoine",
+     "part": "patrimoine",
+     "text": "Objectifs datés, vision et point de départ du patrimoine.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    },
+    {
+     "key": "cycle",
+     "label": "Cycle et clôture",
+     "part": "patrimoine",
+     "text": "Clôture du cycle précédent, ancrage du cycle, décisions de clôture.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    }
+   ]
+  },
+  "checks": {
+   "items": [
+    {
+     "items": [
+      {
+       "id": "rec_006@2026-10-05",
+       "label": "Loyer",
+       "detail": "En retard · Logement",
+       "amountCents": -90000,
+       "target": {
+        "kind": "line",
+        "id": "rec_006@2026-10-05",
+        "coreProjectId": null,
+        "page": "echeances"
+       }
+      },
+      {
+       "id": "rec_009@2026-10-28",
+       "label": "Salaire",
+       "detail": "En retard · Salaires et revenus d'activité",
+       "amountCents": 260000,
+       "target": {
+        "kind": "line",
+        "id": "rec_009@2026-10-28",
+        "coreProjectId": null,
+        "page": "echeances"
+       }
+      }
+     ],
+     "target": "closing-path-title",
+     "key": "points",
+     "level": "blocking",
+     "label": "Points du cycle traités",
+     "state": "fail",
+     "value": "0 / 2",
+     "text": "2 points ouverts : à valider, ou à revoir dans un cycle à venir, avant la clôture.",
+     "resolution": {
+      "problem": "2 points restent ouverts : la clôture attend qu’ils soient validés ou reportés.",
+      "why": "Chaque évènement du cycle doit être réglé, écarté ou reporté pour que le bilan et le résultat soient justes.",
+      "steps": [
+       {
+        "text": "Dans « À valider », validez chaque point ouvert : réglé à sa date prévue, ou avec une autre date, un autre montant.",
+        "target": {
+         "kind": "section",
+         "id": "closing-path-title"
+        }
+       },
+       {
+        "text": "Un point qui ne sera pas validé dans ce cycle : « Ne pas valider ici » et choisissez le cycle où le revoir.",
+        "target": {
+         "kind": "section",
+         "id": "closing-path-title"
+        }
+       },
+       {
+        "text": "Quand il n’en reste aucun, ce contrôle passe au vert."
+       }
+      ],
+      "progress": {
+       "done": 0,
+       "total": 2
+      }
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": "closing-step-account",
+     "key": "account",
+     "level": "blocking",
+     "label": "Compte vérifié",
+     "state": "fail",
+     "value": "À faire",
+     "text": "Comparez le relevé et les règlements du cycle.",
+     "resolution": {
+      "problem": "Le compte n’est pas encore vérifié.",
+      "why": "La vérification garantit que le résultat versé au patrimoine correspond à ce qui s’est réellement passé sur le compte.",
+      "steps": [
+       {
+        "text": "Ouvrez « Vérifier le compte » et comparez le relevé bancaire du cycle aux règlements enregistrés.",
+        "target": {
+         "kind": "reconciliation"
+        }
+       },
+       {
+        "text": "S’il manque un mouvement, saisissez-le comme déjà réglé : il compte dans le cycle sans ouvrir de point.",
+        "target": {
+         "kind": "page",
+         "path": "mouvements"
+        }
+       },
+       {
+        "text": "Revenez ici et confirmez « Le compte correspond ».",
+        "target": {
+         "kind": "section",
+         "id": "closing-step-account"
+        }
+       }
+      ],
+      "progress": {
+       "done": 0,
+       "total": 1
+      }
+     }
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "integrity",
+     "level": "blocking",
+     "label": "Données intègres",
+     "state": "ok",
+     "value": "Aucune anomalie",
+     "text": "Références et valeurs des objets du cycle cohérentes (contrôles du socle).",
+     "resolution": {
+      "problem": null,
+      "why": "Une référence cassée (poste, catégorie, projet ou tâche disparus) fausse les sommes et le bilan qui sera figé.",
+      "steps": [
+       {
+        "text": "Ouvrez chaque élément concerné et corrigez la référence signalée (poste, catégorie, projet, tâche)."
+       },
+       {
+        "text": "Si l’élément ne s’ouvre pas sur le site, notez son identifiant : il se corrige par l’administration."
+       },
+       {
+        "text": "Revenez ici : le contrôle se relit à l’instant."
+       }
+      ],
+      "progress": null
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": "closing-bilan-title",
+     "key": "result",
+     "level": "blocking",
+     "label": "Résultat recalculé à l’identique",
+     "state": "ok",
+     "value": "−240,00 €",
+     "text": "Entrées reçues moins sorties payées : le résultat versé au patrimoine sera celui-ci.",
+     "resolution": {
+      "problem": null,
+      "why": "Le résultat versé au patrimoine doit être celui qui se lit dans le cycle, au centime près.",
+      "steps": [
+       {
+        "text": "Relisez les règlements du cycle (montants, dates réelles) dans Mouvements.",
+        "target": {
+         "kind": "page",
+         "path": "mouvements"
+        }
+       },
+       {
+        "text": "Corrigez la saisie en cause : le résultat se recalcule aussitôt."
+       },
+       {
+        "text": "Revenez ici : si l’écart persiste, il vient des données, à signaler."
+       }
+      ],
+      "progress": null
+     }
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "centers",
+     "level": "warning",
+     "label": "Mouvements rattachés à un poste",
+     "state": "ok",
+     "value": "Tous rattachés",
+     "text": "Chaque mouvement du cycle compte dans son poste, ses plafonds et sa nature.",
+     "resolution": {
+      "problem": null,
+      "why": "Sans poste, un mouvement échappe aux plafonds et au bilan par nature du cycle.",
+      "steps": [
+       {
+        "text": "Ouvrez chaque mouvement concerné, puis « Modifier » : choisissez son poste."
+       },
+       {
+        "text": "Revenez ici : le contrôle compte ceux qui restent."
+       }
+      ],
+      "progress": {
+       "done": 3,
+       "total": 3
+      }
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "caps",
+     "level": "warning",
+     "label": "Plafonds respectés",
+     "state": "ok",
+     "value": "Tous tenus",
+     "text": "Aucun poste au-delà de son plafond.",
+     "resolution": {
+      "problem": null,
+      "why": "Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans bloquer.",
+      "steps": [
+       {
+        "text": "Si la dépense était prévue, relevez le plafond du poste.",
+        "target": {
+         "kind": "page",
+         "path": "plafonds"
+        }
+       },
+       {
+        "text": "Sinon, écartez ou reportez une échéance de ce poste qui n’a pas encore eu lieu.",
+        "target": {
+         "kind": "page",
+         "path": "echeances"
+        }
+       },
+       {
+        "text": "Ou gardez le dépassement : il sera noté dans la clôture."
+       }
+      ],
+      "progress": {
+       "done": 0,
+       "total": 0
+      }
+     }
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "variances",
+     "level": "info",
+     "label": "Règlements conformes au prévu",
+     "state": "ok",
+     "value": "Aucun écart",
+     "text": "Chaque échéance réglée l’a été au montant prévu.",
+     "resolution": {
+      "problem": null,
+      "why": "Un écart peut être réel (un prix qui change) ou une erreur de saisie : à vérifier une fois.",
+      "steps": [
+       {
+        "text": "Vérifiez chaque montant réglé ; une erreur se corrige dans le détail de la ligne."
+       },
+       {
+        "text": "Si l’écart est réel et revient chaque mois, ajustez le budget récurrent.",
+        "target": {
+         "kind": "page",
+         "path": "budget-type"
+        }
+       }
+      ],
+      "progress": null
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "late",
+     "level": "info",
+     "label": "Règlements dans le cycle",
+     "state": "ok",
+     "value": "Tous dans le cycle",
+     "text": "Les échéances du cycle ont été réglées pendant le cycle.",
+     "resolution": {
+      "problem": null,
+      "why": "Elles comptent dans le cycle de leur date réelle, pas dans celui-ci.",
+      "steps": [
+       {
+        "text": "Rien à corriger si la date réelle est juste."
+       },
+       {
+        "text": "Si elle est fausse, corrigez-la dans le détail de la ligne."
+       }
+      ],
+      "progress": null
+     },
+     "more": 0
+    }
+   ],
+   "ok": 6,
+   "warn": 0,
+   "fail": 2,
+   "later": 0,
+   "total": 8,
+   "blocking": [
+    "Points du cycle traités",
+    "Compte vérifié"
+   ]
+  },
+  "lastClosure": {
+   "periodKey": "2026-09",
+   "periodLabel": "Septembre 2026",
+   "resultCents": -71000,
+   "closedAt": "2026-11-26T09:00:00.000Z",
+   "deferredCount": 0
+  }
+ }
+}

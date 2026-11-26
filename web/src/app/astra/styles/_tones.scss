@@ -1,0 +1,43 @@
+// BPM-Astra · teintes des parties appliquées au menu et à la page
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens' as *;
+
+// ---------- 1. Teintes des parties et menu ----------
+#{$app-dense} {
+  @each $tone, $c in $parts {
+    &[data-section-tone='#{$tone}'] {
+      --astra-iris: #{list.nth($c, 1)};
+      --astra-link: #{list.nth($c, 2)};
+      --astra-iris-hover: #{list.nth($c, 3)};
+      --astra-wash: #{list.nth($c, 4)};
+      --astra-keyline: #{list.nth($c, 5)};
+      --app-focus-ring: #{list.nth($c, 6)};
+    }
+    &.editorial-style[data-section-tone='#{$tone}'] {
+      $d: map.get($parts-dark, $tone);
+      --astra-iris: #{list.nth($d, 1)};
+      --astra-link: #{list.nth($d, 2)};
+      --astra-iris-hover: #{list.nth($d, 3)};
+      --astra-wash: #{list.nth($d, 4)};
+      --astra-keyline: #{list.nth($d, 5)};
+    }
+  }
+  .astra-nav-group {
+    @each $tone, $c in $parts { &[data-tone='#{$tone}'] { --nav-part: #{list.nth($c, 7)}; } }
+    .astra-nav-label { display: flex; align-items: center; gap: 8px; }
+    .astra-nav-label::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--nav-part); }
+    a[aria-current='page'] { box-shadow: inset 2px 0 var(--nav-part); }
+    a[aria-current='page'] [data-astra-icon] { color: var(--nav-part); }
+  }
+  @each $tone, $c in $parts {
+    &[data-section-tone='#{$tone}'] .astra-nav-group[data-tone='#{$tone}'] .astra-nav-label { color: #f1eff9; }
+  }
+}
+
+// Les onglets et les ponts suffisent : pas de parcours de bas de page ni de « Poursuivre ».
+#{$app} .main-shell:has(astra-part) {
+  #main > rjs-journey, > .context-dock { display: none; }
+}
+#{$app} .main-shell #main > astra-part { width: 100%; max-width: none; margin: 0; padding: 0; }
+

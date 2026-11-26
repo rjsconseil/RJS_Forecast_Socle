@@ -1,0 +1,351 @@
+@use 'functions' as *;
+@use 'contrat-ruptures' as *;
+
+/* Module Utilisateurs : choix du profil, refus d'accès, administration. Jetons communs. */
+.us-page {
+  color: var(--ink);
+}
+.us-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--ecart-12);
+  margin-block: var(--ecart-16);
+}
+.us-filters label {
+  display: grid;
+  gap: var(--ecart-6);
+  flex: var(--flex-1) var(--flex-1) var(--dim-200);
+  font-size: scaled(var(--fs-sm));
+  font-weight: var(--fw-semibold);
+}
+.us-row.is-editing {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+.us-page h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: scaled(var(--fs-4xl));
+  font-weight: var(--fw-medium);
+}
+.us-page h2 {
+  margin: 0;
+  font-size: scaled(var(--fs-lg));
+}
+.us-page h3 {
+  margin: 0 0 var(--ecart-4);
+  font-size: scaled(var(--fs-md));
+}
+.us-note,
+.us-alert {
+  margin: 0 0 var(--ecart-20);
+  padding: var(--ecart-12) var(--ecart-16);
+  border-radius: var(--radius-sm);
+  font-size: scaled(var(--fs-sm));
+}
+.us-note {
+  border-left: var(--trait-3) solid var(--status-warning);
+  background: var(--status-warning-surface);
+}
+.us-alert {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--ecart-12);
+  border-left: var(--trait-3) solid var(--urgent-mark);
+  background: var(--urgent-surface);
+  color: var(--urgent-ink);
+}
+.us-alert > button:not(.btn) {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: scaled(var(--fs-lg));
+  cursor: pointer;
+}
+.us-section {
+  --card-border: var(--line);
+  min-width: 0;
+  margin-bottom: var(--ecart-24);
+  padding: var(--ecart-24);
+  border: var(--trait-1) solid var(--card-border);
+  border-radius: var(--radius-lg);
+  background: var(--raised-surface);
+  box-shadow: var(--app-panel-shadow);
+}
+.us-section > p {
+  margin: var(--ecart-8) 0 var(--ecart-16);
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+}
+.us-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ecart-12);
+  margin-bottom: var(--ecart-20);
+}
+.us-section-head > div {
+  flex: var(--flex-1);
+  min-width: 0;
+}
+.us-section-head p {
+  margin: var(--ecart-4) 0 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+}
+.us-empty {
+  display: grid;
+  gap: var(--ecart-4);
+  padding: var(--ecart-16);
+  border: var(--trait-1) dashed var(--outline);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: scaled(var(--fs-sm));
+}
+.us-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-10);
+  margin-top: var(--ecart-16);
+}
+.us-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-10);
+  margin: 0;
+}
+.us-stats > div {
+  min-width: var(--dim-112);
+  padding: var(--ecart-10) var(--ecart-14);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--raised-surface);
+}
+.us-stats dt {
+  color: var(--muted);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+}
+.us-stats dd {
+  margin: var(--ecart-2) 0 0;
+  font-size: scaled(var(--fs-2xl));
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pastilles de droits et d'état */
+.us-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-6);
+  margin-top: var(--ecart-6);
+}
+.us-chip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--ecart-6);
+  padding: var(--ecart-2) var(--ecart-8);
+  border: var(--trait-1) solid var(--outline);
+  border-radius: var(--radius-pill);
+  background: var(--space-canvas);
+  color: var(--ink);
+  font-size: scaled(var(--fs-2xs));
+  font-weight: var(--fw-semibold);
+  vertical-align: middle;
+}
+.us-chips .us-chip {
+  margin-left: 0;
+}
+.us-chip.is-accent {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
+}
+.us-chip.is-muted {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+/* Choix du profil : des cartes, une par profil actif */
+
+/* Administration : liste et formulaire côte à côte */
+.us-split {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1));
+  gap: var(--ecart-20);
+  align-items: start;
+}
+/* La liste occupe toute la largeur ; elle la partage seulement avec un formulaire ouvert. */
+.us-split:has(> .us-form) {
+  grid-template-columns: minmax(0, var(--fr-1-2)) minmax(0, var(--fr-1));
+}
+.us-list {
+  display: grid;
+  gap: var(--ecart-8);
+  max-height: var(--dim-560);
+  overflow: auto;
+}
+.us-row {
+  display: grid;
+  grid-template-columns: minmax(0, var(--fr-1)) auto;
+  align-items: center;
+  gap: var(--ecart-10);
+  padding: var(--ecart-12) var(--ecart-12);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--space-canvas);
+}
+.us-row-main strong {
+  display: block;
+  font-size: scaled(var(--fs-sm));
+}
+.us-row-main small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.us-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ecart-6);
+}
+.us-row-actions .btn {
+  min-height: var(--dim-36);
+  padding: 0 var(--ecart-10);
+  font-size: scaled(var(--fs-xs));
+}
+.us-form {
+  display: grid;
+  gap: var(--ecart-14);
+  padding: var(--ecart-20);
+  border: var(--trait-1) solid var(--app-accent);
+  border-radius: var(--radius-md);
+  background: var(--soft);
+}
+.us-page label {
+  display: grid;
+  gap: var(--ecart-6);
+  min-width: 0;
+  color: var(--muted);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-semibold);
+}
+.us-page input:not([type='checkbox']):not([type='radio']),
+.us-page select {
+  min-width: 0;
+  min-height: var(--dim-40);
+  padding: var(--ecart-8) var(--ecart-10);
+  border: var(--trait-1) solid var(--control-line);
+  border-radius: var(--radius-sm);
+  background: var(--raised-surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: scaled(var(--fs-sm));
+}
+.us-page input:focus-visible,
+.us-page select:focus-visible {
+  outline: var(--trait-3) solid var(--app-focus-ring);
+  outline-offset: var(--decalage-1);
+}
+.us-page input[type='checkbox'],
+.us-page input[type='radio'] {
+  width: var(--dim-18);
+  height: var(--dim-18);
+  accent-color: var(--app-accent);
+}
+.us-hint {
+  color: var(--muted);
+  font-weight: var(--fw-regular);
+}
+.us-fieldset {
+  display: grid;
+  gap: var(--ecart-8);
+  margin: 0;
+  padding: var(--ecart-12);
+  border: var(--trait-1) solid var(--line);
+  border-radius: var(--radius-sm);
+}
+.us-fieldset legend {
+  padding: 0 var(--ecart-4);
+  font-size: scaled(var(--fs-xs));
+  font-weight: var(--fw-bold);
+}
+
+/* Hiérarchie */
+.us-tree {
+  display: grid;
+  gap: var(--ecart-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.us-tree li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ecart-4) var(--ecart-10);
+  margin-left: calc(var(--us-depth, 0) * var(--ecart-24));
+  padding: var(--ecart-8) var(--ecart-12);
+  border-left: var(--trait-3) solid var(--app-accent);
+  border-radius: var(--radius-xs);
+  background: var(--space-canvas);
+}
+.us-tree small {
+  color: var(--muted);
+}
+
+/* Barre latérale : le profil actif */
+.profile-switcher {
+  display: flex;
+  align-items: center;
+  gap: var(--ecart-10);
+  margin: var(--ecart-14) var(--sidebar-bottom-padding-x) 0;
+  padding: var(--ecart-10) var(--ecart-12);
+  border: var(--trait-1) solid var(--sidebar-line);
+  border-radius: var(--radius-md);
+}
+.profile-switcher > div {
+  display: grid;
+  min-width: 0;
+}
+.profile-switcher strong {
+  color: var(--sidebar-ink);
+  font-size: scaled(var(--sidebar-bottom-strong-size));
+  overflow-wrap: anywhere;
+}
+.profile-switcher small {
+  color: var(--sidebar-faint);
+  font-size: scaled(var(--sidebar-bottom-small-size));
+}
+.profile-switcher a {
+  margin-top: var(--ecart-4);
+  color: var(--sidebar-accent);
+  font-size: scaled(var(--sidebar-bottom-small-size));
+  font-weight: var(--fw-bold);
+}
+.profile-switcher-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--dim-32);
+  height: var(--dim-32);
+  border-radius: var(--part-50);
+  background: var(--sidebar-accent);
+  color: var(--app-on-accent);
+  font-weight: var(--fw-bold);
+}
+
+@media (max-width: $rupture-900) {
+  .us-split,
+  .us-split:has(> .us-form) {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+  .us-row {
+    grid-template-columns: minmax(0, var(--fr-1));
+  }
+}
+
+/* Un périmètre administré : ses accès, ses rôles, sa hiérarchie */
+.us-subhead {
+  margin-top: var(--ecart-28);
+}

@@ -1,250 +1,94 @@
-@use 'functions' as *;
-
-// Gestion du projet de vie : mêmes cadres que « Gestion de projet » (styles globaux `.bpm-management`),
-// complétés par l'état de santé de chaque volet et la jauge du projet de vie.
-
-.bpm-life-management {
-  // Violet des boutons de la page, résolu ici (hors du bandeau, qui redéfinit --app-accent en blanc).
+/* The life workspace uses the application surfaces, typography and status tokens.*/
+:host { display: block; min-width: 0; }
+:host .bpm-life-management {
   --period-nav-accent: var(--app-accent);
-}
-
-// Titres des volets : un cran sous la gestion de projet, pour que « Charges indispensables » tienne sur deux lignes.
-.bpm-life-management .bpm-management-card h3 {
-  font-size: scaled(var(--fs-xl));
-}
-
-.life-context-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
-  width: 100%;
-  min-width: 0;
-
-  > label { flex: 1 1 180px; }
-  .life-budget-project { flex: 2 1 340px; min-width: 0; }
-  select { min-width: 0; width: 100%; }
-}
-
-// Consultation d'une autre période que la période en cours.
-.life-reading-note {
-  margin: 0;
-  padding: var(--ecart-10) var(--ecart-16);
-  border: 1px solid color-mix(in srgb, var(--app-accent) 35%, var(--line));
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--app-accent) 7%, var(--raised-surface));
-  color: var(--ink);
-  font-size: scaled(var(--fs-sm));
-
-  a {
-    margin-left: var(--ecart-6);
-    font-weight: var(--fw-semibold);
-  }
-}
-
-// Synthèse : couleur des états de santé (volets).
-.life-health-dot {
-  --dot: var(--muted);
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--dot);
-
-  &[data-health='ok'] {
-    --dot: #198353;
-  }
-  &[data-health='watch'] {
-    --dot: #ed8b23;
-  }
-  &[data-health='alert'] {
-    --dot: #df414c;
-  }
-}
-
-// La jauge prend la place de `bpm-project-metrics` dans la carte.
-bpm-life-gauge {
+  --life-surface: var(--bpm-surface, var(--raised-surface));
+  --life-soft: var(--bpm-soft, var(--soft));
+  --life-space: clamp(16px, 2.3vw, 28px);
   display: grid;
-  container: project-metrics / inline-size;
-  gap: var(--ecart-10);
+  gap: 24px;
   min-width: 0;
-}
-.bpm-project-row-budget > bpm-life-gauge {
-  grid-template-rows: minmax(min-content, 1fr) auto;
-}
 
-// Pastilles d'identité du volet : état de santé, puis repère (numéro et contexte).
-.pm-life-health,
-.pm-life-tag {
-  --pm-badge-ink: #171717;
-  --pm-badge-surface: #f3f4f6;
-  --pm-badge-line: #cdd1d5;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ecart-6);
-  padding: var(--ecart-2) var(--ecart-10);
-  border: 1px solid var(--pm-badge-line);
-  border-radius: var(--radius-pill);
-  color: var(--pm-badge-ink);
-  background: var(--pm-badge-surface);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-semibold);
-  line-height: 1.4;
-}
-.pm-life-health::before {
-  content: '';
-  width: var(--ecart-6);
-  height: var(--ecart-6);
-  flex: 0 0 var(--ecart-6);
-  border-radius: 50%;
-  background: currentColor;
-}
-.pm-life-health[data-health='ok'] {
-  --pm-badge-ink: #166534;
-  --pm-badge-surface: #ecfdf3;
-  --pm-badge-line: #92d4ad;
-}
-.pm-life-health[data-health='watch'] {
-  --pm-badge-ink: #765300;
-  --pm-badge-surface: #fff2b3;
-  --pm-badge-line: #d6b540;
-}
-.pm-life-health[data-health='alert'] {
-  --pm-badge-ink: #b42318;
-  --pm-badge-surface: #fff1f1;
-  --pm-badge-line: #f3b8b3;
-}
-.pm-life-tag {
-  --pm-badge-ink: #1754b5;
-  --pm-badge-surface: #edf4ff;
-  --pm-badge-line: #a6c3f7;
-}
-.pm-life-index {
-  display: inline-grid;
-  place-items: center;
-  width: 1.4em;
-  height: 1.4em;
-  border-radius: 50%;
-  color: var(--raised-surface);
-  background: var(--pm-badge-ink);
-  font-size: scaled(var(--fs-xs));
-}
+  h2, h3, p, dl { margin-block-start: 0; }
+  .bpm-note { font-size: 13px; line-height: 1.65; }
+  .bpm-actions { gap: 10px; }
+  :is(button, a, summary, [tabindex]):focus-visible { outline: 2px solid var(--app-focus-ring); outline-offset: 4px; }
 
-// Volet à traiter : la carte et son alerte prennent la couleur du danger.
-.life-volet[data-health='alert'] > .pm-project-overview {
-  border-color: color-mix(in srgb, #df414c 45%, var(--line));
-}
-.pm-project-alert[data-health='alert'] {
-  background: var(--status-danger-surface, #fff1f1);
-  color: var(--status-danger);
-}
-.pm-project-alert[data-health='unknown'] {
-  background: color-mix(in srgb, var(--line) 30%, var(--raised-surface));
-  color: var(--muted);
-}
-
-// Détail déplié d'un volet.
-.life-volet-detail {
-  gap: var(--ecart-16);
-}
-.life-flag {
-  margin-left: var(--ecart-8);
-  padding: 0 var(--ecart-6);
-  border-radius: var(--radius-pill);
-  color: var(--status-warning);
-  background: var(--status-warning-surface);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-semibold);
-}
-.bpm-table .is-deficit {
-  color: var(--status-danger);
-}
-.bpm-table tr.is-over th {
-  color: var(--status-danger);
-}
-.life-line-status {
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-semibold);
-
-  &[data-status='late'] {
-    color: var(--status-danger);
+  /* All subpages have the same inset, heading rhythm and table boundary.*/
+  .bpm-section {
+    gap: 20px;
+    min-width: 0;
+    padding: var(--life-space);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--life-surface);
+    box-shadow: var(--bpm-shadow, none);
+    > header { align-items: center; gap: 12px; }
+    > header h2 { margin: 0; }
+    > p { margin: 0; max-width: 92ch; line-height: 1.65; }
   }
-  &[data-status='due'] {
-    color: var(--status-warning);
-  }
-  &[data-status='settled'] {
-    color: var(--status-success);
-  }
-}
-.life-surplus-note,
-.life-essentials-note {
-  margin: 0;
-  font-style: italic;
-}
-.life-conditions {
-  margin: 0 0 var(--ecart-12);
-  padding-left: var(--ecart-20);
-  color: var(--muted);
-  font-size: scaled(var(--fs-sm));
-}
-// Lien visible vers la fiche du projet de vie (interface commune des projets, variante non standard).
-.bpm-life-management .life-fiche-link {
-  margin-left: auto;
-}
+  .count-badge { display: inline-grid; place-items: center; min-width: 30px; min-height: 30px; border-radius: 8px; padding: 3px 9px; background: var(--app-accent-soft); color: var(--app-accent); font-size: 13px; font-weight: 650; }
+  .life-workspace-panel > header { padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .life-context-tools { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; width: 100%; min-width: 0; }
+  .life-context-tools > label { flex: 1 1 180px; }
+  .life-context-tools .life-budget-project { flex: 2 1 340px; min-width: 0; }
+  .life-context-tools select { min-width: 0; width: 100%; }
 
-// Rattachements du projet de vie : unique, patrimoine, projets de la vie qu'il finance.
-.life-relations {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-8);
-  margin: 0 0 var(--ecart-12);
-  padding: 0;
-  list-style: none;
+  .life-section-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  .life-section-heading h2 { margin: 6px 0 0; }
+  .life-section-heading .bpm-note { margin: 6px 0 0; }
 
-  li {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ecart-6);
-    padding: var(--ecart-4, 4px) var(--ecart-12);
-    border: 1px solid color-mix(in srgb, var(--app-accent) 30%, var(--line));
-    border-radius: var(--radius-pill);
-    background: color-mix(in srgb, var(--app-accent) 6%, var(--raised-surface));
-    font-size: scaled(var(--fs-sm));
+  .life-limit-strip { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--life-soft); }
+  .life-limit-strip > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+  .life-limit-strip dt { color: var(--muted); font-size: 12px; }
+  .life-limit-strip dd { margin: 0; font-size: 13px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .bpm-table-wrap { max-width: 100%; min-width: 0; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--life-surface); }
+  .bpm-table { min-width: 580px; font-size: 13px; }
+  .bpm-table thead { background: var(--life-soft); }
+  .bpm-table th, .bpm-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); line-height: 1.55; }
+  .bpm-table thead th { color: var(--muted); font-size: 11px; font-weight: 650; }
+  .bpm-table tbody th { color: var(--ink); font-size: 13px; white-space: normal; font-weight: 550; }
+  .bpm-table tbody tr:hover { background: var(--life-soft); }
+  .bpm-table tr:last-child > * { border-bottom: 0; }
+  @media (max-width: 670px) {
+    .life-envelopes-table .bpm-table th { min-inline-size: 90px; }
+    .life-envelopes-table .bpm-table th:first-child { min-inline-size: 142px; }
   }
-  a {
-    font-weight: var(--fw-semibold);
-  }
-}
-.life-relation-kind {
-  color: var(--app-accent);
-  font-weight: var(--fw-semibold);
-}
+  .life-nature-table td { text-align: right; white-space: nowrap; }
+  .life-line-table { min-width: 720px; }
+  .life-line-table th:nth-child(2) { min-width: 180px; }
+  .life-line-table .text-link { text-align: left; line-height: 1.55; }
+  .life-line-status { display: inline-flex; padding: 4px 8px; border-radius: 6px; background: var(--life-soft); font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .life-line-status[data-status='late'] { color: var(--status-danger); background: var(--status-danger-surface); }
+  .life-line-status[data-status='due'] { color: var(--status-warning); background: var(--status-warning-surface); }
+  /* Échéance reportée d'un cycle clôturé : elle garde sa marque et se revoit dans ce cycle.*/
+  .life-line-carried { display: block; margin-top: 3px; color: var(--status-warning); font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .life-line-status[data-status='settled'] { color: var(--status-success); background: var(--status-success-surface); }
+  .life-line-task { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .life-flag { display: inline-block; margin-left: 8px; padding: 2px 7px; border-radius: 6px; color: var(--status-warning); background: var(--status-warning-surface); font-size: 11px; }
+  .is-deficit, .bpm-table tr.is-over th { color: var(--status-danger); }
+  .life-closing-workspace { display: grid; gap: 24px; min-width: 0; }
+  .life-workspace-context { margin: 0; color: var(--muted); font-size: 12px; }
+  :is(.pm-finance-summary) { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(200px,100%),1fr)); gap: 12px; margin: 0; }
+  :is(.pm-finance-summary) > div { min-width: 0; padding: 18px 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--life-soft); gap: 10px; }
+  :is(.pm-finance-summary) dt { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  :is(.pm-finance-summary) dd { font-size: 24px; line-height: 1.35; letter-spacing: -.035em; font-weight: 650; font-variant-numeric: tabular-nums; margin: 10px 0 0; overflow-wrap: anywhere; }
+  .pm-finance-summary small { display: block; color: var(--muted); margin-top: 8px; font-size: 12px; }
+  .life-conditions { display: grid; gap: 10px; padding: 18px 18px 18px 36px; margin: 0; border-radius: 10px; background: var(--life-soft); color: var(--muted); font-size: 13px; line-height: 1.65; }
+  .life-task-requests { display: grid; gap: 12px; list-style: none; margin: 0; padding: 0; }
+  .life-task-requests li { padding: 16px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; line-height: 1.7; background: var(--life-soft); }
+  .life-closing-workspace > nav { padding: 16px 0; border-top: 1px solid var(--line); gap: 16px; }
+  .life-reading-note { padding: 14px 18px; margin: 0; border: 1px solid var(--app-accent-line); border-radius: 10px; background: var(--app-accent-soft); font-size: 13px; line-height: 1.65; }
+  .life-reading-note a { font-weight: 650; }
+  .life-surplus-note { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.7; }
 
-// Petits écrans : la carte passe sur une colonne (mêmes points de rupture que la gestion de projet).
-@media (max-width: 900px) {
-  .bpm-life-management .bpm-management-card {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .bpm-life-management .pm-project-overview {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
-
-/* Le budget type s'ouvre dans le même panneau depuis le contenu ou le bandeau fixe. */
-.life-budget-type-disclosure {
-  display: grid;
-  gap: 12px;
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--raised-surface);
-  min-width: 0;
-  h2, p { margin: 0; }
-  > .btn { justify-self: start; }
-}
-
-.life-line-task {
-  display: block;
-  color: var(--text-muted, inherit);
-  font-size: 0.85em;
+@media(max-width: 600px) {
+  :host .bpm-life-management {
+    gap: 18px;
+    .life-limit-strip { gap: 12px; }
+    .life-limit-strip > div { flex: 1 1 100%; justify-content: space-between; }
+    :is(.pm-finance-summary) { grid-template-columns: minmax(0,1fr); }
+    .bpm-table th, .bpm-table td { padding: 12px; }
+  }
 }

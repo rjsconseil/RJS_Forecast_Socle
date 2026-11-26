@@ -1,0 +1,144 @@
+<div class="astra-page astra-dashboard">
+  <bpm-state [loading]="life.loading() && !life.data()" [error]="life.error()" (retry)="life.reload()" />
+  @if (life.data(); as d) {
+    <header class="astra-heading">
+      <div>
+        <h1>Mon projet de vie</h1>
+        <p>{{ d.lifeProject.title }}@if (d.lifeProject.title !== d.context.user.label) { · {{ d.context.user.label }} }</p>
+      </div>
+    </header>
+
+    <rjs-page-toolbar label="Outils du cycle" [focus]="priority().focus">
+      <a toolbarPrimary class="btn btn-primary" [routerLink]="priority().link" [queryParams]="priority().query">{{ priority().action }}</a>
+      <div toolbarActions>
+        <a class="btn btn-secondary" routerLink="/bpm-astra/mouvements/echeances" [queryParams]="ctx.carry()">Régler les échéances</a>
+        <a class="btn btn-secondary" routerLink="/bpm-astra/cloture/compte" [queryParams]="ctx.carry()">Vérifier le compte</a>
+      </div>
+    </rjs-page-toolbar>
+    <div class="astra-board">
+      <section class="astra-cycle" aria-labelledby="astra-cycle-title">
+        <div class="astra-cycle-body">
+          <div class="astra-cycle-period"><span data-astra-icon="cycle" aria-hidden="true"></span> {{ d.cycle.period?.label ?? 'Cycle à configurer' }}</div>
+          @let closed = d.cycle.reading === 'closed';
+          @let balance = closed ? d.cycle.closedResultCents : d.cycle.flows?.expectedCents;
+          <h2 id="astra-cycle-title">{{ closed ? 'Résultat du cycle clôturé' : 'Solde prévu à la clôture' }}</h2>
+          <strong class="astra-balance" [bpmAmount]="balance">{{ balance | signedCents }}</strong>
+          @if (d.cycle.flows; as flows) {
+            <dl class="astra-cycle-flows astra-cycle-grid">
+              <div><dt>Reçu</dt><dd [bpmAmount]="flows.receivedCents" bpmFlow="income">{{ flows.receivedCents | cents:0 }}</dd></div>
+              <div><dt>À recevoir</dt><dd>{{ flows.toReceiveCents | cents:0 }}</dd></div>
+              <div><dt>Dépensé</dt><dd [bpmAmount]="flows.paidCents" bpmFlow="expense">{{ flows.paidCents | cents:0 }}</dd></div>
+              <div><dt>À payer</dt><dd>{{ flows.toPayCents | cents:0 }}</dd></div>
+              <div><dt>Épargne visée</dt><dd>{{ d.results.current?.targetCents ?? null | cents:0 }}@if (d.results.current?.meetsTarget !== null && d.results.current?.meetsTarget !== undefined) { <small>{{ d.results.current!.meetsTarget ? 'tenue' : 'non tenue' }}</small> }</dd></div>
+              <div><dt>Taux d’épargne</dt><dd>{{ flows.savingsRatePct === null ? '—' : flows.savingsRatePct + ' %' }}</dd></div>
+              @if (flows.nextIncome; as next) {
+                <div class="astra-cycle-next"><dt>Prochaine entrée</dt><dd>{{ next.label }} · {{ next.plannedCents | cents:0 }} le {{ next.plannedDate | shortDate }}</dd></div>
+              }
+            </dl>
+          }
+        </div>
+        <div class="astra-cycle-footer">
+          @if (d.cycle.days; as days) {
+            <div class="astra-cycle-time">
+              @if (days.elapsedPct !== null) { <span class="astra-timeline" aria-hidden="true"><i [style.width.%]="days.elapsedPct"></i></span> }
+              <span>{{ closed ? 'Cycle clôturé' : days.left ? days.left + (days.left === 1 ? ' jour restant' : ' jours restants') : 'Cycle terminé' }}</span>
+            </div>
+          }
+          @if (d.cycle.period) {
+            <a class="astra-to-part" routerLink="/bpm-astra/cloture/compte" [queryParams]="ctx.carry()">{{ d.results.toCloseCount && !closed ? 'Préparer la clôture' : 'Clôture du cycle' }} <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+          } @else {
+            <a routerLink="/bpm-astra/cloture/reglages">Configurer mon cycle <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+          }
+        </div>
+      </section>
+
+      <section class="astra-card astra-dues" aria-labelledby="astra-due-title">
+        <div class="astra-card-head">
+          <div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="echeance" aria-hidden="true"></span><h2 id="astra-due-title">Règlements à traiter</h2></div>
+          <a class="astra-text-link" routerLink="/bpm-astra/mouvements/echeances" [queryParams]="ctx.carry()">Toutes les échéances <span data-astra-icon="ouvrir" aria-hidden="true"></span></a>
+        </div>
+        @if (dueView().lateOnly || (d.dueSoon.lateCount > 0 && d.dueSoon.lateCount < d.dueSoon.lines.length)) {
+          <div class="astra-due-filters" role="group" aria-label="Filtrer les règlements">
+            <button type="button" [attr.aria-pressed]="!dueView().lateOnly" (click)="showLateOnly(false)">Tous ({{ d.dueSoon.lines.length }})</button>
+            <button type="button" [attr.aria-pressed]="dueView().lateOnly" (click)="showLateOnly(true)">En retard ({{ d.dueSoon.lateCount }})</button>
+          </div>
+        }
+        @if (dues().total) {
+          <ul class="astra-due-list">
+            @for (line of dues().lines; track line.id) {
+              <li>
+                <div class="astra-line-name">
+                  <a routerLink="/bpm-astra/mouvements" [queryParams]="{ ligne: line.id }">{{ line.label }}</a>
+                  <div class="astra-line-meta">
+                    <time [attr.datetime]="line.plannedDate">{{ line.plannedDate | shortDate }}</time>
+                    <span class="astra-status" [attr.data-status]="line.status">{{ line.statusLabel }}</span>
+                    @if (line.project; as project) {
+                      <a class="astra-due-origin" [routerLink]="['/bpm-astra/projets', project.coreProjectId]" [queryParams]="ctx.carry()" [attr.aria-label]="'Ouvrir le projet ' + project.name"><span data-astra-icon="projets" aria-hidden="true"></span> {{ project.name }}</a>
+                    }
+                  </div>
+                </div>
+                <strong class="astra-due-amount" [bpmAmount]="line.plannedCents" [bpmFlow]="line.direction">{{ line.plannedCents | cents }}</strong>
+                @if (!life.loading() && !life.error()) {
+                  <bpm-quick-settle [line]="line" (settled)="life.reload()" (detail)="openLine(line.id)" />
+                }
+              </li>
+            }
+          </ul>
+          <div class="astra-pagination">
+            <span aria-live="polite">{{ dues().start }}–{{ dues().end }} sur {{ dues().total }} {{ dues().total === 1 ? 'règlement' : 'règlements' }}{{ dueView().lateOnly ? ' en retard' : '' }}</span>
+            @if (dues().last > 0) {
+              <div>
+                <button type="button" class="astra-icon-link" aria-label="Règlements précédents" [disabled]="dues().page === 0" (click)="movePage(-1)"><span data-astra-icon="precedent" aria-hidden="true"></span></button>
+                <button type="button" class="astra-icon-link" aria-label="Règlements suivants" [disabled]="dues().page === dues().last" (click)="movePage(1)"><span data-astra-icon="suivant" aria-hidden="true"></span></button>
+              </div>
+            }
+          </div>
+        } @else { <p class="astra-empty" role="status">{{ dueView().lateOnly ? 'Aucun règlement en retard.' : 'Aucun règlement attendu dans les prochains jours.' }}</p> }
+      </section>
+
+      <section class="astra-card astra-projects" aria-labelledby="astra-project-title">
+        <div class="astra-card-head">
+          <div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="projets" aria-hidden="true"></span><h2 id="astra-project-title">Mes projets dans ce cycle</h2></div>
+        </div>
+        @if (cycleProjects().length) {
+          <ul class="astra-project-list">
+            @for (p of cycleProjects().slice(0, 5); track p.budgetId) {
+              <li class="astra-project-links">
+                <a [routerLink]="['/bpm-astra/projets', p.coreProjectId]" [queryParams]="ctx.carry()">
+                  <span><strong>{{ p.name }}</strong>
+                    <small>
+                      @if (p.regime) {
+                                                Disponible <b [bpmAmount]="p.remainingCents">{{ p.remainingCents | cents }}</b>
+                      } @else { Enveloppe à définir }
+                    </small>
+                  </span>
+                </a>
+                <a class="astra-project-movements" routerLink="/bpm-astra/mouvements"
+                   [queryParams]="{ budgetId: p.budgetId, period: ctx.period() }"
+                   [attr.aria-label]="'Ouvrir les mouvements du projet ' + p.name">
+                  Mouvements <span data-astra-icon="suivant" aria-hidden="true"></span>
+                </a>
+              </li>
+            }
+          </ul>
+          <div class="astra-card-foot">
+            <a class="astra-text-link" routerLink="/bpm-astra/projets" [queryParams]="ctx.carry()">{{ cycleProjects().length > 5 ? 'Tous mes projets (' + d.projects.projectCount + ')' : 'Tous mes projets' }} <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+            <a class="astra-text-link" routerLink="/bpm-astra/financement/enveloppes" [queryParams]="ctx.carry()">Règlements par cycle @if (d.projects.pendingRequests.length + d.projects.taskRequestCount; as requests) { <span class="astra-request-count" [attr.aria-label]="requests + ' demandes à examiner'">{{ requests }}</span> }</a>
+          </div>
+        } @else { <p class="astra-empty">Vous pourrez suivre ici le financement de vos projets.</p><button type="button" class="astra-text-link" (click)="actions.create('project')">Créer mon premier projet <span data-astra-icon="continuer" aria-hidden="true"></span></button> }
+      </section>
+
+      <section class="astra-card astra-spending" aria-labelledby="astra-expense-title">
+        <div class="astra-card-head"><div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="budget" aria-hidden="true"></span><h2 id="astra-expense-title">Dépenses du quotidien</h2></div></div>
+        <div class="astra-natures">
+          @for (nature of [d.natures.indispensable, d.natures.courante]; track nature.key) {
+            <div class="astra-nature">
+              <a class="astra-nature-name" routerLink="/bpm-astra/mouvements" [queryParams]="{ period: ctx.period(), nature: nature.key, direction: 'charge' }">{{ nature.label }} <span data-astra-icon="ouvrir" aria-hidden="true"></span></a>
+              <dl><div><dt>Réglé</dt><dd [bpmAmount]="nature.paidCents" bpmFlow="expense">{{ nature.paidCents | cents }}</dd></div><div><dt>À payer</dt><dd [bpmAmount]="nature.toPayCents" bpmFlow="expense">{{ nature.toPayCents | cents }}</dd></div></dl>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</div>

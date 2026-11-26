@@ -1,7 +1,7 @@
 import { computed, inject, signal } from '@angular/core';
 import { ApiError, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { RegisterLine } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { RegisterLine } from '../data/bpm-models';
 import { parseAmount, shortDate } from '../../core/format';
 import { localToday } from '../../calendar/calendar-dates';
 import { capAlertText, withCapAlerts } from './caps';
@@ -24,6 +24,8 @@ export class Settlement {
   private refresh = inject(BpmRefresh);
   readonly realDate = signal(localToday());
   readonly realAmount = signal('');
+  readonly accountingDate = signal('');
+  readonly fundingSource = signal<'cycle' | 'patrimoine' | ''>('');
   readonly busy = signal(false);
   readonly message = signal<string | null>(null);
   readonly error = signal<ApiError | null>(null);
@@ -35,7 +37,7 @@ export class Settlement {
   constructor(private readonly lineId: () => string) {}
 
   private signature() {
-    return JSON.stringify({ lineId: this.lineId(), date: this.realDate(), amount: this.realAmount() });
+    return JSON.stringify({ lineId: this.lineId(), date: this.realDate(), amount: this.realAmount(), accountingDate: this.accountingDate(), fundingSource: this.fundingSource() });
   }
   /** Refus de la saisie affichée : il ne vaut jamais pour une autre date ou un autre montant. */
   readonly refusal = computed(() => (this.refusedFor() === this.signature() ? this.error() : null));
@@ -63,12 +65,12 @@ export class Settlement {
     this.busy.set(true);
     this.error.set(null);
     try {
-      const body = { realizedDate: this.realDate(), ...(typeof amount === 'number' ? { realizedAmount: amount } : {}) };
+      const body = { realizedDate: this.realDate(), ...(typeof amount === 'number' ? { realizedAmount: amount } : {}), ...(this.accountingDate() ? { accountingDate: this.accountingDate() } : {}), ...(this.fundingSource() ? { fundingSource: this.fundingSource() as 'cycle' | 'patrimoine' } : {}) };
       if (line.direction === 'charge') {
         const input = {
           budgetId: line.budgetId, direction: line.direction, label: line.label,
           amount: line.plannedCents / 100, date: line.plannedDate,
-          costCenterRef: line.costCenterRef ?? undefined, categoryId: line.categoryId,
+          costCenterRef: line.costCenterRef ?? undefined,
           settle: true, ...body,
           ...(occurrence ?? { replaceId: line.operationId ?? line.id }),
         };

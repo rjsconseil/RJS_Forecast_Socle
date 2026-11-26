@@ -1,0 +1,301 @@
+    <div class="page page-wide us-page">
+      <rjs-app-hero
+        data-sticky-hero
+        tone="indigo"
+        headingId="users-page-title"
+        [title]="workspace()?.title ?? 'Utilisateurs'"
+        [kicker]="startLife() ? 'Démarrer un projet · une seule fois' : 'Utilisateurs · administration'"
+        [lead]="workspace()?.lead ?? 'Créez les utilisateurs : leur Budget « Projet de vie », leur Patrimoine et leur composition BPM naissent ensemble.'"
+        [chips]="heroChips()"
+        [result]="error() ? { message: error()!, tone: 'danger' } : null"
+      >
+        @if (workspace()) {
+          <button heroPrimary type="button" class="app-hero-action" (click)="submit()" [disabled]="saving() || !types().length || !usersReady()">{{ saving() ? 'Création…' : startLife() ? 'Créer mon projet de vie' : 'Créer l’utilisateur et son espace' }}</button>
+        }
+        <ng-container heroActions>
+        @if (!workspace()) {
+        <button heroActions type="button" class="app-hero-action" (click)="focusForm()" [disabled]="!types().length || !usersReady()">
+          <span aria-hidden="true">+</span> {{ firstProfile() ? 'Créer le premier utilisateur' : 'Nouvel utilisateur' }}
+        </button>
+        <a heroActions class="app-hero-action is-secondary" routerLink="/utilisateurs" fragment="us-profiles-title" queryParamsHandling="preserve" (click)="focusList()"
+          >Retrouver un utilisateur</a
+        >
+        }
+        </ng-container>
+      </rjs-app-hero>
+
+      <p class="us-note">
+        <strong>Inconnu n'est pas 0.</strong>
+        Tout ce qui n'est pas connu aujourd'hui peut rester vide : cela restera inconnu, jamais compté comme 0, et pourra être
+        complété plus tard dans les réglages.
+      </p>
+
+      @if (loadError()) {
+        <div class="us-alert" role="alert">
+          <span>{{ loadError() }}</span>
+          <button type="button" aria-label="Masquer le message" (click)="loadError.set(null)">×</button>
+        </div>
+      }
+
+      @if (!usersReady()) {
+        <p class="us-empty" role="status">Lecture des utilisateurs…</p>
+      } @else {
+      <section #profilesSection class="us-section" aria-labelledby="us-profiles-title">
+        @if (!workspace()) {
+        <div class="us-section-head">
+          <div>
+            <h2 id="us-profiles-title">Utilisateurs</h2>
+            <p>Chaque utilisateur garde le même identifiant dans tout le site. Son type et sa composition BPM sont fixés à la création.</p>
+          </div>
+        </div>
+
+        <div class="us-filters">
+          <label for="us-profile-search"
+            >Rechercher un utilisateur
+            <input
+              #profileSearch
+              id="us-profile-search"
+              type="search"
+              placeholder="Nom, identifiant ou type"
+              [value]="profileQuery()"
+              (input)="setProfileFilters($any($event.target).value, typeFilter())"
+            />
+          </label>
+          <label for="us-profile-type"
+            >Type
+            <select id="us-profile-type" [value]="typeFilter()" (change)="setProfileFilters(profileQuery(), $any($event.target).value)">
+              <option value="all">Tous les utilisateurs</option>
+              @for (t of types(); track t.key) {
+                <option [value]="t.key" [selected]="typeFilter() === t.key">{{ t.label }}</option>
+              }
+            </select>
+          </label>
+          @if (profileQuery() || typeFilter() !== 'all') {
+            <button class="btn btn-secondary filter-reset" type="button" (click)="setProfileFilters('', 'all')">
+              Effacer les filtres
+            </button>
+          }
+        </div>
+        <p class="filter-summary" role="status">{{ filteredUsers().length }} utilisateur(s) affiché(s)</p>
+        } @else {
+          <h2 id="us-profiles-title">Le profil et son point de départ</h2>
+        }
+
+        <div class="us-split" [class.is-specialized]="!!workspace()">
+          @if (!workspace()) {
+          <div class="us-list">
+            @for (row of filteredUsers(); track row.user.id) {
+              <article class="us-row" [attr.aria-current]="row.current ? 'true' : null">
+                <div class="us-row-main">
+                  <strong>
+                    {{ row.user.label }}
+                    <span class="us-chip">{{ row.user.userTypeLabel }}</span>
+                    @if (row.current) {
+                      <span class="us-chip is-accent">Connecté ici</span>
+                    }
+                  </strong>
+                  <small>#{{ row.user.id }}</small>
+                  <span class="us-chips">
+                    @if (row.user.bpmCompositionId) {
+                      <span class="us-chip">Composition BPM</span>
+                    } @else {
+                      <span class="us-chip is-muted">Sans composition BPM</span>
+                    }
+                    @if (row.user.cycleState === 'active') {
+                      <span class="us-chip">Cycle mensuel actif</span>
+                    } @else if (row.user.cycleState === 'to_configure') {
+                      <span class="us-chip is-muted">Cycle à configurer</span>
+                    }
+                    @if (row.user.entryCount !== undefined) {
+                      <span class="us-chip">{{ row.user.entryCount }} opération(s)</span>
+                    }
+                  </span>
+                </div>
+                <div class="us-row-actions">
+                  @if (row.current) {
+                    <small class="us-hint">Utilisateur actif</small>
+                  } @else {
+                    <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="choose(row.user.id)">Choisir</button>
+                  }
+                </div>
+              </article>
+            } @empty {
+              @if (users().length) {
+                <p class="us-empty">Aucun utilisateur ne correspond aux filtres.</p>
+              } @else {
+                <div class="us-empty">
+                  <strong>Aucun utilisateur pour l'instant.</strong>
+                  <span>Créez le premier : son Budget « Projet de vie », son Patrimoine et sa composition BPM seront créés en même temps.</span>
+                </div>
+              }
+            }
+          </div>
+          }
+
+          @if (showForm()) {
+            <form class="us-form" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="us-form-title" [attr.aria-busy]="saving()">
+              <h3 id="us-form-title">{{ startLife() ? 'Votre profil et votre projet de vie' : firstProfile() ? 'Créons votre espace Budget & Patrimoine' : 'Nouvel utilisateur' }}</h3>
+
+              <label>
+                Libellé
+                <span class="field-requirement">Obligatoire</span>
+                <input
+                  #profileLabel
+                  formControlName="label"
+                  maxlength="120"
+                  autocomplete="nickname"
+                  placeholder="Ex. : Camille"
+                  [attr.aria-invalid]="!!err('label')"
+                  [attr.aria-describedby]="err('label') ? 'e-label' : null"
+                />
+                @if (err('label')) {
+                  <small class="field-hint" data-state="error" id="e-label">{{ err('label') }}</small>
+                }
+              </label>
+              <label>
+                Type d’utilisateur
+                <select formControlName="userType" [attr.aria-invalid]="!!err('userType')" [attr.aria-describedby]="err('userType') ? 'e-type' : null">
+                  @for (t of types(); track t.key) {
+                    <option [value]="t.key">{{ t.label }}</option>
+                  }
+                </select>
+                @if (err('userType')) {
+                  <small class="field-hint" data-state="error" id="e-type">{{ err('userType') }}</small>
+                }
+              </label>
+
+              <fieldset class="us-fieldset">
+                <legend>Votre patrimoine de départ (facultatif)</legend>
+                <label>
+                  Stock d'ouverture (€)
+                  <input formControlName="openingStock" inputmode="decimal" placeholder="Inconnu" [attr.aria-invalid]="!!err('openingStock')" aria-describedby="h-stock" />
+                  <small class="field-hint" id="h-stock" [attr.data-state]="err('openingStock') ? 'error' : null">
+                    @if (err('openingStock')) {
+                      {{ err('openingStock') }}
+                    } @else {
+                      Peut être négatif (dettes). Vide = <strong>inconnu</strong>, ce n'est pas 0.
+                    }
+                  </small>
+                </label>
+                <label>
+                  À la date du
+                  <input type="date" formControlName="openingDate" [attr.aria-invalid]="!!err('openingDate')" aria-describedby="h-odate" />
+                  <small class="field-hint" id="h-odate" [attr.data-state]="err('openingDate') ? 'error' : null">
+                    @if (err('openingDate')) {
+                      {{ err('openingDate') }}
+                    } @else {
+                      Utilisée si un stock est saisi ; aujourd'hui par défaut.
+                    }
+                  </small>
+                </label>
+                <label>
+                  Objectif initial du patrimoine (€)
+                  <input formControlName="objective" inputmode="decimal" placeholder="Aucun objectif" [attr.aria-invalid]="!!err('objective')" aria-describedby="h-obj" />
+                  <small class="field-hint" id="h-obj" [attr.data-state]="err('objective') ? 'error' : null">
+                    @if (err('objective')) {
+                      {{ err('objective') }}
+                    } @else {
+                      Information seule : elle sert à mesurer votre progression.
+                    }
+                  </small>
+                </label>
+              </fieldset>
+
+              <fieldset class="us-fieldset">
+                <legend>Votre cycle mensuel (facultatif)</legend>
+                <label>
+                  Jour de début de période
+                  <input
+                    type="number"
+                    min="1"
+                    max="28"
+                    step="1"
+                    inputmode="numeric"
+                    formControlName="anchorDay"
+                    placeholder="À configurer plus tard"
+                    [attr.aria-invalid]="!!err('anchorDay')"
+                    aria-describedby="h-anchor"
+                  />
+                  <small class="field-hint" id="h-anchor" [attr.data-state]="err('anchorDay') ? 'error' : null">
+                    @if (err('anchorDay')) {
+                      {{ err('anchorDay') }}
+                    } @else {
+                      De 1 à 28, par ex. le jour où arrive votre salaire.
+                    }
+                  </small>
+                </label>
+                <label>
+                  Premier cycle à partir du
+                  <input type="date" formControlName="cycleStartDate" [attr.aria-invalid]="!!err('cycleStartDate')" aria-describedby="h-cstart" />
+                  <small class="field-hint" id="h-cstart" [attr.data-state]="err('cycleStartDate') ? 'error' : null">
+                    @if (err('cycleStartDate')) {
+                      {{ err('cycleStartDate') }}
+                    } @else {
+                      Vide : à partir d'aujourd'hui.
+                    }
+                  </small>
+                </label>
+                @if (!anchorGiven()) {
+                  <small class="us-hint">Sans jour de début, le cycle sera « à configurer plus tard » : les chiffres d'une période resteront inconnus jusque-là.</small>
+                }
+              </fieldset>
+
+              <p class="us-hint">La création prépare son Budget « Projet de vie » et son Patrimoine relié, ensemble ou pas du tout : jamais d'espace à moitié construit.</p>
+
+              @if (saving()) {
+                <p class="form-feedback" data-state="busy" role="status">Création en cours…</p>
+              } @else if (error()) {
+                <p class="form-feedback" data-state="error" role="alert">{{ error() }}</p>
+              } @else if (form.dirty) {
+                <p class="form-feedback" data-state="draft" role="status">Saisie en cours · rien n'est créé avant la validation du formulaire.</p>
+              } @else {
+                <p class="form-feedback">Rien n'est créé avant la validation du formulaire.</p>
+              }
+
+              <div class="us-actions">
+                <button class="btn btn-primary" type="submit" [disabled]="saving() || !types().length">
+                  {{ saving() ? 'Création en cours…' : startLife() ? 'Créer mon projet de vie' : 'Créer et utiliser cet utilisateur' }}
+                </button>
+                <button class="btn btn-secondary" type="button" [disabled]="saving()" (click)="cancel()">Annuler</button>
+              </div>
+            </form>
+          }
+        </div>
+      </section>
+      }
+
+      <section class="us-section" aria-labelledby="chain-title">
+        <div class="us-section-head">
+          <div>
+            <h2 id="chain-title">Ce qui sera créé, en une seule écriture</h2>
+            <p>Tout est créé ensemble, ou rien : jamais d'espace à moitié construit.</p>
+          </div>
+        </div>
+        <ol class="us-tree us-chain">
+          @for (step of chain; track step.title) {
+            <li>
+              <strong>{{ $index + 1 }}. {{ step.title }}</strong>
+              <small>{{ step.detail }}</small>
+            </li>
+          }
+        </ol>
+
+        @if (showForm()) {
+          <h3 class="us-subhead">Votre point de départ</h3>
+          <dl class="us-stats" aria-live="polite">
+            <div>
+              <dt>Stock d'ouverture</dt>
+              <dd [class.is-unknown]="recap().stock === null">{{ recap().stockText }}</dd>
+            </div>
+            <div>
+              <dt>Objectif</dt>
+              <dd>{{ recap().objectiveText }}</dd>
+            </div>
+            <div>
+              <dt>Cycle</dt>
+              <dd [class.is-unknown]="!anchorGiven()">{{ recap().cycleText }}</dd>
+            </div>
+          </dl>
+        }
+      </section>
+    </div>

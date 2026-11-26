@@ -31,9 +31,9 @@ describe('coordination des pages BPM', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
-          { path: 'app/gestion-projet', component: Page },
-          { path: 'app/gestion-projet/:id', component: Page },
-          { path: 'projet-de-vie', component: Page },
+          { path: 'bpm-astra/projets', component: Page },
+          { path: 'bpm-astra/projets/:id', component: Page },
+          { path: 'bpm-astra', component: Page },
           { path: 'socle/budget', component: Page },
           { path: '', component: Page },
         ]),
@@ -47,105 +47,105 @@ describe('coordination des pages BPM', () => {
     harness = await RouterTestingHarness.create();
   });
   it('retrouve les filtres après liste → projet → projet de vie puis deux retours et deux reprises', async () => {
-    await harness.navigateByUrl('/app/gestion-projet?q=travaux&filter=open', Page);
-    await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
-    await harness.navigateByUrl('/projet-de-vie?period=2026-10', Page);
+    await harness.navigateByUrl('/bpm-astra/projets?q=travaux&filter=open', Page);
+    await harness.navigateByUrl('/bpm-astra/projets/prj_1', Page);
+    await harness.navigateByUrl('/bpm-astra?period=2026-10', Page);
     nav.back();
     await settle();
-    expect(router.url).toBe('/app/gestion-projet/prj_1');
+    expect(router.url).toBe('/bpm-astra/projets/prj_1');
     nav.back();
     await settle();
-    expect(router.url).toBe('/app/gestion-projet?q=travaux&filter=open');
+    expect(router.url).toBe('/bpm-astra/projets?q=travaux&filter=open');
     expect((harness.routeDebugElement!.componentInstance as Page).query()).toBe('travaux');
     nav.forward();
     await settle();
     nav.forward();
     await settle();
-    expect(router.url).toBe('/projet-de-vie?period=2026-10');
+    expect(router.url).toBe('/bpm-astra?period=2026-10');
   });
   it('fusionne les remises à zéro de plusieurs filtres sans perdre les autres paramètres', async () => {
     const page = await harness.navigateByUrl(
-      '/app/gestion-projet?q=travaux&filter=open&period=2026-10',
+      '/bpm-astra/projets?q=travaux&filter=open&period=2026-10',
       Page,
     );
     page.query.set('');
     page.filter.set('all');
     await settle();
-    expect(router.url).toBe('/app/gestion-projet?period=2026-10');
+    expect(router.url).toBe('/bpm-astra/projets?period=2026-10');
   });
   it('suit les pages de tous les modules dans un seul parcours', async () => {
-    await harness.navigateByUrl('/projet-de-vie', Page);
+    await harness.navigateByUrl('/bpm-astra', Page);
     await harness.navigateByUrl('/socle/budget', Page);
-    expect(nav.visits().map((v) => v.url)).toEqual(['/projet-de-vie', '/socle/budget']);
-    expect(nav.previous()?.url).toBe('/projet-de-vie');
+    expect(nav.visits().map((v) => v.url)).toEqual(['/bpm-astra', '/socle/budget']);
+    expect(nav.previous()?.url).toBe('/bpm-astra');
   });
   it('garde une identité de visite dans l’historique navigateur et isole les profils', async () => {
-    await harness.navigateByUrl('/app/gestion-projet', Page);
+    await harness.navigateByUrl('/bpm-astra/projets', Page);
     expect((TestBed.inject(Location).getState() as any).journeyVisitId).toBeTruthy();
-    await harness.navigateByUrl('/projet-de-vie', Page);
-    expect(nav.previous()?.url).toBe('/app/gestion-projet');
+    await harness.navigateByUrl('/bpm-astra', Page);
+    expect(nav.previous()?.url).toBe('/bpm-astra/projets');
     TestBed.inject(RecetteContext).userId.set('user-B');
     TestBed.tick();
     expect(nav.previous()).toBeNull();
   });
   it('un passage par le portail ne crée pas d’étape et ne fait rien perdre', async () => {
-    await harness.navigateByUrl('/app/gestion-projet', Page);
-    await harness.navigateByUrl('/projet-de-vie', Page);
+    await harness.navigateByUrl('/bpm-astra/projets', Page);
+    await harness.navigateByUrl('/bpm-astra', Page);
     await harness.navigateByUrl('/', Page);
-    expect(nav.current()?.url).toBe('/projet-de-vie');
-    await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
-    expect(nav.visits().map((v) => v.url)).toEqual(['/app/gestion-projet', '/projet-de-vie', '/app/gestion-projet/prj_1']);
+    expect(nav.current()?.url).toBe('/bpm-astra');
+    await harness.navigateByUrl('/bpm-astra/projets/prj_1', Page);
+    expect(nav.visits().map((v) => v.url)).toEqual(['/bpm-astra/projets', '/bpm-astra', '/bpm-astra/projets/prj_1']);
     nav.back();
     await settle();
     // Le navigateur garderait le portail : le parcours rejoint directement l’étape précédente.
-    expect(router.url).toBe('/projet-de-vie');
+    expect(router.url).toBe('/bpm-astra');
   });
   it('revient de trois étapes, avance par un lien de la page, puis rejoint la dernière étape atteinte', async () => {
-    await harness.navigateByUrl('/app/gestion-projet', Page);
-    await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
-    await harness.navigateByUrl('/projet-de-vie', Page);
-    await harness.navigateByUrl('/projet-de-vie?period=2026-10', Page);
+    await harness.navigateByUrl('/bpm-astra/projets', Page);
+    await harness.navigateByUrl('/bpm-astra/projets/prj_1', Page);
+    await harness.navigateByUrl('/bpm-astra', Page);
+    await harness.navigateByUrl('/bpm-astra?period=2026-10', Page);
     for (let i = 0; i < 3; i++) {
       nav.back();
       await settle();
     }
-    expect(router.url).toBe('/app/gestion-projet');
+    expect(router.url).toBe('/bpm-astra/projets');
     expect(nav.ahead()).toBe(3);
-    await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
+    await harness.navigateByUrl('/bpm-astra/projets/prj_1', Page);
     expect(nav.ahead()).toBe(2);
     nav.forward();
     await settle();
-    expect(router.url).toBe('/projet-de-vie');
+    expect(router.url).toBe('/bpm-astra');
     nav.jump(nav.visits().length - 1);
     await settle();
-    expect(router.url).toBe('/projet-de-vie?period=2026-10');
+    expect(router.url).toBe('/bpm-astra?period=2026-10');
     nav.jump(0);
     await settle();
-    expect(router.url).toBe('/app/gestion-projet');
+    expect(router.url).toBe('/bpm-astra/projets');
     expect(nav.visits()).toHaveLength(4);
   });
   it('retire les étapes d’un parcours confirmé : « Retour » ramène à la page d’avant', async () => {
-    await harness.navigateByUrl('/app/gestion-projet', Page);
-    await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
-    nav.completeFlow((url) => url.startsWith('/app/gestion-projet/'));
-    await router.navigateByUrl('/projet-de-vie', { state: { journeyNotice: 'Projet enregistré.' } });
+    await harness.navigateByUrl('/bpm-astra/projets', Page);
+    await harness.navigateByUrl('/bpm-astra/projets/prj_1', Page);
+    nav.completeFlow((url) => url.startsWith('/bpm-astra/projets/'));
+    await router.navigateByUrl('/bpm-astra', { state: { journeyNotice: 'Projet enregistré.' } });
     await settle();
     expect(nav.notice()).toBe('Projet enregistré.');
-    await router.navigateByUrl('/projet-de-vie?expanded=indispensable', { replaceUrl: true });
+    await router.navigateByUrl('/bpm-astra?expanded=indispensable', { replaceUrl: true });
     await settle();
     expect(nav.notice()).toBe('Projet enregistré.');
     nav.back();
     await settle();
-    expect(router.url).toBe('/app/gestion-projet');
-    expect(nav.visits().map((v) => v.url)).toEqual(['/app/gestion-projet', '/projet-de-vie?expanded=indispensable']);
+    expect(router.url).toBe('/bpm-astra/projets');
+    expect(nav.visits().map((v) => v.url)).toEqual(['/bpm-astra/projets', '/bpm-astra?expanded=indispensable']);
   });
   it('ouvrir une autre adresse au chargement (favori, adresse tapée) ajoute une étape, recharger la même la garde', async () => {
     sessionStorage.setItem(
       'rjs-journey:user-B',
       JSON.stringify({
         visits: [
-          { id: 'liste', url: '/app/gestion-projet', label: 'Projets et financement' },
-          { id: 'fiche', url: '/app/gestion-projet/prj_1', label: 'Fiche du projet' },
+          { id: 'liste', url: '/bpm-astra/projets', label: 'Projets et financement' },
+          { id: 'fiche', url: '/bpm-astra/projets/prj_1', label: 'Fiche du projet' },
         ],
         cursor: 1,
       }),
@@ -153,27 +153,27 @@ describe('coordination des pages BPM', () => {
     TestBed.inject(RecetteContext).userId.set('user-B');
     TestBed.tick();
     expect(router.navigated).toBe(false);
-    await router.navigateByUrl('/projet-de-vie', { replaceUrl: true });
+    await router.navigateByUrl('/bpm-astra', { replaceUrl: true });
     await settle();
     expect(nav.visits().map((v) => v.id).slice(0, 2)).toEqual(['liste', 'fiche']);
     expect(nav.visits()).toHaveLength(3);
     expect(nav.cursor()).toBe(2);
     nav.back();
     await settle();
-    expect(router.url).toBe('/app/gestion-projet/prj_1');
+    expect(router.url).toBe('/bpm-astra/projets/prj_1');
   });
   it('garde le nom d’une fiche dans le parcours quand la page ne le publie plus (rechargement)', async () => {
     const labels = TestBed.inject(PageObjectLabels);
-    await harness.navigateByUrl('/app/gestion-projet/prj_1', Page);
-    labels.set('/app/gestion-projet/prj_1', 'Vacances en Bretagne');
+    await harness.navigateByUrl('/bpm-astra/projets/prj_1', Page);
+    labels.set('/bpm-astra/projets/prj_1', 'Vacances en Bretagne');
     await settle();
-    await harness.navigateByUrl('/projet-de-vie', Page);
-    labels.set('/app/gestion-projet/prj_1', null);
+    await harness.navigateByUrl('/bpm-astra', Page);
+    labels.set('/bpm-astra/projets/prj_1', null);
     await settle();
     expect(nav.visits()[0].label).toBe('Vacances en Bretagne');
     nav.back();
     await settle();
-    expect(router.url).toBe('/app/gestion-projet/prj_1');
+    expect(router.url).toBe('/bpm-astra/projets/prj_1');
     expect(nav.current()?.label).toBe('Vacances en Bretagne');
   });
 });

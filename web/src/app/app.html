@@ -1,0 +1,339 @@
+    <a class="skip-link" href="#main">Aller au contenu</a>
+    <div
+      class="app-shell"
+      rjsStickyPageHero
+      [class.editorial-style]="visualStyle() === 'editorial'"
+      [class.is-focus]="prefs.focus()"
+      [attr.data-density]="prefs.density()"
+      [attr.data-module]="workspaceIdentity().module"
+      [attr.data-application]="location().zone?.numbered ? location().zone!.id : null"
+      [attr.data-space]="workspaceIdentity().space"
+      [attr.data-section-tone]="sectionTone()"
+      [attr.data-overview]="isOverview() ? 'true' : null"
+      [attr.data-page-tone]="location().page?.tone ?? location().section?.homeTone ?? null"
+    >
+      <aside navigationSurface="primary" class="sidebar" aria-label="Navigation de RJS Forecast">
+        <div class="sidebar-mobile-head">
+          @if (isAstra()) {
+            <a class="astra-mobile-brand" routerLink="/bpm-astra"><span class="astra-mark" aria-hidden="true"></span>BPM-Astra</a>
+          } @else {
+            <a class="mobile-brand" routerLink="/modules" aria-label="Accueil RJS Forecast">R<span>.</span> <small>FORECAST</small></a>
+          }
+          @if (!isAstra() && location().zone; as zone) {
+            <span class="mobile-zone" [attr.data-tone]="zone.tone"
+              ><span class="zone-mark" aria-hidden="true">{{ zone.acronym }}</span>{{ location().section?.label ?? zone.label }}</span
+            >
+          }
+          <button class="mobile-nav-toggle" type="button" popovertarget="workspace-navigation" aria-controls="workspace-navigation" [attr.aria-expanded]="navigation.opened()">
+            @if (isAstra()) { <span data-astra-icon="menu" aria-hidden="true"></span> } @else { <span aria-hidden="true">☰</span> } Menu
+          </button>
+        </div>
+        @if (isAstra()) {
+          <a class="brand astra-brand" routerLink="/bpm-astra" aria-label="BPM-Astra, mon projet de vie">
+            <span class="astra-mark" aria-hidden="true"></span><span>BPM-Astra<small>RJS Forecast</small></span>
+          </a>
+        } @else {
+        <a class="brand" routerLink="/modules" aria-label="Accueil RJS Forecast — toutes les zones"
+          ><span class="brand-mark">R<span>.</span></span
+          ><span class="brand-name">RJS <strong>Forecast</strong><small>ZONES DE TRAVAIL</small></span></a
+        >
+        }
+        <div
+          id="workspace-navigation"
+          class="sidebar-navigation"
+          rjsResponsiveNavigation
+          #navigation="rjsNavigation"
+          tabindex="-1"
+          aria-label="Choisir une section ou une page"
+          (click)="closeNavigationOnLink($event)"
+        >
+          <div class="navigation-drawer-head">
+            <strong>Votre navigation</strong>
+            <button type="button" popovertarget="workspace-navigation" popovertargetaction="hide">Fermer <span aria-hidden="true">×</span></button>
+          </div>
+          <!-- Une seule entrée pour tout rejoindre : destinations du plan, vues voisines, épingles, parcours et actions. -->
+          <button type="button" class="quick-open" (click)="openPalette()" aria-keyshortcuts="Meta+K Control+K">
+            <span class="quick-open-icon" aria-hidden="true">⌕</span><span class="quick-open-text">Rechercher, aller à…</span><kbd>⌘K</kbd>
+          </button>
+          <!-- Même identité sur bureau et dans le menu mobile, sans répétition au-dessus de la page. -->
+          <rjs-account-chip class="sidebar-account" variant="sidebar" [label]="activeUser()?.label ?? null" [typeLabel]="activeUser()?.userTypeLabel ?? ''" />
+          @if (location().zone; as zone) {
+            @if (isAstra()) {
+              <nav class="astra-nav" aria-label="Navigation BPM-Astra">
+                @for (section of visibleSections(zone); track section.id) {
+                  <div class="astra-nav-group" [attr.data-tone]="section.tone">
+                    <span class="astra-nav-label">{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</span>
+                    @for (page of visiblePages(section); track page.link) {
+                      <a [routerLink]="page.link" [queryParams]="astraReading()" data-navigation-level="page"
+                         [attr.aria-current]="location().page?.link === page.link ? (path() === page.link ? 'page' : 'true') : null">
+                        <span [attr.data-astra-icon]="page.link.split('/').at(-1)" aria-hidden="true"></span>
+                        {{ page.label | navigationLabel:page.link }}
+                      </a>
+                      <!-- Les pages secondaires de la page ouverte, juste sous elle. -->
+                      @if (location().page?.link === page.link) {
+                        @if (subpagesOf(page); as subs) {
+                          @if (subs.length) {
+                            <ul class="astra-nav-sub" [attr.aria-label]="'Pages de ' + page.label">
+                              @for (sub of subs; track sub.link) {
+                                <li><a [routerLink]="sub.link" [queryParams]="astraReading()" data-navigation-level="detail" [attr.aria-current]="path() === sub.link ? 'page' : null">{{ sub.label | navigationLabel:sub.link }}</a></li>
+                              }
+                            </ul>
+                          }
+                        }
+                      }
+                    }
+                  </div>
+                }
+              </nav>
+            } @else {
+            <div class="zone-identity" [attr.data-tone]="zone.tone">
+              <a data-navigation-level="section" class="zone-identity-head" [routerLink]="zoneHome(zone)" [attr.title]="zone.mission"
+                ><span class="zone-mark" aria-hidden="true">{{ zone.acronym }}</span
+                ><span
+                  ><small>{{ zone.eyebrow }}</small><strong>{{ zone.label | navigationLabel:("zone:" + zone.id) }}</strong></span
+                ></a
+              >
+              <a class="zone-identity-switch" routerLink="/modules" title="Changer de zone"><span class="visually-hidden">Changer de zone</span><span aria-hidden="true">⇄</span></a>
+            </div>
+            <div class="nav-label">Sections de la zone</div>
+            <nav class="section-switch" [attr.aria-label]="'Sections de ' + zone.label">
+              @let sectionList = visibleSections(zone);
+              @for (section of sectionList; track section.id) {
+                @let entry = entryOf(zone, section);
+                @let current = location().section?.id === section.id;
+                <a
+                  data-navigation-level="section" class="section-switch-entry"
+                  [attr.data-tone]="section.tone ?? zone.tone"
+                  [routerLink]="entry.link"
+                  [queryParams]="entry.query"
+                  [class.active]="current"
+                  [attr.aria-current]="current ? 'true' : null"
+                  ><span class="section-mark" aria-hidden="true">{{ markOf(zone, section, sectionList) }}</span
+                  ><span class="section-switch-text"
+                    ><strong>{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</strong><small>{{ section.intention }}</small></span
+                  >
+                  @if (current) {
+                    <span class="section-selected" aria-hidden="true">✓</span>
+                  }
+                </a>
+              }
+            </nav>
+            @if (location().section; as section) {
+              @if (pageMenu(section)) {
+                <div class="nav-label">{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</div>
+                <nav class="section-pages" [attr.aria-label]="'Pages de ' + section.label">
+                  @if (sectionHome(section)) {
+                    <a
+                      [attr.data-page-tone]="section.homeTone"
+                      [routerLink]="sectionHomeOf(zone, section)"
+                      [class.active]="location().kind === 'section'"
+                      [attr.aria-current]="location().kind === 'section' ? 'page' : null"
+                      ><span class="nav-icon" aria-hidden="true">⌂</span><span>Accueil de la section</span></a
+                    >
+                  }
+                  <rjs-section-page-menu [section]="section" [url]="url()" [objectLabel]="objectLabel()" />
+                </nav>
+              }
+            }
+            }
+          } @else {
+            <div class="nav-label">Zones principales</div>
+            @if (location().kind === 'portal') {
+              <ul class="portal-zone-labels" aria-label="Zones principales">
+                @for (zone of zones(); track zone.id) {
+                  <li><a data-navigation-level="section" [routerLink]="zoneHome(zone)">{{ zone.label | navigationLabel:("zone:" + zone.id) }}</a></li>
+                }
+              </ul>
+            } @else {
+              <nav class="section-switch zone-switch" aria-label="Zones principales">
+                @for (zone of zones(); track zone.id) {
+                  <a data-navigation-level="section" class="section-switch-entry" [attr.data-tone]="zone.tone" [routerLink]="zoneHome(zone)"
+                    ><span class="section-mark" aria-hidden="true">{{ zone.acronym }}</span
+                    ><span class="section-switch-text"
+                      ><strong>{{ zone.label | navigationLabel:("zone:" + zone.id) }}</strong><small>{{ visibleSections(zone).length }} sections</small></span
+                    ></a
+                  >
+                }
+              </nav>
+            }
+          }
+
+          <!-- Les pages épinglées par l'utilisateur : niveau « page », quelle que soit la zone affichée. -->
+          @if (pins().length) {
+            <div class="nav-label">Épinglés</div>
+            <nav class="pinned-pages" aria-label="Pages épinglées">
+              @for (pin of pins(); track pin.link) {
+                <span class="pinned-row">
+                  <a data-navigation-level="page" class="pinned-link" [routerLink]="pin.link" [queryParams]="pin.query" [class.active]="pin.current" [attr.aria-current]="pin.current ? 'page' : null" [attr.title]="pin.hint"
+                    ><span class="nav-icon" aria-hidden="true">★</span><span class="pinned-text">{{ pin.label }}</span></a
+                  >
+                  <button type="button" class="pinned-remove" (click)="pinned.remove(pin.link)" [attr.aria-label]="'Retirer l’épingle : ' + pin.label" title="Retirer l’épingle">×</button>
+                </span>
+              }
+            </nav>
+          }
+
+          <!-- Dans une zone, un accès direct aux autres modules ; sur le portail, la liste des zones suffit. -->
+          @if (location().zone) {
+          <details class="navigation-module-switcher">
+            <summary>Tous les modules</summary>
+            <nav aria-label="Accès à tous les modules">
+              @for (zone of zones(); track zone.id) {
+                <a data-navigation-level="section" [routerLink]="zoneHome(zone)" [attr.aria-current]="location().zone?.id === zone.id ? 'true' : null">{{ zone.label | navigationLabel:("zone:" + zone.id) }}</a>
+              }
+            </nav>
+          </details>
+          }
+          <a class="navigation-settings-link" data-navigation-level="detail" routerLink="/navigation"><span aria-hidden="true">⚙</span> {{ "Réglages de navigation" | navigationLabel:"/navigation" }}</a>
+          <div class="sidebar-tools">
+            <div class="profile-switcher" aria-label="Utilisateur connecté" role="group">
+              <span class="profile-switcher-mark" aria-hidden="true">{{ activeInitial() }}</span>
+              <div>
+                @if (activeUser(); as user) {
+                  <strong>{{ user.label }}</strong>
+                  <small>{{ user.userTypeLabel }}</small>
+                  <a routerLink="/utilisateurs">Changer d’utilisateur</a>
+                } @else if (users().length === 0 && ready()) {
+                  <strong>Aucun utilisateur</strong>
+                  <small>Créez le premier pour ouvrir les modules métier.</small>
+                  <a routerLink="/utilisateurs">Créer le premier utilisateur</a>
+                } @else if (error()) {
+                  <strong>Utilisateurs illisibles</strong>
+                  <small>{{ error() }}</small>
+                } @else if (!ready()) {
+                  <strong>Utilisateur</strong>
+                  <small>Lecture des utilisateurs…</small>
+                } @else {
+                  <strong>Aucun utilisateur choisi</strong>
+                  <small>Choisissez qui travaille.</small>
+                  <a routerLink="/utilisateurs">Choisir un utilisateur</a>
+                }
+              </div>
+            </div>
+            <!-- Préférences du navigateur, repliées : elles ne font pas partie de la navigation. -->
+            <details class="sidebar-settings">
+            <summary><span aria-hidden="true">⚙</span> Utilisateur et affichage</summary>
+            <label class="appearance-picker">
+              <span>Utilisateur actif</span>
+              <select aria-label="Utilisateur actif" (change)="choose($any($event.target).value)" [disabled]="!users().length">
+                <option value="" [selected]="!ctx.connected()">Non connecté</option>
+                @for (u of users(); track u.id) {
+                  <option [value]="u.id" [selected]="u.id === ctx.userId()">{{ u.label }} · {{ u.userTypeLabel }}</option>
+                }
+              </select>
+            </label>
+            <label class="appearance-picker">
+              <span>Style de l’interface</span>
+              <select aria-label="Style de l’interface" [value]="visualStyle()" (change)="setVisualStyle($event)">
+                <option value="classic">Classique</option>
+                <option value="editorial">Sombre éditorial</option>
+              </select>
+            </label>
+            <label class="appearance-picker">
+              <span>Densité de l’affichage</span>
+              <select aria-label="Densité de l’affichage" [value]="prefs.density()" (change)="prefs.setDensity($any($event.target).value === 'compact' ? 'compact' : 'comfortable')">
+                <option value="comfortable">Confortable</option>
+                <option value="compact">Dense</option>
+              </select>
+            </label>
+            </details>
+            <div class="sidebar-bottom">
+              <span class="local-indicator"></span>
+              <div><strong>Espace local</strong><small>Enregistré sur cet ordinateur</small></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-shell">
+        <header class="topbar">
+          <button type="button" class="topbar-tool topbar-menu-toggle" (click)="prefs.toggleFocus()" [attr.aria-pressed]="prefs.focus()"
+            [attr.aria-label]="prefs.focus() ? 'Afficher le menu' : 'Masquer le menu'" [title]="prefs.focus() ? 'Afficher le menu (M)' : 'Masquer le menu (M)'"
+            >@if (isAstra()) { <span data-astra-icon="panneau" aria-hidden="true"></span> } @else { <span aria-hidden="true">{{ prefs.focus() ? '▤' : '◧' }}</span> }</button
+          >
+          <nav navigationSurface="tertiary" class="topbar-context" aria-label="Fil d’Ariane">
+            <span class="topbar-square" aria-hidden="true"></span>
+            <a data-navigation-level="section" routerLink="/modules">{{ "Accueil" | navigationLabel:"/" }}</a>
+            @for (crumb of breadcrumb(); track $index) {
+              <span class="topbar-separator" aria-hidden="true">/</span>
+              @if (crumb.link) {
+                <a [routerLink]="crumb.link" [queryParams]="crumb.query ?? null" [attr.data-navigation-level]="crumb.link.startsWith('/zones/') ? 'section' : 'page'">{{ crumb.label | navigationLabel:crumb.navigationKey }}</a>
+              } @else {
+                <span data-navigation-level="detail" class="topbar-current" aria-current="page" [attr.title]="crumb.label | navigationLabel:crumb.navigationKey">{{ crumb.label | navigationLabel:crumb.navigationKey }}</span>
+              }
+            }
+          </nav>
+          <div class="topbar-actions">
+            <button type="button" class="topbar-search" (click)="openPalette()" aria-label="Rechercher une page ou une action" title="Rechercher, aller à… (⌘K)">
+              @if (isAstra()) { <span data-astra-icon="recherche" aria-hidden="true"></span> } @else { <span aria-hidden="true">⌕</span> }<span class="topbar-search-text">Rechercher</span><kbd>⌘K</kbd>
+            </button>
+            @if (location().zone) {
+              <button type="button" class="topbar-tool topbar-pin" (click)="togglePin()" [attr.aria-pressed]="isPinned()"
+                [attr.aria-label]="isPinned() ? 'Retirer l’épingle de cette page' : 'Épingler cette page dans le menu'" [title]="isPinned() ? 'Retirer l’épingle (E)' : 'Épingler cette page (E)'"
+                >@if (isAstra()) { <span data-astra-icon="epingle" aria-hidden="true"></span> } @else { <span aria-hidden="true">{{ isPinned() ? '★' : '☆' }}</span> }</button
+              >
+            }
+            <time class="topbar-date" [attr.datetime]="todayIso">{{ todayLabel }}</time>
+            <a class="topbar-home" routerLink="/modules">RJS Forecast</a>
+            <!-- En haut à droite, comme d'usage : l'utilisateur connecté, accueil compris. -->
+            <rjs-account-chip class="topbar-account" variant="topbar" [label]="activeUser()?.label ?? null" [typeLabel]="activeUser()?.userTypeLabel ?? ''" />
+          </div>
+        </header>
+
+        @if (location().zone?.band === 'assembled' || location().zone?.id === 'noyau') {
+          <div class="recette-banner">Environnement de recette — données fictives. Les interfaces middleware servent aux tests ; les actions métier passent par Budget/Patrimoine Management.</div>
+        }
+        @if (error()) {
+          <div class="error-bar" role="alert">
+            <span>{{ error() }}</span><button type="button" aria-label="Masquer le message" (click)="error.set(null)">×</button>
+          </div>
+        }
+
+        <main id="main" tabindex="-1">
+          @if (ready()) {
+            @if (onLoginPage()) {
+              <router-outlet />
+            } @else if (isAstra() && !ctx.connected()) {
+              @if (profilePicker(); as picker) { <ng-container *ngComponentOutlet="picker" /> }
+            } @else if (users().length === 0 && needsUser()) {
+              <div class="page plan-page">
+                <section class="plan-empty" data-ui-pattern="empty">
+                  <h1>Bienvenue</h1>
+                  <p>Aucun utilisateur pour l’instant. Démarrez votre projet de vie : votre profil, son budget et son patrimoine seront créés en même temps.</p>
+                  <a class="plan-action" routerLink="/creer">Démarrer un projet <span aria-hidden="true">→</span></a>
+                </section>
+              </div>
+            } @else {
+              <!-- Le parcours (Retour / Mon parcours / Suivant) structure toutes les zones du plan, pas seulement BPM. -->
+              @if (location().zone && !isAstra()) { <rjs-journey /> }
+              <router-outlet />
+              @if (isAstra() && ctx.connected()) { <rjs-journey /> }
+            }
+          } @else if (!error()) {
+            <div class="page"><p class="muted">Chargement…</p></div>
+          }
+        </main>
+        <!-- Poursuivre : le niveau supérieur, les autres vues et les pages voisines du plan, avec la même lecture. -->
+        @if (dock().length) {
+          <nav navigationSurface="tertiary" class="context-dock" aria-label="Poursuivre depuis cette page">
+            <span class="context-dock-title">Poursuivre</span>
+            @for (link of dock(); track link.id) {
+              <a class="context-dock-link" [attr.data-navigation-level]="link.kind === 'view' ? 'detail' : 'page'" [attr.data-kind]="link.kind" [routerLink]="link.link" [queryParams]="link.query ?? null">
+                <span class="context-dock-mark" aria-hidden="true">{{ link.mark }}</span>
+                <span class="context-dock-text"><small>{{ link.hint }}</small><strong>{{ link.label | navigationLabel:(link.navigationKey ?? link.link) }}</strong></span>
+              </a>
+            }
+          </nav>
+        }
+        @if (showBackToTop()) {
+          <button class="back-to-top" type="button" (click)="backToTop()" aria-label="Revenir en haut de la page">↑ <span>Haut de page</span></button>
+        }
+        <footer class="main-footer">
+          <span>RJS Forecast · {{ isAstra() ? 'BPM-Astra' : 'Budget/Patrimoine Management' }}</span><span>Données locales · montants en euros</span>
+        </footer>
+      </div>
+      <!-- La palette se charge après le premier rendu : elle ne pèse pas sur l'ouverture du site. -->
+      @defer (on idle) {
+        <rjs-command-palette #palette />
+      }
+    </div>

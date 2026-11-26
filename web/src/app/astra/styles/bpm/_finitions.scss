@@ -1,0 +1,135 @@
+/* Finitions des écrans métier BPM (présentés par BPM-Astra), dans l'ordre de la cascade :*/
+/* 1. rythme des pages de travail, 2. place des gestes sur les lignes (cockpit), 3. présentation sobre (dernier mot).*/
+
+/* ---------- 1. Rythme des pages de travail ----------*/
+/* Harmonisation des espaces BPM, sans modification des données.*/
+
+/*/ Rythme commun des pages de travail BPM (titres, champs, tableaux, actions, petits écrans) : écrit une fois.*/
+@mixin page-rhythm {
+  h2 { line-height: 1.3; }
+  h3 { line-height: 1.4; }
+  input, select { max-width: 100%; min-width: 0; }
+  .bpm-table-wrap { max-width: 100%; overflow: auto; }
+  .bpm-actions { flex-wrap: wrap; gap: 10px; }
+  @media (max-width: 700px) {
+    .bpm-section, .objectives-panel, .objective-card, .bc-hero, .bc-wealth, .bc-history, .bc-centers { padding: 16px; }
+  }
+}
+
+.app-shell[data-module='bpm'] .bpm-disclosure-body {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+.app-shell[data-module='bpm'] .modal .modal-head:has(.modal-close) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+
+  .modal-close {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+.app-shell[data-density][data-module='bpm'] .main-shell main .bpm-caps-page {
+ gap:24px; min-width:0;
+ .caps-review {gap:24px}
+ @include page-rhythm;
+}
+
+.app-shell[data-density][data-module='bpm'] .main-shell main .bpm-objectives-workspace {
+ gap:24px; min-width:0;
+ .objectives-panel,.objective-card,.objectives-callout {padding:24px;border:1px solid var(--line);border-radius:14px;background:var(--raised-surface)} .objectives-panel {display:grid;gap:20px} .objective-card {gap:20px} .objective-identity {gap:10px} .objective-note {font-size:13px;line-height:1.65} .objective-big-number {font-size:clamp(26px,3vw,36px);letter-spacing:-.035em;font-variant-numeric:tabular-nums} .life-objective-fields {gap:16px} .objective-actions {display:flex;flex-wrap:wrap;gap:10px}
+ @include page-rhythm;
+}
+
+.app-shell[data-density][data-module='bpm'] .main-shell main .bc-page {
+ gap:24px; min-width:0;
+ .bc-hero,.bc-wealth,.bc-history,.bc-centers {padding:24px;border:1px solid var(--line);border-radius:14px;background:var(--raised-surface)} .bc-hero-head {gap:20px} .bc-form {gap:20px} .bc-form label {display:grid;gap:8px;min-width:0} .bc-note {font-size:13px;line-height:1.65} .bc-actions {display:flex;flex-wrap:wrap;gap:12px} .bc-wealth-parts {gap:16px} .bc-table-wrap {max-width:100%;overflow:auto;border:1px solid var(--line);border-radius:10px} .bc-table {width:100%;border-collapse:collapse} .bc-table th,.bc-table td {padding:14px 16px;text-align:left;border-bottom:1px solid var(--line)} .bc-section-title {margin-bottom:20px}
+ @include page-rhythm;
+}
+
+.app-shell[data-density][data-module='bpm'] .main-shell main .bpm-projects:not(.bpm-life-management) {
+ gap:24px; min-width:0;
+ .bpm-section {padding:24px;gap:24px}
+ @include page-rhythm;
+}
+
+/* Navigation horizontale compacte ; les titres de contenu restent lisibles à l'arrivée d'une ancre.*/
+.app-shell[data-module='bpm'] .rjs-page-banner {
+  row-gap: 10px;
+  padding-block: 18px;
+  rjs-page-tabs .page-tabs {margin-block: 4px;gap:4px}
+  .bpm-banner-period {margin-block:0}
+}
+.app-shell[data-module='bpm'] main h2[tabindex='-1']:focus-visible {
+  outline:2px solid var(--app-focus-ring);outline-offset:6px;border-radius:4px;
+}
+/* Les titres de projet restent lisibles dans les cartes de tâches étroites.*/
+.bpm-projects .task-card-meta {
+  flex-wrap: wrap;
+  gap: 8px;
+  .task-card-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .due-date { flex-shrink: 0; }
+}
+
+/* ---------- 2. Cockpit : la place des gestes ----------*/
+/* Cockpit : la place des gestes offerts sur les lignes (régler, ouvrir, décider), commune à toutes les pages BPM.*/
+.app-shell[data-density][data-application] main {
+  /* Une échéance réglable porte son bouton à droite de sa ligne, hors du lien qui ouvre la fiche.*/
+  .expense-row:has(> bpm-quick-settle:not(:empty)) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    padding-right: 12px;
+  }
+  .bmd-pending-end {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .life-line-action {
+    text-align: right;
+    white-space: nowrap;
+  }
+  @media (max-width: 720px) {
+    .expense-row:has(> bpm-quick-settle:not(:empty)) {
+      grid-template-columns: minmax(0, 1fr);
+      padding-right: 0;
+      bpm-quick-settle {
+        justify-content: flex-start;
+        padding: 0 12px 10px;
+      }
+    }
+  }
+}
+
+/* ---------- 3. Présentation sobre ----------*/
+/* Présentation sobre des applications (BPM et toute zone numérotée) : dernière couche de la cascade.*/
+/* Elle ne change ni les couleurs ni la disposition : angles plus nets, étiquettes rectangulaires,*/
+/* chiffres alignés. Pour revenir à la présentation précédente, retirer cette feuille de*/
+/* `styles.scss` ; pour doser, changer les deux rayons ci-dessous.*/
+.app-shell[data-density][data-application] {
+  --sober-radius: 6px;
+  --sober-radius-small: 4px;
+
+  /* Surfaces : cadres de page, cartes, panneaux et lignes de relevé. `[class][class]` donne à cette*/
+  /* dernière couche le dernier mot sur les règles plus anciennes, sans `!important`.*/
+  :is(.rjs-page-banner, .bpm-section, .bpm-panel, .bpm-disclosure, .bm-statement, .expense-row, .expense-group, .expense-charge-summary, .life-summary, .life-financial-stat, .life-limit-strip, .dashboard-wealth, .objectives-panel, .objective-card, .objectives-summary-band, .summary-band, .metric-tile, .pm-budget, .section-page-group, .section-band, .zone-identity-head, .period-navigation, .calendar-agenda, .calendar-month-wrap, .calendar-grid-head, .calendar-360-project, .calendar-360-timeline, .calendar-360-heading, .calendar-control-row, .cal-personalization)[class][class][class] {
+    border-radius: var(--sober-radius);
+  }
+
+  /* Étiquettes d'état : rectangulaires plutôt qu'en pastille.*/
+  main :is(.status-chip, .result, .calendar-360-task)[class][class] {
+    border-radius: var(--sober-radius-small);
+  }
+
+  /* Les montants s'alignent en colonnes partout.*/
+  main {
+    font-variant-numeric: tabular-nums;
+  }
+}

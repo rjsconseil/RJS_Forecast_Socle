@@ -1,9 +1,16 @@
+import { BpmTaskShareDialog } from './funding-dialogs';
+import { BpmAmount } from '../ui/amount';
+import { BpmProjectFlowsPanel } from '../ui/project-flows';
+import { BpmCompass } from '../ui/compass';
 import { injectPageWorkspace } from '../../plan/page-workspace';
+import { projectBudgetTiles } from './project-budget-tiles';
+import { chargeState, defaultDate, timeTone } from './project-labels';
 import { PageObjectLabels } from '../../plan/plan-context';
-import { projectLink } from '../../plan/site-plan';
+import { projectLink } from '../bpm.screens';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
 import { BpmFormDraft } from '../ui/form-draft';
+import { BpmDial } from '../ui/dial';
 import { BpmPageBanner, BpmPageFocus } from '../ui';
 import {
   afterNextRender,
@@ -16,19 +23,23 @@ import {
 } from '@angular/core';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BPM_CORE_LINKS, BPM_PAGE_PATH, BPM_PROJECT_DETAIL_PANELS } from '../ui/bpm-page-path';
+import { BpmRouterLink } from '../ui/bpm-router-link';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmBudgetRef, RegisterLine } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmBudgetRef, RegisterLine } from '../data/bpm-models';
 import {
   BpmProjectDetail,
   BpmTaskCard,
+  FundingSource,
+  FUNDING_SOURCE_LABEL,
   OverrunRefusal,
   ProjectChargeLine,
   ProjectOverrun,
   ReturnCadence,
   TaskBudgetRequest,
-} from '../../core/bpm-projects.models';
+} from '../data/bpm-projects.models';
 import { COLUMNS, TASK_STATUS_LABEL, TaskStatus } from '../../core/models';
 import { cents, CentsPipe, parseAmount, shortDate, ShortDatePipe } from '../../core/format';
 import { FUNDING, FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from '../ui/project-funding';
@@ -48,6 +59,10 @@ import {
 import { MetricTile } from '../../shared/metric-tiles.component';
 import { displayDate, dueUrgency, dueTitle, normalizeSearch } from '../../projects/workspace-parts';
 import { BpmProjectEditor, BpmTaskEditor } from './project-editors';
+import { TaskCommandDrafts } from './task-command-drafts';
+import { ProjectWriteFlow, Write } from './project-write-flow';
+import { ProjectTaskFunding } from './project-task-funding';
+import { ProjectFocusInput, projectNextActionLabel, projectPageFocus } from './project-focus';
 
 const today = () => new Date().toISOString().slice(0, 10);
 const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
@@ -57,38 +72,6 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
   { id: 'yearly', label: 'Annuel' },
 ];
 
-/** Action refusée faute de budget, en attente de la décision du budget de vie. */
-const capitalize = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
-
-/**
- * Écriture de la page. `fund` : rejouée après un refus de financement, elle demande au middleware Budget d'accorder
- * dans la même écriture la part et le dépassement nécessaires (règlement financé, part avec dépassement autorisé).
- */
-type Write<T> = (fund?: boolean) => Promise<T>;
-
-/** Règlement refusé faute de part suffisante (projet en mode strict) : la part est accordée avec le règlement. */
-interface ShareFlow {
-  gap: {
-    budgetId: string;
-    taskId: string;
-    taskTitle: string;
-    shareCents: number | null;
-    neededCents: number;
-    availableCents: number;
-    grantOverrunCents: number;
-  };
-  message: string;
-  label: string;
-  retry: Write<unknown>;
-}
-
-interface OverrunFlow {
-  refusal: OverrunRefusal;
-  message: string;
-  label: string;
-  retry: Write<unknown>;
-  request: ProjectOverrun | null;
-}
 
 /**
  * Fiche BPM d'un projet de la vie. Projet standard : budget attribué par le budget de vie (charge non récurrente
@@ -100,19 +83,20 @@ interface OverrunFlow {
 @Component({
   selector: 'app-bpm-project',
   providers: [BpmPageContext],
-  imports: [
+  imports: [BpmAmount, BpmProjectFlowsPanel, BpmCompass, BpmTaskShareDialog,
     BpmPageBanner,
     NgTemplateOutlet,
     CdkDrag,
     CdkDragHandle,
     CdkDropList,
     CdkDropListGroup,
-    RouterLink,
+    BpmRouterLink,
     CentsPipe,
     ShortDatePipe,
     BpmOverrunRequestComponent,
     BpmEntryFlow,
     BpmFormDraft,
+    BpmDial,
     BpmLineDetail,
     BpmTaskRequestsComponent,
     BpmLifeFundingComponent,
@@ -122,9 +106,12 @@ interface OverrunFlow {
     BpmModal,
   ],
   templateUrl: './project.page.html',
-  styleUrls: ['./projects.page.scss', './project.page.scss'],
+  styleUrls: ['./projects.page.scss', './project.page.scss', './project-command-center.scss'],
 })
 export class BpmProjectPage {
+  protected readonly modulePath = inject(BPM_PAGE_PATH);
+  protected readonly coreLinks = inject(BPM_CORE_LINKS);
+  protected readonly detailPanels = inject(BPM_PROJECT_DETAIL_PANELS);
   protected readonly workspace = injectPageWorkspace();
   protected readonly workspaceKey = computed(() => this.workspace()?.key);
   protected ctx = inject(BpmPageContext);
@@ -149,8 +136,18 @@ export class BpmProjectPage {
     (this.data()?.attachable ?? []).filter((t) => !t.task.projectId && t.pathways.canChangeProject),
   );
   protected error = signal<string | null>(null);
-  protected busy = signal(false);
-  protected notice = signal<{ text: string; error: boolean } | null>(null);
+  private writes = new ProjectWriteFlow({ load: () => this.load(), reveal: (id) => this.revealControl(id), funding: this.funding });
+  private taskFunding = new ProjectTaskFunding({
+    run: (action, success, label) => this.writes.run(action, success, label),
+    notice: this.writes.notice,
+    bpm: this.bpm,
+    funding: this.funding,
+    budgetRevision: () => this.data()?.budget?.revision,
+    requestSent: () => this.fundingTask.set(null),
+    returnSaved: () => this.returnEditor.set(null),
+  });
+  protected busy = this.writes.busy;
+  protected notice = this.writes.notice;
   protected toolbarResult = computed(() => {
     const notice = this.notice();
     return notice ? { message: notice.text, tone: notice.error ? 'danger' as const : 'success' as const } : null;
@@ -162,9 +159,30 @@ export class BpmProjectPage {
       : 'Section · projet de vie et financement de tous ses projets';
   });
   private hasTaskSelection = computed(() => !!this.query().trim() || this.taskAttention() !== 'all');
-  protected flow = signal<OverrunFlow | null>(null);
-  protected shareFlow = signal<ShareFlow | null>(null);
+  protected flow = this.writes.flow;
+  protected shareFlow = this.writes.shareFlow;
+  /** Part d'une tâche ouverte en fenêtre depuis son chiffre (« À demander » ou le montant). */
+  protected readonly shareFor = signal<BpmTaskCard | null>(null);
+  protected async shareSaved(message: string) {
+    this.shareFor.set(null);
+    await this.load();
+    this.notice.set({ text: message, error: false });
+  }
   protected allocation = signal('');
+  protected readonly allocationSource = signal<FundingSource>('cycle');
+  protected readonly fundingSourceLabel = FUNDING_SOURCE_LABEL;
+  protected readonly allocationMode = signal<'total' | 'add'>('total');
+  protected readonly allocationBase = signal(0);
+  protected readonly increasedEnvelope = computed(() => {
+    const amount = parseAmount(this.allocation());
+    return typeof amount === 'number' && amount > 0 ? this.allocationBase() + Math.round(amount * 100) : null;
+  });
+
+  protected setAllocationMode(mode: 'total' | 'add') {
+    this.allocationMode.set(mode);
+    this.allocation.set(mode === 'add' ? '' : String(this.allocationBase() / 100).replace('.', ','));
+    this.allocationError.set(null);
+  }
   protected returnEditor = bpmQueryState<string | null>('retour', null, { overlay: true });
   protected settling = bpmQueryState<string | null>('reglement', null, { overlay: true });
   protected entryId = bpmQueryState('entry', '', { overlay: true });
@@ -187,7 +205,6 @@ export class BpmProjectPage {
       (x) => x.status !== 'pending' && x.status !== 'awaiting-life',
     ),
   );
-  private requestKeys = new Map<string, string>();
   private projectId = '';
   protected decisionsOpen = bpmQueryState('decisions', false, { parse: value => value !== 'false', format: () => 'open', overlay: true });
   protected taskAttention = bpmQueryState('attention', 'all');
@@ -227,99 +244,21 @@ export class BpmProjectPage {
       null
     );
   });
-  protected nextActionLabel = computed(() => {
-    const d = this.data();
-    if (d?.budget?.abandoned) return 'Reprendre le projet';
-    if (!d?.budget?.regime) return 'Attribuer l’enveloppe';
-    if (this.pendingDecisions().length || this.pendingTaskRequests().length)
-      return 'Traiter les décisions de financement';
-    if (this.nextCharge()) return 'Préparer le prochain règlement';
-    if (this.hasTaskSelection() && !this.visibleTasks().length) return 'Réinitialiser la sélection';
-    const t = this.nextTask();
-    if (t?.task.status === 'blocked') return 'Revoir une tâche bloquée';
-    if (t && this.isLate(t)) return 'Revoir une tâche en retard';
-    if (t?.task.status === 'done') return 'Libérer une part non consommée';
-    if (t) return 'Poursuivre une tâche';
-    return d?.tasks.length ? 'Vérifier la fin de cycle' : 'Créer la première tâche';
-  });
-  protected pageFocus = computed<BpmPageFocus>(() => {
-    const d = this.data();
-    if (!d) return { title: 'Lecture du projet…', tone: 'info' };
-    if (this.error())
-      return { title: 'L’actualisation du projet a échoué', detail: this.error()!, tone: 'danger' };
-    const gone = d.budget?.abandoned;
-    if (gone)
-      return {
-        title: `Projet abandonné le ${shortDate(gone.at)}${gone.reason ? ` · ${gone.reason}` : ''}`,
-        detail: gone.releasedCents
-          ? `${cents(gone.releasedCents)} sont revenus au budget de vie ; l’enveloppe garde ${cents(gone.allocationAfterCents ?? 0)}, ce qui a été réglé. Reprenez le projet pour y saisir de nouveau.`
-          : 'Ses dépenses réglées restent dans son historique. Reprenez le projet pour y saisir de nouveau.',
-        tone: 'info',
-      };
-    if (d.role === 'standard' && !d.budget?.regime)
-      return {
-        title: 'L’enveloppe de ce projet reste à attribuer',
-        detail:
-          'Attribuez un budget avant d’accorder les demandes des tâches. Les règlements sans enveloppe restent hors budget du projet de vie.',
-        tone: 'warning',
-      };
-    if (d.role === 'standard' && this.hasTaskSelection() && !this.visibleTasks().length)
-      return { title: 'Aucune tâche ne correspond à cette sélection', detail: 'Adaptez la recherche et la priorité de suivi pour retrouver les tâches du projet.', tone: 'info' };
-    const decisions = this.pendingDecisions().length + this.pendingTaskRequests().length;
-    if (decisions)
-      return {
-        title: `${decisions} décision(s) de financement en attente`,
-        detail:
-          'Accordez les montants des tâches et les autorisations nécessaires avant de poursuivre.',
-        tone: 'warning',
-      };
-    if (d.role === 'life')
-      return {
-        title: `${d.life?.fundedCount ?? 0} projet(s) financé(s) par le projet de vie`,
-        detail:
-          'Gérez les ressources, les échéances et le financement des projets dans la vision du projet de vie.',
-        tone: 'info',
-      };
-    const charge = this.nextCharge();
-    if (charge)
-      return {
-        title: `Règlement à préparer : ${charge.label}`,
-        detail: `${cents(charge.plannedCents)} prévus le ${displayDate(charge.plannedDate)}. Validez seulement après le paiement réel.`,
-        tone: 'warning',
-      };
-    const task = this.nextTask();
-    if (task?.task.status === 'blocked')
-      return {
-        title: `Tâche bloquée : ${task.task.title}`,
-        detail: 'Ouvrez la tâche pour revoir sa planification, son budget et son statut.',
-        tone: 'warning',
-      };
-    if (task && this.isLate(task))
-      return {
-        title: `Échéance dépassée : ${task.task.title}`,
-        detail: 'Vérifiez son avancement ou ajustez sa date depuis la tâche.',
-        tone: 'warning',
-      };
-    if (task?.task.status === 'done')
-      return {
-        title: `${cents(task.budget?.unusedCents ?? 0)} peuvent revenir à l’enveloppe`,
-        detail: `« ${task.task.title} » est terminée ; vérifiez les règlements puis libérez sa part inutilisée.`,
-        tone: 'info',
-      };
-    if (!d.tasks.length)
-      return {
-        title: 'Le projet est financé ; préparez sa première tâche',
-        detail: 'Créez une tâche ou rattachez-en une depuis les outils.',
-        tone: 'info',
-      };
+  private focusInput(): ProjectFocusInput {
     return {
-      title: `${this.doneCount()} / ${d.tasks.length} tâches terminées · ${d.project.view.statusLabel}`,
-      detail: task
-        ? `À poursuivre : ${task.task.title}. Les montants portent sur toute la durée du projet.`
-        : 'Toutes les tâches sont terminées. Vérifiez les parts restantes et les contrôles de fin de cycle.',
-      tone: 'success',
+      data: this.data(),
+      error: this.error(),
+      hasSelection: this.hasTaskSelection(),
+      visibleCount: this.visibleTasks().length,
+      pendingCount: this.pendingDecisions().length + this.pendingTaskRequests().length,
+      nextCharge: this.nextCharge(),
+      nextTask: this.nextTask(),
+      isLate: (t) => this.isLate(t),
+      doneCount: this.doneCount(),
     };
-  });
+  }
+  protected nextActionLabel = computed(() => projectNextActionLabel(this.focusInput()));
+  protected pageFocus = computed<BpmPageFocus>(() => projectPageFocus(this.focusInput()));
   /** Contexte de retour uniquement : la fiche du projet reste lue sur toute sa durée. */
   protected lifePeriod = signal<string | null>(null);
   protected allocationEditing = signal(false);
@@ -364,88 +303,83 @@ export class BpmProjectPage {
         COLUMNS.map((c) => [c.id, this.visibleTasks().filter((t) => t.task.status === c.id)]),
       ) as Record<TaskStatus, BpmTaskCard[]>,
   );
+  protected commandTaskId = signal('');
+  protected commandTask = computed(() => {
+    const tasks = this.visibleTasks();
+    return tasks.find(t => t.task.id === this.commandTaskId()) ?? this.nextTask() ?? tasks[0] ?? null;
+  });
+  /** Brouillons des cadrans (temps, part d'enveloppe) de la tâche ouverte : logique à part, testée seule. */
+  private readonly drafts = new TaskCommandDrafts(() => this.commandTask(), () => this.data()?.budget);
+  protected commandTimeRange = this.drafts.timeRange;
+  protected commandTimeDraft = this.drafts.timeDraft;
+  protected commandShareDraft = this.drafts.shareDraft;
+  protected commandTimeValues = this.drafts.timeValues;
+  protected commandTimeMax = this.drafts.timeMax;
+  protected commandTimeStale = this.drafts.timeStale;
+  protected commandShareStale = this.drafts.shareStale;
+  protected commandSharePercent = this.drafts.sharePercent;
+  protected commandShareAmount = this.drafts.shareAmount;
+  protected commandShareMax = this.drafts.shareMax;
+  protected readonly money = cents;
+  protected changeCommandTime(field: 'plannedHours' | 'spentHours', value: number) {
+    if (!this.busy() && !this.error()) this.drafts.changeTime(field, value);
+  }
+  protected changeCommandShare(percent: number) {
+    if (!this.busy() && !this.error()) this.drafts.changeShare(percent);
+  }
+  protected resetCommandTime(taskId?: string) {
+    this.drafts.resetTime(taskId);
+  }
+  protected resetCommandShare(taskId?: string) {
+    this.drafts.resetShare(taskId);
+  }
+  protected async applyCommandTime() {
+    const t = this.commandTask(), draft = this.commandTimeDraft();
+    if (!t || !draft || this.busy() || this.error() || this.data()?.budget?.abandoned || this.commandTimeStale()) return;
+    await this.run(async () => {
+      const result = await this.api.updateTask(t.task.id, { plannedHours: draft.plannedHours, spentHours: draft.spentHours, expectedRevision: draft.revision });
+      this.resetCommandTime(t.task.id);
+      return result;
+    }, `Temps de « ${t.task.title} » enregistrés.`);
+  }
+  protected async applyCommandShare() {
+    const t = this.commandTask(), b = this.data()?.budget, draft = this.commandShareDraft();
+    if (!t || !b?.regime || b.abandoned || !draft || this.busy() || this.error() || this.commandShareStale()) return;
+    await this.saveShare(b.budgetId, t, (draft.amountCents / 100).toFixed(2), draft.revision, () => this.resetCommandShare(t.task.id));
+  }
+  protected commandStats = computed(() => {
+    const tasks = this.data()?.tasks ?? [];
+    return {
+      blocked: tasks.filter(t => t.task.status === 'blocked').length,
+      late: tasks.filter(t => this.isLate(t)).length,
+      release: tasks.filter(t => t.task.status === 'done' && (t.budget?.unusedCents ?? 0) > 0).length,
+    };
+  });
+  protected commandCharges = computed(() =>
+    (this.data()?.charges ?? [])
+      .filter(c => !!c.taskId && !c.settled && this.matchesTaskSelection(c.taskId))
+      .sort((a, b) => a.plannedDate.localeCompare(b.plannedDate)),
+  );
+  protected commandChargeTask(c: ProjectChargeLine) {
+    return this.data()?.tasks.find(t => t.task.id === c.taskId)?.task.title ?? 'Tâche du projet';
+  }
+  protected focusTasks(attention: string) {
+    this.query.set('');
+    this.taskAttention.set(attention);
+    this.commandTaskId.set('');
+    this.revealControl('project-command-task');
+  }
   protected unassignedCharges = computed(() =>
     (this.data()?.charges ?? []).filter((c) => !c.taskId),
   );
+  protected readonly timeTone = timeTone;
+  protected readonly chargeState = chargeState;
+  protected readonly defaultDate = defaultDate;
   protected budgetTiles = computed<MetricTile[]>(() => {
     const b = this.data()?.budget;
-    if (!b) return [];
-    // Variante non standard (projet de vie) : mêmes tuiles, lues sur les ressources du cycle en cours.
-    if (b.kind === 'life') {
-      return [
-        {
-          id: 'envelope',
-          label: 'Entrées prévues du cycle',
-          value: b.regime ? cents(b.allocationCents) : 'Cycle à configurer',
-          tone: 'accent',
-          note: b.life?.period
-            ? `Ressources du budget du projet de vie · ${b.life.period.label}`
-            : 'Ressources du budget du projet de vie',
-        },
-        {
-          id: 'paid',
-          label: 'Dépensé du cycle',
-          value: cents(b.paidCents),
-          tone: 'danger',
-          note: `dont ${cents(b.life?.projectsPaidCents ?? 0)} remontés par ses projets`,
-        },
-        {
-          id: 'remaining',
-          label: 'Reste sur les entrées',
-          value: cents(b.remainingCents),
-          tone: b.remainingCents === null ? null : b.remainingCents < 0 ? 'danger' : 'success',
-          note: 'Entrées prévues − Dépensé',
-        },
-        {
-          id: 'toPay',
-          label: 'Encore à régler',
-          value: cents(b.toPayCents),
-          tone: 'warning',
-          note: 'Charges prévues du cycle non réglées',
-        },
-      ];
-    }
-    return [
-      {
-        id: 'envelope',
-        label: FUNDING.envelope,
-        value: b.regime ? cents(b.allocationCents) : 'À attribuer',
-        tone: 'accent',
-        note: !b.regime
-          ? 'Sans enveloppe, ses dépenses restent hors budget de vie'
-          : b.approvedOverrunCents
-            ? `Depuis le ${displayDate(b.allocationDate!)} · + ${cents(b.approvedOverrunCents)} de dépassement autorisé`
-            : `Par le projet de vie, le ${displayDate(b.allocationDate!)}`,
-      },
-      {
-        id: 'paid',
-        label: b.regime ? FUNDING.paidOnEnvelope : FUNDING.paidOutside,
-        value: cents(b.paidCents),
-        tone: 'danger',
-        note: !b.regime
-          ? 'Règlements validés, non comptés dans le projet de vie'
-          : b.paidBeforeAllocationCents
-            ? `Depuis l’attribution · ${cents(b.paidBeforeAllocationCents)} réglés avant, hors enveloppe`
-            : 'Règlements validés depuis l’attribution',
-      },
-      {
-        id: 'remaining',
-        label: FUNDING.remaining,
-        value: b.regime ? cents(b.remainingCents) : '—',
-        tone: b.remainingCents === null ? null : b.remainingCents < 0 ? 'danger' : 'success',
-        note: b.regime
-          ? 'Enveloppe − réglé sur l’enveloppe'
-          : 'Attribuez une enveloppe pour suivre le reste',
-      },
-      {
-        id: 'toPay',
-        label: FUNDING.toPay,
-        value: cents(b.toPayCents),
-        tone: 'warning',
-        note: 'Dépenses engagées non réglées',
-      },
-    ];
+    return b ? projectBudgetTiles(b) : [];
   });
+
 
   private matchesTaskSelection(taskId: string | null): boolean {
     return !this.hasTaskSelection() || (!!taskId && this.visibleTasks().some((t) => t.task.id === taskId));
@@ -493,12 +427,12 @@ export class BpmProjectPage {
       else {
         this.closeTaskPanel();
         if (this.workspaceKey() === 'project-tasks') {
-          this.router.navigate(['/app/gestion-projet', this.projectId, 'budget'], { queryParamsHandling: 'preserve', fragment: 'charges-title' });
+          this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'budget'], { queryParamsHandling: 'preserve', fragment: 'charges-title' });
           return;
         }
         this.revealSection('charges-title');
       }
-      this.settling.set(charge.id);
+      this.openCharge(charge);
       this.revealControl(`charge-${charge.id}`);
       return;
     }
@@ -513,7 +447,7 @@ export class BpmProjectPage {
       return;
     }
     if (d.tasks.length && this.workspaceKey() === 'project-tasks')
-      this.router.navigate(['/app/gestion-projet', this.projectId, 'budget'], { queryParamsHandling: 'preserve', fragment: 'cycle-title' });
+      this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'budget'], { queryParamsHandling: 'preserve', fragment: 'cycle-title' });
     else if (d.tasks.length) this.revealSection('cycle-title');
     else this.createTask();
   }
@@ -535,7 +469,7 @@ export class BpmProjectPage {
   protected showTask(t: BpmTaskCard, section: 'funding' | 'charges' | null = null) {
     // La vue Budget ne monte pas la fenêtre de tâche : la tâche s'ouvre dans la sous-page Tâches (audit A05).
     if (this.workspaceKey() === 'project-budget') {
-      void this.router.navigate(['/app/gestion-projet', this.projectId, 'taches'], { queryParams: { task: t.task.id }, queryParamsHandling: 'merge' });
+      void this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'taches'], { queryParams: { task: t.task.id }, queryParamsHandling: 'merge' });
       return;
     }
     this.fundingTask.set(section === 'funding' && !t.budget?.request ? t.task.id : null);
@@ -571,16 +505,6 @@ export class BpmProjectPage {
     const p = t.budget?.timeConsumptionPercent;
     return p === null || p === undefined ? null : Math.min(100, Math.max(0, p));
   }
-  protected timeTone(t: BpmTaskCard) {
-    const p = t.budget?.timeConsumptionPercent;
-    return p === null || p === undefined
-      ? 'unknown'
-      : p >= 100
-        ? 'green'
-        : p >= 50
-          ? 'yellow'
-          : 'blue';
-  }
   protected createTask() {
     this.taskEditorId.set('new');
   }
@@ -588,6 +512,7 @@ export class BpmProjectPage {
     this.taskEditorId.set(t.task.id);
   }
   protected addExpense(taskId: string | null) {
+    if (!taskId) { this.notice.set({ text: 'Choisissez une tâche pour saisir sa dépense.', error: true }); return; }
     this.expenseTaskId.set(taskId);
     this.expenseDirection.set('charge');
     this.entryId.set('new');
@@ -616,13 +541,16 @@ export class BpmProjectPage {
   }
   protected editAllocation() {
     if (this.workspaceKey() === 'project-tasks') {
-      this.router.navigate(['/app/gestion-projet', this.projectId, 'budget'], {
+      this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'budget'], {
         queryParams: { task: null }, queryParamsHandling: 'merge', fragment: 'enveloppe',
       });
       return;
     }
     const b = this.data()?.budget;
     if (!b) return;
+    this.allocationMode.set('total');
+    this.allocationBase.set(b.allocationCents ?? 0);
+    this.allocationSource.set(b.fundingSource ?? 'cycle');
     this.allocation.set(
       b.allocationCents === null ? '' : (b.allocationCents / 100).toString().replace('.', ','),
     );
@@ -675,6 +603,7 @@ export class BpmProjectPage {
           id: b.budgetId,
           name: b.name,
           role: 'standard',
+          fundingSource: b.fundingSource,
           coreProjectId: b.coreProjectId,
           capsCents: {},
           revision: b.revision,
@@ -698,6 +627,8 @@ export class BpmProjectPage {
       this.taskAttention.sync();
       this.decisionsOpen.sync();
       this.data.set(null);
+      this.commandTaskId.set('');
+      this.drafts.clear();
       this.flow.set(null);
       this.notice.set(null);
       this.allocationEditing.set(false);
@@ -710,7 +641,7 @@ export class BpmProjectPage {
       this.openTaskId.sync();
       this.returnEditor.sync();
       this.settling.sync();
-      this.requestKeys.clear();
+      this.taskFunding.requestKeys.clear();
       this.load();
     });
     this.route.fragment.pipe(takeUntilDestroyed()).subscribe((fragment) => {
@@ -730,10 +661,10 @@ export class BpmProjectPage {
       if (title) this.objectLabels.set(projectLink(this.projectId), title);
       for (const request of d.requests ?? []) {
         if (request.status !== 'pending' && request.status !== 'awaiting-life') continue;
-        for (const signature of this.requestKeys.keys()) {
+        for (const signature of this.taskFunding.requestKeys.keys()) {
           const [budgetId, taskId] = JSON.parse(signature);
           if (budgetId === request.budgetId && taskId === request.taskId)
-            this.requestKeys.delete(signature);
+            this.taskFunding.requestKeys.delete(signature);
         }
       }
       if (!this.allocationEditing())
@@ -781,18 +712,6 @@ export class BpmProjectPage {
     return RETURN_CADENCES.find((x) => x.id === c)?.label.toLowerCase() ?? c;
   }
 
-  protected chargeState(c: ProjectChargeLine) {
-    if (c.refund)
-      return c.validated
-        ? 'Remboursement · déduit du projet de vie'
-        : c.settled
-          ? 'Remboursement · hors budget de vie'
-          : 'Remboursement attendu';
-    if (c.validated) return 'Réglée · remontée au projet de vie';
-    if (c.beforeAllocation) return 'Réglée · avant l’enveloppe';
-    if (c.settled) return 'Réglée · hors budget de vie';
-    return c.kind === 'occurrence' ? 'Échéance à régler' : 'À régler';
-  }
 
   /** La lecture du middleware fait foi, y compris pour un règlement antidaté. */
   protected settlementResult(c: ProjectChargeLine) {
@@ -807,133 +726,15 @@ export class BpmProjectPage {
     return `${saved} Le projet a été actualisé ; sa date réelle détermine la période du règlement.`;
   }
 
-  protected defaultDate(c: ProjectChargeLine) {
-    return c.plannedDate <= today() ? c.plannedDate : today();
-  }
 
-  /**
-   * Écriture avec relecture. Un refus « autorisation de dépassement requise » ouvre la demande au budget de vie ;
-   * une fois le dépassement autorisé, la même écriture est rejouée.
-   */
-  private async run<T>(action: Write<T>, success: string | ((result: T) => string), label = '') {
-    if (this.busy()) return false;
-    this.busy.set(true);
-    this.notice.set(null);
-    try {
-      const result = await action();
-      this.flow.set(null);
-      this.shareFlow.set(null);
-      await this.load();
-      this.notice.set({
-        text: typeof success === 'function' ? success(result) : success,
-        error: false,
-      });
-      return true;
-    } catch (err) {
-      const e = toApiError(err);
-      const gap = e.body.details as unknown as (ShareFlow['gap'] & { reason?: string }) | undefined;
-      if (e.body.code === 'FORBIDDEN_BY_RULE' && gap?.reason === 'task-share' && label) {
-        this.shareFlow.set({ gap, message: e.message, label, retry: action });
-        this.revealControl('project-share-flow');
-        return false;
-      }
-      if (e.body.code === 'OVERRUN_AUTHORIZATION_REQUIRED') {
-        this.flow.set({
-          refusal: e.body.details as unknown as OverrunRefusal,
-          message: e.message,
-          label,
-          retry: action,
-          request: null,
-        });
-        this.revealControl('project-overrun-flow');
-        return false;
-      }
-      await this.load();
-      this.notice.set({
-        text: e.isConflict
-          ? 'Conflit : la donnée a changé ailleurs. La fiche a été relue ; recommencez si besoin.'
-          : e.message,
-        error: true,
-      });
-      return false;
-    } finally {
-      this.busy.set(false);
-    }
+  /** Écritures de la page : voir `ProjectWriteFlow`. */
+  private run<T>(action: Write<T>, success: string | ((result: T) => string), label = '') {
+    return this.writes.run(action, success, label);
   }
-
-  /** Rejoue l'écriture refusée en la finançant : la part (et son dépassement éventuel) est accordée dans la même écriture. */
-  protected grantShareFlow() {
-    const sf = this.shareFlow();
-    if (!sf) return;
-    this.shareFlow.set(null);
-    const granted = FUNDING_RESULTS.granted(
-      sf.gap.taskTitle,
-      sf.gap.neededCents,
-      sf.gap.grantOverrunCents,
-    );
-    return this.run(
-      () => sf.retry(true),
-      `${granted} ${capitalize(sf.label)} est enregistré.`,
-      sf.label,
-    );
-  }
-
-  /** Geste nominal : vous pilotez aussi le projet de vie, l'écriture refusée est rejouée avec son dépassement autorisé. */
-  protected authorizeFlow() {
-    const f = this.flow();
-    if (!f) return;
-    return this.run(
-      () => f.retry(true),
-      `${FUNDING_RESULTS.approved} ${capitalize(f.label || 'l’écriture')} est enregistrée.`,
-      f.label,
-    );
-  }
-
-  /** Variante : déposer la demande sans décider ; elle attend dans les décisions du projet de vie. */
-  protected async requestAuthorization() {
-    const f = this.flow();
-    if (!f) return;
-    this.busy.set(true);
-    try {
-      const r = await this.funding.request(f.refusal.budgetId, {
-        taskId: f.refusal.taskId,
-        reason: f.refusal.reason,
-        overrunCents: f.refusal.overrunCents,
-      });
-      this.flow.set({ ...f, request: r.overrun });
-    } catch (err) {
-      this.notice.set({ text: toApiError(err).message, error: true });
-    } finally {
-      this.busy.set(false);
-    }
-  }
-
-  /** Décision du budget de vie sur la demande ouverte par une écriture refusée ; autoriser rejoue l'écriture. */
-  protected async decideFlow(decision: 'approve' | 'refuse') {
-    const f = this.flow();
-    if (!f?.request) return;
-    this.busy.set(true);
-    let decided: { message: string };
-    try {
-      decided = await this.funding.decide(f.request, decision);
-    } catch (err) {
-      this.busy.set(false);
-      this.notice.set({ text: toApiError(err).message, error: true });
-      return;
-    }
-    this.busy.set(false);
-    if (decision === 'refuse') {
-      this.flow.set(null);
-      await this.load();
-      this.notice.set({ text: `${decided.message} Rien n’a été enregistré.`, error: false });
-      return;
-    }
-    await this.run(
-      () => f.retry(),
-      `${decided.message} ${capitalize(f.label || 'l’écriture')} est enregistrée.`,
-      f.label,
-    );
-  }
+  protected grantShareFlow() { return this.writes.grantShareFlow(); }
+  protected authorizeFlow() { return this.writes.authorizeFlow(); }
+  protected requestAuthorization() { return this.writes.requestAuthorization(); }
+  protected decideFlow(decision: 'approve' | 'refuse') { return this.writes.decideFlow(decision); }
 
   protected decide(o: ProjectOverrun, decision: 'approve' | 'refuse') {
     return this.run(
@@ -988,10 +789,12 @@ export class BpmProjectPage {
 
   protected async allocate(budgetId: string, revision: number) {
     if (this.busy()) return;
-    const amount = parseAmount(this.allocation());
+    const adding = this.allocationMode() === 'add';
+    const increased = this.increasedEnvelope();
+    const amount = adding ? increased === null ? null : increased / 100 : parseAmount(this.allocation());
     if (amount === null || amount === 'invalid' || amount < 0) {
       this.allocationError.set(
-        'Indiquez un montant positif ou nul en euros, avec deux décimales au plus.',
+        adding ? 'Indiquez le montant à ajouter, en euros, avec deux décimales au plus.' : 'Indiquez le montant total en euros, avec deux décimales au plus.',
       );
       return;
     }
@@ -999,10 +802,12 @@ export class BpmProjectPage {
     this.allocationError.set(null);
     this.notice.set(null);
     try {
-      await this.bpm.allocate(budgetId, amount, revision);
+      const source = this.allocationSource();
+      if (source !== (this.data()?.budget?.fundingSource ?? 'cycle')) await this.bpm.allocate(budgetId, amount, revision, source);
+      else await this.bpm.allocate(budgetId, amount, revision);
       this.allocationEditing.set(false);
       await this.load();
-      this.notice.set({ text: 'Enveloppe budgétaire enregistrée.', error: false });
+      this.notice.set({ text: adding ? `Moyens ajoutés. L’enveloppe atteint ${cents(Math.round(amount * 100))}.` : 'Enveloppe budgétaire enregistrée.', error: false });
     } catch (err) {
       const e = toApiError(err);
       this.allocationError.set(
@@ -1016,69 +821,18 @@ export class BpmProjectPage {
     }
   }
 
-  protected saveShare(budgetId: string, t: BpmTaskCard, raw: string, revision: number) {
-    const amount = parseAmount(raw);
-    if (amount === 'invalid' || (amount !== null && amount < 0)) {
-      this.notice.set({
-        text: 'Indiquez une part en euros (deux décimales au plus), ou laissez vide pour la retirer.',
-        error: true,
-      });
-      return;
-    }
-    return this.run(
-      (fund) =>
-        this.bpm.setTaskShare(budgetId, t.task.id, amount, revision, { authorizeOverrun: fund }),
-      amount === null
-        ? `Part de « ${t.task.title} » retirée.`
-        : `Part de « ${t.task.title} » enregistrée.`,
-      `la part de « ${t.task.title} »`,
-    );
+  /** Gestes de financement d'une tâche : voir `ProjectTaskFunding`. */
+  protected saveShare(budgetId: string, t: BpmTaskCard, raw: string, revision: number, onSaved?: () => void) {
+    return this.taskFunding.saveShare(budgetId, t, raw, revision, onSaved);
   }
-
-  /** Tâche terminée : la part non consommée revient à l'enveloppe (part ramenée au réglé, par le middleware). */
   protected releaseShare(budgetId: string, t: BpmTaskCard, revision: number) {
-    return this.run(
-      () => this.funding.releaseShare({ budgetId, taskId: t.task.id, revision }),
-      (r) => r.message,
-    );
+    return this.taskFunding.releaseShare(budgetId, t, revision);
   }
-
-  protected async requestBudget(
-    budgetId: string,
-    t: BpmTaskCard,
-    controls: HTMLFormControlsCollection,
-    draft?: BpmFormDraft,
-  ) {
-    const get = (name: string) => (controls.namedItem(name) as HTMLInputElement).value;
-    const amount = parseAmount(get('amount'));
-    if (amount === null || amount === 'invalid' || amount <= 0) {
-      this.notice.set({
-        text: 'Indiquez le montant total souhaité en euros, avec deux décimales au plus.',
-        error: true,
-      });
-      return;
-    }
-    const note = get('note');
-    const signature = JSON.stringify([budgetId, t.task.id, amount, note]);
-    const requestKey = this.requestKeys.get(signature) ?? newRequestKey();
-    this.requestKeys.set(signature, requestKey);
-    const ok = await this.run(async () => {
-      await this.bpm.requestTaskBudget(budgetId, t.task.id, { requestKey, amount, note });
-      this.requestKeys.delete(signature);
-    }, `Demande de « ${t.task.title} » enregistrée. Validez-la dans sa carte.`);
-    if (ok) { draft?.clear(); this.fundingTask.set(null); }
-    return ok;
+  protected requestBudget(budgetId: string, t: BpmTaskCard, controls: HTMLFormControlsCollection, draft?: BpmFormDraft) {
+    return this.taskFunding.requestBudget(budgetId, t, controls, draft);
   }
-
-  protected decideRequest(e: {
-    request: TaskBudgetRequest;
-    decision: 'approve' | 'refuse' | 'cancel';
-  }) {
-    const revision = this.data()?.budget?.revision;
-    return this.run(
-      () => this.funding.decideTaskRequest(e.request, e.decision, revision),
-      (r) => r.message,
-    );
+  protected decideRequest(e: { request: TaskBudgetRequest; decision: 'approve' | 'refuse' | 'cancel' }) {
+    return this.taskFunding.decideRequest(e);
   }
 
   protected closeTask() {
@@ -1095,41 +849,11 @@ export class BpmProjectPage {
     this.notice.set({ text: 'Projet enregistré.', error: false });
   }
 
-  protected async saveReturn(
-    budgetId: string,
-    t: BpmTaskCard,
-    f: HTMLFormControlsCollection,
-    revision: number,
-    draft?: BpmFormDraft,
-  ) {
-    const get = (n: string) =>
-      (f.namedItem(n) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
-    const amount = parseAmount(get('amount'));
-    if (amount === null || amount === 'invalid' || amount <= 0) {
-      this.notice.set({ text: 'Indiquez le montant du retour en euros.', error: true });
-      return;
-    }
-    const ok = await this.run(
-      () =>
-        this.bpm.setTaskReturn(budgetId, t.task.id, {
-          label: get('label'),
-          amount,
-          cadence: get('cadence') as ReturnCadence,
-          expectedRevision: revision,
-        }),
-      t.task.status === 'done'
-        ? `Retour enregistré dans le budget du projet de vie : « ${t.task.title} » est déjà terminée.`
-        : `Retour prévu : il sera enregistré dans le budget du projet de vie quand « ${t.task.title} » sera terminée.`,
-    );
-    if (ok) { draft?.clear(); this.returnEditor.set(null); }
+  protected saveReturn(budgetId: string, t: BpmTaskCard, f: HTMLFormControlsCollection, revision: number, draft?: BpmFormDraft) {
+    return this.taskFunding.saveReturn(budgetId, t, f, revision, draft);
   }
-
   protected removeReturn(budgetId: string, t: BpmTaskCard, revision: number) {
-    return this.run(
-      () =>
-        this.bpm.setTaskReturn(budgetId, t.task.id, { amount: null, expectedRevision: revision }),
-      `Retour de « ${t.task.title} » retiré.`,
-    );
+    return this.taskFunding.removeReturn(budgetId, t, revision);
   }
 
   protected async changeStatus(t: BpmTaskCard, status: TaskStatus, select?: HTMLSelectElement) {
@@ -1218,7 +942,7 @@ export class BpmProjectPage {
   protected bill(budgetId?: string) {
     return this.run(
       () => this.bpm.billOverruns(budgetId),
-      'Dépassements facturés au budget du projet de vie : l’enveloppe budgétaire les intègre. Consultez les contrôles de fin de cycle.',
+      'Moyens supplémentaires intégrés à l’enveloppe, sans nouvelle charge.',
     );
   }
 

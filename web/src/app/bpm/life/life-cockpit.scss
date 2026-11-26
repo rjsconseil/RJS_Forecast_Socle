@@ -1,0 +1,172 @@
+// Commandes du cycle et des échéances, chargées après la mise en page commune.
+:host .bpm-life-management {
+  .life-cockpit {
+    display: grid;
+    gap: 20px;
+    min-width: 0;
+  }
+  .life-due-filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .life-due-filters button {
+    display: grid;
+    gap: 9px;
+    justify-items: start;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--life-soft);
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+  }
+  .life-due-filters button[aria-pressed='true'] {
+    border-color: var(--app-accent);
+    box-shadow: inset 0 0 0 1px var(--app-accent);
+    background: var(--app-accent-soft);
+  }
+  .life-due-filters span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .life-due-filters strong {
+    font-size: 25px;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .life-due-filters small {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .life-due-filters .has-late strong {
+    color: var(--status-danger);
+  }
+  .life-due-search {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: end;
+  }
+  .life-due-search label {
+    display: grid;
+    gap: 8px;
+    flex: 1 1 250px;
+    max-width: 480px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .life-due-search input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--life-surface);
+    color: var(--ink);
+    font: inherit;
+  }
+  .life-due-search p {
+    padding-bottom: 10px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .life-funding-actions {
+    display: grid;
+    gap: 10px;
+  }
+  .life-funding-actions article {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--life-soft);
+  }
+  .life-funding-actions article[data-state='deficit'] {
+    border-left: 3px solid var(--status-danger);
+  }
+  .life-funding-actions article > div {
+    flex: 1 1 260px;
+  }
+  .life-funding-actions h3 {
+    font-size: 15px;
+    margin: 7px 0;
+  }
+  .life-funding-actions p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .life-closing-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .life-closing-steps a {
+    display: flex;
+    align-items: start;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--life-surface);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .life-closing-steps a:hover {
+    border-color: var(--app-accent-line);
+  }
+  .life-closing-steps a > span {
+    flex: 0 0 28px;
+    min-height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--app-accent-soft);
+    color: var(--app-accent);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .life-closing-steps strong {
+    font-size: 13px;
+  }
+  .life-closing-steps small {
+    display: block;
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  .life-closing-steps b {
+    color: var(--app-accent);
+    margin-left: auto;
+  }
+}
+@media (max-width: 1100px) {
+  :host .bpm-life-management {
+    .life-due-filters {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .life-closing-steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+@media (max-width: 600px) {
+  :host .bpm-life-management {
+    .life-due-filters button {
+      padding: 14px 12px;
+    }
+    .life-due-filters strong {
+      font-size: 21px;
+    }
+  }
+}

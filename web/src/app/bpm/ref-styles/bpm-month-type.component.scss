@@ -1,168 +1,442 @@
-@use 'functions' as *;
-@use 'contrat-ruptures' as *;
-
-/* L'assistant du mois type : un tableau simple à remplir, une prévision immédiate. */
+// Budget type (page « Budget récurrent ») : les entrées et les charges qui reviennent à chaque cycle.
+// Mise en forme seule : l'ordre et la place des éléments ne changent pas.
+//  - un cadre blanc ; pour chaque groupe (Entrées, Charges), un plateau doux où chaque ligne est une carte blanche ;
+//  - le sens du flux en couleur (vert entrée, rouge charge) : pastille du groupe et filet à gauche des cartes ;
+//  - les valeurs figées (première date, centre) en cases douces, de la hauteur des champs à saisir ;
+//  - l'accent de la partie pour les gestes (ajouter une ligne) et les lignes modifiées ou nouvelles.
 :host {
   display: block;
+  min-width: 0;
+  container: budget-type / inline-size;
+  --bt-line: var(--bpm-line, var(--line));
+  --bt-muted: var(--bpm-muted, var(--muted));
+  --bt-soft: var(--bpm-soft, var(--soft));
+  --bt-surface: var(--bpm-surface, var(--raised-surface));
+  --bt-accent: var(--astra-iris, var(--app-accent));
+  --bt-accent-ink: var(--app-accent);
+  --bt-income: var(--status-success);
+  --bt-charge: var(--status-danger);
+  --bt-radius: var(--a-radius, 14px);
+  --bt-radius-sm: var(--a-radius-sm, 10px);
+  --bt-field-h: 44px;
+  --bt-label-h: 16px;
+  --bt-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --bt-lift: 0 8px 20px -16px rgba(16, 24, 40, 0.5);
 }
+
+// ---------- le cadre ----------
 .bm-month {
   display: grid;
-  gap: var(--ecart-16);
-  padding: var(--ecart-24);
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--card-radius);
-  background: var(--raised-surface);
-  box-shadow: var(--app-panel-shadow);
+  gap: 18px;
+  min-width: 0;
+  padding: var(--a-pad-y, 20px) var(--a-pad-x, 24px) calc(var(--a-pad-y, 20px) + 4px);
+  border: 1px solid var(--bt-line);
+  border-radius: var(--bt-radius);
+  background: var(--bt-surface);
+  box-shadow: var(--bt-shadow);
 }
-.bm-head {
+:host .bm-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 16px;
+  padding: 0 0 14px;
+  border: 0;
+  border-block-end: 1px solid var(--bt-line);
+}
+.bm-head > div { display: grid; gap: 6px; min-width: 0; max-width: 80ch; }
+.bm-month h2 { margin: 0; color: var(--ink); line-height: 1.3; letter-spacing: -0.02em; }
+.bm-month p { margin: 0; color: var(--bt-muted); line-height: 1.6; }
+:host .bm-head > div > p:not(.bpm-help) { color: var(--bt-muted); font-size: 14px; line-height: 1.55; }
+
+// Notes d'aide (sous le titre, sous le bouton d'enregistrement) : un repère d'information, le texte en retrait.
+:host .bm-month .bm-head .bpm-help,
+:host .bm-month .bm-form > .bpm-help {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  color: var(--bt-muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+:host .bm-month .bm-head .bpm-help::before,
+:host .bm-month .bm-form > .bpm-help::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  background: var(--status-info);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M10 9.2v4.9' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='6.3' r='1.1'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M10 9.2v4.9' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='6.3' r='1.1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+:host .bm-month .bm-form > .bpm-help {
+  padding: 10px 14px;
+  border-radius: var(--bt-radius-sm);
+  background: color-mix(in srgb, var(--status-info-surface, var(--bt-soft)) 70%, transparent);
+}
+rjs-metric-tiles { display: block; min-width: 0; }
+// L'état de chargement vide ne compte pas comme un bloc : un seul écart entre l'en-tête et les chiffres.
+.bm-month > bpm-state:empty { display: none; }
+
+// Message après un enregistrement ou une suppression.
+.bm-month p.bm-saved {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--status-success) 28%, transparent);
+  border-radius: var(--bt-radius-sm);
+  color: var(--status-success);
+  background: var(--status-success-surface);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+.bm-month p.bm-saved::before {
+  content: '';
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M6.4 10.3l2.4 2.4 4.8-5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.2' fill='none' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M6.4 10.3l2.4 2.4 4.8-5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+// ---------- les groupes : Entrées, Charges ----------
+.bm-form { display: grid; min-width: 0; gap: 18px; }
+.bm-form fieldset {
+  --bt-flow: var(--bt-charge);
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--bt-line);
+  border-radius: var(--bt-radius);
+  background: var(--bt-soft);
+}
+.bm-form fieldset:has(.bm-income) { --bt-flow: var(--bt-income); }
+// Thème sombre : le plateau descend sous les cartes, qui restent au-dessus comme en clair.
+:host-context(.editorial-style) .bm-form fieldset { background: color-mix(in srgb, var(--bt-surface) 72%, black); }
+// La légende devient la première ligne du plateau (flottante, elle ne chevauche plus la bordure).
+.bm-form legend {
+  float: left;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 -6px;
+  padding: 2px 6px 0;
+  color: var(--ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.bm-form legend::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bt-flow);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--bt-flow) 18%, transparent);
+}
+
+// ---------- une ligne : une carte ----------
+.bm-table { display: grid; min-width: 0; gap: 8px; }
+.bm-row {
+  --bt-flow: var(--bt-charge);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(160px, 1.5fr) minmax(112px, .8fr) minmax(128px, .9fr) minmax(130px, 1fr) minmax(120px, 1fr) 42px;
+  gap: 10px 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 14px 12px 17px;
+  border: 1px solid var(--bt-line);
+  border-radius: var(--bt-radius-sm);
+  background: var(--bt-surface);
+  box-shadow: var(--bt-shadow);
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.bm-row.bm-income { --bt-flow: var(--bt-income); }
+// Filet à gauche : le sens du flux (ou l'état de la ligne, plus bas).
+.bm-row::before {
+  content: '';
+  position: absolute;
+  inset: 10px auto 10px 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--bt-flow);
+}
+.bm-row:not(.bm-row-head):hover { border-color: color-mix(in srgb, var(--bt-accent) 28%, var(--bt-line)); box-shadow: var(--bt-lift); }
+.bm-row:not(.bm-row-head):focus-within { border-color: color-mix(in srgb, var(--bt-accent) 45%, var(--bt-line)); }
+.bm-row > * { min-width: 0; }
+.bm-row-head {
+  padding: 0 14px 0 17px;
+  border-color: transparent; // même géométrie que les cartes : les titres tombent au-dessus des champs
+  border-radius: 0;
+  color: var(--bt-muted);
+  background: transparent;
+  box-shadow: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+.bm-row-head::before { display: none; }
+
+.bm-row input,
+.bm-row select {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--bt-field-h);
+  padding: 10px 12px;
+  border: 1px solid var(--control-line, var(--bt-line));
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--bt-surface);
+  font: inherit;
+  font-size: 13px;
+}
+.bm-row input:focus-visible,
+.bm-row select:focus-visible,
+.bm-add:focus-visible,
+.bm-del:focus-visible {
+  outline: 2px solid var(--app-focus-ring, var(--app-accent));
+  outline-offset: 2px;
+}
+.bm-row input.num { text-align: right; font-variant-numeric: tabular-nums; }
+// Valeur figée (première date, centre) : une case douce, de la hauteur d'un champ à saisir.
+.bm-fixed {
+  display: flex;
+  align-items: center;
+  min-height: var(--bt-field-h);
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--bt-soft);
+  font-size: 13.5px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+// Moyenne mensuelle, états et confirmations de la ligne.
+.bm-row-note {
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--ecart-16);
+  gap: 8px 14px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--bt-line);
+  color: var(--bt-muted);
+  font-size: 12.5px;
 }
-.bm-head > div {
-  flex: var(--flex-1);
-  min-width: 0;
-  display: grid;
-  gap: var(--ecart-6);
-  max-width: var(--dim-70ch);
-}
-.bm-month h2 {
-  margin: 0;
+.bm-row-note strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+// Une pastille longue (ligne retirée au prochain cycle) passe à la ligne plutôt que de sortir de la carte.
+.bm-row-note .chip { max-width: 100%; border-radius: 10px; white-space: normal; line-height: 1.4; }
+.bm-row-note .bpm-error { flex: 1 1 100%; }
+.bm-row-note .bm-confirm {
+  flex: 1 1 100%;
+  padding: 8px 12px;
+  border-inline-start: 3px solid var(--status-warning);
+  border-radius: 0 8px 8px 0;
   color: var(--ink);
-  font-size: scaled(var(--fs-xl));
-}
-.bm-month p {
-  margin: 0;
-  color: var(--muted);
-  line-height: var(--lh-normal);
-}
-.bm-form {
-  display: grid;
-  gap: var(--ecart-20);
-}
-.bm-form fieldset {
-  display: grid;
-  gap: var(--ecart-8);
-  margin: 0;
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--card-radius);
-}
-.bm-form legend {
-  padding: 0 var(--ecart-6);
-  color: var(--ink);
-  font-weight: var(--fw-bold);
-}
-.bm-table {
-  display: grid;
-  gap: var(--ecart-6);
-}
-.bm-row {
-  display: grid;
-  grid-template-columns: minmax(0, var(--fr-1-5)) var(--dim-160) minmax(0, var(--fr-0-8)) repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
-  gap: var(--ecart-8);
-  align-items: center;
-}
-.bm-row-head {
-  color: var(--muted);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-bold);
-  text-transform: uppercase;
-}
-.bm-row input,
-.bm-row select {
-  width: var(--part-100);
-  min-width: 0;
-  min-height: var(--dim-44);
-}
-.bm-row.is-known input:first-child {
-  color: var(--muted);
-}
-.bm-add {
-  justify-self: start;
-  min-height: var(--dim-40);
-  padding: 0 var(--ecart-12);
-  border: var(--trait-1) dashed var(--line);
-  border-radius: var(--rayon-999);
-  color: var(--app-accent);
-  background: transparent;
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-}
-.bm-start {
-  display: grid;
-  gap: var(--ecart-6);
-  max-width: var(--dim-240);
-  color: var(--ink);
-  font-weight: var(--fw-semibold);
-}
-.bm-preview {
-  padding: var(--ecart-12) var(--ecart-16);
-  border-radius: var(--rayon-12);
-  background: var(--status-success-surface);
-}
-.bm-preview[data-sign='negative'] {
-  background: var(--status-danger-surface);
-}
-.bm-preview strong {
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-.bm-month p.bm-saved {
-  color: var(--status-success);
-  font-weight: var(--fw-semibold);
+  background: var(--status-warning-surface);
+  font-weight: 600;
+  line-height: 1.5;
 }
 
-.bm-row > * { min-width: 0; }
-.bm-row.bm-oneshot {
-  grid-template-columns: minmax(0, var(--fr-2)) var(--dim-160) repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
+// Suppression : un bouton discret à droite de la ligne, rouge au survol.
+.bm-row-del { display: flex; justify-content: flex-end; }
+.bm-del {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--bt-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background-color .15s ease;
 }
-.bm-format {
-  align-self: center;
-  display: grid;
-  justify-items: center;
-  gap: var(--ecart-8);
-  color: var(--muted);
-  font-size: var(--fs-xs);
+.bm-del svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.bm-row:hover .bm-del:not(:disabled) { border-color: var(--bt-line); background: var(--bt-surface); }
+.bm-row .bm-del:hover:not(:disabled),
+.bm-row .bm-del[aria-pressed='true'] {
+  color: var(--status-danger, #b63248);
+  border-color: color-mix(in srgb, var(--status-danger, #b63248) 40%, transparent);
+  background: var(--status-danger-surface, #fff0f2);
 }
-.bm-format .is-active { color: var(--ink); font-weight: var(--fw-bold); }
-.bm-switch {
+.bm-del:disabled { opacity: .45; cursor: default; }
+.bm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+// États : ligne modifiée, nouvelle ligne, suppression à confirmer, ligne retirée au prochain cycle.
+// Le filet garde le sens du flux ; l'accent de la partie dit « en cours de saisie ».
+.bm-row.is-dirty {
+  border-color: color-mix(in srgb, var(--bt-accent) 42%, var(--bt-line));
+  background: color-mix(in srgb, var(--bt-accent) 4%, var(--bt-surface));
+}
+.bm-row.is-new {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--bt-accent) 55%, var(--bt-line));
+}
+.bm-row:has(.bm-confirm) { border-color: color-mix(in srgb, var(--status-danger) 38%, var(--bt-line)); }
+.bm-row:not(.bm-row-head):not(:has(.bm-del)) {
+  --bt-flow: var(--status-warning);
+  background: color-mix(in srgb, var(--bt-soft) 65%, var(--bt-surface));
+}
+
+// Ajouter une ligne : un geste en pointillé, à l'accent de la partie.
+.bm-add {
+  justify-self: start;
   display: inline-flex;
   align-items: center;
-  width: var(--dim-48);
-  min-height: var(--dim-28);
-  padding: var(--ecart-4);
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--rayon-999);
-  background: var(--soft);
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px dashed color-mix(in srgb, var(--bt-accent) 55%, var(--bt-line));
+  border-radius: 8px;
+  color: var(--bt-accent-ink);
+  background: var(--bt-surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
   cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background-color .15s ease;
 }
-.bm-switch::before {
-  content: '';
-  width: var(--dim-20);
-  height: var(--dim-20);
-  border-radius: var(--rayon-999);
-  background: var(--muted);
+.bm-add:hover { border-style: solid; border-color: var(--bt-accent); background: color-mix(in srgb, var(--bt-accent) 7%, var(--bt-surface)); }
+
+// ---------- enregistrer ----------
+.bm-form > .bpm-actions { align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--bt-line); }
+.spacer { flex: 1 1 auto; }
+// Changements non enregistrés : une pastille ambrée.
+:host .bm-form > .bpm-actions > .bpm-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid color-mix(in srgb, var(--status-warning) 30%, transparent);
+  border-radius: 999px;
+  color: var(--status-warning);
+  background: var(--status-warning-surface);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.4;
 }
-.bm-switch[aria-checked='true'] { background: var(--app-accent); }
-.bm-switch[aria-checked='true']::before {
-  margin-inline-start: auto;
-  background: var(--app-on-accent);
-}
-.bm-switch:focus-visible {
-  outline: var(--trait-3) solid var(--app-accent);
-  outline-offset: var(--decalage-2);
-}
-@media (max-width: $rupture-760) {
-  .bm-row,
-  .bm-row.bm-income,
-  .bm-row.bm-oneshot {
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
+:host .bm-form > .bpm-actions > .bpm-help::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+// ---------- largeurs réduites : chaque ligne devient une carte à libellés visibles ----------
+@container budget-type (max-width: 930px) {
+  .bm-row { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px 14px; }
   .bm-row-head { display: none; }
-  .bm-row { padding-block: var(--ecart-8); }
-  .bm-month { padding: var(--ecart-12); gap: var(--ecart-8); }
-  .bm-form fieldset { padding: var(--ecart-8); min-width: 0; }
+  .bm-row > [data-field]:first-child { grid-column: 1 / -1; padding-right: 48px; }
+  // La suppression reste en haut à droite, à hauteur du champ du libellé.
+  .bm-row-del { position: absolute; top: calc(12px + var(--bt-label-h) + 6px + (var(--bt-field-h) - 36px) / 2); right: 12px; }
+  .bm-row > [data-field] { display: grid; gap: 6px; }
+  .bm-row > [data-field]::before {
+    content: attr(data-field);
+    color: var(--bt-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: var(--bt-label-h);
+    text-transform: uppercase;
+  }
+  // Valeur figée : le libellé au-dessus, la case douce dessous (étirée à la hauteur du champ voisin).
+  .bm-row > .bm-fixed {
+    position: relative;
+    isolation: isolate;
+    align-self: stretch;
+    grid-template-rows: var(--bt-label-h) minmax(var(--bt-field-h), auto);
+    align-items: center;
+    min-height: 0;
+    padding: 0 12px;
+    background: none;
+  }
+  .bm-row > .bm-fixed::before { align-self: start; margin-inline-start: -12px; }
+  .bm-row > .bm-fixed::after {
+    content: '';
+    position: absolute;
+    inset: calc(var(--bt-label-h) + 6px) 0 0;
+    z-index: -1;
+    border-radius: 8px;
+    background: var(--bt-soft);
+  }
+}
+@container budget-type (max-width: 540px) {
+  .bm-month { gap: 16px; padding: 14px; }
+  .bm-form fieldset { padding: 10px 12px 12px; }
+  .bm-row { grid-template-columns: minmax(0, 1fr); padding: 12px 12px 12px 15px; }
+  .bm-form > .bpm-actions > .btn-primary { width: 100%; }
+  .spacer { display: none; }
+}
+
+
+// ---------- mode : lecture figée, puis « Modifier » ----------
+:host .bm-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.bt-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-inline-start: auto; }
+.bt-edit { display: inline-flex; align-items: center; gap: 8px; }
+.bt-edit svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.bt-mode-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px;
+  color: var(--bt-accent-ink); background: color-mix(in srgb, var(--bt-accent) 10%, var(--bt-surface));
+  border: 1px solid color-mix(in srgb, var(--bt-accent) 35%, transparent);
+  font-size: 12.5px; font-weight: 650;
+}
+.bt-mode-chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+// Lecture : un tableau par groupe, en clair, sans champ ; le sens du flux en filet à gauche du groupe.
+.bt-read { display: grid; gap: 16px; min-width: 0; }
+.bt-group {
+  --bt-flow: var(--bt-charge);
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px 14px 6px 17px;
+  border: 1px solid var(--bt-line);
+  border-radius: var(--bt-radius-sm);
+  background: var(--bt-surface);
+}
+.bt-group.bm-income { --bt-flow: var(--bt-income); }
+.bt-group::before { content: ''; position: absolute; inset: 12px auto 12px 0; width: 3px; border-radius: 0 3px 3px 0; background: var(--bt-flow); }
+.bt-group h3 {
+  display: flex; align-items: baseline; gap: 10px; margin: 0;
+  color: var(--ink); font-size: 12.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+}
+.bt-group h3 span { color: var(--bt-muted); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.bt-table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.bt-table :is(th, td) { padding: 9px 10px; border-bottom: 1px solid var(--bt-line); text-align: start; vertical-align: middle; }
+.bt-table thead th { padding-block: 4px 8px; color: var(--bt-muted); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.bt-table tbody th { color: var(--ink); font-weight: 600; }
+.bt-table tbody tr:last-child :is(th, td) { border-bottom: 0; }
+.bt-table tbody tr:hover :is(th, td) { background: color-mix(in srgb, var(--bt-soft) 70%, transparent); }
+.bt-table .num { text-align: end; white-space: nowrap; font-family: inherit; }
+.bt-table td { color: var(--ink); }
+.bt-table tr.is-leaving :is(th, td) { color: var(--bt-muted); }
+.bt-table .chip { margin-inline-start: 8px; font-size: 11px; font-weight: 600; }
+.bt-empty { padding: 4px 0 8px; color: var(--bt-muted); font-size: 13px; }
+
+// Édition : enregistrer ou annuler une seule ligne, à droite de sa note.
+.bt-row-actions { display: inline-flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+
+@container budget-type (max-width: 700px) {
+  // Lecture étroite : chaque ligne devient un bloc (libellé, puis rythme · montant · moyenne).
+  .bt-table thead { display: none; }
+  .bt-table tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--bt-line); }
+  .bt-table tbody tr:last-child { border-bottom: 0; }
+  .bt-table :is(th, td) { padding: 0; border: 0; }
+  .bt-table tbody th { grid-column: 1 / -1; }
+  .bt-table tbody td { color: var(--bt-muted); font-size: 12.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bm-row, .bm-del, .bm-add { transition: none; }
 }

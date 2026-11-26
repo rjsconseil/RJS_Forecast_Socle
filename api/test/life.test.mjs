@@ -3,7 +3,7 @@
 // dans le registre et paramètre administrable des centres « indispensables ».
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { camille, key, makeSocle, makeUser, operation, rejects, TODAY } from './helpers.mjs';
+import { camille, key, makeSocle, makeUser, operation, rejects, TODAY, firstTaskOf } from './helpers.mjs';
 import { DEFAULT_ESSENTIALS } from '../src/modules/bpm/natures.mjs';
 
 const life = (socle, ctx, periodKey) => socle.modules.bpm.life.lifeManagement(ctx, { periodKey });
@@ -16,9 +16,10 @@ async function fundedProjectWithCharge(socle, ctx, { amount = 1000, spent = 200 
   const core = socle.modules.core;
   const P = socle.modules.bpm.projects;
   const p = await core.createCoreProject(ctx, { requestKey: key('prj'), title: 'Voyage au Japon' });
+  const task = await core.createTask(ctx, { requestKey: key('tsk'), title: 'Réserver les vols', projectId: p.project.id });
   const adopted = await P.adoptProject(ctx, { requestKey: key('adopt'), coreProjectId: p.project.id });
   await P.allocate(ctx, adopted.budgetId, { amount, expectedRevision: adopted.detail.budget.revision });
-  await socle.modules.budget.createOperation(ctx, { requestKey: key('op'), budgetId: adopted.budgetId, direction: 'charge', label: 'Vols', costCenterRef: 'std:loisirs', status: 'realized', date: TODAY, amount: spent });
+  await socle.modules.budget.createOperation(ctx, { requestKey: key('op'), budgetId: adopted.budgetId, taskId: task.task.id, direction: 'charge', label: 'Vols', costCenterRef: 'std:loisirs', status: 'realized', date: TODAY, amount: spent });
   return adopted.budgetId;
 }
 
@@ -163,7 +164,7 @@ test('nature des charges : registre filtré et regroupé par nature, paramètre 
   assert.deepEqual(ind.lines.map((l) => l.label).sort(), ['Courses', 'Loyer', 'Mutuelle']);
   assert.equal(ind.filters.nature, 'indispensable');
   const proj = reads.register(ctx, { nature: 'projet' });
-  assert.ok(proj.lines.length >= 2 && proj.lines.every((l) => l.projectCharge || l.special), 'charges validées et charges spéciales des projets');
+  assert.ok(proj.lines.length >= 1 && proj.lines.every((l) => l.projectCharge && !l.special), 'seuls les flux validés des tâches figurent au registre');
   assert.throws(() => reads.register(ctx, { nature: 'luxe' }), (e) => e.code === 'VALIDATION');
 
   // Les loisirs deviennent indispensables : la lecture suit le paramètre, sans autre changement.
@@ -231,7 +232,7 @@ test('échéances à régler : les dépenses prévues des projets y figurent ave
   const { socle } = await makeSocle();
   const { ctx } = await camille(socle);
   const budgetId = await fundedProjectWithCharge(socle, ctx);
-  const planned = await socle.modules.budget.createOperation(ctx, { requestKey: key('op'), budgetId, direction: 'charge', label: 'Hôtel', costCenterRef: 'std:loisirs', status: 'planned', date: TODAY, amount: 120 });
+  const planned = await socle.modules.budget.createOperation(ctx, { requestKey: key('op'), budgetId, taskId: firstTaskOf(socle, budgetId), direction: 'charge', label: 'Hôtel', costCenterRef: 'std:loisirs', status: 'planned', date: TODAY, amount: 120 });
   const due = life(socle, ctx).dueSoon;
   const line = due.lines.find((l) => l.id === planned.operation.id);
   assert.ok(line, 'la dépense prévue du projet est listée');

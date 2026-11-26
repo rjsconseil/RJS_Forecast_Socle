@@ -4,8 +4,8 @@ import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmTaskCard } from '../../core/bpm-projects.models';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmTaskCard, FundingSource } from '../data/bpm-projects.models';
 import { CoreProject, COLUMNS, Priority, TaskStatus } from '../../core/models';
 import { parseAmount } from '../../core/format';
 import { BpmModal } from '../ui/modal';
@@ -52,12 +52,18 @@ import { BpmModal } from '../ui/modal';
           >
           @if (!project()) {
             <label
-              >Budget attribué (€), facultatif<input
+              >Enveloppe de moyens (€), facultative<input
                 name="amount"
                 inputmode="decimal"
                 [(ngModel)]="amount"
                 placeholder="À définir plus tard"
             /></label>
+            <label>Enveloppe financée par
+              <select name="fundingSource" [(ngModel)]="fundingSource">
+                <option value="cycle">Le budget du quotidien (cycle en cours)</option>
+                <option value="patrimoine">Le patrimoine (hors cycle)</option>
+              </select>
+            </label>
           }
           <label>Date de début<input name="startDate" type="date" [(ngModel)]="startDate" /></label>
           <label
@@ -66,9 +72,7 @@ import { BpmModal } from '../ui/modal';
         </div>
         @if (!project()) {
           <p class="bpm-note">
-            Vous pourrez ajouter les tâches et attribuer le budget plus tard. Attribuer un montant
-            ne crée aucune dépense : seuls les règlements validés seront comptés dans le budget du
-            projet de vie.
+            Vous pourrez ajouter des moyens au fil des cycles. Les montants sont imputés au budget du quotidien ou au patrimoine lorsque les dépenses et les gains des tâches sont réglés.
           </p>
         }
         <bpm-form-actions
@@ -119,6 +123,7 @@ export class BpmProjectEditor implements OnInit {
   protected startDate = '';
   protected dueDate = '';
   protected amount = '';
+  protected fundingSource: FundingSource = 'cycle';
 
   ngOnInit() {
     const p = this.project();
@@ -132,7 +137,7 @@ export class BpmProjectEditor implements OnInit {
     this.draft = this.drafts.fields(
       `project:${p?.id ?? 'new'}:${p?.revision ?? 0}`,
       this,
-      ['title', 'description', 'priority', 'startDate', 'dueDate', 'amount', 'requestKey'],
+      ['title', 'description', 'priority', 'startDate', 'dueDate', 'amount', 'fundingSource', 'requestKey'],
       this.destroy,
     );
   }
@@ -158,7 +163,7 @@ export class BpmProjectEditor implements OnInit {
       const projectId = p
         ? (await this.api.updateProject(p.id, { ...input, expectedRevision: p.revision })).project
             .id
-        : (await this.bpm.createProject({ ...input, amount, requestKey: this.requestKey }))
+        : (await this.bpm.createProject({ ...input, amount, fundingSource: this.fundingSource, requestKey: this.requestKey }))
             .coreProjectId;
       this.draft?.clear();
       this.saved.emit({ projectId, title: input.title });

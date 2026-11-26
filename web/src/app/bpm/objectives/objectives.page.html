@@ -1,6 +1,6 @@
-<bpm-page [title]="workspace()?.title ?? 'Objectifs et avenir'" pageClass="bpm-objectives-workspace"
+<bpm-page [title]="workspace()?.title ?? 'Patrimoine et objectifs'" pageClass="bpm-objectives-workspace"
   [lead]="workspace()?.lead ?? 'Donnez une date et un montant à vos envies, suivez votre effort d’épargne et préparez votre patrimoine.'"
-  [context]="summary.data()?.context" [focus]="pageFocus()" [scope]="pageScope()" [result]="pageResult()" toolsLabel="Préparer mes objectifs et mon avenir">
+  [context]="showsSavingsProjection() ? null : summary.data()?.context" [focus]="pageFocus()" [scope]="pageScope()" [result]="pageResult()" toolsLabel="Préparer mes objectifs et mon avenir">
   <button primary class="btn btn-primary" type="button" [disabled]="!profile.data() || commandBusy()" (click)="runPrimary()">{{ primaryLabel() }}</button>
   @if (primaryKind() !== 'create') {
     <button actions class="btn btn-secondary" type="button" [disabled]="!profile.data()" (click)="editGoal(null)">＋ Créer un objectif daté</button>
@@ -10,7 +10,7 @@
   }
   <button actions class="btn btn-secondary" type="button" (click)="refreshAll()" [disabled]="profile.loading() || goals.loading() || projection.loading() || commandBusy()">Actualiser</button>
   @if (workspace()?.key === 'vision-projection') {
-    <a actions class="bpm-link" routerLink="/vision/reperes" [queryParams]="carry()">Ajuster mes repères d’épargne →</a>
+    <a actions class="bpm-link" routerLink="/vision/reperes" [queryParams]="carry()">Fixer mes repères d’épargne →</a>
   } @else if (workspace()?.key === 'vision-landmarks') {
     <a actions class="bpm-link" routerLink="/vision/projection" [queryParams]="carry()">Mesurer l’effet dans la projection →</a>
   }
@@ -28,12 +28,12 @@
       <div class="objectives-context-command">
         <span>{{ hypDirty() ? 'Un scénario modifié attend votre enregistrement.' : 'La couverture des objectifs utilise les hypothèses enregistrées.' }}</span>
         @if (coverageAvailable() && attentionCount()) {
-          <button type="button" class="btn btn-secondary" (click)="reviewAttention()">Examiner les {{ attentionCount() }} objectifs à revoir</button>
+          <button type="button" class="btn btn-secondary" (click)="reviewAttention()">Ouvrir les {{ attentionCount() }} objectifs à revoir</button>
         }
       </div>
     }
     @if (view() === 'suivi') {
-      <div class="bpm-toolbar-search objectives-filters" role="search" aria-label="Rechercher et filtrer les objectifs">
+      <div class="page-toolbar-search objectives-filters" role="search" aria-label="Rechercher et filtrer les objectifs">
         <label>Rechercher<input type="search" placeholder="Nom ou type d’objectif…" [ngModel]="search()" (ngModelChange)="search.set($event)" /></label>
         <label>Type<select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)"><option value="all">Tous les types</option>
           @for (type of profile.data()?.goalTypes ?? []; track type.key) { <option [value]="type.key">{{ type.label }}</option> }
@@ -50,17 +50,18 @@
 
   <bpm-state [loading]="profile.loading() && !profile.data()" [error]="profile.error()" (retry)="profile.reload()" />
   @if (profile.data(); as p) {
-    <dl [hidden]="workspace()?.key === 'vision-landmarks'" class="objectives-summary-band" aria-label="Synthèse des objectifs datés">
+    <dl [hidden]="workspace()?.key === 'vision-landmarks' || showsSavingsProjection()" class="objectives-summary-band" aria-label="Synthèse des objectifs datés">
       <div><dt>Objectifs datés</dt><dd>{{ goals.data() ? goalRows().length : '—' }}</dd><small>Intentions actives</small></div>
-      <div><dt>Cibles en euros actuels</dt><dd>{{ targetTotal() === null ? '—' : (targetTotal() | cents) }}</dd><small>Montants visés, non réservés</small></div>
+      <div><dt>Cibles en euros actuels</dt><dd [bpmAmount]="targetTotal()" bpmTone="info">{{ targetTotal() === null ? '—' : (targetTotal() | cents) }}</dd><small>Montants visés, non réservés</small></div>
       <div class="summary-covered"><dt>Couverts dans le scénario</dt><dd>{{ coverageAvailable() ? coveredCount() : '—' }}</dd><small>Selon les hypothèses enregistrées</small></div>
       <div class="summary-attention"><dt>À examiner</dt><dd>{{ goals.data() ? attentionCount() : '—' }}</dd><small>Date, financement ou calcul à revoir</small></div>
     </dl>
 
+    @if (!workspace()) { <bpm-project-flows source="patrimoine" anchor="wealth-project-flows" /><bpm-financial-outlook /><bpm-life-projects-link context="patrimoine" /> }
     <section class="objectives-panel" [hidden]="view() !== 'suivi'" id="life-dated-goals" aria-labelledby="dated-goals-title">
       <header class="objectives-section-head"><div><p class="eyebrow">Votre feuille de route</p><h2 id="dated-goals-title">Les objectifs que vous préparez</h2><p>La couverture est une estimation du scénario, pas de l’argent déjà mis de côté.</p></div>
         <span class="objectives-count">{{ filteredGoals().length }} / {{ goalRows().length }} affichés</span></header>
-      @if (nextGoal(); as next) { <div class="objectives-next"><span>Prochaine échéance</span><strong>{{ next.goal.label }}</strong><span>{{ next.goal.date | shortDate }}</span><button class="text-link" type="button" (click)="editGoal(next.goal)">Ajuster</button></div> }
+      @if (nextGoal(); as next) { <div class="objectives-next"><span>Prochaine échéance</span><strong>{{ next.goal.label }}</strong><span>{{ next.goal.date | shortDate }}</span><button class="text-link" type="button" (click)="editGoal(next.goal)">Fixer</button></div> }
       <bpm-state [loading]="goals.loading() && !goals.data()" [error]="goals.error()" (retry)="goals.reload()" />
       <bpm-state [error]="projection.error()" (retry)="projection.reload()" />
       @if (projection.data()?.status !== 'estimate' && !projection.loading() && !projection.error()) {
@@ -75,10 +76,10 @@
               <span class="life-goal-status" [attr.data-status]="g.status">{{ projection.loading() ? 'Recalcul en cours…' : g.statusLabel }}</span>
             </div>
             <div class="objective-finances"><dl>
-              <div><dt>Cible aujourd’hui</dt><dd>{{ g.goal.targetTodayCents | cents }}</dd></div>
-              <div><dt>Cible à l’échéance</dt><dd>{{ g.cov?.nominalTargetCents == null ? 'À calculer' : (g.cov!.nominalTargetCents | cents) }}</dd></div>
-              <div><dt>Couvert dans le scénario</dt><dd>{{ g.cov?.coveredCents == null ? 'À calculer' : (g.cov!.coveredCents | cents) }}</dd></div>
-              <div [class.is-gap]="(g.gapCents ?? 0) > 0"><dt>Reste à couvrir estimé</dt><dd>{{ g.gapCents === null ? 'À calculer' : (g.gapCents | cents) }}</dd></div>
+              <div><dt>Cible aujourd’hui</dt><dd [bpmAmount]="g.goal.targetTodayCents" bpmTone="info">{{ g.goal.targetTodayCents | cents }}</dd></div>
+              <div><dt>Cible à l’échéance</dt><dd [bpmAmount]="g.cov?.nominalTargetCents" bpmTone="info">{{ g.cov?.nominalTargetCents == null ? 'À calculer' : (g.cov!.nominalTargetCents | cents) }}</dd></div>
+              <div><dt>Couvert dans le scénario</dt><dd [bpmAmount]="g.cov?.coveredCents">{{ g.cov?.coveredCents == null ? 'À calculer' : (g.cov!.coveredCents | cents) }}</dd></div>
+              <div [class.is-gap]="(g.gapCents ?? 0) > 0"><dt>Reste à couvrir estimé</dt><dd [bpmAmount]="g.gapCents" [bpmTone]="g.gapCents == null ? 'info' : g.gapCents > 0 ? 'warning' : 'success'">{{ g.gapCents === null ? 'À calculer' : (g.gapCents | cents) }}</dd></div>
             </dl>
               <div class="objective-progress-row"><span>{{ g.meter === null ? 'Couverture inconnue' : g.meter + ' % couverts' }}</span>
                 <div class="objective-progress" role="progressbar" [attr.aria-label]="'Couverture estimée de ' + g.goal.label" [attr.aria-valuenow]="g.meter" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuetext]="g.meter === null ? 'Non calculable' : g.meter + ' %'"><span [style.width.%]="g.meter ?? 0"></span></div></div>
@@ -87,7 +88,13 @@
               @if (g.status === 'outOfHorizon') { <p class="objective-warning">L’année de cet objectif est en dehors de la projection. Revoyez sa date ou l’horizon du scénario.</p> }
               @if (g.cov?.revised) { <p class="objective-warning">La couverture a été réduite par un déficit ultérieur dans le scénario.</p> }
             </div>
-            <div class="objective-actions"><button class="btn btn-secondary" type="button" [attr.aria-label]="'Modifier l’objectif ' + g.goal.label" (click)="editGoal(g.goal)">Modifier</button>
+            <div class="objective-actions">
+              <!-- Cockpit : le geste utile dépend de l’état de l’objectif. -->
+              @if (g.overdue) { <button class="btn btn-primary" type="button" [disabled]="commandBusy() || postponing() === g.goal.id" [attr.aria-label]="'Reporter d’un an l’objectif ' + g.goal.label" (click)="postponeGoal(g.goal)">Reporter d’un an</button> }
+              @if ((g.gapCents ?? 0) > 0) { <button class="btn btn-secondary" type="button" [attr.aria-label]="'Fixer l’épargne visée pour couvrir ' + g.goal.label" (click)="openSetting('savings')">Fixer l’épargne</button> }
+              @if (g.status === 'outOfHorizon' || g.cov?.coveredCents == null) { <button class="btn btn-secondary" type="button" (click)="openSetting('projection')">Revoir le scénario</button> }
+              <a class="btn btn-secondary" routerLink="/projet-de-vie/projets" [queryParams]="{ editProject: 'new' }" [attr.aria-label]="'Créer un projet de la vie pour ' + g.goal.label">En faire un projet</a>
+              <button class="btn btn-secondary" type="button" [attr.aria-label]="'Modifier l’objectif ' + g.goal.label" (click)="editGoal(g.goal)">Modifier</button>
               <button class="text-link objective-remove" type="button" [attr.aria-label]="'Retirer l’objectif ' + g.goal.label" (click)="requestRemoval(g.goal)">Retirer</button></div>
           </li>
         } @empty {
@@ -97,12 +104,12 @@
             @else { <button class="btn btn-primary" type="button" (click)="editGoal(null)">＋ Créer un objectif daté</button> }</li> }
         }
       </ul>
-      <aside class="objectives-handoff"><div><strong>Prêt à passer à l’action ?</strong><p>Un objectif prépare une intention. Créez un projet de la vie pour organiser ses tâches et attribuer une enveloppe réelle.</p></div><a class="btn btn-secondary" routerLink="/app/gestion-projet">Gérer mes projets →</a></aside>
+      <aside class="objectives-handoff"><div><strong>Prêt à passer à l’action ?</strong><p>Un objectif prépare une intention. Créez un projet de la vie pour organiser ses tâches et attribuer une enveloppe réelle.</p></div><a class="btn btn-secondary" routerLink="/projet-de-vie/projets">Ouvrir mes projets →</a></aside>
     </section>
 
     <section class="objectives-reperes" [hidden]="view() !== 'reperes'" aria-label="Épargne et patrimoine">
-      <header class="objectives-section-head"><div><p class="eyebrow">Vos repères financiers</p><h2>Épargner régulièrement, construire dans la durée</h2><p>L’épargne par période, l’excédent cumulé et le patrimoine visé sont trois repères distincts.</p></div></header>
-      <section class="objectives-panel" id="epargne"><header class="objectives-section-head"><div><h3>Épargne visée par période</h3><p>Le montant que vous souhaitez conserver à la fin de chaque cycle.</p></div><strong class="objective-big-number">{{ p.principal.vision.savingsTargetCents === null ? 'À définir' : (p.principal.vision.savingsTargetCents | cents) }}</strong></header>
+      <header class="objectives-section-head"><div><p class="eyebrow">Vos repères financiers</p><h2 id="vision-landmarks">Épargner régulièrement, construire dans la durée</h2><p>L’épargne par période, l’excédent cumulé et le patrimoine visé sont trois repères distincts.</p></div></header>
+      <section class="objectives-panel" id="epargne"><header class="objectives-section-head"><div><h3>Épargne visée par période</h3><p>Le montant que vous souhaitez conserver à la fin de chaque cycle.</p></div><strong class="objective-big-number" [bpmAmount]="p.principal.vision.savingsTargetCents" bpmTone="info">{{ p.principal.vision.savingsTargetCents === null ? 'À définir' : (p.principal.vision.savingsTargetCents | cents) }}</strong></header>
                   @if (settingEditor() !== 'savings') { <ng-container *ngTemplateOutlet="savingsEditor" /> }
               @else { <p class="bpm-help">Ce réglage est ouvert dans le panneau de saisie.</p> }
       </section>
@@ -126,22 +133,53 @@
     </section>
 
     <section class="objectives-projection" [hidden]="view() !== 'projection'" id="life-projection" aria-labelledby="projection-title">
-      <header class="objectives-section-head"><div><p class="eyebrow">Un scénario pour décider</p><h2 id="projection-title">Votre trajectoire patrimoniale</h2><p>Les objectifs datés, les apports et l’inflation sont pris en compte dans une estimation annuelle.</p></div><span class="objective-type">{{ p.principal.vision.horizonYears }} ans</span></header>
+      <header class="objectives-section-head">
+        <div>
+          <h2 id="projection-title">Votre trajectoire patrimoniale</h2>
+          <p>{{ savingsProjection ? 'Le scénario suppose que votre objectif d’épargne est atteint à la fin de chaque cycle.' : 'Les objectifs datés, les apports et l’inflation sont pris en compte dans une estimation annuelle.' }}</p>
+        </div>
+        <span class="objective-type">{{ p.principal.vision.horizonYears }} ans</span>
+      </header>
+      @if (savingsProjection && projection.data(); as forecast) {
+        <dl class="projection-start">
+          <div>
+            <dt>Patrimoine de départ</dt>
+            <dd [bpmAmount]="forecast.hypotheses.startCents">{{ forecast.hypotheses.startCents | cents }}</dd>
+            @if (forecast.hypotheses.startPeriodKey) {
+              <a routerLink="/projet-de-vie/bilans" [queryParams]="{ cycle: forecast.hypotheses.startPeriodKey }">
+                Bilan au {{ forecast.hypotheses.startDate | shortDate }}
+              </a>
+            } @else {
+              <small>{{ forecast.hypotheses.startCents === null ? 'Patrimoine d’ouverture à renseigner' : 'Patrimoine d’ouverture · aucun cycle clôturé' }}</small>
+            }
+          </div>
+          <div>
+            <dt>Objectif d’épargne par cycle</dt>
+            <dd [bpmAmount]="forecast.hypotheses.contributionCents">{{ forecast.hypotheses.contributionCents | cents }}</dd>
+            <a routerLink="/vision/reperes" [queryParams]="{ reglage: 'savings' }">{{ forecast.hypotheses.contributionCents === null ? 'Fixer mon objectif' : 'Modifier mon objectif' }}</a>
+          </div>
+          <div>
+            <dt>Inflation annuelle</dt>
+            <dd>{{ forecast.hypotheses.inflationPct }} %</dd>
+            <small>{{ forecast.hypotheses.inflationSource }}</small>
+          </div>
+        </dl>
+      }
       <div class="objectives-projection-layout">
         <div class="objectives-panel projection-reading">
           <bpm-state [loading]="projection.loading()" [error]="projection.error()" (retry)="projection.reload()" />
           @if (projection.data(); as pr) {
             @if (pr.status === 'estimate' && !projection.error()) {
-              <dl class="projection-metrics"><div><dt>Patrimoine estimé en {{ pr.rows.at(-1)?.year }}</dt><dd>{{ pr.rows.at(-1)?.nominalCents | signedCents }}</dd><small>Valeur nominale</small></div><div><dt>En euros d’aujourd’hui</dt><dd>{{ pr.rows.at(-1)?.realCents | signedCents }}</dd><small>Pouvoir d’achat après inflation</small></div></dl>
+              <dl class="projection-metrics"><div><dt>Patrimoine estimé {{ pr.rows.at(-1)?.date ? 'au ' + (pr.rows.at(-1)?.date | shortDate) : 'en ' + pr.rows.at(-1)?.year }}</dt><dd [bpmAmount]="pr.rows.at(-1)?.nominalCents">{{ pr.rows.at(-1)?.nominalCents | signedCents }}</dd><small>Valeur nominale</small></div><div><dt>{{ savingsProjection ? 'En euros de départ' : 'En euros d’aujourd’hui' }}</dt><dd [bpmAmount]="pr.rows.at(-1)?.realCents">{{ pr.rows.at(-1)?.realCents | signedCents }}</dd><small>Pouvoir d’achat après inflation</small></div></dl>
               <bpm-series-chart title="Projection du patrimoine" categoryLabel="Année" [categories]="projectionYears()" [series]="projectionSeries()" [formats]="['lines']" initialFormat="lines" [height]="280" />
-              <p class="objective-note">Apport retenu : {{ pr.hypotheses?.contributionCents | signedCents }} {{ contributionCadenceLabel() }} · {{ pr.hypotheses?.contributionSource }}.</p>
-              <details class="projection-table"><summary>Détail année par année</summary><div class="table-scroll"><table class="data-table"><thead><tr><th>Année</th><th class="num">Valeur nominale</th><th class="num">Euros actuels</th><th class="num">Capital réservé simulé</th></tr></thead><tbody>
-                @for (row of pr.rows; track row.year) { <tr><th>{{ row.year }}</th><td class="num">{{ row.nominalCents | signedCents }}</td><td class="num">{{ row.realCents | signedCents }}</td><td class="num">{{ row.reservedCents | cents }}</td></tr> }
+              @if (!savingsProjection && pr.hypotheses; as assumptions) { <p class="objective-note">Apport retenu : {{ assumptions.contributionCents | signedCents }} {{ contributionCadenceLabel() }} · {{ assumptions.contributionSource }}.</p> }
+              <details class="projection-table"><summary>Détail année par année</summary><div class="table-scroll"><table class="data-table"><thead><tr><th>{{ savingsProjection ? 'Date' : 'Année' }}</th><th class="num">Valeur nominale</th><th class="num">{{ savingsProjection ? 'Euros de départ' : 'Euros actuels' }}</th><th class="num">Capital réservé simulé</th></tr></thead><tbody>
+                @for (row of pr.rows; track row.n) { <tr><th>{{ row.date ? (row.date | shortDate) : row.year }}</th><td class="num" [bpmAmount]="row.nominalCents">{{ row.nominalCents | signedCents }}</td><td class="num" [bpmAmount]="row.realCents">{{ row.realCents | signedCents }}</td><td class="num" [bpmAmount]="row.reservedCents" bpmTone="info">{{ row.reservedCents | cents }}</td></tr> }
               </tbody></table></div></details>
             } @else { <div class="objectives-empty"><h3>Complétez votre scénario</h3><p>{{ pr.reason ?? 'Le patrimoine initial et une hypothèse de rendement sont nécessaires au calcul.' }}</p>
-              @if (pr.hypotheses?.startCents == null) { <a class="btn btn-secondary" routerLink="/app/reglages" fragment="bc-wealth-title">Renseigner le patrimoine initial</a> }</div> }
+              @if (pr.hypotheses?.startCents == null) { <a class="btn btn-secondary" routerLink="/app/reglages/patrimoine" fragment="bc-wealth-title">Renseigner le patrimoine initial</a> }</div> }
           }
-          <p class="objectives-callout">Le calcul applique les objectifs par année, dans l’ordre de leurs dates. Un achat consomme du capital simulé ; une réserve en affecte une part. Aucun paiement ni placement n’est exécuté.</p>
+          <p class="objectives-callout">{{ savingsProjection ? 'Les achats et les réserves liés aux objectifs datés sont simulés à leur échéance. L’inflation ajuste les montants et le pouvoir d’achat projeté.' : 'Le calcul applique les objectifs par année, dans l’ordre de leurs dates. Un achat consomme du capital simulé et une réserve en affecte une part.' }}</p>
         </div>
         <aside class="objectives-panel" id="hypotheses"><h3>Hypothèses du scénario</h3><p class="objective-note">Les modifications prennent effet après enregistrement et recalculent la couverture de tous vos objectifs.</p>
                         @if (settingEditor() !== 'projection') { <ng-container *ngTemplateOutlet="projectionEditor" /> }
@@ -150,7 +188,7 @@
       </div>
       <details class="objectives-panel" [open]="fragment() === 'bp-sim-title' || !!params().get('effort')">
         <summary>Comparer un autre effort d’épargne</summary>
-        @if (view() === 'projection') { <bpm-act-simulation (adoptRequest)="adoptSimulation($event)" /> }
+        @if (view() === 'projection') { <bpm-act-simulation [savingsProjection]="savingsProjection" (adoptRequest)="adoptSimulation($event)" /> }
       </details>
     </section>
   }
@@ -292,7 +330,7 @@
                       name="rate"
                       inputmode="decimal"
                       [(ngModel)]="rate"
-                      placeholder="À renseigner"
+                      [placeholder]="savingsProjection ? '0 % par défaut' : 'À renseigner'"
                   /></label>
                   <label
                     >Inflation annuelle (%)<input
@@ -306,7 +344,7 @@
                       [(ngModel)]="inflationSource"
                       maxlength="200"
                   /></label>
-                  <label
+                  @if (!savingsProjection) { <label
                     >Apport régulier (€)<input
                       name="contribution"
                       inputmode="decimal"
@@ -319,11 +357,10 @@
                       <option value="monthly">Par mois</option>
                       <option value="yearly">Par an</option>
                     </select></label
-                  >
+                  > }
                 </div>
                 <p class="bpm-help">
-                  Rendement vide : projection indisponible. Apport vide : moyenne du budget type. Ce
-                  scénario ne réalise aucun paiement.
+                  {{ savingsProjection ? 'Le rendement est de 0 % si aucun taux n’est saisi. L’apport de chaque cycle reprend votre objectif d’épargne.' : 'Renseignez le rendement pour afficher la projection. Sans apport saisi, le calcul utilise la moyenne du budget type.' }}
                 </p>
                 @if (hypError()) {
                   <p class="bpm-error" role="alert">{{ hypError() }} Votre saisie est conservée.</p>

@@ -3,6 +3,8 @@
 // Les règles métier restent dans les modules ; ce gestionnaire garantit identités et liens.
 import { createHash, randomUUID } from 'node:crypto';
 import { DomainError, fail } from '../errors.mjs';
+import { baseOf, draftDelta, draftOf, filterCollection, readableDraft, touchedIn } from '../data/data-manager.mjs';
+import { objectsWith } from '../indexes.mjs';
 
 const JOURNAL_LIMIT = 2000;
 
@@ -26,6 +28,50 @@ export class ObjectManager {
     this.store = store;
     this.faultInjection = faultInjection;
     this.recentErrors = []; // supervision : échecs non persistés (Administration)
+  }
+
+  // ---------- P2 · Écriture unique ----------
+
+  /**
+   * L'Object Management d'un module : mêmes lectures et commandes, mais `create` et `update`
+   * n'acceptent que les natures dont ce module est propriétaire.
+   */
+  for(moduleId) {
+    const owns = (kind, verb) => {
+      const owner = this.registry.kind(kind).module;
+      if (owner !== moduleId) {
+        fail('WRITE_OUTSIDE_DOMAIN', `Écriture unique : ${moduleId} ne peut pas ${verb} un objet « ${kind} », propriété de ${owner}. Passer par une commande ou un constructeur de ${owner}.`, { principle: 'P2', module: moduleId, kind, owner });
+      }
+    };
+    return new Proxy(this, {
+      get(target, prop) {
+        if (prop === 'module') return moduleId;
+        if (prop === 'create') return (tx, kind, ...rest) => (owns(kind, 'créer'), target.create(tx, kind, ...rest));
+        if (prop === 'update') return (tx, obj, ...rest) => (owns(obj.kind, 'modifier'), target.update(tx, obj, ...rest));
+        const value = target[prop];
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+  }
+
+  /** Contrôle de sortie : tout objet apparu a été créé par `om.create`, et aucun n'a disparu. */
+  #auditDraft(draft, tx) {
+    const before = baseOf(draft) ?? this.store.state;
+    const created = new Set(tx.created.map((c) => c.id));
+    for (const collection of this.registry.collections()) {
+      if (!touchedIn(draft, collection)) continue; // jamais lue ni écrite : inchangée par construction
+      const was = before[collection] ?? {};
+      const now = draft[collection] ?? {};
+      const delta = draftDelta(now);
+      if (delta) {
+        // Lecture sans copie : le brouillon sait ce qui est apparu et disparu, sans parcourir la collection.
+        for (const id of delta.added) if (!created.has(id)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} est apparu dans « ${collection} » sans passer par om.create.`, { principle: 'P2', collection, id, command: tx.command });
+        for (const id of delta.removed) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} a disparu de « ${collection} ».`, { principle: 'P2', collection, id, command: tx.command });
+        continue;
+      }
+      for (const id in now) if (!(id in was) && !created.has(id)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} est apparu dans « ${collection} » sans passer par om.create.`, { principle: 'P2', collection, id, command: tx.command });
+      for (const id in was) if (!(id in now)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} a disparu de « ${collection} ».`, { principle: 'P2', collection, id, command: tx.command });
+    }
   }
 
   // ---------- identité ----------
@@ -54,8 +100,20 @@ export class ObjectManager {
     return obj;
   }
 
+  /** Sur un brouillon, le filtre lit les originaux gelés : seuls les objets retenus sont copiés (lecture sans copie). */
   list(state, kind, predicate = () => true) {
-    return Object.values(state[this.registry.kind(kind).collection]).filter(predicate);
+    return filterCollection(state[this.registry.kind(kind).collection], predicate);
+  }
+
+  /**
+   * Objets d'une nature dont `field` vaut `value`, par un index mémorisé sur la vue publiée de la partition (refait
+   * seulement quand la partition change) ; sur un brouillon de transaction, parcours des originaux gelés qui ne copie
+   * que les objets retenus.
+   */
+  by(state, kind, field, value) {
+    const collection = state[this.registry.kind(kind).collection] ?? {};
+    if (Object.isFrozen(collection)) return objectsWith(collection, field, value);
+    return filterCollection(collection, (o) => o?.[field] === value);
   }
 
   requireUser(state, ctx) {
@@ -155,10 +213,11 @@ export class ObjectManager {
    * sans écriture, journal ni clé de demande. Renvoie l'état simulé pour le lire avec les mêmes métriques.
    */
   simulate(action, ctx, input, fn) {
-    const draft = structuredClone(this.store.state);
+    const draft = draftOf(this.store.state); // copie à la demande, objet par objet, comme une transaction
     const tx = { draft, command: action, now: new Date().toISOString(), created: [], updated: [], unchanged: false, input };
     tx.userId = this.requireUser(draft, ctx);
-    return { draft, result: fn(tx) };
+    const result = fn(tx);
+    return { draft: readableDraft(draft), result };
   }
 
   // ---------- commandes ----------
@@ -171,6 +230,9 @@ export class ObjectManager {
    */
   async command(action, ctx, input, fn, { creation = false, anonymous = false } = {}) {
     try {
+      // Une clé de demande est unique pour tout le site : son reçu se cherche dans la base, quelle que soit la partition.
+      const key = creation ? input?.requestKey : undefined;
+      const stored = typeof key === 'string' && key.length >= 8 && key.length <= 200 ? await this.store.receipt(key) : null;
       return await this.store.mutate(
         (draft) => {
           const tx = { draft, command: action, now: new Date().toISOString(), created: [], updated: [], unchanged: false, input };
@@ -184,7 +246,7 @@ export class ObjectManager {
             tx.requestKey = key;
             const { requestKey, _fault, ...payload } = input;
             fingerprint = fingerprintOf({ command: action, userId: tx.userId, payload });
-            const existing = draft.creationRequests[key];
+            const existing = draft.creationRequests[key] ?? stored;
             if (existing) {
               if (existing.command === action && existing.fingerprint === fingerprint) {
                 return { unchanged: true, value: { ...existing.result, replayed: true } };
@@ -194,6 +256,7 @@ export class ObjectManager {
           }
           const result = fn(tx);
           if (tx.unchanged) return { unchanged: true, value: { ...result, written: false } };
+          this.#auditDraft(draft, tx);
           if (creation) {
             draft.creationRequests[tx.requestKey] = {
               requestKey: tx.requestKey,
@@ -218,7 +281,7 @@ export class ObjectManager {
           if (draft.journal.length > JOURNAL_LIMIT) draft.journal.splice(0, draft.journal.length - JOURNAL_LIMIT);
           return { value: creation ? { ...result, replayed: false } : { ...result, written: true } };
         },
-        { beforeCommit: this.#faultHook(input) },
+        { partition: anonymous ? null : ctx?.userId ?? null, beforeCommit: this.#faultHook(input) },
       );
     } catch (err) {
       if (err instanceof DomainError) {

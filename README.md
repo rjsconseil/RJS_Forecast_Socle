@@ -3,6 +3,8 @@
 Socle à trois niveaux (noyau, middlewares, application) plus des modules transverses, exposé par une API
 Node sans dépendance et un site Angular. Le contrat détaillé entre modules est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ; ce fichier en donne la vue d'ensemble et le mode d'emploi.
+Les données sont **partitionnées par utilisateur** : une requête ne charge que les données de son utilisateur, et
+les écritures de deux utilisateurs se font en parallèle (`docs/ARCHITECTURE.md`, §16).
 
 ## Lancer
 
@@ -25,7 +27,7 @@ Variables d'environnement de l'API :
 | Variable | Rôle |
 |---|---|
 | `J1_API_PORT` | Port de l'API (défaut `3410`). Lu aussi par `npm run seed`. |
-| `J1_DATA_FILE` | Fichier JSON de persistance (défaut `api/data/store.json`). |
+| `J1_DATA_FILE` | Base SQLite de persistance (défaut `api/data/store.sqlite`). |
 | `J1_ENABLE_RECETTE_RESET=1` | Active `POST /api/_recette/reset` (utilisé par le seed). `npm run api` l'active. |
 | `J1_ENABLE_FAULT_INJECTION=1` | Accepte `_fault: "before-commit"` pour simuler une interruption avant écriture. |
 | `SOCLE_TODAY=AAAA-MM-JJ` | Fixe la date du jour du socle (périodes, période courante, dates par défaut). Utile en recette ; les tests la fixent à `2026-11-03`. Le seed, lui, calcule ses dates à partir de la date réelle : ne pas lancer l'API avec `SOCLE_TODAY` avant `npm run seed`. |
@@ -333,7 +335,17 @@ npm run import:rjs-forecast -- --remplacer
 - `projects-cycles.test.mjs` — les dix cas d'essai des projets sur six mois clos et le mois en cours (26 contrôles), puis arrêt en cours de mois ;
 - `calendar.test.mjs` — module Calendrier : calendriers livrés, noyau, isolement et lecture sans écriture,
   paramétrage du survol, des couleurs et de la vue, configurations refusées, Budget/Patrimoine, configuration
-  fournie à l'appel, fenêtre de lecture, répétitions.
+  fournie à l'appel, fenêtre de lecture, répétitions ;
+- `partitions.test.mjs` — noyau partitionné par user : chargement à la demande, écritures parallèles entre users,
+  refus d'écrire la partition d'un autre user, plusieurs instances sur une base ;
+- `lecture-sans-copie.test.mjs` — brouillon copié objet par objet : la collection se lit comme avant, seuls les
+  objets lus ou écrits sont comparés, `om.list`/`om.by` ne copient que les objets retenus, aperçu sans écriture ;
+- `web-fixtures.test.mjs` — les réponses de l'API qui servent aux tests des écrans BPM sont à jour
+  (`npm run fixtures:web` pour les refaire).
+
+`npm run api:check` contrôle le code de l'API (aucun nom inconnu, aucune importation ni variable inutilisée) ;
+`node api/scripts/bench-noyau.mjs [users] [opérations]` mesure la charge du noyau sur une base temporaire
+(voir `docs/ARCHITECTURE.md`, §16).
 
 `npm --prefix web test -- --watch=false` lance les tests unitaires du site (routes et redirections, lectures
 protégées contre les réponses périmées, graphes, éditeur d'opération rejouable, dates et modèle du calendrier).
@@ -376,7 +388,7 @@ conserve le jeu déjà présent et les modifications qui lui auraient été appo
 
 Le jeu comprend 11 charges (dont deux récurrences), 7 catégories, 400 € de marge sur les
 centres non dépassés, 65 € à compenser sans double comptage et un solde prévu de −35 €.
-Les données sont conservées dans `api/data/store.json` ; la sauvegarde complète du site doit
+Les données sont conservées dans la base SQLite `api/data/store.sqlite` ; la sauvegarde complète du site doit
 inclure ce fichier. Les tests automatisés utilisent des stockages temporaires distincts.
 
 ### Présentation et navigation du module BPM

@@ -35,10 +35,10 @@ describe('bandeau partagé de l’application', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     const dom = fixture.nativeElement as HTMLElement;
-    expect(dom.querySelector('.bpm-toolbar-primary')?.textContent).toContain('Enregistrer');
-    expect(dom.querySelector('.bpm-toolbar-actions')?.textContent).toContain('Annuler');
-    expect(dom.querySelector('.bpm-toolbar-filters input[type="search"]')).not.toBeNull();
-    expect(dom.querySelector('.bpm-toolbar-filters')?.textContent).toContain('Voir le détail');
+    expect(dom.querySelector('.page-toolbar-primary')?.textContent).toContain('Enregistrer');
+    expect(dom.querySelector('.page-toolbar-actions')?.textContent).toContain('Annuler');
+    expect(dom.querySelector('.page-toolbar-filters input[type="search"]')).not.toBeNull();
+    expect(dom.querySelector('.page-toolbar-filters')?.textContent).toContain('Voir le détail');
     expect(dom.querySelector('.page-toolbar-scope')?.textContent).toContain('novembre');
     expect(dom.querySelector('.page-toolbar-result')?.textContent).toContain('Aperçu calculé');
     expect(dom.querySelectorAll('[data-sticky-hero]')).toHaveLength(1);

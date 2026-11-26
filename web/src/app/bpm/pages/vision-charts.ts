@@ -1,5 +1,6 @@
+import { BpmAmount } from '../ui/amount';
 import { Component, input, output } from '@angular/core';
-import { CoverageStatus, GoalCoverage, GoalType, LifeGoal } from '../../core/bpm-models';
+import { CoverageStatus, GoalCoverage, GoalType, LifeGoal } from '../data/bpm-models';
 import { ShortDatePipe, cents, percentText } from '../../core/format';
 
 export const COVERAGE_LABEL: Record<CoverageStatus, string> = { funded: 'Finançable', partial: 'Partiel', unfunded: 'Non financé', outOfHorizon: 'Hors horizon', unknown: 'Non calculable' };
@@ -23,7 +24,7 @@ export interface GoalRow {
  */
 @Component({
   selector: 'bpm-goal-coverage',
-  imports: [ShortDatePipe],
+  imports: [BpmAmount, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-vision.page.scss'],
   template: `
     <ul class="bv-goals" aria-label="Couverture des objectifs">
@@ -34,18 +35,18 @@ export interface GoalRow {
             <small>{{ r.typeLabel }} · {{ r.goal.date | shortDate }}</small>
             <strong>{{ r.goal.label }}</strong>
             <span>
-              {{ c(r.goal.targetTodayCents) }} en euros d’aujourd’hui
+              <span [bpmAmount]="r.goal.targetTodayCents" bpmTone="info">{{ c(r.goal.targetTodayCents) }}</span> en euros d’aujourd’hui
               @if (r.cov?.nominalTargetCents !== null && r.cov?.nominalTargetCents !== undefined) {
-                · À la date visée : {{ c(r.cov!.nominalTargetCents) }}
+                · À la date visée : <span [bpmAmount]="r.cov!.nominalTargetCents" bpmTone="info">{{ c(r.cov!.nominalTargetCents) }}</span>
               }
             </span>
             @if (r.cov && r.cov.nominalTargetCents !== null && r.cov.coveredCents !== null) {
               <span class="bv-meter" aria-hidden="true"><span [style.width.%]="clamp(r.cov.coveragePct)"></span></span>
-              <span>Couvert : {{ c(r.cov.coveredCents) }} / {{ c(r.cov.nominalTargetCents) }} · {{ p(r.cov.coveragePct) }}</span>
+              <span>Couvert : <span [bpmAmount]="r.cov.coveredCents" [bpmTone]="r.status === 'funded' ? 'success' : r.status === 'partial' ? 'warning' : r.status === 'unfunded' ? 'danger' : 'info'">{{ c(r.cov.coveredCents) }}</span> / {{ c(r.cov.nominalTargetCents) }} · {{ p(r.cov.coveragePct) }}</span>
             }
           </div>
           <div class="bv-goal-result">
-            <span class="bv-status">
+            <span class="bv-status" [attr.data-tone]="r.status === 'funded' ? 'success' : r.status === 'partial' ? 'warning' : r.status === 'unfunded' ? 'danger' : 'info'">
               {{ label(r.status) }}
               @if (r.status === 'partial' && r.cov) { · {{ p(r.cov.coveragePct) }} couvert }
               @if (r.cov?.revised) { · réévalué }

@@ -1,17 +1,56 @@
-// Entrée globale : couches de la source de référence (rjsconseil/rjs-forecast @ 54246fa) dans leur ordre —
-// polices, contrat, jetons, identités, base, coquille, composants, calendrier (Calendrier 360 : grille, contrôles,
-// parité et pleine largeur), adaptations, formulaires, interactions, zones (menu et portail), surfaces,
-// présentation BPM — sans les domaines hors périmètre (Formation, budget historique). Le module Calendrier ajoute
-// ses couleurs paramétrables, montants et entrées de survol (`_calendar-module.scss`).
-// Viennent ensuite la passerelle des composants propres à ce projet et les pages du socle.
-@use 'fonts';
-@use 'contrat';
-@use 'tokens';
-@use 'identities';
-@use 'base';
-@use 'shell';
-@use 'components';
-@use 'workspace';
-@use 'home';
-// La suite (habillages, zones, BPM, niveaux) est dans `styles-rest.scss` ; entre les deux, `styles-calendar.scss`
-// se charge avec les pages calendrier, a sa place dans la cascade (voir `app/calendar/calendar.route.ts`).
+// Feuille globale du site, d'un seul tenant. L'ordre des couches est l'ordre de la cascade : ne pas le changer
+// sans vérifier le rendu (une règle plus bas l'emporte à spécificité égale) avec `node e2e/style-fingerprint.mjs`.
+// `npm run styles:audit` doit rester à zéro classe morte et zéro déclaration écrasée.
+//
+// Chaque feuille est rangée avec ce qu'elle habille :
+//   src/styles/fondations  polices, contrat, jetons, identités des espaces, base, passerelle des jetons ;
+//   src/styles/coquille    coquille du site : barre du haut, menu et portail des zones, adaptations, niveaux ;
+//   src/styles/composants  briques partagées : composants, formulaires, interactions, surfaces, tableaux du noyau ;
+//   src/styles/pages       pages du site hors Astra : accueil, utilisateurs, accompagnement, vue d'ensemble, socle ;
+//   app/calendar/styles/site  le calendrier, middleware transverse ;
+//   app/astra/styles          BPM-Astra : les écrans métier de BPM qu'elle présente, puis son propre cadre.
+// Outils Sass sans sortie (lus avec `@use … as *`) : src/styles/_functions.scss, _contrat-ruptures.scss.
+
+// 1. Fondations et coquille.
+@use 'fondations/fonts';
+@use 'fondations/contrat';
+@use 'fondations/tokens';
+@use 'fondations/identities';
+@use 'fondations/base';
+@use 'coquille/shell';
+@use 'composants/components';
+@use 'composants/workspace';
+@use 'pages/home';
+
+// 2. Calendrier : grille et vues, parité Budget, formats, commandes, pleine largeur, module branchable.
+@use './app/calendar/styles/site' as calendar;
+
+// 3. Habillages communs du site : adaptations, formulaires, utilisateurs, interactions, zones (menu et portail),
+//    accompagnement, thème de la vue d'ensemble, langage des surfaces.
+@use 'coquille/site-responsive';
+@use 'composants/forms';
+@use 'pages/utilisateurs';
+@use 'composants/interactions';
+@use 'coquille/zones';
+@use 'pages/management';
+@use 'pages/overview-theme';
+@use 'composants/surface-language';
+
+// 4. Passerelle des composants propres à ce projet et pages du socle.
+@use 'fondations/app-tokens';
+@use 'fondations/app-base';
+@use 'composants/app-controls';
+@use 'composants/app-layout';
+@use 'composants/app-components';
+@use 'coquille/app-shell';
+@use 'pages/socle';
+
+// 5. Cadres de page, éclat des bandeaux, relief, design par niveau hiérarchique, menu de navigation.
+@use 'coquille/page-workspace';
+@use 'composants/hero-glow';
+@use 'composants/elevation';
+@use 'coquille/levels';
+@use './app/navigation/navigation';
+
+// 6. BPM-Astra (dernière couche) : écrans métier de BPM puis cadre d'Astra, voir app/astra/styles/_index.scss.
+@use './app/astra/styles';
