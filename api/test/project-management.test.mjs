@@ -359,7 +359,8 @@ test('isolation : aucun projet, tâche ou demande d’un autre utilisateur ne pe
   const p = await project(socle, ctx);
   const t = await task(socle, ctx, p);
   const r = await request(socle, ctx, p, t, 60);
-  await rejects(projects(socle).createTask(other, { requestKey: key(), title: 'Intrusion', projectId: p.coreProjectId }), 'NOT_FOUND');
+  // Partitions par user : le projet d'un autre user n'existe pas pour celui-ci, il n'est pas un projet de la vie à choisir.
+  await rejects(projects(socle).createTask(other, { requestKey: key(), title: 'Intrusion', projectId: p.coreProjectId }), 'INCOMPATIBLE_REFERENCE');
   await rejects(projects(socle).requestTaskBudget(other, p.budgetId, t.task.id, { requestKey: key(), amount: 80 }), 'NOT_FOUND');
   await rejects(projects(socle).decideTaskBudget(other, r.id, { decision: 'approve', expectedRevision: r.revision }), 'NOT_FOUND');
   assert.equal(JSON.stringify(projects(socle).overview(other)).includes(r.id), false);

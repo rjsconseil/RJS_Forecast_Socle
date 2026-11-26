@@ -3,7 +3,7 @@
 // Les règles métier restent dans les modules ; ce gestionnaire garantit identités et liens.
 import { createHash, randomUUID } from 'node:crypto';
 import { DomainError, fail } from '../errors.mjs';
-import { touchedIn } from '../data/data-manager.mjs';
+import { baseOf, touchedIn } from '../data/data-manager.mjs';
 
 const JOURNAL_LIMIT = 2000;
 
@@ -55,7 +55,7 @@ export class ObjectManager {
 
   /** Contrôle de sortie : tout objet apparu a été créé par `om.create`, et aucun n'a disparu. */
   #auditDraft(draft, tx) {
-    const before = this.store.state;
+    const before = baseOf(draft) ?? this.store.state;
     const created = new Set(tx.created.map((c) => c.id));
     for (const collection of this.registry.collections()) {
       if (!touchedIn(draft, collection)) continue; // jamais lue ni écrite : inchangée par construction
@@ -209,6 +209,9 @@ export class ObjectManager {
    */
   async command(action, ctx, input, fn, { creation = false, anonymous = false } = {}) {
     try {
+      // Une clé de demande est unique pour tout le site : son reçu se cherche dans la base, quelle que soit la partition.
+      const key = creation ? input?.requestKey : undefined;
+      const stored = typeof key === 'string' && key.length >= 8 && key.length <= 200 ? await this.store.receipt(key) : null;
       return await this.store.mutate(
         (draft) => {
           const tx = { draft, command: action, now: new Date().toISOString(), created: [], updated: [], unchanged: false, input };
@@ -222,7 +225,7 @@ export class ObjectManager {
             tx.requestKey = key;
             const { requestKey, _fault, ...payload } = input;
             fingerprint = fingerprintOf({ command: action, userId: tx.userId, payload });
-            const existing = draft.creationRequests[key];
+            const existing = draft.creationRequests[key] ?? stored;
             if (existing) {
               if (existing.command === action && existing.fingerprint === fingerprint) {
                 return { unchanged: true, value: { ...existing.result, replayed: true } };
@@ -257,7 +260,7 @@ export class ObjectManager {
           if (draft.journal.length > JOURNAL_LIMIT) draft.journal.splice(0, draft.journal.length - JOURNAL_LIMIT);
           return { value: creation ? { ...result, replayed: false } : { ...result, written: true } };
         },
-        { beforeCommit: this.#faultHook(input) },
+        { partition: anonymous ? null : ctx?.userId ?? null, beforeCommit: this.#faultHook(input) },
       );
     } catch (err) {
       if (err instanceof DomainError) {

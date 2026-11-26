@@ -26,17 +26,20 @@ for (const m of socle.registry.modules.values()) {
 }
 
 // ---------- Flux des changements (technique, sans règle métier) ----------
-// Chaque écriture réussie est annoncée aux pages ouvertes (Server-Sent Events) : révision du stockage, user
-// de la commande et onglet d'origine (`x-client-id`), pour qu'un affichage se relise sans attendre.
+// Chaque écriture réussie est annoncée aux pages ouvertes de son user (Server-Sent Events) : révision de sa
+// partition, user de la commande et onglet d'origine (`x-client-id`), pour qu'un affichage se relise sans attendre.
+// Une page sans user (administration) reçoit toutes les annonces.
 const listeners = new Set();
 function announce(change) {
   const line = `event: change\ndata: ${JSON.stringify(change)}\n\n`;
-  for (const l of listeners) l.res.write(line);
+  for (const l of listeners) if (!l.userId || !change.userId || l.userId === change.userId) l.res.write(line);
 }
-function openChanges(req, res, url) {
+async function openChanges(req, res, url) {
+  const userId = url.searchParams.get('user') || null;
+  const revision = userId ? await socle.store.within(userId, () => socle.store.state.revision).catch(() => null) : null;
   res.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store', connection: 'keep-alive', 'x-accel-buffering': 'no' });
-  res.write(`event: ready\ndata: ${JSON.stringify({ revision: socle.state.revision })}\n\n`);
-  const listener = { res, userId: url.searchParams.get('user') || null };
+  res.write(`event: ready\ndata: ${JSON.stringify({ revision })}\n\n`);
+  const listener = { res, userId };
   listeners.add(listener);
   const alive = setInterval(() => res.write(': ok\n\n'), 25000);
   req.on('close', () => { clearInterval(alive); listeners.delete(listener); });
@@ -66,10 +69,16 @@ const server = createServer(async (req, res) => {
     const params = Object.fromEntries(match.r.keys.map((k, i) => [k, decodeURIComponent(match.m[i + 1])]));
     const body = req.method === 'GET' ? {} : await readBody(req);
     const ctx = { userId: req.headers['x-user-id'] || null };
-    const before = socle.state.revision;
-    const result = await match.r.handler({ ctx, params, body, query: url.searchParams });
-    if (req.method !== 'GET' && socle.state.revision !== before) {
-      announce({ revision: socle.state.revision, userId: ctx.userId, clientId: req.headers['x-client-id'] || null, module: match.r.module });
+    // La requête travaille dans la partition de son user : l'état lu par les modules est sa vue, revalidée contre la base.
+    const revision = () => (ctx.userId ? socle.store.viewOf(ctx.userId).revision : null);
+    const { result, before, after } = await socle.store.within(ctx.userId, async () => {
+      const before = revision();
+      const result = await match.r.handler({ ctx, params, body, query: url.searchParams });
+      return { result, before, after: revision() };
+    });
+    const created = !ctx.userId && result?.userId && result?.replayed === false;
+    if (req.method !== 'GET' && (before !== after || created)) {
+      announce({ revision: after, userId: ctx.userId ?? (created ? result.userId : null), clientId: req.headers['x-client-id'] || null, module: match.r.module });
     }
     if (result?.__download) {
       res.writeHead(200, { 'content-type': result.__type, 'content-disposition': `attachment; filename="${result.__download}"`, 'cache-control': 'no-store' });
@@ -84,6 +93,6 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`RJS Forecast — socle sur http://localhost:${PORT} (données : ${DATA_FILE})`);
+  console.log(`RJS Forecast — socle sur http://localhost:${PORT} (données : ${DATA_FILE}, partitions par user)`);
   console.log(`Modules : ${socle.registry.describe().map((m) => `${m.id}(N${m.level})`).join(', ')}`);
 });

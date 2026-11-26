@@ -114,9 +114,17 @@ export default {
         });
       },
 
-      listUsers() {
-        const state = socle.state;
-        return om.list(state, 'user').sort((a, b) => a.createdAt.localeCompare(b.createdAt)).map((u) => summary(state, u));
+      /** Le résumé d'un user (type, extensions), lu dans la vue de sa partition. */
+      userSummary(userId) {
+        const state = socle.store.viewOf(userId);
+        const user = state.users[userId];
+        return user ? summary(state, user) : null;
+      },
+
+      /** L'annuaire : chaque user résumé dans la vue de sa propre partition (aucune vue complète). */
+      async listUsers() {
+        const users = [...(await socle.store.directory())].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+        return users.map((u) => summary(socle.store.viewOf(u.id), u));
       },
 
       types: () => userTypesOf(socle, socle.state),

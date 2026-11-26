@@ -124,7 +124,7 @@ test('P5 · Données gérées : un schéma par module, une base SQLite rangée p
   const { DatabaseSync } = await import('node:sqlite');
   const { socle, dataFile, reload } = await makeSocle();
   const { ctx, bundle } = await camille(socle);
-  const described = socle.data.describe();
+  const described = await socle.data.describe();
   assert.deepEqual(described.spaces, ['socle', 'application.bpm']);
   assert.deepEqual(described.engines.map((e) => [e.id, e.coded, e.active]), [['sqlite', true, true], ['sgbd', false, false]]);
   const schema = (name) => described.schemas.find((s) => s.name === name);
@@ -146,7 +146,8 @@ test('P5 · Données gérées : un schéma par module, une base SQLite rangée p
   const journal = db.prepare('SELECT count(*) n FROM SY_journal').get().n;
   await socle.modules.budget.createOperation(ctx, { requestKey: key(), direction: 'charge', label: 'Courses', amount: 12, date: '2026-11-02', costCenterRef: 'std:alimentation' });
   assert.equal(db.prepare('SELECT revision FROM CL_bpm_compositions WHERE id = ?').get(bundle.bpmCompositionId).revision, row.revision);
-  assert.equal(db.prepare("SELECT revision FROM MQ_operations WHERE json_extract(data, '$.label') = 'Courses'").get().revision, socle.state.revision);
+  // La ligne porte la révision de sa partition (celle du user), pas celle de toute la base.
+  assert.equal(db.prepare("SELECT revision FROM MQ_operations WHERE json_extract(data, '$.label') = 'Courses'").get().revision, db.prepare('SELECT revision FROM SY_partitions WHERE user_id = ?').get(ctx.userId).revision);
   assert.equal(db.prepare('SELECT count(*) n FROM SY_journal').get().n, journal + 1);
   db.close();
   // Rechargement : l'état logique est reconstitué à l'identique.
@@ -165,7 +166,7 @@ test('P5 · Données gérées : le moteur se choisit ; SQLite en service, Postgr
   await assert.rejects(createSocle({ dataFile: join(dir, 'b.json'), modules: SOCLE_MODULES, dataEngine: 'inconnu' }), fails('DATA_ENGINE_UNAVAILABLE'));
   await assert.rejects(createSocle({ dataFile: join(dir, 'c.json'), modules: SOCLE_MODULES, dataEngine: 'json-fichiers' }), fails('DATA_ENGINE_UNAVAILABLE'), 'les fichiers JSON ne sont plus un moteur');
   const socle = await createSocle({ dataFile: join(dir, 'd.json'), modules: SOCLE_MODULES });
-  assert.equal(socle.data.describe().engine.id, 'sqlite');
+  assert.equal((await socle.data.describe()).engine.id, 'sqlite');
   await socle.close();
 });
 test('P5 · Données gérées : un stockage JSON d’un seul bloc est repris dans la base au premier démarrage, puis archivé', async () => {
@@ -181,7 +182,7 @@ test('P5 · Données gérées : un stockage JSON d’un seul bloc est repris dan
   await write(dataFile, monolithic);
   const reopened = await createSocle({ dataFile, modules: SOCLE_MODULES });
   assert.equal(JSON.stringify(reopened.state), monolithic, 'reprise à l’identique');
-  assert.equal(reopened.data.describe().engine.importedFromJson.revision, JSON.parse(monolithic).revision);
+  assert.equal((await reopened.data.describe()).engine.importedFromJson.revision, JSON.parse(monolithic).revision);
   await access(dataFile.replace(/\.json$/, '.sqlite'));
   await assert.rejects(access(dataFile), 'le fichier JSON quitte sa place');
   const archives = join(dirname(dataFile), 'store.archives');

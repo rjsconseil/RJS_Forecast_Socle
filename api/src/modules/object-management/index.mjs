@@ -47,7 +47,7 @@ export default {
         },
       ],
       // Architecture du socle : principes appliqués, modules et leurs frontières, système de gestion des données.
-      ['GET', '/api/om/architecture', async () => ({ principles: socle.principles, modules: socle.registry.describe(), data: socle.store.describe() })],
+      ['GET', '/api/om/architecture', async () => ({ principles: socle.principles, modules: socle.registry.describe(), data: await socle.store.describe() })],
       [
         'POST',
         '/api/_recette/reset',

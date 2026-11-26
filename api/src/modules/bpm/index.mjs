@@ -619,7 +619,7 @@ export default {
         const suggestions = centers.filter((c) => c.standard).map((c) => ({ direction: c.direction, label: c.label, costCenterRef: c.ref, amount: null, cadence: 'monthly' }));
         const cycle = cycleOf(state, comp.id);
         const closedPeriods = cycle ? closuresOf(state, cycle.id).length : 0;
-        const userTypeLabel = socle.modules.users.listUsers().find((u) => u.id === userId)?.userTypeLabel ?? user.userType;
+        const userTypeLabel = socle.modules.users.userSummary(userId)?.userTypeLabel ?? user.userType;
         return {
           user: { id: user.id, label: user.label, userType: user.userType, userTypeLabel },
           // Des périodes closes figent le jour d'ancrage et la date de début du cycle [P].
@@ -637,7 +637,7 @@ export default {
       dashboard(ctx, { periodKey } = {}) {
         const state = socle.state;
         const { userId, comp, cycle } = requireComposition(state, ctx);
-        const user = socle.modules.users.listUsers().find((u) => u.id === userId);
+        const user = socle.modules.users.userSummary(userId);
         const mctx = metricContext(state, userId, socle, { periodKey });
         const cs = cycleState(state, cycle);
         const sections = parameters.value(state, 'bpm.tableauDeBord');

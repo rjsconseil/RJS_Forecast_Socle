@@ -52,7 +52,7 @@ test('deuxième application · serveur : un module de niveau 3 se branche à cô
   await assert.rejects(socle.modules.sante.renameUser(ctx), fails('WRITE_OUTSIDE_DOMAIN'));
 
   // Ses données ont leur propre schéma et leur propre espace de stockage, à côté de celui de BPM.
-  const schema = socle.data.describe().schemas.find((entry) => entry.module === 'sante');
+  const schema = (await socle.data.describe()).schemas.find((entry) => entry.module === 'sante');
   assert.deepEqual([schema.name, schema.space, schema.collections.map((collection) => collection.name)], ['application.sante', 'application.sante', ['healthRecords']]);
   const { DatabaseSync } = await import('node:sqlite');
   const db = new DatabaseSync(dataFile.replace(/\.json$/, '.sqlite'));

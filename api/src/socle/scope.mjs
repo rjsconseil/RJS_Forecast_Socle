@@ -24,6 +24,9 @@ export function moduleScope(socle, mod) {
   const store = Object.freeze({
     get state() { return socle.store.state; },
     get path() { return socle.store.path; },
+    /** Vue de la partition d'un user (lecture seule) et annuaire des users : ce qui passe à l'échelle. */
+    viewOf: (userId) => socle.store.viewOf(userId),
+    directory: () => socle.store.directory(),
     describe: () => socle.store.describe(),
   });
   return Object.create(socle, {

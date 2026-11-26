@@ -251,8 +251,9 @@ test('T-OM-04 référence absente, mauvaise nature, autre user : refus sans muta
   const before = structuredClone(socle.state);
   await rejects(core.attachTask(ctx, t.task.id, { expectedRevision: 1, projectId: 'prj_inexistant' }), 'REFERENCE_NOT_FOUND');
   await rejects(core.attachTask(ctx, t.task.id, { expectedRevision: 1, projectId: bundle.budgetId }), 'INCOMPATIBLE_REFERENCE');
-  await rejects(core.attachTask(ctx, t.task.id, { expectedRevision: 1, projectId: other.project.id }), 'INCOMPATIBLE_REFERENCE');
-  await rejects(task(socle, ctx, { projectId: other.project.id }), 'INCOMPATIBLE_REFERENCE');
+  // Partitions par user : l'objet d'un autre user n'existe pas pour ce user (même réponse qu'un objet absent).
+  await rejects(core.attachTask(ctx, t.task.id, { expectedRevision: 1, projectId: other.project.id }), 'REFERENCE_NOT_FOUND');
+  await rejects(task(socle, ctx, { projectId: other.project.id }), 'REFERENCE_NOT_FOUND');
   await rejects(task(socle, ctx, { projectId: 'prj_00000000-0000-0000-0000-000000000000' }), 'REFERENCE_NOT_FOUND');
   await rejects(task(socle, ctx, { projectId: bundle.patrimoineId }), 'INCOMPATIBLE_REFERENCE');
   assert.deepEqual(socle.state, before);

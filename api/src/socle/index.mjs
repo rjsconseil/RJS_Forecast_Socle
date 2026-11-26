@@ -10,7 +10,7 @@ import { MetricEngine } from './calc/metrics.mjs';
 import { moduleScope } from './scope.mjs';
 import { PRINCIPLES } from './principles.mjs';
 
-export async function createSocle({ dataFile, modules, faultInjection = false, dataEngine = process.env.SOCLE_DATA_ENGINE || undefined }) {
+export async function createSocle({ dataFile, modules, faultInjection = false, dataEngine = process.env.SOCLE_DATA_ENGINE || undefined, partitionCache }) {
   const registry = new Registry();
   for (const m of modules) registry.register(m);
 
@@ -22,7 +22,8 @@ export async function createSocle({ dataFile, modules, faultInjection = false, d
   for (const m of registry.collect('metrics')) socle.metrics.registerMetric(m);
 
   // P5 · Données gérées : la couche de gestion, au-dessus du moteur de stockage choisi.
-  socle.store = await new DataManager({ path: dataFile, registry, engine: dataEngine }).load();
+  // Données partitionnées par user : une requête ne charge que la partition de son user (voir data-manager.mjs).
+  socle.store = await new DataManager({ path: dataFile, registry, engine: dataEngine, cacheSize: partitionCache }).load();
   socle.data = socle.store;
   socle.om = new ObjectManager({ registry, store: socle.store, faultInjection });
   socle.inspector = new Inspector(socle);

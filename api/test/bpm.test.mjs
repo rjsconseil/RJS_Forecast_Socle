@@ -32,7 +32,7 @@ test('createUser : user, projet noyau, Budget « Projet de vie », Patrimoine, c
   assert.equal(st.patrimoines[bundle.patrimoineId].objectiveCents, 5000000);
   const cycle = st.cycleLinks[bundle.cycleLinkId];
   assert.deepEqual([cycle.state, cycle.anchorDay, cycle.startDate, cycle.frequency], ['active', 1, '2026-08-01', 'monthly']);
-  const u = socle.modules.users.listUsers()[0];
+  const u = (await socle.modules.users.listUsers())[0];
   assert.deepEqual([u.userTypeLabel, u.bpmCompositionId, u.principalBudgetId, u.cycleState], ['Individuel', bundle.bpmCompositionId, bundle.budgetId, 'active']);
 });
 
