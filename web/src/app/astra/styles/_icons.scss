@@ -1,0 +1,51 @@
+// BPM-Astra · pictogrammes (police locale Lucide)
+
+// Pictogrammes Lucide du module, distribués localement avec leur licence.
+@font-face {
+  font-family: 'Astra Icons';
+  src: url('/astra/lucide-astra.woff2') format('woff2');
+  font-display: block;
+}
+[data-astra-icon] {
+  display: inline-grid;
+  place-content: center;
+  flex: none;
+  inline-size: 1em;
+  block-size: 1em;
+  font: normal 1em / 1 'Astra Icons';
+  -webkit-font-smoothing: antialiased;
+}
+[data-astra-icon='bpm-astra']::before { content: '\e1c0'; }
+[data-astra-icon='mouvements']::before { content: '\e249'; }
+[data-astra-icon='budget']::before { content: '\e203'; }
+[data-astra-icon='plafonds']::before { content: '\e299'; }
+[data-astra-icon='calendrier']::before { content: '\e2b8'; }
+[data-astra-icon='projets']::before { content: '\e342'; }
+[data-astra-icon='nouveau']::before { content: '\e086'; }
+[data-astra-icon='financement']::before { content: '\e09b'; }
+[data-astra-icon='taches']::before { content: '\e1cf'; }
+[data-astra-icon='rapprochement']::before { content: '\e239'; }
+[data-astra-icon='cloture']::before { content: '\e225'; }
+[data-astra-icon='bilans']::before { content: '\e2a2'; }
+[data-astra-icon='patrimoine']::before { content: '\e52d'; }
+[data-astra-icon='projection']::before { content: '\e190'; }
+[data-astra-icon='objectifs']::before, [data-astra-icon='objectif']::before { content: '\e183'; }
+[data-astra-icon='meteo']::before { content: '\e215'; }
+[data-astra-icon='suivant']::before { content: '\e073'; }
+[data-astra-icon='precedent']::before { content: '\e072'; }
+[data-astra-icon='ouvrir']::before { content: '\e051'; }
+[data-astra-icon='continuer']::before { content: '\e04d'; }
+[data-astra-icon='plus']::before { content: '\e140'; }
+[data-astra-icon='echeance']::before { content: '\e5b0'; }
+[data-astra-icon='profil']::before { content: '\e46c'; }
+[data-astra-icon='cycle']::before { content: '\e2bc'; }
+[data-astra-icon='entree']::before { content: '\e047'; }
+[data-astra-icon='depense']::before { content: '\e051'; }
+[data-astra-icon='maison']::before { content: '\e0f8'; }
+[data-astra-icon='quotidien']::before { content: '\e15e'; }
+[data-astra-icon='reglages']::before { content: '\e244'; }
+[data-astra-icon='recherche']::before { content: '\e154'; }
+[data-astra-icon='menu']::before { content: '\e118'; }
+[data-astra-icon='panneau']::before { content: '\e12d'; }
+[data-astra-icon='epingle']::before { content: '\e179'; }
+

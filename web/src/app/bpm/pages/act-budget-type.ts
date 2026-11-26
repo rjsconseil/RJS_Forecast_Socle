@@ -1,7 +1,8 @@
+import { BpmAmount } from '../ui/amount';
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { Cadence, Direction, Recurrence } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { Cadence, Direction, Recurrence } from '../data/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { bpmLoader, BpmRefresh, BpmState, newRequestKey } from '../ui';
@@ -16,6 +17,8 @@ interface RowDraft {
   direction: Direction;
   centerLabel: string | null;
   firstDate: string;
+  /** Dernière échéance prévue : posée par une suppression, la ligne quitte le budget au cycle suivant. */
+  endDate: string | null;
   label: string;
   amount: string;
   cadence: RecCadence;
@@ -50,7 +53,7 @@ const toCents = (raw: string) => {
  */
 @Component({
   selector: 'bpm-act-budget-type',
-  imports: [BpmState, MetricTilesComponent, CentsPipe, ShortDatePipe],
+  imports: [BpmAmount, BpmState, MetricTilesComponent, CentsPipe, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-month-type.component.scss'],
   template: `
     <section class="bm-month" data-bpm-frame="form" id="budget-type" aria-labelledby="bm-month-title">
@@ -86,20 +89,37 @@ const toCents = (raw: string) => {
                     <span role="columnheader">Montant par occurrence (€)</span>
                     <span role="columnheader">Rythme</span>
                     <span role="columnheader">Centre</span>
+                    <span role="columnheader" class="bm-sr">Supprimer</span>
                   </div>
                   @for (r of rowsOf(dir); track r.id) {
                     <div class="bm-row" role="row" [class.bm-income]="dir === 'income'" [class.is-dirty]="isDirty(r)">
-                      <div role="cell"><input [value]="r.label" (input)="patch(r.id, { label: $any($event.target).value })" [attr.aria-label]="'Libellé de ' + r.orig.label" maxlength="200" /></div>
-                      <div role="cell" class="bm-fixed">{{ r.firstDate | shortDate }}</div>
-                      <div role="cell"><input class="num" inputmode="decimal" [value]="r.amount" (input)="patch(r.id, { amount: $any($event.target).value })" [attr.aria-label]="'Montant de ' + r.orig.label" /></div>
-                      <div role="cell">
+                      <div role="cell" data-field="Libellé"><input [value]="r.label" (input)="patch(r.id, { label: $any($event.target).value })" [attr.aria-label]="'Libellé de ' + r.orig.label" maxlength="200" /></div>
+                      <div role="cell" class="bm-fixed" data-field="Première date">{{ r.firstDate | shortDate }}</div>
+                      <div role="cell" data-field="Montant par occurrence (€)"><input class="num" inputmode="decimal" [value]="r.amount" (input)="patch(r.id, { amount: $any($event.target).value })" [attr.aria-label]="'Montant de ' + r.orig.label" /></div>
+                      <div role="cell" data-field="Rythme">
                         <select [value]="r.cadence" (change)="patch(r.id, { cadence: $any($event.target).value })" [attr.aria-label]="'Rythme de ' + r.orig.label">
                           @for (c of cadences; track c) { <option [value]="c" [selected]="c === r.cadence">{{ cadenceLabel[c] }}</option> }
                         </select>
                       </div>
-                      <div role="cell" class="bm-fixed">{{ r.centerLabel ?? 'À préciser' }}</div>
+                      <div role="cell" class="bm-fixed" data-field="Centre">{{ r.centerLabel ?? 'À préciser' }}</div>
+                      <div role="cell" class="bm-row-del">
+                        @if (!isLeaving(r)) {
+                          <button type="button" class="bm-del" (click)="askRemove(r.id)" [disabled]="busy() || removing() === r.id" [attr.aria-pressed]="confirmRemove() === r.id" [attr.aria-label]="'Supprimer la ligne ' + r.orig.label" title="Supprimer la ligne">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" /></svg>
+                          </button>
+                        }
+                      </div>
                       <div role="cell" class="bm-row-note">
-                        <span>Moyenne / mois : <strong class="num">{{ r.averageCents | cents }}</strong></span>
+                        <span>Moyenne / mois : <strong class="num" [bpmAmount]="r.averageCents" [bpmFlow]="r.direction">{{ r.averageCents | cents }}</strong></span>
+                        @if (isLeaving(r)) {
+                          <span class="chip warn">Retirée au prochain cycle · dernière échéance le {{ r.endDate! | shortDate }}</span>
+                          <button type="button" class="btn btn-secondary small" (click)="keepLine(r)" [disabled]="busy() || removing() === r.id">Annuler la suppression</button>
+                        }
+                        @if (confirmRemove() === r.id) {
+                          <span class="bm-confirm" role="status">{{ removalNotice(r) }}</span>
+                          <button type="button" class="btn btn-danger small" (click)="removeLine(r)" [disabled]="removing() === r.id">{{ removing() === r.id ? 'Suppression…' : 'Confirmer la suppression' }}</button>
+                          <button type="button" class="btn btn-secondary small" (click)="confirmRemove.set(null)" [disabled]="removing() === r.id">Garder la ligne</button>
+                        }
                         @if (r.error) {
                           <span class="bpm-error" role="alert">{{ r.error }}</span>
                           <button type="button" class="btn btn-secondary small" (click)="resetRow(r.id)">Reprendre la version enregistrée</button>
@@ -111,23 +131,27 @@ const toCents = (raw: string) => {
                   }
                   @for (n of newsOf(dir); track n.key) {
                     <div class="bm-row is-new" role="row" [class.bm-income]="dir === 'income'">
-                      <div role="cell"><input [value]="n.label" (input)="patchNew(n.key, { label: $any($event.target).value })" placeholder="Nouvelle ligne" aria-label="Libellé de la nouvelle ligne" maxlength="200" /></div>
-                      <div role="cell"><input type="date" [value]="n.firstDate" (change)="patchNew(n.key, { firstDate: $any($event.target).value })" aria-label="Première date de la nouvelle ligne" /></div>
-                      <div role="cell"><input class="num" inputmode="decimal" [value]="n.amount" (input)="patchNew(n.key, { amount: $any($event.target).value })" aria-label="Montant de la nouvelle ligne" /></div>
-                      <div role="cell">
+                      <div role="cell" data-field="Libellé"><input [value]="n.label" (input)="patchNew(n.key, { label: $any($event.target).value })" placeholder="Nouvelle ligne" aria-label="Libellé de la nouvelle ligne" maxlength="200" /></div>
+                      <div role="cell" data-field="Première date"><input type="date" [value]="n.firstDate" (change)="patchNew(n.key, { firstDate: $any($event.target).value })" aria-label="Première date de la nouvelle ligne" /></div>
+                      <div role="cell" data-field="Montant par occurrence (€)"><input class="num" inputmode="decimal" [value]="n.amount" (input)="patchNew(n.key, { amount: $any($event.target).value })" aria-label="Montant de la nouvelle ligne" /></div>
+                      <div role="cell" data-field="Rythme">
                         <select [value]="n.cadence" (change)="patchNew(n.key, { cadence: $any($event.target).value })" aria-label="Rythme de la nouvelle ligne">
                           @for (c of cadences; track c) { <option [value]="c" [selected]="c === n.cadence">{{ cadenceLabel[c] }}</option> }
                         </select>
                       </div>
-                      <div role="cell">
+                      <div role="cell" data-field="Centre">
                         <select [value]="n.center" (change)="patchNew(n.key, { center: $any($event.target).value })" aria-label="Centre de la nouvelle ligne">
                           @for (c of centersOf(dir); track c.ref) { <option [value]="c.ref" [selected]="c.ref === n.center">{{ c.label }}</option> }
                         </select>
                       </div>
+                      <div role="cell" class="bm-row-del">
+                        <button type="button" class="bm-del" (click)="dropNew(n.key)" aria-label="Retirer cette nouvelle ligne du brouillon" title="Retirer la ligne du brouillon">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5" /></svg>
+                        </button>
+                      </div>
                       <div role="cell" class="bm-row-note">
                         <span>Moyenne / mois : après enregistrement</span>
                         @if (n.error) { <span class="bpm-error" role="alert">{{ n.error }}</span> }
-                        <button type="button" class="btn btn-secondary small" (click)="dropNew(n.key)" aria-label="Retirer cette nouvelle ligne du brouillon">Retirer</button>
                       </div>
                     </div>
                   }
@@ -153,16 +177,7 @@ const toCents = (raw: string) => {
       }
     </section>
   `,
-  styles: `
-    .bm-row-note { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ecart-8); color: var(--muted); font-size: var(--fs-sm); }
-    .bm-row-note .bpm-error { flex: 1 1 100%; }
-    .bm-row.is-dirty { padding: var(--ecart-6); border-radius: var(--rayon-8); background: var(--app-accent-soft); }
-    .bm-row.is-new { padding: var(--ecart-6); border-radius: var(--rayon-8); background: var(--soft); }
-    .bm-row select, .bm-row input { width: 100%; }
-    .bm-fixed { color: var(--ink); overflow-wrap: anywhere; }
-    .bpm-actions { align-items: center; }
-    .spacer { flex: 1 1 auto; }
-  `,
+
 })
 export class BpmActBudgetType {
   private bpm = inject(BpmApi);
@@ -181,9 +196,9 @@ export class BpmActBudgetType {
     const d = this.bt.data();
     if (!d) return [];
     return [
-      { id: 'income', label: 'Entrées moyennes / mois', value: cents(d.averageIncomeCents), symbol: 'income', tone: 'success' },
-      { id: 'charge', label: 'Charges moyennes / mois', value: cents(d.averageChargeCents), symbol: 'expense', tone: 'danger' },
-      { id: 'net', label: 'Solde type / mois', value: signedCents(d.averageNetCents), symbol: 'balance', note: 'Épargne naturelle moyenne', emphasis: true, tone: d.averageNetCents < 0 ? 'danger' : d.averageNetCents > 0 ? 'success' : null },
+      { id: 'income', label: 'Entrées moyennes / mois', value: cents(d.averageIncomeCents), amountCents: d.averageIncomeCents, symbol: 'income', tone: 'success' },
+      { id: 'charge', label: 'Charges moyennes / mois', value: cents(d.averageChargeCents), amountCents: d.averageChargeCents, symbol: 'expense', tone: 'danger' },
+      { id: 'net', label: 'Solde type / mois', value: signedCents(d.averageNetCents), amountCents: d.averageNetCents, symbol: 'balance', note: 'Épargne naturelle moyenne', emphasis: true, tone: d.averageNetCents < 0 ? 'danger' : d.averageNetCents > 0 ? 'success' : null },
     ];
   });
 
@@ -191,6 +206,11 @@ export class BpmActBudgetType {
   protected news = signal<NewDraft[]>([]);
   protected busy = signal(false);
   protected message = signal<string | null>(null);
+  /** Ligne dont la suppression attend sa confirmation, puis ligne en cours de suppression. */
+  protected confirmRemove = signal<string | null>(null);
+  protected removing = signal<string | null>(null);
+  /** Dernier jour du cycle budgétaire en cours : une ligne supprimée y reste jusque-là. */
+  private cycleEnd = computed(() => this.bt.data()?.context.period?.end ?? null);
 
   readonly pendingChanges = computed(() => this.pendingCount());
   readonly saving = computed(() => this.busy());
@@ -221,6 +241,7 @@ export class BpmActBudgetType {
       direction: l.direction,
       centerLabel: l.costCenterLabel,
       firstDate: l.firstDate,
+      endDate: l.endDate,
       label: l.label,
       amount: euroText(l.amountCents),
       cadence: l.cadence,
@@ -256,6 +277,70 @@ export class BpmActBudgetType {
   }
   protected addLine(direction: Direction) {
     this.news.update((ns) => [...ns, { key: newRequestKey('budget-type'), direction, label: '', amount: '', cadence: 'monthly', firstDate: localToday(), center: this.centersOf(direction)[0]?.ref ?? '', error: null }]);
+  }
+
+  /** Une ligne supprimée reste jusqu'à la fin du cycle en cours, puis ne revient plus. */
+  protected isLeaving(r: RowDraft) {
+    const end = this.cycleEnd();
+    return !!r.endDate && (!end || r.endDate <= end);
+  }
+  /** La ligne n'a encore aucune échéance dans le cycle en cours : elle peut partir tout de suite. */
+  private startsLater(r: RowDraft) {
+    return r.firstDate > (this.cycleEnd() ?? localToday());
+  }
+  protected removalNotice(r: RowDraft) {
+    if (this.startsLater(r)) return `« ${r.orig.label} » n'a encore aucune échéance : elle sera retirée du budget récurrent dès maintenant.`;
+    const end = this.cycleEnd();
+    return `« ${r.orig.label} » reste dans le cycle en cours${end ? ` jusqu'au ${new Date(end + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}` : ''}. Le changement sera pris en compte au prochain cycle budgétaire : elle n'y reviendra plus.`;
+  }
+  protected askRemove(id: string) {
+    this.message.set(null);
+    this.confirmRemove.set(this.confirmRemove() === id ? null : id);
+  }
+
+  /**
+   * Supprime une ligne du budget récurrent. Elle garde ses échéances du cycle en cours (dernière échéance à la
+   * fin du cycle) et disparaît au cycle suivant ; une ligne qui ne commence qu'après le cycle part tout de suite.
+   */
+  async removeLine(r: RowDraft) {
+    if (this.removing()) return;
+    this.removing.set(r.id);
+    const later = this.startsLater(r);
+    try {
+      if (later) {
+        await this.bpm.cancelRecurrence(r.id, r.revision, 'Supprimée depuis le budget récurrent');
+      } else {
+        const end = this.cycleEnd() ?? localToday();
+        const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: r.revision, endDate: end });
+        this.patch(r.id, { endDate: recurrence.endDate, revision: recurrence.revision, error: null });
+      }
+      this.message.set(later
+        ? `« ${r.orig.label} » est retirée du budget récurrent.`
+        : `« ${r.orig.label} » est supprimée : le changement sera pris en compte au prochain cycle budgétaire.`);
+      this.confirmRemove.set(null);
+      this.refresh.bump();
+    } catch (e) {
+      const err = toApiError(e);
+      this.patch(r.id, { error: err.isConflict ? 'Modifiée ailleurs entre-temps : reprenez la version enregistrée.' : err.message });
+    } finally {
+      this.removing.set(null);
+    }
+  }
+
+  /** Annule une suppression programmée : la ligne revient dans les cycles suivants. */
+  async keepLine(r: RowDraft) {
+    if (this.removing()) return;
+    this.removing.set(r.id);
+    try {
+      const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: r.revision, endDate: null });
+      this.patch(r.id, { endDate: recurrence.endDate, revision: recurrence.revision, error: null });
+      this.message.set(`« ${r.orig.label} » reste dans le budget récurrent.`);
+      this.refresh.bump();
+    } catch (e) {
+      this.patch(r.id, { error: toApiError(e).message });
+    } finally {
+      this.removing.set(null);
+    }
   }
 
   /** Enregistre les lignes modifiées (mise à jour) puis les nouvelles (création rejouable). */

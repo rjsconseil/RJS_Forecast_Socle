@@ -2,9 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { Api, ApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmProjectDetail, BpmTaskCard, TaskBudgetRequest } from '../../core/bpm-projects.models';
-import { BpmManagedTaskComponent, TaskFundingSubmission } from './managed-task';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmProjectDetail, BpmTaskCard, TaskBudgetRequest } from '../data/bpm-projects.models';
 import { BpmProjectPage } from './project.page';
 import { BpmTaskRequestsComponent } from './project-parts';
 
@@ -41,78 +40,6 @@ const request = {
   status: 'pending',
   statusLabel: 'En attente',
 } as TaskBudgetRequest;
-
-describe('clés des demandes de montant depuis une tâche dépliée', () => {
-  it('permet de préparer une demande sans enveloppe et guide vers son attribution', () => {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
-    const f = TestBed.createComponent(BpmManagedTaskComponent);
-    f.componentRef.setInput('task', task);
-    f.componentRef.setInput('funded', false);
-    f.detectChanges();
-    const root: HTMLElement = f.nativeElement;
-    const ask = root.querySelector<HTMLButtonElement>('[aria-label="Demander un montant pour Comparer les devis"]')!;
-    expect(ask.disabled).toBe(false);
-    expect(root.querySelector('a')?.getAttribute('href')).toBe('/app/gestion-projet/prj_1#enveloppe');
-    ask.click();
-    f.detectChanges();
-    expect(root.querySelector('input[name="amount"]')).toBeTruthy();
-  });
-
-  it('explique pourquoi une demande préparée sans enveloppe ne peut pas encore être accordée', () => {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
-    const f = TestBed.createComponent(BpmTaskRequestsComponent);
-    f.componentRef.setInput('requests', [{ ...request, coreProjectId: 'prj_1', budgetName: 'Cuisine', taskTitle: 'Comparer les devis' }]);
-    f.componentRef.setInput('funded', false);
-    f.detectChanges();
-    const root: HTMLElement = f.nativeElement;
-    const grant = [...root.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes('Accorder'))!;
-    expect(grant.disabled).toBe(true);
-    expect(root.textContent).toContain('Attribuez d’abord une enveloppe');
-    expect([...root.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.includes('Refuser'))?.disabled).toBe(false);
-  });
-
-  it('renouvelle la clé dès la confirmation du POST, même avant la relecture du projet', () => {
-    const f = TestBed.createComponent(BpmManagedTaskComponent);
-    f.componentRef.setInput('task', task);
-    f.componentRef.setInput('funded', true);
-    f.detectChanges();
-    const editor = f.componentInstance as unknown as { amount: string; submit(): void };
-    const sent: TaskFundingSubmission[] = [];
-    f.componentInstance.request.subscribe((input) => sent.push(input));
-    editor.amount = '100';
-    editor.submit();
-    sent[0].onAccepted?.();
-    editor.submit();
-    expect(sent[1].requestKey).not.toBe(sent[0].requestKey);
-  });
-
-  it('conserve la clé pour une nouvelle tentative sans confirmation et la renouvelle après clôture', () => {
-    const f = TestBed.createComponent(BpmManagedTaskComponent);
-    f.componentRef.setInput('task', task);
-    f.componentRef.setInput('funded', true);
-    f.detectChanges();
-    const editor = f.componentInstance as unknown as {
-      amount: string;
-      note: string;
-      submit(): void;
-    };
-    const sent: TaskFundingSubmission[] = [];
-    f.componentInstance.request.subscribe((input) => sent.push(input));
-    editor.amount = '100';
-    editor.note = 'Devis';
-    editor.submit();
-    editor.submit(); // aucune réponse : une nouvelle tentative doit rester rejouable
-    expect(sent[1].requestKey).toBe(sent[0].requestKey);
-
-    f.componentRef.setInput('task', { ...task, budget: { ...task.budget, request } });
-    f.detectChanges();
-    // Une demande refusée ou annulée n'apparaît plus parmi les demandes ouvertes.
-    f.componentRef.setInput('task', { ...task, budget: { ...task.budget, request: null } });
-    f.detectChanges();
-    editor.submit();
-    expect(sent[2].requestKey).not.toBe(sent[0].requestKey);
-  });
-});
 
 describe('clés des demandes de montant depuis la fiche projet', () => {
   it('reconnaît la demande relue après une réponse perdue et permet de redemander après clôture', async () => {

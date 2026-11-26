@@ -1,6 +1,7 @@
+import { BpmAmount } from '../ui/amount';
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { LifeFunding, LifeFundingRow } from '../../core/bpm-projects.models';
+import { BpmRouterLink } from '../ui/bpm-router-link';
+import { LifeFunding, LifeFundingRow } from '../data/bpm-projects.models';
 import { cents, CentsPipe } from '../../core/format';
 import { BpmBudgetStateComponent } from '../projects/project-parts';
 
@@ -39,7 +40,7 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
 @Component({
   selector: 'bpm-life-funding',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, CentsPipe, BpmBudgetStateComponent],
+  imports: [BpmAmount, BpmRouterLink, CentsPipe, BpmBudgetStateComponent],
   styleUrl: './life-funding.scss',
   template: `
     @let f = funding();
@@ -49,24 +50,24 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
       <dl class="life-funding-totals" aria-label="Financement des projets de la vie">
         <div>
           <dt>Enveloppes attribuées</dt>
-          <dd>{{ f.totals.allocatedCents | cents }}</dd>
+          <dd [bpmAmount]="f.totals.allocatedCents" bpmTone="info">{{ f.totals.allocatedCents | cents }}</dd>
           <span>Enveloppes actuelles · {{ funded() }} projet{{ funded() > 1 ? 's' : '' }} financé{{ funded() > 1 ? 's' : '' }} sur {{ f.rows.length }}</span>
         </div>
         <div>
           <dt>Cumul remonté au projet de vie</dt>
-          <dd>{{ f.totals.paidCents | cents }}</dd>
+          <dd [bpmAmount]="f.totals.paidCents" bpmFlow="expense">{{ f.totals.paidCents | cents }}</dd>
           <span>Toutes périodes du cycle · depuis chaque attribution</span>
         </div>
         <div>
           <dt>Dépassements autorisés</dt>
-          <dd>{{ overrunCents() | cents }}</dd>
-          <span>{{ billedCents() | cents }} déjà facturés · {{ approvedCents() | cents }} à facturer en fin de cycle</span>
+          <dd [bpmAmount]="overrunCents()" bpmTone="warning">{{ overrunCents() | cents }}</dd>
+          <span>{{ billedCents() | cents }} déjà intégrés à l’enveloppe · {{ approvedCents() | cents }} autorisés, sans nouveau débit</span>
         </div>
       </dl>
       @if (hidden() > 0) {
         <p class="life-funding-scope">
           {{ shown().length }} périodes affichées · {{ shown()[0].label }} à {{ shown()[shown().length - 1].label }}.
-          <button type="button" class="text-link" (click)="all.set(true)">Voir tout le cycle ({{ f.periods.length }})</button>
+          <button type="button" class="text-link" (click)="all.set(true)">Ouvrir tout le cycle ({{ f.periods.length }})</button>
         </p>
       } @else if (all() && f.periods.length > recent) {
         <p class="life-funding-scope">
@@ -74,7 +75,8 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
           <button type="button" class="text-link" (click)="all.set(false)">Revenir à {{ recent }} périodes autour de la consultation</button>
         </p>
       }
-      <div class="bpm-table-wrap">
+      <div class="life-funding-table-head"><strong>Les projets, cycle après cycle</strong><small>Faites défiler horizontalement pour parcourir les périodes.</small></div>
+      <div class="bpm-table-wrap life-funding-scroll" role="region" aria-label="Financement des projets par période, défilement horizontal" tabindex="0">
         <table class="bpm-table life-funding-table">
           <caption class="visually-hidden">Charges validées remontées au budget du projet de vie, par projet et par période du cycle</caption>
           <thead>
@@ -120,7 +122,7 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
                   </td>
                 }
                 <td class="num">
-                  <strong>{{ r.paidCents | cents }}</strong>
+                  <strong [bpmAmount]="r.paidCents" bpmFlow="expense">{{ r.paidCents | cents }}</strong>
                   @if (r.regime) {
                     <small [class.is-over]="(r.remainingCents ?? 0) < 0">reste {{ r.remainingCents | cents }}</small>
                   }
@@ -137,11 +139,11 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
             <tfoot>
               <tr>
                 <th scope="row">Budget du projet de vie</th>
-                <td class="num">{{ f.totals.allocatedCents | cents }}</td>
+                <td class="num" [bpmAmount]="f.totals.allocatedCents" bpmTone="info">{{ f.totals.allocatedCents | cents }}</td>
                 @for (p of shown(); track p.key) {
-                  <td class="num" [class.is-read]="p.key === highlight()">{{ f.totals.byPeriod[p.key] | cents }}</td>
+                  <td class="num" [class.is-read]="p.key === highlight()" [bpmAmount]="f.totals.byPeriod[p.key]">{{ f.totals.byPeriod[p.key] | cents }}</td>
                 }
-                <td class="num"><strong>{{ f.totals.paidCents | cents }}</strong></td>
+                <td class="num"><strong [bpmAmount]="f.totals.paidCents" bpmFlow="expense">{{ f.totals.paidCents | cents }}</strong></td>
                 <td></td>
               </tr>
             </tfoot>
@@ -150,8 +152,7 @@ export function fundingMarks(row: LifeFundingRow, key: string): FundingMarks {
       </div>
       <p class="bpm-note">
         Chaque colonne suit la date réelle du règlement, même si sa date prévue est dans un autre cycle.
-        Une enveloppe n’est pas une dépense : seuls les règlements datés à partir de son attribution remontent au Dépensé
-        du projet de vie. Les totaux sont cumulés sur tout le cycle ; les dépassements accordés sont facturés en fin de cycle.
+        Une enveloppe n’est pas une dépense. Chaque flux validé depuis une tâche suit sa date d’imputation et sa destination : cycle ou patrimoine. Intégrer un dépassement autorisé à l’enveloppe ne crée aucune charge supplémentaire.
       </p>
     }
   `,

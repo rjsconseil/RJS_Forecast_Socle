@@ -8,7 +8,7 @@ import {
   oneOf,
   text,
 } from '../../socle/validation.mjs';
-import { CADENCES } from '../budget/recurrence.mjs';
+import { CADENCES } from '../cycle/api.mjs';
 import { GOAL_TYPES, project } from './projection.mjs';
 export const DEFAULT_PROJECTION = {
   horizonYears: 20,

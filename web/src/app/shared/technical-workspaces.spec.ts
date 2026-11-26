@@ -50,8 +50,8 @@ describe('vues techniques spécialisées', () => {
     expect(dom.querySelector('#budget-test-centers-title')).toBeNull();
     expect(dom.querySelector('#budget-test-list-title')).toBeNull();
     expect(dom.querySelector<HTMLSelectElement>('.bw-manager-config select')?.value).toBe('budget-b');
-    expect(dom.querySelector('.bpm-toolbar-primary')?.textContent).toContain('Créer l’opération saisie');
-    dom.querySelector<HTMLButtonElement>('.bpm-toolbar-primary button')!.click();
+    expect(dom.querySelector('.page-toolbar-primary')?.textContent).toContain('Créer l’opération saisie');
+    dom.querySelector<HTMLButtonElement>('.page-toolbar-primary button')!.click();
     await ready(harness);
     expect(dom.querySelector('.page-toolbar-result')?.textContent).toContain('Montant en euros attendu');
   });
@@ -99,7 +99,7 @@ describe('vues techniques spécialisées', () => {
     edit!.click();
     await ready(harness);
     expect(dom.querySelector('.adm-edit input')?.getAttribute('inputmode')).toBe('decimal');
-    expect(dom.querySelector('.bpm-toolbar-primary')?.textContent).toContain('Enregistrer le paramètre');
+    expect(dom.querySelector('.page-toolbar-primary')?.textContent).toContain('Enregistrer le paramètre');
   });
 
   it('reprend le périmètre des relations et conserve ce contexte dans le lien de retour', async () => {
@@ -125,7 +125,7 @@ describe('vues techniques spécialisées', () => {
     expect(dom.querySelector('.us-form')).not.toBeNull();
     expect(dom.querySelector('.us-list')).toBeNull();
     expect(dom.querySelector('.us-filters')).toBeNull();
-    const create = [...dom.querySelectorAll<HTMLButtonElement>('.bpm-toolbar-primary button')].find((button) => button.textContent?.includes('Créer l’utilisateur'))!;
+    const create = [...dom.querySelectorAll<HTMLButtonElement>('.page-toolbar-primary button')].find((button) => button.textContent?.includes('Créer l’utilisateur'))!;
     create.click();
     await ready(harness);
     expect(dom.querySelector('#e-label')?.textContent).toContain('libellé');

@@ -3,6 +3,7 @@
 // Les règles métier restent dans les modules ; ce gestionnaire garantit identités et liens.
 import { createHash, randomUUID } from 'node:crypto';
 import { DomainError, fail } from '../errors.mjs';
+import { touchedIn } from '../data/data-manager.mjs';
 
 const JOURNAL_LIMIT = 2000;
 
@@ -26,6 +27,43 @@ export class ObjectManager {
     this.store = store;
     this.faultInjection = faultInjection;
     this.recentErrors = []; // supervision : échecs non persistés (Administration)
+  }
+
+  // ---------- P2 · Écriture unique ----------
+
+  /**
+   * L'Object Management d'un module : mêmes lectures et commandes, mais `create` et `update`
+   * n'acceptent que les natures dont ce module est propriétaire.
+   */
+  for(moduleId) {
+    const owns = (kind, verb) => {
+      const owner = this.registry.kind(kind).module;
+      if (owner !== moduleId) {
+        fail('WRITE_OUTSIDE_DOMAIN', `Écriture unique : ${moduleId} ne peut pas ${verb} un objet « ${kind} », propriété de ${owner}. Passer par une commande ou un constructeur de ${owner}.`, { principle: 'P2', module: moduleId, kind, owner });
+      }
+    };
+    return new Proxy(this, {
+      get(target, prop) {
+        if (prop === 'module') return moduleId;
+        if (prop === 'create') return (tx, kind, ...rest) => (owns(kind, 'créer'), target.create(tx, kind, ...rest));
+        if (prop === 'update') return (tx, obj, ...rest) => (owns(obj.kind, 'modifier'), target.update(tx, obj, ...rest));
+        const value = target[prop];
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+  }
+
+  /** Contrôle de sortie : tout objet apparu a été créé par `om.create`, et aucun n'a disparu. */
+  #auditDraft(draft, tx) {
+    const before = this.store.state;
+    const created = new Set(tx.created.map((c) => c.id));
+    for (const collection of this.registry.collections()) {
+      if (!touchedIn(draft, collection)) continue; // jamais lue ni écrite : inchangée par construction
+      const was = before[collection] ?? {};
+      const now = draft[collection] ?? {};
+      for (const id in now) if (!(id in was) && !created.has(id)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} est apparu dans « ${collection} » sans passer par om.create.`, { principle: 'P2', collection, id, command: tx.command });
+      for (const id in was) if (!(id in now)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} a disparu de « ${collection} ».`, { principle: 'P2', collection, id, command: tx.command });
+    }
   }
 
   // ---------- identité ----------
@@ -194,6 +232,7 @@ export class ObjectManager {
           }
           const result = fn(tx);
           if (tx.unchanged) return { unchanged: true, value: { ...result, written: false } };
+          this.#auditDraft(draft, tx);
           if (creation) {
             draft.creationRequests[tx.requestKey] = {
               requestKey: tx.requestKey,

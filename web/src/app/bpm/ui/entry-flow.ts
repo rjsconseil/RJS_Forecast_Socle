@@ -1,6 +1,6 @@
 import { Component, computed, DestroyRef, inject, input, output } from '@angular/core';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmBudgetRef, EntryInput } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmBudgetRef, EntryInput } from '../data/bpm-models';
 import { BpmModal } from './modal';
 import { BpmOperationEditor } from './operation-editor';
 import { BpmPageContext, bpmLoader } from './page-context';

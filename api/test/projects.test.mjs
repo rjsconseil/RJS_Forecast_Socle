@@ -60,17 +60,17 @@ test('projets BPM : le projet de vie et les projets standards du user seulement 
   assert.deepEqual(P(socle).tasksOverview(ctx).tasks.map((t) => t.task.title), ['Vols', 'Hôtels', 'JR Pass']);
 });
 
-test('budget attribué : charge non récurrente spéciale du budget de vie, non comptée à sa date ; ventilation qui décrémente le budget', async () => {
+test('budget attribué : réserve sans flux dans le cycle ; ventilation des moyens entre tâches', async () => {
   const { socle } = await makeSocle();
   const { ctx } = await camille(socle);
   const p = await fundedProject(socle, ctx, { amount: 3700 });
   assert.deepEqual([p.detail.budget.allocationCents, p.detail.budget.allocationDate, p.detail.budget.availableCents, p.detail.budget.state], [370000, TODAY, 370000, 'ok']);
 
-  // Charge spéciale : présentée dans le registre du budget de vie, hors totaux et hors chiffres de la période.
+  // Une enveloppe réserve des moyens : elle ne constitue pas un flux bancaire.
   const reg = socle.modules.bpm.reads.register(ctx, {});
   const alloc = reg.lines.find((l) => l.kind === 'projectAllocation');
-  assert.deepEqual([alloc.plannedCents, alloc.plannedDate, alloc.status, alloc.special], [370000, TODAY, 'project', true]);
-  assert.deepEqual([reg.totals.plannedCents, reg.totals.toPayCents, reg.totals.specialCents], [0, 0, 370000]);
+  assert.equal(alloc, undefined);
+  assert.deepEqual([reg.totals.plannedCents, reg.totals.toPayCents, reg.totals.specialCents], [0, 0, 0]);
   assert.deepEqual([value(socle, ctx, 'bpm.charges'), value(socle, ctx, 'bpm.chargesPrevues'), value(socle, ctx, 'bpm.resteAPayer')], [0, 0, 0]);
 
   const [vols, hotels, pass] = p.taskIds;
@@ -143,7 +143,7 @@ test('fin de cycle : le dépassement autorisé est facturé au budget de vie, le
   const early = await rejects(P(socle).billOverruns(ctx, {}), 'FORBIDDEN_BY_RULE');
   assert.equal(early.details.nextBillingDate, '2026-11-30');
   const line = socle.modules.bpm.reads.register(ctx, {}).lines.find((l) => l.kind === 'projectOverrun');
-  assert.deepEqual([line.plannedDate, line.plannedCents, line.special], ['2026-11-30', 25000, true]);
+  assert.equal(line, undefined, 'autoriser des moyens ne crée aucune dépense');
 
   await at('2026-12-01', async () => {
     assert.ok(socle.inspector.checks(socle.state).some((c) => c.rule === 'PRJ-02'), 'à facturer : signalé');
@@ -156,10 +156,8 @@ test('fin de cycle : le dépassement autorisé est facturé au budget de vie, le
     assert.deepEqual([d.budget.deficit, d.budget.state, d.budget.ceilingCents, d.overruns[0].status], [false, 'ok', 125000, 'billed']);
     // Le budget attribué de la ligne spéciale reste le montant initial ; le dépassement facturé est sa propre ligne.
     const nov = socle.modules.bpm.reads.register(ctx, { period: '2026-11' });
-    assert.deepEqual(nov.lines.filter((l) => l.special).map((l) => [l.kind, l.plannedCents, l.statusLabel]), [
-      ['projectAllocation', 100000, 'Charge de projet · comptée à la validation de ses dépenses'],
-      ['projectOverrun', 25000, 'Dépassement facturé en fin de cycle'],
-    ]);
+    assert.deepEqual(nov.lines.filter((l) => l.special), []);
+    assert.equal(value(socle, ctx, 'bpm.charges'), 0, 'la consolidation des moyens ne crée pas de charge');
   });
 });
 

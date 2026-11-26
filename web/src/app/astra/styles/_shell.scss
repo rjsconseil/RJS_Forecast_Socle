@@ -1,0 +1,322 @@
+// BPM-Astra · identité dans la coquille du site (menu latéral, barre du haut, repères de lecture)
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens' as *;
+
+// L'identité d'Astra reste attachée au module, y compris sur les écrans métier partagés.
+#{$app-dense} {
+  --astra-iris: #5947b8;
+  --astra-link: #5141a5;
+  --astra-iris-hover: #443492;
+  --astra-wash: #efedf9;
+  --astra-keyline: #d7d2ed;
+  --astra-night: #19192d;
+  --astra-nav-ink: #d9d8e9;
+  --astra-subtle: #66667a;
+  --astra-panel-pad: clamp(18px, 2vw, 28px);
+  --astra-gap: 20px;
+  --bpm-section-accent: var(--astra-iris);
+  --bpm-section-deep: var(--astra-link);
+  --bpm-section-soft: var(--astra-wash);
+  --bpm-section-line: var(--astra-keyline);
+  --bpm-link: var(--astra-link);
+  --bpm-text: #222237;
+  --bpm-canvas: #f6f6f9;
+  --bpm-surface: #fff;
+  --bpm-muted: var(--astra-subtle);
+  --bpm-line: #e0dfe8;
+  --bpm-soft: #f7f7fa;
+  --bpm-shadow: 0 2px 6px #22203305;
+  --control-line: #c9c8d7;
+  --sober-radius: 13px;
+  --sober-radius-small: 6px;
+  --app-focus-ring: #8873dc;
+  --page-gutter: clamp(18px, 2.6vw, 44px);
+  --page-padding-top: 16px;
+  --sidebar-width: 230px;
+  --btn-primary-surface: var(--astra-iris);
+  --btn-primary-hover: var(--astra-iris-hover);
+  --app-accent: var(--astra-link);
+  --app-accent-line: var(--astra-keyline);
+  --topbar-surface: var(--bpm-surface);
+  --sidebar-surface: var(--astra-night);
+  --topbar-height: 50px;
+  --frame-hairline: var(--bpm-line);
+  background: var(--bpm-canvas);
+  color: var(--bpm-text);
+
+  &[data-section-tone], #main [data-bpm-tone] {
+    --bpm-section-accent: var(--astra-iris);
+    --bpm-section-deep: var(--astra-link);
+    --bpm-section-soft: var(--astra-wash);
+    --bpm-section-line: var(--astra-keyline);
+    --app-accent: var(--astra-link);
+    --space-solid: var(--astra-iris);
+    --btn-primary-surface: var(--astra-iris);
+  }
+
+  &.editorial-style {
+    color-scheme: dark;
+    --astra-link: #c1b4ff;
+    --astra-iris: #6650c0;
+    --astra-iris-hover: #725dce;
+    --astra-wash: #302b46;
+    --astra-keyline: #4b4166;
+    --astra-subtle: #bab8cd;
+    --bpm-canvas: #151520;
+    --bpm-surface: #20202e;
+    --bpm-line: #393847;
+    --bpm-soft: #262634;
+    --bpm-text: #f1f0fa;
+    --bpm-shadow: none;
+    --control-line: #555469;
+  }
+
+  &[data-density='compact'] {
+    --astra-panel-pad: 17px;
+    --astra-gap: 13px;
+    --page-padding-top: 12px;
+    .astra-nav-group a { min-height: 29px; }
+    .astra-nav { gap: 13px; }
+  }
+
+  #main > :is(astra-overview, astra-profile-picker) { display: block; min-width: 0; max-width: none; width: 100%; margin: 0; padding: 0; }
+  .main-shell { min-width: 0; background: var(--bpm-canvas); }
+  #main { min-width: 0; background: var(--bpm-canvas); }
+
+  .astra-mark {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #e5dfff, #afa0e6);
+    box-shadow: inset 0 1px 0 #ffffffaa;
+    &::before {
+      content: '';
+      width: 24px;
+      height: 24px;
+      background: #31274e;
+      clip-path: polygon(50% 0, 60% 35%, 84% 16%, 67% 41%, 100% 50%, 66% 60%, 50% 100%, 40% 65%, 17% 82%, 34% 58%, 0 50%, 34% 40%);
+    }
+  }
+  .sidebar {
+    --ink: #f4f2fc;
+    --sidebar-ink: #f4f2fc;
+    --sidebar-faint: #b8b6ce;
+    --sidebar-line: #3c3b50;
+    --frame-hairline: var(--sidebar-line);
+    --level-hover-surface: #343347;
+    --level-page-ink: var(--astra-nav-ink);
+    --level-ancestor-ink: #e3dafa;
+    --raised-surface: #242336;
+    --frame-shadow-rest: none;
+    background: var(--astra-night);
+    border-color: #28273e;
+    padding: 23px 15px 14px;
+    scrollbar-color: #55516c transparent;
+    scrollbar-width: thin;
+    .astra-brand, .astra-mobile-brand {
+      display: flex; align-items: center; gap: 11px; color: #f7f6ff;
+      font: 670 21px/1.14 var(--font-sans); letter-spacing: -.055em; text-decoration: none;
+    }
+    .astra-brand { padding: 0 8px 22px; border-bottom: 1px solid var(--sidebar-line); margin-bottom: 16px; }
+    .astra-brand small { display: block; color: #bfbbd2; font: 500 11px/1.5 var(--font-sans); letter-spacing: .025em; }
+    .quick-open, .sidebar-account, .profile-switcher { display: none; }
+    :is(.navigation-module-switcher, .sidebar-settings, .navigation-settings-link, .sidebar-tools, .sidebar-bottom) { background: transparent; }
+    :is(.navigation-module-switcher summary, .navigation-settings-link, .sidebar-settings summary, .sidebar-bottom small, .pinned-link) { color: #c2bed5; }
+    .navigation-module-switcher { padding-top: 9px; margin-top: 18px; }
+    .navigation-module-switcher a { color: #e5e1f2; }
+    .navigation-module-switcher a:hover, .navigation-settings-link:hover { background: #353449; color: white; }
+    .sidebar-tools { margin-top: auto; padding-top: 5px; }
+    .sidebar-bottom { margin-top: 10px; color: #aaa7c0; }
+    .sidebar-bottom strong, .appearance-picker { color: #e3dfef; }
+    .sidebar-settings select { color: #222237; background: #f4f2fa; }
+    .local-indicator { background: #8fd2b7; }
+    :focus-visible { outline: 2px solid #c8bdff; outline-offset: 2px; }
+  }
+  .astra-nav { display: grid; gap: 19px; }
+  .astra-nav-group {
+    display: grid; gap: 1px;
+    .astra-nav-label { padding: 0 10px 6px; color: #aaa7c3; font-size: 10px; line-height: 1.4; font-weight: 650; letter-spacing: .115em; text-transform: uppercase; }
+    a {
+      display: flex; align-items: center; gap: 11px; min-height: 32px; padding: 6px 10px; border-radius: 7px;
+      text-decoration: none; font-size: 13px; font-weight: 500; line-height: 1.3; color: var(--astra-nav-ink);
+      [data-astra-icon] { font-size: 16px; color: #acaac4; }
+      &:hover { color: #fff; background: #2f2d45; }
+      &[aria-current='page'] { color: #f8f5ff; font-weight: 640; background: #403953;  }
+    }
+  }
+  .topbar {
+    min-height: var(--topbar-height); padding: 5px var(--page-gutter); gap: 13px;
+    background: var(--bpm-surface); border: none; border-bottom: 1px solid var(--bpm-line); box-shadow: none;
+    .topbar-context { font-size: 11px; letter-spacing: 0; text-transform: none; }
+    .topbar-context a { color: var(--bpm-muted); }
+    .topbar-square { display: none; }
+    .topbar-current { color: var(--bpm-text); font-weight: 650; }
+    .topbar-separator { color: var(--control-line); }
+    .topbar-tool, .topbar-search { box-shadow: none; color: var(--bpm-muted); border: 1px solid var(--bpm-line); border-radius: 7px; background: var(--bpm-surface); }
+    .topbar-tool { min-width: 32px; width: 32px; height: 32px; padding: 6px; }
+    .topbar-search { display: inline-flex; gap: 7px; min-width: 32px; height: 32px; font-size: 12px; }
+    .topbar-tool[aria-pressed='true'] { color: var(--astra-link); background: var(--astra-wash); }
+    .topbar-tool [data-astra-icon], .topbar-search [data-astra-icon] { font: 15px/1 'Astra Icons'; }
+    .topbar-date { color: var(--bpm-muted); font-size: 11px; }
+    .account-chip { background: transparent; border: none; box-shadow: none; }
+    .account-chip-mark { color: var(--astra-link); background: var(--astra-wash); border: 1px solid var(--astra-keyline); }
+    .account-chip[data-variant='topbar'] strong { color: var(--bpm-text); font-size: 13px; font-weight: 620; }
+    .account-chip[data-variant='topbar'] small { color: var(--bpm-muted); font-size: 10px; }
+  }
+  .main-shell #main {
+    :is(rjs-page-banner.rjs-page-banner, .life-projects-banner, rjs-app-hero .app-hero, .ov-hero, .calendar-module-page .page-head) {
+      background: var(--bpm-surface);
+      border: 1px solid var(--bpm-line);
+      box-shadow: inset 0 3px 0 var(--astra-iris), var(--bpm-shadow);
+      border-radius: var(--sober-radius);
+      :is(h1, h1.display) { color: var(--bpm-text); font-weight: 650; letter-spacing: -.045em; }
+      :is(.eyebrow, .ov-kicker, .bpm-banner-back, .app-hero-back) { color: var(--astra-link); }
+    }
+    .page-tabs .page-tab.is-current { color: var(--astra-link); border-color: var(--astra-iris); }
+    .page-toolbar-frame.page-toolbar-frame { background: transparent; }
+    .page-toolbar-frame .page-toolbar-toggle { border-color: var(--control-line); }
+    // Boutons principaux dans la page. Celui de la barre de titre (action de l’écran) a son style dans _toolbar.scss.
+    .page .btn-primary {
+      background: var(--astra-iris); color: white; border-color: var(--astra-iris); border-radius: 8px;
+      &:hover:not(:disabled) { background: var(--astra-iris-hover); border-color: var(--astra-iris-hover); }
+    }
+    .funding-path, .expense-charge-summary { border: 1px solid var(--bpm-line); border-radius: var(--sober-radius); background: var(--bpm-surface); }
+    .funding-path { padding: var(--astra-panel-pad); }
+    .funding-path > div > div { border-radius: 8px; }
+    :is(.bpm-section, .bl-block, .project-register, .objectives-panel) { border-color: var(--bpm-line); }
+    > rjs-journey { border: none; }
+  }
+  .context-dock { margin-inline: var(--page-gutter); }
+  @media (min-width: 821px) {
+    &:not(.is-focus) { grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+  }
+  @media (max-width: 820px) {
+    --page-gutter: 20px;
+    --page-padding-top: 12px;
+    .sidebar { padding: 0; }
+    .sidebar .sidebar-mobile-head { padding: 9px var(--page-gutter); min-height: 54px; }
+    .sidebar .astra-brand { display: none; }
+    .sidebar .astra-mobile-brand { font-size: 19px; }
+    .sidebar .astra-mark { width: 31px; height: 31px; border-radius: 9px; }
+    .sidebar .astra-mark::before { width: 20px; height: 20px; }
+    .mobile-nav-toggle { border: 1px solid #555165; background: #302e45; color: #fff; border-radius: 8px; min-height: 35px; font-size: 13px; }
+    .sidebar .sidebar-navigation:popover-open { width: min(350px, calc(100% - 24px)); border: 1px solid #58516d; color: #eeeafa; background: var(--astra-night); }
+    .navigation-drawer-head { color: #f4f2fc; margin-bottom: 14px; }
+    .navigation-drawer-head button { color: #f4f2fc; background: #343047; border-color: #544e68; }
+    .astra-nav-group a { min-height: 39px; }
+    .topbar { min-height: 46px; }
+  }
+  @media (max-width: 600px) {
+    --page-gutter: 15px;
+    --astra-panel-pad: 17px;
+    --astra-gap: 14px;
+    .topbar { padding: 5px var(--page-gutter); gap: 6px; }
+    .topbar-context { flex: 1 1 0; min-width: 0; }
+    .topbar-context > :not(a:last-of-type) { display: none; }
+    .topbar-context a:last-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .topbar .topbar-actions { flex: none; gap: 7px; }
+    .topbar .topbar-search { width: 32px; padding: 0; }
+    .topbar .topbar-search :is(kbd, .topbar-search-text), .topbar-account .account-chip-text { display: none; }
+    .topbar-account .account-chip-mark { width: 27px; height: 27px; }
+    .topbar-date { display: none; }
+  }
+}
+
+// Repères de lecture dans les écrans de travail.
+#{$main} {
+  .page-guidance-next {
+    display: inline-flex; align-items: center; gap: 7px; width: fit-content;
+    color: var(--astra-link); font-size: 13px; line-height: 1.5; font-weight: 600;
+    text-decoration: underline; text-decoration-color: var(--astra-keyline); text-underline-offset: 4px;
+    &:hover { text-decoration-color: currentColor; }
+  }
+  .page-guidance-next { margin-top: 8px; }
+  .bpm-banner-compact .page-guidance-next { display: none; }
+  .section-band:has(.guided-section-picker) { padding: 6px 10px; background: var(--bpm-soft); gap: 8px; }
+  .guided-section-picker {
+    display: flex; align-items: center; flex: 1; min-width: 0; gap: 9px;
+    > span { color: var(--bpm-muted); font-size: 11px; white-space: nowrap; }
+    select { width: auto; min-width: min(100%, 24ch); max-width: 100%; padding: 5px 8px; color: var(--bpm-text); background: var(--bpm-surface); border: 1px solid var(--control-line); border-radius: 6px; font: 570 12px/1.4 var(--font-sans); }
+  }
+  .page :is(.vision-panel, .mt-block, .bl-block, .objectives-panel, .caps-cockpit, .bc-hero, .funding-path, .calendar-360-overview, .bpm-section) {
+    background-color: var(--bpm-surface); border: 1px solid var(--bpm-line); border-radius: var(--sober-radius);
+    padding: var(--astra-panel-pad); box-shadow: var(--bpm-shadow);
+  }
+  .page :is(.vision-panel, .mt-block, .bl-block, .objectives-panel, .caps-cockpit, .bc-hero, .funding-path, .bpm-section) > header {
+    margin-bottom: 14px;
+    p:not(.eyebrow) { max-width: 78ch; line-height: 1.55; }
+  }
+  .page :is(.bpm-table,.bl-table,.data-table) thead th {
+    background: var(--bpm-soft); color: var(--bpm-muted); font-size: 12px; font-weight: 620;
+    border-bottom: 1px solid var(--bpm-line);
+  }
+  .page :is(.bpm-table,.bl-table,.data-table) tbody tr:focus-within { background: var(--astra-wash); }
+  .bl-history a[aria-current='true'] { box-shadow: inset 3px 0 var(--astra-iris); background: var(--astra-wash); }
+  .funding-path ol { gap: 12px; }
+  .funding-path li { border-radius: 8px; padding: 12px; background: var(--bpm-soft); line-height: 1.45; }
+  .funding-path li a { color: var(--astra-link); margin-top: auto; }
+  .vision-panel > p { font-size: 14px; line-height: 1.55; max-width: 78ch; }
+  .board-column-head { border-bottom: 1px solid var(--bpm-line); }
+  @media (max-width: 600px) {
+    .guided-section-picker { flex-direction: column; align-items: stretch; gap: 3px; }
+    .section-band:has(.guided-section-picker) { flex-wrap: nowrap; }
+    .guided-section-picker select { width: 100%; }
+  }
+}
+
+@media (max-width: 700px) {
+  #{$main} {
+    rjs-page-banner:not(.bpm-banner-compact) bpm-heading:has(.page-guidance-next) .bpm-banner-intro {
+      display: block; font-size: 13px; line-height: 1.5;
+    }
+    .guided-section-picker select { text-overflow: ellipsis; }
+  }
+}
+
+#{$main} {
+  .register-match-count {
+    color: var(--bpm-muted);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .register-disclosures {
+    display: inline-flex;
+    overflow: hidden;
+    border: 1px solid var(--control-line);
+    border-radius: var(--sober-radius-small);
+    background: var(--bpm-surface);
+
+    button {
+      padding: 7px 12px;
+      min-height: 34px;
+      border: 0;
+      background: transparent;
+      color: var(--astra-link);
+      font: 600 13px/1.4 var(--font-sans);
+      cursor: pointer;
+    }
+    button + button { border-inline-start: 1px solid var(--bpm-line); }
+    button:hover:enabled { background: var(--astra-wash); }
+    button:focus-visible { outline: 2px solid var(--app-focus-ring); outline-offset: -3px; }
+    button:disabled { color: var(--bpm-muted); background: var(--bpm-soft); cursor: default; }
+  }
+  .expense-posting {
+    color: var(--status-info);
+    font-weight: 600;
+  }
+  .astra-project-list .astra-project-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    column-gap: 12px;
+    justify-content: space-between;
+    > a:first-child { flex: 1 1 150px; min-width: 0; }
+    .astra-project-movements { font-size: 12px; font-weight: 600; color: var(--astra-link); }
+    .astra-project-movements:hover { text-decoration: underline; }
+  }
+}
+

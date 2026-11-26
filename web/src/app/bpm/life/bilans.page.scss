@@ -1,0 +1,150 @@
+// Bilans : historique à gauche ; à droite le cycle lu en trois sections (résultat, dépenses, projets) ; dessous, tous les cycles.
+:host { display: block; }
+.bl-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  margin-top: 20px;
+}
+.bl-muted { margin: 0; color: var(--muted); font-size: 13px; }
+.bl-kick { margin: 0 0 3px; color: var(--bpm-section-deep, var(--ink)); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.bl-history,
+.bl-block,
+.bl-detail-head {
+  padding: 18px 20px;
+  background: var(--bpm-surface, #fff);
+  border: 1px solid var(--bpm-line, #e2e7ef);
+  border-radius: 6px;
+}
+.bl-history {
+  position: sticky;
+  top: calc(var(--page-top-offset, 120px) + 12px);
+  h2 { margin: 0 0 4px; font-size: 15px; }
+  ol { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+  a {
+    display: grid;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 1px solid var(--bpm-line, #e2e7ef);
+    border-radius: 4px;
+    color: inherit;
+    text-decoration: none;
+    &:hover { border-color: var(--bpm-section-accent, var(--app-accent)); }
+    &[aria-current] { border-color: var(--bpm-section-accent, var(--app-accent)); box-shadow: inset 3px 0 0 var(--bpm-section-accent, var(--app-accent)); background: var(--bpm-section-soft, var(--soft)); }
+  }
+}
+.bl-history-head,
+.bl-history-figures { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.bl-history-figures span { font-weight: 700; font-variant-numeric: tabular-nums; &[data-sign='negative'] { color: var(--status-danger); } }
+.bl-history-figures small { color: var(--muted); font-size: 12px; &[data-ok='true'] { color: var(--status-success); } &[data-ok='false'] { color: var(--status-warning); } }
+.bl-chip {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--status-success-surface);
+  color: var(--status-success);
+  &[data-status='ended'] { background: var(--status-warning-surface); color: var(--status-warning); }
+  &[data-status='current'] { background: var(--bpm-section-soft, var(--soft)); color: var(--bpm-section-deep, var(--ink)); }
+}
+.bl-detail { display: grid; gap: 16px; min-width: 0; }
+.bl-block { display: grid; gap: 14px; min-width: 0; h3 { margin: 0; font-size: 15px; } h2 { margin: 0; font-size: 16px; } h4 { margin: 0 0 6px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; } }
+.bl-block-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+
+// 1. Résultat : l'équation du cycle, deux jauges, les faits à retenir.
+.bl-result { border-top: 3px solid var(--bpm-section-accent, var(--app-accent)); }
+.bl-result-head {
+  display: flex; justify-content: space-between; align-items: start; gap: 16px;
+  h2 { margin: 2px 0 2px; font-size: 19px; }
+  .bl-kick { display: flex; align-items: center; gap: 8px; }
+}
+.bl-equation {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.2fr); align-items: stretch; gap: 10px;
+  > b { align-self: center; color: var(--muted); font-size: 18px; font-weight: 500; }
+  > div { display: grid; gap: 2px; align-content: start; padding: 10px 12px; border: 1px solid var(--bpm-line, #e2e7ef); border-radius: 6px; }
+  span { color: var(--muted); font-size: 12px; font-weight: 600; }
+  strong { font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  small { color: var(--muted); font-size: 12px; }
+  .is-result { background: var(--bpm-section-soft, var(--soft)); border-color: var(--bpm-section-accent, var(--app-accent)); strong { font-size: 20px; } }
+  .is-result[data-sign='negative'] { background: var(--status-danger-surface); border-color: var(--status-danger); }
+}
+.bl-gauges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.bl-gauge {
+  display: grid; gap: 6px;
+  p { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0; font-size: 13px; span { color: var(--muted); font-weight: 600; } strong { font-variant-numeric: tabular-nums; } }
+  small { color: var(--muted); font-size: 12px; }
+  --bl-fill: var(--bpm-section-accent, var(--app-accent));
+  &[data-tone='positive'] { --bl-fill: var(--status-success); }
+  &[data-tone='warning'] { --bl-fill: var(--status-warning); }
+}
+.bl-bar {
+  display: flex; height: 8px; overflow: hidden; border-radius: 999px; background: var(--bpm-line, #e2e7ef);
+  i { display: block; height: 100%; background: var(--bl-fill, var(--bpm-section-accent, var(--app-accent))); }
+  i.is-before { opacity: .45; }
+  &.is-thin { height: 5px; }
+}
+.bl-notes {
+  display: grid; gap: 4px; margin: 0; padding: 10px 0 0; border-top: 1px solid var(--bpm-line, #e2e7ef); list-style: none; font-size: 13px;
+  li { position: relative; padding-left: 14px; color: var(--muted); strong { color: var(--bpm-text, var(--ink)); } }
+  li::before { content: ''; position: absolute; left: 0; top: .5em; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+  li[data-tone='positive']::before { background: var(--status-success); }
+  li[data-tone='warning']::before { background: var(--status-warning); }
+  li[data-tone='negative']::before { background: var(--status-danger); }
+}
+
+// 2. Dépenses : deux listes lisibles d'un coup d'œil.
+.bl-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.bl-rows {
+  margin: 0; padding: 0; list-style: none;
+  li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 7px 0; border-bottom: 1px solid var(--bpm-line, #e2e7ef); font-size: 13px; }
+  li:last-child { border-bottom: 0; }
+  strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  small { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  .bl-bar { align-self: center; }
+  li.is-projects > span { color: var(--bpm-section-deep, var(--ink)); font-weight: 700; }
+  li.is-over > span { font-weight: 600; }
+  li > .bl-over { grid-column: 1 / -1; text-align: left; }
+}
+.bl-over { margin: 0; color: var(--status-danger); font-size: 12px; font-weight: 600; }
+p.bl-over { margin-top: 6px; }
+
+// 3 et 4. Chiffres-clés en ligne, tableaux sobres.
+.bl-stats {
+  display: grid; grid-template-columns: repeat(var(--bl-cols, 5), minmax(0, 1fr)); gap: 8px; margin: 0;
+  > div { display: grid; gap: 2px; align-content: start; min-width: 0; padding: 8px 10px; border: 1px solid var(--bpm-line, #e2e7ef); border-radius: 6px; }
+  dt { color: var(--muted); font-size: 11.5px; font-weight: 600; line-height: 1.3; }
+  dd { margin: 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; small { display: block; color: var(--muted); font-size: 11px; font-weight: 500; white-space: normal; } }
+  &.is-six { --bl-cols: 6; }
+}
+.bl-table-wrap { position: relative; min-width: 0; max-width: 100%; overflow-x: auto; }
+.bl-table-wrap:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 4px; }
+.bl-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+  th, td { padding: 8px 10px 8px 0; border-bottom: 1px solid var(--bpm-line, #e2e7ef); text-align: left; vertical-align: baseline; }
+  thead th { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  tbody tr:last-child > * { border-bottom: 0; }
+  tbody th { font-weight: 600; small { display: block; color: var(--muted); font-weight: 400; } }
+  .num { padding-right: 0; padding-left: 10px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  a { color: inherit; &:hover { color: var(--bpm-section-accent, var(--app-accent)); } }
+}
+.bl-cycle-tag {
+  display: inline-block; margin: 2px 6px 2px 0; padding: 1px 6px; border: 1px solid var(--bpm-line, #e2e7ef); border-radius: 4px;
+  font-size: 12px; font-variant-numeric: tabular-nums; text-decoration: none;
+  &[data-status='current'], &[data-status='ended'] { border-style: dashed; }
+}
+.bl-traces {
+  font-size: 13px;
+  summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+  ul { margin: 8px 0 0; padding: 0; list-style: none; }
+  li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px solid var(--bpm-line, #e2e7ef); strong { white-space: nowrap; } }
+}
+.bl-all { margin-top: 16px; }
+@media (max-width: 1280px) { .bl-stats.is-six { --bl-cols: 3; } }
+@media (max-width: 900px) {
+  .bl-layout, .bl-duo, .bl-gauges { grid-template-columns: minmax(0, 1fr); }
+  .bl-stats, .bl-stats.is-six { --bl-cols: 2; }
+  .bl-equation { grid-template-columns: minmax(0, 1fr); > b { display: none; } }
+  .bl-history { position: static; }
+  .bl-result-head { flex-direction: column; }
+}

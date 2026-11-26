@@ -341,3 +341,6 @@ code.adm-formula {
 .adm-layout.is-specialized {
   grid-template-columns: minmax(0, 1fr);
 }
+
+// Le formulaire du calendrier garde une largeur de lecture complète.
+.cfg-setting.calendar-setting.changed { grid-column: 1 / -1; }

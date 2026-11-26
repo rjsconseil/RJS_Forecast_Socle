@@ -1,4 +1,4 @@
-import { BpmProjection, CoverageStatus, LifeGoal } from '../../core/bpm-models';
+import { BpmProjection, CoverageStatus, LifeGoal } from '../data/bpm-models';
 
 export type ObjectivesView = 'suivi' | 'reperes' | 'projection';
 export const OBJECTIVE_FRAGMENTS = ['life-objectives', 'life-dated-goals', 'objectifs-budgetaires', 'cap-patrimonial', 'life-projection', 'hypotheses'];

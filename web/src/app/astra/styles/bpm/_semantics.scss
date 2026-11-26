@@ -1,0 +1,164 @@
+// BPM-Astra · écrans métier de BPM · sens des couleurs, indépendant de la partie.
+// BPM : vert = positif, rouge = négatif, jaune = à surveiller, bleu = information.
+// La couleur ne dépend jamais de la section de navigation.
+.app-shell[data-density]:is([data-application='bpm'], [data-module='bpm']) {
+  --status-info: #2463a4;
+  --status-info-surface: #edf4fc;
+  --c-info: var(--status-info);
+  --c-info-soft: var(--status-info-surface);
+  --c-unknown: var(--status-info);
+  --c-unknown-soft: var(--status-info-surface);
+  --s-income: var(--status-success);
+  --s-charge: var(--status-danger);
+  --s-rest: var(--status-success);
+  --s-net: var(--status-info);
+  --s-expected: var(--status-info);
+  --s-patrimoine: var(--status-info);
+  --s-cap: var(--status-info);
+  // Plafonds : couleur du niveau de consommation (part du plafond déjà consommée).
+  // Moins de 50 % vert · de 50 à 75 % bleu · de 75 à 90 % jaune · de 90 à 100 % orange · au-delà de 100 % rouge.
+  --cap-low: var(--status-success);
+  --cap-low-ink: var(--status-success);
+  --cap-low-surface: var(--status-success-surface);
+  --cap-mid: var(--status-info);
+  --cap-mid-ink: var(--status-info);
+  --cap-mid-surface: var(--status-info-surface);
+  --cap-high: #d9a600;
+  --cap-high-ink: #846600;
+  --cap-high-surface: #fff8db;
+  --cap-near: #ea6a12;
+  --cap-near-ink: #b14a08;
+  --cap-near-surface: #fff1e6;
+  --cap-over: var(--status-danger);
+  --cap-over-ink: var(--status-danger);
+  --cap-over-surface: var(--status-danger-surface);
+  &.editorial-style {
+    --status-info: #a8ceff;
+    --status-info-surface: #1c304b;
+    --cap-high: #f2c94c;
+    --cap-high-ink: #f2c94c;
+    --cap-high-surface: #393117;
+    --cap-near: #ff9b57;
+    --cap-near-ink: #ff9b57;
+    --cap-near-surface: #3d2617;
+  }
+
+  .main-shell main {
+    [data-bpm-amount][data-bpm-value-tone] {
+      // Le contrat explicite du montant prime sur les anciennes couleurs locales de jauges.
+      color: var(--bpm-value-ink);
+      font-variant-numeric: tabular-nums;
+    }
+    [data-bpm-value-tone='success'] { --bpm-value-ink: var(--status-success); }
+    [data-bpm-value-tone='danger'] { --bpm-value-ink: var(--status-danger); }
+    [data-bpm-value-tone='warning'] { --bpm-value-ink: var(--status-warning); }
+    [data-bpm-value-tone='info'] { --bpm-value-ink: var(--status-info); }
+    [data-bpm-amount][data-bpm-arrow]::before {
+      content: attr(data-bpm-arrow) / '';
+      display: inline;
+      margin-inline-end: .3em;
+      font-weight: 750;
+      color: var(--bpm-flow-ink);
+    }
+    [data-bpm-flow='income'] { --bpm-flow-ink: var(--status-success); }
+    [data-bpm-flow='expense'] { --bpm-flow-ink: var(--status-danger); }
+
+    // Conventions des composants existants, regroupées sur les quatre mêmes jetons.
+    :is(.pos, .positive, [data-sign='positive'], [data-tone='positive']) { color: var(--status-success); }
+    :is(.neg, .negative, .is-negative, [data-sign='negative'], [data-tone='negative']) { color: var(--status-danger); }
+    :is([data-flow='income'], [data-flow='entree']) { --bpm-flow-color: var(--status-success); }
+    :is([data-flow='expense'], [data-flow='charge'], [data-flow='depense']) { --bpm-flow-color: var(--status-danger); }
+    :is(.flow-direction)[data-flow] { color: var(--bpm-flow-color); }
+    :is(.flow-direction) { background: transparent; }
+
+    :is(.page-toolbar-focus, .page-toolbar-result)[data-state='info'] {
+      color: var(--status-info); background: var(--status-info-surface);
+      .page-toolbar-mark { background: var(--status-info); }
+    }
+    @each $state in success, danger, warning {
+      :is(.page-toolbar-focus, .page-toolbar-result)[data-state='#{$state}'] {
+        color: var(--status-#{$state}); background: var(--status-#{$state}-surface);
+        .page-toolbar-mark { background: var(--status-#{$state}); }
+      }
+    }
+    :is(.page-toolbar-focus, .page-toolbar-result)[data-state] :is(strong, p) { color: inherit; }
+
+    :is(.bpm-feedback, .form-feedback[data-state='success'], .alert.ok):not(.is-error):not(.is-warning) {
+      color: var(--status-success); background: var(--status-success-surface);
+    }
+    :is(.bpm-error, .bpm-feedback.is-error, .form-feedback[data-state='error'], .empty-state[role='alert'], .alert.error) {
+      color: var(--status-danger); background: var(--status-danger-surface);
+    }
+    :is(.bpm-missing, .bpm-feedback.is-warning, .bpm-state-cycle, .bc-alert, .alert.warn) {
+      color: var(--status-warning); background: var(--status-warning-surface);
+    }
+    :is(.bpm-error, .empty-state[role='alert'], .bpm-state-cycle, .bc-alert) > :is(h2, p, strong) { color: inherit; }
+    :is(.bc-alert.is-error, .us-alert[role='alert']) { color: var(--status-danger); background: var(--status-danger-surface); }
+    .field-hint[data-state='error'] { color: var(--status-danger); }
+    .form-feedback:is([data-state='busy'], [data-state='draft']) { color: var(--status-info); background: var(--status-info-surface); }
+    :is(.bpm-help, .expense-note, .life-reading-note) { color: var(--status-info); }
+    [data-health='alert'] { --bpm-health-ink: var(--status-danger); --bpm-health-surface: var(--status-danger-surface); }
+    [data-health='ok'] { --bpm-health-ink: var(--status-success); --bpm-health-surface: var(--status-success-surface); }
+    [data-health='watch'] { --bpm-health-ink: var(--status-warning); --bpm-health-surface: var(--status-warning-surface); }
+    [data-health='unknown'] { --bpm-health-ink: var(--status-info); --bpm-health-surface: var(--status-info-surface); }
+    [data-health] .mt-figure { color: var(--bpm-health-ink); }
+    .pm-project-alert[data-health] { color: var(--bpm-health-ink); background: var(--bpm-health-surface); }
+
+    // Les états inconnus, prévus ou en retard sont distincts d'un règlement réussi.
+    :is(.chip, .mt-chip, .pm-life-health, .life-line-status, .metric-check, .status-chip) {
+      &[data-health='ok'], &.ok, &.pos, &.settled, &[data-tone='success'], &[data-status='settled'] {
+        color: var(--status-success); background: var(--status-success-surface);
+      }
+      &[data-health='alert'], &.neg, &.late, &[data-tone='danger'], &[data-status='late'] {
+        color: var(--status-danger); background: var(--status-danger-surface);
+      }
+      &[data-health='watch'], &.warn, &.due, &.estimate, &[data-tone='warning'], &[data-status='due'], &[data-status='pending'] {
+        color: var(--status-warning); background: var(--status-warning-surface);
+      }
+      &[data-health='unknown'], &[data-tone='neutral'], &[data-tone='accent'], &[data-status='unrealized'] {
+        color: var(--status-info); background: var(--status-info-surface);
+      }
+    }
+    .expense-row {
+      &[data-status='recorded'] .expense-state { color: var(--status-success); background: var(--status-success-surface); }
+      &[data-status='pending'] .expense-state { color: var(--status-warning); background: var(--status-warning-surface); }
+      &[data-status='unrealized'] .expense-state { color: var(--status-info); background: var(--status-info-surface); }
+    }
+    :is(.status-dot)[data-health='unknown'] { background: var(--status-info); }
+    .status-dot[data-status='todo'] { background: var(--status-info); }
+    .status-dot[data-status='doing'] { background: var(--status-warning); }
+    .status-dot[data-status='blocked'] { background: var(--status-danger); }
+    .status-dot[data-status='done'] { background: var(--status-success); }
+    :is(.pm-budget, .pm-time)[data-tone='red'] { --pm-color: var(--status-danger); --pm-ink: var(--status-danger); }
+    :is(.pm-budget, .pm-time)[data-tone='green'] { --pm-color: var(--status-success); --pm-ink: var(--status-success); }
+    :is(.pm-budget, .pm-time):is([data-tone='yellow'], [data-tone='orange']) { --pm-color: var(--status-warning); --pm-ink: var(--status-warning); }
+    :is(.pm-budget, .pm-time):is([data-tone='blue'], [data-tone='unknown']) { --pm-color: var(--status-info); --pm-ink: var(--status-info); }
+    .metric-tile[data-tone='success'] .metric-value { color: var(--status-success); }
+    .metric-tile[data-tone='danger'] .metric-value { color: var(--status-danger); }
+    .metric-tile[data-tone='warning'] .metric-value { color: var(--status-warning); }
+    .metric-tile:is([data-tone='accent'], [data-tone='neutral']) .metric-value { color: var(--status-info); }
+    .metric-tile .metric-value[data-value-tone='success'] { color: var(--status-success); }
+    .metric-tile .metric-value[data-value-tone='danger'] { color: var(--status-danger); }
+    .metric-tile .metric-value[data-value-tone='warning'] { color: var(--status-warning); }
+    .metric-tile .metric-value:is([data-value-tone='accent'], [data-value-tone='neutral']) { color: var(--status-info); }
+    .metric-tile[data-symbol='income'] > .metric-symbol { color: var(--status-success); background: var(--status-success-surface); }
+    .metric-tile[data-symbol='expense'] > .metric-symbol { color: var(--status-danger); background: var(--status-danger-surface); }
+    // Les tuiles compactes masquent leur grand pictogramme : le sens reste près du chiffre.
+    .metric-tiles[data-layout='last-wide'] .metric-tile[data-symbol='income'] .metric-value::before {
+      content: '↑' / ''; color: var(--status-success); margin-inline-end: .3em;
+    }
+    .metric-tiles[data-layout='last-wide'] .metric-tile[data-symbol='expense'] .metric-value::before {
+      content: '↓' / ''; color: var(--status-danger); margin-inline-end: .3em;
+    }
+    .flow-direction[data-flow='income'] { color: var(--status-success); background: var(--status-success-surface); }
+    .flow-direction:is([data-flow='expense'], [data-flow='charge']) { color: var(--status-danger); background: var(--status-danger-surface); }
+    .expense-row[data-status='pending'] .expense-state[data-status='late'] { color: var(--status-danger); background: var(--status-danger-surface); }
+    .calendar-amount[data-direction='entree'] { color: var(--status-success); }
+    .calendar-amount[data-direction='sortie'] { color: var(--status-danger); }
+    .calendar-amount[data-direction]::before { display: inline; margin-inline-end: .25em; font-weight: 750; }
+    .calendar-amount[data-direction='entree']::before { content: '↑' / ''; }
+    .calendar-amount[data-direction='sortie']::before { content: '↓' / ''; }
+    .calendar-day-total[data-sign='zero'] { color: var(--status-info); background: var(--status-info-surface); }
+    .vision-net { color: var(--ink); background: var(--raised-surface); }
+  }
+}

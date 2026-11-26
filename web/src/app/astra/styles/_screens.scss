@@ -1,0 +1,73 @@
+// BPM-Astra · écrans métier de BPM présentés par Astra
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens' as *;
+
+// ---------- 5. Écrans métier présentés par Astra ----------
+#{$frame} {
+  // Le titre, la période et les onglets sont dans la barre : l'écran ne les répète pas.
+  :is(rjs-page-banner) :is(.bpm-banner-period, rjs-page-tabs, .page-guidance-next, .bpm-banner-context) { display: none; }
+  :is(rjs-page-banner, rjs-app-hero) .eyebrow { display: none; }
+  rjs-page-banner bpm-heading > a.navigation-system { display: none; }
+  &[data-titled] .astra-screen :is(rjs-page-banner, rjs-app-hero, .astra-heading) { display: none; }
+  // Sur une fiche, le bandeau de l'écran reste (il porte le nom de l'objet) : resserré.
+  :is(rjs-page-banner.rjs-page-banner, .life-projects-banner, rjs-app-hero .app-hero) {
+    padding: var(--a-pad-y) var(--a-pad-x); min-height: 0;
+    :is(h1, h1.display) { font-size: clamp(20px, 1.7vw, 25px); line-height: 1.2; margin: 0; }
+    .bpm-banner-intro { margin-top: 4px; font-size: 13px; max-width: 90ch; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  }
+
+  .astra-screen {
+    h2 { font-size: clamp(15px, 1.15vw, 18px); }
+    h3 { font-size: 14px; }
+
+    // Cadres de contenu : même marge intérieure, même écart entre eux.
+    :is(.bpm-section, .vision-panel, .mt-block, .bl-block, .objectives-panel, .caps-cockpit, .bc-hero, .funding-path, .life-summary) {
+      padding: var(--a-pad-y) var(--a-pad-x);
+    }
+    :is(.bpm-section, .vision-panel, .mt-block, .bl-block, .objectives-panel, .caps-cockpit) > header { margin-bottom: 10px; }
+    // Le titre d'un bloc suffit : la phrase d'explication dessous est retirée.
+    :is(.bpm-section, .vision-panel, .mt-block, .bl-block, .objectives-panel, .caps-cockpit) > header > p:not(.eyebrow) { display: none; }
+    .page > :is(.bpm-help, .bpm-note) { display: none; }
+
+    // Tuiles et listes de chiffres à fond propre : jamais de texte au ras du fond.
+    :is(.flow-totals, .bpm-budget.is-compact) { padding: var(--a-tile-y) var(--a-tile-x); }
+    fieldset { padding: var(--a-tile-y) var(--a-tile-x); }
+    fieldset > legend { padding-inline: 6px; }
+
+    // Tableaux : cellules au large, premier et dernier texte à 14px du bord ; les en-têtes passent à la ligne
+    // plutôt que d'élargir les colonnes, pour que le tableau tienne dans son cadre sans défiler de côté.
+    :is(.bpm-table-wrap, .bl-table-wrap, .table-wrap) { overflow-x: auto; }
+    table:has(> thead) { width: 100%; min-width: 0; table-layout: auto; font-size: 13px; }
+    table:has(> thead) :is(th, td) { padding: 8px 10px; }
+    table:has(> thead) :is(th, td):first-child { padding-left: var(--a-tile-x); }
+    table:has(> thead) :is(th, td):last-child { padding-right: var(--a-tile-x); }
+    table:has(> thead) th { white-space: normal; overflow-wrap: normal; hyphens: auto; vertical-align: bottom; line-height: 1.3; }
+    table:has(> thead) td { white-space: normal; }
+
+    :is(.metric-symbol, .mt-symbol, .pm-disclosure-sign) { font-size: 16px; }
+    button > strong { font-size: 15px; }
+
+    // Rangées de cartes : elles finissent à la même ligne.
+    :has(> li.objective-card) { align-items: stretch; }
+    li.objective-card { height: auto; }
+
+    // Bilans : la liste des cycles accompagne le détail en restant à l'écran.
+    .bl-layout { align-items: start; }
+    .bl-layout > :first-child { position: sticky; top: var(--a-sticky-top); max-height: calc(100vh - var(--a-sticky-top) - 16px); overflow-y: auto; }
+
+    // Tableaux par statut : hauteur d'écran, chaque colonne défile.
+    section.board { align-items: stretch; max-height: none; }
+    section.board > * { max-height: none; overflow-y: visible; padding: 10px; }
+    section.board :is(.card, .task-card) { padding: 12px var(--a-tile-x); }
+    section.board .card :is(h2, h3, h4) { font-size: 14px; line-height: 1.3; }
+    section.board .card p { font-size: 12.5px; line-height: 1.4; }
+    // Le contenu d'une carte reste dans la carte : noms et montants passent à la ligne.
+    section.board :is(.card, .task-card) { min-width: 0; overflow: hidden; }
+    section.board :is(.card, .task-card) * { min-width: 0; max-width: 100%; }
+    section.board :is(.card, .task-card) :is(a, strong, span, dd, dt, h3, h4, p) { white-space: normal; overflow-wrap: anywhere; }
+    section.board :is(.card, .task-card) :is(dl, dl > div) { flex-wrap: wrap; }
+
+  }
+}
+

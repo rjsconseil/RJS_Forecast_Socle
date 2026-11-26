@@ -1,7 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { convertToParamMap } from '@angular/router';
-import { BpmApi } from '../../core/bpm-api.service';
+import { BpmApi } from '../data/bpm-api.service';
 import { BpmEntryFlow } from './entry-flow';
 import { BpmPageContext } from './page-context';
 

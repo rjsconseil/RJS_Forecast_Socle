@@ -4,28 +4,28 @@
       <h2>Projet indisponible</h2>
       <p>{{ error() }}</p>
       <button class="btn btn-secondary" (click)="load()">Réessayer</button
-      ><a routerLink="/app/gestion-projet">← Projets et financement</a>
+      ><a routerLink="/projet-de-vie/projets">← Projets et financement</a>
     </div>
   } @else if (!data()) {
     <div class="empty-state" role="status"><h2>Chargement du projet…</h2></div>
   } @else {
     @let d = data()!;
-    <bpm-page-banner
+    <rjs-page-banner
       class="life-projects-banner project-detail-banner"
       [title]="d.project.project.title"
       [lead]="projectLead()"
       [focus]="pageFocus()"
       [scope]="toolbarScope()"
       [result]="toolbarResult()"
-      [toolsLabel]="d.role === 'standard' ? 'Piloter ce projet' : 'Piloter le projet de vie'"
+      [toolsLabel]="d.role === 'standard' ? 'Ouvrir le projet' : 'Ouvrir le projet de vie'"
     >
       <div primary>
         @if (d.role === 'standard' && d.budget) {
           <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="runNextAction()">{{ nextActionLabel() }}</button>
         } @else if (pendingDecisions().length) {
-          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="decisionsOpen.set(true)">Décider les dépassements</button>
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="decisionsOpen.set(true)">Accorder ou refuser les dépassements</button>
         } @else {
-          <a class="btn btn-primary" routerLink="/projet-de-vie" [queryParams]="lifePeriod() ? { period: lifePeriod() } : {}">Gérer le projet de vie</a>
+          <a class="btn btn-primary" routerLink="/projet-de-vie" [queryParams]="lifePeriod() ? { period: lifePeriod() } : {}">Ouvrir le projet de vie</a>
         }
       </div>
       <div actions>
@@ -39,8 +39,8 @@
           <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="projectEditor.set(true)">Modifier le projet</button>
           @if (workspaceKey() === 'project-tasks') {
             <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', d.project.project.id, 'budget']" queryParamsHandling="preserve">{{ b.regime ? 'Modifier l’enveloppe' : 'Attribuer l’enveloppe' }}</a>
-          } @else if (b.regime) {
-            <button type="button" class="btn btn-secondary" [disabled]="busy()" [attr.aria-expanded]="allocationEditing()" aria-controls="project-envelope-form" (click)="editAllocation()">Modifier l’enveloppe</button>
+          } @else {
+            <button type="button" class="btn btn-secondary" [disabled]="busy()" [attr.aria-expanded]="allocationEditing()" aria-controls="project-envelope-form" (click)="editAllocation()">{{ b.regime ? 'Modifier l’enveloppe' : 'Attribuer l’enveloppe' }}</button>
           }
           @if (d.abandon) {
             <button type="button" class="btn btn-secondary project-abandon-toggle" [disabled]="busy()" [attr.aria-expanded]="abandonOpen()" aria-controls="project-abandon" (click)="abandonOpen.set(!abandonOpen())">Abandonner le projet</button>
@@ -48,12 +48,15 @@
           }
         } @else {
           @if (pendingDecisions().length) {
-            <a class="btn btn-secondary" routerLink="/projet-de-vie" [queryParams]="lifePeriod() ? { period: lifePeriod() } : {}">Gérer le projet de vie</a>
+            <a class="btn btn-secondary" routerLink="/projet-de-vie" [queryParams]="lifePeriod() ? { period: lifePeriod() } : {}">Ouvrir le projet de vie</a>
           }
-          <a class="btn btn-secondary" routerLink="/app/gestion-projet" [queryParams]="d.life?.taskRequests?.length ? { decisions: 'tasks' } : {}">{{ d.life?.taskRequests?.length ? 'Décider les montants des tâches' : 'Piloter les projets financés' }}</a>
+          <a class="btn btn-secondary" routerLink="/projet-de-vie/projets" [queryParams]="d.life?.taskRequests?.length ? { decisions: 'tasks' } : {}">{{ d.life?.taskRequests?.length ? 'Accorder ou refuser les montants des tâches' : 'Ouvrir les projets avec enveloppe' }}</a>
         }
         <!-- Chaque projet BPM est une racine du noyau : sa fiche noyau (dates, tâches, état dérivé) reste à un clic. -->
-        <a class="btn btn-secondary" [routerLink]="['/projects', d.project.project.id]" title="Fiche du projet dans le noyau transverse">Racine noyau ↗</a>
+        @if (d.role === 'standard' && d.budget; as b) {
+          <a class="btn btn-secondary" routerLink="/tableau-de-bord/entrees" [queryParams]="{ budgetId: b.budgetId, period: lifePeriod() || null }">Ouvrir les mouvements du projet</a>
+        }
+        @if (coreLinks) { <a class="btn btn-secondary" [routerLink]="['/projects', d.project.project.id]" title="Fiche du projet dans le noyau transverse">Racine noyau ↗</a> }
       </div>
       <div tools class="life-banner-tools project-detail-tools">
         @if (d.role === 'standard' && d.budget; as b) {
@@ -117,11 +120,11 @@
               <label
                 >Nouvelle dépense pour<select
                   name="task"
-                  [required]="b.taskFundingRequired"
+                  required
                   [disabled]="busy()"
                 >
                   <option value="">
-                    {{ b.taskFundingRequired ? 'Choisir une tâche…' : 'Le projet, sans tâche' }}
+                    Choisir une tâche…
                   </option>
                   @for (t of d.tasks; track t.task.id) {
                     <option [value]="t.task.id">{{ t.task.title }}</option>
@@ -166,7 +169,7 @@
           >
         } @else if (d.life; as life) {
           <span
-            >{{ life.fundedCount }} projet(s) financé(s) ·
+            >{{ life.fundedCount }} projet(s) avec enveloppe ·
             {{ life.allocatedCents | cents }} attribués</span
           >
           @if (life.billable.length) {
@@ -177,7 +180,7 @@
           @if (life.projectCount > life.fundedCount) {
             <a
               class="btn btn-secondary"
-              routerLink="/app/gestion-projet"
+              routerLink="/projet-de-vie/projets"
               [queryParams]="{ filter: 'unfunded' }"
               >Attribuer les enveloppes manquantes</a
             >
@@ -193,20 +196,21 @@
           }
         }
       </div>
-    </bpm-page-banner>
+    </rjs-page-banner>
+      <bpm-compass />
 
     @if (abandonOpen() && d.abandon; as a) {
       <section id="project-abandon" class="project-abandon" aria-labelledby="project-abandon-title">
         <h2 id="project-abandon-title">Abandonner « {{ d.project.project.title }} » ?</h2>
         <ul>
           @if (a.allocationBeforeCents !== null) {
-            <li><strong>{{ a.releasedCents | cents }}</strong> reviennent au budget de vie : l’enveloppe passe de {{ a.allocationBeforeCents | cents }} à {{ a.allocationAfterCents | cents }}, ce qui a été réglé.</li>
+            <li><strong [bpmAmount]="a.releasedCents">{{ a.releasedCents | cents }}</strong> reviennent au budget de vie : l’enveloppe passe de {{ a.allocationBeforeCents | cents }} à {{ a.allocationAfterCents | cents }}, ce qui a été réglé.</li>
           } @else {
             <li>Le projet n’a pas d’enveloppe : rien à rendre au budget de vie.</li>
           }
           <li>{{ a.cancelledEntries }} dépense(s) ou entrée(s) prévue(s) annulée(s), {{ a.stoppedRecurrences }} récurrence(s) arrêtée(s)@if (a.toPayCents) { — {{ a.toPayCents | cents }} ne resteront plus à payer}.</li>
           @if (a.cancelledRequests || a.cancelledOverruns) {
-            <li>{{ a.cancelledRequests }} demande(s) de part et {{ a.cancelledOverruns }} dépassement(s) non facturé(s) annulé(s).</li>
+            <li>{{ a.cancelledRequests }} demande(s) de part et {{ a.cancelledOverruns }} autorisation(s) de dépassement annulée(s).</li>
           }
           <li>Les {{ a.paidCents | cents }} déjà réglés restent dans l’historique du projet et du budget de vie. Chaque part de tâche est ramenée à ce qu’elle a payé.</li>
         </ul>
@@ -280,10 +284,108 @@
     }
     @if (d.role === 'standard' && d.budget; as b) {
       <div class="project-layout">
+        @if (!b.abandoned && detailPanels) {
+          <section class="project-command-center" aria-labelledby="project-command-title">
+            <header class="project-command-heading">
+              <div>
+                <span class="project-section-label">Cockpit du projet</span>
+                <h2 id="project-command-title">Du suivi à l’action</h2>
+                <p>{{ d.project.view.statusLabel }} · {{ doneCount() }} / {{ d.tasks.length }} tâches terminées</p>
+              </div>
+              <button type="button" class="btn btn-secondary" [disabled]="busy() || !!error()" (click)="projectEditor.set(true)">Objectif et dates du projet</button>
+            </header>
+            <div class="project-command-signals" aria-label="Priorités du projet">
+              <button type="button" [attr.aria-pressed]="taskAttention() === 'all' && !query()" (click)="focusTasks('all')"><strong>{{ d.tasks.length }}</strong><span>Toutes les tâches</span></button>
+              <button type="button" [attr.aria-pressed]="taskAttention() === 'blocked'" [class.needs-attention]="commandStats().blocked > 0" (click)="focusTasks('blocked')"><strong>{{ commandStats().blocked }}</strong><span>À débloquer</span></button>
+              <button type="button" [attr.aria-pressed]="taskAttention() === 'late'" [class.needs-attention]="commandStats().late > 0" (click)="focusTasks('late')"><strong>{{ commandStats().late }}</strong><span>Échéance dépassée</span></button>
+              <button type="button" [attr.aria-pressed]="taskAttention() === 'release'" (click)="focusTasks('release')"><strong>{{ commandStats().release }}</strong><span>Parts à libérer</span></button>
+            </div>
+            <div class="project-command-grid">
+              <section class="project-command-task" aria-labelledby="project-command-task-title">
+                <header><h3 id="project-command-task-title">Agir sur une tâche</h3><button type="button" class="text-link" [disabled]="busy() || !!error()" (click)="createTask()">＋ Nouvelle tâche</button></header>
+                @if (commandTask(); as t) {
+                  <label class="project-command-choice" for="project-command-task">Tâche à piloter <span>{{ visibleTasks().length }} dans la sélection</span></label>
+                  <select id="project-command-task" [value]="t.task.id" [disabled]="busy()" (change)="commandTaskId.set($any($event.target).value)">
+                    @for (task of visibleTasks(); track task.task.id) {
+                      <option [value]="task.task.id">{{ task.task.title }}</option>
+                    }
+                  </select>
+                  <ng-container *ngTemplateOutlet="taskStatusButtons; context: { $implicit: t }" />
+                  <div class="project-command-task-context">
+                    <div><span>Temps saisi / prévu</span><strong>{{ t.task.spentHours }} / {{ t.task.plannedHours ?? '—' }} h</strong></div>
+                    <div><span>Échéance</span><strong>{{ (t.task.dueDate | shortDate) || 'À définir' }}</strong></div>
+                    <div [class.is-over-budget]="(t.budget?.remainingCents ?? 0) < 0"><span>Budget restant</span><strong [bpmAmount]="t.budget?.remainingCents">{{ t.budget?.shareCents == null ? 'Sans part' : (t.budget!.remainingCents | cents) }}</strong></div>
+                  </div>
+                  <div class="project-command-buttons">
+                    <button type="button" class="btn btn-secondary" [disabled]="busy() || !!error()" (click)="editTask(t)">Planifier / saisir le temps</button>
+                    <button type="button" class="btn btn-secondary" [disabled]="busy() || !!error()" (click)="showTask(t, 'funding')">{{ t.budget?.request ? 'Examiner la demande' : 'Gérer la part' }}</button>
+                    <button type="button" class="btn btn-primary" [disabled]="busy() || !!error()" (click)="addExpense(t.task.id)">＋ Dépense</button>
+                    <button type="button" class="btn btn-secondary" [disabled]="busy() || !!error()" (click)="addRefund(t.task.id)">＋ Gain / remboursement</button>
+                  </div>
+                  @if (t.task.status === 'done' && (t.budget?.unusedCents ?? 0) > 0) {
+                    <button type="button" class="text-link project-command-release" [disabled]="busy() || !!error()" (click)="releaseShare(b.budgetId, t, b.revision)">Libérer {{ t.budget!.unusedCents | cents }} de part inutilisée</button>
+                  }
+                  <p class="project-command-note">Les dépenses et gains appartiennent à cette tâche. Leur validation choisit l’imputation au cycle ou au patrimoine.</p>
+                } @else {
+                  <div class="project-command-empty"><p>{{ d.tasks.length ? 'Aucune tâche dans cette sélection.' : 'Décomposez votre projet en une première action concrète.' }}</p><button type="button" class="btn btn-secondary" [disabled]="busy() || !!error()" (click)="d.tasks.length ? focusTasks('all') : createTask()">{{ d.tasks.length ? 'Retrouver toutes les tâches' : 'Créer la première tâche' }}</button></div>
+                }
+              </section>
+              <section class="project-command-money" aria-labelledby="project-command-money-title">
+                <header><h3 id="project-command-money-title">Préparer les moyens</h3><span>{{ b.regime ? 'Enveloppe attribuée' : 'À préparer' }}</span></header>
+                <div class="project-command-envelope"><span>Disponible à répartir</span><strong [bpmAmount]="b.regime ? b.availableCents : null">{{ b.regime ? (b.availableCents | cents) : 'À définir' }}</strong></div>
+                <div class="project-command-buttons">
+                  <button type="button" class="btn btn-secondary" [disabled]="busy() || !!error()" (click)="editAllocation()">{{ b.regime ? 'Ajuster l’enveloppe' : 'Attribuer l’enveloppe' }}</button>
+                  <button type="button" class="btn btn-secondary" [disabled]="busy() || !!error() || !(pendingDecisions().length + pendingTaskRequests().length)" (click)="decisionsOpen.set(true)">Accorder ou refuser les demandes · {{ pendingDecisions().length + pendingTaskRequests().length }}</button>
+                </div>
+                <p class="project-command-note">L’enveloppe et les parts réservent des moyens. Elles ne débitent ni le cycle ni le patrimoine.</p>
+                <div class="project-command-due">
+                  <h4>Prochains flux des tâches <span>{{ commandCharges().length }}</span></h4>
+                  @for (charge of commandCharges().slice(0, 3); track charge.id) {
+                    <button type="button" class="project-command-charge" [disabled]="busy() || !!error()" (click)="openCharge(charge)">
+                      <span><strong>{{ charge.label }}</strong><small>{{ commandChargeTask(charge) }} · {{ charge.plannedDate | shortDate }}</small></span>
+                      <span><strong [bpmAmount]="charge.plannedCents" [bpmFlow]="charge.direction">{{ charge.plannedCents | cents }}</strong><small>{{ charge.direction === 'income' ? 'Examiner le gain' : 'Préparer le règlement' }} →</small></span>
+                    </button>
+                  } @empty {
+                    <p class="project-command-note">Aucun flux en attente dans la sélection. Saisissez une dépense ou un gain depuis sa tâche.</p>
+                  }
+                  @if (commandCharges().length > 3) { <p class="project-command-note">Les 3 prochaines échéances sont affichées. Tous les flux restent accessibles depuis leur tâche.</p> }
+                </div>
+              </section>
+            </div>
+            @if (commandTask(); as t) {
+              <section class="project-command-settings" aria-labelledby="project-settings-title">
+                <header><div><span class="project-section-label">Réglages de la tâche</span><h3 id="project-settings-title">{{ t.task.title }}</h3></div><span>Tournez, vérifiez, puis appliquez.</span></header>
+                <div class="project-command-dials">
+                  <section class="project-share-dial" aria-label="Réglage de la part de budget">
+                    <bpm-dial label="Part de l’enveloppe" [value]="commandSharePercent()" [display]="money(commandShareAmount())" [max]="commandShareMax()" [step]="0.1" unit="%" [disabled]="busy() || !!error() || !b.regime || !(b.allocationCents! > 0) || commandShareStale()" (valueChange)="changeCommandShare($event)" />
+                    <p class="dial-current">{{ commandSharePercent() }} % de {{ b.allocationCents | cents }}<br>Part enregistrée : {{ t.budget?.shareCents == null ? 'non attribuée' : (t.budget!.shareCents | cents) }}</p>
+                    @if (commandShareDraft()) { <p class="dial-draft" role="status">Brouillon : {{ commandShareAmount() | cents }} à accorder</p> }
+                    @if (commandShareStale()) { <p class="is-error" role="alert">L’enveloppe a changé. Annulez ce réglage pour repartir des valeurs actuelles.</p> }
+                    <div class="dial-apply-actions"><button type="button" class="btn btn-primary" [disabled]="busy() || !!error() || !commandShareDraft() || commandShareStale()" (click)="applyCommandShare()">Appliquer la part</button><button type="button" class="text-link" [disabled]="busy() || !commandShareDraft()" (click)="resetCommandShare()">Annuler</button></div>
+                    <p class="project-command-note">{{ b.regime && (b.allocationCents ?? 0) > 0 ? 'Ce réglage répartit l’enveloppe, sans créer de dépense. Un dépassement suit la demande d’autorisation habituelle.' : 'Attribuez une enveloppe positive pour régler la part en pourcentage.' }}</p>
+                  </section>
+                  <section class="project-time-dials" aria-label="Réglage du temps de la tâche">
+                    <div class="project-time-dial-pair">
+                      <div><bpm-dial label="Temps prévu" [value]="commandTimeValues().plannedHours ?? 0" [max]="commandTimeMax()" [step]="0.25" unit="h" [disabled]="busy() || !!error() || commandTimeStale()" (valueChange)="changeCommandTime('plannedHours', $event)" /><p class="dial-current">Enregistré : {{ t.task.plannedHours == null ? 'non estimé' : t.task.plannedHours + ' h' }}</p></div>
+                      <div><bpm-dial label="Temps réellement saisi" [value]="commandTimeValues().spentHours" [max]="commandTimeMax()" [step]="0.25" unit="h" [disabled]="busy() || !!error() || commandTimeStale()" (valueChange)="changeCommandTime('spentHours', $event)" /><p class="dial-current">Enregistré : {{ t.task.spentHours }} h au total</p></div>
+                    </div>
+                    <div class="project-dial-range"><span>Plage : 0 – {{ commandTimeMax() }} h</span><button type="button" class="text-link" [disabled]="commandTimeMax() >= 100000" (click)="commandTimeRange.set(commandTimeMax() * 2)">Élargir la plage × 2</button></div>
+                    @if (commandTimeDraft()) { <p class="dial-draft" role="status">Brouillon : {{ commandTimeValues().plannedHours ?? '—' }} h prévues · {{ commandTimeValues().spentHours }} h saisies au total</p> }
+                    @if (commandTimeStale()) { <p class="is-error" role="alert">La tâche a changé. Annulez ce réglage pour repartir des valeurs actuelles.</p> }
+                    <div class="dial-apply-actions"><button type="button" class="btn btn-primary" [disabled]="busy() || !!error() || !commandTimeDraft() || commandTimeStale()" (click)="applyCommandTime()">Appliquer les temps</button><button type="button" class="text-link" [disabled]="busy() || !commandTimeDraft()" (click)="resetCommandTime()">Annuler</button></div>
+                    <p class="project-command-note">Le temps saisi est un cumul réel. Il peut dépasser le temps prévu ; le budget restant est recalculé selon les règles de la tâche.</p>
+                  </section>
+                </div>
+              </section>
+            }
+          </section>
+        }
+        @if (detailPanels) {
         <p class="bpm-note project-reading-scope">
           Enveloppe, parts et règlements cumulés sur toute la durée du projet. Le suivi du cycle
           actuel correspond à {{ d.context.period?.label ?? 'un cycle à configurer' }}.
         </p>
+        }
         @if (workspaceKey() !== 'project-tasks') {
         <section class="project-cockpit" aria-label="Chiffres clés et suivi du projet">
           <div class="cockpit-body">
@@ -344,7 +446,14 @@
                 class="envelope-editor"
                 (submit)="$event.preventDefault(); allocate(b.budgetId, allocationRevision())"
               >
-                <label for="project-envelope">Montant de l’enveloppe (€)</label>
+                @if (b.regime) {
+                  <label for="project-envelope-mode">Ajustement</label>
+                  <select id="project-envelope-mode" [value]="allocationMode()" [disabled]="busy()" (change)="setAllocationMode($any($event.target).value)">
+                    <option value="total">Fixer le montant total</option>
+                    <option value="add">Ajouter des moyens</option>
+                  </select>
+                }
+                <label for="project-envelope">{{ allocationMode() === 'add' ? 'Montant à ajouter (€)' : 'Montant de l’enveloppe (€)' }}</label>
                 <input
                   id="project-envelope"
                   inputmode="decimal"
@@ -354,11 +463,20 @@
                   (input)="allocation.set($any($event.target).value)"
                   aria-describedby="envelope-help"
                 />
+                @if (allocationMode() === 'add' && increasedEnvelope() !== null) {
+                  <p>Nouveau total <strong>{{ increasedEnvelope() | cents }}</strong></p>
+                }
+                <label for="project-envelope-source">Enveloppe financée par</label>
+                <select id="project-envelope-source" [value]="allocationSource()" [disabled]="busy() || b.fundingSourceLocked" (change)="allocationSource.set($any($event.target).value)">
+                  <option value="cycle">Le budget du quotidien (cycle en cours)</option>
+                  <option value="patrimoine">Le patrimoine (hors cycle)</option>
+                </select>
                 <p id="envelope-help">
-                  Ce montant finance le projet. Chaque tâche demande ensuite sa part.
+                  Les dépenses et gains des tâches sont imputés à cette source lorsqu’ils sont réglés : le cycle en cours, ou directement le patrimoine.
+                  @if (b.fundingSourceLocked) { La source est fixée : des règlements y sont déjà imputés. }
                   @if (d.budget && !d.budget.regime && d.budget.paidCents) {
                     Les {{ d.budget.paidCents | cents }} déjà réglés restent dans l’historique du
-                    projet, hors enveloppe : seule une date réelle à partir de la date d’attribution
+                    projet, hors enveloppe : seule une date d’imputation à partir de la date d’attribution
                     la consomme, même si le règlement est saisi plus tard.
                   }
                 </p>
@@ -379,6 +497,7 @@
                 </div>
               </form>
             }
+            @if (detailPanels) {
             <div class="cockpit-details">
               <details [open]="workspaceKey() === 'project-budget'" class="cockpit-disclosure">
                 <summary>Ventilation et cycle actuel</summary>
@@ -386,23 +505,23 @@
                   <dl class="cockpit-facts">
                     <div>
                       <dt>{{ L.shared }}</dt>
-                      <dd>{{ b.sharesCents | cents }}</dd>
+                      <dd [bpmAmount]="b.sharesCents" bpmTone="info">{{ b.sharesCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>{{ L.toShare }}</dt>
-                      <dd>{{ b.availableCents | cents }}</dd>
+                      <dd [bpmAmount]="b.availableCents">{{ b.availableCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Demandes en attente</dt>
-                      <dd>{{ b.pendingRequestsCents | cents }}</dd>
+                      <dd [bpmAmount]="b.pendingRequestsCents" bpmTone="warning">{{ b.pendingRequestsCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Dépassement autorisé</dt>
-                      <dd>{{ b.approvedOverrunCents | cents }}</dd>
+                      <dd [bpmAmount]="b.approvedOverrunCents" bpmTone="warning">{{ b.approvedOverrunCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Remonté au projet de vie ce cycle</dt>
-                      <dd>{{ b.periodPaidCents | cents }}</dd>
+                      <dd [bpmAmount]="b.periodPaidCents" bpmFlow="expense">{{ b.periodPaidCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Cycle actuel</dt>
@@ -411,9 +530,7 @@
                   </dl>
                   <p class="bpm-note">
                     L’enveloppe et les parts portent sur toute la durée du projet. Le montant de ce
-                    cycle suit la date réelle des règlements, même quand leur date prévue appartient
-                    à un autre cycle. Attribuer une enveloppe ne constitue pas une dépense
-                    immédiate.
+                    cycle suit l’imputation choisie à la validation des flux. La date de paiement reste conservée dans l’historique. Attribuer une enveloppe ou une part ne crée aucun flux financier.
                   </p>
                   @if (b.paidBeforeAllocationCents) {
                     <p class="bpm-note">
@@ -442,8 +559,7 @@
                   <header>
                     <h3>Dépassements et fin de cycle</h3>
                     <p>
-                      À la fin du cycle, les dépassements autorisés sont facturés au budget du
-                      projet de vie, puis le budget du projet est revalidé.
+                      Les autorisations ajustent les moyens disponibles sans créer de charge supplémentaire. Seuls les flux des tâches validés sont comptabilisés.
                     </p>
                   </header>
                   @if (d.overruns.length) {
@@ -455,7 +571,7 @@
                             <th scope="col">Objet</th>
                             <th scope="col" class="num">Montant</th>
                             <th scope="col">Décision</th>
-                            <th scope="col">Facturation</th>
+                            <th scope="col">Historique</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -468,14 +584,14 @@
                                   · {{ o.taskTitle }}
                                 }
                               </td>
-                              <td class="num">{{ o.amountCents | cents }}</td>
+                              <td class="num" [bpmAmount]="o.amountCents" bpmTone="warning">{{ o.amountCents | cents }}</td>
                               <td>{{ o.statusLabel }}</td>
                               <td>
                                 {{
                                   o.billedAt
-                                    ? 'Facturé le '
+                                    ? 'Régularisé le '
                                     : o.billingDate
-                                      ? 'Fin de cycle, le '
+                                      ? 'Repère du cycle : '
                                       : ''
                                 }}{{ o.billedAt ?? o.billingDate | shortDate }}
                               </td>
@@ -484,18 +600,6 @@
                         </tbody>
                       </table>
                     </div>
-                    @if (billable()) {
-                      <div class="bpm-actions">
-                        <button
-                          type="button"
-                          class="btn btn-primary"
-                          [disabled]="busy()"
-                          (click)="bill(b.budgetId)"
-                        >
-                          Facturer au budget du projet de vie (fin de cycle)
-                        </button>
-                      </div>
-                    }
                   } @else {
                     <p class="bpm-note">Aucun dépassement demandé pour ce projet.</p>
                   }
@@ -526,23 +630,22 @@
                 <summary>Dépenses sans tâche ({{ unassignedCharges().length }})</summary>
                 <div class="cockpit-disclosure-body">
                   <p class="bpm-note">Historique des dépenses non rattachées à une tâche.</p>
-                  @if (!b.taskFundingRequired) {
-                    <button class="btn btn-secondary" (click)="addExpense(null)">
-                      Ajouter une dépense
-                    </button>
-                  }
                   <ng-container
                     *ngTemplateOutlet="chargeList; context: { $implicit: unassignedCharges() }"
                   />
                 </div>
               </details>
             </div>
+            }
           </div>
         </section>
         }
+        @if (workspaceKey() === 'project-budget' && d.budget) {
+          <bpm-project-flows source="all" [projectId]="d.project.project.id" anchor="project-flow-history" />
+        }
         @if (workspaceKey() === 'project-budget') {
           <section class="bpm-section" aria-label="Parts des tâches à décider">
-            <header><h2>Demandes de part des tâches</h2><a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', d.project.project.id, 'taches']" queryParamsHandling="preserve">Répartir et suivre les tâches</a></header>
+            <header><h2 id="project-requests-title">Demandes de part des tâches</h2><a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', d.project.project.id, 'taches']" queryParamsHandling="preserve">Répartir et suivre les tâches</a></header>
             <bpm-task-requests [requests]="pendingTaskRequests()" [funded]="b.regime" [busy]="busy()" (decide)="decideRequest($event)" />
           </section>
         }
@@ -712,21 +815,7 @@
                         </button>
                       }
                       <footer class="task-card-foot">
-                        <label class="status-change"
-                          >Déplacer vers<select
-                            [attr.aria-label]="'Déplacer vers · ' + t.task.title"
-                            [disabled]="busy()"
-                            (change)="
-                              changeStatus(t, $any($event.target).value, $any($event.target))
-                            "
-                          >
-                            @for (c of columns; track c.id) {
-                              <option [value]="c.id" [selected]="c.id === t.task.status">
-                                {{ c.label }}
-                              </option>
-                            }
-                          </select></label
-                        >
+                        <ng-container *ngTemplateOutlet="taskStatusButtons; context: { $implicit: t }" />
                         <div class="task-card-actions">
                           @if (!tb?.request) {
                             <button
@@ -760,7 +849,7 @@
           </section>
         </section>
         }
-        @if (!editorOpen() && openTask(); as t) {
+        @if (!editorOpen() && !taskEditor() && !lineId() && openTask(); as t) {
           @let tb = t.budget;
           <!-- Fenêtre de la tâche : tout ce que la carte de taille fixe ne montre pas. -->
           <bpm-modal
@@ -786,6 +875,12 @@
                 {{ t.task.startDate ? date(t.task.startDate) : 'à définir' }} · Échéance
                 {{ t.task.dueDate ? date(t.task.dueDate) : 'à définir' }}
               </p>
+              <div class="task-panel-command-bar" aria-label="Commandes de la tâche">
+                <ng-container *ngTemplateOutlet="taskStatusButtons; context: { $implicit: t }" />
+                <button type="button" class="btn btn-secondary" [disabled]="busy() || !!b.abandoned" (click)="editTask(t)">Dates et temps</button>
+                <button type="button" class="btn btn-primary" [disabled]="busy() || !!b.abandoned" (click)="addExpense(t.task.id)">＋ Dépense</button>
+                <button type="button" class="btn btn-secondary" [disabled]="busy() || !!b.abandoned" (click)="addRefund(t.task.id)">＋ Gain</button>
+              </div>
               @if (t.task.description) {
                 <p class="task-panel-description">{{ t.task.description }}</p>
               }
@@ -884,7 +979,7 @@
                 }
                 @if (b.regime) {
                   <details class="task-panel-adjust">
-                    <summary>Ajuster la part accordée</summary>
+                    <summary>Modifier la part accordée</summary>
                     <form
                       class="bpm-inline-form"
                       (submit)="
@@ -913,7 +1008,7 @@
               </section>
               <section id="task-panel-charges" class="task-panel-section">
                 <header class="task-panel-section-head">
-                  <h3>Dépenses de la tâche · {{ taskCharges(t.task.id).length }}</h3>
+                  <h3>Dépenses et gains de la tâche · {{ taskCharges(t.task.id).length }}</h3>
                   <button
                     class="btn btn-secondary"
                     [disabled]="busy()"
@@ -921,16 +1016,14 @@
                   >
                     Ajouter une dépense
                   </button>
-                  @if (t.budget?.paidCents) {
                     <button
                       class="btn btn-secondary"
                       [disabled]="busy()"
                       (click)="addRefund(t.task.id)"
-                      title="Prestation annulée, avoir : le montant reçu se déduit du réglé de la tâche, du projet et du Dépensé du budget de vie."
+                      title="Saisir un gain ou un remboursement depuis cette tâche, avec son imputation au cycle ou au patrimoine."
                     >
-                      Saisir un remboursement
+                      Saisir un gain / remboursement
                     </button>
-                  }
                 </header>
                 @if (t.budget?.paidBeforeCents; as before) {
                   <p class="bpm-note">
@@ -1058,12 +1151,12 @@
                   </div>
                   <div>
                     <dt>Patrimoine</dt>
-                    <dd>{{ b.life?.patrimoine?.stockCents | cents }}</dd>
+                    <dd [bpmAmount]="b.life?.patrimoine?.stockCents">{{ b.life?.patrimoine?.stockCents | cents }}</dd>
                   </div>
                   <div>
                     <dt>Projets de la vie</dt>
                     <dd>
-                      {{ b.life?.fundedCount ?? 0 }} financé(s) sur {{ b.life?.childCount ?? 0 }}
+                      {{ b.life?.fundedCount ?? 0 }} avec enveloppe sur {{ b.life?.childCount ?? 0 }}
                     </dd>
                   </div>
                 </dl>
@@ -1089,56 +1182,38 @@
                   <dl class="cockpit-facts">
                     <div>
                       <dt>Accordé aux projets</dt>
-                      <dd>{{ b.sharesCents | cents }}</dd>
+                      <dd [bpmAmount]="b.sharesCents" bpmTone="info">{{ b.sharesCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Budget initial du cycle</dt>
-                      <dd>{{ b.availableCents | cents }}</dd>
+                      <dd [bpmAmount]="b.availableCents">{{ b.availableCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Solde attendu</dt>
-                      <dd>{{ b.life?.expectedCents | cents }}</dd>
+                      <dd [bpmAmount]="b.life?.expectedCents">{{ b.life?.expectedCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Demandes de tâches en attente</dt>
-                      <dd>{{ b.pendingRequestsCents | cents }}</dd>
+                      <dd [bpmAmount]="b.pendingRequestsCents" bpmTone="warning">{{ b.pendingRequestsCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Dépassements autorisés</dt>
-                      <dd>{{ b.approvedOverrunCents | cents }}</dd>
+                      <dd [bpmAmount]="b.approvedOverrunCents" bpmTone="warning">{{ b.approvedOverrunCents | cents }}</dd>
                     </div>
                     <div>
                       <dt>Charges directes du projet de vie</dt>
-                      <dd>{{ b.unsharedChargesCents | cents }}</dd>
+                      <dd [bpmAmount]="b.unsharedChargesCents">{{ b.unsharedChargesCents | cents }}</dd>
                     </div>
                   </dl>
                   <p class="bpm-note">
                     Le budget du projet de vie ne reçoit pas d’enveloppe : ses ressources sont les
                     entrées du cycle. Il attribue une enveloppe à chacun de ses projets, décide de
-                    leurs dépassements et les facture en fin de cycle.
+                    leurs dépassements. Ces décisions de moyens ne constituent pas des dépenses.
                   </p>
                 </div>
               </details>
               @for (o of l.pendingRequests; track o.id) {
                 <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
-              }
-              @if (l.billable.length) {
-                <div class="bpm-overrun">
-                  <p>
-                    <strong>Fin de cycle :</strong> {{ l.billableCents | cents }} de dépassement(s)
-                    autorisé(s) à facturer au budget du projet de vie.
-                  </p>
-                  <div class="bpm-actions">
-                    <button
-                      type="button"
-                      class="btn btn-primary"
-                      [disabled]="busy()"
-                      (click)="bill()"
-                    >
-                      Facturer au budget du projet de vie
-                    </button>
-                  </div>
-                </div>
               }
               <details [open]="workspaceKey() === 'project-budget'" class="cockpit-disclosure">
                 <summary>
@@ -1170,7 +1245,7 @@
                                   · {{ o.taskTitle }}
                                 }
                               </td>
-                              <td class="num">{{ o.amountCents | cents }}</td>
+                              <td class="num" [bpmAmount]="o.amountCents" bpmTone="warning">{{ o.amountCents | cents }}</td>
                               <td>{{ o.statusLabel }}</td>
                             </tr>
                           }
@@ -1216,6 +1291,14 @@
     }
   }
 </div>
+<ng-template #taskStatusButtons let-t>
+  <div class="task-status-buttons" role="group" [attr.aria-label]="'Statut de ' + t.task.title">
+    @for (col of columns; track col.id) {
+      <button type="button" [attr.data-status]="col.id" [attr.aria-pressed]="t.task.status === col.id" [disabled]="busy() || !!error() || !!data()?.budget?.abandoned" (click)="changeStatus(t, col.id)"><span aria-hidden="true">{{ col.id === 'done' ? '✓' : col.id === 'blocked' ? 'Ⅱ' : col.id === 'doing' ? '▶' : '○' }}</span>{{ col.label }}</button>
+    }
+  </div>
+</ng-template>
+
 <ng-template #fundingFlows>
   @if (shareFlow(); as sf) {
     <section
@@ -1302,19 +1385,27 @@
   <dl class="task-money">
     <div>
       <dt>{{ L.share }}</dt>
-      <dd>{{ tb?.shareCents === null ? L.noShare : (tb?.shareCents ?? null | cents) }}</dd>
+      <dd [bpmAmount]="tb?.shareCents" bpmTone="info">
+        @if (data()?.budget && !data()?.budget?.abandoned) {
+          <!-- La part se décide depuis le chiffre : « À demander » ou le montant ouvrent la fenêtre de part. -->
+          <button type="button" class="task-share-link" [class.is-missing]="tb?.shareCents == null" (click)="shareFor.set(t)"
+                  [attr.aria-label]="(tb?.shareCents == null ? 'Demander une part pour « ' : 'Modifier la part de « ') + t.task.title + ' »'">{{ tb?.shareCents == null ? L.noShare : (tb?.shareCents ?? null | cents) }}</button>
+        } @else {
+          {{ tb?.shareCents === null ? L.noShare : (tb?.shareCents ?? null | cents) }}
+        }
+      </dd>
     </div>
     <div class="money-rest" [class.is-danger]="(tb?.remainingCents ?? 0) < 0">
-      <dt>{{ L.shareRest }}</dt>
-      <dd>{{ tb?.shareCents === null ? 'Non attribué' : (tb?.remainingCents ?? null | cents) }}</dd>
+      <dt>Budget restant selon le temps</dt>
+      <dd [bpmAmount]="tb?.remainingCents">{{ tb?.shareCents == null ? 'Non attribué' : tb?.remainingCents == null ? 'Temps à renseigner' : (tb!.remainingCents | cents) }}</dd>
     </div>
     <div>
       <dt>{{ L.engaged }}</dt>
-      <dd>{{ tb?.engagedCents ?? 0 | cents }}</dd>
+      <dd [bpmAmount]="tb?.engagedCents ?? 0" bpmTone="info">{{ tb?.engagedCents ?? 0 | cents }}</dd>
     </div>
     <div class="money-paid">
-      <dt>{{ L.sharePaid }}</dt>
-      <dd>{{ tb?.paidCents ?? 0 | cents }}</dd>
+      <dt>Dépenses nettes validées</dt>
+      <dd [bpmAmount]="tb?.paidCents ?? 0" bpmFlow="expense">{{ tb?.paidCents ?? 0 | cents }}</dd>
     </div>
   </dl>
 </ng-template>
@@ -1344,9 +1435,10 @@
           ? 'Temps prévu à renseigner'
           : tb?.timeConsumptionPercent + ' % du temps prévu'
       }}
-      · Budget au prorata :
+      · Budget consommé au temps effectif :
       {{ tb?.timeConsumedCents === null ? 'À estimer' : (tb?.timeConsumedCents ?? null | cents) }}
     </p>
+    <p class="bpm-note">Le temps effectif retient le plus élevé du temps saisi et de l’équivalent temps des achats validés. Ils ne sont pas additionnés ; le reste peut être négatif.</p>
   </div>
 </ng-template>
 <ng-template #chargeList let-charges>
@@ -1372,20 +1464,19 @@
         <dl>
           <div>
             <dt>Prévu le {{ c.plannedDate | shortDate }}</dt>
-            <dd>{{ c.plannedCents | cents }}</dd>
+            <dd [bpmAmount]="c.plannedCents" [bpmFlow]="c.direction">{{ c.plannedCents | cents }}</dd>
           </div>
           @if (c.settled) {
             <div>
               <dt>{{ c.refund ? 'Reçu' : 'Réglé' }} le {{ c.realizedDate | shortDate }}</dt>
-              <dd>{{ c.refund ? '−' : '' }}{{ c.realizedCents | cents }}</dd>
+              <dd [bpmAmount]="c.realizedCents" [bpmFlow]="c.direction">{{ c.realizedCents | cents }}</dd>
             </div>
           }
         </dl>
         <small>{{ c.cadenceLabel }}</small>
         @if (c.refund) {
           <p class="bpm-note">
-            Remboursement reçu : déduit du réglé de la tâche, du projet et du Dépensé du budget de
-            vie.
+            Le gain reçu augmente les entrées du cycle d’imputation ou le patrimoine, selon la source choisie.
           </p>
         } @else if (c.beforeAllocation) {
           <p class="bpm-note">
@@ -1398,13 +1489,13 @@
           </p>
         } @else if (!c.settled) {
           <p class="bpm-note">
-            La date réelle du paiement déterminera sa période. La date prévue sera conservée.
+            Le flux est imputé au cycle ou au patrimoine lors de sa validation. Sa date réelle de paiement reste conservée.
           </p>
         }
         <div class="task-charge-actions">
           <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)">Détail et modification</button>
           @if (!c.settled && settling() !== c.id) {
-            <button type="button" class="text-link" [disabled]="busy()" (click)="settling.set(c.id)">Valider le règlement</button>
+            <button type="button" class="text-link" [disabled]="busy()" (click)="openCharge(c)">Valider le règlement</button>
           }
         </div>
         @if (!c.settled) {
@@ -1471,4 +1562,10 @@
     (closed)="closeTask()"
     (saved)="taskSaved($event)"
   />
+}
+
+@if (shareFor(); as st) {
+  @if (data()?.budget; as sb) {
+    <bpm-task-share-dialog [budget]="sb" [task]="st" (closed)="shareFor.set(null)" (saved)="shareSaved($event)" />
+  }
 }

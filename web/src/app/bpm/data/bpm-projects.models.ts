@@ -1,0 +1,325 @@
+import { RegisterLine } from './bpm-models';
+import { ProjectSummary, TaskView } from '../../core/models';
+
+/**
+ * Projets de la vie dans BPM (contrats de `api/src/modules/bpm/projects.mjs`). Les projets et les tâches sont ceux
+ * du noyau ; BPM porte leur budget : montant attribué par le budget de vie, parts des tâches, dépassements, retours.
+ * Montants en centimes entiers.
+ */
+export type ProjectBudgetState = 'unallocated' | 'ok' | 'at-risk' | 'deficit';
+export type OverrunStatus = 'pending' | 'approved' | 'refused' | 'billed' | 'cancelled';
+export type OverrunReason = 'ventilation' | 'reglement';
+export type ReturnCadence = 'once' | 'weekly' | 'monthly' | 'yearly';
+
+export interface TaskBudgetRequest {
+  id: string;
+  revision: number;
+  budgetId: string;
+  taskId: string;
+  coreProjectId: string;
+  taskTitle: string;
+  budgetName: string;
+  amountCents: number;
+  grantedCents: number | null;
+  note: string | null;
+  status: 'pending' | 'awaiting-life' | 'approved' | 'refused' | 'cancelled';
+  statusLabel: string;
+  requestedAt: string;
+  decidedAt: string | null;
+  overrunId: string | null;
+}
+
+export interface BpmProjectInput {
+  requestKey: string;
+  title: string;
+  description?: string;
+  priority?: 'low' | 'medium' | 'high';
+  startDate?: string | null;
+  dueDate?: string | null;
+  amount?: number | null;
+  fundingSource?: FundingSource;
+}
+
+export interface BpmTaskInput {
+  requestKey: string;
+  title: string;
+  description?: string;
+  projectId?: string | null;
+  status?: 'todo' | 'blocked' | 'doing' | 'done';
+  plannedHours?: number | null;
+  spentHours?: number;
+  startDate?: string | null;
+  dueDate?: string | null;
+}
+
+export interface TaskReturn {
+  label: string;
+  amountCents: number;
+  cadence: ReturnCadence;
+  cadenceLabel?: string;
+  entryId: string | null;
+  entryKind: 'operation' | 'recurrence' | null;
+  triggeredAt: string | null;
+}
+
+export interface ProjectOverrun {
+  id: string;
+  revision: number;
+  budgetId: string;
+  taskId: string | null;
+  reason: OverrunReason;
+  reasonLabel: string;
+  amountCents: number;
+  note: string | null;
+  status: OverrunStatus;
+  statusLabel: string;
+  requestedAt: string;
+  decidedAt: string | null;
+  billingDate: string | null;
+  periodKey: string | null;
+  billedAt: string | null;
+  taskTitle: string | null;
+  budgetName: string | null;
+  coreProjectId: string | null;
+}
+
+/** Variante du budget d'un projet : `standard` (projet de la vie financé) ou `life` (projet de vie, non standard). */
+export type ProjectBudgetKind = 'standard' | 'life';
+
+export interface LifeFundingRow {
+  budgetId: string;
+  coreProjectId: string;
+  name: string;
+  regime: boolean;
+  state: ProjectBudgetState;
+  allocationCents: number | null;
+  initialAllocationCents: number | null;
+  allocationDate: string | null;
+  allocationPeriodKey: string | null;
+  approvedOverrunCents: number;
+  billedOverrunCents: number;
+  pendingOverrunCents: number;
+  paidCents: number;
+  remainingCents: number | null;
+  byPeriod: Record<string, number>;
+  overruns: { id: string; status: ProjectOverrun['status']; statusLabel: string; amountCents: number; periodKey: string | null; billingDate: string | null }[];
+}
+
+/** Financement des projets fils par le budget de vie, cycle par cycle. */
+export interface LifeFunding {
+  periods: { key: string; label: string; start: string; end: string; status: string }[];
+  rows: LifeFundingRow[];
+  totals: { byPeriod: Record<string, number>; paidCents: number; allocatedCents: number };
+}
+
+/** Extension de la variante non standard : accès au projet de vie, au patrimoine, au cycle et aux budgets fils. */
+export interface LifeBudgetExtension {
+  unique: true;
+  compositionId: string;
+  lifeProjectId: string;
+  patrimoineId: string;
+  patrimoine: { stockCents: number | null; objectiveCents: number | null; openingStockCents: number | null };
+  period: { key: string; label: string; start: string; end: string } | null;
+  expectedCents: number | null;
+  projectsPaidCents: number | null;
+  childCount: number;
+  fundedCount: number;
+  children: ProjectBudget[];
+  funding: LifeFunding | null;
+}
+
+/** Source de financement d'un projet de la vie (docs/COMPTABILITE-PROJET-DE-VIE.md). */
+export type FundingSource = 'cycle' | 'patrimoine';
+export const FUNDING_SOURCE_LABEL: Record<FundingSource, string> = { cycle: 'Cycle budgétaire', patrimoine: 'Patrimoine (hors cycle)' };
+
+export interface ProjectBudget {
+  budgetId: string;
+  /** Préférence historique du projet ; l’imputation effective appartient au flux validé de la tâche. */
+  fundingSource: FundingSource;
+  fundingSourceLocked?: boolean;
+  /** Paramètre différenciant : `life` = projet de vie unique, non standard, rattaché au patrimoine. */
+  kind: ProjectBudgetKind;
+  nonStandard: boolean;
+  name: string;
+  coreProjectId: string;
+  parentBudgetId: string | null;
+  revision: number;
+  regime: boolean;
+  taskFundingRequired: boolean;
+  allocationCents: number | null;
+  allocationDate: string | null;
+  initialAllocationCents: number | null;
+  approvedOverrunCents: number;
+  billedOverrunCents: number;
+  pendingOverrun: ProjectOverrun | null;
+  ceilingCents: number | null;
+  sharesCents: number;
+  availableCents: number | null;
+  engagedCents: number;
+  paidCents: number;
+  remainingCents: number | null;
+  toPayCents: number;
+  uncommittedCents: number | null;
+  periodPaidCents: number | null;
+  pendingRequestsCents: number;
+  paidBeforeAllocationCents: number;
+  unsharedChargesCents: number;
+  state: ProjectBudgetState;
+  deficit: boolean;
+  nextBillingDate: string | null;
+  byTask: Record<string, { engagedCents: number; paidCents: number; unbounded: boolean }>;
+  shares: Record<string, number>;
+  returns: Record<string, TaskReturn>;
+  /** Projet abandonné : quand, pourquoi, et ce que l'abandon a rendu au budget de vie. */
+  abandoned: (ProjectAbandonPreview & { at: string; reason: string | null }) | null;
+  life: LifeBudgetExtension | null;
+}
+
+/** Ce qu'abandonner un projet changerait (aperçu avant confirmation), ou ce qu'il a changé. */
+export interface ProjectAbandonPreview {
+  paidCents: number;
+  allocationBeforeCents: number | null;
+  allocationAfterCents: number | null;
+  releasedCents: number;
+  cancelledEntries: number;
+  stoppedRecurrences: number;
+  cancelledRequests: number;
+  cancelledOverruns: number;
+  toPayCents: number;
+}
+
+export const isLifeBudget = (b: ProjectBudget | null | undefined): b is ProjectBudget & { life: LifeBudgetExtension } => !!b && b.kind === 'life' && !!b.life;
+
+export interface ProjectsContext {
+  user: { id: string; label: string; userType: string };
+  lifeBudget: { budgetId: string; name: string; coreProjectId: string };
+  period: { key: string; label: string; start: string; end: string } | null;
+  cycleState: 'active' | 'to_configure';
+  calculationDate: string;
+  revision: number;
+}
+
+export interface BpmProjectCard extends ProjectSummary {
+  role: 'life' | 'standard';
+  budget: ProjectBudget | null;
+}
+
+export interface LifeSummary {
+  budgetId: string;
+  projectCount: number;
+  fundedCount: number;
+  allocatedCents: number;
+  paidCents: number;
+  approvedOverrunCents: number;
+  sharesCents: number;
+  availableCents: number;
+  remainingCents: number;
+  periodPaidCents: number | null;
+  taskRequests: TaskBudgetRequest[];
+  deficitCount: number;
+  pendingRequests: ProjectOverrun[];
+  billable: ProjectOverrun[];
+  billableCents: number;
+  nextBillingDate: string | null;
+}
+
+export interface BpmProjectsOverview {
+  context: ProjectsContext;
+  lifeProject: BpmProjectCard;
+  life: LifeSummary;
+  projects: BpmProjectCard[];
+  candidates: { projectId: string; title: string; taskCount: number }[];
+}
+
+/** Financement d'une tâche, calculé par le middleware Budget (`taskFunding`). */
+export interface TaskBudget {
+  shareCents: number | null;
+  engagedCents: number;
+  paidCents: number;
+  /** Charges prévues non encore réglées. */
+  openCents: number;
+  /** Réglé avant l'attribution de l'enveloppe : hors part, gardé dans l'historique. */
+  paidBeforeCents: number;
+  /** Tâche terminée sans charge à régler : part non consommée, à rendre à l'enveloppe. */
+  unusedCents: number;
+  /** Part × pourcentage du temps restant ; négatif en cas de dépassement, inconnu sans temps prévu. */
+  remainingCents: number | null;
+  /** Part moins dépenses nettes validées, distincte du budget au temps. */
+  cashRemainingCents?: number | null;
+  timeRemainingPct?: number | null;
+  over: boolean;
+  unbounded: boolean;
+  return: TaskReturn | null;
+  request: TaskBudgetRequest | null;
+  /** Consommation effective : maximum entre temps saisi et équivalent temps des achats validés. */
+  timeConsumptionPercent: number | null;
+  workConsumptionPercent?: number | null;
+  purchaseConsumptionPercent?: number | null;
+  purchaseEquivalentHours?: number | null;
+  timeConsumedCents: number | null;
+  timeRemainingCents: number | null;
+}
+
+export interface BpmTaskCard extends TaskView {
+  projectRole: 'life' | 'standard' | null;
+  budgetId: string | null;
+  budget: TaskBudget | null;
+  affectedProjects?: ProjectSummary[];
+  effects?: { module: string; kind: string; message: string; ids: string[] }[];
+}
+
+export interface BpmTasksOverview {
+  context: ProjectsContext;
+  projects: { projectId: string; title: string; role: 'life' | 'standard'; budgetId: string }[];
+  tasks: BpmTaskCard[];
+  attachable: BpmTaskCard[];
+}
+
+export interface CycleCheck {
+  code: string;
+  level: 'ok' | 'info' | 'warning';
+  taskId: string | null;
+  message: string;
+  /** Geste proposé par le contrôle (ex. ramener l'enveloppe d'un projet terminé à ce qui a servi). */
+  action?: { kind: 'allocate'; amountCents: number; label: string };
+}
+
+export interface ProjectChargeLine extends Omit<RegisterLine, 'status' | 'statusLabel' | 'centerKnown'> {
+  validated: boolean;
+  beforeAllocation: boolean;
+  /** Remboursement reçu par le projet : il se déduit du réglé de sa tâche. */
+  refund?: boolean;
+}
+
+export interface BpmProjectDetail {
+  context: ProjectsContext;
+  role: 'life' | 'standard';
+  project: ProjectSummary;
+  budget: ProjectBudget | null;
+  tasks: BpmTaskCard[];
+  attachable: BpmTaskCard[];
+  overruns: ProjectOverrun[];
+  checks: CycleCheck[];
+  requests: TaskBudgetRequest[];
+  charges: ProjectChargeLine[];
+  /** Aperçu d'un abandon ; null pour le projet de vie ou un projet déjà abandonné. */
+  abandon?: ProjectAbandonPreview | null;
+  life: (LifeSummary & { projects: { projectId: string; title: string; budget: ProjectBudget }[] }) | null;
+  effects?: { module: string; kind: string; message: string; ids: string[] }[];
+}
+
+/** Détails d'un refus « autorisation de dépassement requise » (API). */
+export interface OverrunRefusal {
+  reason: OverrunReason;
+  budgetId: string;
+  taskId: string | null;
+  overrunCents: number;
+  ceilingCents: number;
+}
+
+export const BUDGET_STATE_LABEL: Record<ProjectBudgetState, string> = {
+  unallocated: 'Sans budget attribué',
+  ok: 'Dans son budget',
+  'at-risk': 'Engagé au-delà du budget',
+  deficit: 'En dépassement',
+};

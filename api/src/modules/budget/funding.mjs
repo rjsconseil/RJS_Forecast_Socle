@@ -1,186 +1,12 @@
-// Financement des projets de la vie — middleware Budget (niveau 2).
-//
-// Le budget de vie (Budget « Projet de vie ») attribue une enveloppe à chacun de ses Budgets standards ; chaque projet
-// la répartit en parts de ses tâches ; tout dépassement est autorisé par le budget de vie, puis facturé à la fin de la
-// période du cycle ; une tâche terminée peut retourner un revenu au budget de vie. Ce module porte les règles, les
-// chiffres et les commandes de ce financement. L'application BPM (niveau 3) les présente et les enchaîne ; elle fournit
-// la seule donnée qu'elle porte : la période du cycle (extension `fundingPeriod`).
-//
-// Charges de projet [P] : seules les charges qu'un projet a validées comme réglées depuis la date d'attribution
-// comptent dans les dépenses du budget de vie, à leur date réelle.
+// Réservations de moyens des projets de la vie — middleware Budget (niveau 2).
+// Enveloppes, parts et autorisations ne créent aucun flux financier. Seuls les mouvements des tâches
+// validés sont imputés, sur leur date comptable et selon leur source cycle/patrimoine.
 import { fail } from '../../socle/errors.mjs';
 import { today } from '../../socle/clock.mjs';
 import { expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
 import { CADENCE_LABEL, CADENCES, occurrenceDates } from './recurrence.mjs';
-
-const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
-export const fmt = (cents) => euro.format(cents / 100).replace(/[\u00a0\u202f]/g, ' ');
-export const frDate = (d) => (d ? d.split('-').reverse().join('/') : '');
-export const sum = (list, f = (x) => x) => list.reduce((s, x) => s + (f(x) ?? 0), 0);
-const addDays = (ymd, n) => {
-  const [y, m, d] = ymd.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
-};
-
-export const OVERRUN_REASONS = { ventilation: 'Part de budget d’une tâche', reglement: 'Règlement d’une dépense' };
-export const OVERRUN_STATUS = {
-  pending: 'En attente de la décision du budget de vie',
-  approved: 'Autorisé · facturé au budget de vie en fin de cycle',
-  refused: 'Refusé par le budget de vie',
-  billed: 'Facturé au budget de vie',
-  cancelled: 'Annulé · projet abandonné',
-};
-const RETURN_CADENCES = ['once', ...CADENCES];
-/** Engagé d'une récurrence sans date de fin : ses occurrences des 12 prochains mois [P]. */
-const HORIZON_DAYS = 365;
-
-
-/** Projet standard financé par le budget de vie : un montant lui est attribué (régime des charges de projet). */
-export const inRegime = (b) => b?.role === 'standard' && Number.isInteger(b.allocationCents) && typeof b.allocationDate === 'string';
-export const standardOfProject = (state, coreProjectId) => Object.values(state.budgets).find((b) => b.role === 'standard' && b.coreProjectId === coreProjectId) ?? null;
-export const sharesOf = (b) => b.taskSharesCents ?? {};
-export const returnsOf = (b) => b.taskReturns ?? {};
-export const overrunsOf = (state, budgetId) => Object.values(state.projectOverruns ?? {}).filter((x) => x.budgetId === budgetId);
-export const requestsOf = (state, budgetId) => Object.values(state.taskBudgetRequests ?? {}).filter((x) => x.budgetId === budgetId);
-export const openRequest = (x) => ['pending', 'awaiting-life'].includes(x.status);
-export const REQUEST_STATUS = { pending: 'À valider par le projet', 'awaiting-life': 'Autorisation du budget du projet de vie attendue', approved: 'Montant accordé', refused: 'Demande refusée', cancelled: 'Demande annulée' };
-
-/** Projet abandonné : son enveloppe est ramenée à ce qu'il a réglé, il ne reçoit plus d'écriture tant qu'il n'est pas repris. */
-export const isAbandoned = (b) => !!b?.abandonedAt;
-export function abandonedRefusal(b) {
-  fail('FORBIDDEN_BY_RULE', `Le projet « ${b.name} » est abandonné : reprenez-le avant d’y saisir une dépense ou de modifier son financement.`, { budgetId: b.id, reason: 'abandoned' });
-}
-
-export function requestView(state, x) {
-  const b = state.budgets[x.budgetId];
-  return { ...structuredClone(x), statusLabel: REQUEST_STATUS[x.status], taskTitle: state.tasks[x.taskId]?.title ?? '', budgetName: b?.name ?? '', coreProjectId: b?.coreProjectId ?? null, grantedCents: sharesOf(b ?? {})[x.taskId] ?? null };
-}
-
-/** Charge d'un projet validée comme réglée pour ses besoins, depuis l'attribution : comptée dans le budget de vie. */
-export const isValidatedCharge = (o, b) => inRegime(b) && o.budgetId === b.id && o.direction === 'charge' && o.status === 'realized' && o.realizedDate >= b.allocationDate;
-/**
- * Remboursement d'un projet financé [P] : entrée reçue sur le budget du projet depuis l'attribution (prestation annulée,
- * avoir…). Il se déduit des charges réglées du projet, de sa tâche et de ce que le projet coûte au budget de vie, à sa date réelle.
- */
-export const isValidatedRefund = (o, b) => inRegime(b) && o.budgetId === b.id && o.direction === 'income' && o.status === 'realized' && o.realizedDate >= b.allocationDate;
-/** Mouvement validé d'un projet : charge réglée (+) ou remboursement reçu (−), en centimes ; 0 sinon. */
-export const projectMoveCents = (o, b) => (isValidatedCharge(o, b) ? o.realizedAmountCents : isValidatedRefund(o, b) ? -o.realizedAmountCents : 0);
-export const isValidatedMove = (o, b) => isValidatedCharge(o, b) || isValidatedRefund(o, b);
-
-/**
- * Charges du projet qui forment son engagé : réglées validées, prévues ponctuelles, occurrences attendues.
- * Les règlements antérieurs à l'attribution restent dans l'historique du projet, hors budget attribué.
- */
-export function chargeItems(state, b, now) {
-  const from = inRegime(b) ? b.allocationDate : null;
-  const horizon = addDays(now, HORIZON_DAYS);
-  const items = [];
-  const materialized = new Set();
-  for (const o of Object.values(state.operations)) {
-    if (o.budgetId !== b.id) continue;
-    if (o.recurrenceId) materialized.add(`${o.recurrenceId}@${o.occurrenceDate}`);
-    if (o.status === 'cancelled') continue;
-    if (isValidatedRefund(o, b)) items.push({ taskId: o.taskId ?? null, cents: -o.realizedAmountCents, paid: true, refund: true });
-    if (o.direction !== 'charge') continue;
-    if (o.status === 'realized') {
-      if (from && o.realizedDate < from) items.push({ taskId: o.taskId ?? null, cents: o.realizedAmountCents, paid: false, before: true });
-      else items.push({ taskId: o.taskId ?? null, cents: o.realizedAmountCents, paid: true });
-    } else items.push({ taskId: o.taskId ?? null, cents: o.amountCents, paid: false });
-  }
-  for (const r of Object.values(state.recurrences ?? {})) {
-    if (r.budgetId !== b.id || r.direction !== 'charge' || r.cancelledAt) continue;
-    const start = from && from > r.firstDate ? from : r.firstDate;
-    for (const d of occurrenceDates(r, start, r.endDate ?? horizon)) {
-      if (!materialized.has(`${r.id}@${d}`)) items.push({ taskId: r.taskId ?? null, cents: r.amountCents, paid: false, unbounded: !r.endDate });
-    }
-  }
-  return items;
-}
-
-export function overrunView(state, x) {
-  const b = state.budgets[x.budgetId];
-  return {
-    ...structuredClone(x),
-    statusLabel: OVERRUN_STATUS[x.status],
-    reasonLabel: OVERRUN_REASONS[x.reason],
-    taskTitle: x.taskId ? state.tasks[x.taskId]?.title ?? null : null,
-    budgetName: b?.name ?? null,
-    coreProjectId: b?.coreProjectId ?? null,
-  };
-}
-
-/**
- * Chiffres de financement d'un projet standard (centimes) : attribué, dépassements, parts, engagé, réglé validé, reste.
- * Le réglé de la période du cycle est ajouté par l'application, qui porte le cycle.
- */
-export function fundingFigures(state, b, now = today()) {
-  const regime = inRegime(b);
-  const overruns = overrunsOf(state, b.id);
-  const approved = overruns.filter((x) => x.status === 'approved');
-  const approvedCents = sum(approved, (x) => x.amountCents);
-  const billedCents = sum(overruns.filter((x) => x.status === 'billed'), (x) => x.amountCents);
-  const pending = overruns.find((x) => x.status === 'pending') ?? null;
-  const shares = sharesOf(b);
-  const sharesCents = sum(Object.values(shares));
-  const items = chargeItems(state, b, now);
-  const allocationCents = regime ? b.allocationCents : null;
-  const ceilingCents = regime ? allocationCents + approvedCents : null;
-  const byTask = {};
-  /** Réglé avant l'attribution de l'enveloppe, par tâche : hors part, gardé dans l'historique. */
-  const beforeByTask = {};
-  for (const i of items) {
-    if (i.taskId && i.before) beforeByTask[i.taskId] = (beforeByTask[i.taskId] ?? 0) + i.cents;
-    if (!i.taskId || i.before) continue;
-    const t = (byTask[i.taskId] ??= { engagedCents: 0, paidCents: 0, unbounded: false });
-    t.engagedCents += i.cents;
-    if (i.paid) t.paidCents += i.cents;
-    if (i.unbounded) t.unbounded = true;
-  }
-  const current = items.filter((i) => !i.before);
-  const paidCents = sum(current.filter((i) => i.paid), (i) => i.cents);
-  const engagedCents = sum(current, (i) => i.cents);
-  const deficit = regime && approvedCents > 0;
-  const billing = approved.map((x) => x.billingDate).filter(Boolean).sort();
-  return {
-    budgetId: b.id,
-    /** Paramètre différenciant : `standard` (projet de la vie financé) ou `life` (projet de vie, non standard). */
-    kind: 'standard',
-    nonStandard: false,
-    name: b.name,
-    coreProjectId: b.coreProjectId,
-    parentBudgetId: b.parentBudgetId,
-    revision: b.revision,
-    regime,
-    taskFundingRequired: !!b.taskFundingRequired,
-    allocationCents,
-    allocationDate: regime ? b.allocationDate : null,
-    /** Montant attribué hors dépassements déjà facturés (ligne « Budget attribué » du budget de vie). */
-    initialAllocationCents: regime ? allocationCents - billedCents : null,
-    approvedOverrunCents: approvedCents,
-    billedOverrunCents: billedCents,
-    pendingOverrun: pending ? overrunView(state, pending) : null,
-    ceilingCents,
-    sharesCents,
-    availableCents: regime ? ceilingCents - sharesCents : null,
-    engagedCents,
-    paidCents,
-    remainingCents: regime ? ceilingCents - paidCents : null,
-    toPayCents: engagedCents - paidCents,
-    uncommittedCents: regime ? ceilingCents - engagedCents : null,
-    pendingRequestsCents: sum(requestsOf(state, b.id).filter(openRequest), (x) => Math.max(0, x.amountCents - (shares[x.taskId] ?? 0))),
-    paidBeforeAllocationCents: sum(items.filter((i) => i.before), (i) => i.cents),
-    unsharedChargesCents: sum(current.filter((i) => !i.taskId), (i) => i.cents),
-    state: !regime ? 'unallocated' : deficit ? 'deficit' : engagedCents > ceilingCents ? 'at-risk' : 'ok',
-    deficit,
-    nextBillingDate: billing[0] ?? null,
-    byTask,
-    beforeByTask,
-    shares: { ...shares },
-    returns: structuredClone(returnsOf(b)),
-    abandoned: isAbandoned(b) ? { at: b.abandonedAt, reason: b.abandonReason ?? null, ...(b.abandonment ?? {}) } : null,
-    life: null,
-  };
-}
+import { fmt, frDate, sum, OVERRUN_REASONS, RETURN_CADENCES, inRegime, FUNDING_SOURCES, fundingSourceOf, standardOfProject, sharesOf, returnsOf, overrunsOf, requestsOf, openRequest, isAbandoned, abandonedRefusal, requestView, isValidatedCharge, overrunView, fundingFigures } from './funding-rules.mjs';
+export * from './funding-rules.mjs';
 
 
 /** Crée le revenu de retour d'une tâche dans le budget de vie (ponctuel ou récurrent), dans la transaction. */
@@ -214,13 +40,33 @@ export function taskFunding(state, fig, taskId) {
   const s = fig.byTask[taskId] ?? { engagedCents: 0, paidCents: 0, unbounded: false };
   const openCents = s.engagedCents - s.paidCents;
   const done = state.tasks[taskId]?.status === 'done';
+  // Budget restant au temps [P] : part × (temps prévu − temps consommé) / temps prévu. Négatif quand le temps
+  // est dépassé : le dépassement de temps donne le dépassement de budget de la tâche.
+  const task = state.tasks[taskId];
+  const planned = task?.plannedHours ?? null;
+  const workRatio = planned > 0 ? (task?.spentHours ?? 0) / planned : null;
+  const purchaseRatio = share > 0 ? s.paidCents / share : null;
+  // Seul le temps compte pour le reste [P] : les achats réglés sont une information à part (cashRemainingCents),
+  // ils ne modifient ni le pourcentage de temps restant ni le budget restant de la tâche.
+  const consumedRatio = workRatio;
+  const timeLeftRatio = consumedRatio === null ? null : 1 - consumedRatio;
+  const remainingCents = timeLeftRatio === null || share === null ? null : Math.round(share * timeLeftRatio);
   return {
+    timeRemainingPct: timeLeftRatio === null ? null : Math.round(timeLeftRatio * 1000) / 10,
+    timeRemainingCents: remainingCents,
+    timeConsumptionPercent: consumedRatio === null ? null : Math.round(consumedRatio * 1000) / 10,
+    timeConsumedCents: remainingCents === null ? null : share - remainingCents,
+    workConsumptionPercent: workRatio === null ? null : Math.round(workRatio * 1000) / 10,
+    purchaseConsumptionPercent: purchaseRatio === null ? null : Math.round(purchaseRatio * 1000) / 10,
+    purchaseEquivalentHours: planned > 0 && purchaseRatio !== null ? planned * purchaseRatio : null,
+    cashRemainingCents: share === null ? null : share - s.paidCents,
     shareCents: share,
     engagedCents: s.engagedCents,
     paidCents: s.paidCents,
     openCents,
-    remainingCents: share === null ? null : share - s.paidCents,
-    over: share !== null && s.paidCents > share,
+    remainingCents,
+    // La tâche dépasse sa part quand son temps est dépassé ou quand ses achats réglés passent au-delà de la part.
+    over: (remainingCents !== null && remainingCents < 0) || (share !== null && s.paidCents > share),
     unbounded: s.unbounded,
     paidBeforeCents: fig.beforeByTask?.[taskId] ?? 0,
     unusedCents: done && share !== null && openCents <= 0 && s.paidCents < share ? share - s.paidCents : 0,
@@ -352,20 +198,19 @@ export const fundingExtensions = {
   },
 
   /** Valider un règlement qui ferait dépasser le budget du projet exige l'autorisation du budget de vie. */
-  settlementGuard(state, { budgetId, direction, amountCents, realizedDate, taskId, operationId, recurrenceId, occurrenceDate }) {
+  settlementGuard(state, { budgetId, direction, amountCents, realizedDate, accountingDate, authorizeTaskOverrun = false, taskId, operationId, recurrenceId, occurrenceDate }) {
     const b = state.budgets[budgetId];
     const previous = operationId ? state.operations[operationId] : null;
     const previousPaid = previous && isValidatedCharge(previous, b) ? previous.realizedAmountCents : 0;
-    // Une dépense réellement réglée avant la première attribution reste dans l'historique du projet,
-    // hors enveloppe et hors parts. La date de saisie ne doit pas la faire financer rétroactivement.
-    if (inRegime(b) && realizedDate < b.allocationDate) return;
+    // Une validation antérieure à la première attribution reste dans l'historique, hors enveloppe.
+    if (inRegime(b) && (accountingDate ?? realizedDate) < b.allocationDate) return;
     if (direction === 'charge' && b?.taskFundingRequired) {
       if (!inRegime(b)) fail('FORBIDDEN_BY_RULE', `Attribuez d’abord une enveloppe au projet « ${b.name} » : ses dépenses se règlent sur les parts de ses tâches.`, { field: 'budgetId', budgetId });
       if (!taskId || state.tasks[taskId]?.projectId !== b.coreProjectId) fail('FORBIDDEN_BY_RULE', `Reliez cette dépense à une tâche du projet « ${b.name} » avant de la régler : chaque règlement consomme la part d’une tâche.`, { field: 'taskId', budgetId });
       const sfig = fundingFigures(state, b);
       const taskPaid = (sfig.byTask[taskId]?.paidCents ?? 0) - (previous?.taskId === taskId ? previousPaid : 0);
       const share = sharesOf(b)[taskId] ?? null;
-      if (taskPaid + amountCents > (share ?? 0)) {
+      if (!(share > 0) || (taskPaid + amountCents > share && !authorizeTaskOverrun)) {
         const title = state.tasks[taskId]?.title ?? 'la tâche';
         const needed = taskPaid + amountCents;
         fail(
@@ -377,7 +222,7 @@ export const fundingExtensions = {
         );
       }
     }
-    if (direction !== 'charge' || !inRegime(b) || realizedDate < b.allocationDate) return;
+    if (direction !== 'charge' || !inRegime(b) || (accountingDate ?? realizedDate) < b.allocationDate) return;
     const fig = fundingFigures(state, b);
     const after = fig.paidCents - previousPaid + amountCents;
     if (after <= fig.ceilingCents) return;
@@ -523,7 +368,7 @@ export function createFunding(socle, { lifeBudgetOf }) {
 
 
   /**
-   * Montant attribué par le budget de vie (charge non récurrente spéciale du budget de vie). La première attribution
+   * Réservation de moyens du projet, sans charge ni prélèvement. La première attribution
    * fixe la date à partir de laquelle les charges validées du projet comptent dans le budget de vie.
    */
   async function allocate(ctx, budgetId, input = {}) {
@@ -532,19 +377,24 @@ export function createFunding(socle, { lifeBudgetOf }) {
       om.checkRevision(b, expectedRevisionOf(input));
       const cents = money('amount', input.amount);
       const fig = fundingFigures(tx.draft, b);
+      const source = input.fundingSource === undefined ? fundingSourceOf(b) : oneOf('fundingSource', input.fundingSource, FUNDING_SOURCES);
+      // Changer de source déplacerait des dépenses déjà comptabilisées d'un cycle au patrimoine (ou l'inverse) : refusé.
+      if (source !== fundingSourceOf(b) && fig.fundingSourceLocked) {
+        fail('FORBIDDEN_BY_RULE', `L’enveloppe du projet « ${b.name} » a déjà servi à des règlements. Choisissez la source directement sur chaque nouveau mouvement.`, { field: 'fundingSource' });
+      }
       if (fig.regime) {
         const billed = fig.billedOverrunCents;
         if (cents < billed) fail('FORBIDDEN_BY_RULE', `L’enveloppe ne peut pas descendre sous les dépassements déjà facturés (${fmt(billed)}).`, { field: 'amount' });
         if (cents + fig.approvedOverrunCents < fig.sharesCents) fail('FORBIDDEN_BY_RULE', `Les parts des tâches (${fmt(fig.sharesCents)}) dépassent ${fmt(cents + fig.approvedOverrunCents)} : réduisez d’abord des parts, ou gardez une enveloppe d’au moins ${fmt(fig.sharesCents - fig.approvedOverrunCents)}.`, { field: 'amount', sharesCents: fig.sharesCents });
         if (cents + fig.approvedOverrunCents < fig.paidCents) fail('FORBIDDEN_BY_RULE', `Les dépenses déjà réglées sur l’enveloppe (${fmt(fig.paidCents)}) dépassent ${fmt(cents + fig.approvedOverrunCents)} : gardez une enveloppe d’au moins ${fmt(fig.paidCents - fig.approvedOverrunCents)}.`, { field: 'amount', paidCents: fig.paidCents });
-        if (cents === b.allocationCents) {
+        if (cents === b.allocationCents && source === fundingSourceOf(b)) {
           tx.unchanged = true;
           return {};
         }
-        om.update(tx, b, { allocationCents: cents });
+        om.update(tx, b, { allocationCents: cents, fundingSource: source });
       } else {
         if (cents === 0) fail('FORBIDDEN_BY_RULE', `Une enveloppe de 0 € ne permettrait de régler aucune dépense du projet « ${b.name} » : indiquez le montant prévu, ou laissez le projet sans enveloppe tant qu’il n’a rien à payer.`, { field: 'amount' });
-        om.update(tx, b, { allocationCents: cents, allocationDate: today(), taskSharesCents: sharesOf(b), taskReturns: returnsOf(b) });
+        om.update(tx, b, { allocationCents: cents, allocationDate: today(), taskSharesCents: sharesOf(b), taskReturns: returnsOf(b), fundingSource: source });
       }
       return { budgetId };
     });
@@ -742,25 +592,23 @@ export function createFunding(socle, { lifeBudgetOf }) {
    * règlement, dans la même écriture, la part de la tâche est portée au nécessaire (projet en mode strict) et le
    * dépassement de l'enveloppe éventuel est autorisé. La garde `settlementGuard` s'applique ensuite telle quelle.
    */
-  function fundSettlement(tx, { budgetId, direction, amountCents, realizedDate, taskId, operationId }) {
+  function fundSettlement(tx, { budgetId, direction, amountCents, realizedDate, accountingDate, taskId, operationId }) {
     const current = () => tx.draft.budgets[budgetId];
     let b = current();
-    if (direction !== 'charge' || b?.role !== 'standard' || !inRegime(b) || realizedDate < b.allocationDate) return;
+    if (direction !== 'charge' || b?.role !== 'standard' || !inRegime(b) || (accountingDate ?? realizedDate) < b.allocationDate) return;
     standardOf(tx.draft, tx.userId, budgetId);
     const previous = operationId ? tx.draft.operations[operationId] : null;
     const previousPaid = previous && isValidatedCharge(previous, b) ? previous.realizedAmountCents : 0;
-    if (b.taskFundingRequired && taskId && tx.draft.tasks[taskId]?.projectId === b.coreProjectId) {
+    // Autoriser un achat au-delà de sa part n'augmente jamais cette part : le négatif doit rester visible.
+    if (b.taskFundingRequired && !(sharesOf(b)[taskId] > 0) && taskId && tx.draft.tasks[taskId]?.projectId === b.coreProjectId) {
+      // Une décision explicite groupée peut réserver une part initiale avant le règlement, sans effet comptable propre.
       const fig = fundingFigures(tx.draft, b);
-      const share = sharesOf(b)[taskId] ?? null;
-      const needed = (fig.byTask[taskId]?.paidCents ?? 0) - (previous?.taskId === taskId ? previousPaid : 0) + amountCents;
-      if (needed > (share ?? 0)) {
-        const title = tx.draft.tasks[taskId].title;
-        const after = fig.sharesCents - (share ?? 0) + needed;
-        if (after > fig.ceilingCents) newOverrun(tx, b, { taskId, reason: 'ventilation', amountCents: after - fig.ceilingCents, note: `Part de « ${title} » portée à ${fmt(needed)} pour un règlement.`, approve: true });
-        b = current();
-        om.update(tx, b, { taskSharesCents: { ...sharesOf(b), [taskId]: needed } });
-        b = current();
-      }
+      const needed = Math.max(amountCents, (fig.byTask[taskId]?.paidCents ?? 0) - (previous?.taskId === taskId ? previousPaid : 0) + amountCents);
+      const sharesAfter = fig.sharesCents - (sharesOf(b)[taskId] ?? 0) + needed;
+      if (sharesAfter > fig.ceilingCents) newOverrun(tx, b, { taskId, reason: 'ventilation', amountCents: sharesAfter - fig.ceilingCents, note: 'Part initiale réservée lors de la validation du règlement.', approve: true });
+      b = current();
+      om.update(tx, b, { taskSharesCents: { ...sharesOf(b), [taskId]: needed } });
+      b = current();
     }
     const fig = fundingFigures(tx.draft, b);
     const after = fig.paidCents - previousPaid + amountCents;
@@ -771,9 +619,9 @@ export function createFunding(socle, { lifeBudgetOf }) {
    * Builder pour une composition de l'application : un Budget standard créé pour un projet suit le financement par
    * tâche, avec son enveloppe éventuelle (jamais 0 €).
    */
-  function startTaskFunding(tx, b, cents) {
+  function startTaskFunding(tx, b, cents, fundingSource = 'cycle') {
     if (cents === 0) fail('FORBIDDEN_BY_RULE', 'Une enveloppe de 0 € ne permettrait de régler aucune dépense : indiquez le montant prévu, ou laissez le montant vide pour attribuer l’enveloppe plus tard.', { field: 'amount' });
-    om.update(tx, b, { taskFundingRequired: true, taskSharesCents: {}, taskReturns: {}, ...(cents === null ? {} : { allocationCents: cents, allocationDate: today() }) });
+    om.update(tx, b, { taskFundingRequired: true, taskSharesCents: {}, taskReturns: {}, fundingSource: oneOf('fundingSource', fundingSource, FUNDING_SOURCES), ...(cents === null ? {} : { allocationCents: cents, allocationDate: today() }) });
   }
 
   /**

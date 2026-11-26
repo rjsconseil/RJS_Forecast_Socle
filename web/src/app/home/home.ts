@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RecetteContext } from '../core/api.service';
 import { RouterLink } from '@angular/router';
 import { JourneyResume } from '../plan/journey-resume';
-import { PLAN_OVERVIEW_TONE, orderedZones, PlanSection, PlanZone, planZone, portalBands, sectionEntry, zoneHomeLink, zoneSections } from '../plan/site-plan';
+import { PLAN_OVERVIEW_TONE, orderedZones, PlanSection, PlanZone, planZone, portalBands, sectionEntry, sectionMark, zoneHomeLink, zoneSections } from '../plan/site-plan';
 
 type PortalRow = ReturnType<typeof portalBands>[number];
 
@@ -27,7 +27,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
         <nav class="cockpit-navigation portal-jumps" aria-label="Aller directement à une partie de l’accueil">
           @for (row of rows(); track row.band?.id ?? row.zones[0].id; let index = $index) {
             @if (row.band; as band) {
-              <a data-navigation-level="detail" routerLink="/" [fragment]="'portal-' + band.id"><span aria-hidden="true">{{ bandIndex(index) }}</span>{{ band.label | navigationLabel:("anchor:portal:" + band.id) }}</a>
+              <a data-navigation-level="detail" routerLink="/modules" [fragment]="'portal-' + band.id"><span aria-hidden="true">{{ bandIndex(index) }}</span>{{ band.label | navigationLabel:("anchor:portal:" + band.id) }}</a>
             }
           }
         </nav>
@@ -76,10 +76,11 @@ type PortalRow = ReturnType<typeof portalBands>[number];
                       </p>
                     }
                     <nav class="plan-entries" [attr.aria-label]="'Sections de ' + zone.label">
-                      @for (section of visibleSections(zone); track section.id) {
+                      @let sectionList = visibleSections(zone);
+                      @for (section of sectionList; track section.id) {
                         @let entry = entryOf(zone, section);
                         <a data-navigation-level="page" class="plan-entry" [attr.data-tone]="section.tone ?? zone.tone" [routerLink]="entry.link" [queryParams]="entry.query"
-                          ><span class="plan-entry-mark" aria-hidden="true">{{ section.acronym }}</span
+                          ><span class="plan-entry-mark" aria-hidden="true">{{ markOf(zone, section, sectionList) }}</span
                           ><span class="plan-entry-text"><strong>{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</strong><small>{{ section.intention }}</small></span></a
                         >
                       }
@@ -115,6 +116,7 @@ export class HomePage {
   }
   private readonly ctx = inject(RecetteContext);
   protected readonly connected = this.ctx.connected;
+  protected markOf = sectionMark;
   protected visibleSections(zone: PlanZone) {
     return zoneSections(zone, this.ctx.connected());
   }

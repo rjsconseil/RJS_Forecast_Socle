@@ -7,12 +7,6 @@
 :host {
   display: block;
 }
-.audit-card-head {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: var(--ecart-16);
-}
 .audit-caveat {
   color: var(--muted);
 }
@@ -99,9 +93,6 @@
   overflow-wrap: anywhere;
 }
 @media (max-width: $rupture-750) {
-  .audit-card-head {
-    display: block;
-  }
   .audit-stats {
     grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
   }

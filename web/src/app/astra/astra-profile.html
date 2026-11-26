@@ -1,0 +1,32 @@
+<div class="astra-page astra-welcome">
+  <div class="astra-welcome-grid">
+    <header class="astra-welcome-cover">
+      <span class="astra-welcome-sign"><span class="astra-mark" aria-hidden="true"></span> BPM-Astra</span>
+      <div>
+        <h1>Mon projet de vie</h1>
+        <p>Suivez vos entrées et vos dépenses, financez vos projets et retrouvez dans votre patrimoine le résultat de chaque cycle.</p>
+      </div>
+    </header>
+    <section class="astra-profile" aria-labelledby="astra-profile-title">
+      <span class="astra-tile-icon" data-astra-icon="profil" aria-hidden="true"></span>
+      <h2 id="astra-profile-title">Ouvrir mon espace</h2>
+      @if (profiles().length) {
+        <p>Choisissez le profil dont vous souhaitez consulter le budget et les projets.</p>
+        <form (submit)="$event.preventDefault(); openProfile()">
+          <label for="astra-profile">Profil utilisateur</label>
+          <select id="astra-profile" required [value]="selectedProfile()" (change)="selectedProfile.set($any($event.target).value)">
+            <option value="">Choisir un profil</option>
+            @for (profile of profiles(); track profile.id) {
+              <option [value]="profile.id">{{ profile.label }} · {{ profile.userTypeLabel }}</option>
+            }
+          </select>
+          <button type="submit" class="astra-btn primary" [disabled]="!selectedProfile()">Accéder à mon espace <span data-astra-icon="continuer" aria-hidden="true"></span></button>
+        </form>
+        <a class="astra-text-link" routerLink="/creer/projet-de-vie">Créer mon projet de vie <span data-astra-icon="suivant" aria-hidden="true"></span></a>
+      } @else {
+        <p>Créez votre premier profil pour fixer le début de votre cycle et renseigner votre patrimoine de départ.</p>
+        <a class="astra-btn primary" routerLink="/creer/projet-de-vie">Créer mon projet de vie <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+      }
+    </section>
+  </div>
+</div>

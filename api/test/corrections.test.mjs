@@ -339,22 +339,27 @@ test('C11 écritures concurrentes dans une instance : toutes sérialisées, aucu
   await s2.close();
 });
 
-test('C11 fichier modifié par un autre écrivain : écriture refusée, rien n’est écrasé', async () => {
+test('C11 base modifiée par un autre écrivain : écriture refusée, rien n’est écrasé', async () => {
+  const { DatabaseSync } = await import('node:sqlite');
   const { socle, dataFile } = await makeSocle();
   const { ctx } = await camille(socle);
-  const foreign = JSON.parse(await readFile(dataFile, 'utf8'));
-  foreign.updatedAt = 'modifié ailleurs';
-  await writeFile(dataFile, JSON.stringify(foreign) + '\n'.repeat(3));
+  const foreign = new DatabaseSync(dataFile.replace(/\.json$/, '.sqlite'));
+  foreign.prepare("UPDATE SY_store SET value = ? WHERE key = 'revision'").run(String(socle.state.revision + 1));
+  foreign.prepare("UPDATE SY_store SET value = ? WHERE key = 'updatedAt'").run(JSON.stringify('modifié ailleurs'));
   await rejects(operation(socle, ctx, { direction: 'charge', amount: 1, date: '2026-11-01' }), 'PERSISTENCE_CONFLICT');
-  assert.equal(JSON.parse(await readFile(dataFile, 'utf8')).updatedAt, 'modifié ailleurs');
+  assert.equal(JSON.parse(foreign.prepare("SELECT value FROM SY_store WHERE key = 'updatedAt'").get().value), 'modifié ailleurs');
+  foreign.close();
   await socle.close();
 });
 
 // ---------- migration explicite des données existantes ----------
 
 test('migration j1-store/0.2 → socle-store/0.6 : IDs conservés, changements enregistrés, rejouable', async () => {
+  const { removeStore } = await import('../src/socle/store.mjs');
   const { socle, dataFile } = await makeSocle();
   await socle.close();
+  await removeStore(dataFile);
+  // Un ancien stockage JSON : repris dans la base au premier démarrage, puis migré.
   await copyFile(new URL('./fixtures/j1-store-0.2.json', import.meta.url), dataFile);
   const legacy = JSON.parse(await readFile(dataFile, 'utf8'));
   const legacyIds = ['users', 'coreProjects', 'tasks', 'budgets', 'patrimoines', 'bpmCompositions'].flatMap((c) => Object.keys(legacy[c]));

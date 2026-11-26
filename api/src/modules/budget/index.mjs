@@ -7,13 +7,14 @@ import { fail } from '../../socle/errors.mjs';
 import { check } from '../../socle/object-management/inspect.mjs';
 import { today } from '../../socle/clock.mjs';
 import { date, expectedRevisionOf, integer, money, oneOf, text } from '../../socle/validation.mjs';
-import { CADENCE_LABEL, CADENCES, isOccurrence, occurrenceDates, occurrenceKey } from './recurrence.mjs';
+import { CADENCE_LABEL, CADENCES, isOccurrence, occurrenceDates, occurrenceKey, parseOccurrenceKey } from './recurrence.mjs';
+import { budgetLines, CAP_LEVEL_PCT, capLevelOf, capReport, isNearCap, NEAR_CAP_USED_PCT, periodSum, STD } from './lines.mjs';
+export { budgetLines, CAP_LEVEL_PCT, capLevelOf, capReport, isNearCap, NEAR_CAP_USED_PCT };
 import { abandonedRefusal, createFunding, fundingExtensions, isAbandoned } from './funding.mjs';
 
 export const DIRECTIONS = ['income', 'charge'];
 const DIRECTION_LABEL = { income: 'Revenu', charge: 'Charge' };
 const LIFE_BUDGET_NAME = 'Projet de vie';
-const STD = 'std:';
 
 const toEuros = (cents) => (cents === null || cents === undefined ? null : cents / 100);
 
@@ -38,182 +39,14 @@ function realizedDateOf(value) {
   return d;
 }
 
-const lineOfOperation = (o) => ({
-  id: o.id,
-  kind: 'operation',
-  operationId: o.id,
-  recurrenceId: o.recurrenceId ?? null,
-  occurrenceDate: o.occurrenceDate ?? null,
-  occurrenceKey: o.recurrenceId ? occurrenceKey(o.recurrenceId, o.occurrenceDate) : null,
-  budgetId: o.budgetId,
-  userId: o.userId,
-  direction: o.direction,
-  label: o.label,
-  plannedDate: o.date,
-  plannedCents: o.amountCents,
-  realizedDate: o.realizedDate,
-  realizedCents: o.realizedAmountCents,
-  settled: o.status === 'realized',
-  standardCostCenter: o.standardCostCenter,
-  costCenterId: o.costCenterId,
-  categoryId: o.categoryId ?? null,
-  note: o.note ?? null,
-  taskId: o.taskId ?? null,
-  revision: o.revision,
-});
-
-const lineOfOccurrence = (r, date) => ({
-  id: occurrenceKey(r.id, date),
-  kind: 'occurrence',
-  operationId: null,
-  recurrenceId: r.id,
-  occurrenceDate: date,
-  occurrenceKey: occurrenceKey(r.id, date),
-  budgetId: r.budgetId,
-  userId: r.userId,
-  direction: r.direction,
-  label: r.label,
-  plannedDate: date,
-  plannedCents: r.amountCents,
-  realizedDate: null,
-  realizedCents: null,
-  settled: false,
-  standardCostCenter: r.standardCostCenter,
-  costCenterId: r.costCenterId,
-  categoryId: r.categoryId ?? null,
-  note: r.note ?? null,
-  taskId: r.taskId ?? null,
-  revision: null,
-});
-
-/**
- * Lignes financières de Budgets sur une fenêtre [from, to] (bornes incluses) — lecture commune à
- * toutes les sommes : `by: 'planned'` sélectionne par date prévue (opérations et occurrences
- * attendues non encore matérialisées), `by: 'realized'` par date réelle de règlement.
- * Une occurrence réglée est une opération : elle ne figure jamais deux fois.
- */
-export function budgetLines(state, budgetIds, { from, to, by = 'planned' }) {
-  const ids = new Set(budgetIds);
-  const out = [];
-  const materialized = new Set();
-  for (const o of Object.values(state.operations)) {
-    if (o.recurrenceId) materialized.add(occurrenceKey(o.recurrenceId, o.occurrenceDate));
-    if (!ids.has(o.budgetId) || o.status === 'cancelled') continue;
-    const d = by === 'planned' ? o.date : o.status === 'realized' ? o.realizedDate : null;
-    if (d && d >= from && d <= to) out.push(lineOfOperation(o));
-  }
-  if (by === 'planned') {
-    for (const r of Object.values(state.recurrences ?? {})) {
-      if (!ids.has(r.budgetId) || r.cancelledAt) continue;
-      for (const d of occurrenceDates(r, from, to)) if (!materialized.has(occurrenceKey(r.id, d))) out.push(lineOfOccurrence(r, d));
-    }
-  }
-  const dateOf = (l) => (by === 'planned' ? l.plannedDate : l.realizedDate);
-  return out.sort((a, b) => dateOf(a).localeCompare(dateOf(b)) || a.label.localeCompare(b.label));
-}
-
-/**
- * Plafonds de dépenses sur une période [P] : deux niveaux indépendants, jamais bloquants.
- * - centre de coût : plafond du Budget (`capsCents[ref]`) ;
- * - catégorie personnalisée (dans un centre) : plafond de la catégorie.
- * Engagé = charges réglées dans la période (date réelle) + charges prévues de la période non réglées.
- * Une ligne compte dans son centre ET dans sa catégorie : chaque niveau est lu pour lui-même.
- * @param realized lignes `by: 'realized'` de la période ; @param planned lignes `by: 'planned'` de la période.
- */
-/** Seuil d'approche d'un plafond [P] : à partir de 85 % engagés, le poste est « proche du plafond ». Seule source de la règle. */
-export const NEAR_CAP_USED_PCT = 85;
-export const isNearCap = (capCents, engagedCents) => capCents !== null && capCents > 0 && engagedCents <= capCents && (engagedCents / capCents) * 100 >= NEAR_CAP_USED_PCT;
-
-export function capReport({ centers, caps = {}, categories = [], realized, planned, withLines = false }) {
-  const refOf = (l) => l.costCenterId ?? STD + l.standardCostCenter;
-  const charges = (ls) => ls.filter((l) => l.direction === 'charge');
-  const measure = (match, capCents) => {
-    const paid = charges(realized).filter(match);
-    const toPay = charges(planned).filter((l) => !l.settled && match(l));
-    const paidCents = paid.reduce((t, l) => t + l.realizedCents, 0);
-    const toPayCents = toPay.reduce((t, l) => t + l.plannedCents, 0);
-    const engagedCents = paidCents + toPayCents;
-    const cap = capCents ?? null;
-    return {
-      // Composition exacte de l'engagé (sur demande) : la somme des lignes vaut `engagedCents`.
-      ...(withLines
-        ? {
-            lines: [
-              ...paid.map((l) => ({ line: l, engagedCents: l.realizedCents, engagedDate: l.realizedDate, engagedAs: 'paid' })),
-              ...toPay.map((l) => ({ line: l, engagedCents: l.plannedCents, engagedDate: l.plannedDate, engagedAs: 'toPay' })),
-            ],
-          }
-        : {}),
-      paidCents,
-      toPayCents,
-      engagedCents,
-      capCents: cap,
-      marginCents: cap === null ? null : cap - engagedCents,
-      usedPct: cap ? Math.round((engagedCents / cap) * 1000) / 10 : null,
-      over: cap !== null && engagedCents > cap,
-      near: isNearCap(cap, engagedCents),
-      lineCount: charges(realized).filter(match).length + charges(planned).filter((l) => !l.settled && match(l)).length,
-    };
-  };
-  const centerRows = centers
-    .filter((c) => c.direction === 'charge')
-    .map((c) => ({ ref: c.ref, label: c.label, standard: c.standard, ...measure((l) => refOf(l) === c.ref, caps[c.ref]) }));
-  const categoryRows = categories.map((k) => ({
-    id: k.id,
-    label: k.label,
-    costCenterRef: k.costCenterRef,
-    costCenterLabel: centers.find((c) => c.ref === k.costCenterRef)?.label ?? k.costCenterRef,
-    archived: !!k.archived,
-    revision: k.revision,
-    ...measure((l) => l.categoryId === k.id, k.capCents),
-  }));
-  const overCenters = centerRows.filter((r) => r.over);
-  const overCategories = categoryRows.filter((r) => r.over);
-  return {
-    centers: centerRows,
-    categories: categoryRows,
-    overCount: overCenters.length + overCategories.length,
-    alerts: [
-      ...overCenters.map((r) => ({ level: 'center', ref: r.ref, id: null, label: r.label, capCents: r.capCents, engagedCents: r.engagedCents, overCents: -r.marginCents })),
-      ...overCategories.map((r) => ({ level: 'category', ref: r.costCenterRef, id: r.id, label: r.label, capCents: r.capCents, engagedCents: r.engagedCents, overCents: -r.marginCents })),
-    ],
-  };
-}
-
-const sourceOf = (l, realized) => ({
-  id: l.id,
-  kind: l.kind,
-  label: l.label,
-  amount: toEuros(realized ? l.realizedCents : l.plannedCents),
-  date: realized ? l.realizedDate : l.plannedDate,
-  status: l.settled ? 'realized' : 'planned',
-});
-
-/**
- * Somme du Budget du contexte sur la période : réalisé par date réelle, prévu par date prévue,
- * restant = prévu non réglé (C04). Toutes passent par `budgetLines`.
- */
-function periodSum(ctx, socle, { direction, realized, remaining = false, advance = false }) {
-  if (!ctx.budgetId) return { value: null, sources: [], note: 'Aucun Budget dans le contexte' };
-  if (!ctx.period) return { value: null, sources: [], note: 'Aucune période : cycle à configurer' };
-  const { start, end } = ctx.period;
-  // `advance` : prévu dans la période mais déjà réglé avant son début (compté dans le réalisé d'une période antérieure).
-  const lines = budgetLines(ctx.state, [ctx.budgetId], { from: start, to: end, by: realized ? 'realized' : 'planned' }).filter(
-    (l) => l.direction === direction && (!remaining || !l.settled) && (!advance || (l.settled && l.realizedDate < start)),
-  );
-  const cents = lines.reduce((s, l) => s + (realized || advance ? l.realizedCents : l.plannedCents), 0);
-  return {
-    value: cents / 100,
-    sources: lines.map((l) => sourceOf(l, realized || advance)),
-    note: lines.length ? null : advance ? 'Rien de réglé d’avance pour la période' : remaining ? 'Rien en attente sur la période' : `Aucune opération ${realized ? 'réalisée' : 'prévue'} sur la période`,
-  };
-}
-
 export default {
   id: 'budget',
   label: 'Budget Management',
   level: 2,
-  dependsOn: ['users', 'core'],
+  role: 'metier',
+  dependsOn: ['users', 'core', 'cycle'],
+  // P4 · Lecture déclarée : les natures des dépendances que ce middleware lit.
+  reads: ['user', 'coreProject', 'task'],
   kinds: {
     // Financement des projets de la vie (funding.mjs) : demandes de part des tâches et dépassements d'enveloppe.
     projectOverrun: {
@@ -310,6 +143,11 @@ export default {
   ],
 
   extensions: {
+    /** L'ancre de vie d'un user : le Budget « Projet de vie » et sa racine noyau (consommé par Patrimoine, sans dépendance). */
+    lifeAnchor(state, userId, socle) {
+      const life = socle.om.list(state, 'budget', (b) => b.userId === userId && b.role === 'life')[0];
+      return life ? { id: life.id, coreProjectId: life.coreProjectId } : null;
+    },
     // Financement des projets : garde de rattachement d'une tâche, retour à sa complétion, validation d'un règlement.
     ...fundingExtensions,
     /** Un projet renommé renomme le Budget dont il est la racine : listes, registre et alertes gardent le même nom. */
@@ -416,12 +254,47 @@ export default {
       return k && (next.direction !== 'charge' || k.costCenterRef !== ref) ? { categoryId: null } : {};
     }
 
-    /** Garde des niveaux supérieurs (ex. période close) sur les dates d'une opération. */
-    function guard(state, op, dates) {
-      for (const ext of socle.registry.extensions('operationGuard')) ext(state, { userId: op.userId, budgetId: op.budgetId, dates }, socle);
+    /**
+     * Garde des niveaux supérieurs (ex. période close) sur les dates d'une opération. `opens` : dates prévues que
+     * l'écriture ouvre (prévision créée ou déplacée), pour les niveaux qui figent la liste des échéances d'un cycle.
+     * `carried` : report décidé par la clôture d'un cycle (les niveaux supérieurs savent qu'il en fait partie).
+     */
+    function guard(state, op, dates, opens = [], { carried = false } = {}) {
+      for (const ext of socle.registry.extensions('operationGuard')) {
+        ext(state, { userId: op.userId, budgetId: op.budgetId, dates, independentIncome: op.independentIncome, opens, carried }, socle);
+      }
+    }
+
+    /**
+     * Garde des niveaux supérieurs sur une définition récurrente : `from` → `to` (null = sans fin) couvre les
+     * occurrences que la création, la modification ou la suppression touche (ex. cycle qui attend sa clôture).
+     * `opens` : la création ou la modification ouvre des échéances (la suppression n'en ouvre aucune).
+     */
+    function definitionGuard(state, { userId, budgetId }, from, to, opens = false) {
+      for (const ext of socle.registry.extensions('recurrenceGuard')) ext(state, { userId, budgetId, from, to, opens }, socle);
     }
 
     const funding = createFunding(socle, { lifeBudgetOf });
+    const postsProjectIncome = (state, budgetId, direction) => state.budgets[budgetId]?.role === 'standard' && direction === 'income';
+    const plannedFunding = (state, budgetId, input) => {
+      if (state.budgets[budgetId]?.role !== 'standard' || !('fundingSource' in input)) return {};
+      return { plannedFundingSource: input.fundingSource == null ? null : oneOf('fundingSource', input.fundingSource, ['cycle', 'patrimoine']) };
+    };
+
+    // Un règlement de tâche conserve son paiement et choisit séparément son imputation.
+    function projectAccounting(state, budgetId, input, realizedDate, previous = {}) {
+      const b = state.budgets[budgetId];
+      if (b?.role !== 'standard') return {};
+      const fundingSource = oneOf('fundingSource', input.fundingSource ?? previous.fundingSource ?? previous.plannedFundingSource ?? b.fundingSource ?? 'cycle', ['cycle', 'patrimoine']);
+      const accountingDate = date('accountingDate', input.accountingDate ?? realizedDate, { required: true });
+      if (accountingDate < realizedDate) fail('VALIDATION', 'La validation ne peut pas précéder le paiement ou la réception.', { field: 'accountingDate' });
+      if (accountingDate > today()) fail('FUTURE_REALIZATION', 'La validation ne peut pas être imputée dans le futur.', { field: 'accountingDate' });
+      return { fundingSource, accountingDate };
+    }
+    function settlementDates(state, budgetId, values) {
+      return state.budgets[budgetId]?.role === 'standard' ? [values.accountingDate ?? values.realizedDate].filter(Boolean) : [values.realizedDate].filter(Boolean);
+    }
+
 
     /**
      * Garde des niveaux supérieurs sur la validation d'un règlement (opération réglée, réalisation,
@@ -430,7 +303,7 @@ export default {
     function settlementGuard(tx, input, fund) {
       // Règlement financé : la part et le dépassement nécessaires sont accordés dans la même écriture.
       if (fund === true) funding.fundSettlement(tx, input);
-      for (const ext of socle.registry.extensions('settlementGuard')) ext(tx.draft, input, socle);
+      for (const ext of socle.registry.extensions('settlementGuard')) ext(tx.draft, { ...input, authorizeTaskOverrun: fund === true }, socle);
     }
 
     const operationView = (state, o) => ({
@@ -470,7 +343,11 @@ export default {
 
     /** Tâche éventuelle d'une opération : seulement une tâche du projet de la vie de ce Budget (branche). */
     function taskFor(state, userId, budget, taskId) {
-      if (taskId === undefined || taskId === null || taskId === '') return null;
+      if (taskId === undefined || taskId === null || taskId === '') {
+        // Un projet de la vie n'a de dépenses et de gains qu'au niveau de ses tâches (docs/COMPTABILITE-PROJET-DE-VIE.md).
+        if (budget.role === 'standard') fail('VALIDATION', 'Une dépense ou un gain d’un projet de la vie se saisit sur l’une de ses tâches.', { field: 'taskId' });
+        return null;
+      }
       const t = om.owned(state, 'task', taskId, userId);
       if (budget.role !== 'standard' || t.projectId !== budget.coreProjectId) {
         fail('INCOMPATIBLE_REFERENCE', 'La tâche doit appartenir au projet de la vie de ce Budget.', { field: 'taskId' });
@@ -600,11 +477,17 @@ export default {
           status,
           realizedAmountCents,
           realizedDate,
+          ...plannedFunding(tx.draft, budgetId, input),
+          ...(status === 'realized' ? projectAccounting(tx.draft, budgetId, input, realizedDate) : {}),
+          ...(status === 'realized' && postsProjectIncome(tx.draft, budgetId, direction) ? { independentIncome: true } : {}),
           ...costCenterFields(tx.draft, tx.userId, input.costCenterRef || cat?.costCenterRef, direction),
           categoryId: cat?.id ?? null,
+          // Statut et jour de la saisie : une prévision ouvre un point à suivre du cycle, une saisie réglée n'en ouvre pas.
+          entryStatus: status,
+          enteredOn: today(),
         };
-        guard(tx.draft, { userId: tx.userId, budgetId }, [opDate, realizedDate].filter(Boolean));
-        if (status === 'realized') settlementGuard(tx, { userId: tx.userId, budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId: fields.taskId, operationId: null }, input.fund);
+        guard(tx.draft, { ...fields, userId: tx.userId }, status === 'realized' && budget.role === 'standard' ? settlementDates(tx.draft, budgetId, fields) : [opDate, realizedDate].filter(Boolean), status === 'planned' ? [opDate] : []);
+        if (status === 'realized') settlementGuard(tx, { userId: tx.userId, budgetId, direction, amountCents: realizedAmountCents, realizedDate, accountingDate: fields.accountingDate, fundingSource: fields.fundingSource, taskId: fields.taskId, operationId: null }, input.fund);
         return om.create(tx, 'operation', fields);
       },
 
@@ -630,13 +513,18 @@ export default {
           }
           Object.assign(patch, categoryPatch(tx.draft, tx.userId, o, input, { direction, ...patch }));
           if ('note' in input) patch.note = note(input.note);
+          if (o.status !== 'realized') Object.assign(patch, plannedFunding(tx.draft, o.budgetId, input));
           if ('taskId' in input) patch.taskId = taskFor(tx.draft, tx.userId, tx.draft.budgets[o.budgetId], input.taskId);
           // Une occurrence garde son identité : sa date prévue reste celle de la définition.
           if (o.recurrenceId && patch.date !== o.date) fail('FORBIDDEN_BY_RULE', "La date prévue d'une occurrence est fixée par sa définition récurrente.", { field: 'date' });
-          guard(tx.draft, o, [o.date, o.realizedDate, patch.date].filter(Boolean));
+          const changesSense = o.status === 'realized' && patch.direction !== o.direction;
+          if (changesSense) patch.independentIncome = postsProjectIncome(tx.draft, o.budgetId, patch.direction);
+          const dates = o.independentIncome || patch.independentIncome
+            ? settlementDates(tx.draft, o.budgetId, o) : [o.date, o.accountingDate ?? o.realizedDate, patch.date].filter(Boolean);
+          guard(tx.draft, { ...o, independentIncome: o.independentIncome || patch.independentIncome }, dates, o.status === 'planned' && patch.date !== o.date ? [patch.date] : []);
           // Changer la tâche ou le sens d'une charge déjà réglée ne contourne pas le financement de la tâche.
           if (o.status === 'realized' && (patch.direction !== o.direction || patch.taskId !== undefined && patch.taskId !== o.taskId)) {
-            settlementGuard(tx, { userId: o.userId, budgetId: o.budgetId, direction: patch.direction, amountCents: o.realizedAmountCents, realizedDate: o.realizedDate, taskId: patch.taskId !== undefined ? patch.taskId : o.taskId, operationId: o.id }, input.fund);
+            settlementGuard(tx, { userId: o.userId, budgetId: o.budgetId, direction: patch.direction, amountCents: o.realizedAmountCents, realizedDate: o.realizedDate, accountingDate: o.accountingDate, fundingSource: o.fundingSource, taskId: patch.taskId !== undefined ? patch.taskId : o.taskId, operationId: o.id }, input.fund);
           }
           om.update(tx, o, patch);
           return { operationId: id };
@@ -655,9 +543,14 @@ export default {
             status: 'realized',
             realizedAmountCents: money('realizedAmount', input.realizedAmount ?? toEuros(o.amountCents), { positive: true }),
             realizedDate: realizedDateOf(input.realizedDate ?? o.date),
+            // Moment du règlement : le point à suivre de cette prévision se clôt à cet instant.
+            closedAt: tx.now, closedOn: today(),
           };
-          guard(tx.draft, o, [patch.realizedDate, o.realizedDate].filter(Boolean));
-          settlementGuard(tx, { userId: o.userId, budgetId: o.budgetId, direction: o.direction, amountCents: patch.realizedAmountCents, realizedDate: patch.realizedDate, taskId: o.taskId ?? null, operationId: o.id }, input.fund);
+          Object.assign(patch, projectAccounting(tx.draft, o.budgetId, input, patch.realizedDate, o));
+          if (postsProjectIncome(tx.draft, o.budgetId, o.direction)) patch.independentIncome = true;
+          taskFor(tx.draft, tx.userId, tx.draft.budgets[o.budgetId], o.taskId);
+          guard(tx.draft, { ...o, ...patch }, settlementDates(tx.draft, o.budgetId, patch));
+          settlementGuard(tx, { userId: o.userId, budgetId: o.budgetId, direction: o.direction, amountCents: patch.realizedAmountCents, realizedDate: patch.realizedDate, accountingDate: patch.accountingDate, fundingSource: patch.fundingSource, taskId: o.taskId ?? null, operationId: o.id }, input.fund);
           om.update(tx, o, patch);
           return { operationId: id };
         });
@@ -673,8 +566,8 @@ export default {
           const o = om.owned(tx.draft, 'operation', id, tx.userId);
           om.checkRevision(o, expectedRevisionOf(input));
           if (o.status !== 'realized') fail('FORBIDDEN_BY_RULE', "Cette opération n'est pas réglée.", { operationId: id });
-          guard(tx.draft, o, [o.realizedDate]);
-          om.update(tx, o, { status: 'planned', realizedAmountCents: null, realizedDate: null });
+          guard(tx.draft, o, settlementDates(tx.draft, o.budgetId, o));
+          om.update(tx, o, { status: 'planned', realizedAmountCents: null, realizedDate: null, closedAt: null, closedOn: null, accountingDate: null, fundingSource: null, ...(o.independentIncome ? { independentIncome: false } : {}) });
           return { operationId: id };
         });
         return { operation: operationView(socle.state, socle.state.operations[id]) };
@@ -691,8 +584,8 @@ export default {
           om.checkRevision(o, expectedRevisionOf(input));
           if (o.status === 'cancelled') fail('FORBIDDEN_BY_RULE', 'Cette saisie est déjà annulée.', { operationId: id });
           if (o.recurrenceId) fail('FORBIDDEN_BY_RULE', "Une occurrence récurrente ne s'annule pas : annulez son règlement, ou modifiez sa définition.", { operationId: id, recurrenceId: o.recurrenceId });
-          guard(tx.draft, o, [o.date, o.realizedDate].filter(Boolean));
-          om.update(tx, o, { status: 'cancelled', cancelledFrom: o.status, cancelReason: 'reason' in input ? note(input.reason) : null });
+          guard(tx.draft, o, (o.status === 'realized' && tx.draft.budgets[o.budgetId]?.role === 'standard' ? settlementDates(tx.draft, o.budgetId, o) : [o.date, o.realizedDate].filter(Boolean)));
+          om.update(tx, o, { status: 'cancelled', cancelledFrom: o.status, cancelReason: 'reason' in input ? note(input.reason) : null, closedAt: tx.now, closedOn: today() });
           return { operationId: id };
         });
         return { operation: operationView(socle.state, socle.state.operations[id]) };
@@ -714,6 +607,7 @@ export default {
         const endDate = date('endDate', input.endDate);
         if (endDate && endDate < firstDate) fail('VALIDATION', 'La fin ne peut pas précéder la première date.', { field: 'endDate' });
         const cat = categoryFor(tx.draft, tx.userId, input.categoryId, { direction, costCenterRef: input.costCenterRef });
+        definitionGuard(tx.draft, { userId: tx.userId, budgetId }, firstDate, endDate, true);
         return om.create(tx, 'recurrence', {
           budgetId,
           direction,
@@ -724,8 +618,10 @@ export default {
           endDate,
           note: note(input.note),
           taskId: taskFor(tx.draft, tx.userId, budget, input.taskId),
+          ...plannedFunding(tx.draft, budgetId, input),
           ...costCenterFields(tx.draft, tx.userId, input.costCenterRef || cat?.costCenterRef, direction),
           categoryId: cat?.id ?? null,
+          enteredOn: today(),
         });
       },
 
@@ -742,6 +638,7 @@ export default {
           if ('label' in input) patch.label = text('label', input.label, { required: true, max: 200 });
           if ('amount' in input) patch.amountCents = money('amount', input.amount, { positive: true });
           if ('note' in input) patch.note = note(input.note);
+          Object.assign(patch, plannedFunding(tx.draft, r.budgetId, input));
           if ('cadence' in input || 'firstDate' in input) {
             if (settlements.length) fail('FORBIDDEN_BY_RULE', 'Des occurrences sont déjà réglées : la cadence et la première date sont figées. Terminez cette définition et créez-en une nouvelle.', { field: 'firstDate' });
             if ('cadence' in input) patch.cadence = oneOf('cadence', input.cadence, CADENCES);
@@ -754,6 +651,8 @@ export default {
           if ('costCenterRef' in input) Object.assign(patch, costCenterFields(tx.draft, tx.userId, input.costCenterRef, r.direction));
           Object.assign(patch, categoryPatch(tx.draft, tx.userId, r, input, { direction: r.direction, ...patch }));
           if ('taskId' in input) patch.taskId = taskFor(tx.draft, tx.userId, tx.draft.budgets[r.budgetId], input.taskId);
+          // Occurrences touchées : celles de la définition avant et après la modification.
+          definitionGuard(tx.draft, r, firstDate < r.firstDate ? firstDate : r.firstDate, endDate == null || r.endDate == null ? null : endDate > r.endDate ? endDate : r.endDate, true);
           om.update(tx, r, patch);
           return { recurrence: r, scope: { appliesTo: 'occurrences encore attendues', settledUntouched: settlements.length } };
       },
@@ -795,10 +694,15 @@ export default {
             const direction = existing ? existing.direction : rec.direction;
             const realizedDate = realizedDateOf(input.realizedDate ?? occurrenceDate);
             const realizedAmountCents = money('realizedAmount', input.realizedAmount ?? toEuros(rec.amountCents), { positive: true });
-            guard(tx.draft, rec, [realizedDate]);
-            settlementGuard(tx, { userId: rec.userId, budgetId: rec.budgetId, direction, amountCents: realizedAmountCents, realizedDate, taskId, operationId: existing?.id ?? null, recurrenceId: rec.id, occurrenceDate }, input.fund);
+            const accounting = projectAccounting(tx.draft, rec.budgetId, input, realizedDate, {
+              ...existing, plannedFundingSource: rec.plannedFundingSource,
+            });
+            if (postsProjectIncome(tx.draft, rec.budgetId, direction)) accounting.independentIncome = true;
+            taskFor(tx.draft, tx.userId, tx.draft.budgets[rec.budgetId], taskId);
+            guard(tx.draft, { ...rec, ...accounting }, settlementDates(tx.draft, rec.budgetId, { realizedDate, ...accounting }));
+            settlementGuard(tx, { userId: rec.userId, budgetId: rec.budgetId, direction, amountCents: realizedAmountCents, realizedDate, ...accounting, taskId, operationId: existing?.id ?? null, recurrenceId: rec.id, occurrenceDate }, input.fund);
             if (existing) {
-              om.update(tx, existing, { status: 'realized', realizedAmountCents, realizedDate });
+              om.update(tx, existing, { status: 'realized', realizedAmountCents, realizedDate, closedAt: tx.now, closedOn: today(), ...accounting });
               return { operationId: existing.id };
             }
             const op = om.create(tx, 'operation', {
@@ -810,6 +714,8 @@ export default {
               status: 'realized',
               realizedAmountCents,
               realizedDate,
+              closedAt: tx.now, closedOn: today(),
+              ...accounting,
               recurrenceId: rec.id,
               occurrenceDate,
               note: note(input.note) ?? rec.note ?? null,
@@ -846,7 +752,7 @@ export default {
             if (existing?.status === 'cancelled') fail('FORBIDDEN_BY_RULE', 'Cette échéance est déjà écartée.', { operationId: existing.id });
             const cancelReason = 'reason' in input ? note(input.reason) : null;
             if (existing) {
-              om.update(tx, existing, { status: 'cancelled', cancelledFrom: existing.status, cancelReason });
+              om.update(tx, existing, { status: 'cancelled', cancelledFrom: existing.status, cancelReason, closedAt: tx.now, closedOn: today() });
               return { operationId: existing.id };
             }
             const op = om.create(tx, 'operation', {
@@ -858,6 +764,7 @@ export default {
               status: 'cancelled',
               cancelledFrom: 'planned',
               cancelReason,
+              closedAt: tx.now, closedOn: today(),
               realizedAmountCents: null,
               realizedDate: null,
               recurrenceId: rec.id,
@@ -885,7 +792,7 @@ export default {
           const skipped = om.list(tx.draft, 'operation', (o) => o.recurrenceId === rec.id && o.occurrenceDate === occurrenceDate)[0];
           if (skipped?.status !== 'cancelled') fail('FORBIDDEN_BY_RULE', "Cette échéance n'est pas écartée.", { occurrenceDate });
           om.checkRevision(skipped, expectedRevisionOf(input));
-          om.update(tx, skipped, { status: 'planned', cancelledFrom: null, cancelReason: null });
+          om.update(tx, skipped, { status: 'planned', cancelledFrom: null, cancelReason: null, closedAt: null, closedOn: null });
           id = skipped.id;
           return { operationId: id };
         });
@@ -906,11 +813,59 @@ export default {
           const settled = materialized.filter((o) => o.status === 'realized');
           if (settled.length)
             fail('FORBIDDEN_BY_RULE', 'Des échéances sont déjà réglées : annulez leurs règlements, ou terminez la définition par une dernière échéance.', { recurrenceId: id, settled: settled.length });
-          for (const o of materialized) if (o.status === 'planned') om.update(tx, o, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: 'Définition supprimée' });
+          definitionGuard(tx.draft, rec, rec.firstDate, rec.endDate);
+          for (const o of materialized) if (o.status === 'planned') om.update(tx, o, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: 'Définition supprimée', closedAt: tx.now, closedOn: today() });
           om.update(tx, rec, { cancelledAt: today(), cancelReason: 'reason' in input ? note(input.reason) : null });
           return { recurrenceId: id };
         });
         return { recurrence: recurrenceView(socle.state, socle.state.recurrences[id]) };
+      },
+
+      /**
+       * Report d'une échéance non réglée vers un cycle à venir (dans une écriture composée, ex. la clôture du cycle) :
+       * - une saisie ponctuelle prévue change de date et garde son identité ;
+       * - une occurrence (récurrente) est écartée de son cycle et une saisie ponctuelle prévue la remplace à `toDate`.
+       * `carriedFrom` garde l'origine (ligne, date prévue, période, cycle cible) ; l'occurrence écartée garde `carriedTo`.
+       * Les gardes de dates s'appliquent comme à toute saisie.
+       */
+      carryOverLine(tx, lineId, { toDate, periodKey, periodLabel, toPeriodKey = null, toPeriodLabel = null }) {
+        const target = date('toDate', toDate, { required: true });
+        const occurrence = parseOccurrenceKey(lineId);
+        const existing = occurrence
+          ? om.list(tx.draft, 'operation', (o) => o.recurrenceId === occurrence.recurrenceId && o.occurrenceDate === occurrence.date)[0] ?? null
+          : om.owned(tx.draft, 'operation', lineId, tx.userId);
+        const rec = occurrence ? om.owned(tx.draft, 'recurrence', occurrence.recurrenceId, tx.userId) : existing?.recurrenceId ? tx.draft.recurrences[existing.recurrenceId] : null;
+        if (existing?.status === 'realized') fail('ALREADY_SETTLED', 'Cette échéance est réglée : elle ne se reporte plus.', { lineId });
+        if (existing?.status === 'cancelled') fail('FORBIDDEN_BY_RULE', 'Cette échéance est écartée : elle ne se reporte plus.', { lineId });
+        const source = existing ?? rec;
+        const plannedDate = existing?.date ?? occurrence.date;
+        const carriedFrom = { lineId, date: plannedDate, periodKey: periodKey ?? null, ...(toPeriodKey ? { toPeriodKey } : {}) };
+        // Saisie ponctuelle : même opération, nouvelle date prévue.
+        if (existing && !existing.recurrenceId) {
+          guard(tx.draft, existing, [target], [target], { carried: true });
+          om.update(tx, existing, { date: target, carriedFrom });
+          return { operationId: existing.id, moved: true };
+        }
+        // Occurrence : écartée de son cycle, remplacée par une saisie ponctuelle prévue dans le cycle cible.
+        const reason = `${toPeriodLabel ? `Reportée en ${toPeriodLabel}` : 'Reportée au cycle suivant'}${periodLabel ? ` (${periodLabel})` : ''}`;
+        const carriedTo = { periodKey: toPeriodKey, date: target };
+        if (existing) om.update(tx, existing, { status: 'cancelled', cancelledFrom: existing.status, cancelReason: reason, closedAt: tx.now, closedOn: today(), carriedTo });
+        else {
+          om.create(tx, 'operation', {
+            budgetId: rec.budgetId, direction: rec.direction, label: rec.label, amountCents: rec.amountCents, date: occurrence.date,
+            status: 'cancelled', cancelledFrom: 'planned', cancelReason: reason, closedAt: tx.now, closedOn: today(), carriedTo, realizedAmountCents: null, realizedDate: null,
+            recurrenceId: rec.id, occurrenceDate: occurrence.date, note: rec.note ?? null, taskId: rec.taskId ?? null,
+            standardCostCenter: rec.standardCostCenter, costCenterId: rec.costCenterId, categoryId: rec.categoryId ?? null,
+          });
+        }
+        const fields = {
+          recurrenceId: null, occurrenceDate: null, budgetId: source.budgetId, direction: source.direction, label: source.label,
+          amountCents: source.amountCents, date: target, status: 'planned', entryStatus: 'planned', enteredOn: today(), realizedAmountCents: null, realizedDate: null,
+          note: source.note ?? null, taskId: source.taskId ?? null, standardCostCenter: source.standardCostCenter, costCenterId: source.costCenterId,
+          categoryId: source.categoryId ?? null, ...(source.plannedFundingSource !== undefined ? { plannedFundingSource: source.plannedFundingSource } : {}), carriedFrom,
+        };
+        guard(tx.draft, { ...fields, userId: tx.userId }, [target], [target], { carried: true });
+        return { operationId: om.create(tx, 'operation', fields).id, moved: false };
       },
 
       patchCaps(tx, budgetId, input = {}) {
@@ -1040,7 +995,7 @@ export default {
     }
     for (const b of budgets.filter((x) => x.role === 'standard')) {
       const parent = state.budgets[b.parentBudgetId];
-      const shared = budgets.some((o) => o.id !== b.id && o.coreProjectId === b.coreProjectId) || Object.values(state.patrimoines ?? {}).some((p) => p.coreProjectId === b.coreProjectId);
+      const shared = budgets.some((o) => o.id !== b.id && o.coreProjectId === b.coreProjectId) || socle.registry.extensions('rootHolders').some((holders) => holders(state, b.coreProjectId, socle).length > 0); // P1 : Budget ignore qui d'autre tient une racine
       const ok = parent?.role === 'life' && parent.userId === b.userId && !shared;
       out.push(check('BUD-BR-01', 'integrity', 'budget', `Budget standard ${b.name} : père « Projet de vie », racine propre`, 'père = Budget « Projet de vie » du même user ; racine non partagée', `père ${parent ? parent.role : 'absent'} ; racine ${shared ? 'partagée' : 'propre'}`, ok ? 'passed' : 'failed', [b.id, b.coreProjectId, b.parentBudgetId]));
     }

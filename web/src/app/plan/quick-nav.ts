@@ -7,12 +7,12 @@
  * onglets du bandeau (`workspaceContextQuery`) : jamais une saisie ouverte.
  */
 import { PAGE_WORKSPACES } from './page-workspaces';
+import { applicationOf } from '../platform/applications';
 import { workspaceContextQuery } from './page-workspace';
 import {
   hasSectionHome,
   locate,
   menuPages,
-  OBJECT_FALLBACK,
   planContext,
   PLAN_ZONES,
   PlanLocation,
@@ -20,6 +20,7 @@ import {
   sectionHomeLink,
   zoneHomeLink,
   zoneSections,
+  sectionMark,
 } from './site-plan';
 
 export type QuickGroup = 'context' | 'action' | 'pinned' | 'recent' | 'site';
@@ -74,11 +75,12 @@ export function siteDestinations(connected: boolean): QuickLink[] {
       id: 'zone:' + zone.id, group: 'site', kind: 'zone', label: zone.label, hint: zone.eyebrow, link: zoneHomeLink(zone),
       mark: zone.acronym, tone: zone.tone, zone: zone.id, navigationKey: 'zone:' + zone.id, keywords: zone.mission,
     });
-    for (const section of zoneSections(zone, connected)) {
+    const visible = zoneSections(zone, connected);
+    for (const section of visible) {
       if (hasSectionHome(section))
         add({
           id: `section:${zone.id}:${section.id}`, group: 'site', kind: 'section', label: section.label, hint: `${zone.label} › Accueil de section`,
-          link: sectionHomeLink(zone, section), mark: section.acronym, tone: section.tone, zone: zone.id,
+          link: sectionHomeLink(zone, section), mark: sectionMark(zone, section, visible), tone: section.tone, zone: zone.id,
           navigationKey: `section:${zone.id}:${section.id}`, keywords: `${section.intention} ${section.description}`,
         });
       for (const page of menuPages(section)) {
@@ -93,7 +95,7 @@ export function siteDestinations(connected: boolean): QuickLink[] {
     }
   }
   for (const view of PAGE_WORKSPACES) {
-    if (view.path.includes(':')) continue;
+    if (view.path.includes(':') || view.page) continue;
     const owner = locate(view.parent);
     if (!owner.zone || !owner.section || !owner.page) continue;
     if (!zoneSections(owner.zone, connected).includes(owner.section)) continue;
@@ -124,7 +126,7 @@ export function contextLinks(url: string, objectLabel: string | null = null): Qu
       query: carried(query), carries: !!carried(query), mark: '↑', tone, zone: zone.id, navigationKey: context.up.link,
     });
   }
-  const owner = object ? objectLabel || OBJECT_FALLBACK : page?.label;
+  const owner = object ? objectLabel || object.fallback : page?.label;
   for (const tab of context.tabs) {
     if (tab.current) continue;
     const query = workspaceContextQuery(url, tab.link);
@@ -151,10 +153,6 @@ export function contextLinks(url: string, objectLabel: string | null = null): Qu
   return links;
 }
 
-/** Les pages qui savent ouvrir la saisie d'une opération avec son sens (`?entry=new&entryDirection=…`). */
-const ENTRY_HOSTS = ['/tableau-de-bord', '/projet-de-vie', '/piloter/agir'];
-const entryHost = (path: string) => ENTRY_HOSTS.find((host) => path === host) ?? '/tableau-de-bord';
-
 const actionRank = (at: PlanLocation, parent: string) => {
   const owner = locate(parent);
   if (at.page && owner.page?.link === at.page.link) return 0;
@@ -164,8 +162,8 @@ const actionRank = (at: PlanLocation, parent: string) => {
 
 /**
  * Les actions utiles là où l'on se trouve. Les créations viennent du catalogue des sous-pages
- * (« Créer … ») de la zone courante, celles de la page affichée d'abord ; l'application BPM ajoute la
- * saisie d'une entrée ou d'une dépense, sur la période lue ; une fiche ouverte ajoute ses raccourcis.
+ * (« Créer … ») de la zone courante, celles de la page affichée d'abord ; chaque application ajoute
+ * ses propres actions rapides (`ApplicationDeclaration.quickActions`).
  */
 export function contextActions(url: string, connected: boolean, objectLabel: string | null = null): QuickLink[] {
   const at = locate(url);
@@ -175,24 +173,7 @@ export function contextActions(url: string, connected: boolean, objectLabel: str
   const reading = workspaceContextQuery(url);
   const actions: QuickLink[] = [];
   const tone = at.page?.tone ?? at.section?.tone ?? zone.tone;
-  if (zone.id === 'bpm' && connected) {
-    const host = entryHost(path);
-    for (const [direction, label] of [['income', 'Saisir une entrée'], ['charge', 'Saisir une dépense']] as const)
-      actions.push({
-        id: 'entry:' + direction, group: 'action', kind: 'action', label, link: host, mark: '＋', tone, zone: zone.id,
-        hint: reading['period'] || reading['lifePeriod'] ? 'Sur la période affichée' : host === path ? 'Sur cette page' : 'Depuis le tableau de bord',
-        query: { ...reading, entry: 'new', entryDirection: direction }, carries: !!carried(reading), keywords: 'opération revenu charge ajouter nouveau',
-      });
-    if (at.object) {
-      const name = objectLabel || OBJECT_FALLBACK;
-      actions.push({
-        id: 'object-tasks:' + at.object.id, group: 'action', kind: 'action', label: `Voir les tâches de « ${name} » dans le tableau`, hint: 'Tâches des projets, filtrées sur ce projet',
-        link: '/app/taches', query: { ...reading, project: at.object.id }, carries: true, mark: '☑', tone, zone: zone.id,
-      });
-    }
-    if (!path.startsWith('/vision'))
-      actions.push({ id: 'goal:new', group: 'action', kind: 'action', label: 'Créer un objectif daté', hint: 'Objectifs et avenir', link: '/vision', query: { goal: 'new' }, mark: '＋', tone, zone: zone.id });
-  }
+  actions.push(...(applicationOf(zone.id)?.quickActions?.({ path, location: at, reading, tone, connected, objectLabel }) ?? []));
   const creations = PAGE_WORKSPACES
     .filter((view) => !view.path.includes(':') && /^Créer\b/.test(view.label))
     .map((view) => ({ view, owner: locate(view.parent) }))

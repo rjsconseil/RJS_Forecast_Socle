@@ -1,0 +1,163 @@
+/*
+ * Peau de DESIGN du calendrier : elle lit les jetons d'un design (`presentation/calendar-design.ts`,
+ * variables `--cal-d-*`) et ne s'applique qu'à un design autre que « standard ». Le design standard
+ * garde donc l'apparence d'origine, intacte. Aucune règle de mouvement ici : les effets ont leur peau.
+ *
+ * Un jeton absent prend une valeur de repli neutre, proche de l'apparence d'origine.
+ * Couleurs d'état : rouge = dépassement ou négatif, vert = gain ou positif, bleu = situation standard.
+ * Elles ne servent qu'à dire un état ; le reste du design n'emploie que leurs variantes (accent, traits).
+ */
+:host .calendar.is-360.is-canonical[data-cal-design]:not([data-cal-design='standard']) {
+  --cal-state-negative: var(--cal-d-state-negative, #b63248);
+  --cal-state-positive: var(--cal-d-state-positive, #087657);
+  --cal-state-neutral: var(--cal-d-state-neutral, #2563eb);
+  font-family: var(--cal-d-font, inherit);
+  color: var(--cal-d-text, inherit);
+
+  // ---------- cartes : grille, agenda, aperçu, volet ----------
+  .calendar-month-wrap,
+  .calendar-agenda,
+  .calendar-day-peek,
+  .calendar-360-settings,
+  .calendar-360-settings-page {
+    background: var(--cal-d-surface, #fff);
+    border: 1px solid var(--cal-d-line, rgba(34, 34, 55, 0.14));
+    border-radius: var(--cal-d-radius, 20px);
+    box-shadow: var(--cal-d-shadow, none);
+    backdrop-filter: var(--cal-d-backdrop, none);
+    color: var(--cal-d-text, inherit);
+  }
+  // Contour en dégradé (jeton `frame`) : le fond de la carte, puis le dégradé visible sur le bord.
+  :is(.calendar-month-wrap, .calendar-agenda) {
+    position: relative;
+    border-color: transparent;
+    background:
+      var(--cal-d-surface, #fff) padding-box,
+      var(--cal-d-frame, var(--cal-d-line, rgba(34, 34, 55, 0.14))) border-box;
+  }
+  // Filet lumineux en haut des cartes (jeton `topline`).
+  :is(.calendar-month-wrap, .calendar-agenda)::before {
+    content: '';
+    position: absolute;
+    inset: -1px 18px auto;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--cal-d-topline, none);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .calendar-360-settings > summary { border-radius: var(--cal-d-radius, 13px); }
+  .calendar-360-settings[open] > summary { border-bottom: 1px solid var(--cal-d-grid-line, rgba(34, 34, 55, 0.08)); }
+
+  // ---------- en-têtes ----------
+  .calendar-grid-head,
+  .calendar-weekdays,
+  .calendar-agenda-heading {
+    background: var(--cal-d-surface-head, transparent);
+    color: var(--cal-d-text, inherit);
+  }
+  .calendar-grid-head { border-radius: calc(var(--cal-d-radius, 20px) - 1px) calc(var(--cal-d-radius, 20px) - 1px) 0 0; }
+  .calendar-weekdays {
+    box-shadow: 0 1px 0 var(--cal-d-grid-line, rgba(34, 34, 55, 0.08));
+    > span { color: var(--cal-d-accent, inherit); text-transform: uppercase; letter-spacing: 0.12em; font-size: 10.5px; font-weight: 700; }
+  }
+  .calendar-legend-inset {
+    background: transparent;
+    border-top: 1px solid var(--cal-d-grid-line, rgba(34, 34, 55, 0.08));
+    color: var(--cal-d-muted, inherit);
+  }
+  :is(.eyebrow, .calendar-agenda-heading p) { color: var(--cal-d-accent, inherit); letter-spacing: 0.08em; }
+
+  // ---------- cases ----------
+  .calendar-frame .calendar-grid { gap: 1px; background: var(--cal-d-grid-line, transparent); }
+  .calendar-frame .calendar-grid > .calendar-day {
+    background-color: var(--cal-d-surface-alt, #f5f5f7);
+    background-image: none;
+    border-radius: 0;
+  }
+  .calendar-frame .calendar-grid:not(.is-week) > .calendar-day:is(:nth-child(7n), :nth-child(7n - 1)) {
+    background-image: var(--cal-d-weekend, none);
+  }
+  .calendar-frame .calendar-grid > .calendar-day.outside-month { opacity: var(--cal-d-outside-opacity, 0.5); }
+  .calendar-frame .calendar-grid > .calendar-day:is(:hover, :focus-within) { background-color: var(--cal-d-accent-soft, rgba(79, 70, 229, 0.08)); }
+  .calendar-frame .calendar-grid > .calendar-day.today {
+    background-image: none;
+    box-shadow: var(--cal-d-today-ring, inset 0 0 0 2px var(--cal-state-neutral));
+    z-index: 1;
+  }
+  .calendar-frame .calendar-grid > .calendar-day.selected-day:not(.today) {
+    box-shadow: inset 0 0 0 1px var(--cal-d-accent, var(--cal-state-neutral));
+  }
+  .calendar-day-number {
+    font-family: var(--cal-d-numeric, inherit);
+    color: var(--cal-d-muted, inherit);
+  }
+  .calendar-day.today .calendar-day-number { color: var(--cal-d-accent, inherit); font-weight: 750; }
+
+  // ---------- événements ----------
+  .calendar-event {
+    border: 1px solid color-mix(in srgb, var(--event-tone) 22%, transparent);
+    border-left: 3px solid var(--event-tone);
+    border-radius: var(--cal-d-event-radius, 6px);
+    background: color-mix(in srgb, var(--event-tone) var(--cal-d-event-tint, 10%), var(--cal-d-surface-alt, #fff));
+    box-shadow: none;
+    color: var(--cal-d-text, inherit);
+  }
+  .calendar-event.is-pinned,
+  .calendar-event.is-linked { box-shadow: var(--cal-d-shadow-hover, 0 0 0 1px var(--event-tone)); }
+
+  // ---------- liste et aperçu ----------
+  .calendar-agenda-item {
+    margin-bottom: 6px;
+    border: 1px solid var(--cal-d-grid-line, rgba(34, 34, 55, 0.08));
+    border-left: 3px solid var(--event-tone);
+    border-radius: var(--cal-d-radius-small, 10px);
+    background: var(--cal-d-surface-alt, #f7f7fa);
+  }
+  .calendar-agenda-item:is(.is-pinned, .is-linked) {
+    border-color: var(--cal-d-line, rgba(34, 34, 55, 0.14));
+    border-left-color: var(--event-tone);
+    box-shadow: var(--cal-d-shadow-hover, none);
+  }
+  .calendar-agenda-day > h4 { color: var(--cal-d-muted, inherit); text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+  .calendar-day-peek-stats .is-alert { color: var(--cal-state-negative); }
+  .calendar-day-peek-stats .is-success { color: var(--cal-state-positive); }
+
+  // ---------- chiffres et couleurs d'état ----------
+  :is(.calendar-amount, .calendar-day-total) { font-family: var(--cal-d-numeric, inherit); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .calendar-amount[data-direction='entree'],
+  .calendar-day-total[data-sign='positive'] { color: var(--cal-state-positive); }
+  .calendar-amount[data-direction='sortie'],
+  .calendar-day-total[data-sign='negative'] { color: var(--cal-state-negative); }
+  .calendar-day-total[data-sign='zero'] { color: var(--cal-state-neutral); }
+  .calendar-day.has-attention .calendar-day-number::after {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-left: 4px;
+    border-radius: 50%;
+    background: var(--cal-state-negative);
+    vertical-align: middle;
+  }
+
+  // ---------- volet « Sources et affichage » ----------
+  .cal-personalization {
+    fieldset { border-color: var(--cal-d-grid-line, rgba(34, 34, 55, 0.1)); border-radius: var(--cal-d-radius-small, 10px); }
+    legend { color: var(--cal-d-accent, inherit); text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; }
+    p, small { color: var(--cal-d-muted, inherit); }
+    .cal-format-row.is-active,
+    .cal-look-option.is-active { background: var(--cal-d-accent-soft, rgba(79, 70, 229, 0.08)); }
+    input[type='range'] { accent-color: var(--cal-d-accent, auto); }
+  }
+
+  // ---------- vue année ----------
+  .calendar-frame[data-view='year'] .calendar-year-month {
+    background: var(--cal-d-surface-alt, #fff);
+    border-color: var(--cal-d-grid-line, rgba(34, 34, 55, 0.1));
+    border-radius: var(--cal-d-radius-small, 12px);
+    box-shadow: none;
+  }
+  .calendar-frame[data-view='year'] .calendar-year-month:is(:hover, :focus-within, .is-open) { box-shadow: var(--cal-d-shadow-hover, none); }
+  .calendar-frame[data-view='year'] .calendar-year-month h3 { color: var(--cal-d-accent, inherit); text-transform: uppercase; letter-spacing: 0.06em; font-size: 12px; }
+}

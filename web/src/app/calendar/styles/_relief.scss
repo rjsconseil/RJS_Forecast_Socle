@@ -1,18 +1,18 @@
 /*
- * Relief du calendrier BPM : ombres portées, fondus d'apparition, réponse au survol, cases sans repère.
+ * Relief du calendrier : ombres portées, fondus d'apparition, réponse au survol, cases sans repère.
  * Aucune transformation ni masque sur le cadre : l'aperçu d'une journée s'y place en position fixe.
  */
-@keyframes bpm-calendar-fade {
+@keyframes cal-fade {
   from { opacity: 0; }
 }
-:host .calendar.is-360.is-bpm-calendar {
+:host .calendar.is-360.is-canonical {
 
   /* ---------- relief : le calendrier et son agenda sont deux cartes posées sur la page ---------- */
   .calendar-month-wrap,
   .calendar-agenda {
     border: 1px solid color-mix(in srgb, var(--app-accent) 16%, var(--outline));
-    border-radius: var(--bpm-calendar-radius);
-    box-shadow: var(--bpm-calendar-lift);
+    border-radius: var(--cal-radius);
+    box-shadow: var(--cal-lift);
     background: var(--raised-surface);
   }
   .calendar-month-wrap {
@@ -27,7 +27,7 @@
     margin: 0;
     padding: 10px 18px;
     border: 0;
-    border-radius: calc(var(--bpm-calendar-radius) - 1px) calc(var(--bpm-calendar-radius) - 1px) 0 0;
+    border-radius: calc(var(--cal-radius) - 1px) calc(var(--cal-radius) - 1px) 0 0;
     background: linear-gradient(180deg, color-mix(in srgb, var(--app-accent) 11%, var(--raised-surface)), var(--raised-surface));
   }
   .calendar-grid-head h3 {
@@ -57,7 +57,7 @@
     margin: 0;
     padding: 0 18px;
     border: 0;
-    border-radius: 0 0 calc(var(--bpm-calendar-radius) - 1px) calc(var(--bpm-calendar-radius) - 1px);
+    border-radius: 0 0 calc(var(--cal-radius) - 1px) calc(var(--cal-radius) - 1px);
     background: linear-gradient(0deg, color-mix(in srgb, var(--app-accent) 7%, var(--raised-surface)), var(--raised-surface));
     font-size: 11px;
     white-space: nowrap;
@@ -80,31 +80,31 @@
     z-index: 1;
     align-items: center;
     padding: 0;
-    box-shadow: 0 8px 12px -10px var(--bpm-calendar-shadow-mid);
+    box-shadow: 0 8px 12px -10px var(--cal-shadow-mid);
     font-weight: 700;
     letter-spacing: 0.06em;
   }
   .calendar-frame .calendar-grid > .calendar-day {
     position: relative;
-    animation: bpm-calendar-fade var(--bpm-calendar-fade-day) ease-out;
+    animation: cal-fade var(--cal-fade-day) ease-out;
     transition: background-color 180ms ease, box-shadow 180ms ease;
   }
   /* Samedi et dimanche : un voile léger distingue la fin de semaine. */
   .calendar-frame .calendar-grid:not(.is-week) > .calendar-day:is(:nth-child(7n), :nth-child(7n - 1)) {
-    background-image: linear-gradient(var(--bpm-calendar-weekend), var(--bpm-calendar-weekend));
+    background-image: linear-gradient(var(--cal-weekend), var(--cal-weekend));
   }
   .calendar-frame .calendar-grid > .calendar-day:hover,
   .calendar-frame .calendar-grid > .calendar-day:focus-within {
     z-index: 2;
     box-shadow:
       inset 0 0 0 1px color-mix(in srgb, var(--app-accent) 45%, transparent),
-      0 10px 22px -12px var(--bpm-calendar-shadow-strong);
+      0 10px 22px -12px var(--cal-shadow-strong);
   }
   .calendar-frame .calendar-grid > .calendar-day.outside-month {
     background-image: linear-gradient(135deg, color-mix(in srgb, var(--muted) 9%, transparent), transparent 70%);
   }
   .calendar-frame .calendar-grid > .calendar-day.outside-month > :not(.calendar-day-peek) {
-    opacity: var(--bpm-calendar-outside-opacity);
+    opacity: var(--cal-outside-opacity);
     transition: opacity 180ms ease;
   }
   .calendar-frame .calendar-grid > .calendar-day.outside-month:is(:hover, :focus-within) > :not(.calendar-day-peek) {
@@ -115,22 +115,22 @@
     box-shadow:
       inset 0 0 0 2px var(--app-accent),
       0 0 0 4px color-mix(in srgb, var(--app-accent) 16%, transparent),
-      0 12px 24px -12px var(--bpm-calendar-shadow-strong);
+      0 12px 24px -12px var(--cal-shadow-strong);
   }
   .calendar-frame .calendar-grid > .calendar-day.today .calendar-day-number {
     box-shadow: 0 4px 10px -3px color-mix(in srgb, var(--app-accent) 70%, transparent);
   }
   .calendar-frame .calendar-grid > .calendar-day > .calendar-event {
-    box-shadow: 0 1px 2px var(--bpm-calendar-shadow-soft);
+    box-shadow: 0 1px 2px var(--cal-shadow-soft);
     transition: box-shadow 160ms ease, background-color 160ms ease;
   }
   .calendar-frame .calendar-grid > .calendar-day > .calendar-event:is(:hover, :focus-visible) {
-    box-shadow: 0 8px 16px -8px var(--bpm-calendar-shadow-strong);
+    box-shadow: 0 8px 16px -8px var(--cal-shadow-strong);
   }
 
   /* ---------- cases sans repère : inactives, en retrait, sans réponse au survol ---------- */
   .calendar-frame .calendar-grid > .calendar-day:not(.has-events) {
-    background-color: color-mix(in srgb, var(--muted) var(--bpm-calendar-idle-tint), var(--raised-surface));
+    background-color: color-mix(in srgb, var(--muted) var(--cal-idle-tint), var(--raised-surface));
     cursor: default;
   }
   .calendar-frame .calendar-grid > .calendar-day:not(.has-events):not(.today):is(:hover, :focus-within) {
@@ -163,9 +163,9 @@
     border-radius: 12px;
     background: var(--raised-surface);
     box-shadow:
-      0 1px 2px var(--bpm-calendar-shadow-soft),
-      0 10px 20px -14px var(--bpm-calendar-shadow-mid);
-    animation: bpm-calendar-fade var(--bpm-calendar-fade-month) ease-out backwards;
+      0 1px 2px var(--cal-shadow-soft),
+      0 10px 20px -14px var(--cal-shadow-mid);
+    animation: cal-fade var(--cal-fade-month) ease-out backwards;
     transition: box-shadow 200ms ease, border-color 200ms ease;
   }
   /* Rangée après rangée : le deuxième puis le troisième quadrimestre suivent le premier. */
@@ -178,8 +178,8 @@
   .calendar-frame[data-view='year'] .calendar-year-month:is(:hover, :focus-within, .is-open) {
     border-color: color-mix(in srgb, var(--app-accent) 45%, var(--outline));
     box-shadow:
-      0 2px 4px var(--bpm-calendar-shadow-soft),
-      0 18px 30px -16px var(--bpm-calendar-shadow-strong);
+      0 2px 4px var(--cal-shadow-soft),
+      0 18px 30px -16px var(--cal-shadow-strong);
   }
   .calendar-frame[data-view='year'] .calendar-year-month h3 {
     font-weight: 750;
@@ -192,9 +192,9 @@
   /* ---------- aperçu d'une journée et agenda ---------- */
   .calendar-day-peek {
     box-shadow:
-      0 2px 6px var(--bpm-calendar-shadow-soft),
-      0 24px 48px -18px var(--bpm-calendar-shadow-strong);
-    animation: bpm-calendar-fade var(--bpm-calendar-fade-peek) ease-out;
+      0 2px 6px var(--cal-shadow-soft),
+      0 24px 48px -18px var(--cal-shadow-strong);
+    animation: cal-fade var(--cal-fade-peek) ease-out;
   }
   /* Le bas de la liste s'estompe : elle se prolonge sous le bord de la carte. */
   .calendar-agenda-list {
@@ -204,7 +204,7 @@
     transition: box-shadow 180ms ease, border-color 180ms ease;
   }
   .calendar-agenda-item:is(:hover, :focus-within) {
-    box-shadow: 0 10px 20px -14px var(--bpm-calendar-shadow-strong);
+    box-shadow: 0 10px 20px -14px var(--cal-shadow-strong);
   }
 
   @media (prefers-reduced-motion: reduce) {

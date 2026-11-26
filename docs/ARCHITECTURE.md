@@ -138,6 +138,10 @@ transaction : user → projet noyau principal → Budget « Projet de vie » →
   d'attribution (`projets.chargesReglees`) ; tout dépassement (part ou règlement) attend l'accord du budget de vie,
   puis il est facturé à la fin de la période en cours du cycle et intégré au budget attribué ; contrôles PRJ-01 à 03.
 - `dashboard(ctx)`, `explainFigure(ctx, key, {periodKey?})`, `configureCycle(ctx, {anchorDay, startDate, expectedRevision})`, `closePeriod(ctx, {requestKey, periodKey, expectedResultCents})` (aperçu partagé `closingContract`, refus `CLOSING_PREVIEW_STALE`), `closures(ctx)`. Une clôture enregistre `figures` (chiffres de la période) et `stockBeforeCents` ; `figuresFor` relit une période close avec ses chiffres enregistrés et une comparaison séparée.
+- Parcours de clôture (`bpm/closing.mjs`, page « Clôture du cycle ») : suivi des **points** du cycle, puis clôture. Un point est un évènement qui demande une revue : échéance prévue du budget de vie (récurrente, ou saisie comme prévision : `entryStatus: 'planned'`), flux prévu d'un projet financé par le cycle, décision de financement en attente (`projectOverrun`, `taskBudgetRequest`), vérification du compte (bloquante, après le dernier jour). Il s'ouvre quand l'évènement entre dans le cycle (`enteredOn`, ou premier jour du cycle) et se clôt là où il vit (`closedAt` / `closedOn` posés par Budget au règlement ou à l'écart ; `decidedAt` d'une décision). `closingJourney(ctx)` : phase `running` (suivi, sans action de clôture) / `to_close` (mode clôture), points ouverts / clos / reportés / hérités, complétude = (clos + reportés) / points, impacts sur le cycle suivant ; `closingBrief(ctx)` (`GET /api/bpm/closing/brief`) : résumé lu par le cadre Astra (bandeau du mode clôture, point clos signalé à l'instant). `closingDecision(ctx, {periodKey, defer?: {pointId, toPeriodKey}, account?})` (décisions gardées sur la liaison de cycle, `closingPlan`, valables seulement en clôture) : un point non bloquant non validé se revoit dans le cycle choisi (le suivant pour une décision, jusqu'à 24 cycles pour une échéance). `finalizeClosing(ctx, {requestKey, periodKey, expectedResultCents})` : refusée sous 100 % (`CLOSING_INCOMPLETE`) ; en une écriture, clôture (marques des points reportés dans `journey.deferred`) + reports inscrits au premier jour de leur cycle (`budget.carryOverLine`, `carriedFrom` / `carriedTo`). Paramètre `bpm.verrouCycleSuivant` (actif par défaut) : tant qu'un cycle terminé attend sa clôture, il est en clôture (aucune prévision n'y entre : `CYCLE_IN_CLOSING`, gardes `operationGuard` via `opens` et `recurrenceGuard` via `opens`) et le cycle suivant attend (toute entrée datée de lui ou après : `CYCLE_AWAITING_CLOSURE`). `closePeriod` reste la clôture comptable seule (reprises de données, scénarios).
+  - **Actions du cycle** (`bpm/cycle-actions.mjs`) : tout ce qui a été enregistré sur Astra et touche le cycle, classé en catégories (argent du quotidien, projets de la vie, budget récurrent, plafonds et postes, cap et patrimoine, cycle et clôture, autres). Sources : le journal du socle (limité aux 2 000 dernières commandes, tous users) et, avant son début, la création (`provenance`) et la dernière modification (`lastChange`) de chaque objet. Une écriture datée touche le cycle par ses dates (même faite en clôture) ; un réglage, s'il a été fait pendant le cycle. **Catalogue** : une commande du site = une ligne (objet principal, catégorie, verbe) ; une commande inconnue paraît dans « Autres actions », les commandes sans effet sur un cycle sont écartées. Toute nouvelle action du site s'ajoute au catalogue.
+  - **Contrôles de cohérence** (`bpm/closing-checks.mjs`) : bloquants (points traités, compte vérifié, données intègres via l'inspecteur du socle, résultat recalculé à l'identique), à voir (mouvements sans poste, plafonds dépassés), pour information (écarts au prévu, règlements après le dernier jour). `finalizeClosing` est refusée tant qu'un contrôle bloquant échoue (`CLOSING_INCOHERENT`) et fige dans la clôture `journey.actions` (actions compactes) et `journey.checks` (historisation du cycle).
+  - Page : une synthèse (anneau de complétude et une tuile par section) puis quatre sections, du plus important au moins crucial : 1 à valider, 2 résultat et cycle suivant, 3 cohérence, 4 clôturer ; les actions du cycle, consultatives, tiennent sur une ligne dépliable (`closing-journal.ts`). La page s'ouvre repliée : chaque section garde ses encadrés de chiffres clés et son tableau sur deux lignes (`closing-kit.ts`), le détail se déplie. Code couleur d'alerte commun (`AlertTone`) : vert pour ce qui est bon, puis bleu, jaune, orange et rouge selon la gravité. Chaque contrôle porte sa résolution (`resolution` : ce qui ne va pas, pourquoi, étapes avec l'endroit où agir, progression ; éléments avec leur cible), présentée par `closing-resolution.ts` ; l'état au dernier passage (stockage de session) dit, au retour, ce que l'action a changé. Partout où un problème s'affiche (points à valider, compte, étapes et éléments de la cohérence, barre d'actions), « Régler le problème », à gauche du lien vers la page qui le corrige, ouvre le formulaire du site **en fenêtre sur la page de clôture même** (`closing-dialogs.ts`), pour continuer à vérifier et corriger ce qui reste : fiche de l'échéance (`bpm-line-detail`, échéances et flux des projets), carte de décision du projet (`bpm-overrun-request`, `bpm-task-requests`, gestes `ProjectFunding`), comparaison du Rapprochement bancaire (`bpm-bank-reconciliation`, confirmation du compte en clôture), plafond du poste (`bpm-cap-dialog`), saisie d'un mouvement manquant déjà réglé (`bpm-entry-flow`, `defaults.status: realized`). Une page de liste sans formulaire unique garde seulement son lien ; ses éléments ont chacun leur fenêtre.
 - Préparation (C06) : `preparation(ctx)` (prêt / à préparer / incohérent, sans écriture) et `prepareComposition(ctx)` ; contrôle BPM-01 « exactement un » ensemble principal.
 - Lectures communes (`reads.mjs`, `s.reads`) : `summary`, `register`, `lineDetail`, `centers`, `centerDetail`, `incomes`, `balance` (avec rapprochement), `history` (paginé), `impact`, `budgetType`, `due`, `events`, `directives`, `projection` (+ simulation `extra`, comparaison des apports), `previewEntry` (aucune mutation). Chaque lecture porte le contexte commun (user, périmètre, budgets, période début inclus/fin exclue, date de calcul, révision).
 - Partir de zéro : `setupProfile(ctx)` et `setupProject(ctx, input)` — une commande rejouable ; mode `principal` (configure l'ensemble existant, met à jour les lignes du budget type sans les recréer) ou `branch` (Budget standard + projet noyau + ≥ 1 tâche, sans second Patrimoine).
@@ -224,4 +228,166 @@ Parité des parcours (audit ARCH-01, 02, 03, 10) : l'aperçu d'une saisie exécu
 une copie de l'état (`om.simulate`) puis lit les mêmes métriques que la synthèse ; le règlement d'une
 échéance passe par un seul contrôleur web (`bpm/ui/settlement.ts`) depuis la ligne rapide comme depuis la
 fiche ; `setupProject` accepte `expectedRevisions` ; le seuil « proche du plafond » n'existe que dans Budget.
+Il en va de même des niveaux de consommation d'un plafond (`CAP_LEVEL_PCT` : 50, 75 et 90 % ; « proche » à 90 %) : Budget
+rend le niveau de chaque poste et les seuils, et le site colore ses jauges avec eux sans écrire aucun seuil.
 Le relief et les effets visuels viennent des jetons d'ombre (`_tokens.scss`) et de `_elevation.scss`.
+
+## 8. Principes d'architecture appliqués par le socle — 16 novembre 2026
+
+Cinq principes nommés (`api/src/socle/principles.mjs`, exposés par `GET /api/om/architecture`). Ce ne sont pas des
+conventions : le socle refuse leur contournement et `api/test/principles.test.mjs` les vérifie.
+
+| | Principe | Règle | Mécanisme | Refus |
+|---|---|---|---|---|
+| P1 | **Sens unique** | La couche du dessous ne connaît pas celle du dessus. Un module ne voit que les modules qu'il déclare (`dependsOn`), de niveau inférieur ou égal ; le dessus enrichit le dessous par extension. | `socle/scope.mjs` : chaque module reçoit une **portée** dans `setup` et `routes` ; `socle.modules.<x>` non déclaré est refusé. Extensions, compositions, résolveurs et migrations s'exécutent dans la portée de leur fournisseur. | `LAYER_VIOLATION` |
+| P2 | **Écriture unique** | Tout objet naît et change par une commande d'Object Management ; seul le module propriétaire d'une nature écrit ses objets. | État publié **gelé** en profondeur ; `om.create/update` réservés au propriétaire (`om.for(module)`) ; contrôle de sortie de transaction (objet apparu sans `om.create` ou disparu) ; pas d'écrivain du stockage dans la portée d'un module. | `WRITE_OUTSIDE_DOMAIN`, `UNTRACKED_WRITE` |
+| P3 | **Façade publique** | Entre modules, on n'importe que `api.mjs`, et seulement d'une dépendance déclarée. | `modules/budget/api.mjs`, `modules/patrimoine/api.mjs` ; test d'architecture sur les imports. | test |
+| P4 | **Lecture déclarée** | Un module ne lit que ses natures et celles qu'il déclare (`reads`), appartenant à ses dépendances. | Contrat `reads` contrôlé par `Registry.register` ; test d'architecture sur les accès `state.<collection>` et `om.get/list/owned`. | erreur d'enregistrement, test |
+| P5 | **Données gérées** | Les données passent par un système de gestion à deux étages ; chaque module a son schéma ; l'applicatif est séparé du technique. | `socle/data/` (voir ci-dessous). | `DATA_ENGINE_UNAVAILABLE` |
+
+Conséquences : Budget ne lit plus les données de Patrimoine (extension `rootHolders`, fournie par Patrimoine) ;
+Patrimoine déclare `users` ; BPM n'importe plus les fichiers internes des middlewares et déclare ses douze lectures.
+Les tests qui modifiaient l'état en place passent par la voie d'administration (`socle.store.mutate`, réservée à
+l'assemblage du socle, aux scripts et aux tests ; absente de la portée des modules).
+
+### Système de gestion des données (`api/src/socle/data/`)
+
+- **Couche de gestion** — `data-manager.mjs`, `DataManager` (`socle.data`, alias `socle.store`) : catalogue des schémas,
+  état logique publié (gelé), transactions en série, révision, schéma de version et migrations. Elle ignore la façon
+  dont les données sont stockées.
+- **Catalogue** — `schemas.mjs`, dérivé du registre : `technique.socle` (journal, paramètres, reçus, migrations),
+  puis un schéma par module (`technique.users`, `noyau.core`, `middleware.budget`, `middleware.patrimoine`,
+  `application.bpm`). Chaque schéma appartient à un **espace de stockage** : `socle` pour le technique, le noyau et
+  les middlewares ; un espace propre par application (`application.bpm`).
+- **Couche de stockage** — `engines/`, choisie par `SOCLE_DATA_ENGINE` ou `createSocle({ dataEngine })` :
+  - `sqlite` (en service depuis le 24 novembre 2026, SQLite intégré à Node, `engines/sqlite.mjs`) : une base, un
+    fichier (`api/data/store.sqlite`). Une table par collection, **préfixée par la section du site** qui la porte :
+    `MQ_` Mon quotidien (operations, imports, calendarPreferences), `MP_` Mes projets (coreProjects, tasks,
+    projectOverruns, taskBudgetRequests), `MB_` Mon budget (budgets, recurrences, costCenters, chargeCategories),
+    `PT_` Patrimoine (patrimoines, capitalizations, lifeGoals), `CL_` Cycles (cycleLinks, closures, bpmCompositions),
+    `SY_` système (users, parameters, creationRequests et toute collection hors de ces sections). Colonnes : `id`,
+    `user_id`, `revision` de la dernière écriture, `data` (objet complet en JSON). `SY_tables` note la table, la
+    section et l'espace de chaque collection ; `SY_store` les valeurs simples (version, révision, migrations…) ;
+    `SY_journal` le journal, où l'on ne fait qu'ajouter (toute l'histoire est gardée, l'état n'en lit que la fin).
+    Une écriture est une transaction qui n'écrit que les objets créés, modifiés ou supprimés. Verrou d'écrivain unique
+    (`store.sqlite.lock`) et refus `PERSISTENCE_CONFLICT` si la révision enregistrée a changé ailleurs.
+    **Reprise des fichiers JSON** : au premier démarrage sans base, un stockage JSON (`store.json`, toutes dispositions)
+    est copié dans une base neuve, relu et comparé clé par clé, puis rangé dans `store.archives/json-avant-sqlite-<date>/`.
+    Les fichiers JSON ne sont plus un moteur (`json-files.mjs` ne sert qu'à cette reprise et aux copies d'un bloc).
+  - **Copie à la demande** (`DataManager.mutate`) : une transaction ne copie que les collections qu'elle lit ou
+    écrit ; les autres gardent l'objet publié, et le moteur ne les resérialise pas. Le contrôle de sortie (P2)
+    ignore les collections jamais touchées.
+  - **Outils d'administration** (`socle/store.mjs`, réservés aux scripts) : `readStoredState` (lire l'état de la base, ou d'un
+    stockage JSON pas encore repris), `snapshotStore` (copie d'un seul bloc, rouvrable telle quelle comme stockage),
+    `removeStore` (effacer la base). Les scripts d'import et de jeux d'essai les utilisent.
+  - `sgbd` (PostgreSQL, pour un site hébergé à plusieurs) : contrat posé (`open`, `read`, `assertUnchanged`, `write`, `close`, `describe`), **non codé** ; le choisir
+    lève `DATA_ENGINE_UNAVAILABLE`.
+- Non traités à ce stade : historique des objets, identité des utilisateurs. Une commande copie encore en mémoire
+  chaque collection qu'elle lit (environ 80 ms par enregistrement sur les données de recette) : lire sans copier
+  demande qu'Object Management cesse de modifier les objets en place.
+
+### Limites connues
+
+- `checks` et `debug` des modules reçoivent encore le socle entier (diagnostic en lecture seule).
+- Un champ modifié en place dans une transaction sans `om.update` n'est pas détecté (seules l'apparition et la
+  disparition d'objets le sont).
+- Patrimoine dépend de Budget ; la notion de cycle vit dans Budget.
+- Côté site, la structure de navigation reste déclarée dans des fichiers centraux.
+
+## 9. Middlewares typés et indépendants (P6) — 16 novembre 2026
+
+Le niveau 2 distingue trois rôles, portés par le champ `role` du contrat de module et contrôlés par le registre :
+
+| Rôle | Sert | S'appuie sur | Modules |
+|---|---|---|---|
+| **Middleware métier** (`metier`, défaut) | les applications | noyau, transverses, middlewares techniques et transverses ; **jamais un autre middleware métier** | `budget`, `patrimoine`, `navigation` (Navigation system : l'organisation de l'information) |
+| **Middleware technique** (`technique`) | les middlewares métier uniquement | le niveau du dessous uniquement | `cycle` (Cycle et temps : périodes, politique de clôture, cadences) |
+| **Middleware transverse** (`transverse`) | les middlewares métier et les applications | le niveau du dessous uniquement | `calendar` |
+
+- Le cycle, les périodes et les cadences sont sortis de Budget (`modules/cycle/`). Budget et Patrimoine en dépendent
+  tous deux ; une application y accède par la façade du middleware métier qu'elle utilise.
+- Patrimoine ne dépend plus de Budget et ne lit plus ses données. La règle « le Patrimoine partage la racine du
+  Budget de vie » passe par l'extension `lifeAnchor`, fournie par Budget ; Budget connaît les autres tenants d'une
+  racine par l'extension `rootHolders`, fournie par Patrimoine. Deux middlewares métier se parlent par extension.
+- Limite : `patrimoine.principalBudgetId` reste une référence d'identité vers la nature `budget`, vérifiée par le
+  noyau (existence, même utilisateur), sans dépendance de module.
+- Les modules de niveau 0 (`users`, `administration`, `object-management`) restent le socle technique commun.
+
+## 10. Applications déclarées — 16 novembre 2026
+
+Une application de niveau 3 s'ajoute par deux déclarations (module serveur, déclaration d'application
+du site) et deux lignes d'inscription (`SOCLE_MODULES`, `APPLICATIONS`). L'application BPM est déclarée
+par BPM-Astra (`web/src/app/astra/astra.application.ts`) ; le plan, les sous-pages, les actions, les sections de
+contenu, les fiches et les routes sont assemblés par la plateforme (`web/src/app/platform/`).
+Mode d'emploi, contrôles et limites : `docs/APPLICATIONS.md`.
+
+## 11. Feuille de styles globale — 24 novembre 2026
+
+Une seule feuille globale, `web/src/styles.scss`, réunit dans l'ordre de la cascade toutes les couches de
+`web/src/styles/` (socle visuel, calendrier, habillages, présentation BPM, passerelle des composants, module
+Calendrier et projets, cadres et niveaux, cadre des applications et BPM-Astra). Elle remplace les huit feuilles du
+découpage du 17 novembre (`styles`, `styles-calendar`, `styles-rest`, `-b`, `-c`, `styles-pages-a/b/c`) et
+leurs chargeurs à la demande (`platform/page-styles.ts`, `loadCalendarStyles`) : BPM-Astra étant l'application
+par défaut, toutes les pages s'en servaient. Le rendu a été comparé élément par élément sur 15 pages : identique.
+Chargement initial : environ 1,17 Mo (200 Ko transférés) ; limite dans `angular.json` : avertissement à 1,3 Mo,
+échec à 1,5 Mo. Les styles propres à un composant restent dans leur fichier, à côté du composant.
+
+Sans utilisateur choisi, le site n'envoie plus les lectures qui en exigent un : il répond lui-même
+`CONTEXT_REQUIRED` (`core/api.service.ts`, liste gardée par `api/test/anonymous-reads.test.mjs`).
+
+## 12. Vue d'ensemble recentrée et présentation sobre — 17 novembre 2026
+
+L'accueil de BPM (`/zones/bpm`, `bpm/pages/overview.ts`) est la synthèse des deux visions, toujours dans
+cet ordre : 1 · Ma vision budgétaire (entrées, sorties, solde prévu, santé), 2 · Mes projets de la vie
+(ce que le budget finance : enveloppes, projets, décisions), 3 · Calendrier (les prochains événements,
+lus tels quels dans le calendrier de l'application), puis le patrimoine. Aucun calcul métier dans la page.
+La présentation sobre des applications tient dans une seule feuille, dernière de la cascade
+(`styles/_bpm-sober.scss`) : angles nets, étiquettes rectangulaires, chiffres alignés ; couleurs inchangées.
+
+## 13. BPM en cockpit — 17 novembre 2026
+
+Règle d'interface : toute information présentée s'accompagne du geste qui permet d'agir dessus, sur
+place. Première page convertie : la Synthèse (`/zones/bpm`, page « Synthèse », onglet « Ma synthèse »).
+Elle ouvre sur « À faire maintenant » (échéances, décisions, clôtures, santé), puis offre : régler une
+échéance en ligne (`bpm-act-due-row`, même règlement que partout), saisir une entrée ou une dépense,
+accorder ou refuser une demande (`ProjectFunding`), la prochaine action de chaque projet, traiter ou
+reporter un événement du calendrier, régler le cap patrimonial. Aucune règle métier nouvelle : la page
+appelle les commandes existantes. Pages modèles : Projets par statut et Tâches des projets.
+Ordre prévu pour la suite : Tableau de bord, Gestion du projet de vie, Plafonds, Objectifs et avenir,
+Projets et financement, Calendrier.
+
+### Cockpit : pages converties (17 novembre 2026, suite)
+
+Un geste commun, `bpm-quick-settle` (`bpm/ui/quick-settle.ts`) : régler une échéance là où elle est
+affichée, à la date du jour et au montant prévu, par le service `Settlement` (mêmes vérifications de
+plafonds, même confirmation, mêmes refus). Il accepte la ligne du registre ou sa forme allégée, dont il
+relit la ligne complète avant d'écrire. La place des gestes sur les lignes est dans `styles/_bpm-cockpit.scss`.
+
+| Page | Gestes ajoutés |
+| --- | --- |
+| Tableau de bord | Payé / Reçu sur chaque échéance ; « Budget et décisions » et « Tâches » par projet ; « Ajuster les plafonds » sur l'alerte |
+| Registre de flux, détail d'un poste | Payé / Reçu sur chaque échéance ouverte |
+| Gestion du projet de vie | Colonne « Action » (Payé / Reçu) dans tous ses tableaux d'échéances |
+| Plafonds et catégories | « Ajuster ce plafond » et « Voir ses dépenses » sur chaque marge de compensation |
+| Objectifs et avenir | Selon l'état : « Reporter d'un an », « Ajuster l'épargne », « Revoir le scénario », « En faire un projet » |
+| Projets et financement | Accorder / Refuser une demande sur place ; attribuer une enveloppe dans le tableau ; prochaine action par projet |
+| Calendrier | Inchangé : il reflète les événements ; ouvrir et replanifier un repère existaient déjà |
+
+## 12. BPM-Astra devient l'application BPM — 21 novembre 2026
+
+L'ancienne application BPM (zone « Budget/Patrimoine Management », sections MPV, tableau de bord, cockpit
+« Mon projet de vie », page Financement, pages de création) est retirée du site. **BPM-Astra est la seule
+application BPM** et l'application par défaut : la racine du site l'ouvre (`defaultApplicationHome()`),
+le portail des zones est à `/modules`.
+
+- `web/src/app/bpm/` ne déclare plus d'application : `bpm.screens.ts` est le **catalogue des écrans
+  métier** (chargement, données de route, sous-pages, sections de contenu) qu'Astra présente, sous la clé
+  de leur ancienne adresse. BPM ne nomme pas Astra ; la dépendance va d'Astra vers BPM (`builtOn: 'bpm'`).
+- `web/src/app/astra/` déclare l'application : les trois parties, la navigation, le cadre, les actions
+  (N4), les sections de contenu traduites à ses adresses et les actions rapides de la palette.
+- Toutes les anciennes adresses BPM (`BPM_LEGACY_PATHS`) sont des redirections vers leur équivalent Astra,
+  en gardant la lecture (période, filtres, fragment). Vérifié par `app.routes.spec.ts`.
+- L'atelier `/navigation` et son aperçu travaillent sur l'application par défaut (plus de zone écrite en dur).
+- Écrans BPM devenus inatteignables supprimés (tableau de bord, cockpit, financement, création, gestion de
+  projet, et leurs composants) ; la compilation et l'atteignabilité sont vérifiées.
+- L'API ne change pas : `/api/bpm/*` reste l'API de l'application BPM, servie à BPM-Astra.

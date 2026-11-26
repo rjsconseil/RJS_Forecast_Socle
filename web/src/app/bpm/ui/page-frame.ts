@@ -1,15 +1,16 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { BpmContextInfo } from '../../core/bpm-models';
+import { BpmContextInfo } from '../data/bpm-models';
 import { HeroTone } from '../../shared/app-hero.component';
 import { BpmBackTarget } from './heading';
 import { BpmPageBanner } from './page-banner';
 import { BpmPageFocus, BpmPageResult } from './page-focus';
 import { BpmFragmentNavigation } from './fragment-navigation';
+import { BpmCompass } from './compass';
 
 /** Cadre de page : le bandeau commun porte les commandes, le corps reste propre au parcours. */
 @Component({
   selector: 'bpm-page',
-  imports: [BpmPageBanner, BpmFragmentNavigation],
+  imports: [BpmPageBanner, BpmFragmentNavigation, BpmCompass],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
@@ -18,7 +19,7 @@ import { BpmFragmentNavigation } from './fragment-navigation';
       data-tone="budget"
       bpmFragmentNavigation
     >
-      <bpm-page-banner
+      <rjs-page-banner
         [title]="title()"
         [lead]="lead()"
         [kicker]="kicker()"
@@ -34,7 +35,8 @@ import { BpmFragmentNavigation } from './fragment-navigation';
         <ng-content select="[primary]" ngProjectAs="[primary]" />
         <ng-content select="[actions]" ngProjectAs="[actions]" />
         <ng-content select="[tools]" ngProjectAs="[tools]" />
-      </bpm-page-banner>
+      </rjs-page-banner>
+      <bpm-compass />
       <ng-content select="[extra]" />
       <ng-content />
     </div>

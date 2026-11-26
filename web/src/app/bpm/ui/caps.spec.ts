@@ -1,8 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { cents } from '../../core/format';
-import { BpmCapGauge, capAlertText, capEuroText, capGaugeText, capInput, capTone, withCapAlerts } from './caps';
+import { BpmCapGauge, capAlertText, capEuroText, capGaugeText, capInput, capLevel, capLevelLegend, withCapAlerts } from './caps';
 
-// Plafonds de dépenses : deux niveaux (centre, catégorie) lus indépendamment, jamais bloquants.
+/** Seuils rendus par Budget (`levels` des lectures) : les tests les reçoivent comme le site. */
+const LEVELS = { mid: 50, high: 75, near: 90 };
+
+// Plafonds de dépenses : un plafond par poste, jamais bloquant.
 describe('plafonds de dépenses', () => {
   const m = (capCents: number | null, engagedCents: number) => ({
     capCents,
@@ -10,15 +13,24 @@ describe('plafonds de dépenses', () => {
     marginCents: capCents === null ? null : capCents - engagedCents,
     usedPct: capCents ? Math.round((engagedCents / capCents) * 1000) / 10 : null,
     over: capCents !== null && engagedCents > capCents,
-    near: capCents !== null && engagedCents <= capCents && engagedCents >= capCents * 0.85,
+    near: capCents !== null && engagedCents <= capCents && engagedCents >= capCents * 0.9,
+    level: capLevel({ capCents, engagedCents }, LEVELS),
   });
 
-  it('classe un niveau selon les drapeaux du middleware : sans plafond, dans le plafond, proche, dépassé', () => {
-    expect(capTone(m(null, 5000))).toBe('none');
-    expect(capTone(m(10000, 5000))).toBe('ok');
-    expect(capTone(m(10000, 8500))).toBe('near');
-    expect(capTone(m(10000, 10000))).toBe('near');
-    expect(capTone(m(10000, 10001))).toBe('over');
+  it('colore selon le niveau consommé : vert < 50 %, bleu 50–75 %, jaune 75–90 %, orange 90–100 %, rouge au-delà', () => {
+    expect(capLevel(m(null, 5000), LEVELS)).toBe('none');
+    expect(capLevel(m(10000, 0), LEVELS)).toBe('low');
+    expect(capLevel(m(10000, 4999), LEVELS)).toBe('low');
+    expect(capLevel(m(10000, 5000), LEVELS)).toBe('mid');
+    expect(capLevel(m(10000, 7499), LEVELS)).toBe('mid');
+    expect(capLevel(m(10000, 7500), LEVELS)).toBe('high');
+    expect(capLevel(m(10000, 8999), LEVELS)).toBe('high');
+    expect(capLevel(m(10000, 9000), LEVELS)).toBe('near');
+    expect(capLevel(m(10000, 10000), LEVELS)).toBe('near');
+    expect(capLevel(m(10000, 10001), LEVELS)).toBe('over');
+    // Les seuils viennent de Budget : d'autres seuils donnent d'autres couleurs, la légende les reprend.
+    expect(capLevel(m(10000, 8000), { mid: 40, high: 60, near: 80 })).toBe('near');
+    expect(capLevelLegend(LEVELS).map((l) => l.label)).toEqual(['Moins de 50 %', '50 à 75 %', '75 à 90 %', '90 à 100 %', 'Au-delà de 100 %']);
   });
 
   it('lit la saisie en euros : vide = sans plafond, invalide refusé', () => {
@@ -36,12 +48,12 @@ describe('plafonds de dépenses', () => {
     expect(capGaugeText(m(null, 0))).toBe('Sans plafond');
     expect(capGaugeText(m(10000, 2500))).toBe(`Reste ${cents(7500)} sur ${cents(10000)}`);
     expect(capGaugeText(m(10000, 11500))).toBe(`Dépassé de ${cents(1500)} · plafond ${cents(10000)}`);
-    const alert = { level: 'category' as const, ref: 'std:loisirs', id: 'cat_1', label: 'Cinéma', capCents: 3000, engagedCents: 3500, overCents: 500 };
-    expect(capAlertText(alert)).toBe(`catégorie « Cinéma » : ${cents(3500)} engagés pour un plafond de ${cents(3000)} (+${cents(500)})`);
+    const alert = { level: 'center' as const, ref: 'std:loisirs', id: null, label: 'Loisirs', capCents: 3000, engagedCents: 3500, overCents: 500 };
+    expect(capAlertText(alert)).toBe(`poste « Loisirs » : ${cents(3500)} engagés pour un plafond de ${cents(3000)} (+${cents(500)})`);
     expect(withCapAlerts('Charge ajoutée.', [])).toBe('Charge ajoutée.');
-    const msg = withCapAlerts('Charge ajoutée.', [alert, { ...alert, level: 'center', id: null, label: 'Loisirs' }]);
+    const msg = withCapAlerts('Charge ajoutée.', [alert]);
     expect(msg.startsWith('Charge ajoutée. Attention, plafond dépassé')).toBe(true);
-    expect(msg).toContain('centre « Loisirs »');
+    expect(msg).toContain('poste « Loisirs »');
     expect(msg.endsWith('La dépense est bien enregistrée.')).toBe(true);
   });
 

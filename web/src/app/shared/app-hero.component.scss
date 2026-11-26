@@ -306,11 +306,6 @@ rjs-app-hero {
   background: color-mix(in srgb, var(--slate-950) var(--part-20), transparent);
   border-color: color-mix(in srgb, var(--white) var(--part-50), transparent);
 }
-.app-hero-footer .period-reading-state {
-  margin: 0;
-  color: var(--white);
-  font-size: scaled(var(--fs-sm));
-}
 
 /* Poste de lecture permanent : contexte, période et indicateurs équilibrés.
    Les commandes sont réunies dans un seul pied, sur toute la largeur. */
@@ -697,17 +692,17 @@ rjs-app-hero {
       grid-column: 1 / -1;
       grid-row: auto;
     }
-    .bpm-context-toolbar {
+    .page-toolbar-frame {
       padding: 8px 10px;
       gap: 7px;
     }
-    .bpm-toolbar-focus {
+    .page-toolbar-focus {
       padding-bottom: 7px;
     }
-    .bpm-toolbar-focus p {
+    .page-toolbar-focus p {
       display: none;
     }
-    .bpm-toolbar-focus strong {
+    .page-toolbar-focus strong {
       font-size: 12px;
     }
   }
@@ -722,7 +717,7 @@ rjs-app-hero {
     .app-hero-toolbar .app-hero-page-tools .expense-filters {
       min-width: 0;
     }
-    .app-hero-toolbar .bpm-toolbar-primary > [toolbarPrimary] > :is(a, button) {
+    .app-hero-toolbar .page-toolbar-primary > [toolbarPrimary] > :is(a, button) {
       flex: 1 1 auto;
     }
     &.page-hero-compact .app-hero-title > :is(h1, h2) {

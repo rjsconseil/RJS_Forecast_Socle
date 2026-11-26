@@ -1,11 +1,14 @@
+import { BpmAmount } from './amount';
 import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
+import { BpmRouterLink } from './bpm-router-link';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { LineDetail, RegisterLine } from '../../core/bpm-models';
-import { cents, shortDate, signedCents } from '../../core/format';
+import { BpmApi } from '../data/bpm-api.service';
+import { LineDetail, RegisterLine } from '../data/bpm-models';
+import { cents, shortDate, signedCents, parseAmount } from '../../core/format';
+import { BpmPostingImpact } from './posting-impact';
 import { BpmModal } from './modal';
 import { FUNDING_ACTIONS, FUNDING_RESULTS, ProjectFunding } from './project-funding';
 import { bpmLoader, BpmRefresh, newRequestKey } from './page-context';
@@ -46,7 +49,7 @@ interface PendingOverrun {
 
 @Component({
   selector: 'bpm-line-detail',
-  imports: [FormsModule, BpmState, BpmModal, RouterLink],
+  imports: [BpmAmount, BpmPostingImpact, FormsModule, BpmState, BpmModal, BpmRouterLink],
   styleUrls: ['../ref-styles/bpm-context.scss', '../ref-styles/bpm-pages.scss', './line-detail.scss'],
   template: `
     <bpm-modal [open]="true" [headed]="true" [title]="d()?.line?.label ?? 'Détail de l’échéance'" [busy]="busy()" (closed)="closed.emit()">
@@ -77,7 +80,7 @@ interface PendingOverrun {
                     attend déjà votre décision : décidez-la d’abord, puis revenez régler cette dépense.
                   </p>
                   <div class="bpm-actions">
-                    <a class="btn btn-primary" routerLink="/projet-de-vie" fragment="life-decisions" (click)="followLink()">Voir les décisions attendues</a>
+                    <a class="btn btn-primary" routerLink="/projet-de-vie/financement" fragment="project-decisions-title" (click)="followLink()">Ouvrir les décisions attendues</a>
                     <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="actionError.set(null)">Garder la dépense prévue</button>
                   </div>
                 }
@@ -88,7 +91,7 @@ interface PendingOverrun {
                 <p class="bld-notice">{{ n }}</p>
               }
               <p>
-                Vous pilotez aussi le projet : accordez {{ money(g.neededCents) }} à « {{ g.taskTitle }} »
+                Vous pilotez aussi le projet : autorisez ce paiement de {{ money(g.neededCents) }} pour « {{ g.taskTitle }} »
                 @if (g.grantOverrunCents) {
                   — l’enveloppe n’a que {{ money(g.availableCents ?? 0) }} à répartir : {{ money(g.grantOverrunCents) }} seront autorisés en dépassement
                 }
@@ -96,7 +99,7 @@ interface PendingOverrun {
               </p>
               <div class="bpm-actions">
                 <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="grantShareAndSettle(g)">
-                  {{ act.grantShare(g.neededCents, g.taskTitle) + act.andSettle }}
+                  Autoriser et régler
                 </button>
                 <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="actionError.set(null)">Garder la dépense prévue</button>
               </div>
@@ -107,7 +110,7 @@ interface PendingOverrun {
             <div class="bld-overrun">
               <p>
                 Vous décidez pour le projet de vie : autorisez ce dépassement de {{ money(o.overrunCents) }} et le règlement
-                est enregistré aussitôt. Le dépassement sera facturé au budget de vie à la fin du cycle.
+                est enregistré aussitôt. Seul ce flux validé modifie le cycle choisi ou le patrimoine ; l’autorisation ne crée aucune seconde charge.
               </p>
               <div class="bpm-actions">
                 <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="authorizeAndSettle()">
@@ -123,6 +126,9 @@ interface PendingOverrun {
             <small>{{ v.line.direction === 'income' ? 'Entrée' : 'Charge' }} · {{ v.line.cadenceLabel }}</small>
             <p class="bld-tags">
               <span class="chip" [class]="v.line.status">{{ v.line.statusLabel }}</span>
+              @if (v.line.carriedFrom; as cf) {
+                <span class="chip warn" title="Non validée dans un cycle clôturé : elle se revoit dans ce cycle.">Reportée · prévue le {{ date(cf.date) }}</span>
+              }
               @if (!v.line.centerKnown) {
                 <span class="chip warn">Centre à préciser</span>
               }
@@ -133,17 +139,15 @@ interface PendingOverrun {
             <dl>
               <div><dt>Budget / projet</dt><dd>{{ v.line.budgetRole === 'life' ? 'Budget du projet de vie' : v.line.budgetName }}</dd></div>
               <div><dt>Centre</dt><dd>{{ v.line.costCenterLabel ?? 'À préciser' }}</dd></div>
-              @if (v.line.direction === 'charge') {
-                <div><dt>Catégorie</dt><dd>{{ v.line.categoryLabel ?? 'Sans catégorie' }}</dd></div>
-              }
               <div><dt>Tâche</dt><dd>{{ v.line.taskTitle ?? '—' }}</dd></div>
               <div><dt>Date prévue</dt><dd>{{ date(v.line.plannedDate) }}</dd></div>
               @if (v.timing?.plannedPeriod; as p) { <div><dt>Cycle prévu</dt><dd>{{ p.label }}</dd></div> }
-              <div><dt>Montant prévu</dt><dd class="num">{{ c(v.line.plannedCents) }}</dd></div>
-              <div><dt>Date réelle</dt><dd>{{ v.line.realizedDate ? date(v.line.realizedDate) : '—' }}</dd></div>
+              <div><dt>Montant prévu</dt><dd class="num" [bpmAmount]="v.line.plannedCents" [bpmFlow]="v.line.direction">{{ c(v.line.plannedCents) }}</dd></div>
+              <div><dt>Date du paiement / reçu</dt><dd>{{ v.line.realizedDate ? date(v.line.realizedDate) : '—' }}</dd></div>
+              @if (v.project && v.line.settled && v.line.projectPosting !== 'historical') { <div><dt>Imputation validée</dt><dd>{{ date(v.line.accountingDate ?? v.line.realizedDate) }} · {{ v.line.fundingSource === 'patrimoine' ? 'Patrimoine' : 'Cycle budgétaire' }}</dd></div> }
               @if (v.timing?.realizedPeriod; as p) { <div><dt>Cycle du règlement</dt><dd>{{ p.label }}</dd></div> }
-              <div><dt>Montant réel</dt><dd class="num">{{ v.line.realizedCents === null ? '—' : c(v.line.realizedCents) }}</dd></div>
-              <div><dt>Différence (réel − prévu)</dt><dd class="num">{{ v.line.differenceCents === null ? '—' : s(v.line.differenceCents) }}</dd></div>
+              <div><dt>Montant réel</dt><dd class="num" [bpmAmount]="v.line.realizedCents" [bpmFlow]="v.line.direction">{{ v.line.realizedCents === null ? '—' : c(v.line.realizedCents) }}</dd></div>
+              <div><dt>Différence (réel − prévu)</dt><dd class="num" [bpmAmount]="v.line.differenceCents" [bpmTone]="v.line.direction === 'charge' && v.line.differenceCents !== null && v.line.differenceCents !== 0 ? v.line.differenceCents > 0 ? 'danger' : 'success' : undefined">{{ v.line.differenceCents === null ? '—' : s(v.line.differenceCents) }}</dd></div>
             </dl>
           </section>
           @if (v.definition; as def) {
@@ -153,7 +157,7 @@ interface PendingOverrun {
                 <div><dt>Répétition</dt><dd>{{ def.cadenceLabel }}</dd></div>
                 <div><dt>Première échéance</dt><dd>{{ date(def.firstDate) }}</dd></div>
                 <div><dt>Dernière échéance</dt><dd>{{ def.endDate ? date(def.endDate) : 'Sans fin' }}</dd></div>
-                <div><dt>Montant par échéance</dt><dd class="num">{{ c(def.amountCents) }}</dd></div>
+                <div><dt>Montant par échéance</dt><dd class="num" [bpmAmount]="def.amountCents" [bpmFlow]="v.line.direction">{{ c(def.amountCents) }}</dd></div>
               </dl>
             </section>
           }
@@ -171,7 +175,7 @@ interface PendingOverrun {
                 <a class="btn btn-primary" [routerLink]="['/app/gestion-projet', p.coreProjectId]" fragment="enveloppe" (click)="followLink()">Attribuer une enveloppe au projet</a>
               }
               @if (p.inclusion === 'included') {
-                <a class="btn btn-secondary" routerLink="/projet-de-vie" [queryParams]="{ period: v.timing?.realizedPeriod?.key ?? period() }" fragment="life-funding-title" (click)="followLink()">Voir la prise en charge du projet de vie</a>
+                <a class="btn btn-secondary" [routerLink]="v.project?.fundingSource === 'patrimoine' ? '/vision' : '/projet-de-vie/cloture'" [queryParams]="{ period: v.timing?.accountingPeriod?.key ?? period() }" [fragment]="v.project?.fundingSource === 'patrimoine' ? 'wealth-project-flows' : 'cycle-project-flows'" (click)="followLink()">Ouvrir la prise en charge du projet de vie</a>
               }
             </section>
           }
@@ -179,9 +183,17 @@ interface PendingOverrun {
             <section>
               <h3>{{ v.line.direction === 'income' ? 'Marquer reçu' : 'Marquer payé' }}</h3>
               <div class="bld-fields">
-                <label>Date réelle<input type="date" [(ngModel)]="realDate" name="realDate" /></label>
+                <label>Date du paiement ou de la réception<input type="date" [(ngModel)]="realDate" name="realDate" /></label>
                 <label>Montant réel (€)<input inputmode="decimal" [(ngModel)]="realAmount" name="realAmount" /></label>
               </div>
+              @if (v.project) {
+                <div class="bld-fields">
+                  <label>Imputer ce flux à<select name="fundingSource" [(ngModel)]="fundingSource"><option value="">{{ v.project.fundingSource === 'patrimoine' ? 'Patrimoine' : 'Cycle budgétaire' }} · choix du projet</option><option value="cycle">Cycle budgétaire</option><option value="patrimoine">Patrimoine · hors cycle</option></select></label>
+                  <label>Date de validation et d’imputation<input type="date" name="accountingDate" [(ngModel)]="accountingDate" [min]="realDate()" /></label>
+                </div>
+                <p class="bpm-help">Sans date distincte, l’imputation suit le paiement. Seul le cycle de validation porte la charge ou le revenu ; le cycle du paiement en garde la trace. Le patrimoine est débité ou crédité directement après validation.</p>
+                <bpm-posting-impact [source]="fundingSource() || v.project.fundingSource || 'cycle'" [direction]="v.line.direction" [amountCents]="postingAmount(v.line)" [announced]="v.line.plannedDate" [paid]="realDate()" [accounting]="accountingDate()" [anchorDay]="v.context.cycleAnchorDay" [validated]="true" [project]="v.project.name" [task]="v.project.taskTitle ?? ''" />
+              }
               @for (w of settleWarnings(v); track w) {
                 <p class="bpm-feedback is-warning" role="status">{{ w }}</p>
               }
@@ -246,8 +258,8 @@ interface PendingOverrun {
                       <tr>
                         <td>{{ r.occurrenceDate ? date(r.occurrenceDate) : '—' }}</td>
                         <td>{{ date(r.realizedDate) }}</td>
-                        <td class="num">{{ c(r.plannedCents) }}</td>
-                        <td class="num">{{ c(r.realizedCents) }}</td>
+                        <td class="num" [bpmAmount]="r.plannedCents" [bpmFlow]="v.line.direction">{{ c(r.plannedCents) }}</td>
+                        <td class="num" [bpmAmount]="r.realizedCents" [bpmFlow]="v.line.direction">{{ c(r.realizedCents) }}</td>
                         <td>@if (r.outsidePeriod) {<span class="chip">hors période</span>}</td>
                       </tr>
                     }
@@ -326,6 +338,12 @@ export class BpmLineDetail {
   protected actionError = this.settlement.error;
   protected realDate = this.settlement.realDate;
   protected realAmount = this.settlement.realAmount;
+  protected accountingDate = this.settlement.accountingDate;
+  protected fundingSource = this.settlement.fundingSource;
+  protected postingAmount(line: RegisterLine) {
+    const amount = this.realAmount() ? parseAmount(this.realAmount()) : line.plannedCents / 100;
+    return typeof amount === 'number' && Number.isFinite(amount) ? Math.round(amount * 100) : null;
+  }
   protected settleConfirmation = this.settlement.confirmation;
 
   /** Avertissements avant règlement : cas acceptés mais rarement voulus (hors enveloppe, année probablement erronée). */
@@ -335,8 +353,8 @@ export class BpmLineDetail {
     if (!d || v.line.direction !== 'charge') return out;
     const p = v.project;
     if (p && !p.funded && !p.taskFundingRequired) out.push(`« ${p.name} » n’a pas encore d’enveloppe : ce règlement restera dans l’historique du projet, hors budget de vie.`);
-    else if (p?.allocationDate && d < p.allocationDate)
-      out.push(`Date antérieure à l’attribution de l’enveloppe (${this.date(p.allocationDate)}) : ce règlement restera dans l’historique du projet, hors enveloppe et hors budget de vie.`);
+    else if (p?.allocationDate && (this.accountingDate() || d) < p.allocationDate)
+      out.push(`Date d’imputation antérieure à l’attribution de l’enveloppe (${this.date(p.allocationDate)}). Ce règlement restera dans l’historique du projet, hors enveloppe et hors budget de vie.`);
     return [...out, ...settleDateWarnings(v.line, d)];
   }
 
@@ -345,11 +363,11 @@ export class BpmLineDetail {
   protected date = shortDate;
   protected inclusionText(v: LineDetail): string {
     switch (v.project?.inclusion) {
-      case 'included': return 'Ce règlement est compris dans le Dépensé du projet de vie à sa date réelle, une seule fois.';
+      case 'included': return 'Ce flux est comptabilisé une seule fois, à sa date de validation et selon sa source d’imputation.';
       case 'before-allocation': return 'Ce règlement précède l’attribution : il reste dans l’historique du projet, hors enveloppe et hors Dépensé du projet de vie.';
       case 'unfunded': return v.project?.taskFundingRequired ? 'Attribuez une enveloppe à ce projet avant de régler ses dépenses. Vous pouvez préparer les échéances et les demandes des tâches dès maintenant.' : 'Ce projet n’a pas d’enveloppe. Ses règlements restent dans son historique ; attribuer une enveloppe ne reprend pas les paiements antérieurs.';
-      case 'income': return 'Cette entrée appartient au budget du projet. Elle ne devient pas automatiquement une entrée du projet de vie ; les retours au projet de vie se pilotent depuis la tâche.';
-      case 'pending': return 'Cette dépense est prévue dans le projet. Elle remontera au Dépensé du projet de vie lors de son règlement, selon sa date réelle et l’attribution de l’enveloppe.';
+      case 'income': return v.line.settled ? 'Ce gain est pris en compte à sa date d’imputation dans le cycle ou le patrimoine.' : 'Vous pouvez encaisser ce gain même si le projet attend son enveloppe. Choisissez son imputation à la validation.';
+      case 'pending': return 'Cette dépense est prévue dans le projet. Elle sera imputée au cycle ou au patrimoine lors de sa validation. L’enveloppe et les parts des tâches ne créent aucune dépense.';
       default: return '';
     }
   }
@@ -403,7 +421,7 @@ export class BpmLineDetail {
   /** Une écriture : la part de la tâche est portée au nécessaire (dépassement compris) et l'échéance réglée. */
   grantShareAndSettle(g: ShareGap) {
     const v = this.d();
-    return v && this.settle(v, { notice: FUNDING_RESULTS.granted(g.taskTitle, g.neededCents, g.grantOverrunCents) });
+    return v && this.settle(v, { notice: 'Paiement autorisé. La part existante reste inchangée ; son dépassement éventuel reste visible.' });
   }
 
   /** Une écriture : le dépassement est autorisé et l'échéance réglée. */

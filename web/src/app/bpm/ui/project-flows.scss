@@ -1,0 +1,18 @@
+:host { display: block; min-width: 0; margin-block: 20px; container-type: inline-size; }
+.flow-panel { padding: 22px; border: 1px solid var(--card-border, var(--line)); border-radius: 14px; background: var(--c-surface, white); }
+header { display: flex; gap: 16px; justify-content: space-between; align-items: start; }
+header > div { max-width: 750px; } h2 { margin: 5px 0 8px; font-size: 21px; } h3 { font-size: 13px; margin: 6px 0; }
+p, small, .flow-dates { color: var(--muted); font-size: 12px; line-height: 1.6; }
+header p { margin: 0; } a { color: var(--c-accent, #226c6c); font-size: 12px; font-weight: 600; } header > a { flex-shrink: 0; max-width: 200px; }
+.flow-scope { margin: 12px 0; }
+.flow-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; padding: 16px 0; margin: 0 0 16px; border-block: 1px solid var(--line); }
+dt { color: var(--muted); font-size: 12px; } dd { margin: 5px 0 0; font-size: clamp(18px, 2.4cqi, 26px); font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.negative { color: var(--status-danger); } .flow-destinations { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
+.flow-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 12px; margin-block: 16px; } select { max-width: 100%; min-height: 36px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--c-surface); color: inherit; }
+.flow-project { border-bottom: 1px solid var(--line); } summary { cursor: pointer; padding-block: 14px; } .flow-project > summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; } summary span:first-child { display: grid; gap: 4px; min-width: 0; } summary strong { overflow-wrap: anywhere; font-size: 14px; } .flow-net { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.flow-project-link { display: inline-block; margin: 0 0 10px; } .flow-lines { margin: 0; padding: 0; list-style: none; }
+.flow-lines li { display: flex; align-items: start; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding-block: 12px; border-top: 1px solid var(--line); font-size: 13px; }
+.flow-open { display: inline-grid; gap: 4px; text-align: left; color: var(--c-accent, #226c6c); background: transparent; border: 0; padding: 0; cursor: pointer; font: inherit; min-width: 0; max-width: 100%; overflow-wrap: anywhere; } .flow-open > span { color: var(--muted); font-size: 12px; }
+.flow-amount { white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }.flow-dates { display: flex; gap: 6px 16px; flex-wrap: wrap; flex-basis: 100%; }.flow-dates strong { color: var(--c-text, var(--ink)); font-weight: 500; }
+.flow-pending { padding: 12px; margin-bottom: 12px; border-radius: 8px; background: var(--c-surface-2, #f7f8fa); }.flow-note, .flow-empty { padding: 10px 0; margin: 0; }.flow-traces { margin-top: 12px; border-top: 1px solid var(--line); }.flow-traces summary { font-size: 13px; font-weight: 600; }
+@container (max-width: 600px) { .flow-panel { padding: 16px; } header { flex-direction: column; gap: 10px; } header > a { max-width: 100%; } .flow-totals { gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); } .flow-totals > div:last-child { grid-column: 1 / -1; } .flow-net { font-size: 14px; } }

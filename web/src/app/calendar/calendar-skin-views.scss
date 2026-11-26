@@ -1,0 +1,37 @@
+/*
+ * Vues et formats du calendrier, pour chaque calendrier : disposition des événements selon le format choisi,
+ * et vue semaine qui montre tous les événements. Même chaîne que la présentation canonique, sans astuce.
+ */
+:host .calendar.is-360.is-canonical {
+  // ---------- Formats : disposition des événements ----------
+  .calendar-event-meta { display: inline-flex; flex-wrap: wrap; gap: 0 4px; > :not(:first-child)::before { content: '· '; color: var(--host-muted, #5b6b7d); } &:empty { display: none; } }
+  &[data-format-layout='deux-lignes'] {
+    .calendar-grid .calendar-event { flex-wrap: wrap; row-gap: 0; }
+    .calendar-grid .calendar-event > .calendar-event-title { flex: 1 1 calc(100% - 1.4em); }
+    .calendar-grid .calendar-event > small { white-space: nowrap; }
+  }
+  &[data-format-layout='pastille'] {
+    .calendar-grid .calendar-event { gap: 4px; padding-block: 1px; }
+    .calendar-grid .calendar-event > .calendar-event-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11.5px; }
+  }
+
+  // ---------- Vue semaine : la vue qui montre tous les événements ----------
+  // La grille prend toute la largeur (les 7 jours sans défilement) et la hauteur de ses événements ;
+  // la liste de la période passe dessous, les jours côte à côte.
+  .calendar-layout.is-week {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-auto-rows: auto;
+    .calendar-month-wrap { grid-row: 1; height: auto; min-height: 0; aspect-ratio: auto; }
+    .calendar-agenda { grid-row: 2; grid-column: 1; max-height: none; contain: none; height: auto; }
+    ::ng-deep .calendar-360-content { grid-row: 3; }
+    .calendar-frame, .calendar-grid-scroll { flex: none; height: auto; }
+    .calendar-grid-scroll { overflow-x: visible; }
+    .calendar-grid-content, .calendar-weekdays, .calendar-grid { min-width: 0; }
+    .calendar-month-wrap { overflow-x: visible; }
+    .calendar-grid { min-height: 320px; height: auto; }
+    .calendar-grid > .calendar-day { min-width: 0; }
+    .calendar-grid > .calendar-day > .calendar-event { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+    .calendar-agenda-list { flex: none; overflow: visible; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); align-items: start; gap: 12px; }
+  }
+}

@@ -127,6 +127,40 @@ a.expense-charge-summary {
   }
 }
 
+// Les listes imbriquées disposent de moins de place que la largeur de la fenêtre.
+.bm-period-list {
+  container: period-flows / inline-size;
+}
+@container period-flows (max-width: 360px) {
+  .expense-row > .expense-charge-summary,
+  .expense-row > .expense-charge-summary:has(.expense-date) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+  }
+  .expense-row > .expense-charge-summary > .expense-main,
+  .expense-row > .expense-charge-summary:has(.expense-date) > .expense-main {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .expense-row > .expense-charge-summary > .expense-amount,
+  .expense-row > .expense-charge-summary:has(.expense-date) > .expense-amount {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    text-align: left;
+  }
+  .expense-row > .expense-charge-summary > .expense-state,
+  .expense-row > .expense-charge-summary:has(.expense-date) > .expense-state {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+  .expense-row > .expense-charge-summary:has(.expense-date) > .expense-date {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+}
+
 /* Une ligne du détail qui ouvre le panneau partagé garde l'allure d'un bouton de la source. */
 a.bmd-precise-open {
   display: inline-flex;

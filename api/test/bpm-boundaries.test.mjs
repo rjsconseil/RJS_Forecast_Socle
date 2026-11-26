@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile, readdir } from 'node:fs/promises';
-import { makeSocle, camille, key } from './helpers.mjs';
+import { makeSocle, camille, key, firstTaskOf } from './helpers.mjs';
 import { createSocle } from '../src/socle/index.mjs';
 import { SOCLE_MODULES } from '../src/modules/index.mjs';
 
@@ -123,6 +123,7 @@ test('assistant BPM : plafonds invalides et modification de récurrence hors bud
     const { recurrence } = await socle.modules.budget.createRecurrence(ctx, {
       requestKey: key(),
       budgetId: branch.budgetId,
+      taskId: firstTaskOf(socle, branch.budgetId),
       direction: 'charge',
       label: 'Hôtel',
       amount: 100,

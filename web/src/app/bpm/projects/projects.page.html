@@ -1,0 +1,268 @@
+    <div class="page page-wide landing-page section-home bpm-projects">
+      <rjs-page-banner
+        class="life-projects-banner"
+        [title]="workspace()?.title ?? 'Projets par statut'"
+        lead="Choisissez ce qui doit avancer : préparez les moyens, organisez les tâches et traitez les décisions depuis votre cockpit."
+        [focus]="pageFocus()"
+        [scope]="toolbarScope()"
+        [result]="toolbarResult()"
+        toolsLabel="Organiser les projets de la vie"
+      >
+        <div primary>
+          @if (data(); as d) {
+            @if (d.life.pendingRequests.length || d.life.billable.length) {
+              <button type="button" class="btn btn-primary" (click)="cycleOpen.set(true)">Ouvrir les autorisations et le cycle</button>
+            } @else if (d.life.taskRequests.length) {
+              <a class="btn btn-primary" routerLink="/projet-de-vie/financement" fragment="project-decisions-title">Accorder ou refuser {{ d.life.taskRequests.length }} demande(s)</a>
+            } @else if (unfundedCount()) {
+              <a class="btn btn-primary" routerLink="/projet-de-vie/financement">Attribuer {{ unfundedCount() }} enveloppe(s)</a>
+            } @else {
+              <button type="button" class="btn btn-primary" (click)="projectEditor.set('new')">＋ Créer un projet de la vie</button>
+            }
+          } @else { <button type="button" class="btn btn-primary" disabled>Chargement des projets…</button> }
+        </div>
+        <div actions>
+          @if (hasPriorityAction()) {
+            <button type="button" class="btn btn-secondary life-create" (click)="projectEditor.set('new')">＋ Créer un projet de la vie</button>
+          }
+          @if (data(); as d) {
+            @if (!d.life.pendingRequests.length && !d.life.billable.length) {
+              <button type="button" class="btn btn-secondary" (click)="cycleOpen.set(true)">Autorisations et cycle</button>
+            }
+          }
+          @if (filter() !== 'all' && visible().length === 1) {
+            <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', visible()[0].project.id]">Ouvrir le projet</a>
+          }
+        </div>
+        <div tools class="life-banner-tools">
+          <form class="life-budget-project" (submit)="$event.preventDefault(); adopt()">
+            <label>
+              Projet à budgéter
+              <select
+                [value]="candidate()"
+                [disabled]="busy() || !data()?.candidates?.length"
+                (change)="candidate.set($any($event.target).value)"
+              >
+                <option value="">
+                  {{
+                    loading()
+                      ? 'Chargement…'
+                      : data()?.candidates?.length
+                        ? 'Choisir un projet…'
+                        : 'Aucun projet à budgéter'
+                  }}
+                </option>
+                @for (c of data()?.candidates ?? []; track c.projectId) {
+                  <option [value]="c.projectId">
+                    {{ c.title }} ({{ c.taskCount }} tâche{{ c.taskCount > 1 ? 's' : '' }})
+                  </option>
+                }
+              </select>
+            </label>
+            <button type="submit" class="btn btn-secondary" [disabled]="busy() || !candidate()">
+              Attribuer une enveloppe
+            </button>
+          </form>
+        </div>
+      </rjs-page-banner>
+      <bpm-compass />
+
+      <bpm-project-overview-summary [data]="data()" />
+
+      @if (cycleOpen()) {
+        <bpm-modal
+          [open]="cycleOpen()"
+          [headed]="true"
+          title="Autorisations et fin de cycle"
+          [busy]="busy()"
+          (closed)="cycleOpen.set(false)"
+        >
+          @if (data(); as d) {
+            <p>
+              Les autorisations ajustent les moyens des projets sans créer de charge supplémentaire. Les dépenses et gains validés depuis les tâches portent seuls l’imputation financière.
+            </p>
+            <p>
+              Dépassements autorisés : <strong [bpmAmount]="d.life.approvedOverrunCents" bpmTone="warning">{{ d.life.approvedOverrunCents | cents }}</strong>
+            </p>
+            @if (notice(); as n) {
+              <p
+                class="bpm-feedback"
+                [class.is-error]="n.error"
+                [attr.role]="n.error ? 'alert' : 'status'"
+              >
+                {{ n.text }}
+              </p>
+            }
+            @for (o of d.life.pendingRequests; track o.id) {
+              <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
+            }
+            @if (!d.life.pendingRequests.length) { <p>Aucune autorisation en attente.</p> }
+          }
+          <div class="bpm-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              [disabled]="busy()"
+              (click)="cycleOpen.set(false)"
+            >
+              Fermer
+            </button>
+          </div>
+        </bpm-modal>
+      }
+
+      <div class="section-home-board">
+        @if (notice(); as n) {
+          <p
+            class="bpm-feedback"
+            [class.is-error]="n.error"
+            [attr.role]="n.error ? 'alert' : 'status'"
+          >
+            {{ n.text }}
+          </p>
+        }
+        @if (error()) {
+          <div class="empty-state" role="alert">
+            <h2>Projets indisponibles</h2>
+            <p>{{ error() }}</p>
+            <button class="btn btn-secondary" type="button" (click)="load()">Réessayer</button>
+          </div>
+        } @else if (loading()) {
+          <div class="empty-state" role="status"><h2>Chargement des projets…</h2></div>
+        } @else {
+          @if (search().trim()) {
+            <p class="board-result-count" role="status">
+              {{ visible().length }} résultat(s) pour « {{ search().trim() }} » dans le filtre
+              courant.
+            </p>
+          }
+          @if (!workspace() || workspace()?.key === 'life-projects') {<h2 id="projects-status-title">Projets par statut</h2>}
+          @if (workspace()?.key === 'projects-review') {
+            <section class="bpm-section" aria-label="Revue des projets">
+              <header><h2 id="projects-review-title">Prochaine étape par projet</h2><span>{{ reviewProjects().length }} projet(s)</span></header>
+              <div class="bpm-table-wrap"><table class="bpm-table"><thead><tr><th scope="col">Projet</th><th scope="col">Travail</th><th scope="col">Enveloppe</th><th scope="col">Reste à consommer</th><th scope="col">Suite utile</th></tr></thead><tbody>
+                @for (p of reviewProjects(); track p.project.id) {
+                  <tr><td><a [routerLink]="['/app/gestion-projet', p.project.id]">{{ p.project.title }}</a><br /><small>{{ p.project.dueDate ? 'Échéance · ' + date(p.project.dueDate) : 'Échéance à définir' }}</small></td>
+                  <td>{{ p.view.doneCount }} / {{ p.view.time.taskCount }} tâches<br /><small>{{ p.view.statusLabel }}</small></td>
+                  <td [bpmAmount]="p.budget?.allocationCents" bpmTone="info">{{ p.budget?.allocationCents | cents }}</td><td [bpmAmount]="p.budget?.remainingCents">{{ p.budget?.remainingCents | cents }}</td>
+                  <td><a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', p.project.id, reviewStep(p).page]" queryParamsHandling="preserve">{{ reviewStep(p).label }}</a></td></tr>
+                } @empty { <tr><td colspan="5">Aucun projet de la vie dans cette sélection.</td></tr> }
+              </tbody></table></div>
+            </section>
+          } @else {
+          <section class="board" aria-label="Tableau des projets de la vie">
+            @for (col of columns; track col.id) {
+              <div class="board-column" [attr.data-column]="col.id">
+                <div class="board-column-head">
+                  <div>
+                    <span class="status-dot" [attr.data-status]="col.id"></span>
+                    <h3 class="status-heading">{{ col.label }}</h3>
+                  </div>
+                  @if (col.id !== 'done') {
+                    <span class="count-badge">{{ byColumn()[col.id].length }}</span>
+                  }
+                </div>
+                <div class="board-column-content">
+                  @for (p of byColumn()[col.id]; track p.project.id) {
+                    @let done = p.view.column === 'done';
+                    <article
+                      class="card task-card"
+                      [attr.data-urgency]="urgency(p.project.dueDate, done)"
+                      [attr.data-budget-state]="p.budget?.state ?? null"
+                    >
+                      <h4>
+                        <a
+                          class="task-title-link"
+                          [routerLink]="['/app/gestion-projet', p.project.id]"
+                          [attr.title]="p.project.title"
+                          >{{ p.project.title }}</a
+                        >
+                      </h4>
+                      <p class="task-card-description" [attr.title]="p.project.description || null">
+                        {{ p.project.description }}
+                      </p>
+                      @if (p.budget) {
+                        <bpm-budget-meter [budget]="p.budget" [compact]="true" [showState]="true" [editable]="!p.budget.abandoned" (envelope)="envelopeFor.set(p.budget)" />
+                      } @else if (data(); as d) {
+                        <div class="bpm-task-budget">
+                          <span
+                            >Budget du projet de vie ·
+                            <strong [bpmAmount]="d.life.allocatedCents" bpmTone="info">{{ d.life.allocatedCents | cents }}</strong> attribués aux
+                            projets</span
+                          >
+                        </div>
+                      }
+                      <div class="task-card-meta">
+                        <span>{{ 'Priorité ' + priority[p.project.priority].toLowerCase() }}</span
+                        ><span
+                          class="due-date"
+                          [attr.data-urgency]="urgency(p.project.dueDate, done)"
+                          [attr.title]="dueTitle(p.project.dueDate, done)"
+                          >{{ p.project.dueDate ? date(p.project.dueDate) : 'Sans échéance' }}</span
+                        ><span [attr.title]="progressTitle(p)">{{ progressLabel(p) }}</span>
+                        @if (p.role === 'life') {
+                          <span
+                            class="task-card-badge"
+                            title="Racine du Budget « Projet de vie » et du Patrimoine"
+                            >Projet de vie</span
+                          >
+                        }
+                      </div>
+                      <div class="pc-card-action">
+                        @if (p.role === 'life') {<a class="btn btn-primary small" routerLink="/projet-de-vie">Ouvrir le projet de vie →</a>}
+                        @else {
+                          <a class="btn btn-primary small" [routerLink]="['/app/gestion-projet', p.project.id, reviewStep(p).page]">{{ reviewStep(p).label }} →</a>
+                          @if (!p.budget?.abandoned) {<button class="btn btn-secondary small" type="button" (click)="openTask(p.project.id)" [attr.aria-label]="'Créer une tâche pour ' + p.project.title">＋ Tâche</button>}
+                        }
+                      </div>
+                      <p class="project-task-links">
+                        <a class="project-task-link" [routerLink]="['/app/gestion-projet', p.project.id, 'taches']" [attr.aria-label]="'Ouvrir les tâches du projet ' + p.project.title">
+                          <span aria-hidden="true">☑</span> Ouvrir ses {{ p.view.time.taskCount }} tâche(s)
+                        </a>
+                        <button type="button" class="project-task-link" (click)="projectEditor.set(p.project.id)" [attr.aria-label]="'Modifier le projet ' + p.project.title">Modifier</button>
+                      </p>
+                      <p class="status-change">
+                        Statut
+                        <span
+                          class="status-value"
+                          [attr.data-status]="p.view.status"
+                          [attr.title]="p.view.explanation"
+                          ><span class="status-dot" [attr.data-status]="p.view.status"></span
+                          >{{ p.view.statusLabel }}</span
+                        >
+                      </p>
+                    </article>
+                  } @empty {
+                    <div class="board-empty">Aucun projet ici</div>
+                  }
+                </div>
+              </div>
+            }
+          </section>
+          }
+        }
+        <nav class="board-nav" aria-label="Changer de section">
+          <a routerLink="/app/taches" class="text-link"
+            >Tâches par statut <span aria-hidden="true">↗</span></a
+          >
+          <a routerLink="/projet-de-vie/financement" class="text-link"
+            >Financer et décider <span aria-hidden="true">↗</span></a
+          >
+          @if (coreLinks) {
+          <a routerLink="/projects" class="text-link"
+            >Projets du noyau <span aria-hidden="true">↗</span></a
+          >
+          }
+        </nav>
+      </div>
+    </div>
+    @if (taskEditor() === 'new') {
+      <bpm-task-editor [projects]="taskProjectOptions()" [defaultProjectId]="taskProjectId()" (closed)="taskEditor.set('')" (saved)="taskSaved($event)" />
+    }
+    @if (projectEditor() && (projectEditor() === 'new' || editingProject())) {
+      <bpm-project-editor [project]="editingProject()" (closed)="projectEditor.set('')" (saved)="projectSaved($event)" />
+    }
+
+@if (envelopeFor(); as eb) {
+  <bpm-envelope-dialog [budget]="eb" (closed)="envelopeFor.set(null)" (saved)="envelopeSaved($event)" />
+}

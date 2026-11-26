@@ -1,0 +1,435 @@
+    <bpm-page
+      [title]="workspace()?.title ?? (direction() === 'income' ? 'Entrées de la période' : direction() === 'all' ? 'Entrées et dépenses' : 'Dépenses de la période')"
+      pageClass="bpm-money expense-register-page"
+      [lead]="workspace()?.lead ?? lead()" [focus]="pageFocus()" [result]="message() ? { message: message()!, tone: 'success' } : null" toolsLabel="Saisir, pointer et retrouver"
+      [context]="reg.data()?.context"
+      [periodKey]="ctx.period()"
+      [periodNav]="!customWindow()"
+      (periodChange)="ctx.setQuery({ period: $event })"
+    >
+      @if (nextLine(); as line) {
+        <button primary type="button" class="app-hero-action" (click)="reviewNext()">{{ line.status === 'late' ? 'Régler le retard' : line.status === 'due' ? 'Vérifier l’échéance du jour' : direction() === 'income' ? 'Ouvrir la prochaine entrée' : direction() === 'all' ? 'Ouvrir la prochaine échéance' : 'Ouvrir la prochaine dépense' }} · {{ line.label }}</button>
+      } @else {
+        <button primary type="button" class="app-hero-action" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Saisir une entrée' : direction() === 'all' ? 'Saisir une entrée ou une dépense' : 'Saisir une dépense' }}</button>
+      }
+      @if (nextLine()) {
+        <button actions type="button" class="btn btn-secondary" (click)="openCreate()" [disabled]="!budgets().length">＋ {{ direction() === 'income' ? 'Saisir une entrée' : direction() === 'all' ? 'Saisir une entrée ou une dépense' : 'Saisir une dépense' }}</button>
+      }
+      @if (activeRefine().length || search()) {
+        <button actions type="button" class="btn btn-secondary" (click)="clearAll()">{{ showsLifeProjects ? 'Réinitialiser la sélection' : 'Effacer les filtres et la recherche' }}</button>
+      }
+      @if (overCaps().length) {
+        <a actions class="bpm-link" routerLink="/plafonds" [queryParams]="ctx.carry()">Revoir {{ overCaps().length }} plafond(s) dépassé(s) →</a>
+      }
+
+      <section tools class="expense-filters page-toolbar-search" [attr.role]="showsLifeProjects ? null : 'search'" [attr.aria-label]="showsLifeProjects ? 'Affiner les mouvements' : 'Rechercher et affiner la liste'">
+        <label class="expense-search">
+          {{ direction() === 'income' ? 'Afficher les entrées' : direction() === 'all' ? 'Afficher les échéances' : 'Afficher les dépenses' }}
+          <select name="expense-grouping" [ngModel]="groupBy()" (ngModelChange)="setGroup($event)">
+            @for (g of groupKeys; track g) { <option [value]="g">{{ g === 'date' && dateBasis() === 'realized' ? 'Par date de règlement' : groupLabel[g] }}</option> }
+          </select>
+        </label>
+        <label class="expense-search">
+          Lire les montants selon
+          <select name="expense-date-basis" [ngModel]="dateBasis()" (ngModelChange)="setDateBasis($event)">
+            <option value="planned">Les dates prévues</option>
+            <option value="realized">Les dates de règlement</option>
+          </select>
+        </label>
+        @if (!showsLifeProjects) {
+          <label class="expense-search">
+            {{ direction() === 'income' ? 'Rechercher une entrée' : direction() === 'all' ? 'Rechercher une échéance' : 'Rechercher une dépense' }}
+            <input type="search" name="expense-search" [value]="search()" (input)="onSearch($any($event.target).value)" placeholder="Libellé, note ou poste…" aria-describedby="search-help" />
+          </label>
+        }
+        <div class="expense-direction">
+          <span id="dir-l">Sens</span>
+          <span class="segmented" role="group" aria-labelledby="dir-l">
+            <button type="button" [attr.aria-pressed]="direction() === 'charge'" (click)="setDirection('charge')">Charges</button>
+            <button type="button" [attr.aria-pressed]="direction() === 'income'" (click)="setDirection('income')">Entrées</button>
+            <button type="button" [attr.aria-pressed]="direction() === 'all'" (click)="setDirection('all')">Tout</button>
+          </span>
+        </div>
+        <details id="refine-panel" class="expense-advanced-filters" [open]="refineOpen()" (toggle)="refineOpen.set($any($event.target).open)">
+          <summary>
+            Affiner la liste
+            @if (activeRefine().length) { <span>{{ activeRefine().length }} filtre(s) actif(s)</span> }
+          </summary>
+          <div class="expense-filter-fields">
+            @if (!showsLifeProjects) { <label>
+              Budget
+              <select name="expense-budget" [ngModel]="budgetSel()" (ngModelChange)="setBudget($event)">
+                <option value="principal">Budget du projet de vie (principal)</option>
+                <option value="consolidated">Tous les projets (chaque Budget une fois)</option>
+                @for (b of budgets(); track b.id) {
+                  @if (b.role === 'standard') { <option [value]="b.id">{{ b.name }} (projet de la vie)</option> }
+                }
+              </select>
+            </label> }
+            <label>
+              État
+              <select name="expense-status" [ngModel]="ctx.q('status')()" (ngModelChange)="ctx.setQuery({ status: $event })">
+                <option value="">Tout afficher</option>
+                @for (s of statuses; track s) { <option [value]="s">{{ statusLabel[s] }}</option> }
+              </select>
+            </label>
+            <label>
+              Nature de charge
+              <select name="expense-nature" [ngModel]="ctx.q('nature')()" (ngModelChange)="setNature($event)">
+                <option value="">Tout afficher</option>
+                @for (n of natures; track n) { <option [value]="n">{{ natureLabel[n] }}</option> }
+              </select>
+            </label>
+            <label>
+              Poste
+              <select name="expense-center" [ngModel]="ctx.q('center')()" (ngModelChange)="ctx.setQuery({ center: $event })">
+                <option value="">Tout afficher</option>
+                <option value="__none__">Poste à préciser</option>
+                @for (c of centerOptions(); track c.ref) { <option [value]="c.ref">{{ c.label }}{{ c.standard ? '' : ' (personnel)' }}</option> }
+              </select>
+            </label>
+            <label>
+              Tâche du projet
+              <select name="expense-task" [ngModel]="ctx.q('taskId')()" (ngModelChange)="ctx.setQuery({ taskId: $event })" [disabled]="!taskOptions().length">
+                <option value="">{{ taskOptions().length ? 'Tout afficher' : 'Aucune tâche de projet budgétisé' }}</option>
+                @for (t of taskOptions(); track t.id) { <option [value]="t.id">{{ t.title }}</option> }
+              </select>
+            </label>
+            <label>
+              Du ({{ dateBasis() === 'realized' ? 'règlement' : 'prévision' }})
+              <input type="date" name="expense-from" [value]="ctx.q('from')()" (change)="setWindow('from', $any($event.target).value)" />
+            </label>
+            <label>
+              Au (inclus)
+              <input type="date" name="expense-to" [value]="ctx.q('to')()" (change)="setWindow('to', $any($event.target).value)" />
+            </label>
+          </div>
+          @if (windowError()) { <p class="bpm-error" role="alert">{{ windowError() }}</p> }
+          <p class="bpm-help">Une fenêtre de dates libre remplace la période pour la lecture ; elle ne change pas le cycle de clôture. Les deux dates sont nécessaires.</p>
+          <button type="button" class="btn btn-secondary" (click)="clearRefine()">Réinitialiser les filtres</button>
+        </details>
+        @if (!showsLifeProjects) {
+          <small id="search-help" class="expense-search-help">La recherche est conservée à l'ouverture d'une ligne et dans le lien.</small>
+        }
+      </section>
+
+      <div class="bpm-money bpm-money-body expense-register-page" data-tone="budget">
+        @if (message()) {
+          <div class="alert ok" role="status">{{ message() }} <button type="button" class="btn btn-secondary" (click)="message.set(null)">Fermer</button></div>
+        }
+
+        @if (activeRefine().length || customWindow() || (showsLifeProjects && search())) {
+          <p class="expense-active-filters" aria-label="Filtres actifs">
+            @for (f of activeRefine(); track f.key) {
+              <span class="chip">{{ f.label }} <button type="button" class="x" (click)="ctx.setQuery(clearOne(f.key))" [attr.aria-label]="'Retirer le filtre ' + f.label">✕</button></span>
+            }
+            @if (showsLifeProjects && search()) {
+              <span class="chip">Libellé : {{ search() }} <button type="button" class="x" (click)="onSearch('')" aria-label="Retirer le filtre de libellé">✕</button></span>
+            }
+            <button type="button" class="btn btn-secondary" (click)="clearRefine()">Réinitialiser les filtres</button>
+          </p>
+        }
+
+        @if (reg.data(); as r) {
+          <section class="vision-panel" aria-labelledby="flows-title">
+            <div class="vision-heading">
+              <div>
+                <h2 id="flows-title">{{ showsLifeProjects ? 'Synthèse des mouvements' : 'L’argent qui entre. L’argent qui sort.' }}</h2>
+                @if (showsLifeProjects) {
+                  <small class="expense-register-window">{{ r.window.from | shortDate }} → {{ r.window.to | shortDate }}</small>
+                }
+              </div>
+              @if (showsLifeProjects) {
+                <label class="expense-register-scope">
+                  Mouvements affichés
+                  <select id="life-movement-scope" [ngModel]="budgetSel()" (ngModelChange)="setBudget($event)">
+                    <option value="life-with-projects">Quotidien et projets de la vie</option>
+                    <option value="principal">Flux imputés au cycle</option>
+                    @if (scope() === 'consolidated') { <option value="consolidated">Tous les budgets</option> }
+                    @for (b of budgets(); track b.id) { <option [value]="b.id">{{ b.role === 'life' ? 'Quotidien seul' : b.name }}</option> }
+                  </select>
+                </label>
+              } @else {
+                <span>{{ r.totals.lineCount }} flux · {{ r.window.from | shortDate }} → {{ r.window.to | shortDate }}</span>
+              }
+            </div>
+            @if (!showsLifeProjects) {
+              <p>{{dateBasis() === 'realized' ? 'Règlements sélectionnés par date réelle : la lecture à utiliser face au relevé bancaire.' : 'Échéances à leur date prévue : la lecture pour anticiper. Un règlement peut appartenir à un autre cycle : le tableau de bord les compte à leur date réelle pour le budget de vie, et à leur date d’imputation validée pour les tâches de projets.'}}</p>
+            }
+            <div class="vision-metrics">
+              @for (side of flowSides; track side.key) {
+                <article [attr.data-flow]="side.key"><span>{{ showsLifeProjects ? (side.key === 'income' ? 'Entrées reçues' : 'Dépenses payées') : side.label }}</span><strong [bpmAmount]="r.totals.byDirection?.[side.key]?.settledCents" [bpmFlow]="side.key">{{r.totals.byDirection?.[side.key]?.settledCents ?? 0 | cents}}</strong>
+                @if (!showsLifeProjects) { <small>{{side.key === 'income' ? 'reçus' : 'payés'}} · sur la sélection</small> }
+                @if (dateBasis() === 'planned') {<p><span [bpmAmount]="r.totals.byDirection?.[side.key]?.openCents" [bpmFlow]="side.key">{{r.totals.byDirection?.[side.key]?.openCents ?? 0 | cents}}</span> {{side.key === 'income' ? 'à recevoir' : 'à payer'}}</p>}
+                </article>
+              }
+              <article class="vision-net"><span>{{ showsLifeProjects ? 'Solde des flux réglés' : 'Différence des flux réglés' }}</span><strong [bpmAmount]="r.totals.netSettledCents">{{r.totals.netSettledCents ?? 0 | signedCents}}</strong>@if (!showsLifeProjects) { <small>Entrées − sorties · ce n’est pas le solde bancaire</small> }</article>
+            </div>
+            @if (dateBasis() === 'planned' && r.totals.unrealizedCents) {<p><strong [bpmAmount]="r.totals.unrealizedCents" bpmTone="info">{{r.totals.unrealizedCents | cents}}</strong> d’échéances non réalisées à la clôture (montants sans signe). Filtrez l’état « Non réalisé » pour les examiner.</p>}
+            <div class="vision-actions" aria-label="Lectures rapides du registre">
+              <button class="btn btn-secondary" [attr.aria-pressed]="direction() === 'all'" (click)="setDirection('all')">Tous les flux</button>
+              <button class="btn btn-secondary" [attr.aria-pressed]="direction() === 'income'" (click)="setDirection('income')">Entrées</button>
+              <button class="btn btn-secondary" [attr.aria-pressed]="direction() === 'charge'" (click)="setDirection('charge')">Dépenses</button>
+              <button class="btn btn-secondary" (click)="ctx.setQuery({status:'late',dateBasis:'planned'})">Retards</button>
+              <a class="btn btn-primary" routerLink="/tableau-de-bord/rapprochement" [queryParams]="ctx.carry()">Rapprocher mes comptes →</a>
+            </div>
+          </section>
+        }
+        <!-- La période en un regard : les totaux suivent les filtres -->
+        @if (!workspace()) { @if (reg.data(); as r) {
+          <section class="expense-overview" data-bpm-frame="metrics" aria-labelledby="expense-overview-title">
+            <header>
+              <div>
+                <span class="expense-overview-kicker">{{ dateBasis() === 'realized' ? 'Règlements sélectionnés par date réelle' : 'Échéances sélectionnées par date prévue' }}</span>
+                <h2 id="expense-overview-title">{{ direction() === 'income' ? 'Où en sont vos entrées ?' : direction() === 'all' ? 'Où en sont vos échéances ?' : 'Où en sont vos dépenses ?' }}</h2>
+              </div>
+              <span class="expense-overview-count">{{ r.totals.lineCount }} échéance(s) affichée(s) sur {{ r.totals.unfilteredCount }}</span>
+            </header>
+            <div class="expense-overview-grid">
+              <article class="expense-overview-card" data-status="recorded">
+                <div class="expense-overview-label">
+                  <h3>{{ labels().paid }}</h3>
+                  <span class="flow-direction is-compact" [attr.data-flow]="direction() === 'income' ? 'income' : direction() === 'charge' ? 'expense' : null" aria-hidden="true">{{ direction() === 'income' ? '↑' : '↓' }}</span>
+                </div>
+                <strong class="expense-overview-value" [bpmAmount]="r.totals.paidCents" [bpmFlow]="direction() === 'all' ? null : direction() === 'income' ? 'income' : 'charge'" [bpmTone]="direction() === 'all' ? 'info' : null">{{ r.totals.paidCents | cents }}</strong>
+                <p>{{ notes().paid }}</p>
+              </article>
+              @if (dateBasis() === 'planned') {
+              <article class="expense-overview-card" data-status="pending">
+                <div class="expense-overview-label">
+                  <h3>{{ labels().toPay }}</h3>
+                  <span class="flow-direction is-compact" aria-hidden="true">◷</span>
+                </div>
+                <strong class="expense-overview-value" [bpmAmount]="r.totals.toPayCents" [bpmFlow]="direction() === 'all' ? null : direction() === 'income' ? 'income' : 'charge'" bpmTone="warning">{{ r.totals.toPayCents | cents }}</strong>
+                <p>{{ notes().toPay }}</p>
+              </article>
+              <article class="expense-overview-card" data-status="unrealized">
+                <div class="expense-overview-label">
+                  <h3>Non réalisé</h3>
+                  <span class="flow-direction is-compact" aria-hidden="true">—</span>
+                </div>
+                <strong class="expense-overview-value" [bpmAmount]="r.totals.unrealizedCents" bpmTone="info">{{ r.totals.unrealizedCents | cents }}</strong>
+                <p>{{ notes().unrealized }}</p>
+              </article>
+              }
+            </div>
+            <p class="expense-overview-note">
+              {{ r.selection }} {{ r.totals.lineCount }} ligne(s) sur {{ r.totals.unfilteredCount }}, du {{ r.window.from | shortDate }} au {{ r.window.to | shortDate }} inclus.
+              @if (dateBasis() === 'planned') { Les règlements affichés peuvent avoir eu lieu dans une autre période : le tableau de bord les compte à leur date réelle. }
+              @if (r.context.scope === 'principal') {
+                <span>Pour les projets de la vie, seuls les règlements validés depuis l’attribution de leur enveloppe remontent ici. Leurs dépenses encore prévues restent à piloter dans chaque projet.</span>
+              }
+              @if (direction() === 'all') {
+                <span class="chip warn">Entrées et charges additionnées sans signe : choisissez un sens pour un total lisible.</span>
+              }
+            </p>
+          </section>
+        }
+
+        }
+        @if (reg.data()?.announcementTrace?.length) { <details class="bpm-card"><summary>Dépenses annoncées ici, imputées à un autre cycle</summary><p class="bpm-help">Ces montants restent tracés dans le cycle d’annonce, sans être ajoutés à ses charges.</p>@for (line of reg.data()!.announcementTrace!; track line.id) { <p><button type="button" class="bpm-link" (click)="ctx.setQuery(lineQuery(line))">{{ line.label }}</button> · {{ line.budgetName }} · {{ line.realizedCents | cents }} · prévu {{ line.plannedDate | shortDate }} · imputé {{ line.accountingDate | shortDate }}</p> }</details> }
+        @if (reg.data()?.paymentTrace?.length) {
+          <section class="bpm-card" aria-labelledby="payment-trace-title">
+            <h2 id="payment-trace-title">Paiements imputés à un autre cycle</h2>
+            <p class="bpm-help">Ces paiements gardent leur trace ici. Leurs montants sont comptabilisés uniquement dans le cycle de validation, et sont exclus des totaux ci-dessus.</p>
+            @for (line of reg.data()!.paymentTrace!; track line.id) {
+              <p><button type="button" class="bpm-link" (click)="ctx.setQuery(lineQuery(line))">{{ line.label }}</button> · {{ line.realizedCents | cents }} · payé / reçu le {{ line.realizedDate | shortDate }} · imputé le {{ line.accountingDate | shortDate }}</p>
+            }
+          </section>
+        }
+        <!-- Plafonds dépassés sur la période : signalés en rouge, jamais bloquants -->
+        @if (overCaps().length) {
+          <div class="expense-caps-alert" role="status">
+            <strong>{{ overCaps().length }} plafond{{ overCaps().length > 1 ? 's' : '' }} dépassé{{ overCaps().length > 1 ? 's' : '' }} sur la période :</strong>
+            @for (o of overCaps(); track o.key) {
+              <span class="expense-caps-item">{{ o.level }} « {{ o.label }} » <strong [bpmAmount]="o.overCents" bpmTone="danger">+{{ o.overCents | cents }}</strong></span>
+            }
+            <a routerLink="/plafonds" [queryParams]="ctx.carry()">Ouvrir les plafonds →</a>
+          </div>
+        }
+
+        @if (!workspace()) {
+        <details class="bm-calculation">
+          <summary>Date prévue ou date réelle ?</summary>
+          <div class="record-details">
+            <p>Choisissez <strong>Les dates prévues</strong> pour préparer vos échéances, ou <strong>Les dates de règlement</strong> pour retrouver les montants réalisés du tableau de bord. Une charge prévue le 31 octobre et payée le 2 novembre figure en octobre dans la lecture des prévisions et en novembre dans celle des règlements.</p>
+            @if (reg.data(); as r) { <p class="bpm-help">{{ r.selection }}</p> }
+          </div>
+        </details>
+
+        }
+        <!-- Lien profond vers une ligne absente des filtres -->
+        @if (missing()) {
+          <div class="expense-note" role="status">
+            <strong>L'échéance demandée ne figure pas dans cet intervalle ou dans ces filtres.</strong>
+            @if (missingLine.data(); as d) {
+              <p>« {{ d.line.label }} », prévue le {{ d.line.plannedDate | shortDate }} ({{ d.line.direction === 'income' ? 'entrée' : 'charge' }}, {{ d.line.statusLabel }}).
+                @for (r of missingReasons(); track r) { <br />— {{ r }} }
+              </p>
+            } @else if (missingLine.error(); as e) {
+              <p>{{ e.message }}</p>
+            }
+            <p>Le détail reste ouvert ; vous pouvez réinitialiser les filtres ou changer de période :</p>
+            <div class="bpm-actions">
+              <button type="button" class="btn btn-secondary" (click)="clearAll()">{{ showsLifeProjects ? 'Réinitialiser les filtres' : 'Réinitialiser filtres et recherche' }}</button>
+              @if (missingLine.data(); as d) {
+                <button type="button" class="btn btn-secondary" (click)="showDate(d.line.plannedDate)">Lire la date prévue ({{ d.line.plannedDate | shortDate }})</button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Liste groupée -->
+        <header class="expense-list-heading" id="expense-list">
+          <div>
+            <h2 id="register-details">{{ listTitle() }}</h2>
+            @if (!showsLifeProjects) {
+              <p>{{ groupBy() === 'date' ? (dateBasis() === 'realized' ? 'Dans l’ordre des dates de règlement.' : 'Dans l’ordre des dates prévues.') : 'Du montant le plus élevé au plus faible.' }}</p>
+            }
+          </div>
+          @if (showsLifeProjects) {
+            @if (reg.data(); as r) {
+              <span class="register-match-count" role="status">{{ r.totals.lineCount }} {{ r.totals.lineCount > 1 ? 'mouvements' : 'mouvement' }} · {{ dateBasis() === 'realized' ? 'Total réglé' : 'Total prévu' }} <strong>{{ (dateBasis() === 'realized' ? r.totals.paidCents : r.totals.plannedCents) | cents }}</strong></span>
+              @if (r.groups.length > 1) {
+                <div class="register-disclosures" role="group" aria-label="Affichage des groupes">
+                  <button type="button" [disabled]="openGroupCount() === r.groups.length" (click)="expandAllGroups(true)">Tout déplier</button>
+                  <button type="button" [disabled]="openGroupCount() === 0" (click)="expandAllGroups(false)">Tout replier</button>
+                </div>
+              }
+            }
+          } @else {
+            @if (reg.data(); as r) { <strong>{{ r.totals.lineCount }} {{ dateBasis() === 'realized' ? 'règlement(s)' : 'échéance(s)' }} affiché(s) · {{ dateBasis() === 'realized' ? 'réglé' : 'prévu' }} {{ (dateBasis() === 'realized' ? r.totals.paidCents : r.totals.plannedCents) | cents }}</strong> }
+            <p class="expense-list-help">Les totaux suivent vos filtres et les dates {{ dateBasis() === 'realized' ? 'réelles de règlement' : 'prévues' }}. Dépliez un groupe pour voir ses lignes, puis ouvrez une ligne pour consulter son détail et les actions disponibles.</p>
+          }
+        </header>
+        <bpm-state [loading]="reg.loading() && !reg.data()" [error]="reg.error()" (retry)="reg.reload()" [empty]="!!reg.data() && !reg.data()!.lines.length" [emptyText]="emptyText()">
+          @if (reg.data()?.totals?.unfilteredCount) {
+            <button type="button" class="btn btn-secondary" (click)="clearAll()">{{ showsLifeProjects ? 'Réinitialiser les filtres' : 'Réinitialiser filtres et recherche' }}</button>
+          } @else {
+            <button type="button" class="btn btn-primary" (click)="openCreate()" [disabled]="!budgets().length">{{ direction() === 'income' ? 'Ajouter une entrée' : 'Ajouter une charge' }}</button>
+          }
+        </bpm-state>
+        @if (reg.data(); as r) {
+          @for (g of r.groups; track g.key) {
+            @let summary = groupSummaries().get(g.key)!;
+            <details #groupElement class="expense-group" [open]="showsLifeProjects && expandedGroups().has(g.key)" (toggle)="setGroupExpanded(g.key, groupElement.open)" [attr.data-flow]="groupFlow()" [attr.data-balance]="summary.tone" [attr.aria-labelledby]="'expenses-' + $index">
+              <summary class="expense-center-heading" data-ui-pattern="section-heading" [attr.aria-labelledby]="'expenses-' + $index">
+                <div class="expense-center-name">
+                  <h2 [id]="'expenses-' + $index">
+                    @if (groupBy() === 'center' && g.key && !isNoneGroup(g.key) && g.key !== 'projects' && r.context.scope === 'principal' && !customWindow()) {
+                      <a [routerLink]="['/argent/postes', g.key]" [queryParams]="centerQuery()" [attr.aria-label]="'Détail du poste ' + g.label">{{ g.label }}</a>
+                    } @else {
+                      {{ groupBy() === 'date' ? (g.label | shortDate) : g.label }}
+                    }
+                  </h2>
+                  <p>{{ g.lineIds.length }} {{ g.lineIds.length === 1 ? 'échéance' : 'échéances' }}</p>
+                  @if (groupCap(g.key); as m) {
+                    <bpm-cap-gauge [measure]="m" label="Plafond du poste" />
+                  }
+                </div>
+                <div class="expense-center-total">
+                  @if (g.specialCents && !g.plannedCents) {
+                    <small>Charges spéciales · non comptées</small><strong [bpmAmount]="g.specialCents" bpmTone="info">{{ g.specialCents | cents }}</strong>
+                  } @else {
+                    <small>{{ showsLifeProjects ? 'entrées − dépenses' : dateBasis() === 'realized' ? 'Bilan réglé · entrées − dépenses' : 'Bilan prévu · entrées − dépenses' }}</small>
+                    <strong [bpmAmount]="summary.balanceCents">{{ summary.balanceCents | signedCents }}</strong>
+                  }
+                </div>
+                <p class="expense-center-breakdown" aria-label="Résumé des mouvements">
+                  @let received = summary.income.settledCents;
+                  @let paid = summary.charge.settledCents;
+                  @let noReceipt = showsLifeProjects && received === 0;
+                  @let noPayment = showsLifeProjects && paid === 0;
+                  <span>
+                    <span class="expense-center-label">{{ showsLifeProjects ? 'Reçu :' : 'Reçu' }}</span>
+                    <strong [bpmAmount]="received" bpmFlow="income" [attr.data-astra-zero]="noReceipt ? '' : null">
+                      <span [class.visually-hidden]="noReceipt">{{ received | cents }}</span>
+                    </strong>
+                  </span>
+                  <span>
+                    <span class="expense-center-label">{{ showsLifeProjects ? 'Payé :' : 'Payé' }}</span>
+                    <strong [bpmAmount]="paid" bpmFlow="charge" [attr.data-astra-zero]="noPayment ? '' : null">
+                      <span [class.visually-hidden]="noPayment">{{ paid | cents }}</span>
+                    </strong>
+                  </span>
+                  @let readsPlannedDates = dateBasis() === 'planned';
+                  @if (readsPlannedDates || showsLifeProjects) {
+                    @let toReceive = readsPlannedDates ? summary.income.openCents : null;
+                    @let toPay = readsPlannedDates ? summary.charge.openCents : null;
+                    @let nothingToReceive = showsLifeProjects && toReceive === 0;
+                    @let nothingToPay = showsLifeProjects && toPay === 0;
+                    @let pendingHint = readsPlannedDates ? null : 'Les échéances ouvertes sont disponibles selon les dates prévues.';
+                    <span class="expense-pending-total" [attr.title]="pendingHint">
+                      <span class="expense-center-label">{{ showsLifeProjects ? 'À recevoir :' : 'À recevoir' }}</span>
+                      <strong [bpmAmount]="toReceive" bpmFlow="income" [attr.data-astra-zero]="nothingToReceive ? '' : null">
+                        <span [class.visually-hidden]="nothingToReceive">{{ readsPlannedDates ? (toReceive | cents) : '—' }}</span>
+                      </strong>
+                    </span>
+                    <span class="expense-pending-total" [attr.title]="pendingHint">
+                      <span class="expense-center-label">{{ showsLifeProjects ? 'À payer :' : 'À payer' }}</span>
+                      <strong [bpmAmount]="toPay" bpmFlow="charge" [attr.data-astra-zero]="nothingToPay ? '' : null">
+                        <span [class.visually-hidden]="nothingToPay">{{ readsPlannedDates ? (toPay | cents) : '—' }}</span>
+                      </strong>
+                    </span>
+                  }
+                  @if (groupUnrealized(g.lineIds); as u) {
+                    <span class="expense-unrealized-total">Non réalisé <strong [bpmAmount]="u" bpmTone="info">{{ u | cents }}</strong></span>
+                  }
+                </p>
+              </summary>
+              @for (id of g.lineIds; track id) {
+                @if (byId().get(id); as l) {
+                  <article class="expense-row" [attr.data-selected]="isSelected(l) || null" [attr.data-status]="rowStatus(l)" data-ui-pattern="panel">
+                    <!-- Charge spéciale d'un projet de la vie : elle s'ouvre sur la fiche du projet, pas sur un détail d'échéance. -->
+                    <a class="expense-charge-summary" [routerLink]="l.special && l.project ? ['/app/gestion-projet', l.project.coreProjectId] : []" [queryParams]="l.special ? null : lineQuery(l)" [queryParamsHandling]="l.special ? '' : 'merge'" [attr.aria-label]="(l.special ? 'Ouvrir le projet : ' : 'Ouvrir le détail : ') + l.label + ', ' + date(dateBasis() === 'realized' ? l.realizedDate : l.plannedDate)">
+                      <span class="expense-date">
+                        <small>{{ dateBasis() === 'realized' ? 'Date de règlement' : 'Date prévue' }}</small>{{ (dateBasis() === 'realized' ? l.realizedDate : l.plannedDate) | shortDate }}
+                        @if (dateBasis() === 'realized' && l.realizedDate !== l.plannedDate) { <small>Prévue le {{ l.plannedDate | shortDate }}</small> }
+                        @if (dateBasis() === 'planned' && l.realizedDate && l.realizedDate !== l.plannedDate) { <small>{{ l.direction === 'income' ? 'Date de réception' : 'Date de paiement' }} · {{ l.realizedDate | shortDate }}</small> }
+                        @if (outsideWindow(l)) { <small class="chip">Réglé hors de cette période</small> }
+                      </span>
+                      <span class="expense-main">
+                        <strong>{{ l.label }}</strong>
+                        <small>
+                          @if (l.project; as project) {
+                            {{ project.name }}
+                            @if (groupBy() !== 'center' && l.centerKnown) { · {{ l.costCenterLabel }} }
+                          } @else if (groupBy() === 'center') {
+                            {{ l.budgetRole === 'life' ? (showsLifeProjects ? 'Quotidien' : 'Budget du projet de vie') : l.budgetName }}
+                          } @else if (l.centerKnown) {
+                            {{ l.costCenterLabel }}
+                          } @else {
+                            <span class="chip warn">Poste à préciser</span>
+                          }
+                          @if (l.cadence !== 'once') { · {{ l.cadenceLabel }} }
+                          @if (l.taskTitle) { · {{ l.taskTitle }} }
+                          @if (l.projectPosting === 'historical') {
+                            · Historique du projet
+                          } @else if (l.projectPosting) {
+                            · <span class="expense-posting">{{ l.fundingSource === 'patrimoine' ? 'Patrimoine' : 'Cycle' }}{{ l.projectPosting === 'planned' ? ' prévu' : '' }}</span>
+                            @if (l.accountingDate && l.accountingDate !== l.realizedDate) { · Imputé le {{ l.accountingDate | shortDate }} }
+                          } @else if (l.projectCharge) { · Projet de la vie, imputé au cycle }
+                        </small>
+                      </span>
+                      <span class="expense-amount" [attr.data-flow]="l.direction === 'income' ? 'income' : 'expense'">
+                        <strong [bpmAmount]="amountOf(l)" [bpmFlow]="l.direction">{{ amountOf(l) | cents }}</strong>
+                        @if (l.settled && l.realizedCents !== null && l.realizedCents !== l.plannedCents) { <small>Montant prévu · {{ l.plannedCents | cents }}</small> }
+                      </span>
+                      <span class="expense-state" [attr.data-status]="l.status">{{ l.statusLabel }}@if (l.carriedFrom) { <small class="expense-carried" [title]="'Non validée dans un cycle clôturé (prévue le ' + (l.carriedFrom.date | shortDate) + ') : elle se revoit ici.'">· reportée</small> }</span>
+                      @if (showsLifeProjects) {
+                        <span class="expense-detail-link" aria-hidden="true">{{ l.special && l.project ? 'Projet' : 'Détail' }}</span>
+                      }
+                    </a>
+                    @if (!l.special) { <bpm-quick-settle [line]="l" (detail)="ctx.setQuery(lineQuery(l))" /> }
+                  </article>
+                }
+              }
+            </details>
+          }
+        }
+      </div>
+    </bpm-page>
+
+    <bpm-entry-flow [budgets]="budgets()" [defaults]="createDefaults()" (saved)="onSaved($event)" /> @if (selectedId() && !ctx.q('entry')()) {
+      <bpm-line-detail [lineId]="selectedId()!" [period]="ctx.period()" (closed)="closeDetail()" (edit)="openEdit($event)" />
+    }

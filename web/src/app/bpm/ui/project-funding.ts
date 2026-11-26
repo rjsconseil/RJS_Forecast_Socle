@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { BpmApi } from '../../core/bpm-api.service';
-import { ProjectOverrun, TaskBudgetRequest } from '../../core/bpm-projects.models';
+import { BpmApi } from '../data/bpm-api.service';
+import { ProjectOverrun, TaskBudgetRequest } from '../data/bpm-projects.models';
 import { cents } from '../../core/format';
 import { newRequestKey } from './page-context';
 
@@ -16,8 +16,8 @@ export const FUNDING = {
   remaining: 'Reste à consommer',
   toPay: 'Encore à régler',
   share: 'Part accordée',
-  shareRest: 'Reste sur la part',
-  sharePaid: 'Réglé sur la part',
+  shareRest: 'Budget restant selon le temps',
+  sharePaid: 'Dépenses nettes validées',
   noShare: 'À demander',
   /** Lecture agrégée côté projet de vie (plusieurs projets). */
   envelopes: 'Enveloppes attribuées',
@@ -45,7 +45,7 @@ export const FUNDING_ACTIONS = {
 
 /** Messages de résultat, identiques quelle que soit la page d'où part la décision. */
 export const FUNDING_RESULTS = {
-  approved: 'Dépassement autorisé : il sera facturé au budget du projet de vie en fin de cycle.',
+  approved: 'Moyens supplémentaires autorisés. Seule la validation des dépenses ou gains des tâches produit un effet sur le cycle ou le patrimoine.',
   refused: 'Dépassement refusé : la demande associée est refusée.',
   released: (amountCents: number, task: string, paidCents: number) =>
     `${cents(amountCents)} rendus à l’enveloppe : la part de « ${task} » est ramenée à ${cents(paidCents)}.`,

@@ -1,0 +1,342 @@
+// BPM-Astra · Mouvements : la liste par poste en un seul cadre
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens' as *;
+
+// ---------- Mouvements : la liste par poste forme un seul cadre ----------
+// Le titre et ses outils en tête, puis chaque poste comme une section du même cadre (plus de cartes séparées).
+#{$frame} .astra-screen .expense-register-page.bpm-money-body {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  > .vision-panel {
+    container: astra-movement-overview / inline-size;
+    margin-bottom: var(--a-gap);
+
+    .vision-heading {
+      align-items: center;
+      gap: 8px 16px;
+    }
+
+    .expense-register-window {
+      color: var(--bpm-muted);
+      font-size: 12px;
+    }
+
+    .expense-register-scope {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 10px;
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+
+      > select {
+        max-width: 100%;
+        min-height: 34px;
+        font-size: 13px;
+      }
+    }
+
+    .vision-metrics {
+      margin-block: 12px;
+      gap: 8px;
+
+      > article {
+        min-width: 0;
+        padding: 8px 10px;
+        overflow-wrap: anywhere;
+      }
+
+      > article > :first-child { font-size: 13px; }
+      > article > p {
+        margin-top: 2px;
+        padding-top: 4px;
+        font-size: 12px;
+      }
+    }
+
+    .vision-actions {
+      gap: 6px 8px;
+
+      .btn {
+        min-height: 36px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  @container astra-movement-overview (max-width: 480px) {
+    > .vision-panel .vision-metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      > .vision-net {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 4px 12px;
+      }
+    }
+  }
+
+  > bpm-state:not(:has(*)) { display: none; }
+  > .expense-list-heading {
+    margin: 0; padding: var(--a-tile-y) var(--a-pad-x); background: var(--bpm-surface);
+    border: 1px solid var(--bpm-line); border-radius: var(--a-radius) var(--a-radius) 0 0;
+  }
+  > details.expense-group {
+    margin: 0; border: 1px solid var(--bpm-line); border-top: 0; border-radius: 0; box-shadow: none;
+    container: astra-movement-group / inline-size;
+
+    > summary.expense-center-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 2fr) minmax(132px, 1fr) 24px;
+      grid-template-areas: 'name figures balance toggle';
+      align-items: center;
+      gap: 10px 18px;
+      padding: var(--a-tile-y) var(--a-pad-x);
+
+      &::after {
+        grid-area: toggle;
+        position: static;
+        display: grid;
+        place-items: center;
+        inline-size: 24px;
+        block-size: 24px;
+        border-radius: var(--a-radius-sm);
+        background: var(--bpm-surface);
+        font-size: 20px;
+        line-height: 1;
+      }
+    }
+
+    .expense-center-name {
+      grid-area: name;
+      min-width: 0;
+      overflow-wrap: anywhere;
+
+      > p {
+        margin-top: 3px;
+        color: var(--bpm-muted);
+        font-size: 12px;
+      }
+    }
+
+    .expense-center-total {
+      grid-area: balance;
+      justify-self: end;
+      max-inline-size: 100%;
+      gap: 3px;
+      overflow-wrap: anywhere;
+
+      > small {
+        color: var(--bpm-muted);
+        font-size: 12px;
+      }
+    }
+
+    .expense-center-breakdown {
+      grid-area: figures;
+      justify-self: center;
+      inline-size: min(100%, 520px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+      grid-template-rows: repeat(2, auto);
+      grid-auto-flow: column;
+      gap: 4px 18px;
+
+      > span {
+        display: grid;
+        grid-template-columns: 5.2ch minmax(0, 1fr);
+        align-items: baseline;
+        column-gap: 6px;
+        min-width: 0;
+        font-size: 14px;
+        overflow-wrap: anywhere;
+      }
+
+      > .expense-pending-total {
+        grid-template-columns: 8.75ch minmax(0, 1fr);
+      }
+
+      .expense-center-label {
+        text-align: end;
+      }
+
+      strong {
+        font-size: inherit;
+        text-align: start;
+      }
+
+      strong:is([data-bpm-arrow], [data-astra-zero]) {
+        display: grid;
+        grid-template-columns: 1em minmax(0, 1fr);
+        align-items: baseline;
+        column-gap: .25em;
+
+        &::before {
+          display: block;
+          inline-size: 1em;
+          margin-inline-end: 0;
+          text-align: center;
+        }
+      }
+
+      strong[data-astra-zero]::before {
+        content: '';
+        block-size: 1em;
+        background: linear-gradient(currentColor, currentColor) center / .6em 2px no-repeat;
+      }
+
+      > .expense-unrealized-total {
+        grid-area: 3 / 1 / auto / -1;
+        display: flex;
+      }
+    }
+
+    @container astra-movement-group (max-width: 650px) {
+      > summary.expense-center-heading {
+        grid-template-columns: minmax(0, 1fr) max-content 24px;
+        grid-template-areas:
+          'name balance toggle'
+          'figures figures figures';
+        column-gap: 12px;
+      }
+
+      .expense-center-breakdown {
+        column-gap: 10px;
+        padding-block-start: 8px;
+        border-block-start: 1px solid var(--bpm-line);
+      }
+    }
+
+    @container astra-movement-group (max-width: 340px) {
+      > summary.expense-center-heading { padding-inline: 8px; }
+      .expense-center-breakdown { column-gap: 8px; }
+      .expense-center-breakdown > span {
+        column-gap: 4px;
+        font-size: clamp(12px, 4.2cqi, 14px);
+      }
+    }
+
+    > .expense-row {
+      --movement-action-width: 96px;
+      --movement-detail-width: 58px;
+      --movement-action-row: 1;
+      --movement-feedback-row: 2;
+      --movement-action-alignment: start;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) clamp(116px, 17cqi, 156px) clamp(110px, 16cqi, 156px) 94px var(--movement-action-width) var(--movement-detail-width);
+      align-items: start;
+      column-gap: 10px;
+      padding: 12px var(--a-pad-x) 12px calc(var(--a-pad-x) + 4px);
+      border: 0;
+      border-block-start: 1px solid var(--bpm-line);
+      border-radius: 0;
+
+      > .expense-charge-summary {
+        grid-area: 1 / 1 / 2 / -1;
+        grid-template-columns: subgrid;
+        grid-template-areas: 'description date amount status action detail';
+        align-items: start;
+        row-gap: 8px;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        border-radius: 0;
+
+        > * { min-width: 0; }
+        > .expense-main { grid-area: description; }
+        > .expense-date {
+          grid-area: date;
+          padding: 0;
+          border: 0;
+        }
+        > .expense-amount {
+          grid-area: amount;
+          text-align: start;
+          white-space: normal;
+        }
+        > .expense-state {
+          grid-area: status;
+          justify-self: start;
+        }
+
+        > .expense-detail-link {
+          grid-area: detail;
+          justify-self: end;
+          padding-block: 4px;
+          color: var(--astra-link);
+          font-size: 12px;
+          font-weight: 650;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+
+        &::after { content: none; }
+      }
+
+      > bpm-quick-settle:not(:empty),
+      > bpm-quick-settle:has(> [role='alert']) > button {
+        grid-area: var(--movement-action-row) / -3 / auto / -2;
+        align-self: var(--movement-action-alignment);
+        justify-self: start;
+        z-index: 1;
+        justify-content: flex-start;
+        min-width: 0;
+      }
+
+      > bpm-quick-settle:not(:empty) {
+        padding: 0;
+      }
+
+      > bpm-quick-settle:has(> [role='alert']) {
+        display: contents;
+
+        > [role='alert'] {
+          grid-area: var(--movement-feedback-row) / 1 / auto / -1;
+          margin-block-start: 6px;
+        }
+      }
+    }
+
+    @container astra-movement-group (max-width: 760px) {
+      > .expense-row {
+        grid-template-columns: minmax(0, 1fr) minmax(112px, 1fr) 94px var(--movement-action-width) var(--movement-detail-width);
+
+        > .expense-charge-summary {
+          grid-template-areas:
+            'description description description action detail'
+            'date amount status . .';
+        }
+      }
+    }
+
+    @container astra-movement-group (max-width: 520px) {
+      > .expense-row {
+        --movement-action-row: 3;
+        --movement-feedback-row: 4;
+        --movement-action-alignment: center;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) var(--movement-detail-width);
+        grid-template-rows: auto auto auto;
+        row-gap: 6px;
+
+        > .expense-charge-summary {
+          grid-row: 1 / 4;
+          grid-template-rows: subgrid;
+          grid-template-areas:
+            'description description description'
+            'date amount amount'
+            'status action detail';
+
+          > :is(.expense-state, .expense-detail-link) { align-self: center; }
+        }
+      }
+    }
+  }
+  > details.expense-group:nth-last-child(1 of details.expense-group) { border-radius: 0 0 var(--a-radius) var(--a-radius); overflow: hidden; }
+}
+

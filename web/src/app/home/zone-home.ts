@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { NgComponentOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Type, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { RecetteContext } from '../core/api.service';
-import { BpmOverviewPage } from '../bpm/pages/overview';
+import { applicationOf } from '../platform/applications';
 import { PLAN_OVERVIEW_TONE, PlanCard, planZone } from '../plan/site-plan';
 import { JourneyResume } from '../plan/journey-resume';
 import { PlanCardsComponent, zoneSectionCards } from './plan-cards';
@@ -12,20 +13,22 @@ import { PlanCardsComponent, zoneSectionCards } from './plan-cards';
  * L'accueil d'une zone (`/zones/<zone>`, gabarit `zone-home.page` de la référence) : sa mission, ce qu'on
  * peut y faire, par où commencer, puis une carte par grande section. Chaque carte annonce ce que la section
  * produit, ses pages, et ouvre son accueil ou sa page utile. Aucune entrée ne lance de traitement.
- * La vue d'ensemble de Budget/Patrimoine Management est propre : la chaîne de financement de l'application.
+ * Une application peut déclarer sa propre vue d'ensemble (`ApplicationDeclaration.overview`) : elle remplace l'accueil générique.
  */
 @Component({
   selector: 'rjs-zone-home',
-  imports: [RouterLink, PlanCardsComponent, BpmOverviewPage, JourneyResume],
+  imports: [RouterLink, PlanCardsComponent, NgComponentOutlet, JourneyResume],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (zone(); as zone) {
-      @if (zone.id === 'bpm') {
-        <bpm-overview [zone]="zone" />
+      @if (ownOverview()) {
+        @if (overview(); as component) {
+          <ng-container *ngComponentOutlet="component; inputs: { zone }" />
+        }
       } @else {
         <div class="page plan-page plan-zone-home" [attr.data-tone]="overviewTone">
           <header class="plan-heading" data-ui-pattern="heading">
-            <a class="plan-return" routerLink="/"> <span aria-hidden="true">←</span> Toutes les zones </a>
+            <a class="plan-return" routerLink="/modules"> <span aria-hidden="true">←</span> Toutes les zones </a>
             <div class="page-hero-title">
               <h1 class="plan-title-with-mark">
                 <span class="plan-mark" aria-hidden="true">{{ zone.acronym }}</span
@@ -70,7 +73,7 @@ import { PlanCardsComponent, zoneSectionCards } from './plan-cards';
         <section class="plan-empty" data-ui-pattern="empty">
           <h1>Destination introuvable</h1>
           <p>Cette zone n’existe pas dans le plan du site.</p>
-          <a class="plan-action" routerLink="/">Retour à l’accueil →</a>
+          <a class="plan-action" routerLink="/modules">Retour à l’accueil →</a>
         </section>
       </div>
     }
@@ -81,6 +84,14 @@ export class ZoneHomePage {
   private readonly ctx = inject(RecetteContext);
   private readonly zoneId = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => params.get('zone'))));
   protected readonly zone = computed(() => planZone(this.zoneId()));
+  /** L'application de la zone apporte-t-elle sa propre vue d'ensemble ? */
+  protected readonly ownOverview = computed(() => !!applicationOf(this.zone()?.id)?.overview);
+  protected readonly overview = signal<Type<unknown> | null>(null);
+  private readonly loadOverview = effect(() => {
+    const id = this.zone()?.id;
+    this.overview.set(null);
+    void applicationOf(id)?.overview?.().then((component) => { if (this.zone()?.id === id) this.overview.set(component); });
+  });
   protected readonly cards = computed<PlanCard[]>(() => {
     const zone = this.zone();
     return zone ? zoneSectionCards(zone, this.ctx.connected()) : [];

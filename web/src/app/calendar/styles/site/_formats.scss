@@ -1,0 +1,106 @@
+// Formats d'affichage, sources à brancher, vue de la période et commandes de la page calendrier.
+// Tout ce qui suit appartient au calendrier et vaut pour chaque calendrier, quelle que soit l'application.
+
+// ---------- Vue de la période : trois choix exclusifs, de même largeur ----------
+.cal-view-choice {
+  display: grid;
+  gap: 4px;
+  > span { font-size: 12px; font-weight: 600; color: var(--host-muted, inherit); }
+}
+.cal-view-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  > label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 32px;
+    padding: 4px 6px;
+    border: 1px solid var(--host-line, #d5dce5);
+    border-radius: 7px;
+    background: var(--host-surface, #fff);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    &.is-active { color: #fff; background: var(--host-accent, #1d4ed8); border-color: transparent; > span { color: inherit; } }
+    &:has(input:focus-visible) { outline: 2px solid var(--host-accent, #1d4ed8); outline-offset: 2px; }
+    > input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  }
+}
+
+// ---------- Panneau : sources branchées, sources à brancher, formats ----------
+.cal-personalization {
+  .cal-source-row, .cal-format-row { display: flex; align-items: center; gap: 6px; > .cal-choice { flex: 1 1 auto; min-width: 0; } }
+  .cal-source-origin, .cal-format-own { font-style: normal; color: var(--host-muted, #5b6b7d); }
+  .cal-source-unplug {
+    flex: none; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px;
+    color: var(--host-muted, #5b6b7d); background: transparent; font-size: 16px; line-height: 1; cursor: pointer;
+    &:hover:enabled { color: var(--red-600, #b91c1c); background: rgba(185, 28, 28, .08); }
+  }
+  .cal-library {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--host-line, #e2e7ef);
+    > summary { cursor: pointer; font-weight: 600; font-size: 13px; small { font-weight: 400; color: var(--host-muted, #5b6b7d); } }
+    h4 { margin: 8px 0 4px; font-size: 12px; color: var(--host-muted, #5b6b7d); }
+  }
+  .cal-library-row {
+    display: flex; align-items: center; gap: 8px; padding: 3px 0;
+    > i { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--event-tone, #2563eb); }
+    > span { flex: 1 1 auto; min-width: 0; font-size: 13px; }
+  }
+  .cal-format-list { display: grid; gap: 2px; }
+  .cal-format-row {
+    padding: 2px 6px; border-radius: 6px;
+    &.is-active { background: rgba(37, 99, 235, .07); }
+    .cal-choice > span { display: grid; small { color: var(--host-muted, #5b6b7d); font-size: 11.5px; } }
+  }
+  .cal-format-actions { display: inline-flex; gap: 8px; font-size: 12px; }
+  .cal-format-editor {
+    display: grid; gap: 8px; margin: 8px 0; padding: 10px; border: 1px solid var(--host-line, #e2e7ef); border-radius: 8px;
+    > label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; }
+    :is(input[type='text'], select) { padding: 6px 8px; border: 1px solid var(--host-line, #d5dce5); border-radius: 6px; font: inherit; font-weight: 400; }
+  }
+  .cal-format-fields { display: grid; gap: 2px; > span { font-size: 12px; font-weight: 600; } }
+  .cal-format-field { display: flex; align-items: center; gap: 4px; > .cal-choice { flex: 1 1 auto; } &:not(.is-on) { opacity: .75; } }
+  .cal-format-move { width: 26px; height: 24px; padding: 0; border: 1px solid var(--host-line, #d5dce5); border-radius: 6px; background: var(--host-surface, #fff); cursor: pointer; &:disabled { opacity: .35; cursor: default; } }
+  .cal-format-editor-actions { display: flex; gap: 8px; }
+}
+
+// ---------- Volet « Sources et affichage » (partie du module) ----------
+// Le module est sans boîte (`display: contents`) : le volet est une rangée de la grille de la page, qui donne l'écart.
+.calendar.is-canonical {
+  .calendar-360-settings-body { padding-top: 16px; }
+  > .calendar-360-settings-page { padding: 4px 0 12px; }
+}
+
+// ---------- Volet : apparence (design et effets d'affichage, choisis séparément) ----------
+.cal-personalization {
+  .cal-look-group { display: grid; gap: 4px; margin-top: 8px; }
+  .cal-look-title { font-size: 12px; font-weight: 650; }
+  .cal-look-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--host-line, #e2e7ef);
+    border-radius: 8px;
+    cursor: pointer;
+    &.is-active { border-color: var(--host-accent, #4f46e5); background: rgba(79, 70, 229, 0.06); }
+    &:has(input:focus-visible) { outline: 2px solid var(--host-accent, #4f46e5); outline-offset: 2px; }
+    > input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  }
+  .cal-look-swatch { display: inline-flex; flex: none; > i { width: 12px; height: 22px; border: 1px solid rgba(15, 26, 46, 0.12); } > i:first-child { border-radius: 5px 0 0 5px; } > i:last-child { border-radius: 0 5px 5px 0; } }
+  .cal-look-text { display: grid; min-width: 0; strong { font-size: 13px; } small { font-size: 11.5px; color: var(--host-muted, #5b6b7d); } }
+  .cal-look-params { display: grid; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--host-line, #e2e7ef); }
+  .cal-look-param {
+    display: grid;
+    gap: 2px;
+    font-size: 12px;
+    > span { display: flex; justify-content: space-between; gap: 8px; }
+    output { font-variant-numeric: tabular-nums; color: var(--host-muted, #5b6b7d); }
+    input[type='range'] { width: 100%; }
+  }
+}

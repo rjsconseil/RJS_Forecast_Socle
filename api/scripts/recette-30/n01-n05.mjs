@@ -1,5 +1,5 @@
 // Groupes N01 à N05 : projet de vie seul, sans projet de la vie.
-import { lifeLines, oneOffs, category, caps, dayOf } from "./kit.mjs";
+import { lifeLines, oneOffs, caps, dayOf } from "./kit.mjs";
 import { addDays, cents } from "./engine.mjs";
 
 // ————— N01 · Célibataire salarié —————
@@ -161,14 +161,14 @@ const n03Lines = (o = {}) => [
   ["Allocations familiales", "income", 140, "std:allocations", 5, o.caf ?? {}],
   ["Loyer", "charge", 1300, "std:logement", 5],
   ["Énergie", "charge", 130, "std:logement", 9],
-  ["Cantine", "charge", 110, "std:enfants", 10, { category: o.categories ? "Cantine" : undefined }],
-  ["Activités des enfants", "charge", 60, "std:enfants", 12, { category: o.categories ? "Activités sportives" : undefined }],
+  ["Cantine", "charge", 110, "std:enfants", 10],
+  ["Activités des enfants", "charge", 60, "std:enfants", 12],
   ["Courses", "charge", 190, "std:alimentation", 3, { cadence: "weekly", variation: [-15, 10, 22, -8] }],
   ["Transports", "charge", 120, "std:transport", 2],
 ];
 const n03OneOffs = (o = {}) => ({
   0: [["Pharmacie", 32, "std:sante", 7], ["Sortie au zoo", 85, "std:loisirs", 16]],
-  1: [["Fournitures de rentrée", 180, "std:enfants", 2, { category: o.categories ? "Fournitures scolaires" : undefined }], ["Médecin", 25, "std:sante", 14]],
+  1: [["Fournitures de rentrée", 180, "std:enfants", 2], ["Médecin", 25, "std:sante", 14]],
   2: [["Vêtements des enfants", 140, "std:enfants", 11], ["Anniversaire", 90, "std:loisirs", 22]],
   3: [["Pharmacie de novembre", 21, "std:sante", 4], ["Sortie scolaire", 25, "std:enfants", 18, { realizedDate: null }]],
 });
@@ -193,19 +193,17 @@ const n03 = (id, title, particularity, extra = {}) => ({
 });
 
 export const N03 = [
-  n03("N03-V1", "Famille · catégories plafonnées pour les enfants", "Trois catégories du poste « Enfants » ont un plafond : cantine 100 €, fournitures 150 €, activités 80 €.", {
-    categories: true,
+  n03("N03-V1", "Famille · plafond du poste Enfants", "Le poste « Enfants » a un plafond de 300 € par cycle ; la rentrée de septembre le fait dépasser.", {
     setup: async (t) => {
-      await category(t, "Cantine", { center: "std:enfants", cap: 100 });
-      await category(t, "Fournitures scolaires", { center: "std:enfants", cap: 150 });
-      await category(t, "Activités sportives", { center: "std:enfants", cap: 80 });
+      await caps(t, { "std:enfants": 300 });
     },
     verify: (t) => {
-      const over = (key) => Object.fromEntries(t.bpm.reads.capsReview(t.ctx, { period: key }).categories.map((k) => [k.label, k.over]).sort((a, z) => a[0].localeCompare(z[0])));
-      t.check("Septembre : cantine et fournitures dépassées, activités dans le plafond", over("2026-09"), { "Activités sportives": false, Cantine: true, "Fournitures scolaires": true });
-      t.check("Août : seule la cantine dépasse", over("2026-08"), { "Activités sportives": false, Cantine: true, "Fournitures scolaires": false });
+      const enfants = (key) => t.bpm.reads.capsReview(t.ctx, { period: key }).centers.find((c) => c.ref === "std:enfants");
+      t.check("Septembre : la rentrée fait dépasser le poste Enfants (350 € pour 300 €)", [enfants("2026-09").engagedCents, enfants("2026-09").over], [35000, true]);
+      t.check("Août : le poste Enfants reste dans son plafond", enfants("2026-08").over, false);
       const life = t.bpm.life.lifeManagement(t.ctx, { periodKey: "2026-09" });
-      t.check("Le poste Enfants sans plafond n'est pas dépassé lui-même", life.natures.courante.rows?.find?.((r) => r.ref === "std:enfants")?.over ?? false, false);
+      const row = [life.natures.indispensable, life.natures.courante].flatMap((n) => n?.rows ?? []).find((r) => r.ref === "std:enfants");
+      t.check("Le volet des charges signale le poste Enfants dépassé", row?.over ?? false, true);
     },
   }),
   n03("N03-V2", "Famille · allocations de septembre jamais versées", "La CAF ne verse pas les allocations de septembre ; la période est close sans elles.", {

@@ -1,3 +1,4 @@
+import { amountSemantics, BpmAmount, BpmAmountFlow } from './amount';
 import { Component, computed, input, linkedSignal, output, signal } from '@angular/core';
 import { cents, percentText, signedCents } from '../../core/format';
 
@@ -6,9 +7,10 @@ import { cents, percentText, signedCents } from '../../core/format';
 // interrompt la série ; elle n'est jamais dessinée comme un zéro.
 
 export interface ChartSeries {
+  flow?: BpmAmountFlow;
   key: string;
   label: string;
-  /** Couleur de la mesure (token `--s-*`) : identique d'un graphe et d'un format à l'autre. */
+  /** Couleur d’identification historique ; points et barres suivent désormais le signe du montant. */
   color: string;
   values: (number | null)[];
   kind?: 'bar' | 'line';
@@ -21,6 +23,14 @@ export const FORMAT_LABEL: Record<string, string> = { combined: 'Combiné', line
 
 const W = 640;
 const PAD = { l: 64, r: 12, t: 12, b: 34 };
+
+/** Un flux de dépense est sortant même si son montant est stocké en valeur absolue. */
+function chartValueColor(value: number | null | undefined, flow?: BpmAmountFlow) {
+  return `var(--status-${amountSemantics(value, flow).tone})`;
+}
+function chartSeriesColor(series: ChartSeries) {
+  return series.flow ? chartValueColor(1, series.flow) : series.color;
+}
 
 /** Montant compact pour les axes (centimes → « 1,2 k€ »). */
 export function axisCents(v: number) {
@@ -45,6 +55,7 @@ function niceTicks(min: number, max: number, count = 4) {
 
 @Component({
   selector: 'bpm-series-chart',
+  imports: [BpmAmount],
   template: `
     <figure class="chart">
       <figcaption>
@@ -95,7 +106,7 @@ function niceTicks(min: number, max: number, count = 4) {
         </svg>
         <div class="legend">
           @for (s of series(); track s.key) {
-            <span class="item"><i [style.background]="s.color" [class.dash]="s.dashed"></i>{{ s.label }}</span>
+            <span class="item"><i [style.background]="seriesColor(s)" [class.dash]="s.dashed"></i>{{ s.label }}</span>
           }
           @if (hasForecast()) {
             <span class="item"><i class="hollow"></i>Prévision (tracé clair ou pointillé)</span>
@@ -105,7 +116,7 @@ function niceTicks(min: number, max: number, count = 4) {
           @if (sel() !== null) {
             <strong>{{ categories()[sel()!] }}</strong>
             @for (s of series(); track s.key) {
-              <span> · {{ s.label }} : <span class="num">{{ fmt(s.values[sel()!]) }}</span></span>
+              <span> · {{ s.label }} : <span class="num" [bpmAmount]="s.values[sel()!]" [bpmFlow]="s.flow">{{ fmt(s.values[sel()!]) }}</span></span>
             }
           } @else {
             <span class="muted">Cliquez ou tabulez sur une colonne pour lire ses valeurs.</span>
@@ -119,7 +130,7 @@ function niceTicks(min: number, max: number, count = 4) {
             <thead><tr><th>{{ categoryLabel() }}</th>@for (s of series(); track s.key) {<th class="num">{{ s.label }}</th>}</tr></thead>
             <tbody>
               @for (c of categories(); track $index; let i = $index) {
-                <tr [class.selected]="sel() === i"><td>{{ c }}@if (isForecast(i)) { <span class="chip estimate">prévision</span> }</td>@for (s of series(); track s.key) {<td class="num">{{ fmt(s.values[i]) }}</td>}</tr>
+                <tr [class.selected]="sel() === i"><td>{{ c }}@if (isForecast(i)) { <span class="chip estimate">prévision</span> }</td>@for (s of series(); track s.key) {<td class="num" [bpmAmount]="s.values[i]" [bpmFlow]="s.flow">{{ fmt(s.values[i]) }}</td>}</tr>
               }
             </tbody>
           </table>
@@ -171,6 +182,7 @@ export class BpmSeriesChart {
 
   protected label = (f: string) => FORMAT_LABEL[f] ?? f;
   protected axis = axisCents;
+  protected seriesColor = chartSeriesColor;
   protected hasData = computed(() => this.series().some((s) => s.values.some((v) => v !== null && v !== undefined)) && this.categories().length > 0);
   protected hasForecast = computed(() => this.series().some((s) => s.forecastFrom !== null && s.forecastFrom !== undefined));
   protected isForecast = (i: number) => this.series().some((s) => s.forecastFrom !== null && s.forecastFrom !== undefined && i >= s.forecastFrom);
@@ -200,7 +212,7 @@ export class BpmSeriesChart {
         const x = cx[i] - (bw * barSeries.length) / 2 + k * bw;
         const y0 = y(0);
         const y1 = y(v);
-        bars.push({ id: s.key + i, x, y: Math.min(y0, y1), w: Math.max(bw - 2, 1), h: Math.max(Math.abs(y1 - y0), 1), color: s.color, forecast: s.forecastFrom != null && i >= s.forecastFrom });
+        bars.push({ id: s.key + i, x, y: Math.min(y0, y1), w: Math.max(bw - 2, 1), h: Math.max(Math.abs(y1 - y0), 1), color: chartValueColor(v, s.flow), forecast: s.forecastFrom != null && i >= s.forecastFrom });
       });
     });
     const lines: { id: string; d: string; color: string; dashed: boolean }[] = [];
@@ -219,18 +231,18 @@ export class BpmSeriesChart {
         const p = { x: cx[i], y: y(v), forecast: s.forecastFrom != null && i >= s.forecastFrom };
         if (p.forecast) fc += prev ? `M${prev.x},${prev.y}L${p.x},${p.y}` : `M${p.x},${p.y}`;
         else real += prev ? `L${p.x},${p.y}` : `M${p.x},${p.y}`;
-        points.push({ id: s.key + i, x: p.x, y: p.y, color: s.color, forecast: p.forecast });
+        points.push({ id: s.key + i, x: p.x, y: p.y, color: chartValueColor(v, s.flow), forecast: p.forecast });
         prev = p;
       });
-      lines.push({ id: s.key + 'r', d: real, color: s.color, dashed: !!s.dashed });
-      if (fc) lines.push({ id: s.key + 'f', d: fc, color: s.color, dashed: true });
+      lines.push({ id: s.key + 'r', d: real, color: chartSeriesColor(s), dashed: !!s.dashed });
+      if (fc) lines.push({ id: s.key + 'f', d: fc, color: chartSeriesColor(s), dashed: true });
       if (fmt === 'area') {
         const pts = s.values.map((v, i) => (v === null || v === undefined ? null : `${cx[i]},${y(v)}`));
         // Aire par segment continu, fermée sur la ligne de zéro.
         let seg: string[] = [];
         let first = -1;
         const flush = (last: number) => {
-          if (seg.length > 1) areas.push({ key: s.key + first, d: `M${cx[first]},${y(0)}L${seg.join('L')}L${cx[last]},${y(0)}Z`, color: s.color });
+          if (seg.length > 1) areas.push({ key: s.key + first, d: `M${cx[first]},${y(0)}L${seg.join('L')}L${cx[last]},${y(0)}Z`, color: chartSeriesColor(s) });
           seg = [];
         };
         pts.forEach((p, i) => {
@@ -280,6 +292,7 @@ export class BpmSeriesChart {
 }
 
 export interface ShareItem {
+  flow?: BpmAmountFlow;
   key: string;
   label: string;
   cents: number | null;
@@ -292,6 +305,7 @@ export interface ShareItem {
  */
 @Component({
   selector: 'bpm-share-chart',
+  imports: [BpmAmount],
   template: `
     <figure class="chart">
       <figcaption>
@@ -334,7 +348,7 @@ export interface ShareItem {
               } @else {
                 <span>{{ p.label }}</span>
               }
-              <span class="num amt">{{ cents(p.cents) }}</span>
+              <span class="num amt" [bpmAmount]="p.cents" [bpmFlow]="p.flow">{{ cents(p.cents) }}</span>
               <span class="num per">{{ per100(p.cents) }} <span class="muted">/ 100 €</span></span>
             </li>
           }
@@ -416,6 +430,7 @@ export interface CapRow {
 /** Plafonds et marges : payé, restant prévu, plafond facultatif et dépassement par centre. */
 @Component({
   selector: 'bpm-cap-chart',
+  imports: [BpmAmount],
   template: `
     <div class="caps" role="list" [attr.aria-label]="title()">
       @for (r of rows(); track r.key) {
@@ -428,8 +443,8 @@ export interface CapRow {
               <span class="cap" [style.left.%]="pct(r.capCents)" aria-hidden="true"></span>
             }
           </span>
-          <span class="num val">{{ cents(r.paidCents) }}@if (r.remainingCents) { <span class="muted"> + {{ cents(r.remainingCents) }}</span> }</span>
-          <span class="num margin" [class.neg]="margin(r) !== null && margin(r)! < 0" [class.pos]="margin(r) !== null && margin(r)! >= 0">
+          <span class="num val"><span [bpmAmount]="r.paidCents" bpmFlow="charge">{{ cents(r.paidCents) }}</span>@if (r.remainingCents) { <span class="muted"> + <span [bpmAmount]="r.remainingCents" bpmFlow="charge">{{ cents(r.remainingCents) }}</span></span> }</span>
+          <span class="num margin" [bpmAmount]="margin(r)">
             {{ margin(r) === null ? 'Sans plafond' : margin(r)! < 0 ? 'Dépassement ' + cents(-margin(r)!) : 'Marge ' + cents(margin(r)!) }}
           </span>
         </button>

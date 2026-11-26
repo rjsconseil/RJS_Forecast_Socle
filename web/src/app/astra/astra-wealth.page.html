@@ -1,0 +1,115 @@
+<div class="astra-page astra-wealth-page">
+  <header class="astra-heading">
+    <div>
+      <h1>Patrimoine</h1>
+      <p>Ce que vos cycles ont construit, constaté à date.</p>
+    </div>
+  </header>
+  <bpm-state [loading]="life.loading() && !life.data()" [error]="life.error()" (retry)="life.reload()" />
+
+  @if (life.data(); as d) {
+    @let p = d.patrimoine;
+    <rjs-page-toolbar label="Outils du patrimoine" [focus]="p.objectiveCents !== null ? { title: (p.progressPct ?? 0) + ' % du patrimoine visé', detail: 'Reste ' + (p.remainingCents | cents:0) + ' à constituer.', tone: 'info' } : null">
+      <a toolbarPrimary class="btn btn-primary" routerLink="/bpm-astra/cloture/compte" [queryParams]="ctx.carry()">Préparer la clôture du cycle</a>
+      <div toolbarActions>
+        <a class="btn btn-secondary" routerLink="/bpm-astra/objectif" [queryParams]="ctx.carry()">Régler mon objectif</a>
+        <a class="btn btn-secondary" routerLink="/bpm-astra/patrimoine/reglages" [queryParams]="ctx.carry()">Corriger le point de départ</a>
+      </div>
+    </rjs-page-toolbar>
+    <section class="astra-wealth-hero" aria-labelledby="astra-stock-title">
+      <div class="astra-wealth-now">
+        <h2 id="astra-stock-title" class="astra-cap-kicker">Patrimoine à date</h2>
+        <strong class="astra-cap-figure" [bpmAmount]="p.stockCents">{{ p.stockCents | cents }}</strong>
+        @if (p.stockReason) { <p>{{ p.stockReason }}</p> }
+        @if (composition(); as c) {
+          <div class="astra-composition" role="img" [attr.aria-label]="'Départ ' + (p.openingStockCents | cents) + ', versements des cycles ' + (p.capitalizedCents | signedCents)">
+            <i class="opening" [style.width.%]="c.opening"></i><i class="capitalized" [style.width.%]="c.capitalized"></i>
+          </div>
+          <dl class="astra-composition-legend">
+            <div><dt><span class="opening" aria-hidden="true"></span>Départ @if (p.openingDate) { au {{ p.openingDate | shortDate }} }</dt><dd>{{ p.openingStockCents | cents }}</dd></div>
+            <div><dt><span class="capitalized" aria-hidden="true"></span>Versé par {{ p.capitalizationCount }} {{ p.capitalizationCount === 1 ? 'cycle clôturé' : 'cycles clôturés' }}</dt><dd [bpmAmount]="p.capitalizedCents">{{ p.capitalizedCents | signedCents }}</dd></div>
+          </dl>
+        }
+      </div>
+      <div class="astra-wealth-after-block">
+        @if (d.cycle.period && d.cycle.reading !== 'closed') {
+          <span class="astra-cap-kicker">Après la clôture de {{ d.cycle.period.label }}</span>
+          <strong class="astra-wealth-after" [bpmAmount]="p.expectedAfterCents">{{ p.expectedAfterCents | cents }}</strong>
+          <p>si le cycle se termine comme prévu ({{ d.cycle.flows?.expectedCents | signedCents }}).</p>
+        }
+      </div>
+      <div class="astra-wealth-next">
+        <div class="astra-wealth-target">
+          @if (p.objectiveCents !== null) {
+            <span class="astra-cap-kicker">Vers le patrimoine visé · {{ p.objectiveCents | cents }}</span>
+            <span class="astra-progress" aria-hidden="true"><i [style.width.%]="p.progressPct ?? 0"></i></span>
+            <p><b>{{ p.progressPct ?? 0 }} %</b> du chemin · reste {{ p.remainingCents | cents }}</p>
+          } @else {
+            <span class="astra-cap-kicker">Patrimoine visé</span>
+            <p>Fixez le montant visé pour mesurer le chemin parcouru.</p>
+          }
+        </div>
+      </div>
+    </section>
+
+    <div class="astra-wealth-grid">
+      <section class="astra-card" aria-labelledby="astra-closures-title">
+        <div class="astra-card-head">
+          <div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="cloture" aria-hidden="true"></span><h2 id="astra-closures-title">Versements des cycles</h2></div>
+          <a class="astra-text-link" routerLink="/bpm-astra/bilans" [queryParams]="ctx.carry()">Tous les bilans <span data-astra-icon="ouvrir" aria-hidden="true"></span></a>
+        </div>
+        @if (closures().length) {
+          <ul class="astra-closure-list">
+            @for (r of closures(); track r.closureId) {
+              <li>
+                <a routerLink="/bpm-astra/bilans" [queryParams]="{ cycle: r.periodKey }">
+                  <span class="astra-closure-name"><strong>{{ r.periodLabel }}</strong>
+                    <small>@if (r.targetCents !== null) { {{ r.meetsTarget ? 'Objectif d’épargne tenu' : 'Sous l’objectif' }} ({{ r.targetCents | cents }}) } @else { Clôturé le {{ r.closedAt | shortDate }} }</small>
+                  </span>
+                  <span class="astra-closure-bar" aria-hidden="true"><i [class.loss]="r.resultCents < 0" [style.width.%]="(r.resultCents < 0 ? -r.resultCents : r.resultCents) / maxResult() * 100"></i></span>
+                  <strong class="astra-closure-amount" [bpmAmount]="r.resultCents">{{ r.resultCents | signedCents }}</strong>
+                </a>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="astra-empty">Le résultat de votre premier cycle clôturé s’ajoutera ici au patrimoine.</p>
+        }
+      </section>
+
+      <div class="astra-stack">
+      <section class="astra-card" aria-labelledby="astra-offcycle-title">
+        <div class="astra-card-head">
+          <div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="projets" aria-hidden="true"></span><h2 id="astra-offcycle-title">Projets payés par le patrimoine</h2></div>
+        </div>
+        @if (offCycle().length) {
+          <ul class="astra-project-list">
+            @for (pj of offCycle(); track pj.budgetId) {
+              <li><a [routerLink]="['/bpm-astra/projets', pj.coreProjectId]" [queryParams]="ctx.carry()">
+                <span><strong>{{ pj.name }}</strong><small>Réglé {{ pj.paidCents | cents }} · reste {{ pj.remainingCents | cents }}</small></span>
+                <span data-astra-icon="ouvrir" aria-hidden="true"></span>
+              </a></li>
+            }
+          </ul>
+        } @else {
+          <p class="astra-empty">Tous vos projets sont payés par le budget du cycle. Un grand projet peut être payé hors cycle, sur le patrimoine.</p>
+        }
+        <div class="astra-card-foot">
+          <a class="astra-text-link" routerLink="/bpm-astra/projets" [queryParams]="ctx.carry()">Choisir qui paie chaque projet, depuis sa fiche <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+        </div>
+      </section>
+      <section class="astra-card" aria-labelledby="astra-marks-title">
+        <div class="astra-card-head"><div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="bilans" aria-hidden="true"></span><h2 id="astra-marks-title">Repères des cycles</h2></div></div>
+        <dl class="astra-marks">
+          <div><dt>Cycles clôturés</dt><dd>{{ d.results.count }}</dd></div>
+          <div><dt>Objectif d’épargne tenu</dt><dd>{{ d.results.metCount }} / {{ d.results.count }}</dd></div>
+          <div><dt>Résultat moyen</dt><dd [bpmAmount]="d.results.averageCents">{{ d.results.averageCents | signedCents:0 }}</dd></div>
+          <div><dt>Meilleur cycle</dt><dd>{{ d.results.best ? (d.results.best.periodLabel + ' · ' + (d.results.best.resultCents | signedCents:0)) : '—' }}</dd></div>
+          <div><dt>Cumul versé</dt><dd [bpmAmount]="d.results.totalCents">{{ d.results.totalCents | signedCents:0 }}</dd></div>
+          <div><dt>Épargne visée</dt><dd>{{ d.results.savingsTargetCents | cents:0 }} / cycle</dd></div>
+        </dl>
+      </section>
+      </div>
+    </div>
+  }
+</div>

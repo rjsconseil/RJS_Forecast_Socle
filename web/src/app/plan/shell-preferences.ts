@@ -96,7 +96,9 @@ interface StoredShell {
 @Injectable({ providedIn: 'root' })
 export class ShellPreferences {
   private static readonly key = 'rjs-forecast-shell';
-  private readonly stored = signal<StoredShell>(ShellPreferences.read());
+  // Le menu masqué ne vaut que pour la séance : un rechargement rend toujours la navigation latérale,
+  // pour qu'un appui involontaire sur « M » ne la fasse jamais disparaître durablement.
+  private readonly stored = signal<StoredShell>({ ...ShellPreferences.read(), focus: false });
   /** Le menu latéral est masqué : la page prend toute la largeur. */
   readonly focus = computed(() => !!this.stored().focus);
   readonly density = computed<ShellDensity>(() => (this.stored().density === 'compact' ? 'compact' : 'comfortable'));

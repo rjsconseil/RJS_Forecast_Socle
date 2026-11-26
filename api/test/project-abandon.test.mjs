@@ -24,7 +24,7 @@ test("abandonner un projet : l'enveloppe non consommée revient au budget de vie
   await P.setTaskShare(ctx, p.budgetId, tiles.id, { expectedRevision: budget().revision, amount: 300 });
   await operation(socle, ctx, { budgetId: p.budgetId, taskId: works.id, direction: "charge", label: "Acompte artisan", amount: 600, date: "2026-11-03", fund: true });
   const { operation: planned } = await B.createOperation(ctx, { requestKey: key(), budgetId: p.budgetId, taskId: tiles.id, direction: "charge", label: "Carreaux", amount: 200, date: "2026-11-20", costCenterRef: "std:divers", status: "planned" });
-  const { recurrence } = await B.createRecurrence(ctx, { requestKey: key(), budgetId: p.budgetId, direction: "charge", label: "Location benne", amount: 80, cadence: "monthly", firstDate: "2026-11-25", costCenterRef: "std:divers" });
+  const { recurrence } = await B.createRecurrence(ctx, { requestKey: key(), budgetId: p.budgetId, taskId: tiles.id, direction: "charge", label: "Location benne", amount: 80, cadence: "monthly", firstDate: "2026-11-25", costCenterRef: "std:divers" });
   const { request } = await P.requestTaskBudget(ctx, p.budgetId, extra.id, { requestKey: key(), amount: 900 });
   const { overrun } = await P.requestOverrun(ctx, p.budgetId, { requestKey: key(), reason: "reglement", amount: 150 });
   const spent = () => reads.summary(ctx, { period: "2026-11" }).figures["bpm.charges"].valueCents;
@@ -51,8 +51,8 @@ test("abandonner un projet : l'enveloppe non consommée revient au budget de vie
   assert.equal(d.budget.toPayCents, 0, "plus rien à payer sur le projet");
 
   // Fermé aux écritures tant qu'il n'est pas repris.
-  await assert.rejects(B.createOperation(ctx, { requestKey: key(), budgetId: p.budgetId, direction: "charge", label: "Oubli", amount: 10, date: "2026-11-03", costCenterRef: "std:divers" }), { code: "FORBIDDEN_BY_RULE" });
-  await assert.rejects(B.createRecurrence(ctx, { requestKey: key(), budgetId: p.budgetId, direction: "charge", label: "Oubli", amount: 10, cadence: "monthly", firstDate: "2026-12-01", costCenterRef: "std:divers" }), { code: "FORBIDDEN_BY_RULE" });
+  await assert.rejects(B.createOperation(ctx, { requestKey: key(), budgetId: p.budgetId, taskId: works.id, direction: "charge", label: "Oubli", amount: 10, date: "2026-11-03", costCenterRef: "std:divers" }), { code: "FORBIDDEN_BY_RULE" });
+  await assert.rejects(B.createRecurrence(ctx, { requestKey: key(), budgetId: p.budgetId, taskId: works.id, direction: "charge", label: "Oubli", amount: 10, cadence: "monthly", firstDate: "2026-12-01", costCenterRef: "std:divers" }), { code: "FORBIDDEN_BY_RULE" });
   await assert.rejects(P.allocate(ctx, p.budgetId, { expectedRevision: budget().revision, amount: 3000 }), { code: "FORBIDDEN_BY_RULE" });
   await assert.rejects(P.createTask(ctx, { requestKey: key(), projectId: p.coreProjectId, title: "Peinture" }), { code: "FORBIDDEN_BY_RULE" });
   await assert.rejects(P.abandonProject(ctx, p.budgetId, { expectedRevision: budget().revision }), { code: "FORBIDDEN_BY_RULE" });

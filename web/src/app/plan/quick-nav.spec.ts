@@ -6,23 +6,20 @@ describe('accès rapides dérivés du plan', () => {
     const connected = siteDestinations(true);
     const links = connected.map((link) => link.link);
     expect(new Set(links).size).toBe(links.length);
-    expect(links).toContain('/zones/bpm');
-    expect(links).toContain('/tableau-de-bord');
-    expect(links).toContain('/plafonds/reglages');
-    // « Démarrer un projet » est réservé au visiteur ; les fiches (`:id`) ne sont pas des destinations.
-    expect(links).not.toContain('/creer');
+    for (const link of ['/bpm-astra', '/bpm-astra/projets', '/bpm-astra/taches', '/bpm-astra/calendrier', '/bpm-astra/plafonds', '/bpm-astra/plafonds/postes', '/bpm-astra/objectif']) expect(links).toContain(link);
+    // Les réglages et catégories de plafonds n'existent plus : une seule page Plafonds.
+    for (const gone of ['/bpm-astra/plafonds/reglages', '/bpm-astra/plafonds/categories']) expect(links).not.toContain(gone);
+    // Les anciennes adresses BPM ne sont plus des destinations ; les fiches (`:id`) non plus.
+    for (const old of ['/zones/bpm', '/app/gestion-projet', '/tableau-de-bord', '/creer']) expect(links).not.toContain(old);
     expect(links.some((link) => link.includes(':'))).toBe(false);
-    expect(siteDestinations(false).map((link) => link.link)).toContain('/creer');
   });
 
   it('propose le niveau supérieur, les autres vues et les pages voisines en gardant la lecture', () => {
-    const links = contextLinks('/plafonds/reglages?period=2026-10&entry=new');
-    expect(links.map((link) => `${link.kind}:${link.link}`)).toEqual([
-      'up:/plafonds',
-      'view:/plafonds',
-      'view:/plafonds/categories',
-      'sibling:/projet-de-vie',
-      'sibling:/vision',
+    const links = contextLinks('/bpm-astra/cloture/compte?period=2026-10&entry=new');
+    expect(links.map((link) => `${link.kind}:${link.link}`).slice(0, 3)).toEqual([
+      'up:/bpm-astra/cloture',
+      'view:/bpm-astra/cloture',
+      'view:/bpm-astra/cloture/reglages',
     ]);
     // La période suit le lien, jamais la saisie ouverte.
     expect(links.every((link) => link.query?.['period'] === '2026-10' && !link.query?.['entry'])).toBe(true);
@@ -30,51 +27,47 @@ describe('accès rapides dérivés du plan', () => {
   });
 
   it('nomme la fiche ouverte dans ses liens de contexte', () => {
-    const links = contextLinks('/app/gestion-projet/prj_1/taches', 'Cuisine');
-    expect(links[0]).toMatchObject({ kind: 'up', label: 'Cuisine', link: '/app/gestion-projet/prj_1' });
+    const links = contextLinks('/bpm-astra/projets/prj_1/taches', 'Cuisine');
+    expect(links[0]).toMatchObject({ kind: 'up', label: 'Cuisine', link: '/bpm-astra/projets/prj_1' });
     expect(links.filter((link) => link.kind === 'view').map((link) => link.label)).toEqual(['Vue d’ensemble', 'Budget et décisions']);
     expect(contextLinks('/')).toEqual([]);
   });
 
-  it('ouvre la saisie sur la période lue et place d’abord les créations de la page', () => {
-    const actions = contextActions('/tableau-de-bord?period=2026-10', true);
-    expect(actions[0]).toMatchObject({ label: 'Saisir une entrée', link: '/tableau-de-bord', query: { period: '2026-10', entry: 'new', entryDirection: 'income' } });
-    expect(actions[1].query).toMatchObject({ entryDirection: 'charge' });
-    // Hors d'une page qui porte la saisie, elle s'ouvre depuis le tableau de bord, sur la même période.
-    expect(contextActions('/vision?period=2026-10', true)[0]).toMatchObject({ link: '/tableau-de-bord', query: { period: '2026-10', entry: 'new' } });
-    const project = contextActions('/app/gestion-projet', true).filter((action) => action.id.startsWith('create:'));
-    expect(project[0].link).toBe('/app/gestion-projet/nouveau');
-    expect(contextActions('/app/gestion-projet/prj_1', true, 'Cuisine').find((action) => action.id.startsWith('object-tasks'))).toMatchObject({ link: '/app/taches', query: { project: 'prj_1' } });
+  it('ouvre la saisie sur la période lue et propose les créations d’Astra', () => {
+    const actions = contextActions('/bpm-astra?period=2026-10', true);
+    expect(actions.find((a) => a.id === 'entry:charge')).toMatchObject({ label: 'Saisir une dépense', link: '/bpm-astra/mouvements', query: { period: '2026-10', entry: 'new', entryDirection: 'charge' } });
+    expect(actions.find((a) => a.id === 'entry:income')?.query).toMatchObject({ entryDirection: 'income' });
+    expect(actions.find((a) => a.id === 'create:project')).toMatchObject({ link: '/bpm-astra/projets', query: { editProject: 'new' } });
+    expect(contextActions('/bpm-astra/projets/prj_1', true, 'Cuisine').find((action) => action.id.startsWith('object-tasks'))).toMatchObject({ link: '/bpm-astra/taches', query: { project: 'prj_1' } });
     // Les créations restent dans leur zone ; sans utilisateur, aucune saisie n'est proposée.
     expect(contextActions('/projects', true).map((action) => action.link)).toEqual(['/projects/new', '/tasks/new']);
-    expect(contextActions('/zones/bpm', false).some((action) => action.id.startsWith('entry:'))).toBe(false);
+    expect(contextActions('/bpm-astra', false).some((action) => action.id.startsWith('entry:'))).toBe(false);
   });
 
   it('cherche sans accents ni casse et place la zone courante devant', () => {
     const all = siteDestinations(true);
-    expect(searchLinks(all, 'categories plaf')[0].link).toBe('/plafonds');
-    expect(searchLinks(all, 'organiser categ')[0].link).toBe('/plafonds/categories');
+    expect(searchLinks(all, 'postes et REVENUS')[0].link).toBe('/bpm-astra/plafonds/postes');
     expect(searchLinks(all, 'TACHES', 'noyau')[0].link).toBe('/tasks');
-    expect(searchLinks(all, 'TACHES', 'bpm')[0].link).toBe('/app/taches');
+    expect(searchLinks(all, 'TACHES', 'bpm-astra')[0].link).toBe('/bpm-astra/taches');
     expect(searchLinks(all, 'zzz')).toEqual([]);
     expect(searchLinks(all, '   ')).toBe(all);
   });
 
   it('ne garde qu’un lien par adresse, le plus proche du contexte', () => {
-    const near = contextLinks('/plafonds');
+    const near = contextLinks('/bpm-astra/plafonds');
     const unique = uniqueLinks([...near, ...siteDestinations(true)]);
-    expect(unique.filter((link) => link.link === '/plafonds/reglages')).toHaveLength(1);
-    expect(unique.find((link) => link.link === '/plafonds/reglages')?.group).toBe('context');
+    expect(unique.filter((link) => link.link === '/bpm-astra/plafonds/postes')).toHaveLength(1);
+    expect(unique.find((link) => link.link === '/bpm-astra/plafonds/postes')?.group).toBe('context');
   });
 
   it('épingle et désépingle une page, dans la limite prévue', () => {
     const pin = (link: string) => ({ link, label: link, hint: '' });
-    let pins = togglePin([], pin('/vision'));
-    expect(pins.map((entry) => entry.link)).toEqual(['/vision']);
-    pins = togglePin(pins, pin('/vision'));
+    let pins = togglePin([], pin('/bpm-astra/objectif/echeances'));
+    expect(pins.map((entry) => entry.link)).toEqual(['/bpm-astra/objectif/echeances']);
+    pins = togglePin(pins, pin('/bpm-astra/objectif/echeances'));
     expect(pins).toEqual([]);
-    for (let i = 0; i < PIN_LIMIT + 3; i++) pins = togglePin(pins, pin(`/app/gestion-projet/prj_${i}`));
+    for (let i = 0; i < PIN_LIMIT + 3; i++) pins = togglePin(pins, pin(`/bpm-astra/projets/prj_${i}`));
     expect(pins).toHaveLength(PIN_LIMIT);
-    expect(pins.at(-1)?.link).toBe(`/app/gestion-projet/prj_${PIN_LIMIT + 2}`);
+    expect(pins.at(-1)?.link).toBe(`/bpm-astra/projets/prj_${PIN_LIMIT + 2}`);
   });
 });

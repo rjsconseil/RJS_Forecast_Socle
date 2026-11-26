@@ -16,11 +16,24 @@ export const ERROR_HTTP = {
   PERIOD_CLOSED: 409,
   FUTURE_REALIZATION: 422,
   CLOSING_PREVIEW_STALE: 409,
+  // Un cycle terminé attend sa clôture : le cycle suivant ne démarre (et ne reçoit d'entrée) qu'après elle.
+  CYCLE_AWAITING_CLOSURE: 409,
+  // Un cycle terminé est en clôture : la liste de ses points est figée (aucune nouvelle prévision n'y entre).
+  CYCLE_IN_CLOSING: 409,
+  // Parcours de clôture incomplet : chaque point doit être traité avant de clôturer.
+  CLOSING_INCOMPLETE: 422,
+  // Cohérence du cycle à rétablir (contrôle bloquant en échec) : rien ne se fige avant.
+  CLOSING_INCOHERENT: 422,
   STORE_LOCKED: 409,
   PERSISTENCE_CONFLICT: 409,
   ALREADY_SETTLED: 409,
   // Dépassement du budget attribué à un projet : le budget de vie doit l'autoriser avant l'écriture.
   OVERRUN_AUTHORIZATION_REQUIRED: 422,
+  // Principes d'architecture (socle/principles.mjs) : un contournement est une erreur de construction, pas d'usage.
+  LAYER_VIOLATION: 500,
+  WRITE_OUTSIDE_DOMAIN: 500,
+  UNTRACKED_WRITE: 500,
+  DATA_ENGINE_UNAVAILABLE: 503,
 };
 
 export class DomainError extends Error {

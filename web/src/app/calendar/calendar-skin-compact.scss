@@ -1,0 +1,153 @@
+/*
+ * Présentation resserrée du calendrier (entrée `compact` du module), demandée par une page hôte qui porte déjà
+ * titre et commandes. Elle complète la présentation canonique (même chaîne de sélecteurs, une classe de plus) :
+ * aucune astuce de priorité, et l'hôte ne règle que des jetons publics (--host-*, --frame-pad-*, --tile-pad-*).
+ * Le contenu projeté par la page (`.calendar-360-content`) est placé dans la grille du module.
+ */
+:host .calendar.is-360.is-canonical.is-compact-host {
+  .calendar-360-settings {
+    grid-row: 1;
+    margin: 1px;
+    scroll-margin-block-start: var(--host-sticky-top, 0px);
+
+    > summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+      gap: 4px 12px;
+      min-height: 36px;
+      padding: 6px 14px;
+    }
+
+    .calendar-360-timeline-controls { margin: 0; }
+
+    @container calendar-compact (max-width: 570px) {
+      > summary { grid-template-columns: minmax(0, 1fr) auto auto; }
+      .calendar-settings-period { grid-area: 2 / 1 / 3 / -1; text-align: start; }
+    }
+  }
+  .calendar-settings-period { text-align: center; font-size: 13px; font-weight: 650; line-height: 1.25; }
+  .calendar-settings-event-count { color: var(--host-muted, #5b6b7d); text-align: end; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .calendar-settings-readonly {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--host-line, #d5dce5);
+    border-radius: var(--host-radius-sm, 9px);
+    background: var(--host-surface, #fff);
+  }
+  .calendar-layout { grid-row: auto; }
+  .calendar-feedback { grid-row: auto; }
+  &.has-external-tools .calendar-control-row { display: none; }
+
+  &:not(.is-specialized-calendar) {
+    // La vue semaine garde sa disposition pleine largeur (calendar-skin-views.scss).
+    .calendar-layout:not(.is-week) { grid-template-columns: minmax(0, 1fr) var(--cal-agenda-width, 240px); }
+    .calendar-grid-head { display: none; }
+    .calendar-month-wrap, .calendar-agenda { grid-row: 1; }
+    .calendar-agenda { grid-column: 2; }
+    ::ng-deep .calendar-360-content { grid-row: 2; }
+    .calendar-legend-inset {
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+      gap: 4px 12px;
+      padding: 6px 12px;
+      white-space: normal;
+
+      > .calendar-legend-hint { flex: 1 1 100%; overflow: visible; text-align: start; }
+    }
+
+    @container calendar-compact (max-width: 740px) {
+      .calendar-layout.is-week {
+        grid-template-columns: minmax(0, 1fr);
+
+        .calendar-agenda { grid-row: 2; grid-column: 1; }
+        ::ng-deep .calendar-360-content { grid-row: 3; }
+      }
+    }
+
+    .calendar-layout:is(.is-month, .is-year) {
+      --calendar-viewport-reserve: 304px;
+      --calendar-weekdays-height: 28px;
+      grid-template-columns: minmax(0, 1fr) clamp(240px, 20cqi, 312px);
+      gap: 12px;
+
+      @media (max-width: 900px) {
+        --calendar-viewport-reserve: 358px;
+      }
+
+      .calendar-month-wrap {
+        container: calendar-compact-frame / inline-size;
+        min-height: 0;
+        height: auto;
+        aspect-ratio: auto;
+        padding: 6px 8px;
+      }
+
+      .calendar-frame {
+        // Six rangées carrées tant que leur hauteur tient près du bas de la fenêtre.
+        --calendar-weeks-height: min(calc(100cqi * 6 / 7), max(288px, calc(100dvh - var(--calendar-viewport-reserve))));
+        flex: 0 0 auto;
+        height: calc(var(--calendar-weeks-height) + var(--calendar-weekdays-height) + 2px);
+        aspect-ratio: auto;
+        padding: 0;
+      }
+
+      .calendar-frame[data-view='month'] {
+        .calendar-scroll-hint { display: none; }
+        .calendar-grid-content { min-width: 0; grid-template-rows: var(--calendar-weekdays-height) minmax(0, 1fr); }
+        .calendar-grid { grid-template-rows: repeat(6, minmax(0, 1fr)); }
+      }
+
+      .calendar-frame[data-view='year'] {
+        .calendar-year-grid {
+          min-width: 0;
+          overflow-x: hidden;
+          overflow-y: auto;
+        }
+        .calendar-year-month h3 { margin: 0 0 4px; font-size: 13px; }
+        .calendar-year-weekdays {
+          flex: 0 0 16px;
+          align-items: center;
+          margin: 0;
+
+          > span { padding: 0; }
+        }
+        .calendar-year-days { flex: 1 1 0; aspect-ratio: auto; }
+      }
+
+      .calendar-agenda {
+        align-self: stretch;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        contain: size;
+      }
+
+      @container calendar-compact (max-width: 555px) {
+        grid-template-columns: minmax(0, 1fr);
+
+        .calendar-agenda {
+          grid-row: 2;
+          grid-column: 1;
+          height: clamp(220px, 45dvh, 360px);
+        }
+        ::ng-deep .calendar-360-content { grid-row: 3; }
+      }
+
+      @container calendar-compact-frame (max-width: 410px) {
+        .calendar-frame[data-view='month'] .calendar-day-head .calendar-day-more { min-width: 0; }
+        .calendar-frame[data-view='year'] .calendar-year-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-rows: none;
+          grid-auto-rows: 126px;
+        }
+      }
+    }
+  }
+
+  // Cadres du calendrier : mêmes marges que les cadres de l'application hôte (jetons publics).
+  .calendar-frame { padding: var(--frame-pad-y, 14px) var(--frame-pad-x, 18px); }
+  .calendar-month-wrap { padding: var(--tile-pad-y, 10px) var(--tile-pad-x, 14px); }
+}

@@ -2,55 +2,26 @@
 // Patrimoine sur le noyau : création du user et de son triplet, projets de la vie, cycle et
 // clôtures, parcours métier. Chaque chiffre présenté est une métrique dont la formule est
 // administrée (`metric.<clé>`) et dont l'explication remonte jusqu'aux objets sources.
-import { cycleFields, assertCycleChange, assertOpenDates, assertClosable } from '../budget/cycle-policy.mjs';
+import { cycleFields, assertCycleChange, assertOpenDates, assertClosable } from '../budget/api.mjs';
 import { fail } from '../../socle/errors.mjs';
 import { check } from '../../socle/object-management/inspect.mjs';
 import { date, expectedRevisionOf, integer, money, oneOf, text } from '../../socle/validation.mjs';
-import { CADENCES } from '../budget/recurrence.mjs';
+import { CADENCES } from '../budget/api.mjs';
 import { createReads } from './reads.mjs';
 import { createLife } from './life.mjs';
+import { createBilans } from './bilans.mjs';
+import { createMeteo } from './meteo.mjs';
+import { calendarSources, createCalendarSources } from './calendar-sources.mjs';
+import { closuresOf, compositionOf, cycleOf } from './composition.mjs';
+import { DEFAULT_DASHBOARD, METRICS, RESULT_METRIC } from './metrics.mjs';
+import { BPM_MIGRATIONS } from './migrations.mjs';
+import { bpmRoutes } from './routes.mjs';
 import { essentialsParameter } from './natures.mjs';
-import { GOAL_TYPES } from '../patrimoine/projection.mjs';
+import { GOAL_TYPES } from '../patrimoine/api.mjs';
 import { createProjects, projectExtensions } from './projects.mjs';
-import { cycleBounds, dayBefore, indexOfKey, periodByIndex, periodByKey, periodsPage, today } from '../budget/periods.mjs';
+import { awaitingClosure, closingModeMessage, createClosing, LOCK_PARAMETER, lockMessage } from './closing.mjs';
+import { cycleBounds, dayBefore, indexOfKey, periodByIndex, periodByKey, periodsPage, today } from '../budget/api.mjs';
 
-const RESULT_METRIC = 'bpm.resultatPeriode';
-
-const METRICS = [
-  // Synthèse de la période : réalisé (date réelle de règlement) et restant (date prévue, non réglé)
-  { key: 'bpm.revenus', label: 'Reçu', unit: 'EUR', group: 'Période', formula: 'budget.revenusRealises', description: 'Revenus effectivement reçus, datés dans la période (date réelle).' },
-  { key: 'bpm.charges', label: 'Dépensé', unit: 'EUR', group: 'Période', formula: 'budget.chargesRealisees + projets.chargesReglees', description: 'Dépenses effectivement payées, datées dans la période (date réelle) : celles du budget de vie et les charges des projets de la vie validées comme réglées (charges spéciales, jamais comptées avant validation).' },
-  { key: 'bpm.chargesProjets', label: 'Projets de la vie · réglé validé', unit: 'EUR', group: 'Période', formula: 'projets.chargesReglees', description: 'Charges des projets de la vie validées comme réglées pour leurs besoins, datées dans la période (date réelle). Elles font partie du Dépensé.' },
-  { key: RESULT_METRIC, label: 'Reste réel', unit: 'EUR', group: 'Période', formula: 'bpm.revenus - bpm.charges', description: 'Net réalisé = reçu − payé. Résultat signé capitalisé dans le Patrimoine à la clôture.' },
-  { key: 'bpm.resteARecevoir', label: 'À recevoir', unit: 'EUR', group: 'Période', formula: 'budget.resteARecevoir', description: 'Revenus prévus dans la période et pas encore reçus.' },
-  { key: 'bpm.resteAPayer', label: 'À payer', unit: 'EUR', group: 'Période', formula: 'budget.resteAPayer', description: 'Dépenses prévues dans la période et pas encore payées.' },
-  { key: 'bpm.soldeAttendu', label: 'Solde prévu à la clôture', unit: 'EUR', group: 'Période', formula: 'bpm.resultatPeriode + bpm.resteARecevoir - bpm.resteAPayer', description: 'Net réalisé + revenus restant à recevoir − dépenses restant à payer (C04). Une échéance déjà réglée ne compte pas une seconde fois.' },
-  { key: 'bpm.recuAvance', label: 'Reçu d’avance', unit: 'EUR', group: 'Période', formula: 'budget.revenusAnticipes', description: 'Entrées prévues dans la période mais reçues avant son début : elles sont dans le résultat de la période où elles ont été reçues, pas dans le Reçu de celle-ci.' },
-  { key: 'bpm.payeAvance', label: 'Payé d’avance', unit: 'EUR', group: 'Période', formula: 'budget.chargesAnticipees', description: 'Charges prévues dans la période mais payées avant son début : elles sont dans le Dépensé de la période où elles ont été payées.' },
-  { key: 'bpm.soldeAvecAvances', label: 'Solde prévu, avances comprises', unit: 'EUR', group: 'Période', formula: 'bpm.soldeAttendu + bpm.recuAvance - bpm.payeAvance', description: 'Solde prévu à la clôture si les entrées et charges réglées d’avance avaient été réglées à leur date prévue : il mesure l’équilibre propre du cycle.' },
-  { key: 'bpm.tauxEpargne', label: "Taux d'épargne", unit: '%', decimals: 1, group: 'Période', formula: 'pourcentage(bpm.resultatPeriode, bpm.revenus)', description: 'Part des revenus reçus conservée sur la période.' },
-  // Budget initial : référence distincte du solde attendu
-  { key: 'bpm.revenusPrevus', label: 'Revenus prévus (initial)', unit: 'EUR', group: 'Budget initial', formula: 'budget.revenusPrevus', description: 'Montants prévus des revenus datés dans la période, réglés ou non.' },
-  { key: 'bpm.chargesPrevues', label: 'Charges prévues (initial)', unit: 'EUR', group: 'Budget initial', formula: 'budget.chargesPrevues', description: 'Montants prévus des charges datées dans la période, réglées ou non.' },
-  { key: 'bpm.resultatPrevu', label: 'Budget initial', unit: 'EUR', group: 'Budget initial', formula: 'bpm.revenusPrevus - bpm.chargesPrevues', description: 'Solde du budget prévisionnel initial (montants prévus). Référence, distincte du solde attendu.' },
-  { key: 'bpm.ecartResultat', label: 'Écart au budget initial', unit: 'EUR', group: 'Budget initial', formula: 'bpm.soldeAttendu - bpm.resultatPrevu', description: 'Solde attendu moins budget initial.' },
-  { key: 'bpm.consommationCharges', label: 'Charges consommées', unit: '%', decimals: 0, group: 'Budget initial', formula: 'pourcentage(budget.chargesRealisees, bpm.chargesPrevues)', description: 'Dépenses payées du budget de vie rapportées à ses charges prévues (les charges des projets, comptées à leur validation, n’ont pas de prévu dans le budget de vie).' },
-  // Patrimoine
-  { key: 'bpm.patrimoineConstitue', label: 'Stock enregistré', unit: 'EUR', group: 'Patrimoine', formula: 'patrimoine.stockOuverture + patrimoine.resultatsCapitalises', description: "Stock d'ouverture et résultats capitalisés avant le début de la période (C09 [P]). La période lue n'y est pas encore incluse." },
-  { key: 'bpm.patrimoineFinPeriode', label: 'Estimation après la période', unit: 'EUR', group: 'Patrimoine', formula: 'bpm.patrimoineConstitue + bpm.resultatPeriode', description: "Stock enregistré + effet signé de la période (une seule fois)." },
-  { key: 'bpm.progressionObjectif', label: "Atteinte de l'objectif", unit: '%', decimals: 0, group: 'Patrimoine', formula: 'pourcentage(bpm.patrimoineConstitue, patrimoine.objectif)', description: 'Stock enregistré rapporté à l’objectif de stock (C10 [P]).' },
-  { key: 'bpm.resteObjectif', label: "Reste pour l'objectif", unit: 'EUR', group: 'Patrimoine', formula: 'max(patrimoine.objectif - bpm.patrimoineConstitue, 0)', description: "Montant restant à constituer pour atteindre l'objectif de stock." },
-];
-
-const DEFAULT_DASHBOARD = [
-  { id: 'periode', title: 'Synthèse de la période', metrics: ['bpm.revenus', 'bpm.charges', RESULT_METRIC, 'bpm.soldeAttendu', 'bpm.resteARecevoir', 'bpm.resteAPayer'] },
-  { id: 'initial', title: 'Budget initial', metrics: ['bpm.resultatPrevu', 'bpm.ecartResultat', 'bpm.revenusPrevus', 'bpm.chargesPrevues', 'bpm.consommationCharges', 'bpm.tauxEpargne'] },
-  { id: 'patrimoine', title: 'Patrimoine', metrics: ['bpm.patrimoineConstitue', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif'] },
-];
-
-const compositionOf = (state, userId) => Object.values(state.bpmCompositions).find((c) => c.userId === userId) ?? null;
-const cycleOf = (state, compositionId) => Object.values(state.cycleLinks).find((c) => c.bpmCompositionId === compositionId) ?? null;
-const closuresOf = (state, cycleId) => Object.values(state.closures).filter((c) => c.cycleLinkId === cycleId).sort((a, b) => a.periodStart.localeCompare(b.periodStart));
 
 /**
  * Liaison de cycle : mensuelle [P] ; active dès que le jour d'ancrage est connu.
@@ -132,6 +103,21 @@ function metricContext(state, userId, socle, { periodKey } = {}) {
 }
 
 /**
+ * Verrou du cycle suivant [P] (paramètre `bpm.verrouCycleSuivant`) : tant qu'un cycle terminé attend sa clôture,
+ * le budget du projet de vie et ses projets ne reçoivent aucune entrée datée du cycle d'aujourd'hui ou après.
+ */
+function nextCycleLock(state, socle, userId, budgetId) {
+  if (socle.parameters.value(state, LOCK_PARAMETER) === false) return null;
+  const comp = compositionOf(state, userId);
+  const cycle = comp ? cycleOf(state, comp.id) : null;
+  const b = state.budgets[budgetId];
+  if (!cycle || !b || (b.id !== comp.budgetId && b.parentBudgetId !== comp.budgetId)) return null;
+  return awaitingClosure(cycleState(state, cycle));
+}
+
+const lockRefusal = (lock, date) => fail('CYCLE_AWAITING_CLOSURE', lockMessage(lock), { periodKey: lock.periodKey, from: lock.from, date });
+
+/**
  * Contrat commun de la clôture (C02) : conditions et montant qui sera effectivement capitalisé.
  * La confirmation affichée et la commande utilisent exactement ce calcul.
  */
@@ -175,7 +161,9 @@ export default {
   id: 'bpm',
   label: 'Budget/Patrimoine Management',
   level: 3,
-  dependsOn: ['users', 'core', 'budget', 'patrimoine'],
+  dependsOn: ['users', 'core', 'budget', 'patrimoine', 'calendar'],
+  // P4 · Lecture déclarée : l'application assemble ses pages en lisant ces natures des couches inférieures.
+  reads: ['user', 'coreProject', 'task', 'budget', 'operation', 'recurrence', 'costCenter', 'projectOverrun', 'taskBudgetRequest', 'patrimoine', 'capitalization', 'lifeGoal'],
   kinds: {
     bpmComposition: {
       collection: 'bpmCompositions',
@@ -214,6 +202,14 @@ export default {
     },
     // Nature des charges du projet de vie (indispensables / courantes / projets) : voir natures.mjs.
     essentialsParameter,
+    {
+      key: LOCK_PARAMETER,
+      label: 'Verrou du cycle suivant',
+      group: 'Application BPM',
+      type: 'boolean',
+      default: true,
+      description: 'Quand un cycle terminé attend sa clôture, il est en clôture (ses points sont figés : aucune nouvelle prévision n’y entre) et le cycle suivant attend d’être lancé (aucune entrée datée de lui ou après avant la clôture). Désactivé, les saisies restent libres et la clôture reste à faire.',
+    },
   ],
 
 
@@ -221,6 +217,8 @@ export default {
 
   extensions: {
     metricContext,
+    // Calendrier : règlements, tâches des projets et rendez-vous de décision, fournis comme natures lisibles.
+    calendarSources,
     // Projets de la vie : période du cycle fournie au financement du middleware Budget.
     ...projectExtensions,
 
@@ -258,11 +256,32 @@ export default {
       return null;
     },
 
-    /** Une période close est figée [P] : aucune opération du Budget « Projet de vie » n'y entre ni n'en sort. */
-    operationGuard(state, { userId, budgetId, dates }) {
+    /**
+     * Une période close est figée [P] : aucune opération du Budget « Projet de vie » n'y entre ni n'en sort.
+     * Un cycle terminé qui attend sa clôture tient le cycle suivant fermé (verrou du cycle suivant). Seul un report
+     * décidé par la clôture (`carried`) passe le verrou : quand plusieurs cycles attendent, la clôture du premier
+     * inscrit ses reports dans un cycle à venir, au-delà de celui qui attend encore.
+     */
+    operationGuard(state, { userId, budgetId, dates, independentIncome, opens = [], carried = false }, socle) {
       const comp = compositionOf(state, userId);
       const cycle = comp ? cycleOf(state, comp.id) : null;
-      assertOpenDates({ budget: state.budgets[budgetId], principalBudgetId: comp?.budgetId, closures: closuresOf(state, cycle?.id), dates });
+      assertOpenDates({ budget: state.budgets[budgetId], principalBudgetId: comp?.budgetId, closures: closuresOf(state, cycle?.id), dates, independentIncome });
+      const lock = nextCycleLock(state, socle, userId, budgetId);
+      const locked = lock && dates.find((d) => d >= lock.from);
+      if (locked && !carried) lockRefusal(lock, locked);
+      // Mode clôture : les points du cycle terminé sont figés, aucune prévision n'y entre (ce qui a eu lieu, oui).
+      const frozen = lock && opens.find((d) => d >= lock.start && d < lock.from);
+      if (frozen) fail('CYCLE_IN_CLOSING', closingModeMessage(lock), { periodKey: lock.periodKey, date: frozen });
+    },
+
+    /**
+     * Définition récurrente : refusée si elle touche une occurrence du cycle qui attend d'être lancé ou après, ou si
+     * elle ouvre (création, modification) des échéances dans le cycle en clôture.
+     */
+    recurrenceGuard(state, { userId, budgetId, from, to, opens = false }, socle) {
+      const lock = nextCycleLock(state, socle, userId, budgetId);
+      if (lock && (to == null || to >= lock.from)) lockRefusal(lock, to == null || from >= lock.from ? from : lock.from);
+      if (lock && opens && from < lock.from && (to == null || to >= lock.start)) fail('CYCLE_IN_CLOSING', closingModeMessage(lock), { periodKey: lock.periodKey, date: from > lock.start ? from : lock.start });
     },
 
     userSummary(state, user) {
@@ -297,64 +316,7 @@ export default {
     },
   },
 
-  migrations: [
-    {
-      from: ['j1-store/0.2', 'socle-store/0.3', 'socle-store/0.4'],
-      id: 'bpm-vision',
-      description: 'Hypothèses de projection ajoutées vides à chaque composition (rendement à renseigner) ; aucun objectif créé.',
-      apply(draft, tx) {
-        return Object.values(draft.bpmCompositions)
-          .filter((c) => !('vision' in c))
-          .map((c) => {
-            c.vision = null;
-            tx.updated.push({ kind: 'bpmComposition', id: c.id });
-            return `${c.id} : hypothèses à renseigner`;
-          });
-      },
-    },
-    {
-      from: ['j1-store/0.2', 'socle-store/0.3'],
-      id: 'bpm-composition-et-cycle',
-      description: 'Composition BPM reliée à sa racine noyau ; liaison de cycle « à configurer » créée si absente (aucune période inventée).',
-      apply(draft, tx, socle) {
-        const changes = [];
-        for (const c of Object.values(draft.bpmCompositions)) {
-          if (!c.coreProjectId) {
-            c.coreProjectId = draft.budgets[c.budgetId]?.coreProjectId ?? null;
-            c.label ??= `BPM de ${draft.users[c.userId]?.label ?? c.userId}`;
-            tx.updated.push({ kind: 'bpmComposition', id: c.id });
-            changes.push(`${c.id} : coreProjectId = ${c.coreProjectId}`);
-          }
-          if (!cycleOf(draft, c.id)) {
-            const cycle = socle.om.create(tx, 'cycleLink', { bpmCompositionId: c.id, ...cycleFields({ anchorDay: null, startDate: null }) }, { userId: c.userId });
-            changes.push(`${cycle.id} : liaison de cycle à configurer pour ${c.id}`);
-          }
-        }
-        return changes;
-      },
-    },
-    {
-      from: ['j1-store/0.2', 'socle-store/0.3', 'socle-store/0.4', 'socle-store/0.5'],
-      id: 'bpm-domaines-middleware',
-      description: 'Transfert des objectifs aux middlewares et rattachement des objectifs patrimoniaux à leur racine noyau, sans changer les IDs ni les montants.',
-      apply(draft, tx, socle) {
-        const changes = [];
-        for (const comp of Object.values(draft.bpmCompositions)) {
-          tx.userId = comp.userId;
-          socle.modules.budget.migrateObjectives(tx, comp.budgetId, comp.vision);
-          socle.modules.patrimoine.migrateObjectives(tx, comp.patrimoineId, comp.vision);
-          if ('vision' in comp) {
-            delete comp.vision;
-            socle.om.update(tx, comp, {});
-          }
-          changes.push(`${comp.id} : objectifs transférés aux middlewares ; racine ${comp.coreProjectId}`);
-        }
-        tx.userId = null;
-        return changes;
-      },
-    },
-
-  ],
+  migrations: BPM_MIGRATIONS,
 
   setup(socle) {
     const { om, metrics, parameters } = socle;
@@ -444,6 +406,68 @@ export default {
     // Gestion du projet de vie : lecture de pilotage du projet unique (voir life.mjs).
     const life = createLife(socle, { figuresFor, closuresOf, closingOf }, reads, projects);
 
+    // Bilans des cycles : tous les faits de chaque période et ses faits marquants (voir bilans.mjs).
+    const bilans = createBilans(socle, { requireComposition, cycleState, figuresFor, closuresOf }, reads);
+
+    /**
+     * Écriture de la clôture d'une période (dans une commande) : clôture avec l'instantané des chiffres et le bilan,
+     * capitalisation unique du résultat. `extra` complète la clôture (ex. le parcours suivi par la page).
+     */
+    function recordClosure(tx, input, bilan, extra = {}) {
+      const { comp, cycle, period, mctx, result, preview } = closingContract(tx.draft, tx.userId, socle, input.periodKey);
+      const resultCents = preview.resultCents;
+      // Le montant confirmé doit être celui qui sera capitalisé : sinon relecture demandée (C02).
+      if (input.expectedResultCents !== undefined && input.expectedResultCents !== resultCents) {
+        fail('CLOSING_PREVIEW_STALE', 'Les données ont changé depuis l’aperçu : relire le montant avant de confirmer.', { expectedResultCents: input.expectedResultCents, preview });
+      }
+      const sourceOperationIds = [...new Set(collectSources(result.inputs).filter((s) => s.kind === 'operation').map((s) => s.id))];
+      const closure = om.create(tx, 'closure', {
+        cycleLinkId: cycle.id,
+        budgetId: comp.budgetId,
+        patrimoineId: comp.patrimoineId,
+        capitalizationId: null,
+        periodKey: period.key,
+        periodLabel: period.label,
+        periodStart: period.start,
+        periodEnd: period.end,
+        resultCents,
+        budgetBalanceAfterCents: 0,
+        calculation: { metric: RESULT_METRIC, formula: result.formula, parameter: result.parameter, explanation: result.explanation, inputs: result.inputs.map((i) => ({ name: i.name, label: i.label, value: i.value })) },
+        // Instantané de tous les chiffres de la période à la clôture (C01) : formules, révisions, valeurs, sources.
+        figures: metrics.evaluateMany(mctx, [...metrics.metrics.keys()]),
+        stockBeforeCents: preview.stockBefore === null ? null : Math.round(preview.stockBefore * 100),
+        sourceOperationIds,
+        // Bilan du cycle (faits et faits marquants), figé à la clôture.
+        bilan: bilan && bilan.period.key === period.key && bilan.patrimoine.capitalizedCents === resultCents ? bilan : null,
+        ...extra,
+      });
+      const cap = socle.modules.patrimoine.buildCapitalization(tx, {
+        patrimoineId: comp.patrimoineId,
+        amountCents: resultCents,
+        date: period.end,
+        label: `Résultat ${period.label}`,
+        source: { kind: 'closure', id: closure.id },
+      });
+      closure.capitalizationId = cap.id;
+      return { closureId: closure.id, capitalizationId: cap.id };
+    }
+
+    // Parcours de clôture : complétude du cycle, décisions, finalisation qui lance le cycle suivant (voir closing.mjs).
+    const closing = createClosing(
+      socle,
+      {
+        requireComposition, compositionOf, cycleOf, closuresOf, closingOf, figuresFor, recordClosure, closureView,
+        cycleState: (state, cycle) => cycleState(state, cycle),
+        closingContract: (state, userId, periodKey) => closingContract(state, userId, socle, periodKey),
+      },
+      reads,
+      bilans,
+    );
+
+    // Météo BPM : l'état des deux sections, les prévisions et les tendances, lus dans les lectures ci-dessus (voir meteo.mjs).
+    const calendarReads = createCalendarSources({ reads, projects });
+    const meteo = createMeteo({ life, projects, bilans, reads, calendar: () => socle.modules.calendar });
+
     // Une écriture atomique compose les deux middlewares ; la révision de composition
     // protège le formulaire agrégé existant, sans stocker ses règles financières dans BPM.
     function applyVision(tx, comp, input) {
@@ -458,6 +482,9 @@ export default {
       reads,
       projects,
       life,
+      bilans,
+      meteo,
+      calendarSources: calendarReads,
 
       async updateVision(ctx, input = {}) {
         await om.command('updateVision', ctx, input, (tx) => {
@@ -542,7 +569,8 @@ export default {
             const refOf = (ref) => tempRefs[ref] ?? ref;
 
             for (const [i, e] of (input.entries ?? []).entries()) {
-              const entry = { ...e, budgetId, costCenterRef: refOf(e.costCenterRef) };
+              const initialTask = mode === 'branch' && out.taskIds?.length ? (e.taskIndex === undefined && out.taskIds.length === 1 ? out.taskIds[0] : Number.isInteger(e.taskIndex) ? out.taskIds[e.taskIndex] : undefined) : undefined;
+              const entry = { ...e, taskId: e.taskId ?? initialTask, budgetId, costCenterRef: refOf(e.costCenterRef) };
               if (e.recurrenceId) {
                 // Même validation que l'édition directe, sans écrire hors du budget du parcours.
                 const fields = Object.fromEntries(['label', 'amount', 'endDate'].filter(k => k in e).map(k => [k, e[k]]));
@@ -724,50 +752,24 @@ export default {
        * `expectedResultCents` (montant affiché à la confirmation) protège d'une donnée périmée.
        */
       async closePeriod(ctx, input = {}) {
-        const r = await om.command(
-          'closePeriod',
-          ctx,
-          input,
-          (tx) => {
-            const { comp, cycle, period, mctx, result, preview } = closingContract(tx.draft, tx.userId, socle, input.periodKey);
-            const resultCents = preview.resultCents;
-            // Le montant confirmé doit être celui qui sera capitalisé : sinon relecture demandée (C02).
-            if (input.expectedResultCents !== undefined && input.expectedResultCents !== resultCents) {
-              fail('CLOSING_PREVIEW_STALE', 'Les données ont changé depuis l’aperçu : relire le montant avant de confirmer.', { expectedResultCents: input.expectedResultCents, preview });
-            }
-            const sourceOperationIds = [...new Set(collectSources(result.inputs).filter((s) => s.kind === 'operation').map((s) => s.id))];
-
-            const closure = om.create(tx, 'closure', {
-              cycleLinkId: cycle.id,
-              budgetId: comp.budgetId,
-              patrimoineId: comp.patrimoineId,
-              capitalizationId: null,
-              periodKey: period.key,
-              periodLabel: period.label,
-              periodStart: period.start,
-              periodEnd: period.end,
-              resultCents,
-              budgetBalanceAfterCents: 0,
-              calculation: { metric: RESULT_METRIC, formula: result.formula, parameter: result.parameter, explanation: result.explanation, inputs: result.inputs.map((i) => ({ name: i.name, label: i.label, value: i.value })) },
-              // Instantané de tous les chiffres de la période à la clôture (C01) : formules, révisions, valeurs, sources.
-              figures: metrics.evaluateMany(mctx, [...metrics.metrics.keys()]),
-              stockBeforeCents: preview.stockBefore === null ? null : Math.round(preview.stockBefore * 100),
-              sourceOperationIds,
-            });
-            const cap = socle.modules.patrimoine.buildCapitalization(tx, {
-              patrimoineId: comp.patrimoineId,
-              amountCents: resultCents,
-              date: period.end,
-              label: `Résultat ${period.label}`,
-              source: { kind: 'closure', id: closure.id },
-            });
-            closure.capitalizationId = cap.id;
-            return { closureId: closure.id, capitalizationId: cap.id };
-          },
-          { creation: true },
-        );
+        // Le bilan du cycle est établi avant l'écriture, avec les données qui produisent le résultat versé ;
+        // une clôture refusée (période non terminée, aperçu périmé…) est signalée par la commande elle-même.
+        let bilan = null;
+        try {
+          const contract = closingContract(socle.state, om.requireUser(socle.state, ctx), socle, input.periodKey);
+          bilan = { ...bilans.forClosure(ctx, contract.period, contract.preview.resultCents), recordedAt: today() };
+        } catch (err) {
+          if (!err.code) throw err;
+        }
+        const r = await om.command('closePeriod', ctx, input, (tx) => recordClosure(tx, input, bilan), { creation: true });
         return { replayed: r.replayed, closure: closureView(socle.state.closures[r.closureId]) };
       },
+
+      // Parcours de clôture de la page « Clôture du cycle » (voir closing.mjs).
+      closingJourney: (ctx) => closing.journey(ctx),
+      closingBrief: (ctx) => closing.brief(ctx),
+      closingDecision: (ctx, input) => closing.decide(ctx, input),
+      finalizeClosing: (ctx, input) => closing.finalize(ctx, input),
 
       closures(ctx) {
         const state = socle.state;
@@ -899,101 +901,7 @@ export default {
     },
   },
 
-  routes(socle) {
-    const s = socle.modules.bpm;
-    const { budget, patrimoine } = socle.modules;
-    const lifeBudgetId = (ctx) => socle.modules.bpm.compositionOf(socle.state, socle.om.requireUser(socle.state, ctx))?.budgetId;
-    /** Ajoute les plafonds dépassés touchés par la dépense écrite : information, jamais un refus. */
-    const withCapAlerts = (ctx, r) => {
-      const x = r?.operation ?? r?.recurrence;
-      if (!x) return r;
-      try {
-        const alerts = s.reads.capAlertsFor(ctx, { date: x.realizedDate ?? x.date ?? x.firstDate, costCenterRef: x.costCenterRef, categoryId: x.categoryId, direction: x.direction });
-        return { ...r, capAlerts: alerts };
-      } catch {
-        return { ...r, capAlerts: [] };
-      }
-    };
-    return [
-      ['GET', '/api/bpm/dashboard', ({ ctx, query }) => s.dashboard(ctx, { periodKey: query.get('period') || undefined })],
-      ['GET', '/api/bpm/figures/:key', ({ ctx, params, query }) => s.figure(ctx, params.key, { periodKey: query.get('period') || undefined })],
-      ['GET', '/api/bpm/summary', ({ ctx, query }) => s.reads.summary(ctx, { periodKey: query.get('period') || undefined })],
-      ['GET', '/api/bpm/register', ({ ctx, query }) => s.reads.register(ctx, Object.fromEntries(query))],
-      ['GET', '/api/bpm/lines/:id', ({ ctx, params, query }) => s.reads.lineDetail(ctx, params.id, { periodKey: query.get('period') || undefined })],
-      ['GET', '/api/bpm/centers', ({ ctx, query }) => s.reads.centers(ctx, Object.fromEntries(query))],
-      ['GET', '/api/bpm/centers/:ref', ({ ctx, params, query }) => s.reads.centerDetail(ctx, params.ref, Object.fromEntries(query))],
-      ['GET', '/api/bpm/incomes', ({ ctx, query }) => s.reads.incomes(ctx, Object.fromEntries(query))],
-      ['GET', '/api/bpm/balance', ({ ctx, query }) => s.reads.balance(ctx, Object.fromEntries(query))],
-      ['GET', '/api/bpm/history', ({ ctx, query }) => s.reads.history(ctx, { before: query.get('before') ?? undefined, limit: query.get('limit') ?? undefined })],
-      ['GET', '/api/bpm/impact', ({ ctx, query }) => s.reads.impact(ctx, { period: query.get('period') || undefined })],
-      ['GET', '/api/bpm/budget-type', ({ ctx }) => s.reads.budgetType(ctx)],
-      ['GET', '/api/bpm/due', ({ ctx }) => s.reads.due(ctx)],
-      ['GET', '/api/bpm/events', ({ ctx }) => s.reads.events(ctx)],
-      ['GET', '/api/bpm/directives', ({ ctx }) => s.reads.directives(ctx)],
-      ['GET', '/api/bpm/projection', ({ ctx, query }) => s.reads.projection(ctx, Object.fromEntries(query))],
-      ['GET', '/api/bpm/life-management', ({ ctx, query }) => s.life.lifeManagement(ctx, { periodKey: query.get('period') || undefined })],
-      ['POST', '/api/bpm/caps/preview', ({ ctx, body }) => s.reads.previewCaps(ctx, body)],
-      ['POST', '/api/bpm/operations/preview', ({ ctx, body }) => s.reads.previewEntry(ctx, body)],
-      ['PUT', '/api/bpm/vision', ({ ctx, body }) => s.updateVision(ctx, body)],
-      ['GET', '/api/bpm/goals', ({ ctx }) => s.goals(ctx)],
-      ['POST', '/api/bpm/goals', ({ ctx, body }) => s.createGoal(ctx, body)],
-      ['PUT', '/api/bpm/goals/:id', ({ ctx, params, body }) => s.updateGoal(ctx, params.id, body)],
-      ['POST', '/api/bpm/goals/:id/remove', ({ ctx, params, body }) => s.removeGoal(ctx, params.id, body)],
-      ['GET', '/api/bpm/setup', ({ ctx }) => s.setupProfile(ctx)],
-      ['POST', '/api/bpm/setup', ({ ctx, body }) => s.setupProject(ctx, body)],
-      ['GET', '/api/bpm/recurrences', ({ ctx, query }) => budget.recurrences(ctx, { budgetId: query.get('budgetId') || undefined })],
-      ['PUT', '/api/bpm/recurrences/:id', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.updateRecurrence(ctx, params.id, body))],
-      ['POST', '/api/bpm/recurrences/:id/settle', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.settleOccurrence(ctx, params.id, body))],
-      // Une échéance qui n'aura pas lieu s'écarte (et se rétablit) ; une définition saisie par erreur se supprime.
-      ['POST', '/api/bpm/recurrences/:id/skip', ({ ctx, params, body }) => budget.skipOccurrence(ctx, params.id, body)],
-      ['POST', '/api/bpm/recurrences/:id/restore', ({ ctx, params, body }) => budget.restoreOccurrence(ctx, params.id, body)],
-      ['POST', '/api/bpm/recurrences/:id/cancel', ({ ctx, params, body }) => budget.cancelRecurrence(ctx, params.id, body)],
-      ['PUT', '/api/bpm/operations/:id', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.updateOperation(ctx, params.id, body))],
-      ['POST', '/api/bpm/operations/:id/cancel-realization', ({ ctx, params, body }) => budget.cancelRealization(ctx, params.id, body)],
-      ['POST', '/api/bpm/operations/:id/cancel', ({ ctx, params, body }) => budget.cancelOperation(ctx, params.id, body)],
-      ['PUT', '/api/bpm/caps', ({ ctx, body }) => budget.setCaps(ctx, lifeBudgetId(ctx), body)],
-      // Plafonds de dépenses : centres de coût et catégories personnalisées (jamais bloquants).
-      ['GET', '/api/bpm/spending-caps', ({ ctx, query }) => s.reads.spendingCaps(ctx, Object.fromEntries(query))],
-      ['GET', '/api/bpm/caps-review', ({ ctx, query }) => s.reads.capsReview(ctx, Object.fromEntries(query))],
-      ['GET', '/api/bpm/categories', ({ ctx, query }) => budget.categories(ctx, { archived: query.get('archived') === 'true' })],
-      ['POST', '/api/bpm/categories', ({ ctx, body }) => budget.createCategory(ctx, body)],
-      ['PUT', '/api/bpm/categories/:id', ({ ctx, params, body }) => budget.updateCategory(ctx, params.id, body)],
-      ['GET', '/api/bpm/periods', ({ ctx, query }) => s.periods(ctx, { before: query.get('before') ?? undefined, limit: query.get('limit') ?? undefined })],
-      ['GET', '/api/bpm/closures/preview', ({ ctx, query }) => s.closingPreview(ctx, query.get('period'))],
-      ['GET', '/api/bpm/preparation', ({ ctx }) => s.preparation(ctx)],
-      ['POST', '/api/bpm/prepare', ({ ctx, body }) => s.prepareComposition(ctx, body)],
-      ['PUT', '/api/bpm/cycle', ({ ctx, body }) => s.configureCycle(ctx, body)],
-      ['GET', '/api/bpm/closures', ({ ctx }) => s.closures(ctx)],
-      ['POST', '/api/bpm/closures', ({ ctx, body }) => s.closePeriod(ctx, body)],
-      ['GET', '/api/bpm/life-projects', ({ ctx }) => s.lifeProjects(ctx)],
-      // Projets et tâches du budget de vie (les projets et tâches sont ceux du noyau ; BPM porte leurs budgets).
-      ['GET', '/api/bpm/projects', ({ ctx }) => s.projects.overview(ctx)],
-      ['POST', '/api/bpm/projects', ({ ctx, body }) => s.projects.createProject(ctx, body)],
-      ['POST', '/api/bpm/projects/adopt', ({ ctx, body }) => s.projects.adoptProject(ctx, body)],
-      ['GET', '/api/bpm/projects/:id', ({ ctx, params }) => s.projects.projectDetail(ctx, params.id)],
-      ['GET', '/api/bpm/tasks', ({ ctx }) => s.projects.tasksOverview(ctx)],
-      ['POST', '/api/bpm/tasks', ({ ctx, body }) => s.projects.createTask(ctx, body)],
-      ['POST', '/api/bpm/project-budgets/:id/requests/:taskId', ({ ctx, params, body }) => s.projects.requestTaskBudget(ctx, params.id, params.taskId, body)],
-      ['POST', '/api/bpm/task-budget-requests/:id/decision', ({ ctx, params, body }) => s.projects.decideTaskBudget(ctx, params.id, body)],
-      ['PUT', '/api/bpm/project-budgets/:id/allocation', ({ ctx, params, body }) => s.projects.allocate(ctx, params.id, body)],
-      ['PUT', '/api/bpm/project-budgets/:id/shares/:taskId', ({ ctx, params, body }) => s.projects.setTaskShare(ctx, params.id, params.taskId, body)],
-      ['POST', '/api/bpm/project-budgets/:id/shares/:taskId/release', ({ ctx, params, body }) => s.projects.releaseTaskShare(ctx, params.id, params.taskId, body)],
-      ['PUT', '/api/bpm/project-budgets/:id/returns/:taskId', ({ ctx, params, body }) => s.projects.setTaskReturn(ctx, params.id, params.taskId, body)],
-      ['POST', '/api/bpm/project-budgets/:id/overruns', ({ ctx, params, body }) => s.projects.requestOverrun(ctx, params.id, body)],
-      // Abandonner un projet de la vie rend son enveloppe non consommée au budget de vie ; le reprendre le rouvre.
-      ['POST', '/api/bpm/project-budgets/:id/abandon', ({ ctx, params, body }) => s.projects.abandonProject(ctx, params.id, body)],
-      ['POST', '/api/bpm/project-budgets/:id/resume', ({ ctx, params, body }) => s.projects.resumeProject(ctx, params.id, body)],
-      ['POST', '/api/bpm/overruns/bill', ({ ctx, body }) => s.projects.billOverruns(ctx, body)],
-      ['POST', '/api/bpm/overruns/:id/decision', ({ ctx, params, body }) => s.projects.decideOverrun(ctx, params.id, body)],
-      ['POST', '/api/bpm/life-projects', ({ ctx, body }) => s.createLifeProject(ctx, body)],
-      ['GET', '/api/bpm/cost-centers', ({ ctx }) => budget.costCenters(ctx)],
-      ['POST', '/api/bpm/cost-centers', ({ ctx, body }) => budget.addCustomCostCenter(ctx, body)],
-      // Éditeur partagé : ponctuelle ou récurrente ; Budget du projet de vie par défaut, ou une branche du user.
-      ['POST', '/api/bpm/operations', async ({ ctx, body }) => withCapAlerts(ctx, await budget.createEntry(ctx, { ...body, budgetId: body?.budgetId || lifeBudgetId(ctx) }))],
-      ['POST', '/api/bpm/operations/:id/realize', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.realizeOperation(ctx, params.id, body))],
-      ['PUT', '/api/bpm/patrimoine', ({ ctx, body }) => patrimoine.updatePatrimoine(ctx, socle.modules.bpm.compositionOf(socle.state, socle.om.requireUser(socle.state, ctx))?.patrimoineId, body)],
-    ];
-  },
+  routes: bpmRoutes,
 };
 
 /** Clôture antérieure à l'instantané des chiffres : seul le résultat capitalisé est enregistré. */

@@ -33,13 +33,12 @@ const statusOf = (covered, target) => (covered >= target ? 'funded' : covered > 
  * @param {number} p.perYear           fréquence annuelle de l'apport (52, 12 ou 1)
  * @param {Array}  p.goals             [{ id, label, type, date: 'AAAA-MM-JJ', targetTodayCents }]
  */
-export function project({ startCents, startYear, horizonYears, ratePct, inflationPct, contributionCents, perYear, goals = [] }) {
+export function project({ startCents, startYear, horizonYears, ratePct, inflationPct, contributionCents, perYear, goals = [], timeline = null }) {
   const realReturnPct = ((1 + ratePct / 100) / (1 + inflationPct / 100) - 1) * 100;
   if (startCents === null || startCents === undefined) {
     return { status: 'unknown', reason: 'Stock initial à renseigner : aucune projection fiable sans valeur de départ.', realReturnPct, rows: [], goals: goalsOutOfReach(goals, startYear, horizonYears) };
   }
   const annualContribution = contributionCents * perYear;
-  const lastYear = startYear + horizonYears;
   const sorted = [...goals].sort((a, b) => a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id)));
   const results = new Map();
   const reservations = []; // { goalId, cents } dans l'ordre de réservation
@@ -47,8 +46,8 @@ export function project({ startCents, startYear, horizonYears, ratePct, inflatio
   let index = 1;
   const rows = [];
 
-  const applyGoals = (year) => {
-    for (const g of sorted.filter((x) => Number(x.date.slice(0, 4)) === year)) {
+  const applyGoals = (due) => {
+    for (const g of due) {
       const nominalTarget = Math.round(g.targetTodayCents * index);
       const reserved = reservations.reduce((s, r) => s + r.cents, 0);
       const available = Math.max(0, capital - reserved);
@@ -56,7 +55,7 @@ export function project({ startCents, startYear, horizonYears, ratePct, inflatio
       const type = GOAL_TYPES[g.type] ?? GOAL_TYPES.autre;
       if (type.consumes) capital -= covered;
       else if (covered > 0) reservations.push({ goalId: g.id, cents: covered });
-      results.set(g.id, { goalId: g.id, label: g.label, type: g.type, typeLabel: type.label, consumes: type.consumes, date: g.date, year, targetTodayCents: g.targetTodayCents, nominalTargetCents: nominalTarget, coveredCents: covered, status: statusOf(covered, nominalTarget) });
+      results.set(g.id, { goalId: g.id, label: g.label, type: g.type, typeLabel: type.label, consumes: type.consumes, date: g.date, year: Number(g.date.slice(0, 4)), targetTodayCents: g.targetTodayCents, nominalTargetCents: nominalTarget, coveredCents: covered, status: statusOf(covered, nominalTarget) });
     }
   };
   /** Un déficit ultérieur remet en cause les réservations, de la plus récente à la plus ancienne. */
@@ -73,17 +72,42 @@ export function project({ startCents, startYear, horizonYears, ratePct, inflatio
     }
   };
 
-  applyGoals(startYear);
-  rows.push(rowOf(startYear, 0, capital, index, reservations));
-  for (let n = 1; n <= horizonYears; n++) {
-    index *= 1 + inflationPct / 100;
-    capital = Math.round(capital * (1 + ratePct / 100)) + annualContribution;
-    applyGoals(startYear + n);
-    recheckReservations();
-    rows.push(rowOf(startYear + n, n, capital, index, reservations));
+  if (timeline) {
+    const { startDate, cycleEnds, checkpoints } = timeline;
+    const end = checkpoints.at(-1);
+    const due = new Map();
+    for (const g of sorted) {
+      if (g.date < startDate || g.date > end) continue;
+      if (!due.has(g.date)) due.set(g.date, []);
+      due.get(g.date).push(g);
+    }
+    const contributions = new Set(cycleEnds);
+    const checkpointsByDate = new Map(checkpoints.map((date, n) => [date, n]));
+    const dates = [...new Set([...checkpoints, ...cycleEnds, ...due.keys()])].sort();
+    let previous = startDate;
+    // Rendement et inflation sont appliqués au temps écoulé. Un apport devient disponible à la fin de son cycle.
+    for (const date of dates) {
+      const elapsedYears = (Date.parse(date) - Date.parse(previous)) / (365.2425 * 86_400_000);
+      index *= (1 + inflationPct / 100) ** elapsedYears;
+      capital = Math.round(capital * (1 + ratePct / 100) ** elapsedYears);
+      if (contributions.has(date)) capital += contributionCents;
+      applyGoals(due.get(date) ?? []);
+      recheckReservations();
+      if (checkpointsByDate.has(date)) rows.push({ ...rowOf(Number(date.slice(0, 4)), checkpointsByDate.get(date), capital, index, reservations), date });
+      previous = date;
+    }
+  } else {
+    applyGoals(sorted.filter(g => Number(g.date.slice(0, 4)) === startYear));
+    rows.push(rowOf(startYear, 0, capital, index, reservations));
+    for (let n = 1; n <= horizonYears; n++) {
+      index *= 1 + inflationPct / 100;
+      capital = Math.round(capital * (1 + ratePct / 100)) + annualContribution;
+      applyGoals(sorted.filter(g => Number(g.date.slice(0, 4)) === startYear + n));
+      recheckReservations();
+      rows.push(rowOf(startYear + n, n, capital, index, reservations));
+    }
   }
-  const outOfHorizon = sorted.filter((g) => Number(g.date.slice(0, 4)) > lastYear || Number(g.date.slice(0, 4)) < startYear);
-  for (const g of outOfHorizon) results.set(g.id, outOfHorizonResult(g));
+  for (const g of sorted) if (!results.has(g.id)) results.set(g.id, outOfHorizonResult(g));
   const last = rows.at(-1);
   return {
     status: 'estimate',

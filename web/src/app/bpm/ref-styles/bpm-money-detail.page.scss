@@ -235,8 +235,3 @@
   gap: var(--ecart-8);
 }
 
-.bmd-check-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-200)), var(--fr-1)));
-  gap: var(--ecart-12);
-}

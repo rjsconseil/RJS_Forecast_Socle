@@ -36,47 +36,47 @@ describe('ordre des liens de navigation', () => {
     for (const entry of SITE_NAVIGATION.entries) expect(keys.has(entry.key), entry.key).toBe(true);
     // Sous un même parent, chaque lien n'apparaît qu'une fois : sa clé suffit à le ranger.
     for (const node of walk(tree)) expect(new Set(node.children?.map(child => child.key)).size).toBe(node.children?.length ?? 0);
-    const bpm = tree.find(part => part.key === 'zone:bpm')!;
-    const page = walk([bpm]).find(node => node.key === '/app/gestion-projet')!;
+    const bpm = tree.find(part => part.key === 'zone:bpm-astra')!;
+    const page = walk([bpm]).find(node => node.key === '/bpm-astra/projets')!;
     expect(page.level).toBe('page');
-    expect(page.children?.find(child => child.key === '/app/gestion-projet/:id')).toMatchObject({ fixed: true });
-    expect(page.children?.find(child => child.key === '/app/gestion-projet/:id')?.children?.map(child => child.key)).toEqual(['/app/gestion-projet/:id/budget', '/app/gestion-projet/:id/taches']);
+    expect(page.children?.find(child => child.key === '/bpm-astra/projets/:id')).toMatchObject({ fixed: true });
+    expect(page.children?.find(child => child.key === '/bpm-astra/projets/:id')?.children?.map(child => child.key)).toEqual(['/bpm-astra/projets/:id/budget', '/bpm-astra/projets/:id/taches']);
   });
-  it('applique l’ordre au menu, aux onglets et à l’accueil sans changer la destination d’une section', () => {
-    const bpm = planZone('bpm')!;
-    const sections = zoneSections(bpm, true).map(section => section.id);
-    const section = bpm.sections.find(entry => menuPages(entry).length > 1)!;
+  it('applique l’ordre aux parties, aux pages et aux onglets de BPM-Astra', () => {
+    const astra = planZone('bpm-astra')!;
+    const sections = zoneSections(astra, true).map(section => section.id);
+    const section = astra.sections[0];
     const pages = menuPages(section).map(page => page.link);
-    const entry = sectionEntry(bpm, section).link;
     planOrder.set({
-      'zone:bpm': [...sections].reverse().map(id => `section:bpm:${id}`),
-      [`section:bpm:${section.id}`]: [...pages].reverse(),
-      '/plafonds': ['/plafonds/categories', '/plafonds/reglages'],
-      '/app/gestion-projet/:id': ['/app/gestion-projet/:id/taches', '/app/gestion-projet/:id/budget'],
+      'zone:bpm-astra': [...sections].reverse().map(id => `section:bpm-astra:${id}`),
+      [`section:bpm-astra:${section.id}`]: [...pages].reverse(),
+      '/bpm-astra/cloture': ['/bpm-astra/cloture/reglages', '/bpm-astra/cloture/compte'],
+      '/bpm-astra/projets/:id': ['/bpm-astra/projets/:id/taches', '/bpm-astra/projets/:id/budget'],
       '/': ['anchor:portal:technical'],
     });
-    expect(zoneSections(bpm, true).map(item => item.id)).toEqual([...sections].reverse());
+    expect(zoneSections(astra, true).map(item => item.id)).toEqual([...sections].reverse());
     expect(menuPages(section).map(page => page.link)).toEqual([...pages].reverse());
-    expect(sectionEntry(bpm, section).link).toBe(entry);
-    const caps = menuPages(bpm.sections.find(item => item.pages.some(page => page.link === '/plafonds'))!).find(page => page.link === '/plafonds')!;
-    expect(pageChildren(caps).map(child => child.link)).toEqual(['/plafonds/categories', '/plafonds/reglages']);
-    expect(planContext('/plafonds').tabs.map(tab => tab.link)).toEqual(['/plafonds', '/plafonds/categories', '/plafonds/reglages']);
-    expect(planContext('/app/gestion-projet/prj_1').tabs.map(tab => tab.id)).toEqual(['object', 'project-tasks', 'project-budget']);
+    expect(sectionEntry(astra, section).link).toBe(menuPages(section)[0].link);
+    const closing = menuPages(astra.sections[4]).find(page => page.link === '/bpm-astra/cloture')!;
+    expect(pageChildren(closing).map(child => child.link)).toEqual(['/bpm-astra/cloture/reglages', '/bpm-astra/cloture/compte']);
+    expect(planContext('/bpm-astra/cloture').tabs.map(tab => tab.link)).toEqual(['/bpm-astra/cloture', '/bpm-astra/cloture/reglages', '/bpm-astra/cloture/compte']);
+    expect(planContext('/bpm-astra/projets/prj_1').tabs.map(tab => tab.id)).toEqual(['object', 'project-tasks', 'project-budget']);
     expect(orderedZones()[0].band).toBe('technical');
     expect(orderedZones()).toHaveLength(PLAN_ZONES.length);
   });
   it('donne à chaque onglet ses gestes, rangés dans l’ordre réglé, et les déclare dans l’arbre', () => {
-    const tabs = planContext('/vision/reperes?period=2026-10').tabs;
-    expect(tabs.find(tab => tab.id === 'main')?.links.map(link => link.key)).toEqual(['/vision?goal=new']);
-    const landmarks = tabs.find(tab => tab.link === '/vision/reperes')!;
-    expect(landmarks.links.map(link => link.label)).toEqual(['Régler l’épargne visée', 'Régler le cap patrimonial']);
-    expect(planContext('/plafonds').tabs.every(tab => tab.links.length === 0)).toBe(true);
-    planOrder.set({ '/vision/reperes': ['/vision/reperes?reglage=wealth', '/vision/reperes?reglage=savings'], '/tableau-de-bord#main': ['/tableau-de-bord?entry=new&entryDirection=charge'] });
-    expect(planContext('/vision/reperes').tabs.find(tab => tab.link === '/vision/reperes')?.links.map(link => link.query['reglage'])).toEqual(['wealth', 'savings']);
-    expect(planContext('/tableau-de-bord').tabs[0].links.map(link => link.query['entryDirection'])).toEqual(['charge', 'income']);
-    const bpm = walk(SITE_NAVIGATION.tree.filter(part => part.key === 'zone:bpm'));
-    expect(bpm.find(node => node.key === '/vision/reperes')?.children?.map(child => child.key)).toEqual(['/vision/reperes?reglage=savings', '/vision/reperes?reglage=wealth']);
-    expect(bpm.find(node => node.key === '/tableau-de-bord#main')).toMatchObject({ fixed: true, unlabeled: true });
+    // N4 : l'accueil porte les actions de la page ; les autres sous-pages n'en ont pas.
+    const closing = planContext('/bpm-astra/cloture').tabs;
+    expect(closing[0].links.map(link => link.link)).toEqual(['/bpm-astra/cloture/compte', '/bpm-astra/cloture/reglages']);
+    expect(closing.slice(1).every(tab => tab.links.length === 0)).toBe(true);
+    // Plafonds : une seule page pour fixer les plafonds, son seul geste mène aux postes.
+    expect(planContext('/bpm-astra/plafonds').tabs[0].links.map(link => link.link)).toEqual(['/bpm-astra/plafonds/postes']);
+    expect(planContext('/bpm-astra/mouvements?period=2026-10').tabs[0].links.map(link => link.query['entryDirection'])).toEqual(['charge', 'income']);
+    planOrder.set({ '/bpm-astra/mouvements#main': ['/bpm-astra/mouvements?entry=new&entryDirection=income'] });
+    expect(planContext('/bpm-astra/mouvements').tabs[0].links.map(link => link.query['entryDirection'])).toEqual(['income', 'charge']);
+    const astra = walk(SITE_NAVIGATION.tree.filter(part => part.key === 'zone:bpm-astra'));
+    expect(astra.find(node => node.key === '/bpm-astra/mouvements#main')).toMatchObject({ fixed: true });
+    expect(astra.find(node => node.key === '/bpm-astra/mouvements#main')?.children?.some(child => child.key === '/bpm-astra/mouvements?entry=new&entryDirection=charge')).toBe(true);
   });
   it('sans réglage, garde l’ordre du plan', () => {
     expect(orderedZones()).toBe(PLAN_ZONES);

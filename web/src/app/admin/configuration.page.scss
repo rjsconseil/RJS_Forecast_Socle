@@ -69,17 +69,6 @@
   color: var(--app-accent);
   font-weight: var(--fw-semibold);
 }
-.cfg-retention-grid,
-.cfg-design-selectors,
-.cfg-token-grid {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--dim-240), var(--part-100)), var(--fr-1))
-  );
-  gap: var(--ecart-16);
-  margin: var(--ecart-24) 0;
-}
 .cfg-impact {
   display: grid;
   grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
@@ -149,8 +138,6 @@
   color: var(--muted);
   font-weight: var(--fw-regular);
 }
-.cfg-retention-grid label,
-.cfg-design-selectors label,
 .cfg-token {
   display: grid;
   align-content: start;
@@ -158,53 +145,13 @@
   min-width: 0;
   font-weight: var(--fw-semibold);
 }
-.cfg-color-controls {
-  display: grid;
-  grid-template-columns: var(--dim-48) minmax(0, var(--fr-1));
-  gap: var(--ecart-8);
-}
-.cfg-token-grid .cfg-color-picker {
-  padding: var(--ecart-4);
-  cursor: pointer;
-}
-.cfg-token .cfg-inherit-color {
-  justify-self: start;
-  margin-top: 0;
-}
-.cfg-retention-grid label span,
-.cfg-range,
-.cfg-token-grid code {
+.cfg-range {
   color: var(--muted);
   font-size: var(--fs-xs);
   font-weight: var(--fw-regular);
 }
-.cfg-retention-grid input,
-.cfg-design-selectors select,
-.cfg-token-grid input {
-  width: var(--part-100);
-  min-height: var(--control-height);
-  padding: var(--ecart-8) var(--ecart-10);
-  border: var(--trait-1) solid var(--field-line);
-  border-radius: var(--field-radius);
-  background: var(--field-surface);
-  color: var(--field-ink);
-}
-.cfg-token-grid select,
 .cfg-search input {
   width: var(--part-100);
-}
-.cfg-token-grid .cfg-slider {
-  width: var(--part-100);
-  min-height: var(--dim-32);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  accent-color: var(--app-accent);
-  cursor: ew-resize;
-}
-.cfg-page-design {
-  width: var(--part-100);
-  --page-gutter: clamp(var(--ecart-16), var(--ecart-1-5vw), var(--ecart-28));
 }
 .cfg-workbench {
   display: grid;
@@ -234,12 +181,8 @@
 .cfg-selection p {
   font-size: var(--fs-sm);
 }
-.cfg-selection .cfg-design-selectors,
 .cfg-selection .cfg-impact {
   grid-template-columns: var(--fr-1);
-}
-.cfg-category-select {
-  margin-block: var(--ecart-16);
 }
 .cfg-patterns button {
   padding: var(--ecart-12);
@@ -278,29 +221,7 @@
   color: var(--muted);
   font-size: var(--fs-sm);
 }
-.cfg-edit-layout {
-  display: grid;
-  grid-template-columns: var(--fr-1);
-  gap: var(--ecart-12);
-  align-items: start;
-}
-.cfg-edit-layout .cfg-token-grid {
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--dim-200), var(--part-100)), var(--fr-1))
-  );
-}
-.cfg-preview-area {
-  min-width: 0;
-}
-.cfg-preview-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-8);
-  font-weight: var(--fw-semibold);
-}
-.cfg-inheritance summary,
-.cfg-impact-disclosure > summary {
+.cfg-inheritance summary {
   cursor: pointer;
   font-weight: var(--fw-semibold);
   margin-bottom: var(--ecart-8);
@@ -316,11 +237,7 @@
     padding: 0;
   }
 }
-.cfg-retention-grid input:focus-visible,
-.cfg-design-selectors select:focus-visible,
-.cfg-token-grid input:focus-visible,
-.cfg-page button:focus-visible,
-.cfg-page a:focus-visible {
+.cfg-page button:focus-visible, .cfg-page a:focus-visible {
   outline: var(--trait-3) solid var(--app-focus-ring);
   outline-offset: var(--decalage-2);
 }
@@ -378,121 +295,6 @@
   color: var(--muted);
   font-size: var(--fs-sm);
 }
-.cfg-file-grid {
-  align-items: start;
-}
-.cfg-csv-example {
-  display: grid;
-  gap: var(--ecart-4);
-  max-width: var(--part-100);
-  overflow-x: auto;
-  margin: var(--ecart-20) 0;
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--card-radius);
-  background: var(--soft);
-}
-.cfg-csv-example code,
-.cfg-csv-preview code {
-  font-size: var(--fs-sm);
-  white-space: nowrap;
-}
-.cfg-csv-file {
-  display: grid;
-  gap: var(--ecart-8);
-  margin-top: var(--ecart-20);
-  font-weight: var(--fw-semibold);
-}
-.cfg-csv-file input {
-  width: var(--part-100);
-  min-width: 0;
-  padding: var(--ecart-10);
-  border: var(--trait-1) solid var(--control-line);
-  border-radius: var(--field-radius);
-  background: var(--field-surface);
-  color: var(--field-ink);
-}
-.cfg-csv-preview {
-  margin-top: var(--ecart-20);
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--card-radius);
-  background: var(--soft);
-}
-.cfg-csv-preview h3 {
-  margin: 0 0 var(--ecart-6);
-}
-.cfg-csv-preview ul {
-  display: grid;
-  gap: var(--ecart-8);
-  max-height: var(--dim-360);
-  overflow: auto;
-  padding: 0;
-  list-style: none;
-}
-.cfg-csv-preview li {
-  display: grid;
-  gap: var(--ecart-4);
-  min-width: 0;
-  padding-block: var(--ecart-8);
-  border-bottom: var(--trait-1) solid var(--line);
-}
-.cfg-csv-preview li span {
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
-.cfg-navigation-groups {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--part-100), var(--dim-320)), var(--fr-1))
-  );
-  gap: var(--ecart-20);
-  margin-block: var(--ecart-24);
-}
-.cfg-navigation-group {
-  min-width: 0;
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--card-radius);
-  background: var(--soft);
-}
-.cfg-navigation-group h3 {
-  margin: 0 0 var(--ecart-12);
-}
-.cfg-navigation-group ol {
-  display: grid;
-  gap: var(--ecart-8);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.cfg-navigation-group li {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-10);
-  min-width: 0;
-  padding: var(--ecart-8) var(--ecart-10);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--card-radius);
-  background: var(--raised-surface);
-}
-.cfg-navigation-position {
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-.cfg-navigation-name {
-  flex: var(--flex-1);
-  min-width: 0;
-}
-.cfg-navigation-actions {
-  display: flex;
-  gap: var(--ecart-4);
-}
-.cfg-navigation-actions .btn {
-  min-width: var(--dim-36);
-  padding-inline: var(--ecart-8);
-}
 @media (max-width: $rupture-720) {
   .cfg-grid,
   .cfg-impact {
@@ -504,19 +306,6 @@
   .cfg-hero,
   .cfg-panel {
     padding: var(--ecart-20);
-  }
-}
-
-.cfg-retention-pages {
-  margin-top: var(--ecart-16);
-
-  > summary {
-    cursor: pointer;
-    font-weight: var(--graisse-600);
-  }
-
-  > .cfg-retention-grid {
-    margin-top: var(--ecart-12);
   }
 }
 
@@ -617,42 +406,6 @@
   display: grid;
   gap: var(--ecart-10);
   margin-top: var(--ecart-20);
-}
-.cfg-table-row {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--dim-220), var(--part-100)), var(--fr-1))
-  );
-  gap: var(--ecart-10);
-  padding: var(--ecart-12);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--rayon-10);
-
-  > legend {
-    padding: 0 var(--ecart-4);
-  }
-  > label {
-    display: grid;
-    gap: var(--ecart-4);
-  }
-  > .cfg-actions {
-    grid-column: 1 / -1;
-  }
-}
-.cfg-table-list {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-4) var(--ecart-14);
-  border: 0;
-  padding: 0;
-}
-.cfg-table-add {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-8);
-  align-items: end;
 }
 .cfg-effects {
   margin: 0;

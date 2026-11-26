@@ -1,3 +1,4 @@
+import { BpmAmount } from './amount';
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -17,7 +18,7 @@ export interface MetricSub {
  */
 @Component({
   selector: 'bpm-metric',
-  imports: [RouterLink, NgTemplateOutlet],
+  imports: [BpmAmount, RouterLink, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../../shared/metric-tiles.component.scss',
   template: `
@@ -40,7 +41,7 @@ export interface MetricSub {
     }
     <ng-template #body>
       <small class="metric-label">{{ label() }}</small>
-      <strong class="metric-value">{{ text() }}</strong>
+      <strong class="metric-value" [bpmAmount]="valueCents()" [bpmFlow]="flow()">{{ text() }}</strong>
       @if (badge()) {
         <span class="metric-check" [attr.data-tone]="badgeDataTone()"><strong>{{ badge() }}</strong></span>
       }
@@ -50,7 +51,7 @@ export interface MetricSub {
       @if (subs().length) {
         <span class="metric-details">
           @for (s of subs(); track s.label) {
-            <span>{{ s.label }} {{ subText(s) }}</span>
+            <span>{{ s.label }} <span [bpmAmount]="s.cents">{{ subText(s) }}</span></span>
           }
         </span>
       }
@@ -65,6 +66,7 @@ export class BpmMetric {
   readonly label = input.required<string>();
   readonly valueCents = input<number | null>(null);
   readonly signed = input(false);
+  readonly flow = input<'income' | 'expense' | 'charge' | undefined>(undefined);
   readonly colored = input(false);
   readonly unknownText = input('À renseigner');
   readonly unknownReason = input<string | null>(null);
@@ -84,7 +86,7 @@ export class BpmMetric {
   /** Ton de la tuile de référence : succès / danger si coloré, avertissement si la valeur est inconnue. */
   protected dataTone = computed<MetricTone | null>(() => {
     const t = tone(this.valueCents());
-    if (t === 'unknown') return 'warning';
+    if (t === 'unknown') return 'accent';
     if (!this.colored()) return null;
     return t === 'pos' ? 'success' : t === 'neg' ? 'danger' : null;
   });

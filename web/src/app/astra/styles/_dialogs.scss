@@ -1,0 +1,34 @@
+// BPM-Astra · fenêtres de saisie et réglages de la projection
+@use 'sass:list';
+@use 'sass:map';
+@use 'tokens' as *;
+
+// ---------- Fenêtres de saisie : même marge que leur en-tête ----------
+// L'en-tête d'une fenêtre a 18px / 24px ; le formulaire en dessous prend la même marge, quel que soit l'écran
+// qui l'ouvre (dépense, entrée, projet, tâche, objectif daté, enveloppe, part). Les encadrés d'aide ont leur propre marge.
+#{$app} dialog.modal {
+  > form { padding: 18px 24px 22px; }
+  > form :is(.bpm-note, .bpm-help, .bpm-feedback, .fd-help):where(:not(:empty)) { margin-inline: 0; }
+  > form .bpm-feedback { padding: 10px 12px; border-radius: 8px; }
+  > form :is(.bpm-note, .bpm-help) { padding-inline: 0; }
+  > form :is(input, select, textarea) { max-width: 100%; box-sizing: border-box; }
+  > form :is(.bpm-form-actions, .form-actions, .bpm-actions, .fd-actions) { margin-top: 6px; }
+}
+
+// Objectif et projection · « Affiner » : une hypothèse par ligne, libellé à gauche, petit champ à droite.
+// (La règle générale des filtres du panneau étire les champs à 100 % ; ici le champ garde une largeur fixe.)
+#{$frame} .astra-rail .astra-cap-refine {
+  display: grid; gap: 10px;
+  > p { margin: 0; color: var(--bpm-text); font-size: 12.5px; font-weight: 640; }
+  .astra-cap-fields { display: grid; gap: 8px; margin: 0; }
+  .astra-cap-fields label {
+    display: grid; grid-template-columns: minmax(0, 1fr) 104px; align-items: center; gap: 10px;
+    color: var(--bpm-muted); font-size: 12.5px; font-weight: 600; line-height: 1.3; overflow-wrap: normal;
+  }
+  .astra-cap-input.small {
+    display: flex; align-items: center; gap: 6px; width: 104px; max-width: 104px; margin: 0; padding: 4px 10px; box-sizing: border-box;
+    input { flex: 1 1 auto; width: 100%; min-width: 0; padding: 0; text-align: right; font-size: 14px; }
+    > span { flex: none; font-size: 12px; }
+  }
+}
+

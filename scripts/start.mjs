@@ -72,7 +72,10 @@ function shutdown(code = 0) {
 process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
-run('api', process.execPath, [join(root, 'api', 'src', 'server.mjs')]);
+// En développement, l'API redémarre seule dès qu'un fichier de `api/src` change (les données, dans `api/data`,
+// ne déclenchent rien) : plus besoin de Ctrl+C pour voir une modification du serveur. Le site, lui, se recharge déjà seul.
+const apiArgs = production ? [] : ['--watch-path=' + join(root, 'api', 'src'), '--watch-preserve-output'];
+run('api', process.execPath, [...apiArgs, join(root, 'api', 'src', 'server.mjs')]);
 if (production) run('site', process.execPath, [join(root, 'scripts/site-server.mjs')]);
 else run('site', process.execPath, [ng, 'serve'], { cwd: join(root, 'web'), env: { ...process.env, NG_CLI_ANALYTICS: 'false' } });
 

@@ -1,0 +1,179 @@
+<div class="astra-page astra-goal">
+  <header class="astra-heading">
+    <div>
+      <h1>Objectif et projection</h1>
+      <p>Votre cap d’épargne et ce qu’il construit, à partir de votre patrimoine d’aujourd’hui.</p>
+    </div>
+  </header>
+  <bpm-state [loading]="profile.loading() && !profile.data()" [error]="profile.error()" (retry)="profile.reload()" />
+
+  @if (profile.data()) {
+    @let pr = projection.data();
+    @let h = pr?.hypotheses;
+    <rjs-page-toolbar label="Outils du cap" [focus]="focus()">
+      <div toolbarPrimary>
+        @if (dirty()) {
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="save()">{{ busy() ? 'Enregistrement…' : 'Enregistrer ce cap' }}</button>
+        } @else {
+          <button type="button" class="btn btn-primary" (click)="createGoal()">＋ Créer un objectif daté</button>
+        }
+      </div>
+      <div toolbarActions>
+        @if (dirty()) { <button type="button" class="btn btn-secondary" [disabled]="busy()" (click)="reset()">Revenir à mon cap</button> }
+      </div>
+      <div toolbarFilters class="astra-cap-refine">
+        <p>Hypothèses de la projection</p>
+        <div class="astra-cap-fields">
+            <label>Rendement annuel<span class="astra-cap-input small"><input inputmode="decimal" [value]="draft().rate" (change)="set('rate', $any($event.target).value)" /><span aria-hidden="true">%</span></span></label>
+            <label>Inflation annuelle<span class="astra-cap-input small"><input inputmode="decimal" [value]="draft().inflation" (change)="set('inflation', $any($event.target).value)" /><span aria-hidden="true">%</span></span></label>
+            <label>Horizon<span class="astra-cap-input small"><input inputmode="numeric" [value]="draft().horizon" (change)="set('horizon', $any($event.target).value)" /><span aria-hidden="true">ans</span></span></label>
+          </div>
+      </div>
+    </rjs-page-toolbar>
+    <form class="astra-cap" (submit)="$event.preventDefault(); save()" aria-labelledby="astra-cap-title">
+      <h2 id="astra-cap-title" class="astra-visually-hidden">Mon cap</h2>
+      <div class="astra-cap-start">
+        <span class="astra-cap-kicker">Point de départ</span>
+        <strong class="astra-cap-figure">{{ h?.startCents | cents:0 }}</strong>
+        <p>Patrimoine constaté au {{ h?.startDate | shortDate }}{{ h?.startPeriodKey ? ', dernier cycle clôturé' : '' }}. Le passé s’arrête là : la projection part de ce montant.</p>
+        <a class="astra-text-link" routerLink="/bpm-astra/patrimoine" [queryParams]="ctx.carry()">Ouvrir mon patrimoine <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+      </div>
+
+      <div class="astra-cap-goal">
+        <label class="astra-cap-kicker" for="astra-savings">Épargne visée par cycle</label>
+        <div class="astra-cap-input" [class.is-invalid]="parsed().savings.invalid">
+          <input id="astra-savings" inputmode="decimal" autocomplete="off" [value]="draft().savings" (change)="set('savings', $any($event.target).value)" placeholder="0" aria-describedby="astra-savings-help" />
+          <span aria-hidden="true">€</span>
+        </div>
+        <p id="astra-savings-help">{{ parsed().savings.invalid ? 'Saisissez un montant positif.' : 'Ce que chaque cycle doit laisser de côté. C’est l’apport de la projection.' }}</p>
+      </div>
+
+      <div class="astra-cap-target">
+        <label class="astra-cap-kicker" for="astra-wealth">Patrimoine visé</label>
+        <div class="astra-cap-input" [class.is-invalid]="parsed().wealth.invalid">
+          <input id="astra-wealth" inputmode="decimal" autocomplete="off" [value]="draft().wealth" (change)="set('wealth', $any($event.target).value)" placeholder="Facultatif" aria-describedby="astra-wealth-help" />
+          <span aria-hidden="true">€</span>
+        </div>
+        <p id="astra-wealth-help">
+          @if (reached(); as r) {
+            @if (r.year) { Atteint en <b>{{ r.year }}</b>{{ r.n ? ', dans ' + r.n + (r.n === 1 ? ' an' : ' ans') : ', déjà atteint' }}, en euros d’aujourd’hui. }
+            @else { Pas atteint dans l’horizon de {{ parsed().horizon }} ans : augmentez l’épargne visée ou l’horizon. }
+          } @else { En euros d’aujourd’hui. Il dit quand votre épargne vous y mène. }
+        </p>
+      </div>
+
+      <div class="astra-cap-result" aria-live="polite">
+        <span class="astra-cap-kicker">Dans {{ parsed().horizon }} ans</span>
+        @if (pr?.status === 'estimate' && pr?.keyFigures; as k) {
+          <strong class="astra-cap-figure">{{ k.nominalAtHorizonCents | cents:0 }}</strong>
+          <p>soit <b>{{ k.realAtHorizonCents | cents:0 }}</b> en euros d’aujourd’hui</p>
+          @if (pr?.difference?.length) {
+            @let gain = pr!.difference!.at(-1)!.nominalCents;
+            <p class="astra-cap-delta" [attr.data-sign]="gain >= 0 ? 'up' : 'down'">{{ gain >= 0 ? '+' : '−' }}{{ (gain >= 0 ? gain : -gain) | cents:0 }} par rapport à l’objectif enregistré</p>
+          }
+        } @else if (pr?.reason) {
+          <p>{{ pr!.reason }}</p>
+        } @else { <p>Calcul en cours…</p> }
+      </div>
+
+
+      @if (error() || message()) {
+        <p class="astra-cap-status" [class.is-error]="error()" role="status">{{ error() || message() }}</p>
+      }
+    </form>
+
+    <div class="astra-goal-grid">
+    <section class="astra-card astra-projection" aria-labelledby="astra-projection-title">
+      <div class="astra-card-head">
+        <div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="projection" aria-hidden="true"></span><h2 id="astra-projection-title">Accumulation dans le temps</h2></div>
+        <ul class="astra-legend">
+          <li data-series="nominal">En euros courants</li>
+          <li data-series="real">En euros d’aujourd’hui</li>
+          @if (chart()?.target !== null) { <li data-series="target">Patrimoine visé</li> }
+        </ul>
+      </div>
+      @if (chart(); as c) {
+        <svg class="astra-projection-chart" [attr.viewBox]="'0 0 ' + W + ' ' + H" role="img"
+             [attr.aria-label]="'Projection sur ' + parsed().horizon + ' ans, de ' + (h?.startCents | cents:0) + ' à ' + (pr?.keyFigures?.nominalAtHorizonCents | cents:0)">
+          <defs><linearGradient id="astra-gold" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--astra-iris)" stop-opacity=".32" /><stop offset="1" stop-color="var(--astra-iris)" stop-opacity="0" /></linearGradient></defs>
+          @for (t of c.ticks; track t.y) {
+            <line class="grid" [attr.x1]="L" [attr.x2]="W - 18" [attr.y1]="t.y" [attr.y2]="t.y" />
+            <text class="axis" [attr.x]="L - 8" [attr.y]="t.y + 4" text-anchor="end">{{ t.label }}</text>
+          }
+          @for (yr of c.years; track yr.x) { <text class="axis" [attr.x]="yr.x" [attr.y]="H - 8" text-anchor="middle">{{ yr.label }}</text> }
+          <path class="area" [attr.d]="c.area" fill="url(#astra-gold)" />
+          <path class="nominal" [attr.d]="c.nominal" />
+          <path class="real" [attr.d]="c.real" />
+          @if (c.target !== null) {
+            <line class="target" [attr.x1]="L" [attr.x2]="W - 18" [attr.y1]="c.target" [attr.y2]="c.target" />
+          }
+          @for (g of c.goals; track g.label) {
+            <g class="goal" [attr.data-status]="g.status"><line [attr.x1]="g.x" [attr.x2]="g.x" [attr.y1]="14" [attr.y2]="H - B" /><circle [attr.cx]="g.x" cy="14" r="4" /></g>
+          }
+          <line class="cursor" [attr.x1]="c.cursor.x" [attr.x2]="c.cursor.x" [attr.y1]="14" [attr.y2]="H - B" />
+          <circle class="dot-nominal" [attr.cx]="c.cursor.x" [attr.cy]="c.cursor.nominal" r="5" />
+          <circle class="dot-real" [attr.cx]="c.cursor.x" [attr.cy]="c.cursor.real" r="4" />
+        </svg>
+        @if (cursor(); as row) {
+          <div class="astra-projection-reader">
+            <label for="astra-year">Année</label>
+            <input id="astra-year" type="range" min="0" [max]="(pr?.rows?.length ?? 1) - 1" [value]="year()" (input)="pickYear($any($event.target).value)" [attr.aria-valuetext]="row.year + ' : ' + (row.nominalCents | cents:0)" />
+            <dl>
+              <div><dt>{{ row.year }}</dt><dd>{{ row.n === 0 ? 'Départ' : 'Dans ' + row.n + (row.n === 1 ? ' an' : ' ans') }}</dd></div>
+              <div><dt>En euros courants</dt><dd>{{ row.nominalCents | cents:0 }}</dd></div>
+              <div><dt>En euros d’aujourd’hui</dt><dd>{{ row.realCents | cents:0 }}</dd></div>
+              @if (row.reservedCents) { <div><dt>Réservé aux objectifs datés</dt><dd>{{ row.reservedCents | cents:0 }}</dd></div> }
+            </dl>
+          </div>
+        }
+        <details class="astra-projection-table">
+          <summary>Toutes les années en tableau</summary>
+          <table>
+            <thead><tr><th scope="col">Année</th><th scope="col">En euros courants</th><th scope="col">En euros d’aujourd’hui</th></tr></thead>
+            <tbody>@for (r of pr?.rows ?? []; track r.year) { <tr><th scope="row">{{ r.year }}</th><td>{{ r.nominalCents | cents:0 }}</td><td>{{ r.realCents | cents:0 }}</td></tr> }</tbody>
+          </table>
+        </details>
+      } @else if (pr?.reason) {
+        <p class="astra-empty">{{ pr!.reason }}</p>
+      }
+    </section>
+
+    <div class="astra-stack">
+    <section class="astra-card astra-goals" aria-labelledby="astra-goals-title">
+      <div class="astra-card-head">
+        <div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="objectifs" aria-hidden="true"></span><h2 id="astra-goals-title">Objectifs datés</h2></div>
+        <div class="astra-actions">
+          <a class="astra-text-link" routerLink="/bpm-astra/objectif/echeances" [queryParams]="ctx.carry()">Organiser mes objectifs datés <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+        </div>
+      </div>
+      @if (pr?.goals?.length) {
+        <ul class="astra-goal-list">
+          @for (g of pr!.goals; track g.goalId) {
+            <li>
+              <div><strong>{{ g.label }}</strong><small>{{ g.typeLabel }} · {{ g.date | shortDate }} · {{ g.targetTodayCents | cents:0 }} d’aujourd’hui</small></div>
+              <span class="astra-coverage" [attr.data-status]="g.status">
+                <span class="astra-coverage-bar" aria-hidden="true"><i [style.width.%]="g.coveragePct ?? 0"></i></span>
+                {{ coverageLabel(g.status) }}@if (g.coveragePct !== null && g.status !== 'funded') { · {{ g.coveragePct }} % }
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="astra-empty">Une étude, un achat, la retraite : datez un objectif pour savoir si votre épargne le couvrira à temps.</p>
+      }
+    </section>
+    @if (pr?.status === 'estimate' && pr?.keyFigures; as k) {
+      <section class="astra-card" aria-labelledby="astra-proj-marks">
+        <div class="astra-card-head"><div class="astra-card-title"><span class="astra-tile-icon" data-astra-icon="projection" aria-hidden="true"></span><h2 id="astra-proj-marks">Repères de la projection</h2></div></div>
+        <dl class="astra-marks">
+          <div><dt>Apport par an</dt><dd>{{ pr!.annualContributionCents ?? null | cents:0 }}</dd></div>
+          <div><dt>Rendement réel</dt><dd>{{ k.realReturnPct.toFixed(1).replace('.', ',') }} % / an</dd></div>
+          <div><dt>Départ</dt><dd>{{ h?.startCents | cents:0 }}</dd></div>
+          <div><dt>Effet de l’inflation sans rendement</dt><dd>−{{ k.erosionWithoutReturnCents | cents:0 }}</dd></div>
+        </dl>
+      </section>
+    }
+    </div>
+    </div>
+  }
+</div>

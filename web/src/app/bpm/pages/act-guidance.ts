@@ -1,8 +1,9 @@
+import { BpmAmount } from '../ui/amount';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { BpmRouterLink } from '../ui/bpm-router-link';
 import { ApiError, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
+import { BpmApi } from '../data/bpm-api.service';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents } from '../../core/format';
 import { bpmLoader, BpmProgress, BpmRefresh, BpmState } from '../ui';
 
@@ -13,7 +14,7 @@ import { bpmLoader, BpmProgress, BpmRefresh, BpmState } from '../ui';
  */
 @Component({
   selector: 'bpm-act-directives',
-  imports: [RouterLink, BpmState, ShortDatePipe],
+  imports: [BpmAmount, BpmRouterLink, BpmState, ShortDatePipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss'],
   template: `
     <section class="bv-card bp-directives" [attr.data-state]="state()" aria-labelledby="bp-dir-title" data-ui-pattern="panel">
@@ -29,7 +30,7 @@ import { bpmLoader, BpmProgress, BpmRefresh, BpmState } from '../ui';
             <li [class.is-over]="i.valueCents !== null && (i.key === 'available' || i.key === 'weekly') && (i.valueCents ?? 0) < 0">
               <span aria-hidden="true">{{ marks[n] ?? n + 1 }}</span>{{ i.label }} :
               @if (i.valueCents !== null) {
-                <strong>{{ value(i.key, i.valueCents) }}</strong>
+                <strong [bpmAmount]="i.valueCents" [bpmTone]="i.key === 'available' || i.key === 'weekly' ? (i.valueCents < 0 ? 'danger' : i.valueCents > 0 ? 'success' : 'info') : 'info'">{{ value(i.key, i.valueCents) }}</strong>
                 @if (i.computable) { <span class="chip estimate">Indicatif</span> }
               } @else {
                 <strong>Non calculable</strong> <span>{{ i.reason }}</span>
@@ -55,7 +56,7 @@ import { bpmLoader, BpmProgress, BpmRefresh, BpmState } from '../ui';
         </div>
         <p class="bpm-help">
           Indications calculées sans écriture. L'épargne nécessaire vient de l'objectif d'excédent ou de l'épargne visée ;
-          les provisions viennent des objectifs datés (<a routerLink="/vision">Objectifs et avenir</a>) ; le plafond est la somme des limites définies dans <a routerLink="/plafonds/reglages">Définir les plafonds</a>.
+          les provisions viennent des objectifs datés (<a routerLink="/vision">Patrimoine et objectifs</a>) ; le plafond est la somme des limites définies dans <a routerLink="/plafonds">Plafonds</a>.
         </p>
       }
     </section>
@@ -87,7 +88,7 @@ export class BpmActDirectives {
  */
 @Component({
   selector: 'bpm-act-surplus',
-  imports: [FormsModule, BpmState, BpmProgress, CentsPipe],
+  imports: [BpmAmount, FormsModule, BpmState, BpmProgress, CentsPipe],
   styleUrls: ['../ref-styles/bpm-pages.scss', '../ref-styles/bpm-vision.page.scss', '../ref-styles/bpm-pilot-charts.scss'],
   template: `
     <section class="bv-card" aria-labelledby="bp-target-title" data-ui-pattern="panel">
@@ -99,11 +100,11 @@ export class BpmActDirectives {
           <dl class="bp-target-facts">
             <div>
               <dt>Excédent cumulé visé</dt>
-              <dd><strong>{{ s.targetCents | cents }}</strong><span>{{ s.periods }} période(s) depuis {{ s.startKey }}</span></dd>
+              <dd><strong [bpmAmount]="s.targetCents" bpmTone="info">{{ s.targetCents | cents }}</strong><span>{{ s.periods }} période(s) depuis {{ s.startKey }}</span></dd>
             </div>
             <div>
               <dt>Excédent par période</dt>
-              <dd><strong>{{ s.perPeriodCents | cents }}</strong><span>par période</span></dd>
+              <dd><strong [bpmAmount]="s.perPeriodCents" bpmTone="info">{{ s.perPeriodCents | cents }}</strong><span>par période</span></dd>
             </div>
           </dl>
           <bpm-progress label="Excédent cumulé vers la cible" [value]="s.cumulatedCents" [target]="s.targetCents"
@@ -141,7 +142,7 @@ export class BpmActDirectives {
             </label>
           </div>
           @if (perPeriod() !== null) {
-            <p>Soit <strong class="num">{{ perPeriod()! | cents }}</strong> d'excédent par période (arrondi au centime supérieur).</p>
+            <p>Soit <strong class="num" [bpmAmount]="perPeriod()" bpmTone="info">{{ perPeriod()! | cents }}</strong> d'excédent par période (arrondi au centime supérieur).</p>
           }
           <p class="bpm-help">Enregistrer cet objectif ne modifie pas le stock du Patrimoine : il fixe l'épargne nécessaire des directives. Le stock n'évolue qu'à la clôture, par la capitalisation du résultat réel.</p>
           <div class="bpm-actions">

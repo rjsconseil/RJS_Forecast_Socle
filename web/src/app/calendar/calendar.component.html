@@ -1,0 +1,1002 @@
+    <section
+      class="calendar is-360 calendar-module"
+      [class.is-canonical]="true"
+      [class.is-compact-host]="compact()"
+      [class]="presentationClass()"
+      [class.is-period-leaving]="periodLeaving()"
+      [style]="presentationStyle()"
+      [attr.data-cal-design]="design().id"
+      [attr.data-cal-effect]="effect().id"
+      [attr.data-fx-enter]="effect().motion.enter"
+      [attr.data-fx-leave]="effect().motion.leave"
+      [attr.data-fx-hover]="effect().motion.hover"
+      [attr.data-fx-period]="effect().motion.period"
+      [attr.data-format-layout]="format().layout"
+      [class.has-external-tools]="externalTools()"
+      [class.is-specialized-calendar]="presentation() !== 'calendar'"
+      [attr.data-presentation]="presentation()"
+      [attr.aria-label]="data()?.calendar?.label ?? 'Calendrier'"
+      [attr.aria-busy]="loading() || busy()"
+    >
+      @if (settingsAvailable()) {
+        @if (presentation() === 'sources') {
+          <!-- Page dédiée aux réglages : le même panneau, ouvert, sans grille. -->
+          <div class="calendar-360-settings-page" [id]="settingsAnchor">
+            <ng-container [ngTemplateOutlet]="personalization" />
+          </div>
+        } @else {
+          <!-- Volet « Sources et affichage » : partie du module, identique pour chaque calendrier et chaque page. -->
+          <details
+            #settings
+            class="calendar-360-timeline calendar-360-settings"
+            [id]="settingsAnchor"
+            [open]="settingsOpen()"
+            (toggle)="settingsOpen.set(settings.open)"
+          >
+            <summary>
+              <span class="calendar-360-timeline-copy">
+                <strong>Sources et affichage</strong>
+                <small>Sources branchées, format d’affichage et bilan au survol d’un jour</small>
+              </span>
+              @if (compact()) {
+                <span class="calendar-settings-period">Du {{ date(periodRange().start) }} au {{ date(periodRange().end) }}</span>
+                <span class="calendar-settings-event-count">{{ periodEvents().length }} {{ periodEvents().length === 1 ? 'événement' : 'événements' }}</span>
+              }
+              <span class="calendar-360-timeline-controls">
+                @if (!compact()) { <span class="calendar-360-timeline-count">{{ periodEvents().length }} événements affichés</span> }
+                <span class="calendar-360-timeline-closed">Afficher</span>
+                <span class="calendar-360-timeline-open">Masquer</span>
+                <span class="calendar-360-timeline-chevron" aria-hidden="true"></span>
+              </span>
+            </summary>
+            <div class="calendar-360-timeline-body calendar-360-settings-body">
+              <ng-container [ngTemplateOutlet]="personalization" />
+            </div>
+          </details>
+        }
+      } @else if (compact()) {
+        <div class="calendar-settings-readonly">
+          <span class="calendar-settings-period">Du {{ date(periodRange().start) }} au {{ date(periodRange().end) }}</span>
+          <span class="calendar-settings-event-count">{{ periodEvents().length }} {{ periodEvents().length === 1 ? 'événement' : 'événements' }}</span>
+        </div>
+      }
+      <div
+        class="calendar-layout is-compact"
+        [class.is-month]="view() === 'month'"
+        [class.is-year]="view() === 'year'"
+        [class.is-week]="view() === 'week'"
+      >
+        <div class="calendar-right-rail">
+          <div class="calendar-control-row">
+            @if (!externalTools()) {
+              <div class="calendar-options">
+                <select
+                  class="calendar-date-filter"
+                  aria-label="Regroupement affiché"
+                  [ngModel]="group()"
+                  (ngModelChange)="selectGroup($event)"
+                >
+                  <option value="all">Tous les regroupements</option>
+                  @for (g of groups(); track g.key) {
+                    <option [value]="g.key">{{ g.label }}</option>
+                  }
+                </select>
+                <label class="calendar-completed-control">
+                  <input
+                    type="checkbox"
+                    [disabled]="!controlAllowed('completed')"
+                    aria-label="Afficher les éléments terminés"
+                    [ngModel]="includeDone()"
+                    (ngModelChange)="setIncludeDone($event)"
+                  />
+                  <span>Terminés inclus</span>
+                  <span class="calendar-help">
+                    <button
+                      type="button"
+                      class="calendar-help-trigger"
+                      aria-label="Aide : afficher les éléments terminés"
+                      aria-describedby="calendar-completed-help"
+                    >
+                      i
+                    </button>
+                    <span id="calendar-completed-help" class="calendar-help-tooltip" role="tooltip"
+                      >Afficher les éléments terminés ou réglés ; ils restent atténués.</span
+                    >
+                  </span>
+                </label>
+              </div>
+              <div class="calendar-toolbar">
+                <div class="calendar-period-control">
+                  <div class="calendar-view-switch" role="group" aria-label="Vue du calendrier">
+                    <button
+                      type="button"
+                      [attr.aria-pressed]="view() === 'year'"
+                      aria-label="Vue annuelle"
+                      title="Année"
+                      (click)="setView('year')"
+                    >
+                      Année
+                    </button>
+                    <button
+                      type="button"
+                      [attr.aria-pressed]="view() === 'month'"
+                      aria-label="Vue mensuelle"
+                      title="Mois"
+                      (click)="setView('month')"
+                    >
+                      Mois
+                    </button>
+                    <button
+                      type="button"
+                      [attr.aria-pressed]="view() === 'week'"
+                      aria-label="Vue hebdomadaire"
+                      title="Semaine"
+                      (click)="setView('week')"
+                    >
+                      Semaine
+                    </button>
+                  </div>
+                  <div
+                    class="calendar-paging"
+                    [attr.aria-label]="'Changer la période : ' + periodName()"
+                  >
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [attr.aria-label]="previousLabel()"
+                      (click)="movePeriod(-1)"
+                    >
+                      ←
+                    </button>
+                    <h2 aria-live="polite" class="visually-hidden" [title]="periodName()">
+                      {{ periodName() }}
+                    </h2>
+                    <button
+                      class="btn btn-secondary"
+                      type="button"
+                      [attr.aria-label]="nextLabel()"
+                      (click)="movePeriod(1)"
+                    >
+                      →
+                    </button>
+                  </div>
+                  <div class="calendar-actions">
+                    <button class="btn btn-secondary" type="button" (click)="selectDay(today)">
+                      Aujourd’hui
+                    </button>
+                    <span class="calendar-month-picker">
+                      <button
+                        class="btn btn-secondary calendar-month-trigger"
+                        type="button"
+                        [attr.aria-label]="'Choisir un mois : ' + monthButtonLabel()"
+                        (click)="openMonthPicker(monthPicker)"
+                      >
+                        {{ monthButtonLabel() }}
+                      </button>
+                      <input
+                        #monthPicker
+                        class="calendar-month-input"
+                        type="month"
+                        tabindex="-1"
+                        aria-hidden="true"
+                        [ngModel]="month()"
+                        (ngModelChange)="chooseMonth($event)"
+                      />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+            @if (showSourceSummary()) {
+                <p class="cal-source-summary" role="status">
+                  {{ visibleSourceCount() }} / {{ elements().length }} sources ·
+                  {{ periodEvents().length }} événements affichés
+                </p>
+            }
+          </div>
+          @if (presentation() === 'calendar') {
+          <button class="calendar-grid-shortcut" type="button" (click)="focusCalendarGrid()">
+            Aller aux jours du calendrier
+          </button>
+          }
+          @if (presentation() !== 'sources') {
+          <aside class="calendar-agenda" aria-label="Repères de la période">
+            <div class="calendar-agenda-heading">
+              <div>
+                <p class="eyebrow">
+                  Événements de la période
+                </p>
+                <h3>{{ periodName() }}</h3>
+              </div>
+              <span
+                >{{ periodDays().length }} {{ periodDays().length === 1 ? 'jour' : 'jours' }}</span
+              >
+            </div>
+            <button
+              class="text-link calendar-clear-highlights"
+              type="button"
+              [disabled]="!pinnedEventKeys().size"
+              (click)="clearHighlights()"
+            >
+              Effacer la sélection ({{ pinnedEventKeys().size }})
+            </button>
+            <div
+              class="calendar-agenda-list"
+              tabindex="0"
+              aria-label="Liste des événements de la période"
+            >
+              @for (group of periodDays(); track group.day; let gi = $index) {
+                <section
+                  class="calendar-agenda-day"
+                  [style.--cal-i]="gi"
+                  [class.is-selected]="group.day === selectedDay()"
+                >
+                  <h4>{{ date(group.day) }}</h4>
+                  @for (event of group.events; track event.key) {
+                    <article
+                      class="calendar-agenda-item"
+                      [animate.leave]="fxLeave()"
+                      [attr.data-event-key]="event.key"
+                      [attr.data-kind]="marker(event)"
+                      [style.--event-tone]="tone(element(event)?.tone)"
+                      [class.is-linked]="isHighlighted(event.key)"
+                      [class.is-pinned]="isPinned(event.key)"
+                      (mouseenter)="hoveredEventKey.set(event.key)"
+                      (mouseleave)="hoveredEventKey.set(null)"
+                      (focusin)="hoveredEventKey.set(event.key)"
+                      (focusout)="hoveredEventKey.set(null)"
+                    >
+                      <button
+                        class="calendar-agenda-select"
+                        type="button"
+                        [attr.aria-pressed]="isPinned(event.key)"
+                        [attr.aria-label]="
+                          (isPinned(event.key) ? 'Désélectionner ' : 'Mettre en évidence ') +
+                          event.title +
+                          (presentation() === 'agenda' ? ' dans l’agenda' : ' dans le calendrier')
+                        "
+                        (click)="toggleHighlight(event.key)"
+                      >
+                        <span class="calendar-agenda-select-mark" aria-hidden="true">{{
+                          isPinned(event.key) ? '●' : '○'
+                        }}</span>
+                        <span class="calendar-agenda-select-content">
+                          <span class="calendar-agenda-title">{{ event.title }}</span>
+                          @if (format().layout !== 'pastille') {
+                            <ng-container *ngTemplateOutlet="eventMeta; context: { $implicit: event, tag: 'span' }" />
+                          }
+                        </span>
+                      </button>
+                      <div class="calendar-agenda-actions">
+                        @if (event.link) {
+                          <button class="text-link" type="button" (click)="open.emit(event)">
+                            Ouvrir
+                          </button>
+                        }
+                        @if (event.reschedule) {
+                          <button class="text-link" type="button" (click)="plan(event)">
+                            Replanifier
+                          </button>
+                        }
+                      </div>
+                    </article>
+                  }
+                </section>
+              } @empty {
+                <p class="muted">
+                  {{
+                    !visibleSourceCount()
+                      ? 'Aucune source sélectionnée. Affichez au moins une source pour retrouver vos événements.'
+                      : 'Aucun repère pour cette période avec ces choix d’affichage.'
+                  }}
+                </p>
+                @if (!visibleSourceCount()) {
+                  <button class="text-link" type="button" (click)="showAllSources()">
+                    Afficher toutes les sources
+                  </button>
+                }
+              }
+            </div>
+            @if (planning(); as item) {
+              <form class="calendar-plan" (ngSubmit)="savePlan()">
+                <h4>{{ item.title }}</h4>
+                <p class="calendar-plan-note">
+                  {{ element(item)?.label }} · actuellement le {{ date(item.date) }}
+                </p>
+                <label class="field"
+                  >Nouvelle date<input
+                    name="newDate"
+                    type="date"
+                    required
+                    [ngModel]="plannedDate" (ngModelChange)="changePlanDate($event)"
+                /></label>
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  [disabled]="busy() || !valid(plannedDate)"
+                >
+                  Enregistrer la date
+                </button>
+                <button class="text-link" type="button" [disabled]="busy()" (click)="finishPlan()">
+                  Annuler
+                </button>
+              </form>
+            }
+          </aside>
+          }
+        </div>
+
+        @if (presentation() === 'calendar') {
+        <div
+          class="calendar-month-wrap"
+          tabindex="-1"
+          [attr.aria-label]="'Jours du calendrier · ' + periodName()"
+          (scroll)="repositionVisiblePeek()"
+        >
+          <div class="calendar-grid-head">
+            <h3>{{ periodName() }}</h3>
+            <span>{{ gridHint() }}</span>
+          </div>
+
+          <!-- Aperçu d'une journée au survol : indicateurs paramétrés, puis repères et leurs entrées de survol. -->
+          <ng-template
+            #peekBody
+            let-day
+            let-events="events"
+            let-expanded="expanded"
+            let-year="year"
+          >
+            <div class="calendar-day-peek-head">
+              <strong>{{ date(day) }}</strong>
+              @if (isDayPinned(day, year)) {
+                <span>Fixé</span>
+              }
+              <span>{{ events.length }} {{ events.length === 1 ? 'repère' : 'repères' }}</span>
+            </div>
+            @if (indicators().length) {
+              <div
+                class="calendar-day-peek-stats"
+                aria-label="Bilan de la journée"
+                [style.grid-template-columns]="
+                  'repeat(' + indicators().length + ', minmax(0, 1fr))'
+                "
+              >
+                @for (stat of statsOf(events); track stat.key) {
+                  <button
+                    type="button"
+                    [attr.aria-label]="stat.aria"
+                    [attr.aria-expanded]="activePeekDay() === day && activePeekStat() === stat.key"
+                    [class.is-detail-active]="
+                      activePeekDay() === day && activePeekStat() === stat.key
+                    "
+                    (pointerenter)="openPeekDetails($event, day, stat.key)"
+                    (pointerleave)="closePeekDetails()"
+                    (focus)="openPeekDetails($event, day, stat.key)"
+                    (blur)="closePeekDetails()"
+                    (click)="openPeekDetails($event, day, stat.key)"
+                  >
+                    <span>{{ stat.label }}</span>
+                    @for (line of stat.lines; track $index) {
+                      <strong
+                        [class.is-alert]="line.tone === 'alert'"
+                        [class.is-success]="line.tone === 'success'"
+                        [class.is-zero]="line.tone === 'zero'"
+                        >{{ line.text }}</strong
+                      >
+                    }
+                  </button>
+                }
+              </div>
+            }
+            @if (activePeekDay() === day && activePeekStat(); as stat) {
+              @let rows = statRows(events, stat);
+              <aside
+                rjsTopLayer
+                class="calendar-peek-details"
+                [style.left.px]="peekDetailsPosition().left"
+                [style.top.px]="peekDetailsPosition().top"
+                [style.max-height.px]="peekDetailsPosition().maxHeight"
+                [attr.aria-label]="statLabel(stat) + ' du ' + date(day)"
+              >
+                <h4 class="calendar-peek-details-title">{{ statLabel(stat) }}</h4>
+                <div class="calendar-peek-details-content">
+                  @for (row of rows.slice(0, 8); track $index) {
+                    <p>
+                      <strong>{{ row.label }}</strong> {{ row.title }}
+                    </p>
+                  } @empty {
+                    <p>Aucun élément pour cette rubrique.</p>
+                  }
+                  @if (rows.length > 8) {
+                    <p>+ {{ rows.length - 8 }} autres repères</p>
+                  }
+                </div>
+              </aside>
+            }
+            <div class="calendar-day-peek-list">
+              @for (
+                event of events.slice(0, expanded ? events.length : perPeek());
+                track event.key
+              ) {
+                <article
+                  class="calendar-peek-card"
+                  [attr.data-kind]="marker(event)"
+                  [style.--event-tone]="tone(element(event)?.tone)"
+                  [class.completed]="event.done"
+                  [class.is-linked]="isHighlighted(event.key)"
+                  [class.is-pinned]="isPinned(event.key)"
+                  [attr.draggable]="!!event.reschedule && !busy()"
+                  (dragstart)="drag($event, event)"
+                  (dragend)="dragged = null"
+                  (pointerenter)="hoverCalendarEvent(event.key)"
+                  (pointerleave)="hoveredEventKey.set(null)"
+                >
+                  <header class="calendar-peek-card-head">
+                    <button
+                      type="button"
+                      class="calendar-peek-card-pin"
+                      [attr.aria-pressed]="isPinned(event.key)"
+                      [attr.aria-label]="
+                        (isPinned(event.key)
+                          ? 'Ne plus mettre en évidence '
+                          : 'Mettre en évidence ') + event.title
+                      "
+                      (click)="togglePeekHighlight(event, $event, year)"
+                    >
+                      <span aria-hidden="true">{{ symbol(element(event)) }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="calendar-peek-card-title"
+                      [title]="event.link ? 'Ouvrir ' + event.title : event.title"
+                      [disabled]="!event.link"
+                      (click)="open.emit(event)"
+                    >
+                      {{ event.title }}
+                    </button>
+                    @if (event.amountCents !== null) {
+                      <span class="calendar-amount" [attr.data-direction]="event.direction">{{
+                        amount(event)
+                      }}</span>
+                    }
+                  </header>
+                  <p class="calendar-peek-card-kind">
+                    <span>{{ element(event)?.label }}</span>
+                    @if (event.urgent === 'overdue') {
+                      <span class="calendar-urgency" data-urgency="overdue">En retard</span>
+                    } @else if (event.urgent === 'soon') {
+                      <span class="calendar-urgency" data-urgency="soon">Bientôt</span>
+                    }
+                  </p>
+                  @if (event.details.length) {
+                    <dl class="calendar-peek-card-details">
+                      @for (d of event.details; track $index) {
+                        <div>
+                          <dt>{{ d.label }}</dt>
+                          <dd>{{ d.value }}</dd>
+                        </div>
+                      }
+                    </dl>
+                  }
+                </article>
+              }
+              @if (events.length > perPeek()) {
+                <button
+                  type="button"
+                  class="calendar-more calendar-peek-more"
+                  [attr.aria-expanded]="expanded"
+                  (click)="toggleExpansion(day, year)"
+                >
+                  @if (expanded) {
+                    Réduire
+                  } @else {
+                    + {{ events.length - perPeek() }} autres
+                  }
+                </button>
+              }
+            </div>
+          </ng-template>
+
+          <!-- Cadre commun aux trois vues : même largeur et même hauteur (proportions du nombre d'or). -->
+          <div
+            class="calendar-frame"
+            [attr.data-view]="view()"
+            [attr.tabindex]="view() === 'year' ? 0 : null"
+            [attr.role]="view() === 'year' ? 'region' : null"
+            [attr.aria-label]="
+              view() === 'year'
+                ? 'Calendrier annuel, défilement horizontal sur petit écran'
+                : null
+            "
+          >
+            @if (view() === 'year') {
+              <div class="calendar-year-grid" (scroll)="repositionVisiblePeek()">
+                @for (yearMonth of months(); track yearMonth.key) {
+                  <section
+                    class="calendar-year-month"
+                    [class.is-open]="visibleYearDay()?.slice(0, 7) === yearMonth.key"
+                    [attr.aria-label]="monthName(yearMonth.key)"
+                    (mouseleave)="scheduleYearPeekClose()"
+                    (focusout)="clearYearDayFocus($event)"
+                  >
+                    <h3>{{ monthName(yearMonth.key) }}</h3>
+                    <div class="calendar-year-weekdays" aria-hidden="true">
+                      @for (weekday of weekdays; track $index) {
+                        <span>{{ weekday.slice(0, 1) }}</span>
+                      }
+                    </div>
+                    <div class="calendar-year-days">
+                      @for (day of yearMonth.days; track day) {
+                        @let dayEvents = byDay().get(day) ?? [];
+                        @if (day.startsWith(yearMonth.key) && dayEvents.length) {
+                          <button
+                            type="button"
+                            class="calendar-year-day has-events"
+                            [attr.data-day]="day"
+                            [class.is-today]="day === today"
+                            [class.is-selected]="day === pinnedYearDay()"
+                            [class.has-highlighted-events]="isDayHighlighted(day)"
+                            [class.is-busy]="dayEvents.length >= 4"
+                            [class.is-heavy]="dayEvents.length >= 8"
+                            [class.has-attention]="hasAttention(dayEvents)"
+                            [class.has-progress]="hasProgress(dayEvents)"
+                            [style.--day-tone]="dominantTone(dayEvents)"
+                            [attr.aria-label]="yearDayLabel(day, dayEvents.length)"
+                            [attr.aria-expanded]="day === visibleYearDay()"
+                            (pointerenter)="enterYearDay(day, $event)"
+                            (pointermove)="orientYearPeek(day, $event)"
+                            (pointerleave)="leaveYearDay(day)"
+                            (focus)="
+                              cancelYearPeekClose();
+                              focusedYearDay.set(day);
+                              positionYearPeekOnFocus($event)
+                            "
+                            (click)="toggleYearDay(day, $event)"
+                            (keydown)="onDayKeydown($event, day)"
+                            (dragover)="allowDrop($event)"
+                            (drop)="drop($event, day)"
+                          >
+                            <span class="calendar-year-number">
+                              {{ day.slice(-2) }}
+                              <span class="calendar-year-load" aria-hidden="true">{{
+                                dayEvents.length
+                              }}</span>
+                            </span>
+                          </button>
+                        } @else if (day.startsWith(yearMonth.key)) {
+                          <span
+                            class="calendar-year-empty-day"
+                            [class.is-today]="day === today"
+                            (dragover)="allowDrop($event)"
+                            (drop)="drop($event, day)"
+                            ><span class="calendar-year-number">{{ day.slice(-2) }}</span></span
+                          >
+                        } @else {
+                          <span class="calendar-year-outside-day" aria-hidden="true"
+                            ><span class="calendar-year-number">{{ day.slice(-2) }}</span></span
+                          >
+                        }
+                      }
+                    </div>
+                    @if (visibleYearDay(); as openDay) {
+                      @if (openDay.startsWith(yearMonth.key)) {
+                        @let openEvents = byDay().get(openDay) ?? [];
+                        <div
+                          rjsTopLayer
+                          class="calendar-day-peek calendar-year-peek" [animate.leave]="fxLeave()"
+                          [class.is-expanded]="expandedYearPeekDay() === openDay"
+                          role="region"
+                          [attr.aria-label]="'Repères du ' + date(openDay)"
+                          [attr.data-day]="openDay"
+                          [style.left.px]="yearPeekPosition().x"
+                          [style.top.px]="yearPeekPosition().top"
+                          [style.max-height.px]="yearPeekPosition().maxHeight"
+                          [style.min-height.px]="
+                            pinnedYearDay() === openDay ? yearPeekPosition().bridgeHeight : null
+                          "
+                          (pointerenter)="cancelYearPeekClose()"
+                          (pointerleave)="scheduleYearPeekClose(openDay)"
+                          (keydown.escape)="releasePeek()"
+                        >
+                          <ng-container
+                            *ngTemplateOutlet="
+                              peekBody;
+                              context: {
+                                $implicit: openDay,
+                                events: openEvents,
+                                expanded: expandedYearPeekDay() === openDay,
+                                year: true,
+                              }
+                            "
+                          />
+                        </div>
+                      }
+                    }
+                    <div class="calendar-year-band" aria-live="polite">
+                      @if (visibleYearDay(); as openDay) {
+                        @if (openDay.startsWith(yearMonth.key)) {
+                          <strong>{{ date(openDay) }}</strong>
+                          <span>{{ (byDay().get(openDay) ?? []).length }} repères</span>
+                        }
+                      }
+                    </div>
+                  </section>
+                }
+              </div>
+            } @else {
+              <p class="calendar-scroll-hint">
+                Faites défiler la grille horizontalement pour voir les autres jours.
+              </p>
+              <div
+                class="calendar-grid-scroll"
+                [class.is-week]="view() === 'week'"
+                role="region"
+                [attr.aria-label]="'Jours de ' + periodName() + ', défilement horizontal'"
+                tabindex="0"
+                (scroll)="repositionVisiblePeek()"
+              >
+                <div class="calendar-grid-content">
+                  <div class="calendar-weekdays" aria-hidden="true">
+                    @for (weekday of weekdays; track $index) {
+                      <span>{{ view() === 'week' ? weekday : weekday.slice(0, 1) }}</span>
+                    }
+                  </div>
+                  <div class="calendar-grid" [class.is-week]="view() === 'week'">
+                    @for (day of days(); track day; let di = $index) {
+                      @let dayEvents = byDay().get(day) ?? [];
+                      @let shown =
+                        view() === 'week' ? dayEvents : dayEvents.slice(0, perCell());
+                      <section
+                        class="calendar-day"
+                        [style.--cal-i]="di"
+                        [attr.data-day]="day"
+                        [class.has-events]="dayEvents.length > 0"
+                        [class.has-attention]="hasAttention(dayEvents)"
+                        [class.has-progress]="hasProgress(dayEvents)"
+                        [class.is-lit]="isDayHighlighted(day)"
+                        [class.outside-month]="view() === 'month' && day.slice(0, 7) !== month()"
+                        [class.selected-day]="day === selectedDay()"
+                        [class.is-peek-pinned]="pinnedMonthDay() === day"
+                        [class.today]="day === today"
+                        (click)="toggleMonthPeekPin(day, $event)"
+                        (pointerenter)="enterMonthDay(day, $event)"
+                        (pointermove)="orientMonthPeek(day, $event)"
+                        (pointerleave)="leaveMonthDay(day)"
+                        (focusin)="focusMonthDay(day, $event)"
+                        (focusout)="clearMonthDayFocus($event)"
+                        (dragover)="allowDrop($event)"
+                        (drop)="drop($event, day)"
+                      >
+                        <div class="calendar-day-head">
+                          <button
+                            class="calendar-day-number"
+                            type="button"
+                            [attr.aria-label]="
+                              'Voir le ' +
+                              date(day) +
+                              (dayEvents.length ? ' · ' + dayEvents.length + ' repères' : '')
+                            "
+                            [attr.aria-pressed]="day === selectedDay()"
+                            [attr.aria-expanded]="day === visibleMonthDay() && dayEvents.length > 0"
+                            [attr.aria-disabled]="idleDay(dayEvents.length) ? 'true' : null"
+                            [attr.tabindex]="idleDay(dayEvents.length) ? -1 : null"
+                            (click)="idleDay(dayEvents.length) || selectDay(day)"
+                            (keydown)="onDayKeydown($event, day)"
+                          >
+                            {{ day.slice(-2) }}
+                          </button>
+                          @if (dayAmount(dayEvents); as total) {
+                            <span class="calendar-day-total" [attr.data-sign]="total.sign">{{
+                              total.text
+                            }}</span>
+                          }
+                          @if (dayEvents.length > shown.length) {
+                            <button
+                              type="button"
+                              class="calendar-more calendar-day-more"
+                              [attr.aria-expanded]="expandedDay() === day"
+                              [attr.aria-label]="
+                                'Voir les ' + dayEvents.length + ' repères du ' + date(day)
+                              "
+                              (click)="toggleDayExpansion(day, $event)"
+                            >
+                              +{{ dayEvents.length - shown.length }}
+                            </button>
+                          }
+                        </div>
+                        @for (event of shown; track event.key) {
+                          <button
+                            type="button"
+                            class="calendar-event"
+                            [animate.leave]="fxLeave()"
+                            [attr.data-kind]="marker(event)"
+                            [attr.data-tone]="element(event)?.tone"
+                            [style.--event-tone]="tone(element(event)?.tone)"
+                            [attr.aria-pressed]="isPinned(event.key)"
+                            [class.completed]="event.done"
+                            [class.is-linked]="isHighlighted(event.key)"
+                            [class.is-pinned]="isPinned(event.key)"
+                            [class.is-movable]="!!event.reschedule"
+                            [attr.draggable]="!!event.reschedule && !busy()"
+                            (dragstart)="drag($event, event)"
+                            (dragend)="dragged = null"
+                            [title]="
+                              event.title +
+                              ' · ' +
+                              (element(event)?.label ?? '') +
+                              ' — clic : garder en évidence, double-clic : ouvrir'
+                            "
+                            (pointerenter)="hoverCalendarEvent(event.key)"
+                            (pointerleave)="hoveredEventKey.set(null)"
+                            (focus)="hoverCalendarEvent(event.key)"
+                            (blur)="hoveredEventKey.set(null)"
+                            (click)="toggleHighlight(event.key)"
+                            (dblclick)="open.emit(event)"
+                          >
+                            <span aria-hidden="true">{{ symbol(element(event)) }}</span>
+                            <span class="calendar-event-title">{{ event.title }}</span>
+                            @if (format().layout !== 'pastille') {
+                              @for (field of eventFields(); track field) {
+                                @switch (field) {
+                                  @case ('amount') { @if (event.amountCents !== null) { <small class="calendar-amount" [attr.data-direction]="event.direction">{{ amount(event) }}</small> } }
+                                  @case ('type') { <small class="cal-event-type">{{ element(event)?.label }}</small> }
+                                  @case ('status') { @if (event.statusLabel) { <small class="cal-event-status">{{ event.statusLabel }}</small> } }
+                                  @case ('group') { @if (event.groupLabel) { <small class="cal-event-group">{{ event.groupLabel }}</small> } }
+                                }
+                              }
+                            }
+                          </button>
+                        }
+                        @if (dayEvents.length && visibleMonthDay() === day) {
+                          <div
+                            rjsTopLayer
+                            class="calendar-day-peek" [animate.leave]="fxLeave()"
+                            [class.is-expanded]="expandedDay() === day"
+                            role="region"
+                            [attr.aria-label]="'Repères du ' + date(day)"
+                            (pointerenter)="cancelMonthPeekClose()"
+                            (pointerleave)="scheduleMonthPeekClose(day)"
+                            (keydown.escape)="releasePeek()"
+                            [style.left.px]="monthPeekPosition().x"
+                            [style.top.px]="monthPeekPosition().top"
+                            [style.max-height.px]="monthPeekPosition().maxHeight"
+                            [style.min-height.px]="
+                              pinnedMonthDay() === day ? monthPeekPosition().bridgeHeight : null
+                            "
+                          >
+                            <ng-container
+                              *ngTemplateOutlet="
+                                peekBody;
+                                context: {
+                                  $implicit: day,
+                                  events: dayEvents,
+                                  expanded: expandedDay() === day,
+                                  year: false,
+                                }
+                              "
+                            />
+                          </div>
+                        }
+                      </section>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+          <p class="calendar-legend calendar-legend-inset">
+            <span><i data-kind="start"></i> {{ markerText.start }}</span>
+            <span><i data-kind="due"></i> {{ markerText.due }}</span>
+            <span><i data-kind="point"></i> {{ markerText.point }}</span>
+            <span><i data-kind="done"></i> Élément terminé ou réglé</span>
+            <span class="calendar-legend-hint">Survolez un jour pour lire ses repères ; cliquez pour fixer l’aperçu.
+              @if (!showSourceSummary() && reschedulingAvailable()) { {{ gridHint() }} }
+            </span>
+          </p>
+        </div>
+        <ng-content />
+        }
+      </div>
+      @if (loading()) {
+        <p class="calendar-feedback calendar-loading" role="status">Chargement des repères…</p>
+      }
+      @if (feedback()) {
+        <p class="calendar-feedback" role="status">{{ feedback() }}</p>
+      }
+      @if (error()) {
+        <p class="import-issues" role="alert">{{ error() }}</p>
+      }
+    </section>
+    <!-- Champs d'un événement dans la liste, dans l'ordre du format choisi. -->
+    <ng-template #eventMeta let-event>
+      <small class="calendar-event-meta">
+        @for (field of eventFields(); track field) {
+          @switch (field) {
+            @case ('amount') { @if (event.amountCents !== null) { <span class="calendar-amount" [attr.data-direction]="event.direction">{{ amount(event) }}</span> } }
+            @case ('type') { <span class="cal-event-type">{{ element(event)?.label }}</span> }
+            @case ('status') { @if (event.statusLabel) { <span class="cal-event-status">{{ event.statusLabel }}</span> } }
+            @case ('group') { @if (event.groupLabel) { <span class="cal-event-group">{{ event.groupLabel }}</span> } }
+          }
+        }
+      </small>
+    </ng-template>
+    <!-- Encadré « Votre calendrier, vos repères » : contenu du volet « Sources et affichage » du module. -->
+    <ng-template #personalization>
+      @if (data()?.interaction?.access !== 'hidden') {
+      <section
+        id="cal-personalization"
+        class="cal-personalization"
+        aria-label="Personnaliser le calendrier"
+      >
+        <div class="cal-preference-head">
+          <div>
+            <h3>Votre calendrier, vos repères</h3>
+            <p>
+              Enregistré pour votre profil : vos choix vous suivent sur tous vos appareils. Les données
+              financières restent inchangées.
+            </p>
+          </div>
+          <button class="text-link" type="button" (click)="resetDisplay()">
+            Réinitialiser
+          </button>
+        </div>
+        <div class="cal-preference-grid">
+          <fieldset class="cal-sources" [disabled]="!controlAllowed('sources')">
+            <legend>Sources branchées</legend>
+            <p>Cochez pour afficher, débranchez pour ne plus lire une source.</p>
+            @for (el of elements(); track el.id) {
+              <div class="cal-source-row">
+                <label class="cal-choice" [style.--event-tone]="tone(el.tone)"
+                  ><input
+                    type="checkbox"
+                    [checked]="!hidden().has(el.id)"
+                    (change)="toggleElement(el.id)"
+                  /><i aria-hidden="true"></i><span>{{ el.label }}@if (el.origin) { <em class="cal-source-origin">· {{ el.origin.label }}</em> }</span
+                  ><small>{{ countInPeriod(el.id) }}</small></label
+                >
+                <button type="button" class="cal-source-unplug" (click)="unplugSource(el.id)" [attr.aria-label]="'Débrancher la source ' + el.label" title="Débrancher">×</button>
+              </div>
+            }
+            <button type="button" class="text-link" (click)="showAllSources()">
+              Tout afficher
+            </button>
+            @if (library().length) {
+              <details class="cal-library">
+                <summary>Brancher une source <small>{{ data()?.library?.length }} proposée(s)</small></summary>
+                @for (group of library(); track group.label) {
+                  <section>
+                    <h4>{{ group.label }}</h4>
+                    @for (offer of group.sources; track offer.id) {
+                      <div class="cal-library-row" [style.--event-tone]="tone(offer.tone)">
+                        <i aria-hidden="true"></i><span>{{ offer.label }}</span>
+                        <button type="button" class="btn btn-secondary btn-sm" (click)="plugSource(offer.id)" [attr.aria-label]="'Brancher la source ' + offer.label">Brancher</button>
+                      </div>
+                    }
+                  </section>
+                }
+              </details>
+            }
+          </fieldset>
+          <fieldset class="cal-formats" [disabled]="!controlAllowed('fields')">
+            <legend>Format d’affichage</legend>
+            <p>Dans les cases et la liste des événements.</p>
+            <div class="cal-format-list" role="radiogroup" aria-label="Format d’affichage">
+              @for (f of formats(); track f.id) {
+                <div class="cal-format-row" [class.is-active]="f.id === format().id">
+                  <label class="cal-choice"
+                    ><input type="radio" name="cal-format" [checked]="f.id === format().id" (change)="chooseFormat(f.id)" /><span
+                      >{{ f.label }}@if (f.own) { <em class="cal-format-own">· à moi</em> }<small>{{ describeFormat(f) }}</small></span
+                    ></label
+                  >
+                  @if (f.own) {
+                    <span class="cal-format-actions">
+                      <button type="button" class="text-link" (click)="editFormat(f)" [attr.aria-label]="'Modifier le format ' + f.label">Modifier</button>
+                      <button type="button" class="text-link" (click)="deleteFormat(f.id)" [attr.aria-label]="'Supprimer le format ' + f.label">Supprimer</button>
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+            @if (formatDraft(); as draft) {
+              <form class="cal-format-editor" (submit)="$event.preventDefault(); saveFormat()" aria-label="Créer ou modifier un format">
+                <label>Nom<input type="text" maxlength="40" required [ngModel]="draft.label" (ngModelChange)="updateDraft({ label: $event })" name="cal-format-label" /></label>
+                <label>Disposition<select [ngModel]="draft.layout" (ngModelChange)="updateDraft({ layout: $event })" name="cal-format-layout">
+                  @for (layout of layouts; track layout) { <option [ngValue]="layout">{{ layoutLabels[layout] }}</option> }
+                </select></label>
+                <div class="cal-format-fields" role="group" aria-label="Informations montrées, dans l’ordre">
+                  <span>Informations, dans l’ordre</span>
+                  @for (field of draft.fields; track field; let i = $index, last = $last) {
+                    <div class="cal-format-field is-on">
+                      <label class="cal-choice"><input type="checkbox" checked (change)="toggleDraftField(field)" /><span>{{ i + 1 }}. {{ fieldLabel(field) }}</span></label>
+                      <button type="button" class="cal-format-move" [disabled]="i === 0" (click)="moveDraftField(field, -1)" [attr.aria-label]="'Monter ' + fieldLabel(field)">↑</button>
+                      <button type="button" class="cal-format-move" [disabled]="last" (click)="moveDraftField(field, 1)" [attr.aria-label]="'Descendre ' + fieldLabel(field)">↓</button>
+                    </div>
+                  }
+                  @for (field of formatFields; track field.key) {
+                    @if (!draft.fields.includes(field.key)) {
+                      <div class="cal-format-field">
+                        <label class="cal-choice"><input type="checkbox" (change)="toggleDraftField(field.key)" /><span>{{ field.label }}</span></label>
+                      </div>
+                    }
+                  }
+                </div>
+                <label>Événements par case<select [ngModel]="draft.perCell" (ngModelChange)="updateDraft({ perCell: $event })" name="cal-format-density">
+                  <option [ngValue]="null">Selon le calendrier</option>
+                  @for (n of [0, 1, 2, 3, 4, 5, 6, 7, 8]; track n) { <option [ngValue]="n">{{ n }}</option> }
+                </select></label>
+                <div class="cal-format-editor-actions">
+                  <button type="submit" class="btn btn-primary btn-sm" [disabled]="!draft.label.trim()">{{ draft.id ? 'Enregistrer' : 'Créer ce format' }}</button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="formatDraft.set(null)">Annuler</button>
+                </div>
+              </form>
+            } @else {
+              <button type="button" class="text-link" (click)="editFormat()">+ Créer un format à partir de « {{ format().label }} »</button>
+            }
+            <label class="cal-density"
+              >Événements par case<select
+                [disabled]="!controlAllowed('density')"
+                aria-label="Événements par case"
+                [ngModel]="perCell()"
+                (ngModelChange)="setDensity($event)"
+              >
+                @for (n of [0, 1, 2, 3, 4, 5, 6, 7, 8]; track n) {
+                  <option [ngValue]="n">{{ n }}</option>
+                }
+              </select></label
+            >
+          </fieldset>
+          <fieldset class="cal-look" [disabled]="!controlAllowed('appearance')">
+            <legend>Apparence</legend>
+            <p>Le design règle l’apparence, l’effet règle le mouvement : ils se choisissent séparément.</p>
+            <div class="cal-look-group" role="radiogroup" aria-label="Design du calendrier">
+              <span class="cal-look-title">Design</span>
+              @for (d of designs; track d.id) {
+                <label class="cal-look-option" [class.is-active]="d.id === design().id">
+                  <input type="radio" name="cal-design" [checked]="d.id === design().id" (change)="chooseDesign(d.id)" />
+                  <span class="cal-look-swatch" aria-hidden="true">@for (c of d.swatch; track $index) {<i [style.background]="c"></i>}</span>
+                  <span class="cal-look-text"><strong>{{ d.label }}</strong><small>{{ d.description }}</small></span>
+                </label>
+              }
+            </div>
+            <div class="cal-look-group" role="radiogroup" aria-label="Effets d’affichage">
+              <span class="cal-look-title">Effets d’affichage</span>
+              @for (e of effects; track e.id) {
+                <label class="cal-look-option" [class.is-active]="e.id === effect().id">
+                  <input type="radio" name="cal-effect" [checked]="e.id === effect().id" (change)="chooseEffect(e.id)" />
+                  <span class="cal-look-text"><strong>{{ e.label }}</strong><small>{{ e.description }}</small></span>
+                </label>
+              }
+            </div>
+            @if (effectParameters().length) {
+              <div class="cal-look-params" role="group" [attr.aria-label]="'Réglages de l’effet ' + effect().label">
+                @for (p of effectParameters(); track p.key) {
+                  <label class="cal-look-param">
+                    <span>{{ p.label }} <output>{{ p.value }} {{ p.unit }}</output></span>
+                    <input type="range" [min]="p.min" [max]="p.max" [step]="p.step" [value]="p.value" [attr.aria-label]="p.label" (input)="setEffectParam(p.key, +$any($event.target).value)" />
+                  </label>
+                }
+                <button type="button" class="text-link" (click)="resetEffectParams()">Rétablir les réglages de l’effet</button>
+              </div>
+            }
+          </fieldset>
+          <fieldset class="cal-reading" [disabled]="!controlAllowed('completed')">
+            <legend>Lecture</legend>
+            <label class="cal-choice"><input type="checkbox" [checked]="includeDone()" (change)="setIncludeDone($any($event.target).checked)" /><span>Inclure les éléments terminés ou réglés</span></label>
+          </fieldset>
+          <fieldset [disabled]="!controlAllowed('indicators')">
+            <legend>Bilan au survol d’un jour</legend>
+            <p>Choisissez les indicateurs de l’aperçu.</p>
+            @for (indicator of data()?.indicators ?? []; track indicator.key) {
+              <label class="cal-choice"
+                ><input
+                  type="checkbox"
+                  [checked]="indicatorShown(indicator.key)"
+                  (change)="toggleIndicator(indicator.key)"
+                /><span>{{ indicator.label }}</span></label
+              >
+            }
+          </fieldset>
+        </div>
+      </section>
+      }
+    </ng-template>

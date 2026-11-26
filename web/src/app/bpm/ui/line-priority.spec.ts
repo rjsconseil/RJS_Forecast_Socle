@@ -1,4 +1,4 @@
-import { RegisterLine } from '../../core/bpm-models';
+import { RegisterLine } from '../data/bpm-models';
 import { nextOpenLine } from './line-priority';
 const line = (id: string, status: string, date: string, extra = {}) =>
   ({ id, status, plannedDate: date, settled: status === 'settled', ...extra }) as RegisterLine;

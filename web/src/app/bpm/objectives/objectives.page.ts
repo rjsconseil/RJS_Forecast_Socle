@@ -1,4 +1,8 @@
+import { BpmAmount } from '../ui/amount';
+import { BpmFinancialOutlookPanel } from '../ui/financial-outlook';
+import { BpmProjectFlowsPanel } from '../ui/project-flows';
 import { redirectLegacyView } from '../ui/legacy-view';
+import { BpmLifeProjectsLink } from '../life/life-projects-link';
 import { injectPageWorkspace } from '../../plan/page-workspace';
 import { NgTemplateOutlet } from '@angular/common';
 import { BpmPageContext } from '../ui/page-context';
@@ -6,12 +10,14 @@ import { BpmDrafts } from '../ui/drafts';
 import { bpmQueryState } from '../ui/query-state';
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BPM_PAGE_PATH } from '../ui/bpm-page-path';
+import { BpmRouterLink } from '../ui/bpm-router-link';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RecetteContext, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { Cadence, LifeGoal, Vision } from '../../core/bpm-models';
-import { cents, CentsPipe, parseAmount, ShortDatePipe, SignedCentsPipe } from '../../core/format';
+import { BpmApi } from '../data/bpm-api.service';
+import { Cadence, LifeGoal, Vision } from '../data/bpm-models';
+import { cents, CentsPipe, parseAmount, ShortDatePipe, SignedCentsPipe, shortDate } from '../../core/format';
 import { BpmModal } from '../ui/modal';
 import { BpmActSimulation, SimulationAdoption } from '../pages/act-simulation';
 import { BpmActDirectives, BpmActSurplus } from '../pages/act-guidance';
@@ -26,11 +32,12 @@ const CADENCES = { weekly: 'semaine', monthly: 'mois', yearly: 'an' };
 @Component({
   selector: 'bpm-objectives-page',
   providers: [BpmPageContext],
-  imports: [
+  imports: [BpmAmount, BpmFinancialOutlookPanel, BpmProjectFlowsPanel,
+    BpmLifeProjectsLink,
     BpmActSimulation, BpmActDirectives, BpmActSurplus,
     FormsModule,
     NgTemplateOutlet,
-    RouterLink,
+    BpmRouterLink,
     BpmPageFrame,
     CentsPipe,
     SignedCentsPipe,
@@ -45,10 +52,12 @@ const CADENCES = { weekly: 'semaine', monthly: 'mois', yearly: 'an' };
   templateUrl: './objectives.page.html',
 })
 export class BpmObjectivesPage {
+  protected readonly modulePath = inject(BPM_PAGE_PATH);
   private ctx = inject(BpmPageContext);
   private bpm = inject(BpmApi);
   private refresh = inject(BpmRefresh);
   private route = inject(ActivatedRoute);
+  protected readonly savingsProjection = this.route.snapshot?.data?.['projectionBasis'] === 'savings-goal';
   private router = inject(Router);
   protected workspace = injectPageWorkspace();
   protected carry = computed(() => Object.fromEntries(this.ctx.query().keys.filter(key => key !== 'view').map(key => [key, this.ctx.query().get(key)!])));
@@ -56,6 +65,7 @@ export class BpmObjectivesPage {
   protected fragment = toSignal(this.route.fragment, { initialValue: this.route.snapshot.fragment });
   protected params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
   protected view = computed(() => this.workspace()?.key === 'vision-projection' ? 'projection' : this.workspace()?.key === 'vision-landmarks' ? 'reperes' : objectivesView(this.params().get('view'), this.fragment()));
+  protected readonly showsSavingsProjection = computed(() => this.savingsProjection && this.view() === 'projection');
   private readonly legacyView = redirectLegacyView(() => this.view(), 'suivi', { reperes: '/vision/reperes', projection: '/vision/projection' }, () => !!this.workspace());
   protected tabs = [
     { key: 'suivi', label: 'Mes objectifs datés', note: 'Suivre et ajuster' },
@@ -84,7 +94,7 @@ export class BpmObjectivesPage {
   );
   protected projection = bpmLoader(
     () => 0,
-    () => this.bpm.projection(),
+    () => this.savingsProjection ? this.bpm.projection({ basis: 'savings-goal' }) : this.bpm.projection(),
   );
   protected message = signal('');
   protected editing = computed(() => {
@@ -118,6 +128,7 @@ export class BpmObjectivesPage {
   protected cadence = signal<Exclude<Cadence, 'once'>>('monthly');
   protected contributionLabel = computed(() => {
     const v = this.profile.data()?.principal.vision;
+    if (this.savingsProjection) return v?.savingsTargetCents == null ? 'Objectif d’épargne à définir' : `${cents(v.savingsTargetCents)} par cycle`;
     return !v || v.contributionCents === null
       ? 'Moyenne du budget type'
       : `${cents(v.contributionCents)} / ${CADENCES[v.contributionCadence]}`;
@@ -151,18 +162,18 @@ export class BpmObjectivesPage {
     parse: value => value === 'savings' || value === 'wealth' || value === 'projection' ? value : null,
   });
   protected settingChoice = signal<'savings' | 'wealth'>('savings');
-  protected settingTitle = computed(() => this.settingEditor() === 'wealth' ? 'Préparer mon cap patrimonial' : this.settingEditor() === 'projection' ? 'Ajuster mon scénario' : 'Préparer mon épargne par période');
+  protected settingTitle = computed(() => this.settingEditor() === 'wealth' ? 'Préparer mon cap patrimonial' : this.settingEditor() === 'projection' ? 'Fixer mon scénario' : 'Préparer mon épargne par période');
   protected openSetting(setting: 'savings' | 'wealth' | 'projection') {
     if (setting !== 'projection') this.settingChoice.set(setting);
     const view = setting === 'projection' ? 'projection' : 'reperes';
     // Chaque réglage vit dans sa sous-page : on l'y ouvre, ou on l'ouvre sur place si l'on y est déjà.
     if (this.workspace() && this.view() === view) void this.ctx.setQuery({ reglage: setting });
-    else void this.router.navigate([view === 'projection' ? '/vision/projection' : '/vision/reperes'], { queryParams: { ...this.carry(), reglage: setting } });
+    else void this.router.navigate([this.modulePath(view === 'projection' ? '/vision/projection' : '/vision/reperes')], { queryParams: { ...this.carry(), reglage: setting } });
   }
   protected closeSetting() { void this.ctx.setQuery({ reglage: null }, { replace: true }); }
   protected reviewAttention() {
     if (this.workspace()) {
-      void this.router.navigate(['/vision'], { queryParams: { ...this.carry(), status: 'all', q: null, type: 'all', sort: 'date', goal: this.priorityGoal()?.goal.id ?? null } });
+      void this.router.navigate([this.modulePath('/vision')], { queryParams: { ...this.carry(), status: 'all', q: null, type: 'all', sort: 'date', goal: this.priorityGoal()?.goal.id ?? null } });
       return;
     }
     void this.ctx.setQuery({ status: 'all', q: null, type: 'all', sort: 'date' });
@@ -192,7 +203,7 @@ export class BpmObjectivesPage {
     switch (this.primaryKind()) {
       case 'save': return this.pendingSetting() === 'wealth' ? 'Enregistrer le cap saisi' : this.pendingSetting() === 'projection' ? 'Enregistrer le scénario saisi' : 'Enregistrer l’épargne saisie';
       case 'goal': return `Revoir ${this.priorityGoal()!.goal.label}`;
-      case 'projection': return this.view() === 'projection' ? 'Ajuster les hypothèses' : 'Calculer la couverture des objectifs';
+      case 'projection': return this.view() === 'projection' ? 'Fixer les hypothèses' : 'Calculer la couverture des objectifs';
       case 'setting': return this.settingChoice() === 'wealth' ? 'Régler mon cap patrimonial' : 'Régler mon épargne visée';
       case 'reset': return 'Afficher tous les objectifs';
       default: return '＋ Créer un objectif daté';
@@ -234,6 +245,15 @@ export class BpmObjectivesPage {
     if (this.pendingSetting()) return { title: this.pendingSetting() === 'projection' ? 'Vos hypothèses modifiées attendent leur enregistrement' : 'Vous avez un repère non enregistré', detail: this.pendingSetting() === 'projection' ? 'Enregistrez vos hypothèses pour recalculer le scénario.' : 'Enregistrez le repère saisi ; les autres réglages sont conservés.', tone: 'warning' };
     if (this.view() === 'projection') {
       if (this.projection.error()) return { title: 'La projection est indisponible', detail: this.projection.error()!.message, tone: 'warning' };
+      if (this.showsSavingsProjection()) {
+        const forecast = this.projection.data();
+        if (!forecast || forecast.status === 'estimate') return null;
+        return {
+          title: forecast.hypotheses.contributionCents === null ? 'Objectif d’épargne à définir' : 'Patrimoine de départ à renseigner',
+          detail: forecast.reason ?? '',
+          tone: 'info',
+        };
+      }
       return this.coverageAvailable()
         ? { title: `Scénario calculé sur ${p.principal.vision.horizonYears} ans`, detail: `${this.coveredCount()} objectif(s) couvert(s) sur ${this.goalRows().length} selon vos hypothèses.`, tone: 'info' }
         : { title: 'La couverture des objectifs reste à calculer', detail: this.projection.data()?.reason ?? 'Vérifiez le patrimoine initial et les hypothèses du scénario.', tone: 'warning' };
@@ -277,7 +297,7 @@ export class BpmObjectivesPage {
     },
     {
       key: 'real',
-      label: 'Euros d’aujourd’hui',
+      label: this.savingsProjection ? 'Euros de départ' : 'Euros d’aujourd’hui',
       color: 'var(--s-real)',
       kind: 'line',
       dashed: true,
@@ -401,6 +421,26 @@ export class BpmObjectivesPage {
       this.removing.set(false);
     }
   }
+  /** Cockpit : un objectif dont la date est passée se reporte d'un an d'un geste, sans ouvrir l'éditeur. */
+  protected postponing = signal<string | null>(null);
+  protected async postponeGoal(goal: LifeGoal) {
+    if (this.postponing() || this.commandBusy()) return;
+    const [year, rest] = [Number(goal.date.slice(0, 4)), goal.date.slice(4)];
+    // Reporter jusqu'à une date à venir : un objectif très en retard ne reste pas dépassé après le geste.
+    const next = Math.max(year + 1, new Date().getFullYear() + (`${new Date().getFullYear()}${rest}` > new Date().toISOString().slice(0, 10) ? 0 : 1));
+    const date = `${next}${rest}`;
+    this.postponing.set(goal.id);
+    this.lastWrite.set(null);
+    try {
+      await this.bpm.updateGoal(goal.id, { expectedRevision: goal.revision, date });
+      this.message.set(`Objectif « ${goal.label} » reporté au ${shortDate(date)}.`);
+      this.refresh.bump();
+    } catch (e) {
+      this.message.set(toApiError(e).message);
+    } finally {
+      this.postponing.set(null);
+    }
+  }
   private fillHypotheses(v: Vision) {
     this.horizon.set(String(v.horizonYears));
     this.rate.set(v.annualReturnPct === null ? '' : String(v.annualReturnPct));
@@ -423,7 +463,7 @@ export class BpmObjectivesPage {
     const horizonYears = num(this.horizon());
     const annualReturnPct = num(this.rate());
     const inflationPct = num(this.inflation());
-    const contribution = parseAmount(this.contribution());
+    const contribution = this.savingsProjection ? null : parseAmount(this.contribution());
     if (
       horizonYears === null ||
       !Number.isInteger(horizonYears) ||
@@ -454,8 +494,7 @@ export class BpmObjectivesPage {
         annualReturnPct,
         inflationPct,
         inflationSource: this.inflationSource().trim(),
-        contribution,
-        contributionCadence: this.cadence(),
+        ...(this.savingsProjection ? {} : { contribution, contributionCadence: this.cadence() }),
       });
       this.hypDirty.set(false);
       this.hypOpen.set(false);

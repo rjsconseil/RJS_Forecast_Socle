@@ -1,0 +1,419 @@
+<bpm-page
+  title="Clôture du cycle"
+  lead="Le suivi et l’historique de tout ce qui a été fait sur Astra pour le cycle : ce qui reste à valider, ce qu’il rapporte, ce qui se tient ; à la fin du dernier jour, la clôture qui fige le cycle et lance le suivant."
+  pageClass="bpm-closing-page"
+  [context]="j()?.context"
+  [focus]="focus()"
+  [result]="result()"
+  toolsLabel="Lire la clôture"
+>
+  @if (j()?.period) {
+    <button primary class="btn btn-primary" type="button" [disabled]="!!busy() || read.loading()" (click)="runPrimary()">{{ primaryLabel() }}</button>
+  } @else {
+    <a primary class="btn btn-primary" routerLink="/app/reglages/cycle">Régler le cycle</a>
+  }
+  @if (j()?.period) {
+    <button actions class="btn btn-secondary" type="button" [disabled]="!!busy()" (click)="accountOpen.set(true)">Vérifier le compte</button>
+  }
+  <a actions class="bpm-link" routerLink="/tableau-de-bord/rapprochement" [queryParams]="{ period: j()?.period?.key ?? null }">Rapprochement bancaire →</a>
+  <a actions class="bpm-link" routerLink="/projet-de-vie/echeances">Échéances du cycle →</a>
+  <a actions class="bpm-link" routerLink="/projet-de-vie/projets-finances">Décisions des projets →</a>
+  <a actions class="bpm-link" routerLink="/projet-de-vie/budget-type">Budget récurrent du cycle suivant →</a>
+  <p tools class="closing-tools-note">La synthèse résume les quatre sections : 1 ce qui reste à valider, 2 le résultat et le cycle suivant, 3 la cohérence, 4 la clôture. Couleurs : vert pour ce qui est bon, puis bleu, jaune, orange et rouge selon la gravité.</p>
+
+  <div class="closing-page">
+    <bpm-state [loading]="read.loading() && !j()" [error]="read.error()" (retry)="read.reload()" />
+
+    @if (j(); as v) {
+      <!-- Synthèse : l'état du cycle et le compte rendu de chaque section, pour savoir où aller -->
+      <section class="closing-summary" [attr.data-phase]="v.phase" [attr.data-ready]="v.canClose" aria-labelledby="closing-state-title">
+        <div class="closing-summary-main">
+          <div class="closing-ring" role="progressbar" aria-label="Complétude du cycle" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="v.percent">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="closing-ring-track" cx="60" cy="60" [attr.r]="ring.r" />
+              <circle class="closing-ring-fill" cx="60" cy="60" [attr.r]="ring.r" [attr.stroke-dasharray]="ringDash()" transform="rotate(-90 60 60)" />
+            </svg>
+            <div class="closing-ring-value"><strong>{{ v.percent }} %</strong><small>{{ v.done }} / {{ v.total }} points</small></div>
+          </div>
+          <div class="closing-summary-head">
+            <span class="closing-phase">{{ phaseLabel() }}</span>
+            <h2 id="closing-state-title">{{ v.period?.label ?? 'Cycle à configurer' }}@if (v.period) { · complété à {{ v.percent }} %}</h2>
+            <p>{{ phaseText() }}</p>
+            @if (v.period) {
+              <dl class="closing-facts">
+                <div><dt>Du</dt><dd>{{ v.period.start | shortDate }}</dd></div>
+                <div><dt>Au</dt><dd>{{ v.period.end | shortDate }}</dd></div>
+                @if (v.phase === 'running') {
+                  <div><dt>Jours restants</dt><dd>{{ v.days?.left }}</dd></div>
+                } @else {
+                  <div><dt>Cycle suivant</dt><dd>{{ v.next?.label }}</dd></div>
+                }
+              </dl>
+            }
+          </div>
+        </div>
+
+        @if (tiles().length) {
+          <ol class="closing-tiles" aria-label="Synthèse des sections de la page">
+            @for (t of tiles(); track t.key) {
+              <li>
+                <button type="button" class="closing-tile" [attr.data-tile]="t.key" [attr.data-tone]="t.tone" (click)="go(t)" [attr.aria-label]="t.n + '. ' + t.label + ' : ' + t.value + ', ' + t.caption + '. Aller à la section.'">
+                  <span class="closing-tile-head"><span class="closing-tile-n" aria-hidden="true">{{ t.n }}</span>{{ t.label }}<span class="closing-tile-dot" aria-hidden="true"></span></span>
+                  <strong class="closing-tile-value">{{ t.value }}</strong>
+                  <span class="closing-tile-graph" aria-hidden="true">
+                    @switch (t.key) {
+                      @case ('points') {
+                        @if (v.counts; as n) {
+                          <span class="closing-stack"><i data-k="closed" [style.flex-grow]="n.closed"></i><i data-k="deferred" [style.flex-grow]="n.deferred"></i><i data-k="open" [style.flex-grow]="n.open"></i><i data-k="later" [style.flex-grow]="n.later"></i></span>
+                        }
+                      }
+                      @case ('result') {
+                        @if (flowBars(); as f) { <span class="closing-flows"><i data-k="in" [style.width.%]="f.in"></i><i data-k="out" [style.width.%]="f.out"></i></span> }
+                      }
+                      @case ('checks') {
+                        <span class="closing-dots">@for (c of checkColumns(); track c.label) { <i [attr.data-tone]="c.tone"></i> }</span>
+                      }
+                      @case ('close') {
+                        <span class="closing-progress"><i [style.width.%]="v.percent"></i></span>
+                      }
+                    }
+                  </span>
+                  <small class="closing-tile-caption">
+                    @if (t.urgent !== null) { dont <b class="closing-urgent" [class.is-none]="!t.urgent">{{ plural(t.urgent, 'urgent') }}</b> } @else { {{ t.caption }} }
+                  </small>
+                </button>
+              </li>
+            }
+          </ol>
+        }
+
+        @if (v.closingMode.active && (v.backlog ?? 1) <= 1) {
+          <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.period!.label }} est en clôture : ses points sont figés, aucune nouvelle prévision n’y entre (une dépense ou une entrée déjà faite se saisit toujours). {{ v.next?.label }} démarrera à sa clôture : aucune entrée datée du {{ v.lock.from! | shortDate }} ou après n’est possible avant.</span></p>
+        } @else if (v.closingMode.active) {
+          <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.closingMode.message }} {{ v.lock.message }}</span></p>
+        } @else if (v.lock.active) {
+          <p class="closing-lock" role="status"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>{{ v.lock.message }}</span></p>
+        } @else if (v.phase === 'running' && v.lock.enabled && v.next) {
+          <p class="closing-lock is-later"><span class="closing-lock-icon" data-astra-icon="cloture" aria-hidden="true"></span><span>Le {{ v.opensOn! | shortDate }}, {{ v.period!.label }} entrera en clôture : ses points seront figés et seuls ceux encore ouverts se traiteront, ici. {{ v.next.label }} attendra cette clôture pour recevoir des entrées.</span></p>
+        }
+      </section>
+
+      @if (v.period) {
+        <div class="closing-fold-all" role="group" aria-label="Replier ou déplier les sections">
+          <span>{{ allFolded() ? 'Sections repliées : les chiffres clés de chacune, le détail se déplie.' : allOpen() ? 'Sections dépliées.' : 'Certaines sections sont dépliées.' }}</span>
+          <button type="button" class="text-link" [disabled]="allOpen()" (click)="foldAll(false)">Tout déplier</button>
+          <button type="button" class="text-link" [disabled]="allFolded()" (click)="foldAll(true)">Tout replier</button>
+        </div>
+
+        <!-- 1. Ce qui reste à valider -->
+        <section class="closing-path" [attr.data-phase]="v.phase" [attr.data-folded]="folded().path" aria-labelledby="closing-path-title">
+          <header class="closing-section-head">
+            <span class="closing-section-n" aria-hidden="true">1</span>
+            <div>
+              <h2 id="closing-path-title">{{ v.phase === 'to_close' ? 'Finaliser les points ouverts' : 'À valider avant la clôture' }}</h2>
+              @if (!folded().path) {
+                <p>{{ v.phase === 'to_close'
+                  ? 'Validez chaque point ouvert, ou décidez qu’un point non bloquant ne sera pas validé dans ' + v.period.label + ' : il y garde sa marque et se revoit dans le cycle choisi.'
+                  : 'Les points ouverts, par étape : chacun se traite là où il vit, et passe ici en « clos » à l’instant. Plus ils sont clos tôt, moins il reste à revoir à la clôture.' }}</p>
+              }
+            </div>
+            <button type="button" class="btn btn-secondary small closing-fold" [attr.aria-expanded]="!folded().path" (click)="toggle('path')">{{ folded().path ? 'Déplier' : 'Replier' }}</button>
+          </header>
+          <bpm-closing-boxes [boxes]="pathBoxes()" />
+          <bpm-closing-table class="closing-table" [columns]="pathColumns()" caption="Points par étape : faits sur à faire" />
+          @if (!folded().path) {
+            <ol class="closing-steps">
+              @for (c of criteria(); track c.key; let n = $index) {
+                <li class="closing-step" [id]="'closing-step-' + c.key" [attr.data-state]="c.state">
+                  <div class="closing-step-head">
+                    <span class="closing-step-mark" aria-hidden="true">{{ c.state === 'done' ? '' : n + 1 }}</span>
+                    <div class="closing-step-title">
+                      <h3>{{ c.label }}</h3>
+                      <p>{{ stepText[c.key] }}</p>
+                    </div>
+                    <span class="closing-step-count">
+                      @switch (c.state) {
+                        @case ('none') { Sans objet ce cycle }
+                        @case ('done') { {{ c.key === 'account' ? 'Vérifié' : c.done + ' / ' + c.total }} }
+                        @default { {{ c.key === 'account' ? (c.state === 'later' ? 'Après le ' + (v.period.end | shortDate) : 'À faire') : c.done + ' / ' + c.total }} }
+                      }
+                    </span>
+                  </div>
+
+                  @if (c.key === 'account') {
+                    <div class="closing-account">
+                      @if (v.account; as a) {
+                        <p [class.is-stale]="a.stale">{{ a.stale ? 'Des règlements du cycle ont changé depuis la vérification du ' + (a.confirmedAt | shortDate) + ' : vérifiez de nouveau.' : 'Vérifié le ' + (a.confirmedAt | shortDate) + ', pour un solde réalisé de ' + (a.netCents | signedCents) + '.' }}</p>
+                      } @else if (c.state === 'later') {
+                        <p>À faire après le {{ v.period.end | shortDate }}, quand tous les mouvements du cycle sont passés en banque.</p>
+                      }
+                      <div class="closing-actions">
+                        @if (c.state !== 'done') {
+                          <button class="closing-fix" type="button" [disabled]="!!busy()" aria-label="Régler le problème : vérifier le compte" (click)="accountOpen.set(true)">Régler le problème</button>
+                        }
+                        <a class="btn btn-secondary small" routerLink="/tableau-de-bord/rapprochement" [queryParams]="{ period: v.period.key }">Comparer avec la banque</a>
+                        @if (v.phase === 'to_close') {
+                          @if (c.state !== 'done') {
+                            <button class="btn btn-primary small" type="button" [disabled]="!!busy()" (click)="confirmAccount(true)">Le compte correspond</button>
+                          } @else {
+                            <button class="btn btn-secondary small" type="button" [disabled]="!!busy()" (click)="confirmAccount(false)">Retirer la vérification</button>
+                          }
+                        }
+                      </div>
+                    </div>
+                  } @else if (pending(c.key).length) {
+                    <ul class="closing-items" [attr.aria-label]="c.label + ' : points ouverts'">
+                      @for (p of pending(c.key); track p.id) {
+                        <li class="closing-item" [attr.data-status]="p.status" [attr.data-state]="p.state">
+                          <div class="closing-item-main">
+                            <strong>{{ p.label }}</strong>
+                            <small><span class="closing-item-status">{{ p.statusLabel }}</span>@if (p.plannedDate) { · {{ p.kind === 'decision' ? 'demandée' : 'prévue' }} le {{ p.plannedDate | shortDate }}}@if (p.detail) { · {{ p.detail }}}</small>
+                            <span class="closing-marks">
+                              @if (p.state === 'deferred') { <span class="closing-mark" data-mark="deferred">Non validé ici · à revoir en {{ p.deferTo!.label }}</span> }
+                              @if (p.inheritedFrom; as h) { <span class="closing-mark" data-mark="inherited">{{ h.label ? 'Reporté de ' + h.label : 'En attente depuis le ' + (h.date! | shortDate) }}</span> }
+                              @if (p.openedOn) { <span class="closing-mark">Ouvert le {{ p.openedOn | shortDate }}</span> }
+                            </span>
+                          </div>
+                          @if (p.plannedCents !== undefined) {
+                            <span class="closing-item-amount" [bpmAmount]="p.plannedCents" [bpmFlow]="p.direction ?? 'charge'">{{ p.plannedCents | cents }}</span>
+                          }
+                          <div class="closing-actions">
+                            <!-- Le formulaire qui règle le point, en fenêtre sur cette page, puis le lien vers sa page. -->
+                            @if (fixable(p)) { <button class="closing-fix" type="button" [disabled]="!!busy()" [attr.aria-label]="'Régler le problème : ' + p.label" (click)="fix(p)">Régler le problème</button> }
+                            @if (whereTo(p); as w) { <a class="closing-where" [routerLink]="w.path" [queryParams]="w.query">{{ w.label }} →</a> }
+                            @if (v.phase === 'to_close') {
+                              @if (p.state === 'deferred') {
+                                <button class="text-link" type="button" [disabled]="!!busy()" (click)="defer(p, null)">Le garder dans {{ v.period.label }}</button>
+                              } @else {
+                                @if (p.kind === 'line' && p.group !== 'projects' && p.plannedDate && p.plannedDate <= today()) {
+                                  <button class="btn btn-secondary small" type="button" [disabled]="!!busy()" (click)="settle(p)">{{ p.direction === 'income' ? 'Reçue' : 'Payée' }} le {{ p.plannedDate | shortDate }}</button>
+                                }
+                                <span class="closing-defer">
+                                  <label>
+                                    <span>Ne pas valider ici, revoir en</span>
+                                    <select #to [attr.aria-label]="'Cycle où revoir « ' + p.label + ' »'" [disabled]="!!busy()">
+                                      @for (t of targetsOf(p); track t.key) { <option [value]="t.key">{{ t.label }}</option> }
+                                    </select>
+                                  </label>
+                                  <button class="btn btn-secondary small closing-carry" type="button" [disabled]="!!busy()" (click)="defer(p, to.value)">Reporter</button>
+                                </span>
+                              }
+                            }
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </li>
+              }
+            </ol>
+
+            @if (closedPoints().length) {
+              <details class="closing-closed" [open]="v.phase === 'running'">
+                <summary>
+                  <span>{{ plural(closedPoints().length, 'point clos', 'points clos') }}, les plus récents d’abord</span>
+                  @if (fresh().size) { <span class="closing-mark" data-mark="fresh">{{ fresh().size }} à l’instant</span> }
+                </summary>
+                <ul class="closing-items is-closed" aria-label="Points clos du cycle">
+                  @for (p of closedPoints(); track p.id) {
+                    <li class="closing-item" data-state="closed" [class.is-fresh]="isFresh(p)">
+                      <div class="closing-item-main">
+                        <strong>{{ p.label }}</strong>
+                        <small>{{ p.outcomeLabel }}@if (p.detail && p.kind !== 'account') { · {{ p.detail }}}</small>
+                        <span class="closing-marks">
+                          @if (isFresh(p)) {
+                            <span class="closing-mark" data-mark="fresh">Clos à l’instant</span>
+                          } @else if (p.closedOn) {
+                            <span class="closing-mark" data-mark="closed">Clos le {{ p.closedOn | shortDate }}@if (timeOf(p); as t) { à {{ t }}}</span>
+                          }
+                          @if (p.openedOn) { <span class="closing-mark">Ouvert le {{ p.openedOn | shortDate }}</span> }
+                          @if (p.inheritedFrom?.label) { <span class="closing-mark" data-mark="inherited">Reporté de {{ p.inheritedFrom!.label }}</span> }
+                        </span>
+                      </div>
+                      @if (p.plannedCents !== undefined && p.kind !== 'account') {
+                        <span class="closing-item-amount" [bpmAmount]="p.realizedCents ?? p.plannedCents" [bpmFlow]="p.direction ?? 'charge'">{{ (p.realizedCents ?? p.plannedCents) | cents }}</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              </details>
+            }
+          }
+        </section>
+
+        <!-- 2. Ce qui se tient : les contrôles de cohérence et comment résoudre ce qui ne va pas -->
+        @if (checks(); as ck) {
+          <section class="closing-checks" [attr.data-folded]="folded().checks" aria-labelledby="closing-checks-title">
+            <header class="closing-section-head">
+              <span class="closing-section-n" aria-hidden="true">2</span>
+              <div>
+                <h2 id="closing-checks-title">Cohérence du cycle</h2>
+                @if (!folded().checks) { <p>Avant de figer le cycle, la clôture vérifie que tout ce qui a été fait se tient. Pour chaque incohérence : ce qui ne va pas, comment la résoudre, et, à votre retour, ce que votre action a changé.</p> }
+              </div>
+              <span class="closing-section-count">{{ ck.ok }} / {{ ck.total }} bons</span>
+              <button type="button" class="btn btn-secondary small closing-fold" [attr.aria-expanded]="!folded().checks" (click)="toggle('checks')">{{ folded().checks ? 'Déplier' : 'Replier' }}</button>
+            </header>
+            <bpm-closing-boxes [boxes]="checkBoxes()" />
+            <bpm-closing-table class="closing-table" [columns]="checkColumns()" caption="Contrôles de cohérence" />
+            @if (!folded().checks) {
+              <bpm-closing-resolution [checks]="ck.items" [periodKey]="v.period.key" [baseline]="baseline()" [canFix]="canFixCheck" (go)="goTo($event)" (fix)="fixCheck($event)" />
+            }
+          </section>
+        }
+
+        <!-- 3. Le résultat du cycle et ce qu'il laisse au suivant -->
+        <section class="closing-result" [attr.data-phase]="v.phase" [attr.data-folded]="folded().result" aria-labelledby="closing-result-title">
+          <header class="closing-section-head">
+            <span class="closing-section-n" aria-hidden="true">3</span>
+            <div>
+              <h2 id="closing-result-title">Résultat de {{ v.period.label }} et cycle suivant</h2>
+              @if (!folded().result) { <p>{{ bilan()?.source === 'provisoire' || !bilan() ? 'Bilan en cours de constitution, figé à la clôture ; puis tout ce que la clôture fera entrer dans ' + v.next?.label + '.' : 'Bilan figé à la clôture, et ce qu’il a laissé au cycle suivant.' }}</p> }
+            </div>
+            <a class="bpm-link" routerLink="/projet-de-vie/bilans" [queryParams]="{ period: v.period.key }">Tous les bilans →</a>
+            <button type="button" class="btn btn-secondary small closing-fold" [attr.aria-expanded]="!folded().result" (click)="toggle('result')">{{ folded().result ? 'Déplier' : 'Replier' }}</button>
+          </header>
+          <h3 class="closing-sub">Résultat de {{ v.period.label }}</h3>
+          <bpm-closing-boxes [boxes]="resultBoxes()" [min]="160" />
+          @if (v.impacts; as im) {
+            <h3 class="closing-sub">Ce que {{ v.period.label }} laisse à {{ im.next.label }}</h3>
+            <bpm-closing-boxes [boxes]="nextBoxes()" [min]="160" />
+          }
+          @if (!folded().result) {
+            <bpm-state [loading]="bilanRead.loading() && !bilan()" [error]="bilanRead.error()" (retry)="bilanRead.reload()" />
+            @if (bilan(); as b) {
+              @if (b.natures.length) {
+                <ul class="closing-natures" aria-label="Dépenses par nature">
+                  @for (n of b.natures; track n.key) {
+                    <li [attr.data-nature]="n.key">
+                      <span class="closing-nature-label">{{ n.label }}</span>
+                      <span class="closing-nature-bar" aria-hidden="true"><span [style.width.%]="n.sharePct ?? 0"></span></span>
+                      <span class="closing-nature-value">{{ n.paidCents | cents }}@if (n.sharePct !== null) { · {{ pct(n.sharePct) }} %}</span>
+                    </li>
+                  }
+                </ul>
+              }
+              @if (b.highlights.length) {
+                <details class="closing-highlights-wrap">
+                  <summary>{{ plural(b.highlights.length, 'fait marquant', 'faits marquants') }} du cycle</summary>
+                  <ul class="closing-highlights">
+                    @for (h of b.highlights; track h.kind + h.title) {
+                      <li [attr.data-tone]="h.tone"><strong>{{ h.title }}</strong><span>{{ h.text }}</span></li>
+                    }
+                  </ul>
+                </details>
+              }
+            }
+            @if (v.impacts; as im) {
+              <ul class="closing-impact-list">
+                @for (cy of im.deferred.byCycle; track cy.key) {
+                  <li data-impact="deferred">
+                    <span class="closing-impact-label">{{ plural(cy.count, 'point revu', 'points revus') }} en {{ cy.label }}</span>
+                    <span class="closing-impact-text">@for (pt of cy.points; track pt.id; let last = $last) { {{ pt.label }}@if (pt.project) { ({{ pt.project }})}{{ last ? '' : ', ' }}} · inscrit{{ cy.count > 1 ? 's' : '' }} au {{ cy.start | shortDate }}, avec la marque de {{ v.period.label }}.</span>
+                    <strong>{{ (cy.incomeCents - cy.chargeCents) | signedCents }}</strong>
+                  </li>
+                }
+                @if (im.decisions.count) {
+                  <li data-impact="decisions">
+                    <span class="closing-impact-label">{{ plural(im.decisions.count, 'décision en attente', 'décisions en attente') }}</span>
+                    <span class="closing-impact-text">@for (d of im.decisions.points; track d.id; let last = $last) { {{ d.label }}@if (d.project) { ({{ d.project }})}{{ last ? '' : ', ' }}} · revue{{ im.decisions.count > 1 ? 's' : '' }} en {{ im.next.label }}.</span>
+                    <strong>{{ plural(im.decisions.count, 'point', 'points') }}</strong>
+                  </li>
+                }
+                @if (im.planned.count) {
+                  <li data-impact="planned">
+                    <span class="closing-impact-label">Prévisions déjà inscrites en {{ im.next.label }}</span>
+                    <span class="closing-impact-text">{{ plural(im.planned.count, 'échéance ponctuelle', 'échéances ponctuelles') }} : entrées {{ im.planned.incomeCents | cents }}, charges {{ im.planned.chargeCents | cents }}.</span>
+                    <strong>{{ (im.planned.incomeCents - im.planned.chargeCents) | signedCents }}</strong>
+                  </li>
+                }
+                @if (im.projects.count) {
+                  <li data-impact="projects">
+                    <span class="closing-impact-label">Flux des projets financés par le cycle</span>
+                    <span class="closing-impact-text">{{ plural(im.projects.count, 'flux prévu', 'flux prévus') }} en {{ im.next.label }}.</span>
+                    <strong>{{ (im.projects.incomeCents - im.projects.chargeCents) | signedCents }}</strong>
+                  </li>
+                }
+                @if (v.lock.enabled) {
+                  <li data-impact="lock">
+                    <span class="closing-impact-label">Entrées de {{ im.next.label }}</span>
+                    <span class="closing-impact-text">{{ im.opensEntries ? 'Elles s’ouvrent avec la clôture : le verrou du cycle suivant tombe.' : 'Elles s’ouvriront à la clôture de ' + v.period.label + '.' }}</span>
+                    <strong>{{ im.opensEntries ? 'Rouvertes' : 'À la clôture' }}</strong>
+                  </li>
+                }
+              </ul>
+            }
+          }
+        </section>
+
+        <!-- 4. Clôturer : figer le cycle (actions, contrôles, bilan, résultat) et lancer le suivant -->
+        <section class="closing-final" [attr.data-ready]="v.canClose" [attr.data-folded]="folded().close" aria-labelledby="life-closing-title">
+          <header class="closing-section-head">
+            <span class="closing-section-n" aria-hidden="true">4</span>
+            <div>
+              <h2 id="life-closing-title">Clôturer {{ v.period.label }} et lancer {{ v.next?.label }}</h2>
+              @if (!folded().close) { <p>Une seule opération, possible à 100 % une fois le cycle terminé, et seulement si tout se tient.</p> }
+            </div>
+            <button type="button" class="btn btn-secondary small closing-fold" [attr.aria-expanded]="!folded().close" (click)="toggle('close')">{{ folded().close ? 'Déplier' : 'Replier' }}</button>
+          </header>
+          <bpm-closing-boxes [boxes]="closeBoxes()" />
+          @if (v.phase === 'to_close') {
+            <div class="closing-final-actions">
+              <button class="btn btn-primary" type="button" [disabled]="!v.canClose || !!busy()" (click)="finalize()">{{ busy() === 'finalize' ? 'Clôture en cours…' : 'Clôturer ' + v.period.label + ' et lancer ' + v.next?.label }}</button>
+              @if (!v.canClose) { <p class="closing-final-hint">Encore : {{ (v.remaining ?? []).join(', ') }}.</p> }
+            </div>
+          }
+          @if (!folded().close) {
+            <ul class="closing-effects">
+              <li>La cohérence du cycle est vérifiée une dernière fois : {{ checks() ? checks()!.ok + ' / ' + checks()!.total + ' contrôles bons aujourd’hui' : 'contrôles à lire' }}@if (checks()?.blocking?.length) {, bloquant : {{ checks()!.blocking.join(', ') }}}.</li>
+              <li>{{ actions() ? 'Les ' + plural(actions()!.total, 'action', 'actions') : 'Les actions' }} du cycle sont figées dans son historique, avec les contrôles et la marque de chaque point non validé ici.</li>
+              @if (preview(); as pv) {
+                <li>Le bilan est figé et le résultat <strong [bpmAmount]="pv.resultCents">{{ pv.resultCents | signedCents }}</strong> est capitalisé une seule fois dans le patrimoine, au {{ pv.capitalizationDate | shortDate }}.</li>
+              } @else {
+                <li>Le bilan est figé et le résultat du cycle, <strong [bpmAmount]="v.netCents ?? null">{{ v.netCents === null || v.netCents === undefined ? 'à connaître' : (v.netCents | signedCents) }}</strong> à ce jour, est capitalisé une seule fois dans le patrimoine.</li>
+              }
+              @if (v.counts?.deferred; as d) {
+                <li>{{ plural(d, 'point non validé', 'points non validés') }} ici {{ d > 1 ? 'entrent' : 'entre' }} dans {{ d > 1 ? 'leur' : 'son' }} cycle de revue, au premier jour.</li>
+              }
+              <li>{{ v.next?.label }} est lancé : ses entrées s’ouvrent.</li>
+            </ul>
+            @if (v.phase === 'running') {
+              <div class="closing-final-actions">
+                <button class="btn btn-primary" type="button" disabled>{{ 'Clôturer ' + v.period.label + ' et lancer ' + v.next?.label }}</button>
+                <p class="closing-final-hint">La clôture s’ouvrira le {{ v.opensOn! | shortDate }}, à la fin du dernier jour du cycle.</p>
+              </div>
+            }
+            @if (v.lastClosure; as lc) {
+              <p class="closing-last">Dernière clôture : {{ lc.periodLabel }}, {{ lc.resultCents | signedCents }} capitalisés@if (lc.deferredCount) {, {{ plural(lc.deferredCount, 'point revu', 'points revus') }} plus tard}. <a routerLink="/projet-de-vie/bilans" [queryParams]="{ period: lc.periodKey }">Relire son bilan →</a></p>
+            }
+          }
+        </section>
+
+        <!-- Actions du cycle : consultatif, sur une ligne qui se déplie -->
+        @if (actions(); as ac) {
+          <details class="closing-actions-line">
+            <summary>
+              <span class="closing-actions-title">Actions du cycle</span>
+              <span class="closing-actions-meta">{{ plural(ac.total, 'action enregistrée', 'actions enregistrées') }} depuis le {{ v.period.start | shortDate }}@if (ac.lastAt) { · dernière le {{ whenOf(ac.lastAt) }}}</span>
+              <small>consultatif</small>
+            </summary>
+            <bpm-closing-journal [actions]="ac" />
+          </details>
+        }
+      }
+    }
+  </div>
+
+  <bpm-entry-flow [budgets]="budgets()" [defaults]="entryDefaults()" [clearOnClose]="['entryDirection', 'entryPaid']" (saved)="saved($event)" />
+  @if (lineId() && !ctx.q('entry')()) {
+    <bpm-line-detail [lineId]="lineId()!" (closed)="closeLine()" (edit)="editLine($event)" />
+  }
+  @if (decisionPoint(); as p) {
+    <bpm-closing-decision [point]="p" (closed)="decisionPoint.set(null)" (done)="decided($event)" />
+  }
+  @if (capRefs(); as refs) {
+    @if (j()?.period; as per) { <bpm-closing-cap [refs]="refs" [periodKey]="per.key" (closed)="capRefs.set(null)" (saved)="capSaved($event)" /> }
+  }
+  @if (accountOpen() && j()?.period; as per) {
+    <bpm-closing-account [period]="per" [today]="today()" [canConfirm]="closing()" [busy]="!!busy()" (closed)="accountOpen.set(false)" (confirm)="confirmAccountInDialog()" />
+  }
+</bpm-page>

@@ -45,4 +45,22 @@ describe('graphes BPM', () => {
     expect(d.match(/M/g)!.length).toBe(2); // deux segments, aucun point à zéro
     expect(el.querySelectorAll('.hit[tabindex="0"]').length).toBe(3);
   });
+
+  it('colore les soldes et remboursements selon leur effet sans transformer les données du graphe', () => {
+    const f = TestBed.createComponent(BpmSeriesChart);
+    f.componentRef.setInput('title', 'Soldes et flux');
+    f.componentRef.setInput('categories', ['Négatif', 'Équilibre', 'Positif', 'Inconnu']);
+    const values = [-1000, 0, 3000, null];
+    f.componentRef.setInput('series', [
+      { key: 'net', label: 'Solde', color: 'purple', kind: 'bar', values },
+      { key: 'out', label: 'Dépense ou remboursement', flow: 'charge', color: 'orange', kind: 'bar', values },
+    ]);
+    f.detectChanges();
+    const geo = (f.componentInstance as any).geo();
+    expect(geo.bars.map((b: { color: string }) => b.color)).toEqual([
+      'var(--status-danger)', 'var(--status-info)', 'var(--status-success)',
+      'var(--status-success)', 'var(--status-info)', 'var(--status-danger)',
+    ]);
+    expect(values).toEqual([-1000, 0, 3000, null]);
+  });
 });

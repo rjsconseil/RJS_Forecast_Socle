@@ -1,7 +1,6 @@
 // Object Management (transverse) : exposition en lecture seule des objets de tous les niveaux,
 // de leurs relations, des contrôles et des exports. Remise à zéro réservée à la recette.
 import { fail } from '../../socle/errors.mjs';
-import { emptyState } from '../../socle/store.mjs';
 import { today } from '../../socle/clock.mjs';
 import { date } from '../../socle/validation.mjs';
 
@@ -47,16 +46,14 @@ export default {
           return { __download: `preuve-om-${manifest.snapshotId}.zip`, __type: 'application/zip', __body: zip };
         },
       ],
+      // Architecture du socle : principes appliqués, modules et leurs frontières, système de gestion des données.
+      ['GET', '/api/om/architecture', async () => ({ principles: socle.principles, modules: socle.registry.describe(), data: socle.store.describe() })],
       [
         'POST',
         '/api/_recette/reset',
         async () => {
           if (!socle.config?.recetteReset) fail('NOT_FOUND', 'Route inconnue.');
-          return socle.store.mutate((draft) => {
-            for (const k of Object.keys(draft)) delete draft[k];
-            Object.assign(draft, emptyState(socle.registry.collections()));
-            return { value: { reset: true } };
-          });
+          return socle.resetData();
         },
       ],
       [

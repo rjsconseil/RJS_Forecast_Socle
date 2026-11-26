@@ -5,12 +5,13 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { userContextInterceptor } from './core/api.service';
+import { dataChangesInterceptor } from './core/data-changes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: NAVIGATION_CATALOG, useValue: SITE_NAVIGATION },
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptors([userContextInterceptor])),
+    provideHttpClient(withInterceptors([userContextInterceptor, dataChangesInterceptor])),
   ],
 };

@@ -34,7 +34,7 @@
 .objectives-next .text-link { margin-left: auto; }
 .life-goal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .objective-card {
-  --goal-color: var(--muted); display: grid; grid-template-columns: minmax(170px, .8fr) minmax(0, 2fr) auto;
+  --goal-color: var(--status-info); display: grid; grid-template-columns: minmax(170px, .8fr) minmax(0, 2fr) auto;
   align-items: start; gap: 22px; padding: 20px; border: 1px solid var(--line); border-left: 4px solid var(--goal-color); border-radius: 10px;
   &[data-status='funded'] { --goal-color: var(--status-success); }
   &[data-status='partial'] { --goal-color: var(--status-warning); }
@@ -43,7 +43,8 @@
 .objective-identity { min-width: 0; display: grid; gap: 9px; justify-items: start; h3 { overflow-wrap: anywhere; font-size: 18px; line-height: 1.4; } }
 .objective-type { color: var(--app-accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .objective-date { color: var(--muted); font-size: 13px; }
-.is-overdue, .objective-warning { color: var(--status-warning); }
+.is-overdue { color: var(--status-danger); }
+.objective-warning { color: var(--status-warning); }
 .life-goal-status { background: color-mix(in srgb, var(--goal-color) 10%, var(--raised-surface)); color: var(--goal-color); padding: 5px 8px; border-radius: 6px; font-size: 11px; font-weight: 650; }
 .objective-finances { min-width: 0; }
 .objective-finances dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 0; }
@@ -107,4 +108,30 @@ bpm-vision-objectives { display: grid; gap: 20px; }
   min-width: 0;
   label { flex: 1 1 220px; max-width: 30rem; }
   > span { flex: 1 1 240px; font-size: 13px; line-height: 1.5; }
+}
+
+.projection-start {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+
+  > div {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--card-radius);
+    background: var(--raised-surface);
+  }
+
+  dt, small, a { font-size: 13px; }
+  dt, small { color: var(--muted); }
+  dd {
+    margin: 5px 0;
+    font-size: clamp(20px, 2.4vw, 28px);
+    font-weight: 640;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  a { color: var(--app-accent); text-underline-offset: 3px; }
 }

@@ -1,5 +1,5 @@
 @media (max-width: 1100px) {
-  :host .calendar.is-360.is-bpm-calendar {
+  :host .calendar.is-360.is-canonical {
     .calendar-layout {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -25,7 +25,19 @@
   }
 }
 @media (max-width: 640px) {
-  :host .calendar.is-360.is-bpm-calendar {
+  :host .calendar.is-360.is-canonical {
+    .calendar-legend-inset {
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      padding: 12px 14px;
+      white-space: normal;
+    }
+    .calendar-legend-inset span:last-child {
+      flex-basis: 100%;
+      overflow: visible;
+      text-align: left;
+    }
     .calendar-right-rail .calendar-control-row {
       padding: 12px;
       grid-template-columns: minmax(0, 1fr);

@@ -44,7 +44,7 @@ import { locate } from './site-plan';
     .journey-resume-zone { flex-shrink: 0; min-width: 38px; padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--app-accent) 12%, transparent); color: var(--app-accent); font-size: 11px; font-weight: 700; text-align: center; }
     .journey-resume-label { display: grid; flex: 1; min-width: 0; }
     .journey-resume-label strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .journey-resume-label small { color: var(--muted); font-size: 0.78rem; }
+    .journey-resume-label small { color: var(--muted); font-size: 0.78rem; overflow-wrap: anywhere; }
     button > span:last-child { flex-shrink: 0; color: var(--app-accent); font-size: 0.85rem; font-weight: 650; }
   `,
 })

@@ -14,11 +14,14 @@ process.env.SOCLE_TODAY = TODAY;
 /**
  * Socle neuf sur un fichier temporaire ; `reload()` relit le même fichier (redémarrage) :
  * l'instance précédente est fermée d'abord, car le stockage n'admet qu'un écrivain (C11).
+ * `closingLock` : les tests historiques saisissent des cycles passés sans les clôturer ; le verrou du cycle suivant
+ * (paramètre `bpm.verrouCycleSuivant`, actif par défaut dans l'application) n'y est donc actif que sur demande.
  */
-export async function makeSocle({ faultInjection = true } = {}) {
+export async function makeSocle({ faultInjection = true, closingLock = false } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'socle-test-'));
   const dataFile = join(dir, 'store.json');
   let current = await createSocle({ dataFile, modules: SOCLE_MODULES, faultInjection });
+  if (!closingLock) await current.modules.administration.setParameter('bpm.verrouCycleSuivant', { value: false, expectedRevision: 0, note: 'Tests historiques' });
   const reload = async (opts = {}) => {
     await current.close();
     current = await createSocle({ dataFile, modules: SOCLE_MODULES, faultInjection, ...opts });
@@ -81,3 +84,9 @@ export function throwsCode(fn, code) {
 
 /** Espaces insécables du format fr-FR ramenées à des espaces simples. */
 export const plain = (s) => s.replace(/\s+/g, ' ');
+
+/** Première tâche du projet d'un Budget de projet de la vie : une dépense de projet se saisit sur une tâche. */
+export const firstTaskOf = (socle, budgetId) => {
+  const b = socle.state.budgets[budgetId];
+  return Object.values(socle.state.tasks).filter((t) => t.projectId === b.coreProjectId).sort((x, y) => x.createdAt.localeCompare(y.createdAt))[0]?.id ?? null;
+};

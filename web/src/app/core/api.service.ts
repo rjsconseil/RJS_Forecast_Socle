@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, throwError } from 'rxjs';
 import {
   ApiErrorBody,
   BudgetObject,
@@ -55,8 +55,28 @@ function readStored(): string | null {
   }
 }
 
+/**
+ * Les lectures qui exigent un utilisateur côté serveur (refus CONTEXT_REQUIRED). Un test de l'API vérifie
+ * que cette liste reste alignée sur le serveur (`api/test/anonymous-reads.test.mjs`).
+ */
+export const USER_BOUND_READS = ['/api/bpm/', '/api/budget/', '/api/patrimoine', '/api/projects', '/api/tasks'];
+/** Les lectures du calendrier ouvertes à tous ; une instance de calendrier (`/api/calendar/<id>`) exige un utilisateur. */
+export const OPEN_CALENDAR_READS = ['/api/calendar', '/api/calendar/catalog'];
+export function needsUser(url: string): boolean {
+  const path = url.split(/[?#]/)[0];
+  if (path.startsWith('/api/calendar')) return !OPEN_CALENDAR_READS.includes(path);
+  return USER_BOUND_READS.some((prefix) => path === prefix || path.startsWith(prefix.endsWith('/') ? prefix : prefix + '/'));
+}
+
 export const userContextInterceptor: HttpInterceptorFn = (req, next) => {
   const userId = inject(RecetteContext).userId();
+  // Sans utilisateur choisi, une lecture qui en exige un n'est pas envoyée : le site répond lui-même
+  // comme le ferait le serveur, sans appel refusé. Les pages affichent leur invitation à se connecter.
+  if (!userId && req.method === 'GET' && needsUser(req.url))
+    return throwError(() => new HttpErrorResponse({
+      status: 401, statusText: 'Unauthorized', url: req.url,
+      error: { error: { code: 'CONTEXT_REQUIRED', action: null, message: 'Contexte absent : choisir un user.' } },
+    }));
   return next(userId && req.url.startsWith('/api/') ? req.clone({ setHeaders: { 'x-user-id': userId } }) : req);
 };
 
@@ -235,6 +255,10 @@ export class Api {
   }
   metricCatalog() {
     return this.get<MetricCatalog>('/api/admin/metrics');
+  }
+  /** Périodes du cycle du user actif, pour l'aperçu d'une métrique administrée (aucune donnée d'application). */
+  metricPeriods() {
+    return this.get<{ periods: import('./models').Period[] }>('/api/bpm/periods?limit=240');
   }
   metric(key: string) {
     return this.get<MetricDefinitionRow>(`/api/admin/metrics/${encodeURIComponent(key)}`);

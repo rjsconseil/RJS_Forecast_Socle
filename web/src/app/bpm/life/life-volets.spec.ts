@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { routes } from '../../app.routes';
-import { BpmLifeManagement, LifeHealth } from '../../core/bpm-life.models';
+import { BpmLifeManagement, LifeHealth } from '../data/bpm-life.models';
 import { followCount, lifeVolets, VoletLink } from './life-volets';
 
 const info = (health: LifeHealth = 'ok', alert: string | null = null) => ({ health, healthLabel: { ok: 'En règle', watch: 'À surveiller', alert: 'À traiter', unknown: 'À renseigner' }[health], alert });
@@ -98,7 +98,7 @@ function lecture(o: { surplus?: boolean; toClose?: number; noCycle?: boolean; sa
 function declared(link: string) {
   const path = link.replace(/^\//, '');
   return routes.some((r) => {
-    if (r.path === undefined || r.redirectTo) return false;
+    if (r.path === undefined || r.path === '**') return false;
     const re = new RegExp('^' + r.path.replace(/:[^/]+/g, '[^/]+') + '$');
     return re.test(path);
   });
@@ -131,7 +131,7 @@ describe('Gestion du projet de vie — volets', () => {
   });
 
   it('propose la clôture de la première période terminée, sinon l’historique', () => {
-    expect(lifeVolets(lecture()).find((x) => x.key === 'resultats')!.primary).toEqual({ label: 'Clôturer Octobre 2026', action: 'close' });
+    expect(lifeVolets(lecture()).find((x) => x.key === 'resultats')!.primary).toEqual({ label: 'Préparer la clôture · Octobre 2026', link: '/projet-de-vie/cloture', fragment: 'life-closing-title' });
     expect(lifeVolets(lecture({ toClose: 0 })).find((x) => x.key === 'resultats')!.primary).toMatchObject({ link: '/tableau-de-bord', fragment: 'bm-history' });
   });
 
@@ -192,32 +192,19 @@ describe('Gestion du projet de vie — volets', () => {
     const projects = lifeVolets(d).find((x) => x.key === 'projets')!;
     expect([projects.hideGauge, projects.primary.link, projects.figures.length, projects.facts.length]).toEqual([true, '/app/gestion-projet/nouveau', 0, 1]);
   });
-  it('compte les catégories plafonnées dépassées dans le volet de leur nature', () => {
-    const d = lecture();
-    Object.assign(d.natures.courante, {
-      overCount: 1,
-      categories: [
-        { id: 'k1', label: 'Cantine', ref: 'std:enfants', capCents: 10000, engagedCents: 11000, marginCents: -1000, over: true, near: false },
-        { id: 'k2', label: 'Activités sportives', ref: 'std:enfants', capCents: 8000, engagedCents: 6000, marginCents: 2000, over: false, near: false },
-      ],
-    });
-    const courante = lifeVolets(d).find((x) => x.key === 'courante')!;
-    expect(courante.gauge.caption).toMatch(/^Aucun plafond par poste · 2 catégories plafonnées dont 1 dépassée \(Cantine −10,00\s€\)$/);
-  });
-
-  it('garde les deux postes dépassés quand une catégorie du même poste dépasse aussi', () => {
+  it('légende des charges : plafonds des postes, marge et postes dépassés', () => {
     const d = lecture();
     Object.assign(d.natures.indispensable, {
       capCents: 45000,
       marginCents: -4500,
-      // Le total déduplique la catégorie déjà couverte par son poste.
       overCount: 2,
       rows: [{ ref: 'std:alimentation', over: true }, { ref: 'std:transport', over: true }],
-      categories: [{ id: 'k1', label: 'Courses', ref: 'std:alimentation', capCents: 18000, engagedCents: 21500, marginCents: -3500, over: true, near: false }],
     });
     const essentials = lifeVolets(d).find((x) => x.key === 'indispensable')!;
     expect(essentials.gauge.caption).toContain('2 postes dépassés');
-    expect(essentials.gauge.caption).toContain('1 catégorie plafonnée dont 1 dépassée');
+    expect(essentials.gauge.caption).not.toContain('catégorie');
+    const courante = lifeVolets(d).find((x) => x.key === 'courante')!;
+    expect(courante.gauge.caption).toMatch(/^Aucun plafond/);
   });
 
   it('cycle clôturé : nomme les entrées jamais reçues au lieu des retards', () => {

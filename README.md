@@ -25,7 +25,7 @@ Variables d'environnement de l'API :
 | Variable | Rôle |
 |---|---|
 | `J1_API_PORT` | Port de l'API (défaut `3410`). Lu aussi par `npm run seed`. |
-| `J1_DATA_FILE` | Fichier JSON de persistance (défaut `api/data/store.json`). |
+| `J1_DATA_FILE` | Base SQLite de persistance (défaut `api/data/store.sqlite`). |
 | `J1_ENABLE_RECETTE_RESET=1` | Active `POST /api/_recette/reset` (utilisé par le seed). `npm run api` l'active. |
 | `J1_ENABLE_FAULT_INJECTION=1` | Accepte `_fault: "before-commit"` pour simuler une interruption avant écriture. |
 | `SOCLE_TODAY=AAAA-MM-JJ` | Fixe la date du jour du socle (périodes, période courante, dates par défaut). Utile en recette ; les tests la fixent à `2026-11-03`. Le seed, lui, calcule ses dates à partir de la date réelle : ne pas lancer l'API avec `SOCLE_TODAY` avant `npm run seed`. |
@@ -376,7 +376,7 @@ conserve le jeu déjà présent et les modifications qui lui auraient été appo
 
 Le jeu comprend 11 charges (dont deux récurrences), 7 catégories, 400 € de marge sur les
 centres non dépassés, 65 € à compenser sans double comptage et un solde prévu de −35 €.
-Les données sont conservées dans `api/data/store.json` ; la sauvegarde complète du site doit
+Les données sont conservées dans la base SQLite `api/data/store.sqlite` ; la sauvegarde complète du site doit
 inclure ce fichier. Les tests automatisés utilisent des stockages temporaires distincts.
 
 ### Présentation et navigation du module BPM

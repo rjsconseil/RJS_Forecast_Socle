@@ -1,5 +1,5 @@
 /* Variante de présentation exclusivement activée pour calendrier.budgetPatrimoine. */
-:host .calendar.is-360.is-bpm-calendar {
+:host .calendar.is-360.is-canonical {
   .calendar-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(230px, 280px);
@@ -226,14 +226,14 @@
     grid-column: 1 / -1;
     grid-row: 3;
   }
-  .bpm-calendar-source-summary {
+  .cal-source-summary {
     grid-column: 1 / -1;
     margin: 0;
     color: var(--muted);
     font-size: 12px;
   }
-  .bpm-calendar-event-status,
-  .bpm-calendar-event-group {
+  .cal-event-status,
+  .cal-event-group {
     display: block;
     font-size: 10px;
     font-weight: 500;
@@ -296,9 +296,7 @@
   .calendar-frame .calendar-grid.is-week {
     grid-template-rows: minmax(0, 1fr);
   }
-  .calendar-frame .calendar-grid-scroll.is-week .calendar-grid-content {
-    min-width: 860px;
-  }
+  // La vue semaine tient dans la largeur (calendar-skin-views.scss) : pas de largeur minimale ni de défilement de côté.
   .calendar-frame .calendar-grid > .calendar-day {
     min-height: 0;
     padding: 2px;

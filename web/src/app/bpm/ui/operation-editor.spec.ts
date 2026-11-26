@@ -2,20 +2,16 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { BpmBudgetRef } from '../../core/bpm-models';
+import { BpmBudgetRef } from '../data/bpm-models';
 import { BpmOperationEditor } from './operation-editor';
 import { BpmRefresh } from './page-context';
 
-const capPreview = { mutation: false, period: { key: '2026-11', label: 'Novembre 2026' }, before: { center: null, category: null }, after: { center: null, category: null }, alerts: [], note: null };
+const capPreview = { mutation: false, period: { key: '2026-11', label: 'Novembre 2026' }, before: { center: null }, after: { center: null }, alerts: [], note: null };
 
 const budgets: BpmBudgetRef[] = [{ id: 'bud_life', name: 'Budget du projet de vie', role: 'life', coreProjectId: 'prj_1', capsCents: {}, revision: 1 }];
 const centers = [
   { ref: 'std:logement', label: 'Logement', direction: 'charge', directionLabel: 'Charge', standard: true },
   { ref: 'std:loisirs', label: 'Loisirs', direction: 'charge', directionLabel: 'Charge', standard: true },
-];
-const categories = [
-  { id: 'cat_assur', label: 'Assurance habitation', costCenterRef: 'std:logement', costCenterLabel: 'Logement', capCents: 3000, archived: false, revision: 1 },
-  { id: 'cat_cine', label: 'Cinéma', costCenterRef: 'std:loisirs', costCenterLabel: 'Loisirs', capCents: null, archived: false, revision: 1 },
 ];
 
 describe('éditeur d’opération partagé', () => {
@@ -32,8 +28,6 @@ describe('éditeur d’opération partagé', () => {
     f.detectChanges();
     http.expectOne('/api/bpm/cost-centers').flush(centers);
     http.expectOne('/api/tasks').flush([]);
-    // Catégories retirées comprises : une dépense déjà rangée dans une catégorie retirée la garde.
-    http.expectOne((r) => r.url === '/api/bpm/categories' && r.params.get('archived') === 'true').flush(categories);
     await new Promise((r) => setTimeout(r));
     await f.whenStable();
     return f;
@@ -62,6 +56,23 @@ describe('éditeur d’opération partagé', () => {
   function refuseFunding() {
     http.expectOne('/api/bpm/operations').flush({ error: { code: 'FORBIDDEN_BY_RULE', message: 'Part à accorder', details: { reason: 'task-share', budgetId: 'bud_project', taskId: 'tsk_project', neededCents: 9000, grantOverrunCents: 1000 } } }, { status: 409, statusText: 'Conflict' });
   }
+
+  it('ouvre une saisie déjà réglée quand on le demande (mouvement manquant relevé au rapprochement)', async () => {
+    const f = TestBed.createComponent(BpmOperationEditor);
+    f.componentRef.setInput('budgets', budgets);
+    f.componentRef.setInput('defaults', { direction: 'charge', status: 'realized' });
+    f.detectChanges();
+    http.expectOne('/api/bpm/cost-centers').flush(centers);
+    http.expectOne('/api/tasks').flush([]);
+    await new Promise((r) => setTimeout(r));
+    await f.whenStable();
+    const ed = f.componentInstance as any;
+    expect(ed.realized()).toBe(true);
+    expect(ed.realizedDate()).toBe(ed.date());
+    // Sans demande, la saisie reste une prévision.
+    const g = await open();
+    expect((g.componentInstance as any).realized()).toBe(false);
+  });
 
   it('rejoue la même clé de commande après une erreur, sans perdre le brouillon', async () => {
     const f = await open();
@@ -117,15 +128,27 @@ describe('éditeur d’opération partagé', () => {
     http.match(() => true); f.destroy();
   });
 
+  it('conserve le paiement et transmet la source et la date d’imputation du flux de tâche', async () => {
+    const { f, ed } = await openProjectExpense();
+    ed.realizedDate.set('2026-10-29'); ed.accountingDate.set('2026-11-06'); ed.fundingSource.set('patrimoine');
+    const done = ed.save();
+    await verifyCaps();
+    const req = http.expectOne('/api/bpm/operations');
+    expect(req.request.body).toMatchObject({ taskId: 'tsk_project', realizedDate: '2026-10-29', accountingDate: '2026-11-06', fundingSource: 'patrimoine', status: 'realized' });
+    req.flush({ operation: { label: 'Achat UI' } });
+    await done; http.match(() => true); f.destroy();
+  });
+
   it.each([
     ['amount', '900'],
     ['realizedAmount', '900'],
     ['date', '2026-12-06'],
     ['realizedDate', '2026-12-06'],
+    ['accountingDate', '2026-12-06'],
+    ['fundingSource', 'patrimoine'],
     ['budgetId', 'bud_life'],
     ['taskId', 'tsk_other'],
     ['center', 'std:loisirs'],
-    ['categoryId', 'cat_assur'],
   ])('invalide le financement proposé si le champ %s change', async (field, value) => {
     const { f, ed } = await openProjectExpense();
     const first = ed.save();
@@ -200,47 +223,29 @@ describe('éditeur d’opération partagé', () => {
     expect((f.nativeElement as HTMLElement).textContent).toContain('Montant positif attendu');
   });
 
-  it('range la dépense dans une catégorie du centre choisi, jamais dans celle d’un autre centre', async () => {
+  it('ne propose plus de catégorie : la dépense se range dans son poste, l’alerte nomme le poste', async () => {
     const f = await open();
-    type Ed = { label: { set(v: string): void }; amount: { set(v: string): void }; date: { set(v: string): void }; center: { set(v: string): void }; categoryId: { set(v: string): void }; save(): Promise<void> };
+    type Ed = { label: { set(v: string): void }; amount: { set(v: string): void }; date: { set(v: string): void }; center: { set(v: string): void }; save(): Promise<void> };
     const ed = f.componentInstance as unknown as Ed;
     f.detectChanges();
-    const options = [...(f.nativeElement as HTMLElement).querySelectorAll('select[name="categoryId"] option')].map((o) => o.textContent!.trim());
-    expect(options[0]).toBe('Sans catégorie');
-    expect(options.some((o) => o.startsWith('Assurance habitation'))).toBe(true);
-    expect(options.some((o) => o.startsWith('Cinéma'))).toBe(false);
+    expect((f.nativeElement as HTMLElement).querySelector('select[name="categoryId"]')).toBeNull();
+    expect((f.nativeElement as HTMLElement).textContent).not.toContain('Catégorie');
     ed.label.set('Assurance');
     ed.amount.set('25');
     ed.date.set('2026-11-05');
-    ed.categoryId.set('cat_assur');
+    ed.center.set('std:logement');
     let saved = '';
     f.componentInstance.saved.subscribe((m: string) => (saved = m));
     const first = ed.save();
     await verifyCaps();
     const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/bpm/operations');
-    expect(req.request.body).toMatchObject({ costCenterRef: 'std:logement', categoryId: 'cat_assur' });
+    expect(req.request.body).toMatchObject({ costCenterRef: 'std:logement' });
+    expect('categoryId' in req.request.body).toBe(false);
     // Plafond dépassé : signalé dans le message, la dépense est enregistrée.
-    req.flush({ replayed: false, operation: { label: 'Assurance' }, capAlerts: [{ level: 'category', ref: 'std:logement', id: 'cat_assur', label: 'Assurance habitation', capCents: 3000, engagedCents: 3500, overCents: 500 }] });
+    req.flush({ replayed: false, operation: { label: 'Assurance' }, capAlerts: [{ level: 'center', ref: 'std:logement', id: null, label: 'Logement', capCents: 3000, engagedCents: 3500, overCents: 500 }] });
     await first;
     expect(saved).toContain('Attention, plafond dépassé');
-    expect(saved).toContain('catégorie « Assurance habitation »');
-    http.match(() => true);
-  });
-
-  it('écarte une catégorie devenue incohérente quand le centre change', async () => {
-    const f = await open();
-    const ed = f.componentInstance as unknown as { label: { set(v: string): void }; amount: { set(v: string): void }; date: { set(v: string): void }; center: { set(v: string): void }; categoryId: { set(v: string): void }; save(): Promise<void> };
-    ed.label.set('Séance');
-    ed.amount.set('12');
-    ed.date.set('2026-11-05');
-    ed.categoryId.set('cat_assur');
-    ed.center.set('std:loisirs');
-    const done = ed.save();
-    await verifyCaps();
-    const req = http.expectOne((r) => r.method === 'POST' && r.url === '/api/bpm/operations');
-    expect(req.request.body).toMatchObject({ costCenterRef: 'std:loisirs', categoryId: null });
-    req.flush({ replayed: false, operation: { label: 'Séance' } });
-    await done;
+    expect(saved).toContain('poste « Logement »');
     http.match(() => true);
   });
 

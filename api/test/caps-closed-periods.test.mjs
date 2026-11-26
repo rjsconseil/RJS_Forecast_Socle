@@ -13,19 +13,12 @@ async function fixture(t) {
     expectedRevision: life.revision,
     caps: { "std:loisirs": 50 },
   });
-  const { category } = await budget.createCategory(ctx, {
-    requestKey: key(),
-    label: "Cinéma",
-    costCenterRef: "std:loisirs",
-    cap: 30,
-  });
   const { operation: paid } = await operation(socle, ctx, {
     direction: "charge",
     label: "Payé en septembre",
     amount: 20,
     date: "2026-09-10",
     costCenterRef: "std:loisirs",
-    categoryId: category.id,
   });
   const { operation: pending } = await operation(socle, ctx, {
     direction: "charge",
@@ -34,7 +27,6 @@ async function fixture(t) {
     date: "2026-09-15",
     status: "planned",
     costCenterRef: "std:loisirs",
-    categoryId: category.id,
   });
   const { recurrence } = await budget.createRecurrence(ctx, {
     requestKey: key(),
@@ -45,7 +37,6 @@ async function fixture(t) {
     firstDate: "2026-09-05",
     endDate: "2026-09-05",
     costCenterRef: "std:loisirs",
-    categoryId: category.id,
   });
   const reads = socle.modules.bpm.reads;
   assert.equal(
@@ -59,7 +50,6 @@ async function fixture(t) {
   return {
     socle,
     ctx,
-    category,
     paid,
     pending,
     recurrence,
@@ -70,7 +60,7 @@ async function fixture(t) {
   };
 }
 
-test("période close : poste, catégorie et revue excluent les échéances non réalisées sans effacer leur historique", async (t) => {
+test("période close : poste et revue excluent les échéances non réalisées sans effacer leur historique", async (t) => {
   const f = await fixture(t);
   for (const socle of [f.socle, await f.reload()]) {
     const reads = socle.modules.bpm.reads;
@@ -79,7 +69,6 @@ test("période close : poste, catégorie et revue excluent les échéances non r
     });
     const review = reads.capsReview(f.ctx, { period: "2026-09" });
     const center = review.centers.find((c) => c.ref === "std:loisirs");
-    const category = review.categories.find((c) => c.id === f.category.id);
     assert.deepEqual(
       [
         detail.center.paidCents,
@@ -102,15 +91,6 @@ test("période close : poste, catégorie et revue excluent les échéances non r
       [center.engagedCents, center.marginCents, center.chargeIds],
       [2000, 3000, [f.paid.id]],
     );
-    assert.deepEqual(
-      [
-        category.engagedCents,
-        category.marginCents,
-        category.over,
-        category.chargeIds,
-      ],
-      [2000, 1000, false, [f.paid.id]],
-    );
     assert.equal(review.totals.overCount, 0);
     assert.deepEqual(
       detail.unrealizedLines.map((l) => l.plannedCents).sort((a, b) => a - b),
@@ -131,7 +111,7 @@ test("période close : poste, catégorie et revue excluent les échéances non r
 });
 
 test("règlement tardif après clôture : les plafonds consomment uniquement la période réelle et gardent les prévisions ouvertes", async (t) => {
-  const { socle, ctx, recurrence, category } = await fixture(t);
+  const { socle, ctx, recurrence } = await fixture(t);
   const reads = socle.modules.bpm.reads;
   const budget = socle.modules.budget;
   await operation(socle, ctx, {
@@ -141,14 +121,12 @@ test("règlement tardif après clôture : les plafonds consomment uniquement la 
     date: TODAY,
     status: "planned",
     costCenterRef: "std:loisirs",
-    categoryId: category.id,
   });
   const input = {
     direction: "charge",
     amount: 10,
     date: "2026-09-05",
     costCenterRef: "std:loisirs",
-    categoryId: category.id,
     settle: true,
     recurrenceId: recurrence.id,
     occurrenceDate: "2026-09-05",
@@ -166,10 +144,8 @@ test("règlement tardif après clôture : les plafonds consomment uniquement la 
     ],
     [2500, 1000, 2500, 3500],
   );
-  assert.deepEqual(
-    preview.alerts.map((a) => [a.level, a.overCents]),
-    [["category", 500]],
-  );
+  // 35 € engagés sous le plafond de 50 € du poste : aucune alerte.
+  assert.deepEqual(preview.alerts, []);
   assert.equal(JSON.stringify(socle.state), before);
   await budget.settleOccurrence(ctx, recurrence.id, {
     requestKey: key(),
@@ -186,14 +162,10 @@ test("règlement tardif après clôture : les plafonds consomment uniquement la 
     current.centers.find((c) => c.ref === "std:loisirs").engagedCents,
     preview.after.center.engagedCents,
   );
-  assert.equal(
-    current.categories.find((c) => c.id === category.id).engagedCents,
-    preview.after.category.engagedCents,
-  );
 });
 
 test("aperçus de plafonds sur période close : ni le budget principal ni la branche projet ne réintroduisent les non-réalisés", async (t) => {
-  const { socle, ctx, category } = await fixture(t);
+  const { socle, ctx } = await fixture(t);
   const project = await socle.modules.bpm.projects.createProject(ctx, {
     requestKey: key(),
     title: "Projet de simulation",
@@ -207,8 +179,7 @@ test("aperçus de plafonds sur période close : ni le budget principal ni la bra
       amount: 15,
       date: "2026-09-20",
       costCenterRef: "std:loisirs",
-      categoryId: category.id,
-    });
+      });
     assert.deepEqual(
       [
         preview.before.center.engagedCents,
@@ -216,13 +187,6 @@ test("aperçus de plafonds sur période close : ni le budget principal ni la bra
         preview.after.center.toPayCents,
       ],
       [2000, 2000, 0],
-    );
-    assert.deepEqual(
-      [
-        preview.before.category.engagedCents,
-        preview.after.category.engagedCents,
-      ],
-      [2000, 2000],
     );
     assert.deepEqual(preview.alerts, []);
   }

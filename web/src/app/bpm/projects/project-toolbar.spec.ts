@@ -3,8 +3,8 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { BehaviorSubject, of } from 'rxjs';
 import { vi } from 'vitest';
 import { Api } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { BpmTaskCard, BpmTasksOverview } from '../../core/bpm-projects.models';
+import { BpmApi } from '../data/bpm-api.service';
+import { BpmTaskCard, BpmTasksOverview } from '../data/bpm-projects.models';
 import { BpmTasksPage } from './tasks.page';
 
 const task = (
@@ -34,7 +34,13 @@ function setup(query: Record<string, string> = {}, render = false) {
     ],
     attachable: [task('libre', 'todo', null, null)],
   } as unknown as BpmTasksOverview;
-  const api = { attachTask: vi.fn(async () => ({ task: state.attachable[0].task })) };
+  const api = { attachTask: vi.fn(async (taskId: string, projectId: string, _revision: number) => {
+    const attached = state.attachable.find((t) => t.task.id === taskId)!;
+    attached.task.projectId = projectId;
+    state.attachable = state.attachable.filter((t) => t.task.id !== taskId);
+    state.tasks.push(attached);
+    return { task: attached.task };
+  }) };
   const bpm = { tasksOverview: vi.fn(async () => state) };
   TestBed.configureTestingModule({
     providers: [
@@ -61,13 +67,15 @@ function setup(query: Record<string, string> = {}, render = false) {
 }
 
 describe('outils contextuels du tableau de tâches BPM', () => {
-  it('présente les commandes et le rattachement dans le bandeau partagé', () => {
+  it('présente les commandes dans le bandeau et la capture rapide au-dessus du tableau', () => {
     const { fixture, page } = setup({ project: 'p1' }, true);
     page.loading.set(false);
     fixture.detectChanges();
-    const banner = fixture.nativeElement.querySelector('bpm-page-banner') as HTMLElement;
-    expect(banner.querySelector('.bpm-toolbar-focus')?.textContent).toContain('échéance');
-    expect(banner.querySelector('form select[name="taskId"]')).toBeTruthy();
+    const banner = fixture.nativeElement.querySelector('rjs-page-banner') as HTMLElement;
+    expect(banner.querySelector('.page-toolbar-focus')?.textContent).toContain('échéance');
+    // Le rattachement se fait sur chaque carte ; le bandeau ne porte plus de formulaire de rattachement.
+    expect(banner.querySelector('form select[name="taskId"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('form.task-capture input')).toBeTruthy();
     const create = [...banner.querySelectorAll<HTMLButtonElement>('button')].find((b) =>
       b.textContent?.includes('Créer une tâche'),
     )!;
@@ -96,9 +104,9 @@ describe('outils contextuels du tableau de tâches BPM', () => {
     page.data.set({ ...state });
     page.loading.set(false);
     fixture.detectChanges();
-    const banner = fixture.nativeElement.querySelector('bpm-page-banner') as HTMLElement;
+    const banner = fixture.nativeElement.querySelector('rjs-page-banner') as HTMLElement;
     expect(page.visible().map((t: BpmTaskCard) => t.task.id)).toEqual(['devis']);
-    expect(banner.querySelector('.bpm-toolbar-focus')?.textContent).not.toContain('bloquée');
+    expect(banner.querySelector('.page-toolbar-focus')?.textContent).not.toContain('bloquée');
     const review = [...banner.querySelectorAll<HTMLButtonElement>('button')].find((b) =>
       b.textContent?.includes('Revoir une tâche en retard'),
     )!;
@@ -151,5 +159,43 @@ describe('outils contextuels du tableau de tâches BPM', () => {
     expect(bpm.tasksOverview).toHaveBeenCalledOnce();
     expect(page.notice().text).toContain('Cuisine');
     expect(page.pending().size).toBe(0);
+  });
+
+  it('conserve les tâches sans projet dans les indicateurs globaux et leur attribution depuis une carte', async () => {
+    const { fixture, page, params, api } = setup({ project: 'none' }, true);
+    page.loading.set(false);
+    fixture.detectChanges();
+    expect(page.selectedProjectId()).toBeNull();
+    expect(page.remaining()).toBe(3);
+    expect(page.progress()).toBe(25);
+    expect(page.counts().todo).toBe(1);
+    expect(page.toolbarScope()).toContain('Sans projet · 1 / 4 tâche(s)');
+    const links = [...fixture.nativeElement.querySelectorAll('a')] as HTMLAnchorElement[];
+    expect(links.some((link) => link.getAttribute('href') === '/projet-de-vie/projets')).toBe(true);
+    expect(links.some((link) => link.getAttribute('href')?.includes('/none'))).toBe(false);
+
+    const select = fixture.nativeElement.querySelector('.task-attach select') as HTMLSelectElement;
+    select.value = 'p2';
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(api.attachTask).toHaveBeenCalledExactlyOnceWith('libre', 'p2', 4);
+    expect(fixture.nativeElement.querySelector('.task-attach')).toBeNull();
+    params.next(convertToParamMap({ project: 'p2' }));
+    fixture.detectChanges();
+    expect(page.visible().map((t: BpmTaskCard) => t.task.id)).toEqual(['bloquee', 'libre']);
+    expect(page.remaining()).toBe(3);
+  });
+
+  it('garde les compteurs globaux stables pendant une recherche et ouvre la tâche ciblée dans son projet', () => {
+    const { fixture, page, params } = setup({}, true);
+    page.loading.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('a.task-title-link[href*="task=retard"]')?.getAttribute('href')).toBe('/app/gestion-projet/p1/taches?task=retard');
+    params.next(convertToParamMap({ q: 'retard' }));
+    expect(page.visible()).toHaveLength(1);
+    expect(page.filterOptions()[0].label).toContain('(4)');
+    expect(page.filterOptions()[1].label).toContain('(1)');
+    expect(page.progress()).toBe(25);
   });
 });

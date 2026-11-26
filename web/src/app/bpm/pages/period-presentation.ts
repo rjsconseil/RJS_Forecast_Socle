@@ -1,4 +1,4 @@
-import { RegisterLine } from '../../core/bpm-models';
+import { RegisterLine } from '../data/bpm-models';
 
 /** Repère d'affichage seulement : les montants et leur rattachement viennent des lectures métier. */
 export function settlementOutsideWindow(

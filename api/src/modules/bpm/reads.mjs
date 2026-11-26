@@ -4,23 +4,27 @@
 // Les sommes passent par `budgetLines` (middleware Budget) ou par les métriques administrées :
 // un même montant n'est jamais recalculé avec une autre formule. Aucune lecture n'écrit.
 import { fail } from '../../socle/errors.mjs';
-import { date, money, oneOf } from '../../socle/validation.mjs';
-import { CADENCES, PER_YEAR, monthlyAverageCents, occurrenceDates, parseOccurrenceKey } from '../budget/recurrence.mjs';
-import { addDays, today, periodContaining } from '../budget/periods.mjs';
-import { GOAL_TYPES } from '../patrimoine/projection.mjs';
-import { percent } from '../patrimoine/objectives.mjs';
-import { fundedStandardsOf, isValidatedCharge, specialProjectLines } from './projects.mjs';
+import { date, isCalendarDate, money, oneOf } from '../../socle/validation.mjs';
+import { CADENCES, CAP_LEVEL_PCT, PER_YEAR, monthlyAverageCents, occurrenceDates, parseOccurrenceKey } from '../budget/api.mjs';
+import { addDays, today, periodContaining, periodByIndex } from '../budget/api.mjs';
+import { GOAL_TYPES } from '../patrimoine/api.mjs';
+import { percent } from '../patrimoine/api.mjs';
+import { linkedProjectBudgets, isValidatedMove, projectAccountingDate, projectFundingSource } from '../budget/api.mjs';
+import { createCapsReads } from './reads-caps.mjs';
 import { essentialRefsOf, NATURES, NATURE_LABEL, natureOf } from './natures.mjs';
+import { cents, sum } from './format.mjs';
 
 const RESULT = 'bpm.resultatPeriode';
-const SUMMARY_KEYS = ['bpm.revenus', 'bpm.charges', RESULT, 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu', 'bpm.tauxEpargne', 'bpm.patrimoineConstitue', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif'];
+const SUMMARY_KEYS = ['bpm.revenus', 'bpm.charges', RESULT, 'bpm.resteARecevoir', 'bpm.resteAPayer', 'bpm.soldeAttendu', 'bpm.resultatPrevu', 'bpm.tauxEpargne', 'bpm.patrimoineConstitue', 'bpm.patrimoineDisponible', 'bpm.patrimoineFinPeriode', 'bpm.progressionObjectif', 'bpm.resteObjectif'];
 const STATUS_LABEL = { settled: 'Réglé', due: 'Du jour', late: 'En retard', pending: 'À venir', unrealized: 'Non réalisé' };
 const NATURE_ORDER = ['entrees', ...NATURES];
-/** Groupe et filtre des dépenses sans catégorie personnalisée. */
-const NO_CATEGORY = '__none__';
+const WITH_PROJECTS = 'life-with-projects';
+const SCOPE_LABELS = {
+  principal: 'Budget du projet de vie',
+  consolidated: 'Tous les Budgets du user (chaque Budget une fois ; aucun flux père/enfant calculé)',
+  [WITH_PROJECTS]: 'Quotidien et projets de la vie',
+};
 
-const cents = (v) => (v === null || v === undefined ? null : Math.round(v * 100));
-const sum = (lines, f) => lines.reduce((s, l) => s + (f(l) ?? 0), 0);
 const sign = (direction) => (direction === 'income' ? 1 : -1);
 
 /** Montant venant d'une adresse (texte « 12,50 » ou « 12.50 ») : converti à la frontière, puis validé en centimes. */
@@ -45,7 +49,7 @@ export function createReads(socle, h) {
     const budgets = om
       .list(state, 'budget', (b) => b.userId === userId)
       .sort((a, b) => (a.role === b.role ? a.createdAt.localeCompare(b.createdAt) : a.role === 'life' ? -1 : 1))
-      .map((b) => ({ id: b.id, name: b.role === 'life' ? 'Budget du projet de vie' : b.name, role: b.role, coreProjectId: b.coreProjectId, capsCents: b.capsCents ?? {}, revision: b.revision }));
+      .map((b) => ({ id: b.id, name: b.role === 'life' ? 'Budget du projet de vie' : b.name, role: b.role, coreProjectId: b.coreProjectId, fundingSource: b.fundingSource ?? 'cycle', capsCents: b.capsCents ?? {}, revision: b.revision }));
     return { state, userId, comp, cycle, cs, mctx, period: mctx.period, budgets };
   }
 
@@ -54,11 +58,12 @@ export function createReads(socle, h) {
     return {
       user: { id: user.id, label: user.label, userType: user.userType },
       scope,
-      scopeLabel: scope === 'principal' ? 'Budget du projet de vie' : 'Tous les Budgets du user (chaque Budget une fois ; aucun flux père/enfant calculé)',
+      scopeLabel: SCOPE_LABELS[scope],
       budgets: b.budgets,
       period: b.period ? { ...b.period, endExclusive: addDays(b.period.end, 1) } : null,
       // Bornes de navigation : de la première période du cycle à la période courante (seules lisibles).
       periods: b.cs ? { firstKey: b.cs.first.key, currentKey: b.cs.current.key } : null,
+      cycleAnchorDay: b.cycle?.anchorDay ?? null,
       calculationDate: today(),
       revision: b.state.revision,
       unit: 'centimes (EUR)',
@@ -81,6 +86,22 @@ export function createReads(socle, h) {
     return { ...v, status, statusLabel: STATUS_LABEL[status], centerKnown: !String(v.costCenterLabel ?? '').endsWith('(retiré)') && v.costCenterLabel !== null };
   };
 
+  function decorateProjectLine(b, line) {
+    const view = decorate(b, line);
+    const pb = b.state.budgets[line.budgetId];
+    if (pb?.role !== 'standard') return view;
+    const operation = b.state.operations[line.operationId];
+    const fundingSource = projectFundingSource(operation ?? line, pb);
+    const posted = operation && isValidatedMove(operation, pb);
+    // Une échéance imputable au patrimoine reste ouverte même après la fin du cycle de sa date prévue.
+    const status = !line.settled && fundingSource === 'patrimoine' ? statusOf(b.state, null, line) : view.status;
+    return {
+      ...view, status, statusLabel: STATUS_LABEL[status], fundingSource,
+      project: { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: b.state.coreProjects[pb.coreProjectId]?.title ?? pb.name },
+      projectPosting: posted ? 'validated' : line.settled ? 'historical' : 'planned',
+    };
+  }
+
   /** Fenêtre de lecture : période du cycle, ou vue libre semaine/mois/année (n'altère pas le cycle). */
   function windowOf(b, q) {
     if (q.from || q.to) {
@@ -89,83 +110,45 @@ export function createReads(socle, h) {
       if (to < from) fail('VALIDATION', 'La fin de la fenêtre précède son début.', { field: 'to' });
       return { from, to, kind: 'custom' };
     }
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
+    if (!b.period) {
+      if (q.scope !== WITH_PROJECTS) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
+      const month = periodContaining(today(), 1);
+      return { from: month.start, to: month.end, kind: 'custom' };
+    }
     return { from: b.period.start, to: b.period.end, kind: 'period' };
   }
 
-  /**
-   * Charges des projets de la vie validées comme réglées (Budgets standards financés par le budget de vie, réglées
-   * depuis l'attribution) : elles comptent dans les dépenses du budget de vie, jamais avant leur validation.
-   */
-  // Un remboursement reçu par le projet se lit comme une charge négative, sur le poste de la dernière charge de sa tâche :
-  // les mêmes lignes donnent le Dépensé, les natures et les plafonds, sans écart avec `projets.chargesReglees`.
-  const validatedProjectLines = (b, { from, to, by }) =>
-    fundedStandardsOf(b.state, b.comp.budgetId).flatMap((sb) =>
-      budget()
-        .budgetLines(b.state, [sb.id], { from, to, by })
-        .filter((l) => l.kind === 'operation' && l.settled && l.realizedDate >= sb.allocationDate)
-        .map((l) => (l.direction === 'income' ? refundLine(b.state, sb, l) : l)),
-    );
-  function refundLine(state, sb, l) {
-    const charge = Object.values(state.operations)
-      .filter((o) => o.budgetId === sb.id && o.direction === 'charge' && o.status !== 'cancelled' && (!l.taskId || o.taskId === l.taskId) && o.date <= (l.realizedDate ?? l.plannedDate))
-      .sort((x, y) => y.date.localeCompare(x.date))[0];
-    return {
-      ...l,
-      direction: 'charge',
-      refund: true,
-      realizedCents: -l.realizedCents,
-      plannedCents: -l.plannedCents,
-      standardCostCenter: charge ? charge.standardCostCenter : 'divers',
-      costCenterId: charge ? charge.costCenterId : null,
-      categoryId: charge?.categoryId ?? null,
-    };
+  /** Les montants du cycle suivent l'imputation validée ; la date bancaire reste visible. */
+  function projectLinesOf(source) {
+    return (b, { from, to, by }) => linkedProjectBudgets(b.state, b.comp.budgetId).flatMap(sb => {
+      const operations = Object.values(b.state.operations).filter(o => isValidatedMove(o, sb) && projectFundingSource(o, sb) === source &&
+        (by === 'planned' ? o.date : projectAccountingDate(o)) >= from && (by === 'planned' ? o.date : projectAccountingDate(o)) <= to);
+      if (!operations.length) return [];
+      const ids = new Set(operations.map(o => o.id));
+      const dates = operations.map(o => o.date).sort();
+      return budget().budgetLines(b.state, [sb.id], { from: dates[0], to: dates.at(-1), by: 'planned' })
+        .filter(l => ids.has(l.operationId))
+        .map(l => ({ ...l, accountingDate: projectAccountingDate(b.state.operations[l.operationId]), fundingSource: source }));
+    });
   }
-
-  /** Charge spéciale du budget de vie (budget attribué, dépassement facturé) : présentée, jamais totalisée. */
-  const specialLine = (b, sp) => ({
-    id: sp.id,
-    kind: sp.kind,
-    operationId: null,
-    recurrenceId: null,
-    occurrenceDate: null,
-    occurrenceKey: null,
-    budgetId: b.comp.budgetId,
-    userId: b.userId,
-    direction: 'charge',
-    label: sp.label,
-    plannedDate: sp.date,
-    plannedCents: sp.cents,
-    realizedDate: null,
-    realizedCents: null,
-    settled: false,
-    standardCostCenter: null,
-    costCenterId: null,
-    costCenterRef: 'projects',
-    costCenterLabel: 'Charges des projets de la vie',
-    centerKnown: true,
-    budgetName: 'Budget du projet de vie',
-    budgetRole: 'life',
-    cadence: 'once',
-    cadenceLabel: 'Ponctuelle',
-    firstDate: null,
-    endDate: null,
-    note: null,
-    taskId: null,
-    taskTitle: null,
-    revision: null,
-    differenceCents: null,
-    status: 'project',
-    statusLabel: sp.statusLabel,
-    special: true,
-    project: { budgetId: sp.budget.id, coreProjectId: sp.budget.coreProjectId, name: sp.budget.name },
-  });
+  const validatedProjectLines = projectLinesOf('cycle');
+  const patrimoineProjectLines = projectLinesOf('patrimoine');
+  /** Paiements notifiés dans cette période, imputés ailleurs : mémoire bancaire sans seconde charge. */
+  function paymentTrace(b, { from, to }, by = 'realized') {
+    return linkedProjectBudgets(b.state, b.comp.budgetId).flatMap(sb => budget().budgetLines(b.state, [sb.id], { from, to, by })
+      .filter(l => {
+        const o = b.state.operations[l.operationId];
+        const accounting = o && projectAccountingDate(o);
+        return o && isValidatedMove(o, sb) && projectFundingSource(o, sb) === 'cycle' && (accounting < from || accounting > to);
+      }).map(l => ({ ...decorate(b, l), projectCharge: true, fundingSource: 'cycle', accountingDate: projectAccountingDate(b.state.operations[l.operationId]) })));
+  }
 
   const budgetIdsOf = (b, q) => {
     if (q.budgetId) {
       if (!b.budgets.some((x) => x.id === q.budgetId)) fail('NOT_FOUND', 'Budget inconnu pour ce user.', { field: 'budgetId' });
       return [q.budgetId];
     }
+    if (q.scope === WITH_PROJECTS) return [b.comp.budgetId, ...linkedProjectBudgets(b.state, b.comp.budgetId).map(x => x.id)];
     return q.scope === 'consolidated' ? b.budgets.map((x) => x.id) : [b.comp.budgetId];
   };
 
@@ -186,17 +169,120 @@ export function createReads(socle, h) {
 
   // ---------- registre ----------
 
+  /** Traçabilité des projets : mêmes validations, sources et dates que les chiffres BPM.
+   * Cycle = période consultée ; patrimoine = stock cumulé au jour de lecture ; all = vie du projet.
+   * Les prévisions restent séparées du réalisé, les enveloppes et parts ne sont jamais des flux.
+   */
+  function projectFlows(ctx, q = {}) {
+    const source = oneOf('source', q.source, ['cycle', 'patrimoine', 'all'], 'cycle');
+    const b = base(ctx, { periodKey: q.period || undefined });
+    const now = today();
+    const from = source === 'cycle' ? b.period?.start ?? null : null;
+    const to = q.period && b.period ? (b.period.end < now ? b.period.end : now) : now;
+    const until = q.until ? date('until', q.until, { required: true }) : source === 'cycle' ? b.period?.end ?? now : addDays(to, 30);
+    const matches = (s) => source === 'all' || s === source;
+    const rows = [], pending = [], paymentTraces = [], announcementTrace = [];
+    for (const pb of linkedProjectBudgets(b.state, b.comp.budgetId).filter(x => !q.projectId || x.coreProjectId === q.projectId)) {
+      const operations = Object.values(b.state.operations).filter(o => o.budgetId === pb.id && isValidatedMove(o, pb) && matches(projectFundingSource(o, pb)));
+      const dates = operations.map(o => o.date).sort();
+      const selected = new Map(operations.map(o => [o.id, o]));
+      const decorateProject = (line) => ({ ...decorateProjectLine(b, line), projectCharge: true });
+      if (dates.length) {
+        for (const raw of budget().budgetLines(b.state, [pb.id], { from: dates[0], to: dates.at(-1), by: 'planned' })) {
+          const op = selected.get(raw.operationId);
+          if (!op) continue;
+          const accountingDate = projectAccountingDate(op);
+          const line = { ...decorateProject(raw), accountingDate };
+          if ((source !== 'cycle' || b.period) && (!from || accountingDate >= from) && accountingDate <= (source === 'cycle' ? b.period?.end ?? to : to)) rows.push(line);
+          else if (source === 'cycle' && b.period) {
+            if (op.realizedDate >= b.period.start && op.realizedDate <= b.period.end) paymentTraces.push(line);
+            if (op.date >= b.period.start && op.date <= b.period.end) announcementTrace.push(line);
+          }
+        }
+      }
+      const starts = [b.cycle?.startDate, pb.allocationDate, ...Object.values(b.state.operations).filter(o => o.budgetId === pb.id).map(o => o.date), ...Object.values(b.state.recurrences ?? {}).filter(r => r.budgetId === pb.id).map(r => r.firstDate)].filter(Boolean).sort();
+      const pendingFrom = from ?? starts[0] ?? to;
+      if (source === 'cycle' && !b.period) continue;
+      for (const raw of budget().budgetLines(b.state, [pb.id], { from: pendingFrom, to: until, by: 'planned' })) {
+        if (raw.settled) continue;
+        const line = decorateProject(raw);
+        if (!matches(line.fundingSource)) continue;
+        if (line.status !== 'unrealized') pending.push(line);
+      }
+    }
+    rows.sort((x, y) => y.accountingDate.localeCompare(x.accountingDate) || x.label.localeCompare(y.label));
+    pending.sort((x, y) => x.plannedDate.localeCompare(y.plannedDate) || x.label.localeCompare(y.label));
+    const totalsOf = (lines, planned = []) => {
+      const paidCents = sum(lines.filter(l => l.direction === 'charge'), l => l.realizedCents);
+      const receivedCents = sum(lines.filter(l => l.direction === 'income'), l => l.realizedCents);
+      return { paidCents, receivedCents, netCents: receivedCents - paidCents, count: lines.length,
+        pendingPaidCents: sum(planned.filter(l => l.direction === 'charge'), l => l.plannedCents), pendingReceivedCents: sum(planned.filter(l => l.direction === 'income'), l => l.plannedCents), pendingCount: planned.length };
+    };
+    const ids = [...new Set([...rows, ...pending].map(l => l.budgetId))];
+    return { context: contextOf(b), source, from, to: source === 'cycle' ? b.period?.end ?? to : to, pendingUntil: until,
+      totals: totalsOf(rows, pending),
+      bySource: Object.fromEntries(['cycle', 'patrimoine'].map(s => [s, totalsOf(rows.filter(l => l.fundingSource === s), pending.filter(l => l.fundingSource === s))])),
+      projects: ids.map(id => ({ ...b.budgets.find(x => x.id === id), ...totalsOf(rows.filter(l => l.budgetId === id), pending.filter(l => l.budgetId === id)) })),
+      lines: rows, pending, paymentTrace: paymentTraces, announcementTrace };
+  }
+
+  /** Prévision de trésorerie : réalisé + échéances restant à valider, sans enveloppes.
+   * Une échéance réalisée, même à une autre date, sort du prévisionnel. Les cycles clos ne
+   * sont jamais capitalisés une deuxième fois ; les prélèvements déjà validés sont dans le stock.
+   */
+  function financialOutlook(ctx, q = {}) {
+    const b = base(ctx);
+    const horizon = Number(q.horizon ?? 3);
+    if (!Number.isInteger(horizon) || horizon < 1 || horizon > 12) fail('VALIDATION', 'Choisissez entre 1 et 12 cycles.', { field: 'horizon' });
+    const stockCents = summary(ctx).figures['bpm.patrimoineDisponible'].valueCents;
+    if (!b.cs) return { context: contextOf(b), stockCents, waitingCents: 0, waiting: [], cycles: [], pending: [], reason: 'Fixez l’ancrage du cycle pour projeter les budgets. Le patrimoine reste disponible sans cycle.' };
+    const current = b.cs.current;
+    const periods = Array.from({ length: horizon }, (_, i) => periodByIndex(current.index + i, b.cycle.anchorDay));
+    const movements = projectFlows(ctx, { source: 'all', until: periods.at(-1).end });
+    const waiting = [];
+    for (let index = b.cs.firstOpen.index; index < current.index; index++) {
+      const p = periodByIndex(index, b.cycle.anchorDay);
+      const result = summary(ctx, { periodKey: p.key }).figures[RESULT].valueCents;
+      waiting.push({ period: p, resultCents: result });
+    }
+    const waitingCents = waiting.some(w => w.resultCents === null) ? null : sum(waiting, w => w.resultCents);
+    let stock = stockCents === null || waitingCents === null ? null : stockCents + waitingCents;
+    const cycles = periods.map((p, index) => {
+      const planned = budget().budgetLines(b.state, [b.comp.budgetId], { from: p.start, to: p.end, by: 'planned' }).filter(l => !l.settled);
+      const projects = movements.pending.filter(l => l.fundingSource === 'cycle' && l.plannedDate >= p.start && l.plannedDate <= p.end);
+      const wealth = movements.pending.filter(l => l.fundingSource === 'patrimoine' && (index === 0 || l.plannedDate >= p.start) && l.plannedDate <= p.end);
+      const incoming = ls => sum(ls.filter(l => l.direction === 'income'), l => l.plannedCents);
+      const outgoing = ls => sum(ls.filter(l => l.direction === 'charge'), l => l.plannedCents);
+      const actual = index === 0 ? summary(ctx).figures[RESULT].valueCents : 0;
+      const lifeIncomeCents = incoming(planned), lifeChargeCents = outgoing(planned);
+      const projectIncomeCents = incoming(projects), projectChargeCents = outgoing(projects);
+      const wealthIncomeCents = incoming(wealth), wealthChargeCents = outgoing(wealth);
+      const expectedCents = actual === null ? null : actual + lifeIncomeCents - lifeChargeCents + projectIncomeCents - projectChargeCents;
+      const stockBeforeCents = stock;
+      stock = stock === null || expectedCents === null ? null : stock + expectedCents + wealthIncomeCents - wealthChargeCents;
+      return { period: p, actualCents: actual, lifeIncomeCents, lifeChargeCents, projectIncomeCents, projectChargeCents, wealthIncomeCents, wealthChargeCents, expectedCents, stockBeforeCents, stockAfterCents: stock,
+        projects: movements.projects.filter(x => [...projects, ...wealth].some(l => l.budgetId === x.id)).map(x => ({ projectId: x.coreProjectId, name: x.name,
+          cycleCents: incoming(projects.filter(l => l.budgetId === x.id)) - outgoing(projects.filter(l => l.budgetId === x.id)),
+          patrimoineCents: incoming(wealth.filter(l => l.budgetId === x.id)) - outgoing(wealth.filter(l => l.budgetId === x.id)) })) };
+    });
+    return { context: contextOf(b), stockCents, waitingCents, waiting, cycles, pending: movements.pending, reason: null };
+  }
+
   function register(ctx, q = {}) {
     const b = base(ctx, { periodKey: q.period });
     const win = windowOf(b, q);
     const dateBasis = oneOf('dateBasis', q.dateBasis, ['planned', 'realized'], 'planned');
-    const all = budget().budgetLines(b.state, budgetIdsOf(b, q), { from: win.from, to: win.to, by: dateBasis }).map((l) => decorate(b, l));
-    // Budget du projet de vie : ses charges de projet validées comptent ; ses charges spéciales sont présentées à part.
-    if (!q.budgetId && q.scope !== 'consolidated') {
+    const scope = q.budgetId ? 'budget' : oneOf('scope', q.scope, ['principal', 'consolidated', WITH_PROJECTS], 'principal');
+    const principal = scope === 'principal';
+    const ids = budgetIdsOf(b, q);
+    const all = budget().budgetLines(b.state, ids, { from: win.from, to: win.to, by: dateBasis }).map(l => decorateProjectLine(b, l));
+    // La lecture comptable du cycle sélectionne les tâches validées par date d'imputation.
+    if (principal) {
       for (const l of validatedProjectLines(b, { from: win.from, to: win.to, by: dateBasis })) all.push({ ...decorate(b, l), projectCharge: true });
-      if (dateBasis === 'planned') for (const sp of specialProjectLines(b.state, b.comp.budgetId, win)) all.push(specialLine(b, sp));
     }
-    const selectedDate = (line) => dateBasis === 'realized' ? line.realizedDate : line.plannedDate;
+    const selectedDate = (line) => dateBasis === 'realized'
+      ? (principal ? line.accountingDate ?? line.realizedDate : line.realizedDate)
+      : line.plannedDate;
     all.sort((x, y) => selectedDate(x).localeCompare(selectedDate(y)) || x.label.localeCompare(y.label));
     // Nature d'une charge (indispensable, courante, projet) : paramètre `bpm.chargesIndispensables` [P].
     const essentials = essentialRefsOf(socle, b.state);
@@ -209,14 +295,12 @@ export function createReads(socle, h) {
         (!nature || l.nature === nature) &&
         (!q.status || l.status === q.status) &&
         (!q.center || (q.center === '__none__' ? !l.centerKnown : l.costCenterRef === q.center)) &&
-        (!q.category || (q.category === NO_CATEGORY ? !l.categoryId : l.categoryId === q.category)) &&
         (!q.taskId || l.taskId === q.taskId) &&
-        (!needle || [l.label, l.note, l.costCenterLabel, l.categoryLabel].some((t) => (t ?? '').toLowerCase().includes(needle))),
+        (!needle || [l.label, l.note, l.costCenterLabel, l.project?.name, l.taskTitle].some((t) => (t ?? '').toLowerCase().includes(needle))),
     );
-    const groupBy = oneOf('groupBy', q.groupBy, ['center', 'category', 'project', 'nature', 'date', 'none'], 'center');
+    const groupBy = oneOf('groupBy', q.groupBy, ['center', 'project', 'nature', 'date', 'none'], 'center');
     const keyOf = {
       center: (l) => [l.costCenterRef, l.costCenterLabel ?? 'Centre à préciser'],
-      category: (l) => (l.categoryId ? [l.categoryId, l.categoryLabel ?? 'Catégorie retirée'] : [NO_CATEGORY, 'Sans catégorie']),
       project: (l) => [l.budgetId, l.budgetRole === 'life' ? 'Budget du projet de vie' : l.budgetName],
       nature: (l) => (l.nature ? [l.nature, NATURE_LABEL[l.nature]] : ['entrees', 'Entrées']),
       date: (l) => [selectedDate(l), selectedDate(l)],
@@ -239,18 +323,24 @@ export function createReads(socle, h) {
     }
     const open = (l) => ['late', 'due', 'pending'].includes(l.status);
     const counted = lines.filter((l) => !l.special);
-    // Plafonds de la période (budget du projet de vie seulement) : état de chaque centre et de chaque catégorie.
-    const principal = !q.budgetId && q.scope !== 'consolidated';
+    // Plafonds de la période (budget du projet de vie seulement) : état de chaque poste.
     const caps = principal && win.kind === 'period' ? capsBrief(capsRead(b)) : null;
+    const context = contextOf(b, scope);
+    if (scope === 'budget') context.scopeLabel = b.budgets.find(x => x.id === q.budgetId).name;
+    if (scope === WITH_PROJECTS) context.budgets = b.budgets.filter(x => ids.includes(x.id));
     const ordered = [...groups.values()];
     return {
-      context: contextOf(b, q.budgetId ? 'budget' : q.scope === 'consolidated' ? 'consolidated' : 'principal'),
+      context,
       window: win,
+      paymentTrace: principal ? paymentTrace(b, win) : [],
+      announcementTrace: principal ? paymentTrace(b, win, 'planned') : [],
       dateBasis,
-      selection: dateBasis === 'realized'
-        ? 'Les règlements sont sélectionnés par leur date réelle, comme les montants reçu et dépensé du tableau de bord. Les dates prévues restent visibles pour expliquer les décalages.'
-        : 'Les lignes sont sélectionnées par leur date prévue ; le réalisé des synthèses suit la date réelle de règlement.',
-      filters: { q: q.q ?? null, direction: q.direction ?? null, nature, status: q.status ?? null, center: q.center ?? null, category: q.category ?? null, taskId: q.taskId ?? null, budgetId: q.budgetId ?? null, groupBy, dateBasis },
+      selection: scope === WITH_PROJECTS
+        ? 'Les mouvements du quotidien et des projets partagent les mêmes postes. Chaque mouvement indique son imputation. Les totaux portent sur les lignes affichées.'
+        : dateBasis === 'realized'
+        ? 'Les flux des tâches sont sélectionnés par leur date d’imputation au cycle ; la date du paiement reste visible. Les autres flux suivent leur date réelle.'
+        : 'Les lignes sont sélectionnées par leur date prévue ; le réalisé des synthèses suit l’imputation validée des tâches et la date réelle des autres flux.',
+      filters: { q: q.q ?? null, direction: q.direction ?? null, nature, status: q.status ?? null, center: q.center ?? null, taskId: q.taskId ?? null, budgetId: q.budgetId ?? null, groupBy, dateBasis },
       totals: {
         followsFilters: true,
         paidCents: sum(counted.filter((l) => l.settled), (l) => l.realizedCents),
@@ -270,13 +360,8 @@ export function createReads(socle, h) {
         lineCount: lines.length,
         unfilteredCount: all.length,
       },
-      // Par nature : entrées, puis indispensables, courantes et projets ; par catégorie : « Sans catégorie » en dernier.
-      groups:
-        groupBy === 'nature'
-          ? ordered.sort((x, y) => NATURE_ORDER.indexOf(x.key) - NATURE_ORDER.indexOf(y.key))
-          : groupBy === 'category'
-            ? ordered.sort((x, y) => (x.key === NO_CATEGORY) - (y.key === NO_CATEGORY))
-            : ordered,
+      // Par nature : entrées, puis indispensables, courantes et projets.
+      groups: groupBy === 'nature' ? ordered.sort((x, y) => NATURE_ORDER.indexOf(x.key) - NATURE_ORDER.indexOf(y.key)) : ordered,
       caps,
       lines,
     };
@@ -289,8 +374,9 @@ export function createReads(socle, h) {
     if (pb?.role !== 'standard') return null;
     const funded = Number.isInteger(pb.allocationCents) && typeof pb.allocationDate === 'string';
     const operation = view.operationId ? state.operations[view.operationId] : null;
-    const inclusion = view.direction === 'income' ? 'income' : !funded ? 'unfunded' : !view.settled ? 'pending' : operation && isValidatedCharge(operation, pb) ? 'included' : 'before-allocation';
-    return { budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, taskFundingRequired: !!pb.taskFundingRequired, allocationDate: funded ? pb.allocationDate : null, taskTitle: view.taskId ? state.tasks[view.taskId]?.title ?? null : null, inclusion };
+    const inclusion = view.direction === 'income' && (!view.settled || operation && isValidatedMove(operation, pb))
+      ? 'income' : !funded ? 'unfunded' : !view.settled ? 'pending' : operation && isValidatedMove(operation, pb) ? 'included' : 'before-allocation';
+    return { fundingSource: projectFundingSource(operation ?? view, pb), budgetId: pb.id, coreProjectId: pb.coreProjectId, name: pb.name, funded, taskFundingRequired: !!pb.taskFundingRequired, allocationDate: funded ? pb.allocationDate : null, taskTitle: view.taskId ? state.tasks[view.taskId]?.title ?? null : null, inclusion };
   }
 
   function lineDetail(ctx, lineId, { periodKey } = {}) {
@@ -309,7 +395,7 @@ export function createReads(socle, h) {
       line = budget().budgetLines(state, [o.budgetId], { from: o.date, to: o.date, by: 'planned' }).find((l) => l.operationId === o.id);
     }
     if (!line) fail('NOT_FOUND', "Cette échéance n'existe pas (hors des dates de sa définition).", { lineId });
-    const view = decorate(b, line);
+    const view = decorateProjectLine(b, line);
     // Échéances écartées de la définition : elles se rétablissent depuis n'importe quelle échéance de la série.
     const skipped = rec
       ? om
@@ -328,8 +414,9 @@ export function createReads(socle, h) {
     // Même portée que la garde d'écriture BPM : le budget de vie, ou les dates depuis
     // l'attribution d'un projet financé. Un règlement antérieur reste hors de cette enveloppe.
     const pb = state.budgets[view.budgetId];
-    const protectedClosure = (ymd) => ymd && (view.budgetId === b.comp.budgetId || Number.isInteger(pb?.allocationCents) && pb?.allocationDate && ymd >= pb.allocationDate) ? closedPeriodOf(state, b.cycle, ymd) : null;
-    const editClosure = protectedClosure(view.plannedDate) ?? protectedClosure(view.realizedDate);
+    const independentIncome = line.operationId && state.operations[line.operationId]?.independentIncome;
+    const protectedClosure = (ymd) => ymd && (view.budgetId === b.comp.budgetId || independentIncome || Number.isInteger(pb?.allocationCents) && pb?.allocationDate && ymd >= pb.allocationDate) ? closedPeriodOf(state, b.cycle, ymd) : null;
+    const editClosure = pb?.role === 'standard' ? protectedClosure(view.accountingDate ?? view.realizedDate) : protectedClosure(view.plannedDate) ?? protectedClosure(view.realizedDate);
     const canEdit = view.kind === 'occurrence' || !editClosure;
     const timingPeriod = (ymd) => {
       if (!ymd || b.cycle?.state !== 'active') return null;
@@ -345,10 +432,10 @@ export function createReads(socle, h) {
       skipped,
       ids: { lineId, operationId: view.operationId, recurrenceId: view.recurrenceId, budgetId: view.budgetId, taskId: view.taskId },
       project: projectOfLine(state, view),
-      timing: { plannedPeriod: timingPeriod(view.plannedDate), realizedPeriod: timingPeriod(view.realizedDate) },
+      timing: { plannedPeriod: timingPeriod(view.plannedDate), realizedPeriod: timingPeriod(view.realizedDate), accountingPeriod: timingPeriod(view.accountingDate ?? view.realizedDate) },
       actions: {
         canSettle: !view.settled && !(view.direction === 'charge' && pb?.taskFundingRequired && !Number.isInteger(pb.allocationCents)),
-        canCancelSettlement: view.settled && !protectedClosure(view.realizedDate),
+        canCancelSettlement: view.settled && !protectedClosure(view.accountingDate ?? view.realizedDate),
         canEdit,
         // Doublon ou erreur de saisie : une opération ponctuelle s'annule tant que ses dates ne sont pas closes.
         canCancelEntry: view.kind === 'operation' && !view.recurrenceId && !editClosure,
@@ -356,7 +443,7 @@ export function createReads(socle, h) {
         canSkipOccurrence: !!rec && !view.settled,
         canDeleteDefinition: !!rec && !om.list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'realized').length,
         editReason: canEdit ? null : `La période ${editClosure.periodLabel ?? editClosure.periodKey} est close : cette opération est conservée dans son historique.`,
-        settlementPolicy: 'Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
+        settlementPolicy: pb?.role === 'standard' ? 'La date du paiement garde la trace bancaire. Seule la date d’imputation validée affecte le cycle choisi ; le patrimoine est traité hors cycle.' : 'Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
       },
     };
   }
@@ -425,201 +512,9 @@ export function createReads(socle, h) {
   // ---------- plafonds de dépenses : centres de coût et catégories ----------
 
   /** Résumé d'un plafond pour les listes (registre) : plafond, engagé, marge, consommation, dépassement. */
-  const capBrief = (r) => ({ capCents: r.capCents, engagedCents: r.engagedCents, marginCents: r.marginCents, usedPct: r.usedPct, over: r.over, near: r.near });
-  const capsBrief = (report) => ({
-    centers: Object.fromEntries(report.centers.map((c) => [c.ref, capBrief(c)])),
-    categories: Object.fromEntries(report.categories.map((k) => [k.id, { ...capBrief(k), label: k.label, costCenterRef: k.costCenterRef, archived: k.archived }])),
-    overCount: report.overCount,
-  });
+  // Plafonds : voir reads-caps.mjs.
+  const { capsBrief, capsRead, capsReview, spendingCaps, capAlertsFor, previewCaps } = createCapsReads(socle, h, { budget, base, contextOf, statusOf, decorate, validatedProjectLines });
 
-  // Une échéance non réglée d'une période close reste dans l'historique, mais n'est
-  // plus un engagement à payer. Même sélection que les postes et les flux de période.
-  const capPlannedLines = (b, lines) => lines.filter((l) => statusOf(b.state, b.cycle, l) !== 'unrealized');
-
-  /** Plafonds de la période lue : même périmètre que les centres (budget de vie + charges de projet validées). */
-  function capsRead(b, { withLines = false } = {}) {
-    const { start, end } = b.period;
-    const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'realized' }), ...validatedProjectLines(b, { from: start, to: end, by: 'realized' })];
-    const planned = capPlannedLines(b, budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'planned' }));
-    const life = b.state.budgets[b.comp.budgetId];
-    return budget().capReport({
-      centers: budget().costCentersOf(b.state, b.userId),
-      caps: life.capsCents ?? {},
-      categories: budget().categoriesOf(b.state, b.userId, { archived: true }),
-      realized,
-      planned,
-      withLines,
-    });
-  }
-
-  /** Mois entiers écoulés entre deux dates (AAAA-MM-JJ), jamais négatif. */
-  const monthsBetween = (from, to) => {
-    const [fy, fm, fd] = from.split('-').map(Number);
-    const [ty, tm, td] = to.split('-').map(Number);
-    return Math.max(0, (ty - fy) * 12 + (tm - fm) - (td < fd ? 1 : 0));
-  };
-
-  /**
-   * Revue des plafonds de la période : chaque poste et chaque catégorie avec son plafond, et les charges qui,
-   * ensemble, forment son engagé (même calcul que les alertes). Chaque charge porte sa récurrence et son
-   * antériorité, pour décider de ce qu'on peut retirer — la décision reste à l'utilisateur.
-   */
-  function capsReview(ctx, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période à lire.', { field: 'period' });
-    const report = capsRead(b, { withLines: true });
-    const life = b.state.budgets[b.comp.budgetId];
-    const { start, end } = b.period;
-    const now = today();
-    const projectIds = new Set(validatedProjectLines(b, { from: start, to: end, by: 'realized' }).map((l) => l.id));
-    const charges = new Map();
-    const chargeOf = (c) => {
-      const l = c.line;
-      if (!charges.has(l.id)) {
-        const v = decorate(b, l);
-        const rec = l.recurrenceId ? b.state.recurrences[l.recurrenceId] : null;
-        const origin = rec?.firstDate ?? l.plannedDate;
-        const project = projectIds.has(l.id) ? b.budgets.find((x) => x.id === l.budgetId) ?? null : null;
-        charges.set(l.id, {
-          ...v,
-          projectCharge: !!project,
-          project: project ? { budgetId: project.id, coreProjectId: project.coreProjectId, name: project.name } : null,
-          engagedCents: c.engagedCents,
-          engagedDate: c.engagedDate,
-          engagedAs: c.engagedAs,
-          origin,
-          sinceMonths: monthsBetween(origin, now < origin ? origin : now),
-          newThisPeriod: origin >= start && origin <= end,
-          rank: rec ? occurrenceDates(rec, rec.firstDate, l.occurrenceDate ?? l.plannedDate).length : null,
-          perYearCents: rec ? rec.amountCents * PER_YEAR[rec.cadence] : null,
-          monthlyCents: rec ? monthlyAverageCents(rec.amountCents, rec.cadence) : null,
-        });
-      }
-      return l.id;
-    };
-    const row = ({ lines, ...r }) => ({ ...r, chargeIds: lines.sort((x, y) => y.engagedCents - x.engagedCents).map(chargeOf) });
-    const centers = report.centers.map(row);
-    const categories = report.categories.filter((k) => !k.archived || k.lineCount).map(row);
-    const overOf = (r) => (r.over ? -r.marginCents : 0);
-    // À compenser sur les autres postes : le dépassement du poste plafonné ; sans plafond de poste, celui de ses catégories.
-    const toCompensateCents = centers.reduce(
-      (t, c) => t + (c.capCents !== null ? overOf(c) : categories.filter((k) => k.costCenterRef === c.ref).reduce((s, k) => s + overOf(k), 0)),
-      0,
-    );
-    const capped = [...centers, ...categories].filter((r) => r.capCents !== null);
-    const { figures } = h.figuresFor(b.state, b.userId, ['bpm.soldeAttendu', 'bpm.resultatPrevu'], { periodKey: b.period.key });
-    return {
-      context: contextOf(b),
-      lifeBudget: { budgetId: life.id, revision: life.revision, capsCents: life.capsCents ?? {} },
-      centers,
-      categories,
-      charges: Object.fromEntries(charges),
-      totals: {
-        cappedCount: capped.length,
-        overCount: report.overCount,
-        toCompensateCents,
-        // Marge restante sous les plafonds respectés (postes seulement : une catégorie est comprise dans son poste).
-        headroomCents: centers.filter((c) => c.capCents !== null && !c.over).reduce((t, c) => t + c.marginCents, 0),
-        expectedCents: cents(figures['bpm.soldeAttendu'].value),
-        initialCents: cents(figures['bpm.resultatPrevu'].value),
-        // Lecture d'une période terminée ou close : un bilan, plus un budget à piloter (messages au passé, aucun nouvel achat).
-        reading: b.period.status ?? 'current',
-        closedResultCents: b.period.closureId ? (b.state.closures[b.period.closureId]?.resultCents ?? null) : null,
-      },
-    };
-  }
-
-  /** Lecture des plafonds de la période (deux niveaux indépendants, jamais bloquants). */
-  function spendingCaps(ctx, q = {}) {
-    const b = base(ctx, { periodKey: q.period });
-    const life = b.state.budgets[b.comp.budgetId];
-    const report = b.period ? capsRead(b) : { centers: [], categories: [], overCount: 0, alerts: [] };
-    return {
-      context: contextOf(b),
-      lifeBudget: { budgetId: life.id, revision: life.revision, capsCents: life.capsCents ?? {} },
-      ...report,
-      // Catégories retirées : visibles seulement si des dépenses de la période y sont encore rangées.
-      categories: report.categories.filter((k) => !k.archived || k.lineCount),
-    };
-  }
-
-  /**
-   * Alertes de plafond touchées par une dépense, dans la période de sa date (lecture après écriture).
-   * Les périodes futures sont calculées directement ; aucune limite de pagination historique.
-   */
-  function capAlertsFor(ctx, { date: d, costCenterRef, categoryId, direction }) {
-    if (direction !== 'charge' || !d) return [];
-    const b = base(ctx);
-    if (!b.cs) return [];
-    const period = periodContaining(d, b.cycle.anchorDay);
-    if (period.index < b.cs.first.index) return [];
-    const report = capsRead({ ...b, period });
-    return report.alerts.filter((a) => (a.level === 'center' && a.ref === costCenterRef) || (a.level === 'category' && a.id === categoryId));
-  }
-
-  /** Simulation en mémoire : mêmes lignes Budget et mêmes plafonds, aucune écriture ni ID créé. */
-  function previewCaps(ctx, input = {}) {
-    const b = base(ctx);
-    if (!b.cs) fail('FORBIDDEN_BY_RULE', 'Configurez le cycle avant de consulter les plafonds.');
-    const direction = oneOf('direction', input.direction, ['income', 'charge']);
-    const cadence = oneOf('cadence', input.cadence, ['once', ...CADENCES], 'once');
-    const recurring = cadence !== 'once';
-    const kind = recurring ? 'recurrence' : 'operation';
-    const original = input.replaceId ? om.owned(b.state, kind, input.replaceId, b.userId) : null;
-    const recurrence = input.settle && input.recurrenceId ? om.owned(b.state, 'recurrence', input.recurrenceId, b.userId) : null;
-    const budgetId = original?.budgetId ?? recurrence?.budgetId ?? input.budgetId ?? b.comp.budgetId;
-    om.owned(b.state, 'budget', budgetId, b.userId);
-    const category = input.categoryId ? om.owned(b.state, 'chargeCategory', input.categoryId, b.userId) : null;
-    const ref = input.costCenterRef ?? category?.costCenterRef ?? 'std:divers';
-    const amountCents = money('amount', input.amount, { positive: true });
-    const d = date(recurring ? 'firstDate' : 'date', recurring ? input.firstDate : input.date, { required: true });
-    const item = {
-      ...recurrence, ...original, id: original?.id ?? '__preview__', userId: b.userId, budgetId,
-      direction, label: input.label || 'Aperçu', amountCents,
-      costCenterId: ref.startsWith('std:') ? null : ref,
-      standardCostCenter: ref.startsWith('std:') ? ref.slice(4) : null,
-      categoryId: category?.id ?? null,
-    };
-    if (recurring) Object.assign(item, { cadence, firstDate: d, endDate: date('endDate', input.endDate) });
-    else Object.assign(item, {
-      date: d, status: original?.status ?? input.status ?? 'planned',
-      realizedDate: original?.realizedDate ?? (input.status === 'realized' ? date('realizedDate', input.realizedDate ?? d, { required: true }) : null),
-      realizedAmountCents: original?.realizedAmountCents ?? (input.status === 'realized' ? money('realizedAmount', input.realizedAmount ?? input.amount, { positive: true }) : null),
-    });
-    if (input.settle) {
-      item.status = 'realized';
-      item.realizedDate = date('realizedDate', input.realizedDate ?? d, { required: true });
-      item.realizedAmountCents = money('realizedAmount', input.realizedAmount ?? input.amount, { positive: true });
-      if (recurrence) Object.assign(item, { recurrenceId: recurrence.id, occurrenceDate: date('occurrenceDate', input.occurrenceDate, { required: true }) });
-    }
-    // Une définition récurrente passée est évaluée sur la période actuelle ; une saisie future sur sa première période.
-    const effectiveDate = recurring ? (d > b.cs.current.start ? d : b.cs.current.start) : item.realizedDate ?? d;
-    const period = periodContaining(effectiveDate, b.cycle.anchorDay);
-    const table = recurring ? 'recurrences' : 'operations';
-    const state = { ...b.state, [table]: { ...b.state[table], [item.id]: item } };
-    const before = capsRead({ ...b, period });
-    let after = capsRead({ ...b, state, period });
-    // Pour un projet, anticiper la charge avant sa validation dans le budget de vie.
-    if (budgetId !== b.comp.budgetId) {
-      const window = { from: period.start, to: period.end };
-      const candidate = l => recurring ? l.recurrenceId === item.id : l.operationId === item.id;
-      const keep = l => !candidate(l);
-      const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'realized' }), ...validatedProjectLines(b, { ...window, by: 'realized' }).filter(keep), ...budget().budgetLines(state, [budgetId], { ...window, by: 'realized' }).filter(candidate)];
-      const planned = capPlannedLines({ ...b, state }, [...budget().budgetLines(b.state, [b.comp.budgetId], { ...window, by: 'planned' }), ...budget().budgetLines(state, [budgetId], { ...window, by: 'planned' }).filter(candidate)]);
-      after = budget().capReport({ centers: budget().costCentersOf(state, b.userId), categories: budget().categoriesOf(state, b.userId, { archived: true }), caps: state.budgets[b.comp.budgetId].capsCents ?? {}, realized, planned });
-    }
-    const relevant = r => ({
-      center: r.centers.find(c => c.ref === ref) ?? null,
-      category: r.categories.find(c => c.id === category?.id) ?? null,
-    });
-    return { mutation: false, period, before: relevant(before), after: relevant(after),
-      alerts: direction === 'charge' ? after.alerts.filter(a => a.level === 'center' ? a.ref === ref : a.id === category?.id) : [],
-      note: budgetId !== b.comp.budgetId ? 'Impact estimé après validation de la charge du projet.' : null };
-  }
-
-  /** Flux d'une période : réalisé à sa date réelle, échéances non réglées à leur date prévue.
-   * Le registre garde sa sélection par date prévue ; ces listes expliquent les chiffres des postes et revenus.
-   */
   function periodFlow(b, { direction, center } = {}) {
     const { start, end } = b.period;
     const keep = (l) => (!direction || l.direction === direction) && (!center || (l.costCenterId ?? `std:${l.standardCostCenter}`) === center);
@@ -656,7 +551,7 @@ export function createReads(socle, h) {
     const row = read.rows.find((x) => x.ref === c.ref);
     // Périmètre du budget de vie, avec ses charges de projet validées (mêmes lignes que le dépensé du poste).
     const flow = periodFlow(b, { center: c.ref });
-    // Plafonds du poste : celui du centre et ceux de ses catégories, lus indépendamment (jamais bloquants).
+    // Plafond du poste (jamais bloquant).
     const report = c.direction === 'charge' ? capsRead(b) : null;
     const life = b.state.budgets[b.comp.budgetId];
     return {
@@ -665,7 +560,8 @@ export function createReads(socle, h) {
       basis: read.basis,
       ...flow,
       cap: report?.centers.find((x) => x.ref === c.ref) ?? null,
-      categories: report ? report.categories.filter((k) => k.costCenterRef === c.ref && (!k.archived || k.lineCount)) : [],
+      // Seuils des niveaux de consommation (Budget, seule source) : jauge et fenêtre du plafond.
+      levels: CAP_LEVEL_PCT,
       lifeBudget: { budgetId: life.id, revision: life.revision },
     };
   }
@@ -867,13 +763,49 @@ export function createReads(socle, h) {
 
   // ---------- projection et simulation ----------
 
+  function savingsProjection(b, v, { horizonYears, ratePct, inflationPct }) {
+    const last = h.closuresOf(b.state, b.cycle?.id).at(-1);
+    const patrimoine = b.state.patrimoines[b.comp.patrimoineId];
+    const startDate = last?.periodEnd ?? patrimoine.openingDate ?? today();
+    let startCents = patrimoine.openingStockCents ?? null;
+    if (last) {
+      const accounting = h.metricContext(b.state, b.userId, { periodKey: last.periodKey });
+      startCents = last.bilan?.patrimoine?.stockAfterCents ??
+        cents(metrics.evaluate({ ...accounting, asOf: startDate }, 'bpm.patrimoineDisponible').value);
+    }
+    const anchor = b.cycle?.anchorDay ?? 1;
+    const startingPeriod = periodContaining(startDate, anchor);
+    const first = Math.max(startingPeriod.index, b.cs?.first.index ?? startingPeriod.index);
+    const checkpoints = [startDate];
+    for (let year = 1; year <= horizonYears; year++) {
+      const ymd = `${Number(startDate.slice(0, 4)) + year}${startDate.slice(4)}`;
+      checkpoints.push(last ? periodByIndex(startingPeriod.index + 12 * year, anchor).end
+        : isCalendarDate(ymd) ? ymd : ymd.slice(0, -2) + '28');
+    }
+    const cycleEnds = [];
+    for (let index = first; ; index++) {
+      const { end } = periodByIndex(index, anchor);
+      if (end > checkpoints.at(-1)) break;
+      if (end > startDate) cycleEnds.push(end);
+    }
+    return {
+      basis: 'savings-goal', horizonYears, ratePct: ratePct ?? 0, inflationPct, inflationSource: v.inflationSource,
+      contributionCents: v.savingsTargetCents, contributionSource: 'Objectif d’épargne', cadence: 'monthly', perYear: 12,
+      startCents, startDate, startPeriodKey: last?.periodKey ?? null,
+      stockReason: startCents === null ? 'Patrimoine de départ à renseigner.' : null,
+      timeline: { startDate, cycleEnds, checkpoints },
+    };
+  }
+
   function hypotheses(b, q = {}) {
     const v = visionOf(b.comp);
-    const bt = budgetType({ userId: b.userId });
-    const stock = metrics.evaluate(h.metricContext(b.state, b.userId, {}), 'bpm.patrimoineConstitue');
-    const horizonYears = q.horizon !== undefined && q.horizon !== '' ? Math.min(Math.max(Math.round(Number(q.horizon)), 1), 80) : v.horizonYears;
+    const horizon = Number(q.horizon);
+    const horizonYears = q.horizon !== undefined && q.horizon !== '' && Number.isFinite(horizon)
+      ? Math.min(Math.max(Math.round(horizon), 1), 80) : v.horizonYears;
     const ratePct = q.rate !== undefined && q.rate !== '' ? percent('rate', q.rate, { min: -50, max: 50 }) : v.annualReturnPct;
     const inflationPct = q.inflation !== undefined && q.inflation !== '' ? percent('inflation', q.inflation, { min: -20, max: 50 }) : v.inflationPct;
+    if (q.basis === 'savings-goal') return savingsProjection(b, v, { horizonYears, ratePct, inflationPct });
+    const stock = metrics.evaluate(h.metricContext(b.state, b.userId, {}), 'bpm.patrimoineDisponible');
     let contributionCents = v.contributionCents;
     let contributionSource = 'Apport saisi';
     let cadence = v.contributionCadence ?? 'monthly';
@@ -881,6 +813,7 @@ export function createReads(socle, h) {
       contributionCents = queryMoney('contribution', q.contribution, { signed: true });
       contributionSource = 'Apport de la simulation';
     } else if (contributionCents === null) {
+      const bt = budgetType({ userId: b.userId });
       contributionCents = bt.empty ? 0 : bt.averageNetCents;
       contributionSource = bt.empty ? 'Aucun apport : budget type vide' : 'Moyenne mensuelle du budget type';
       cadence = 'monthly';
@@ -890,14 +823,15 @@ export function createReads(socle, h) {
 
   function projection(ctx, q = {}) {
     const b = base(ctx);
-    const hy = hypotheses(b, q);
+    const { timeline, ...hy } = hypotheses(b, q);
     const goals = goalsOf(b.state, b.userId).map((g) => ({ id: g.id, label: g.label, type: g.type, date: g.date, targetTodayCents: g.targetTodayCents }));
-    const startYear = Number(today().slice(0, 4));
-    if (hy.ratePct === null) {
-      return { context: contextOf(b), hypotheses: hy, status: 'missing-hypothesis', reason: 'Rendement annuel à renseigner (Objectifs et avenir › Hypothèses).', rows: [], goals: [] };
+    const startYear = Number((hy.startDate ?? today()).slice(0, 4));
+    if (hy.contributionCents === null || hy.ratePct === null) {
+      const reason = hy.contributionCents === null ? 'Fixez votre objectif d’épargne par cycle pour calculer la projection.' : 'Rendement annuel à renseigner (Objectifs et avenir › Hypothèses).';
+      return { context: contextOf(b), hypotheses: hy, status: 'missing-hypothesis', reason, rows: [], goals: [] };
     }
     const extraCents = q.extra !== undefined && q.extra !== '' ? queryMoney('extra', q.extra, { signed: true }) : 0;
-    const run = (contribution) => socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: contribution, perYear: hy.perYear, goals });
+    const run = (contribution) => socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: contribution, perYear: hy.perYear, goals, timeline });
     const result = run(hy.contributionCents + extraCents);
     const out = { context: contextOf(b), hypotheses: { ...hy, extraCents }, label: 'Estimation', ...result };
     if (extraCents) {
@@ -909,7 +843,7 @@ export function createReads(socle, h) {
     const closures = h.closuresOf(b.state, b.cycle?.id);
     if (closures.length >= 2 && hy.contributionSource !== 'Moyenne réelle des clôtures') {
       const avg = Math.round(sum(closures, (c) => c.resultCents) / closures.length);
-      const alt = socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: avg, perYear: 12, goals });
+      const alt = timeline ? run(avg) : socle.modules.patrimoine.project({ startCents: hy.startCents, startYear, horizonYears: hy.horizonYears, ratePct: hy.ratePct, inflationPct: hy.inflationPct, contributionCents: avg, perYear: 12, goals });
       out.comparison = { label: 'Apport fondé sur la moyenne réelle des clôtures', contributionCents: avg, closures: closures.length, rows: alt.rows, keyFigures: alt.keyFigures };
     } else {
       out.comparison = { label: 'Comparaison indisponible', reason: 'Au moins deux clôtures sont nécessaires.' };
@@ -921,21 +855,31 @@ export function createReads(socle, h) {
 
   /** Même constructeur Budget que l'écriture, sur une copie de l'état, puis mêmes métriques que la synthèse (audit ARCH-01). */
   function previewEntry(ctx, input = {}) {
-    const b = base(ctx);
-    if (!b.period) fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période pour l’aperçu.');
+    let b = base(ctx);
     const cadence = oneOf('cadence', input.cadence, ['once', ...CADENCES], 'once');
     const entry = { ...input, label: input.label || 'Aperçu', budgetId: input.budgetId || b.comp.budgetId };
     const { draft } = om.simulate('previewEntry', ctx, entry, (tx) => (cadence === 'once' ? budget().buildOperation(tx, entry) : budget().buildRecurrence(tx, entry)));
-    const keys = ['bpm.soldeAttendu', RESULT, 'bpm.patrimoineConstitue'];
+    const project = b.state.budgets[entry.budgetId];
+    const source = project?.role === 'standard' ? projectFundingSource(entry, project) : 'cycle';
+    const accountingDate = input.accountingDate || input.realizedDate || input.date || input.firstDate;
+    // Une validation d'octobre doit montrer octobre, même si le formulaire est ouvert en novembre.
+    if (cadence === 'once' && source === 'cycle' && b.cycle?.state === 'active' && accountingDate && accountingDate <= today()) {
+      const target = periodContaining(accountingDate, b.cycle.anchorDay);
+      if (b.cs.find(target.key)) b = base(ctx, { periodKey: target.key });
+    }
+    if (!b.period && source !== 'patrimoine') fail('FORBIDDEN_BY_RULE', 'Cycle à configurer : aucune période pour l’aperçu.');
+    const keys = ['bpm.soldeAttendu', RESULT, 'bpm.patrimoineDisponible'];
     const read = (state) => {
-      const { figures } = h.figuresFor(state, b.userId, keys, { periodKey: b.period.key });
+      const { figures } = h.figuresFor(state, b.userId, keys, { periodKey: b.period?.key });
       const [expectedCents, netCents, stock] = keys.map((k) => cents(figures[k].value));
-      return { netCents, expectedCents, stockEstimateCents: stock === null || expectedCents === null ? null : stock + expectedCents };
+      return { netCents, expectedCents, stockCents: stock, stockEstimateCents: stock === null || expectedCents === null ? null : stock + expectedCents };
     };
     const before = read(b.state);
     return {
       context: contextOf(b),
       mutation: false,
+      source,
+      accountingDate,
       before,
       after: read(draft),
       note: before.stockEstimateCents === null && before.expectedCents !== null ? 'Stock à renseigner : estimation du Patrimoine non calculable.' : null,
@@ -943,8 +887,8 @@ export function createReads(socle, h) {
   }
 
   return {
-    summary, register, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, previewCaps, incomes, balance, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
-    // Outils partagés avec la gestion du projet de vie (`life.mjs`) : même contexte, mêmes états, mêmes lignes.
-    base, contextOf, decorate, validatedProjectLines,
+    summary, register, projectFlows, financialOutlook, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, previewCaps, incomes, balance, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
+    // Outils partagés avec la gestion du projet de vie (`life.mjs`) et la clôture : même contexte, mêmes états, mêmes lignes.
+    base, contextOf, decorate, decorateProjectLine, validatedProjectLines, patrimoineProjectLines, capsRead,
   };
 }

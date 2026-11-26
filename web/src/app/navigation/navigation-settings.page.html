@@ -1,0 +1,477 @@
+<div class="nav-workbench">
+  <header class="studio-header">
+    <div>
+      <span class="studio-kicker">RJS · NAVIGATION STUDIO</span>
+      <h1>Composez votre navigation.</h1>
+      <p>BPM · Sections, pages, sous-pages et contenu, dans un même atelier.</p>
+    </div>
+    <div class="studio-publish">
+      <span [class.pending]="dirty()">{{
+        dirty() ? '● Modifications non publiées' : '● À jour'
+      }}</span
+      ><button (click)="undo()" [disabled]="!history().length || busy()">↶ Annuler</button
+      ><button
+        class="publish"
+        (click)="save()"
+        [disabled]="!dirty() || busy() || !nav.ready() || validationErrors().length > 0"
+      >
+        {{ busy() ? 'Enregistrement…' : 'Enregistrer la configuration' }}
+      </button>
+    </div>
+  </header>
+  @if (message() || nav.error()) {
+    <p class="studio-notice" role="status">{{ message() || nav.error() }}</p>
+  }
+  @if (validationErrors().length) {
+    <div class="studio-errors" role="alert">
+      @for (error of validationErrors(); track error) {
+        <p>{{ error }}</p>
+      }
+    </div>
+  }
+  @for (audit of audits(); track audit.app.module) {
+    <section class="studio-audit" [class.has-findings]="audit.findings.length" aria-label="Contrôles du moteur de navigation">
+      <strong>{{ audit.findings.length ? '!' : '✓' }} {{ audit.app.label }}</strong>
+      <span>{{ audit.app.sections.length }} sections · {{ audit.subpages }} sous-pages ·
+        {{ audit.findings.length ? audit.findings.length + ' point(s) à reprendre' : 'chaque page a son accueil, ses actions et ses sections' }}</span>
+      @for (f of audit.findings; track f.at + f.rule) {
+        <small>{{ f.rule }} · {{ f.message }}</small>
+      }
+    </section>
+  }
+  <div class="studio-layout">
+    <aside class="studio-explorer">
+      <header>
+        <span class="studio-kicker">01 · EXPLORER</span>
+        <h2>L’architecture BPM</h2>
+      </header>
+      <input
+        type="search"
+        aria-label="Rechercher dans la navigation"
+        placeholder="Rechercher une page, une action…"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+      <div class="tree-tools">
+        <button (click)="expandAll(true)">Tout replier</button
+        ><button (click)="expandAll(false)">Tout déplier</button>
+      </div>
+      @for (root of parts(); track root.key) {
+        <ng-container *ngTemplateOutlet="tree; context: { $implicit: root }" />
+      }
+    </aside>
+    <section class="studio-canvas" aria-label="Composition de la navigation">
+      <div class="canvas-toolbar">
+        <div>
+          <span class="studio-kicker">02 · COMPOSER</span>
+          <h2>{{ selected().label }}</h2>
+        </div>
+        <div>
+          <button [attr.aria-pressed]="canvasMode() === 'map'" (click)="canvasMode.set('map')">
+            Structure</button
+          ><button
+            [attr.aria-pressed]="canvasMode() === 'preview'"
+            (click)="canvasMode.set('preview')"
+          >
+            Aperçu
+          </button>
+        </div>
+      </div>
+      <p class="selection-path">
+        {{ selected().role }} <span> / {{ selected().key }}</span>
+      </p>
+      @if (canvasMode() === 'map') {
+        <div class="canvas-parent">
+          <span>{{ nodeKind(selected()) }}</span
+          ><strong>{{ displayNode(selected()) }}</strong>
+          <p>
+            {{
+              selected().key.includes('#main')
+                ? 'Accueil de la page · ses liens ouvrent des actions.'
+                : 'Sélectionnez un enfant pour le configurer. Déplacez ses voisins pour composer le parcours.'
+            }}
+          </p>
+        </div>
+        <div
+          class="canvas-children"
+          cdkDropList
+          [cdkDropListDisabled]="!!search()"
+          (cdkDropListDropped)="drop(selected(), $event)"
+        >
+          @for (child of children(selected()); track child.key; let index = $index) {
+            <article cdkDrag [cdkDragDisabled]="!!child.fixed || !!search()" class="canvas-node">
+              <span class="node-grip" cdkDragHandle>{{ child.fixed ? '⌂' : '⠿' }}</span
+              ><button class="node-select" (click)="selectNode(child)">
+                <small>{{ nodeKind(child) }}</small
+                ><strong>{{ displayNode(child) }}</strong
+                ><span>{{ child.children?.length ?? 0 }} élément(s) · {{ child.role }}</span>
+              </button>
+              <div class="node-move">
+                @if (!child.fixed) {
+                  <button
+                    (click)="step(selected(), child, index, -1)"
+                    [disabled]="index === 0 || !!search()"
+                    aria-label="Monter"
+                  >
+                    ↑</button
+                  ><button
+                    (click)="step(selected(), child, index, 1)"
+                    [disabled]="index >= movable(selected()) - 1 || !!search()"
+                    aria-label="Descendre"
+                  >
+                    ↓
+                  </button>
+                }
+              </div>
+            </article>
+          } @empty {
+            <div class="canvas-empty">
+              <strong>Un point d’arrivée dans le parcours</strong>
+              <p>
+                Ce lien
+                {{
+                  selected().key.includes('#')
+                    ? 'rejoint une section de contenu ou l’accueil de la page'
+                    : 'ouvre sa destination'
+                }}. Personnalisez son libellé et son apparence à droite.
+              </p>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="preview-shell" [class.preview-narrow]="previewNarrow()">
+          <header>
+            <span>APERÇU · {{ surfaceLabel(surface()) }}</span
+            ><button (click)="previewNarrow.set(!previewNarrow())">
+              {{ previewNarrow() ? 'Large' : 'Étroit' }}
+            </button>
+          </header>
+          <div class="preview-items" [class.horizontal]="surface() === 'secondary'">
+            @for (state of previewStates; track state.key) {
+              <button [ngStyle]="sampleStyle(state.key)">
+                {{ displayNode(selected()) }}<small>{{ state.label }}</small>
+              </button>
+            }
+          </div>
+          <p>
+            Simulation du niveau « {{ levelLabel() }} ». Les modifications restent en brouillon
+            jusqu’à leur application.
+          </p>
+        </div>
+      }
+      <details class="studio-review">
+        <summary>
+          {{ changeCount() }} groupe(s) de modifications · comparer avant d’appliquer
+        </summary>
+        @for (change of changes(); track change.key) {
+          <article>
+            <h3>{{ change.label }}</h3>
+            <code>{{ change.key }}</code>
+            <div class="diff-columns">
+              <div>
+                <span>Enregistré</span>
+                <pre>{{ revisionValue(change.key, false) }}</pre>
+              </div>
+              <div>
+                <span>Brouillon</span>
+                <pre>{{ revisionValue(change.key, true) }}</pre>
+              </div>
+            </div>
+          </article>
+        }
+        <div class="review-actions">
+          <button (click)="exportBpm()">Exporter le brouillon JSON</button
+          ><button (click)="discard()" [disabled]="!dirty() || busy()">
+            Abandonner les modifications
+          </button>
+        </div>
+      </details>
+    </section>
+    <aside class="studio-inspector">
+      <header>
+        <span class="studio-kicker">03 · AJUSTER</span>
+        <h2>Propriétés</h2>
+      </header>
+      <nav class="inspector-tabs">
+        @for (tab of propertyTabs; track tab.key) {
+          <button
+            [attr.aria-pressed]="propertyTab() === tab.key"
+            (click)="
+              propertyTab.set(tab.key); tab.key === 'style' ? canvasMode.set('preview') : null
+            "
+          >
+            {{ tab.label }}
+          </button>
+        }
+      </nav>
+      <fieldset [disabled]="busy() || !nav.ready()">
+        @if (propertyTab() === 'identity') {
+          <label
+            >Libellé du lien<input
+              maxlength="100"
+              [placeholder]="selected().label"
+              [ngModel]="settings().labels?.[selected().key] ?? ''"
+              (ngModelChange)="setLabel(selected().key, $event)"
+          /></label>
+          <p class="inspector-help">Vide : le libellé d’origine ou hérité s’applique.</p>
+          <div class="identity-card">
+            <span>{{ nodeKind(selected()) }}</span
+            ><strong>{{ selected().role }}</strong
+            ><code>{{ selected().link || selected().key }}</code>
+          </div>
+          <h3>Présent dans</h3>
+          <div class="surface-chips">
+            @for (zone of selected().surfaces; track zone) {
+              <button
+                (click)="chooseSurface(zone); propertyTab.set('style'); canvasMode.set('preview')"
+              >
+                {{ surfaceLabel(zone) }} ↗
+              </button>
+            }
+          </div>
+          <h3>Héritage</h3>
+          <ng-container *ngTemplateOutlet="scopeEditor" /><button
+            class="text-button"
+            (click)="setLabel(selected().key, '')"
+          >
+            Retrouver le libellé hérité
+          </button>
+          <p class="inspector-help">
+            Les rattachements et les accueils se règlent dans Relations. L’ordre des liens se règle
+            au centre.
+          </p>
+        }
+        @if (propertyTab() === 'relations') {
+          <h3>{{ displayNode(selected()) }}</h3>
+          @if (parentChoices().length) {
+            <label
+              >Rattaché à
+              <select [ngModel]="selectedRelation().parent" (ngModelChange)="setParent($event)">
+                @for (parent of parentChoices(); track parent.key) {
+                  <option [value]="parent.key">
+                    {{ nodeKind(parent) }} · {{ displayNode(parent) }}
+                  </option>
+                }
+              </select>
+            </label>
+          }
+          @if (homeChoices().length) {
+            <label
+              >Accueil sélectionné à l’ouverture
+              <select [ngModel]="selectedRelation().home ?? ''" (ngModelChange)="setHome($event)">
+                @for (child of homeChoices(); track child.key) {
+                  <option [value]="child.key">{{ displayNode(child) }}</option>
+                }
+              </select>
+            </label>
+          }
+          <h3>Zones d’affichage</h3>
+          @for (zone of surfaceNames; track zone.id) {
+            <label class="relation-surface">
+              <input
+                type="checkbox"
+                [checked]="selected().surfaces.includes(zone.id)"
+                (change)="setSurface(zone.id, $any($event.target).checked)"
+              />
+              {{ zone.label }}
+            </label>
+          }
+          <p class="inspector-help">
+            Le déplacement emporte les enfants du lien. « Simuler » reconstruit toute la navigation
+            BPM à partir du brouillon.
+          </p>
+          <button type="button" class="text-button" (click)="resetRelations()">
+            Rétablir les relations du catalogue BPM
+          </button>
+        }
+        @if (propertyTab() === 'style') {
+          <label
+            >Zone de navigation<select
+              [ngModel]="surface()"
+              (ngModelChange)="chooseSurface($event)"
+            >
+              @for (zone of surfaceNames; track zone.id) {
+                <option [value]="zone.id">{{ zone.label }}</option>
+              }
+            </select></label
+          ><label
+            >Niveau<select [ngModel]="selectedLevel()" (ngModelChange)="selectedLevel.set($event)">
+              @for (level of availableLevels(); track level.id) {
+                <option [value]="level.id">{{ level.label }}</option>
+              }
+            </select></label
+          ><ng-container *ngTemplateOutlet="scopeEditor" />
+          <div class="preset-row">
+            <button (click)="preset('compact')">Compact</button
+            ><button (click)="preset('comfortable')">Confort</button
+            ><button (click)="preset('contrast')">Contrasté</button>
+          </div>
+          <div class="style-transfer">
+            <button (click)="copyStyle()">Copier ce style</button
+            ><button (click)="pasteStyle()" [disabled]="!copiedStyle()">Coller le style</button>
+          </div>
+          <p class="inspector-help">
+            Le style concerne ce niveau dans la zone choisie. La portée permet une exception par
+            page.
+          </p>
+          <details open>
+            <summary>Dimensions et typographie</summary>
+            <div class="property-grid">
+              @for (field of numericFields; track field.key) {
+                <label
+                  >{{ field.label
+                  }}<input
+                    type="number"
+                    [min]="field.min"
+                    [max]="field.max"
+                    [step]="field.step"
+                    [placeholder]="inherited(selectedLevel())[field.key]?.toString() || 'Hérité'"
+                    [ngModel]="style(selectedLevel())[field.key] ?? ''"
+                    (ngModelChange)="setStyle(selectedLevel(), field.key, $event)"
+                  /><small>{{ field.min }}–{{ field.max }} {{ field.unit }}</small></label
+                >
+              }
+            </div>
+          </details>
+          <details open>
+            <summary>Couleurs et états</summary>
+            @for (color of colors; track color.key) {
+              <label class="color-property"
+                >{{ color.label
+                }}<span
+                  ><input
+                    type="color"
+                    [attr.aria-label]="color.label"
+                    [ngModel]="preview(selectedLevel())[color.key] || '#24344b'"
+                    (ngModelChange)="setStyle(selectedLevel(), color.key, $event)" /><input
+                    [attr.aria-label]="color.label + ' hexadécimal'"
+                    maxlength="7"
+                    placeholder="Hérité"
+                    [ngModel]="style(selectedLevel())[color.key] ?? ''"
+                    (ngModelChange)="setStyle(selectedLevel(), color.key, $event)" /></span
+              ></label>
+            }
+          </details>
+          <div class="style-transfer">
+            <button (click)="resetLevel()">Hériter pour ce niveau</button
+            ><button (click)="resetSurface()">Hériter pour toute la zone</button>
+          </div>
+        }
+        @if (propertyTab() === 'behavior') {
+          <h3>Listes verticales des onglets</h3>
+          <p class="inspector-help">
+            Une seule mécanique : l’onglet d’accueil déroule ses actions, les autres onglets
+            déroulent les sections de leur sous-page. Le titre de section suit la lecture sous le
+            cadre du haut.
+          </p>
+          <ng-container *ngTemplateOutlet="scopeEditor" /><label
+            >Actions de l’accueil<select
+              [ngModel]="settings().contentMenu?.homeTrigger ?? ''"
+              (ngModelChange)="setMenu('homeTrigger', $event)"
+            >
+              <option value="">Héritée</option>
+              <option value="click">Clic</option>
+              <option value="hover">Survol et clic</option>
+            </select></label
+          ><label
+            >Titre de section<select
+              [ngModel]="settings().contentMenu?.band ?? ''"
+              (ngModelChange)="setMenu('band', $event)"
+            >
+              <option value="">Hérité</option>
+              <option value="on">Affiché sous le cadre</option>
+              <option value="off">Masqué</option>
+            </select></label
+          ><label
+            >Numérotation<select
+              [ngModel]="settings().contentMenu?.numbers ?? ''"
+              (ngModelChange)="setMenu('numbers', $event)"
+            >
+              <option value="">Héritée</option>
+              <option value="on">Sections numérotées</option>
+              <option value="off">Sans numéro</option>
+            </select></label
+          ><label
+            >Sections des sous-pages<select
+              [ngModel]="settings().contentMenu?.trigger ?? ''"
+              (ngModelChange)="setMenu('trigger', $event)"
+            >
+              <option value="">Héritée</option>
+              <option value="hover">Survol et clic</option>
+              <option value="click">Clic uniquement</option>
+            </select></label
+          ><label
+            >Largeur du menu<input
+              type="number"
+              min="220"
+              max="480"
+              [placeholder]="menuPreview().width.toString()"
+              [ngModel]="settings().contentMenu?.width ?? ''"
+              (ngModelChange)="setMenu('width', $event)"
+            /><small>220–480 px</small></label
+          ><label
+            >Délai avant fermeture<input
+              type="number"
+              min="0"
+              max="600"
+              [placeholder]="menuPreview().closeDelay.toString()"
+              [ngModel]="settings().contentMenu?.closeDelay ?? ''"
+              (ngModelChange)="setMenu('closeDelay', $event)"
+            /><small>0–600 ms</small></label
+          >
+        }
+      </fieldset>
+    </aside>
+  </div>
+  <rjs-navigation-live-preview [configuration]="draft()" [pages]="previewPages()" />
+  <ng-template #scopeEditor
+    ><label
+      >Appliquer à<select [ngModel]="scopeType()" (ngModelChange)="scopeType.set($event)">
+        <option value="module">Tout BPM</option>
+        <option value="page">Une page ou un modèle de fiche</option>
+      </select></label
+    >
+    @if (scopeType() === 'page') {
+      <label
+        >Page de référence<select [ngModel]="pageId()" (ngModelChange)="pageId.set($event)">
+          @for (page of pages(); track page.link) {
+            <option [value]="page.link">{{ page.label }}</option>
+          }
+        </select></label
+      >
+    }
+    <p class="scope-note">
+      Site → BPM → Page ·
+      {{ scopeType() === 'module' ? 'Réglage commun à BPM' : 'Exception pour cette page' }}
+    </p></ng-template
+  >
+  <ng-template #tree let-parent
+    ><ul class="explorer-tree">
+      @for (node of children(parent); track node.key) {
+        <li>
+          <div class="tree-row" [class.selected]="selected().key === node.key">
+            @if (node.children?.length) {
+              <button
+                type="button"
+                class="tree-toggle"
+                (click)="toggleNode(node)"
+                [attr.aria-expanded]="!folded(node)"
+                [attr.aria-label]="(folded(node) ? 'Déplier ' : 'Replier ') + displayNode(node)"
+              >
+                {{ folded(node) ? '›' : '⌄' }}
+              </button>
+            } @else {
+              <span class="tree-leaf">·</span>
+            }
+            <button class="tree-label" (click)="selectNode(node)">
+              <span>{{ displayNode(node) }}</span
+              ><small>{{ nodeKind(node) }}</small>
+            </button>
+          </div>
+          @if (node.children?.length && !folded(node)) {
+            <ng-container *ngTemplateOutlet="tree; context: { $implicit: node }" />
+          }
+        </li>
+      }</ul
+  ></ng-template>
+</div>

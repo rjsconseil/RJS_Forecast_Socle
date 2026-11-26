@@ -1,18 +1,25 @@
+import { BpmEnvelopeDialog } from './funding-dialogs';
+import { BpmAmount } from '../ui/amount';
+import { BPM_CORE_LINKS } from '../ui/bpm-page-path';
+import { BpmCompass } from '../ui/compass';
 import { injectPageWorkspace } from '../../plan/page-workspace';
-import { BpmPageBanner, BpmPageFocus } from '../ui';
+import { BpmPageBanner, BpmPageContext, BpmPageFocus, bpmQueryState } from '../ui';
+import { BpmProjectEditor, BpmTaskEditor } from './project-editors';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BpmRouterLink } from '../ui/bpm-router-link';
 import { newRequestKey, toApiError } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
+import { BpmApi } from '../data/bpm-api.service';
 import { ProjectFunding } from '../ui/project-funding';
 import {
   BpmProjectCard,
   BpmProjectsOverview,
+  ProjectBudget,
   ProjectOverrun,
-} from '../../core/bpm-projects.models';
+} from '../data/bpm-projects.models';
 import { COLUMNS, PRIORITY_LABEL, TaskStatus } from '../../core/models';
-import { CentsPipe, ShortDatePipe } from '../../core/format';
+import { CentsPipe } from '../../core/format';
 import {
   displayDate,
   dueTitle,
@@ -31,346 +38,51 @@ import { BpmBudgetMeterComponent, BpmOverrunRequestComponent } from './project-p
  */
 @Component({
   selector: 'app-bpm-projects',
-  imports: [
+  providers: [BpmPageContext],
+  imports: [BpmAmount, BpmCompass,
+    BpmProjectEditor, BpmTaskEditor,
     BpmPageBanner,
     BpmProjectOverviewSummaryComponent,
-    RouterLink,
+    BpmRouterLink,
     CentsPipe,
-    ShortDatePipe,
     BpmModal,
     BpmBudgetMeterComponent,
+    BpmEnvelopeDialog,
     BpmOverrunRequestComponent,
   ],
-  styleUrl: './projects.page.scss',
-  template: `
-    <div class="page page-wide landing-page section-home bpm-projects">
-      <bpm-page-banner
-        class="life-projects-banner"
-        title="Projets de la vie"
-        lead="Votre projet de vie finance vos projets de la vie. Repérez les projets à préparer, financer ou poursuivre, puis agissez sur leur budget et leurs tâches."
-        [focus]="pageFocus()"
-        [scope]="toolbarScope()"
-        [result]="toolbarResult()"
-        toolsLabel="Organiser les projets de la vie"
-      >
-        <div primary>
-          @if (data(); as d) {
-            @if (d.life.pendingRequests.length || d.life.billable.length) {
-              <button type="button" class="btn btn-primary" (click)="cycleOpen.set(true)">Traiter les autorisations et le cycle</button>
-            } @else if (d.life.taskRequests.length) {
-              <a class="btn btn-primary" routerLink="/app/gestion-projet" [queryParams]="{ decisions: 'tasks' }">Décider {{ d.life.taskRequests.length }} demande(s)</a>
-            } @else if (unfundedCount()) {
-              <a class="btn btn-primary" routerLink="/app/gestion-projet" [queryParams]="{ filter: 'unfunded' }">Attribuer {{ unfundedCount() }} enveloppe(s)</a>
-            } @else {
-              <a class="btn btn-primary" routerLink="/app/gestion-projet/nouveau">＋ Créer un projet de la vie</a>
-            }
-          } @else { <button type="button" class="btn btn-primary" disabled>Chargement des projets…</button> }
-        </div>
-        <div actions>
-          @if (hasPriorityAction()) {
-            <a class="btn btn-secondary life-create" routerLink="/app/gestion-projet/nouveau">＋ Créer un projet de la vie</a>
-          }
-          @if (data(); as d) {
-            @if (!d.life.pendingRequests.length && !d.life.billable.length) {
-              <button type="button" class="btn btn-secondary" (click)="cycleOpen.set(true)">Autorisations et cycle</button>
-            }
-          }
-          @if (filter() !== 'all' && visible().length === 1) {
-            <a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', visible()[0].project.id]">Piloter ce projet</a>
-          }
-        </div>
-        <div tools class="life-banner-tools">
-          <label class="life-filter">
-            Afficher les projets
-            <select
-              [value]="filter()"
-              (change)="
-                setParams({
-                  project: $any($event.target).value === 'all' ? null : $any($event.target).value,
-                })
-              "
-            >
-              @for (option of filterOptions(); track option.value) {
-                <option [value]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label class="life-filter">
-            Priorité de suivi
-            <select
-              [value]="attention()"
-              (change)="
-                setParams({
-                  attention: $any($event.target).value === 'all' ? null : $any($event.target).value,
-                })
-              "
-            >
-              <option value="all">Tout le suivi</option>
-              <option value="open">Projets à poursuivre</option>
-              <option value="unfunded">Enveloppe à attribuer ({{ unfundedCount() }})</option>
-              <option value="requests">
-                Demandes à décider ({{ data()?.life?.taskRequests?.length ?? 0 }})
-              </option>
-              <option value="deficit">
-                En dépassement ({{ data()?.life?.deficitCount ?? 0 }})
-              </option>
-              <option value="late">Échéance dépassée</option>
-            </select>
-          </label>
-          <label class="life-search">
-            Rechercher un projet
-            <span class="life-search-field">
-              <input
-                type="search"
-                aria-label="Rechercher un projet"
-                placeholder="Nom, description ou référence…"
-                [value]="search()"
-                (input)="setParams({ q: $any($event.target).value || null })"
-              />
-              @if (search()) {
-                <button
-                  type="button"
-                  aria-label="Effacer la recherche"
-                  title="Effacer la recherche"
-                  (click)="setParams({ q: null })"
-                >
-                  ×
-                </button>
-              }
-            </span>
-          </label>
-          @if (search() || filter() !== 'all' || attention() !== 'all') {
-            <button
-              type="button"
-              class="btn btn-secondary"
-              (click)="setParams({ project: null, q: null, attention: null })"
-            >
-              Réinitialiser la vue ({{ visible().length }})
-            </button>
-          }
-          <form class="life-budget-project" (submit)="$event.preventDefault(); adopt()">
-            <label>
-              Projet à budgéter
-              <select
-                [value]="candidate()"
-                [disabled]="busy() || !data()?.candidates?.length"
-                (change)="candidate.set($any($event.target).value)"
-              >
-                <option value="">
-                  {{
-                    loading()
-                      ? 'Chargement…'
-                      : data()?.candidates?.length
-                        ? 'Choisir un projet…'
-                        : 'Aucun projet à budgéter'
-                  }}
-                </option>
-                @for (c of data()?.candidates ?? []; track c.projectId) {
-                  <option [value]="c.projectId">
-                    {{ c.title }} ({{ c.taskCount }} tâche{{ c.taskCount > 1 ? 's' : '' }})
-                  </option>
-                }
-              </select>
-            </label>
-            <button type="submit" class="btn btn-secondary" [disabled]="busy() || !candidate()">
-              Budgéter
-            </button>
-          </form>
-        </div>
-      </bpm-page-banner>
-
-      <bpm-project-overview-summary [data]="data()" [includeLifeProject]="true" />
-
-      @if (cycleOpen()) {
-        <bpm-modal
-          [open]="cycleOpen()"
-          [headed]="true"
-          title="Autorisations et fin de cycle"
-          [busy]="busy()"
-          (closed)="cycleOpen.set(false)"
-        >
-          @if (data(); as d) {
-            <p>
-              Le budget du projet de vie autorise les dépassements des projets, puis les intègre en
-              fin de cycle.
-            </p>
-            <p>
-              Dépassements autorisés : <strong>{{ d.life.approvedOverrunCents | cents }}</strong>
-            </p>
-            @if (notice(); as n) {
-              <p
-                class="bpm-feedback"
-                [class.is-error]="n.error"
-                [attr.role]="n.error ? 'alert' : 'status'"
-              >
-                {{ n.text }}
-              </p>
-            }
-            @for (o of d.life.pendingRequests; track o.id) {
-              <bpm-overrun-request [overrun]="o" [busy]="busy()" (decide)="decide(o, $event)" />
-            }
-            @if (d.life.billable.length) {
-              <div class="bpm-overrun">
-                <p>
-                  <strong>Fin de cycle :</strong> {{ d.life.billableCents | cents }} de
-                  dépassement(s) autorisé(s) à facturer au budget du projet de vie.
-                </p>
-                <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="bill()">
-                  Facturer au budget du projet de vie
-                </button>
-              </div>
-            } @else if (d.life.nextBillingDate) {
-              <p>
-                Prochaine facturation des dépassements : fin du cycle, le
-                {{ d.life.nextBillingDate | shortDate }}.
-              </p>
-            } @else if (!d.life.pendingRequests.length) {
-              <p>Aucune autorisation ni facturation en attente.</p>
-            }
-          }
-          <div class="bpm-actions">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              [disabled]="busy()"
-              (click)="cycleOpen.set(false)"
-            >
-              Fermer
-            </button>
-          </div>
-        </bpm-modal>
-      }
-
-      <div class="section-home-board">
-        @if (notice(); as n) {
-          <p
-            class="bpm-feedback"
-            [class.is-error]="n.error"
-            [attr.role]="n.error ? 'alert' : 'status'"
-          >
-            {{ n.text }}
-          </p>
-        }
-        @if (error()) {
-          <div class="empty-state" role="alert">
-            <h2>Projets indisponibles</h2>
-            <p>{{ error() }}</p>
-            <button class="btn btn-secondary" type="button" (click)="load()">Réessayer</button>
-          </div>
-        } @else if (loading()) {
-          <div class="empty-state" role="status"><h2>Chargement des projets…</h2></div>
-        } @else {
-          @if (search().trim()) {
-            <p class="board-result-count" role="status">
-              {{ visible().length }} résultat(s) pour « {{ search().trim() }} » dans le filtre
-              courant.
-            </p>
-          }
-          @if (workspace()?.key === 'projects-review') {
-            <section class="bpm-section" aria-label="Revue des projets">
-              <header><h2>Prochaine étape par projet</h2><span>{{ reviewProjects().length }} projet(s)</span></header>
-              <div class="bpm-table-wrap"><table class="bpm-table"><thead><tr><th scope="col">Projet</th><th scope="col">Travail</th><th scope="col">Enveloppe</th><th scope="col">Reste à consommer</th><th scope="col">Suite utile</th></tr></thead><tbody>
-                @for (p of reviewProjects(); track p.project.id) {
-                  <tr><td><a [routerLink]="['/app/gestion-projet', p.project.id]">{{ p.project.title }}</a><br /><small>{{ p.project.dueDate ? 'Échéance · ' + date(p.project.dueDate) : 'Échéance à définir' }}</small></td>
-                  <td>{{ p.view.doneCount }} / {{ p.view.time.taskCount }} tâches<br /><small>{{ p.view.statusLabel }}</small></td>
-                  <td>{{ p.budget?.allocationCents | cents }}</td><td>{{ p.budget?.remainingCents | cents }}</td>
-                  <td><a class="btn btn-secondary" [routerLink]="['/app/gestion-projet', p.project.id, reviewStep(p).page]" queryParamsHandling="preserve">{{ reviewStep(p).label }}</a></td></tr>
-                } @empty { <tr><td colspan="5">Aucun projet de la vie dans cette sélection.</td></tr> }
-              </tbody></table></div>
-            </section>
-          } @else {
-          <section class="board" aria-label="Tableau des projets de la vie">
-            @for (col of columns; track col.id) {
-              <div class="board-column" [attr.data-column]="col.id">
-                <div class="board-column-head">
-                  <div>
-                    <span class="status-dot" [attr.data-status]="col.id"></span>
-                    <h3 class="status-heading">{{ col.label }}</h3>
-                  </div>
-                  @if (col.id !== 'done') {
-                    <span class="count-badge">{{ byColumn()[col.id].length }}</span>
-                  }
-                </div>
-                <div class="board-column-content">
-                  @for (p of byColumn()[col.id]; track p.project.id) {
-                    @let done = p.view.column === 'done';
-                    <article
-                      class="card task-card"
-                      [attr.data-urgency]="urgency(p.project.dueDate, done)"
-                      [attr.data-budget-state]="p.budget?.state ?? null"
-                    >
-                      <h4>
-                        <a
-                          class="task-title-link"
-                          [routerLink]="['/app/gestion-projet', p.project.id]"
-                          [attr.title]="p.project.title"
-                          >{{ p.project.title }}</a
-                        >
-                      </h4>
-                      <p class="task-card-description" [attr.title]="p.project.description || null">
-                        {{ p.project.description }}
-                      </p>
-                      @if (p.budget) {
-                        <bpm-budget-meter [budget]="p.budget" [compact]="true" [showState]="true" />
-                      } @else if (data(); as d) {
-                        <div class="bpm-task-budget">
-                          <span
-                            >Budget du projet de vie ·
-                            <strong>{{ d.life.allocatedCents | cents }}</strong> attribués aux
-                            projets</span
-                          >
-                        </div>
-                      }
-                      <div class="task-card-meta">
-                        <span>{{ 'Priorité ' + priority[p.project.priority].toLowerCase() }}</span
-                        ><span
-                          class="due-date"
-                          [attr.data-urgency]="urgency(p.project.dueDate, done)"
-                          [attr.title]="dueTitle(p.project.dueDate, done)"
-                          >{{ p.project.dueDate ? date(p.project.dueDate) : 'Sans échéance' }}</span
-                        ><span [attr.title]="progressTitle(p)">{{ progressLabel(p) }}</span>
-                        @if (p.role === 'life') {
-                          <span
-                            class="task-card-badge"
-                            title="Racine du Budget « Projet de vie » et du Patrimoine"
-                            >Projet de vie</span
-                          >
-                        }
-                      </div>
-                      <p class="status-change">
-                        Statut
-                        <span
-                          class="status-value"
-                          [attr.data-status]="p.view.status"
-                          [attr.title]="p.view.explanation"
-                          ><span class="status-dot" [attr.data-status]="p.view.status"></span
-                          >{{ p.view.statusLabel }}</span
-                        >
-                      </p>
-                    </article>
-                  } @empty {
-                    <div class="board-empty">Aucun projet ici</div>
-                  }
-                </div>
-              </div>
-            }
-          </section>
-          }
-        }
-        <nav class="board-nav" aria-label="Changer de section">
-          <a routerLink="/app/taches" class="text-link"
-            >Parcourir les tâches des projets <span aria-hidden="true">↗</span></a
-          >
-          <a routerLink="/projects" class="text-link"
-            >Projets du noyau <span aria-hidden="true">↗</span></a
-          >
-        </nav>
-      </div>
-    </div>
-  `,
+  styleUrls: ['./projects.page.scss', './projects-cockpit.scss'],
+  templateUrl: './projects.page.html',
 })
 export class BpmProjectsPage implements OnInit {
+  /** Enveloppe ouverte en fenêtre depuis la carte d'un projet (montant ou « À attribuer »). */
+  protected readonly envelopeFor = signal<ProjectBudget | null>(null);
+  protected async envelopeSaved(message: string) {
+    this.envelopeFor.set(null);
+    await this.load();
+    this.notice.set({ text: message, error: false });
+  }
   protected readonly workspace = injectPageWorkspace();
+  protected readonly steeringProject = signal('');
+  protected readonly steeredProject = computed(() => this.data()?.projects.find(p => p.project.id === this.steeringProject()) ?? this.data()?.projects[0] ?? null);
+  protected readonly envelopeScale = signal(0);
+  protected readonly envelopeDraft = signal<{ projectId: string; budgetId: string; revision: number; amount: number } | null>(null);
+  protected readonly envelopeValue = computed(() => this.envelopeDraft()?.projectId === this.steeredProject()?.project.id ? this.envelopeDraft()!.amount : (this.steeredProject()?.budget?.allocationCents ?? 0) / 100);
+  protected readonly envelopeMaximum = computed(() => Math.max(1000, this.envelopeScale(), (this.steeredProject()?.budget?.allocationCents ?? 0) / 50, this.envelopeValue()));
+  protected selectSteeringProject(id: string) { this.steeringProject.set(id); this.envelopeDraft.set(null); this.envelopeScale.set(0); }
+  protected prepareEnvelope(amount: number) {
+    const project = this.steeredProject();
+    if (!project?.budget || project.budget.abandoned || this.busy() || this.loading() || this.error()) return;
+    const draft = this.envelopeDraft();
+    this.envelopeDraft.set(draft?.projectId === project.project.id ? { ...draft, amount } : { projectId: project.project.id, budgetId: project.budget.budgetId, revision: project.budget.revision, amount });
+  }
+  protected async applyEnvelope() {
+    const draft = this.envelopeDraft();
+    if (!draft || draft.projectId !== this.steeredProject()?.project.id || this.steeredProject()?.budget?.abandoned || this.busy() || this.loading() || this.error() || !Number.isFinite(draft.amount) || draft.amount <= 0) return;
+    await this.run(async () => {
+      await this.bpm.allocate(draft.budgetId, draft.amount, draft.revision);
+      this.envelopeDraft.set(null);
+    }, 'Enveloppe enregistrée. Aucun débit du cycle ou du patrimoine.');
+  }
   protected readonly reviewProjects = computed(() => this.visible().filter((p) => p.role === 'standard').sort((a, b) => this.reviewPriority(b) - this.reviewPriority(a)));
   private reviewPriority(p: BpmProjectCard) {
     return (p.budget?.pendingOverrun ? 100 : 0) + (!p.budget?.regime ? 80 : 0) +
@@ -378,12 +90,14 @@ export class BpmProjectsPage implements OnInit {
       (p.view.time.taskCount === 0 ? 20 : 0);
   }
   protected reviewStep(p: BpmProjectCard): { page: string; label: string } {
+    if (p.budget?.abandoned) return { page: 'budget', label: 'Ouvrir le bilan du projet' };
     if (!p.budget?.regime) return { page: 'budget', label: 'Attribuer l’enveloppe' };
-    if (p.budget.pendingOverrun || (this.data()?.life.taskRequests.some((r) => r.coreProjectId === p.project.id))) return { page: 'budget', label: 'Décider le financement' };
+    if (p.budget.pendingOverrun || (this.data()?.life.taskRequests.some((r) => r.coreProjectId === p.project.id))) return { page: 'budget', label: 'Accorder ou refuser le financement' };
     if (p.budget.deficit) return { page: 'budget', label: 'Revoir le budget' };
     if (p.view.column === 'done') return { page: 'budget', label: 'Contrôler la fin du projet' };
     return { page: 'taches', label: p.view.time.taskCount ? 'Poursuivre les tâches' : 'Préparer la première tâche' };
   }
+  protected readonly coreLinks = inject(BPM_CORE_LINKS);
   private bpm = inject(BpmApi);
   /** Décisions de financement communes à toutes les pages (mêmes gestes, mêmes messages). */
   private funding = inject(ProjectFunding);
@@ -404,7 +118,42 @@ export class BpmProjectsPage implements OnInit {
     return notice ? { message: notice.text, tone: notice.error ? 'danger' as const : 'success' as const } : null;
   });
   protected candidate = signal('');
-  protected cycleOpen = signal(false);
+  /** « Autorisations et fin de cycle » : s'ouvre aussi depuis un lien (`?cycle=open`). */
+  protected cycleOpen = signal(this.route.snapshot.queryParamMap.get('cycle') === 'open');
+  /** Éditeur de projet par-dessus le tableau : `editProject=new` ou l'identifiant du projet. */
+  protected projectEditor = bpmQueryState('editProject', '', { overlay: true });
+  protected readonly taskEditor = bpmQueryState('editTask', '', { overlay: true });
+  private readonly taskProject = bpmQueryState('taskProject', '');
+  protected readonly taskProjectOptions = computed(() => (this.data()?.projects ?? []).filter(p => !p.budget?.abandoned).map(p => ({ projectId: p.project.id, title: p.project.title })));
+  protected readonly taskProjectId = computed(() => this.taskProjectOptions().some(p => p.projectId === this.taskProject()) ? this.taskProject() : '');
+  protected openTask(projectId = '') {
+    this.taskProject.set(projectId);
+    this.taskEditor.set('new');
+  }
+  protected async taskSaved(message: string) {
+    this.taskEditor.set('');
+    await this.load();
+    this.notice.set({ text: message, error: false });
+  }
+  protected readonly cockpitPriorities = computed(() => {
+    const projects = this.data()?.projects ?? [];
+    const today = this.data()?.context.calculationDate ?? '';
+    return [
+      { key: 'open', label: 'Projets à poursuivre', count: projects.filter(p => !p.budget?.abandoned && p.view.column !== 'done').length, hint: 'Organiser les prochaines tâches' },
+      { key: 'unfunded', label: 'Sans enveloppe', count: this.unfundedCount(), hint: 'Préparer leurs moyens' },
+      { key: 'requests', label: 'Projets avec demandes', count: projects.filter(p => this.hasRequest(p.project.id)).length, hint: 'Accorder ou refuser' },
+      { key: 'late', label: 'Échéances dépassées', count: projects.filter(p => !p.budget?.abandoned && p.view.column !== 'done' && p.project.dueDate && p.project.dueDate < today).length, hint: 'Revoir les dates et les tâches' },
+    ];
+  });
+  private hasRequest(projectId: string) { return !!this.data()?.life.taskRequests.some(r => r.coreProjectId === projectId) || !!this.data()?.life.pendingRequests.some(r => r.coreProjectId === projectId); }
+  protected focusProjects(attention: string) { this.setParams({ attention, project: null, q: null }); }
+  protected editingProject = computed(() => this.data()?.projects.find((p) => p.project.id === this.projectEditor())?.project ?? null);
+  protected projectSaved(project: { projectId: string; title: string }) {
+    const created = !this.editingProject();
+    this.projectEditor.set('');
+    void this.load();
+    this.notice.set({ text: created ? `Projet « ${project.title} » créé : attribuez-lui une enveloppe ou créez sa première tâche.` : 'Projet enregistré.', error: false });
+  }
   private params = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
@@ -412,7 +161,7 @@ export class BpmProjectsPage implements OnInit {
   protected filter = computed(() => this.params().get('project') || 'all');
   protected attention = computed(() => this.params().get('attention') || 'all');
   protected unfundedCount = computed(
-    () => (this.data()?.projects ?? []).filter((p) => !p.budget?.regime).length,
+    () => (this.data()?.projects ?? []).filter((p) => !p.budget?.abandoned && !p.budget?.regime).length,
   );
   protected hasPriorityAction = computed(() => {
     const data = this.data();
@@ -441,12 +190,6 @@ export class BpmProjectsPage implements OnInit {
           'La gestion de projet permet d’accorder les parts disponibles ou de traiter le financement manquant.',
         tone: 'warning',
       };
-    if (d.life.billable.length)
-      return {
-        title: `${d.life.billable.length} dépassement(s) autorisé(s) à intégrer en fin de cycle`,
-        detail: 'Ouvrez les autorisations et le cycle pour valider leur facturation.',
-        tone: 'warning',
-      };
     if (this.unfundedCount())
       return {
         title: `${this.unfundedCount()} projet(s) attendent leur enveloppe`,
@@ -460,17 +203,17 @@ export class BpmProjectsPage implements OnInit {
         tone: 'info',
       };
     return {
-      title: `${this.visible().length} projet(s) dans cette vue · ${d.life.fundedCount} financé(s)`,
+      title: `${this.visible().length} projet(s) dans cette vue · ${d.life.fundedCount} avec enveloppe`,
       detail:
         'Choisissez une priorité de suivi pour retrouver les projets qui demandent une action.',
       tone: 'success',
     };
   });
 
-  /** Projet de vie et projets de la vie : seuls projets du user présentés ici. */
+  /** Le projet de vie porte l'accueil ; ce tableau rassemble ses projets de la vie. */
   private cards = computed<BpmProjectCard[]>(() => {
     const d = this.data();
-    return d ? [d.lifeProject, ...d.projects] : [];
+    return d?.projects ?? [];
   });
   protected filterOptions = computed<FilterOption[]>(() => [
     { value: 'all', label: 'Tous les projets de la vie' },
@@ -526,14 +269,14 @@ export class BpmProjectsPage implements OnInit {
 
   private matchesAttention(p: BpmProjectCard): boolean {
     const mode = this.attention();
-    if (mode === 'open') return p.view.column !== 'done';
-    if (mode === 'unfunded') return p.role === 'standard' && !p.budget?.regime;
+    if (mode === 'open') return p.role === 'standard' && !p.budget?.abandoned && p.view.column !== 'done';
+    if (mode === 'unfunded') return p.role === 'standard' && !p.budget?.abandoned && !p.budget?.regime;
     if (mode === 'deficit') return !!p.budget?.deficit;
     if (mode === 'requests')
-      return !!this.data()?.life.taskRequests.some((r) => r.coreProjectId === p.project.id);
+      return this.hasRequest(p.project.id);
     if (mode === 'late')
       return (
-        p.view.column !== 'done' &&
+        p.role === 'standard' && !p.budget?.abandoned && p.view.column !== 'done' &&
         !!p.project.dueDate &&
         p.project.dueDate < (this.data()?.context.calculationDate ?? '')
       );
@@ -583,7 +326,7 @@ export class BpmProjectsPage implements OnInit {
   protected bill() {
     return this.run(
       () => this.bpm.billOverruns(),
-      'Dépassements facturés au budget du projet de vie : les budgets attribués les intègrent. Ouvrez chaque projet pour relire ses contrôles de fin de cycle.',
+      'Moyens supplémentaires intégrés aux enveloppes, sans nouvelle charge.',
     );
   }
 

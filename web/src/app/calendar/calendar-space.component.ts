@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   inject,
@@ -12,8 +13,9 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { RecetteContext, toApiError } from '../core/api.service';
+import { DataChanges } from '../core/data-changes';
 import { CalendarComponent } from './calendar.component';
-import { CalendarData, CalendarEvent, CalendarPeriod } from './calendar.models';
+import { CalendarData, CalendarDisplayChoice, CalendarEvent, CalendarFormat, CalendarPeriod } from './calendar.models';
 import { CalendarService } from './calendar.service';
 import { formatAmount } from './calendar-model';
 import { CalendarView, validDate } from './calendar-dates';
@@ -28,8 +30,11 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
 /**
  * Le calendrier comme service, prêt à poser dans n'importe quelle page : il charge un calendrier nommé
  * (`calendar="noyau"`, paramètre `calendrier.noyau`) ou une configuration fournie (`[configuration]`), pour
- * la fenêtre affichée et le user actif. Il ouvre un repère par son lien (ou le confie à la page avec
- * `openInPlace`) et replanifie par la commande que la configuration désigne, puis relit la période.
+ * la fenêtre affichée et le user actif. La page hôte décide des sources proposées (`offer` : calendriers dont
+ * les sources peuvent être branchées) ; la personne choisit les siennes et son affichage dans le volet
+ * « Sources et affichage » du module, enregistrés sur le serveur pour son profil. Il ouvre un repère par son
+ * lien (ou le confie à la page avec `openInPlace`), replanifie par la commande que la configuration désigne,
+ * et se relit de lui-même après toute écriture (de cet onglet ou annoncée par le serveur) ou au retour sur l'onglet.
  */
 @Component({
   selector: 'rjs-calendar-space',
@@ -38,8 +43,9 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
   template: `
     <rjs-calendar
       [data]="data()"
-      [bpm]="calendar() === 'budgetPatrimoine'"
+      [compact]="compact()"
       [externalTools]="externalTools()"
+      [showSourceSummary]="showSourceSummary()"
       [presentation]="presentation()"
       [loading]="loading()"
       [busy]="busy()"
@@ -49,6 +55,9 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
       (open)="openEvent($event)"
       (reschedule)="move($event.event, $event.date)"
       (displayedEventsChange)="displayedEventsChange.emit($event)"
+      (sourcesChange)="plug($event)"
+      (preferencesChange)="keepPreferences($event)"
+      (formatsChange)="keepFormats($event)"
     >
       <ng-content />
     </rjs-calendar>
@@ -62,7 +71,12 @@ export class CalendarSpaceComponent {
   /** La page ouvre elle-même les repères (sinon : navigation vers leur lien). */
   readonly openInPlace = input(false);
   readonly externalTools = input(false);
+  readonly showSourceSummary = input(true);
   readonly presentation = input<'calendar' | 'agenda' | 'sources'>('calendar');
+  /** Calendriers dont la page hôte propose les sources au branchement (aucun par défaut). */
+  readonly offer = input<readonly string[]>([]);
+  /** Présentation resserrée demandée par la page hôte. */
+  readonly compact = input(false);
   private readonly calendarView = viewChild(CalendarComponent);
   readonly toolbarState = computed(() => {
     const state = this.calendarView()?.toolbarState();
@@ -83,6 +97,9 @@ export class CalendarSpaceComponent {
   private readonly service = inject(CalendarService);
   private readonly router = inject(Router);
   private readonly context = inject(RecetteContext);
+  private readonly changes = inject(DataChanges);
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingDisplay: { display: CalendarDisplayChoice | null } | null = null;
   protected readonly data = signal<CalendarData | null>(null);
   protected readonly loading = signal(false);
   protected readonly busy = signal(false);
@@ -92,13 +109,25 @@ export class CalendarSpaceComponent {
   private request = 0;
 
   constructor() {
-    // Lecture dès que la période affichée et le calendrier (ou sa configuration) sont connus, puis à chaque changement.
+    // Lecture dès que la période affichée et le calendrier (ou sa configuration) sont connus, puis à chaque
+    // changement : période, profil, sources proposées, ou écriture faite ici ou ailleurs.
     effect(() => {
       const period = this.periodShown();
-      if (this.calendar() === 'budgetPatrimoine') this.context.userId();
+      this.context.userId();
+      this.offer();
+      this.changes.version();
       const ready = this.calendar() !== null || this.configuration() !== null;
       if (period && ready) untracked(() => void this.fetch(period));
     });
+    // Revenir sur l'onglet relit la période : une autre fenêtre a pu changer les données.
+    if (typeof document !== 'undefined') {
+      const visible = () => { if (document.visibilityState === 'visible' && this.period) void this.fetch(this.period); };
+      document.addEventListener('visibilitychange', visible);
+      inject(DestroyRef).onDestroy(() => {
+        document.removeEventListener('visibilitychange', visible);
+        void this.flushPreferences();
+      });
+    }
   }
 
   private get period() {
@@ -124,10 +153,51 @@ export class CalendarSpaceComponent {
   setIncludeDone(value: boolean) {
     this.calendarView()?.setIncludeDone(value);
   }
-  /** L'encadré de personnalisation du calendrier BPM, que la page place où elle veut. */
-  readonly personalization = computed(() => this.calendarView()?.personalization() ?? null);
+  /** Volet « Sources et affichage » du module : la page hôte peut l'ouvrir depuis son propre bouton. */
+  readonly settingsOpen = computed(() => this.calendarView()?.settingsOpen() ?? false);
+  readonly settingsAvailable = computed(() => this.calendarView()?.settingsAvailable() ?? false);
+  toggleSettings(open?: boolean) {
+    this.calendarView()?.toggleSettings(open);
+  }
   focusEvent(event: CalendarEvent) {
     this.calendarView()?.focusEvent(event);
+  }
+
+  /** La personne branche ou débranche des sources (nul : revenir à celles de la configuration) : enregistré, puis relu. */
+  protected async plug(ids: readonly string[] | null) {
+    const id = this.calendar();
+    if (!id) return;
+    await this.persist(() => this.service.savePreferences(id, { plugged: ids }));
+    if (this.period) await this.fetch(this.period);
+  }
+
+  /** Préférences d'affichage : déjà à l'écran, enregistrées un instant plus tard (plusieurs choix d'affilée, une écriture). */
+  protected keepPreferences(display: CalendarDisplayChoice | null) {
+    if (!this.calendar()) return;
+    this.pendingDisplay = { display };
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => void this.flushPreferences(), 300);
+  }
+  private async flushPreferences() {
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = null;
+    const pending = this.pendingDisplay;
+    const id = this.calendar();
+    this.pendingDisplay = null;
+    if (pending && id) await this.persist(() => this.service.savePreferences(id, pending));
+  }
+
+  /** Formats créés par la personne : enregistrés pour son profil, valables dans tous ses calendriers. */
+  protected keepFormats(formats: CalendarFormat[]) {
+    void this.persist(() => this.service.saveFormats(formats));
+  }
+
+  private async persist(write: () => Promise<unknown>) {
+    try {
+      await write();
+    } catch (err) {
+      this.error.set(`Vos préférences n’ont pas pu être enregistrées : ${toApiError(err).message}`);
+    }
   }
 
   /** Période affichée par le calendrier : sa fenêtre sera lue. */
@@ -138,13 +208,14 @@ export class CalendarSpaceComponent {
   /** Lit la fenêtre de la période affichée ; une réponse devenue ancienne est ignorée. */
   private async fetch(period: CalendarPeriod) {
     const ticket = ++this.request;
-    if (this.calendar() === 'budgetPatrimoine') this.data.set(null);
+    // Un autre calendrier ne montre pas, même un instant, les repères du précédent.
+    if (this.data() && this.data()!.calendar.id !== this.calendar()) this.data.set(null);
     this.loading.set(true);
     this.error.set(null);
     try {
       const id = this.calendar();
       const data = id
-        ? await this.service.read(id, period.from, period.to)
+        ? await this.service.read(id, period.from, period.to, this.offer())
         : await this.service.preview(this.configuration(), period.from, period.to);
       if (ticket !== this.request) return;
       this.data.set(data);

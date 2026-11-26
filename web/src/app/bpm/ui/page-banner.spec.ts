@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { BpmPageFrame } from './page-frame';
-import { BpmContextInfo } from '../../core/bpm-models';
+import { BpmContextInfo } from '../data/bpm-models';
 import { By } from '@angular/platform-browser';
 import { PageHeroDirective } from '../../shared/page-hero.directive';
 
@@ -43,23 +43,23 @@ class Host {
 describe('bandeau commun et coordination', () => {
   it('présente l’intention spécialisée et retourne au projet parent sans reprendre une commande ouverte', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter([
-      { path: 'app/gestion-projet/:id/budget', component: Host, data: { workspace: {
-        key: 'project-budget', parent: '/app/gestion-projet', title: 'Budget du projet', lead: 'Attribuez les moyens.'
+      { path: 'bpm-astra/projets/:id/budget', component: Host, data: { workspace: {
+        key: 'project-budget', parent: '/bpm-astra/projets', title: 'Budget du projet', lead: 'Attribuez les moyens.'
       } } },
     ])] });
-    const h = await RouterTestingHarness.create('/app/gestion-projet/prj_42/budget?period=2026-10&q=travaux&entry=new&editTask=tsk_42');
-    const banner = h.routeNativeElement!.querySelector('bpm-page-banner')!;
+    const h = await RouterTestingHarness.create('/bpm-astra/projets/prj_42/budget?period=2026-10&q=travaux&entry=new&editTask=tsk_42');
+    const banner = h.routeNativeElement!.querySelector('rjs-page-banner')!;
     // Une fiche garde son nom en titre ; la sous-page est l'onglet courant.
     expect(banner.querySelector('h1')?.textContent).toBe('Test du cadre');
     expect(banner.querySelector('.page-intro')?.textContent).toBe('Attribuez les moyens.');
-    expect(banner.querySelector('.eyebrow')?.textContent).toBe('Mes projets de la vie · Projets et financement');
+    expect(banner.querySelector('.eyebrow')?.textContent).toBe('Mes projets · Projets de la vie');
     const back = banner.querySelector('.bpm-banner-back') as HTMLAnchorElement;
-    expect(back.getAttribute('href')).toBe('/app/gestion-projet/prj_42?period=2026-10&q=travaux');
+    expect(back.getAttribute('href')).toBe('/bpm-astra/projets/prj_42?period=2026-10&q=travaux');
     expect(back.textContent).toContain('Fiche du projet');
     const tabs = [...banner.querySelectorAll('.page-tab')] as HTMLAnchorElement[];
     expect(tabs.map(t => t.textContent?.trim())).toEqual(['Vue d’ensemble', 'Budget et décisions', 'Tâches']);
     expect(banner.querySelector('.page-tab[aria-current="page"]')?.textContent).toContain('Budget et décisions');
-    expect(tabs[2].getAttribute('href')).toBe('/app/gestion-projet/prj_42/taches?period=2026-10&q=travaux');
+    expect(tabs[2].getAttribute('href')).toBe('/bpm-astra/projets/prj_42/taches?period=2026-10&q=travaux');
   });
   it('projette actions et outils une seule fois et garde les saisies lors du repli', async () => {
     TestBed.configureTestingModule({
@@ -67,9 +67,9 @@ describe('bandeau commun et coordination', () => {
     });
     const h = await RouterTestingHarness.create('/cadre');
     const element = h.routeNativeElement!;
-    const banner = element.querySelector('bpm-page-banner')!;
+    const banner = element.querySelector('rjs-page-banner')!;
     expect(banner.querySelector('h1')?.textContent).toBe('Test du cadre');
-    expect(banner.querySelector('.bpm-toolbar-focus')?.textContent).toContain(
+    expect(banner.querySelector('.page-toolbar-focus')?.textContent).toContain(
       'Échéance à vérifier',
     );
     expect(banner.querySelector('[toolbarPrimary]')?.textContent).toContain('Action prioritaire');
@@ -82,7 +82,7 @@ describe('bandeau commun et coordination', () => {
     expect(action.textContent).toContain('Pointer 1');
     const field = banner.querySelector('input')!;
     field.value = 'Voyage';
-    const toggle = banner.querySelector('.bpm-toolbar-toggle') as HTMLButtonElement;
+    const toggle = banner.querySelector('.page-toolbar-toggle') as HTMLButtonElement;
     toggle.click();
     h.detectChanges();
     toggle.click();
@@ -97,13 +97,13 @@ describe('bandeau commun et coordination', () => {
       providers: [provideRouter([{ path: 'cadre', component: Host }])],
     });
     const h = await RouterTestingHarness.create('/cadre');
-    const tools = h.routeNativeElement!.querySelector('.bpm-toolbar-filters')!;
+    const tools = h.routeNativeElement!.querySelector('.page-toolbar-filters')!;
     expect(tools.hasAttribute('hidden')).toBe(true);
-    (h.routeNativeElement!.querySelector('.bpm-toolbar-toggle') as HTMLButtonElement).click();
+    (h.routeNativeElement!.querySelector('.page-toolbar-toggle') as HTMLButtonElement).click();
     h.detectChanges();
     const field = h.routeNativeElement!.querySelector('input')!;
     field.focus();
-    const banner = h.routeDebugElement!.query(By.css('bpm-page-banner'));
+    const banner = h.routeDebugElement!.query(By.css('rjs-page-banner'));
     banner.injector.get(PageHeroDirective).compact.set(true);
     h.detectChanges();
     expect(tools.hasAttribute('hidden')).toBe(false);

@@ -41,6 +41,8 @@ export function injectWorkspaceReturn() {
   const workspace = injectPageWorkspace();
   return computed(() => {
     // Hors du plan (adresse de démonstration), la vue spécialisée déclare encore sa page parente.
+    // Une page du plan (niveau 2) n'a pas de niveau supérieur dans le bandeau.
+    if (plan().location.kind === 'page') return null;
     const parent = workspace()?.parent;
     const up = plan().up ?? (parent ? { link: parent, label: locate(parent).page?.label ?? 'Page principale' } : null);
     if (!up) return null;

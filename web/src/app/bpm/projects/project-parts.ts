@@ -1,13 +1,14 @@
+import { BpmAmount } from '../ui/amount';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { BUDGET_STATE_LABEL, ProjectBudget, ProjectBudgetState, ProjectOverrun, TaskBudgetRequest } from '../../core/bpm-projects.models';
+import { BUDGET_STATE_LABEL, ProjectBudget, ProjectBudgetState, ProjectOverrun, TaskBudgetRequest } from '../data/bpm-projects.models';
 import { CentsPipe, ShortDatePipe } from '../../core/format';
-import { RouterLink } from '@angular/router';
+import { BpmRouterLink } from '../ui/bpm-router-link';
 import { FUNDING, FUNDING_ACTIONS } from '../ui/project-funding';
 
 /** Part d'un montant dans le budget du projet, bornée à 100 % pour la jauge. */
 const share = (value: number, total: number | null) => (!total || total <= 0 ? (value > 0 ? 100 : 0) : Math.min(100, Math.round((value / total) * 1000) / 10));
 
-/** Pastille d'état budgétaire d'un projet (rouge réservé au dépassement autorisé). */
+/** Pastille d'état budgétaire : dépassement en rouge, risque en jaune, budget tenu en vert. */
 @Component({
   selector: 'bpm-budget-state',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,16 +26,36 @@ export class BpmBudgetStateComponent {
  */
 @Component({
   selector: 'bpm-budget-meter',
-  imports: [CentsPipe, BpmBudgetStateComponent],
+  styles: `
+    .bpm-budget-cta { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 10px; border: 1px dashed var(--astra-keyline, var(--bpm-line)); border-radius: 8px; background: var(--astra-wash, var(--bpm-soft)); color: var(--bpm-text); font: inherit; cursor: pointer; text-align: left; }
+    .bpm-budget-cta span { color: var(--bpm-muted); font-size: 12px; }
+    .bpm-budget-cta strong { color: var(--astra-link, var(--bpm-link)); text-decoration: underline; text-underline-offset: 3px; }
+    .bpm-budget-cta:hover { border-style: solid; }
+    .bpm-budget-amount-link { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+    .bpm-budget-amount-link strong { text-decoration: underline; text-decoration-color: var(--astra-keyline, currentColor); text-underline-offset: 3px; }
+    .bpm-budget-amount-link:hover strong { text-decoration-color: currentColor; }
+  `,
+  imports: [BpmAmount, CentsPipe, BpmBudgetStateComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let b = budget();
     @if (!b.regime) {
-      <p class="bpm-budget-empty">Aucun montant attribué par le budget du projet de vie.</p>
+      @if (editable()) {
+        <button type="button" class="bpm-budget-cta" (click)="envelope.emit()" [attr.aria-label]="'Attribuer une enveloppe au projet « ' + b.name + ' »'">
+          <span>Budget</span><strong>À attribuer</strong>
+        </button>
+      } @else {
+        <p class="bpm-budget-empty">Aucun montant attribué par le budget du projet de vie.</p>
+      }
     } @else {
       <div class="bpm-budget" [attr.data-state]="b.state" [class.is-compact]="compact()">
         <div class="bpm-budget-head">
-          <span>Budget</span><strong>{{ b.ceilingCents | cents }}</strong>
+          <span>Budget</span>
+          @if (editable()) {
+            <button type="button" class="bpm-budget-amount-link" (click)="envelope.emit()" [attr.aria-label]="'Modifier l’enveloppe du projet « ' + b.name + ' »'" title="Modifier l’enveloppe"><strong [bpmAmount]="b.ceilingCents" bpmTone="info">{{ b.ceilingCents | cents }}</strong></button>
+          } @else {
+            <strong [bpmAmount]="b.ceilingCents" bpmTone="info">{{ b.ceilingCents | cents }}</strong>
+          }
           @if (showState()) {
             <bpm-budget-state [state]="b.state" [title]="stateTitle()" />
           }
@@ -48,12 +69,12 @@ export class BpmBudgetStateComponent {
         </div>
         @if (figures()) {
           <dl [class]="compact() ? 'bpm-budget-rows' : 'bpm-budget-figures'">
-            <div><dt>{{ L.shared }}</dt><dd>{{ b.sharesCents | cents }}</dd></div>
-            <div><dt>{{ L.paidOnEnvelope }}</dt><dd>{{ b.paidCents | cents }}</dd></div>
-            <div><dt>{{ L.toShare }}</dt><dd>{{ b.availableCents | cents }}</dd></div>
+            <div><dt>{{ L.shared }}</dt><dd [bpmAmount]="b.sharesCents" bpmTone="info">{{ b.sharesCents | cents }}</dd></div>
+            <div><dt>{{ L.paidOnEnvelope }}</dt><dd [bpmAmount]="b.paidCents" bpmFlow="expense">{{ b.paidCents | cents }}</dd></div>
+            <div><dt>{{ L.toShare }}</dt><dd [bpmAmount]="b.availableCents">{{ b.availableCents | cents }}</dd></div>
             @if (!compact()) {
-              <div><dt>{{ L.engaged }}</dt><dd>{{ b.engagedCents | cents }}</dd></div>
-              <div><dt>{{ L.remaining }}</dt><dd>{{ b.remainingCents | cents }}</dd></div>
+              <div><dt>{{ L.engaged }}</dt><dd [bpmAmount]="b.engagedCents" bpmTone="info">{{ b.engagedCents | cents }}</dd></div>
+              <div><dt>{{ L.remaining }}</dt><dd [bpmAmount]="b.remainingCents">{{ b.remainingCents | cents }}</dd></div>
             }
           </dl>
         }
@@ -70,9 +91,12 @@ export class BpmBudgetMeterComponent {
   readonly figures = input(true);
   /** Pastille d'état dans l'en-tête de la jauge. */
   readonly showState = input(false);
+  /** Le montant (ou « À attribuer ») ouvre la fenêtre de l'enveloppe. */
+  readonly editable = input(false);
+  readonly envelope = output<void>();
   protected stateTitle = computed(() => {
     const b = this.budget();
-    if (b.state === 'deficit') return 'Dépassement autorisé par le budget du projet de vie, facturé à la fin de son cycle.';
+    if (b.state === 'deficit') return 'Moyens supplémentaires autorisés ; aucune charge créée par cette décision.';
     if (b.state === 'at-risk') return 'Les charges planifiées du projet dépassent son budget.';
     return 'Dépenses réglées et parts des tâches dans le budget du projet.';
   });
@@ -84,7 +108,7 @@ export class BpmBudgetMeterComponent {
 /** Demande de dépassement en attente : la décision appartient au budget de vie. */
 @Component({
   selector: 'bpm-overrun-request',
-  imports: [CentsPipe, ShortDatePipe],
+  imports: [BpmAmount, CentsPipe, ShortDatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let o = overrun();
@@ -93,10 +117,10 @@ export class BpmBudgetMeterComponent {
         <strong>Demande au budget du projet de vie</strong> · {{ o.budgetName }}@if (o.taskTitle) { · {{ o.taskTitle }} }
       </p>
       <p>
-        {{ o.reasonLabel }} : dépassement de <strong>{{ o.amountCents | cents }}</strong>, demandé le {{ o.requestedAt | shortDate }}.
+        {{ o.reasonLabel }} : dépassement de <strong [bpmAmount]="o.amountCents" bpmTone="warning">{{ o.amountCents | cents }}</strong>, demandé le {{ o.requestedAt | shortDate }}.
       </p>
       <p class="bpm-overrun-help">
-        Autoriser fait passer le projet en dépassement ; la charge sera facturée au budget du projet de vie à la fin de son cycle.
+        Autoriser ajuste les moyens du projet. Cette décision ne crée aucune charge : seuls les flux des tâches validés sont imputés au cycle ou au patrimoine.
       </p>
       <div class="bpm-actions">
         <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="decide.emit('approve')">{{ act.authorize(o.amountCents) }}</button>
@@ -115,7 +139,7 @@ export class BpmOverrunRequestComponent {
 /** Demandes persistantes : le montant demandé est la nouvelle part totale de la tâche, pas un supplément. */
 @Component({
   selector: 'bpm-task-requests',
-  imports: [CentsPipe, ShortDatePipe, RouterLink],
+  imports: [BpmAmount, CentsPipe, ShortDatePipe, BpmRouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="bpm-request-list">
@@ -126,7 +150,7 @@ export class BpmOverrunRequestComponent {
             <p class="bpm-note"><a class="text-link" [routerLink]="['/app/gestion-projet', r.coreProjectId]" fragment="requests-title">{{ r.budgetName }} →</a> · demandé le {{ r.requestedAt | shortDate }}</p>
             @if (r.note) { <p>{{ r.note }}</p> }
           </div>
-          <dl><div><dt>Montant total demandé</dt><dd>{{ r.amountCents | cents }}</dd></div><div><dt>{{ L.share }}</dt><dd>{{ r.grantedCents | cents }}</dd></div></dl>
+          <dl><div><dt>Montant total demandé</dt><dd [bpmAmount]="r.amountCents" bpmTone="warning">{{ r.amountCents | cents }}</dd></div><div><dt>{{ L.share }}</dt><dd [bpmAmount]="r.grantedCents" bpmTone="info">{{ r.grantedCents | cents }}</dd></div></dl>
           <div>
             <p class="bpm-note" role="status">{{ r.statusLabel }}</p>
             @if (r.status === 'pending') {
@@ -140,7 +164,7 @@ export class BpmOverrunRequestComponent {
               }
             } @else if (r.status === 'awaiting-life') {
               <p class="bpm-note">La part dépasse l’enveloppe : le dépassement attend l’accord du projet de vie (« Décisions attendues »). L’autorisation accorde la part si les autres parts n’ont pas changé ; sinon la demande revient au projet pour être réexaminée.</p>
-              <a class="text-link" routerLink="/projet-de-vie" fragment="life-decisions">Voir les décisions attendues →</a>
+              <a class="text-link" routerLink="/projet-de-vie" fragment="life-decisions">Ouvrir les décisions attendues →</a>
               <button class="text-link" type="button" [disabled]="busy()" (click)="decide.emit({ request: r, decision: 'cancel' })">Annuler la demande</button>
             }
           </div>

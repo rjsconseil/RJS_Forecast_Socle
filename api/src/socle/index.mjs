@@ -2,13 +2,15 @@
 // moteur de calcul et services des modules. L'ordre d'intégration suit les niveaux :
 // transverse → niveau 1 (noyau) → niveau 2 (middleware) → niveau 3 (application).
 import { Registry } from './registry.mjs';
-import { JsonStore, STORE_SCHEMA } from './store.mjs';
+import { DataManager, STORE_SCHEMA, emptyState } from './data/data-manager.mjs';
 import { ObjectManager } from './object-management/object-manager.mjs';
 import { Inspector } from './object-management/inspect.mjs';
 import { Parameters } from './parameters.mjs';
 import { MetricEngine } from './calc/metrics.mjs';
+import { moduleScope } from './scope.mjs';
+import { PRINCIPLES } from './principles.mjs';
 
-export async function createSocle({ dataFile, modules, faultInjection = false }) {
+export async function createSocle({ dataFile, modules, faultInjection = false, dataEngine = process.env.SOCLE_DATA_ENGINE || undefined }) {
   const registry = new Registry();
   for (const m of modules) registry.register(m);
 
@@ -19,13 +21,27 @@ export async function createSocle({ dataFile, modules, faultInjection = false })
   for (const v of registry.collect('variables')) socle.metrics.registerVariable(v);
   for (const m of registry.collect('metrics')) socle.metrics.registerMetric(m);
 
-  socle.store = await new JsonStore(dataFile, registry.collections()).load();
+  // P5 · Données gérées : la couche de gestion, au-dessus du moteur de stockage choisi.
+  socle.store = await new DataManager({ path: dataFile, registry, engine: dataEngine }).load();
+  socle.data = socle.store;
   socle.om = new ObjectManager({ registry, store: socle.store, faultInjection });
   socle.inspector = new Inspector(socle);
   Object.defineProperty(socle, 'state', { get: () => socle.store.state });
   socle.close = () => socle.store.close();
+  /** Remise à zéro de recette : primitive d'administration du socle, hors des commandes métier. */
+  socle.resetData = () => socle.store.mutate((draft) => {
+    for (const k of Object.keys(draft)) delete draft[k];
+    Object.assign(draft, emptyState(registry.collections()));
+    return { value: { reset: true } };
+  });
 
-  for (const m of registry.modules.values()) socle.modules[m.id] = m.setup?.(socle) ?? {};
+  socle.principles = PRINCIPLES;
+  // P1 · Sens unique : chaque module travaille dans sa portée, jamais avec le socle entier.
+  socle.scopeOf = (id) => registry.scopes.get(id);
+  for (const m of registry.modules.values()) registry.scopes.set(m.id, moduleScope(socle, m));
+  for (const m of registry.modules.values()) socle.modules[m.id] = m.setup?.(registry.scopes.get(m.id)) ?? {};
+  /** Les routes d'un module, construites dans sa portée. */
+  socle.routesOf = (m) => m.routes?.(registry.scopes.get(m.id)) ?? [];
   try {
     await migrate(socle);
   } catch (err) {

@@ -2,11 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Api } from '../../core/api.service';
-import { BpmApi } from '../../core/bpm-api.service';
-import { RegisterLine } from '../../core/bpm-models';
+import { BpmApi } from '../data/bpm-api.service';
+import { RegisterLine } from '../data/bpm-models';
 import { BpmCenterPage } from './center';
 import { BpmExpensesPage } from './expenses';
-import { BpmIncomesPage } from './incomes';
 import { settlementOutsideWindow } from './period-presentation';
 
 const context = {
@@ -57,8 +56,6 @@ const line = (
     budgetId: 'bud_life',
     budgetName: 'Projet de vie',
     special: false,
-    categoryId: null,
-    categoryLabel: null,
     note: null,
     taskId: null,
     taskTitle: null,
@@ -120,7 +117,7 @@ describe('lecture des dates des flux dans BPM', () => {
         selection,
         totals,
         cap: null,
-        categories: [],
+        levels: { mid: 50, high: 75, near: 90 },
         lifeBudget: { budgetId: 'bud_life', revision: 1 },
       }),
       incomes: vi.fn().mockResolvedValue({
@@ -144,14 +141,12 @@ describe('lecture des dates des flux dans BPM', () => {
         caps: null,
       }),
       costCenters: vi.fn().mockResolvedValue([]),
-      categories: vi.fn().mockResolvedValue([]),
     };
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
           { path: 'argent/postes/:poste', component: BpmCenterPage },
-          { path: 'tableau-de-bord/entrees', component: BpmIncomesPage },
-          { path: 'depenses/registre', component: BpmExpensesPage },
+          { path: 'depenses/registre', component: BpmExpensesPage, data: {workspace:{key:'register',title:'Registre de flux',parent:'/tableau-de-bord'}} },
         ]),
         { provide: BpmApi, useValue: api },
         { provide: Api, useValue: { tasks: vi.fn().mockResolvedValue([]) } },
@@ -194,31 +189,30 @@ describe('lecture des dates des flux dans BPM', () => {
     );
     await settle();
     const back = [...harness.routeNativeElement!.querySelectorAll('a')].find((a) =>
-      a.textContent!.includes('Entrées de la période'),
+      a.textContent!.includes('Registre de flux'),
     )!;
     expect(back.getAttribute('href')).toBe('/tableau-de-bord/entrees?period=2026-10');
   });
-  it('conserve le plafond saisi dans le bandeau après une relecture sans changement serveur', async () => {
-    const page = await harness.navigateByUrl('/argent/postes/std:loisirs', BpmCenterPage);
+  it('ouvre la fenêtre du plafond du poste depuis ses actions et n’écrit que ce poste', async () => {
+    const base = await api['center']();
+    const cap = { ref: 'std:loisirs', label: 'Loisirs', standard: true, paidCents: 24000, toPayCents: 15000, engagedCents: 39000, capCents: null, marginCents: null, usedPct: null, over: false, near: false, level: 'none', lineCount: 3 };
+    api['center'].mockResolvedValue({ ...base, cap });
+    api['setCaps'] = vi.fn().mockResolvedValue({});
+    await harness.navigateByUrl('/argent/postes/std:loisirs', BpmCenterPage);
     await settle();
-    const input = harness.routeNativeElement!.querySelector<HTMLInputElement>('bpm-page-banner input[name="cap"]')!;
-    input.value = '250';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const open = [...harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>('rjs-page-banner button')].find((x) => x.textContent!.trim() === 'Fixer un plafond')!;
+    open.click();
     await settle();
-    (page as any).read.reload();
+    const dialog = harness.routeNativeElement!.querySelector<HTMLElement>('bpm-cap-dialog')!;
+    expect(dialog.textContent).toContain('390,00');
+    const input = dialog.querySelector<HTMLInputElement>('input[name="capAmount"]')!;
+    input.value = '500';
+    input.dispatchEvent(new Event('input'));
     await settle();
-    expect(input.value).toBe('250');
-    expect((harness.routeNativeElement!.querySelector('bpm-page-banner button[type="submit"]') as HTMLButtonElement).disabled).toBe(false);
-  });
-  it('les entrées affichent les montants réellement reçus et un compteur cohérent', async () => {
-    await harness.navigateByUrl('/tableau-de-bord/entrees?period=2026-11', BpmIncomesPage);
+    [...dialog.querySelectorAll<HTMLButtonElement>('button')].find((x) => x.textContent!.trim() === 'Enregistrer le plafond')!.click();
     await settle();
-    const received = section('bmd-entries-title').textContent!;
-    expect(received).toContain(delayed.label);
-    expect(received).toContain(advanced.label);
-    expect(received).not.toContain(pending.label);
-    expect(text()).toContain('en 2 montant(s)');
-    expect(section('bmd-pending-title').textContent).toContain(pending.label);
+    expect(api['setCaps']).toHaveBeenCalledExactlyOnceWith({ expectedRevision: 1, caps: { 'std:loisirs': 500 }, merge: true });
+    expect(harness.routeNativeElement!.querySelector('bpm-cap-dialog')).toBeNull();
   });
   it('le registre garde la date prévue et signale un paiement fait dans une autre période', async () => {
     await harness.navigateByUrl('/depenses/registre?period=2026-11', BpmExpensesPage);
@@ -226,10 +220,6 @@ describe('lecture des dates des flux dans BPM', () => {
     expect(text()).toContain(historical.label);
     expect(text()).toContain('Réglé hors de cette période');
     expect(text()).toContain('le tableau de bord les compte à leur date réelle');
-    // Le registre est une sous-page du tableau de bord : le bandeau y remonte, période comprise.
-    const back = harness.routeNativeElement!.querySelector('.bpm-banner-back') as HTMLAnchorElement;
-    expect(back.textContent).toContain('Tableau de bord');
-    expect(back.getAttribute('href')).toBe('/tableau-de-bord?period=2026-11');
   });
   it('ne fait pas quitter silencieusement le périmètre d’un projet par un lien de poste global', async () => {
     const response = await api['register']();
@@ -278,6 +268,103 @@ describe('lecture des dates des flux dans BPM', () => {
     expect(api['register'].mock.lastCall![0]).not.toEqual(
       expect.objectContaining({ status: expect.any(String) }),
     );
+  });
+  it('distingue les entrées et dépenses pour les bilans positifs, négatifs et équilibrés des groupes', async () => {
+    const flow = (id: string, direction: RegisterLine['direction'], plannedCents: number, realizedCents: number | null, status?: string): RegisterLine => ({
+      ...line(id, '2026-11-20', realizedCents === null ? null : '2026-11-05', status),
+      direction, plannedCents, realizedCents,
+    });
+    const mixed = [
+      flow('Salaire reçu', 'income', 20000, 18000),
+      flow('Remboursement attendu', 'income', 5000, null),
+      flow('Achat réglé', 'charge', 9000, 10000),
+      flow('Facture en retard', 'charge', 4000, null, 'late'),
+      flow('Facture du jour', 'charge', 3000, null, 'due'),
+      flow('Achat à venir', 'charge', 2000, null),
+    ];
+    const negative = [{ ...flow('Dépense seule', 'charge', 12000, null), costCenterRef: 'std:logement' }];
+    const balanced = [
+      { ...flow('Gain attendu', 'income', 8000, null), costCenterRef: 'std:transport' },
+      { ...flow('Frais attendus', 'charge', 8000, null), costCenterRef: 'std:transport' },
+    ];
+    const response = await api['register']();
+    api['register'].mockResolvedValue({
+      ...response,
+      lines: [...mixed, ...negative, ...balanced],
+      groups: [
+        { key: 'std:loisirs', label: 'Loisirs', lineIds: mixed.map(l => l.id), plannedCents: 43000, paidCents: 28000, toPayCents: 14000, specialCents: 0 },
+        { key: 'std:logement', label: 'Logement', lineIds: negative.map(l => l.id), plannedCents: 12000, paidCents: 0, toPayCents: 12000, specialCents: 0 },
+        { key: 'std:transport', label: 'Transport', lineIds: balanced.map(l => l.id), plannedCents: 16000, paidCents: 0, toPayCents: 16000, specialCents: 0 },
+      ],
+      totals: { ...totals, lineCount: 9, unfilteredCount: 9, plannedCents: 71000, paidCents: 28000, toPayCents: 42000 },
+    });
+    const page = await harness.navigateByUrl('/depenses/registre?period=2026-11', BpmExpensesPage);
+    await settle();
+    const summaries = (page as any).groupSummaries();
+    expect(summaries.get('std:loisirs')).toMatchObject({
+      income: { plannedCents: 25000, settledCents: 18000, openCents: 5000 },
+      charge: { plannedCents: 18000, settledCents: 10000, openCents: 9000 },
+      balanceCents: 7000, tone: 'pos',
+    });
+    expect(summaries.get('std:logement')).toMatchObject({ balanceCents: -12000, tone: 'neg' });
+    expect(summaries.get('std:transport')).toMatchObject({ balanceCents: 0, tone: 'zero' });
+    expect(harness.routeNativeElement!.querySelectorAll('details.expense-group[open]')).toHaveLength(0);
+  });
+  it('change le bilan selon la date lue, exclut les réservations et garde un règlement inconnu distinct de zéro', async () => {
+    const flow = (id: string, direction: RegisterLine['direction'], plannedCents: number, realizedCents: number | null, status?: string): RegisterLine => ({
+      ...line(id, '2026-11-20', realizedCents === null ? null : '2026-11-05', status),
+      direction, plannedCents, realizedCents,
+    });
+    const mixed = [
+      flow('Revenu reçu', 'income', 50000, 30000),
+      flow('Dépense payée', 'charge', 20000, 35000),
+      flow('Revenu attendu', 'income', 10000, null),
+      flow('Dépense en retard', 'charge', 5000, null, 'late'),
+      flow('Revenu non réalisé', 'income', 7000, null, 'unrealized'),
+      flow('Dépense non réalisée', 'charge', 3000, null, 'unrealized'),
+      { ...flow('Réservation entrante', 'income', 900000, 900000), special: true },
+      { ...flow('Enveloppe réservée', 'charge', 800000, 800000), special: true },
+    ];
+    const unknown = [
+      { ...flow('Revenu connu', 'income', 15000, 10000), costCenterRef: 'std:transport' },
+      { ...flow('Règlement sans montant réel', 'charge', 11000, null), costCenterRef: 'std:transport', settled: true, status: 'settled', statusLabel: 'Réglé', realizedDate: '2026-11-05' },
+    ];
+    const response = await api['register']();
+    api['register'].mockImplementation(async (...args: unknown[]) => {
+      const query = args[0] as { dateBasis?: string };
+      return ({
+      ...response,
+      dateBasis: query.dateBasis,
+      lines: [...mixed, ...unknown].filter(l => query.dateBasis !== 'realized' || l.settled),
+      groups: [
+        { key: 'std:loisirs', label: 'Loisirs', lineIds: mixed.filter(l => query.dateBasis !== 'realized' || l.settled).map(l => l.id), plannedCents: query.dateBasis === 'realized' ? 70000 : 95000, paidCents: 65000, toPayCents: query.dateBasis === 'realized' ? 0 : 15000, specialCents: 1700000 },
+        { key: 'std:transport', label: 'Transport', lineIds: unknown.map(l => l.id), plannedCents: 26000, paidCents: 10000, toPayCents: 0, specialCents: 0 },
+      ],
+      totals: { ...totals, lineCount: query.dateBasis === 'realized' ? 6 : 10, unfilteredCount: 10, plannedCents: query.dateBasis === 'realized' ? 96000 : 121000, paidCents: 75000, toPayCents: query.dateBasis === 'realized' ? 0 : 15000, unrealizedCents: query.dateBasis === 'realized' ? 0 : 10000, specialCents: 1700000 },
+      });
+    });
+    const page = await harness.navigateByUrl('/depenses/registre?period=2026-11', BpmExpensesPage);
+    await settle();
+    expect((page as any).groupSummaries().get('std:loisirs')).toMatchObject({
+      income: { plannedCents: 67000, settledCents: 30000, openCents: 10000 },
+      charge: { plannedCents: 28000, settledCents: 35000, openCents: 5000 },
+      balanceCents: 39000, tone: 'pos',
+    });
+    expect((page as any).groupSummaries().get('std:transport')).toMatchObject({ balanceCents: 4000, tone: 'pos' });
+    const dateBasis = harness.routeNativeElement!.querySelector<HTMLSelectElement>('select[name="expense-date-basis"]')!;
+    dateBasis.value = 'realized';
+    dateBasis.dispatchEvent(new Event('change'));
+    await settle();
+    expect((page as any).groupSummaries().get('std:loisirs')).toMatchObject({
+      income: { settledCents: 30000, openCents: 0 },
+      charge: { settledCents: 35000, openCents: 0 },
+      balanceCents: -5000, tone: 'neg',
+    });
+    expect((page as any).groupSummaries().get('std:transport')).toMatchObject({
+      income: { settledCents: 10000 },
+      charge: { settledCents: null },
+      balanceCents: null, tone: 'unknown',
+    });
   });
 });
 
