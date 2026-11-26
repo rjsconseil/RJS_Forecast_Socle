@@ -496,7 +496,9 @@ parallèle sur plusieurs partitions, écriture sur une grosse partition, lecture
 
 | Mesure (20 users × 20 opérations) | Avant le chantier 4 | Après |
 |---|---|---|
-| Écriture sur une partition de 2 070 opérations (poste de travail) | environ 11,5 ms | à mesurer sur le poste |
+| Écriture sur une partition de 2 070 opérations (poste de travail) | environ 11,5 ms | 1,8 ms |
+| Écritures en parallèle, 50 users (poste de travail) | environ 4 000 par seconde | environ 4 550 par seconde |
+| Lecture du registre, cache de 100 partitions (poste de travail) | 0,4 ms | 0,4 ms |
 | Même mesure, machine de développement en ligne (plus lente) | 37 à 49 ms | 7 à 9 ms |
 | Écritures en parallèle, 50 users (machine en ligne) | 700 à 800 par seconde | environ 950 par seconde |
 | Lecture du registre (cache de 100 partitions) | environ 1 ms | environ 1 ms |
