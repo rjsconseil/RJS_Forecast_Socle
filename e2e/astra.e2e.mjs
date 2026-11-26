@@ -5,7 +5,7 @@
 // menu « Nouveau » au clavier, onglets précédent / suivant.
 //
 //   npm run e2e:astra                      (site sur http://localhost:4300, premier profil qui a des données)
-//   BPM_BASE_URL=… BPM_USER_ID=… CHROME_PATH=… npm run e2e:astra
+//   BPM_BASE_URL=… BPM_USER_ID=… BPM_SESSION_TOKEN=… CHROME_PATH=… npm run e2e:astra
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { chromium } from 'playwright-core';
@@ -29,6 +29,8 @@ const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  // Connexion exigée (SOCLE_AUTH=required) : un jeton de session fourni par BPM_SESSION_TOKEN.
+  if (process.env.BPM_SESSION_TOKEN) await context.addCookies([{ name: 'rjs_session', value: process.env.BPM_SESSION_TOKEN, url: base }]);
   const users = await (await context.request.get(base + '/api/users')).json();
   const userId = process.env.BPM_USER_ID ?? (users.find(u => u.entryCount > 0) ?? users[0])?.id;
   assert(userId, 'Aucun profil sur ce site.');
