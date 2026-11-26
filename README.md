@@ -3,6 +3,8 @@
 Socle à trois niveaux (noyau, middlewares, application) plus des modules transverses, exposé par une API
 Node sans dépendance et un site Angular. Le contrat détaillé entre modules est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) ; ce fichier en donne la vue d'ensemble et le mode d'emploi.
+Les données sont **partitionnées par utilisateur** : une requête ne charge que les données de son utilisateur, et
+les écritures de deux utilisateurs se font en parallèle (`docs/ARCHITECTURE.md`, §16).
 
 ## Lancer
 
@@ -333,7 +335,17 @@ npm run import:rjs-forecast -- --remplacer
 - `projects-cycles.test.mjs` — les dix cas d'essai des projets sur six mois clos et le mois en cours (26 contrôles), puis arrêt en cours de mois ;
 - `calendar.test.mjs` — module Calendrier : calendriers livrés, noyau, isolement et lecture sans écriture,
   paramétrage du survol, des couleurs et de la vue, configurations refusées, Budget/Patrimoine, configuration
-  fournie à l'appel, fenêtre de lecture, répétitions.
+  fournie à l'appel, fenêtre de lecture, répétitions ;
+- `partitions.test.mjs` — noyau partitionné par user : chargement à la demande, écritures parallèles entre users,
+  refus d'écrire la partition d'un autre user, plusieurs instances sur une base ;
+- `lecture-sans-copie.test.mjs` — brouillon copié objet par objet : la collection se lit comme avant, seuls les
+  objets lus ou écrits sont comparés, `om.list`/`om.by` ne copient que les objets retenus, aperçu sans écriture ;
+- `web-fixtures.test.mjs` — les réponses de l'API qui servent aux tests des écrans BPM sont à jour
+  (`npm run fixtures:web` pour les refaire).
+
+`npm run api:check` contrôle le code de l'API (aucun nom inconnu, aucune importation ni variable inutilisée) ;
+`node api/scripts/bench-noyau.mjs [users] [opérations]` mesure la charge du noyau sur une base temporaire
+(voir `docs/ARCHITECTURE.md`, §16).
 
 `npm --prefix web test -- --watch=false` lance les tests unitaires du site (routes et redirections, lectures
 protégées contre les réponses périmées, graphes, éditeur d'opération rejouable, dates et modèle du calendrier).

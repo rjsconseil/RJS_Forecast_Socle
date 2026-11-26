@@ -29,8 +29,8 @@ const FRESH_MS = 120_000;
 const isUrgent = (p: ClosingPoint) => p.status === 'late' || p.status === 'due';
 
 /**
- * Clôture du cycle : la synthèse, puis quatre sections du plus important au moins crucial (1 à valider, 2 cohérence, 3 résultat
- * et cycle suivant, 4 clôturer) et, en ligne dépliable, les actions du cycle (consultatives). La page
+ * Clôture du cycle : quatre sections du plus important au moins crucial (1 à valider, 2 cohérence, 3 synthèse du résultat
+ * et du cycle suivant, 4 clôturer, dont le bouton reste grisé tant que la clôture n'est pas débloquée) et, en ligne dépliable, les actions du cycle (consultatives). La page
  * s'ouvre repliée : chaque section montre ses encadrés de chiffres clés et son tableau, le détail se déplie.
  * Un même code couleur d'alerte partout : vert pour ce qui est bon, puis bleu, jaune, orange et rouge selon la gravité.
  * Tant que le cycle court, la page suit les points ; chacun se règle sur sa page, ou en fenêtre quand le site a son
