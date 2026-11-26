@@ -18,6 +18,51 @@ export const SECURITY_HEADERS = {
 };
 /** Adresses ouvertes sans connexion quand la connexion est exigée. */
 const PUBLIC_PATHS = new Set(['GET /api/users/types']);
+/** Méthodes sans effet : seules à échapper au contrôle de l'origine et du type de contenu. */
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+/** Noms d'hôte du poste : seuls acceptés en mode local, sauf liste explicite (`SOCLE_ALLOWED_HOSTS`). */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
+const listOf = (value) => String(value ?? '').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);
+/** Nom d'hôte d'un en-tête `Host` (sans le port). */
+export function hostnameOf(host) {
+  const h = String(host ?? '').trim().toLowerCase();
+  if (h.startsWith('[')) return h.slice(0, h.indexOf(']') + 1);
+  return h.split(':')[0];
+}
+
+/**
+ * Garde contre les requêtes venues d'un autre site (CSRF) et le « DNS rebinding » :
+ * - `Host` : en mode local, le poste seul (localhost, 127.0.0.1, ::1) ; sinon la liste `SOCLE_ALLOWED_HOSTS` si elle
+ *   est fixée (le domaine du site en ligne) ;
+ * - écriture (toute méthode hors GET/HEAD/OPTIONS) : refusée si le navigateur la dit venue d'un autre site
+ *   (`Sec-Fetch-Site: cross-site`), ou si son `Origin` n'est ni celui de la requête ni dans `SOCLE_ALLOWED_ORIGINS` ;
+ *   son corps, s'il y en a un, doit être déclaré `application/json` (un formulaire ou un `text/plain` d'une autre page
+ *   ne passe plus).
+ */
+export function createRequestGuard({ required, env = process.env } = {}) {
+  const hosts = listOf(env.SOCLE_ALLOWED_HOSTS);
+  const origins = new Set(listOf(env.SOCLE_ALLOWED_ORIGINS));
+  return function check(req) {
+    const host = hostnameOf(req.headers.host);
+    if (hosts.length ? !hosts.includes(host) && !LOOPBACK_HOSTS.has(host) : !required && !LOOPBACK_HOSTS.has(host)) {
+      fail('FORBIDDEN', 'Adresse du site non reconnue.', { host });
+    }
+    if (SAFE_METHODS.has(req.method)) return;
+    if (String(req.headers['sec-fetch-site'] ?? '').toLowerCase() === 'cross-site') fail('FORBIDDEN', 'Requête venue d’un autre site : refusée.');
+    const origin = req.headers.origin;
+    if (origin && origin !== 'null') {
+      let o;
+      try { o = new URL(origin); } catch { fail('FORBIDDEN', 'Origine de la requête invalide.'); }
+      const same = o.host.toLowerCase() === String(req.headers.host ?? '').toLowerCase();
+      if (!same && !origins.has(o.origin.toLowerCase())) fail('FORBIDDEN', 'Requête venue d’un autre site : refusée.', { origin: o.origin });
+    } else if (origin === 'null') fail('FORBIDDEN', 'Requête d’origine opaque : refusée.');
+    const type = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+    const hasBody = Number(req.headers['content-length'] || 0) > 0 || req.headers['transfer-encoding'] !== undefined;
+    if ((type && type !== 'application/json') || (hasBody && !type)) {
+      fail('UNSUPPORTED_MEDIA_TYPE', 'Le corps d’une requête doit être du JSON (content-type: application/json).', { contentType: type || null });
+    }
+  };
+}
 
 export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCLE_AUTH || 'local' } = {}) {
   if (!AUTH_MODES.includes(authMode)) throw new Error(`SOCLE_AUTH inconnu : ${authMode} (attendu : ${AUTH_MODES.join(', ')})`);
@@ -25,6 +70,7 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
   const sessions = createSessions({ secret: authSecret(dataFile) });
   const throttle = createThrottle();
   const users = socle.modules.users;
+  const checkRequest = createRequestGuard({ required });
 
   const routes = [];
   for (const m of socle.registry.modules.values()) {
@@ -167,6 +213,7 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
       res.end(JSON.stringify(payload));
     };
     try {
+      checkRequest(req);
       const ctxFull = await contextOf(req);
       const ctx = { userId: ctxFull.userId };
       if (req.method === 'GET' && url.pathname === '/api/changes') return await openChanges(req, res, url, ctxFull);

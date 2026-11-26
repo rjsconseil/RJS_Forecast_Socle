@@ -1,5 +1,5 @@
 // Jeux d'essai RJS Forecast, préparés par les contrats réels (HTTP) après réinitialisation de recette.
-// Usage : API lancée avec J1_ENABLE_RECETTE_RESET=1 (`npm run api`), puis `npm run seed`.
+// Usage : API lancée avec J1_ENABLE_RECETTE_RESET=1 (`npm run api:recette`), puis `npm run seed`.
 // Port : J1_API_PORT (défaut 3410) ou URL complète J1_API_URL.
 // Les dates sont relatives à la date réelle du jour (locale), pas à SOCLE_TODAY.
 import { randomUUID } from 'node:crypto';

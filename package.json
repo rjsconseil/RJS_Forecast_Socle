@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node scripts/start.mjs",
     "start:production": "node scripts/start.mjs --production",
-    "api": "J1_ENABLE_RECETTE_RESET=1 node api/src/server.mjs",
+    "api": "node api/src/server.mjs",
+    "api:recette": "J1_ENABLE_RECETTE_RESET=1 node api/src/server.mjs",
     "web": "npm --prefix web start",
     "seed": "node api/scripts/seed.mjs",
     "seed:plafonds": "node api/scripts/seed-plafonds.mjs",

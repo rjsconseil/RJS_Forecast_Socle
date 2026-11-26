@@ -11,7 +11,8 @@ les écritures de deux utilisateurs se font en parallèle (`docs/ARCHITECTURE.md
 ```bash
 npm install --prefix web
 npm start          # API (http://localhost:3410) et site (http://localhost:4300) ensemble ; Ctrl+C arrête les deux
-npm run api        # API locale http://localhost:3410 (réinitialisation de recette activée)
+npm run api        # API locale http://localhost:3410
+npm run api:recette # la même, avec la réinitialisation de recette (jeux d’essai)
 npm run seed       # jeux d'essai via les contrats HTTP réels (API lancée, voir plus bas)
 npm run seed:projets   # foyer d'essai : 10 projets de la vie sur 6 mois clos et le mois en cours (API arrêtée)
 npm run e2e:projets    # bout en bout dans un navigateur (après npm run build ; API et ports temporaires)
@@ -28,7 +29,7 @@ Variables d'environnement de l'API :
 |---|---|
 | `J1_API_PORT` | Port de l'API (défaut `3410`). Lu aussi par `npm run seed`. |
 | `J1_DATA_FILE` | Base SQLite de persistance (défaut `api/data/store.sqlite`). |
-| `J1_ENABLE_RECETTE_RESET=1` | Active `POST /api/_recette/reset` (utilisé par le seed). `npm run api` l'active. |
+| `J1_ENABLE_RECETTE_RESET=1` | Active `POST /api/_recette/reset` (utilisé par le seed). `npm run api:recette` l’active (`npm run api` ne l’active plus). |
 | `J1_ENABLE_FAULT_INJECTION=1` | Accepte `_fault: "before-commit"` pour simuler une interruption avant écriture. |
 | `SOCLE_TODAY=AAAA-MM-JJ` | Fixe la date du jour du socle (périodes, période courante, dates par défaut). Utile en recette ; les tests la fixent à `2026-11-03`. Le seed, lui, calcule ses dates à partir de la date réelle : ne pas lancer l'API avec `SOCLE_TODAY` avant `npm run seed`. |
 
