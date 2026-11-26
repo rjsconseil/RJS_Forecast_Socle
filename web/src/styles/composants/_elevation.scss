@@ -3,7 +3,7 @@
  * --btn-primary-shadow) ; ce fichier n'ajoute que le mouvement : survol des cartes cliquables, halo des
  * commandes, entrée des fenêtres. La règle « mouvement réduit » de `_interactions.scss` les neutralise.
  */
-.app-shell :is(.plan-destination, .plan-entry, .plan-tool, a[data-ui-pattern~='panel']) {
+.app-shell :is(.plan-destination, .plan-entry, a[data-ui-pattern~='panel']) {
   transition:
     border-color var(--ease-fast),
     background-color var(--ease-fast),
@@ -16,7 +16,7 @@
     box-shadow: var(--card-hover-shadow);
     transform: translateY(var(--card-lift));
   }
-  .app-shell :is(.plan-entry, .plan-tool):hover:not(:active) {
+  .app-shell :is(.plan-entry):hover:not(:active) {
     transform: translateY(var(--card-lift));
   }
   .app-shell .btn-primary:hover:not(:disabled) {
@@ -46,7 +46,7 @@
 }
 
 /* Les panneaux arrivent en douceur à l'ouverture d'une page ; l'ordre de lecture ne change pas. */
-.app-shell main :is([data-ui-pattern~='panel'], .bv-card, .plan-zone-card, .plan-page-card, .plan-section-card, .journey-resume) {
+.app-shell main :is([data-ui-pattern~='panel'], .bv-card, .plan-zone-card, .plan-page-card, .journey-resume) {
   animation: surface-rise var(--duree-320) ease-out backwards;
 }
 @keyframes surface-rise {
@@ -54,15 +54,6 @@
 }
 
 /* Vue d'ensemble BPM : les étapes de la chaîne et les projets de l'arbre réagissent au survol. */
-.app-shell main :is(.ov-stage, .ov-project) {
-  transition: box-shadow var(--duree-240) ease, transform var(--duree-240) ease;
-}
-@media (hover: hover) {
-  .app-shell main :is(.ov-stage, .ov-project):hover {
-    box-shadow: var(--card-hover-shadow);
-    transform: translateY(var(--card-lift));
-  }
-}
 
 /* La colonne de navigation se détache de la page par une ombre fine. */
 .app-shell .sidebar {

@@ -7,7 +7,7 @@
  * Les nouveaux composants utilisent section-heading ; les classes ci-dessous
  * sont les adaptateurs des écrans historiques, aussi déclarés dans cibles.csv.
  */
-$section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .budget-section-head:not(:has(h1)), .bw-section-head, .bw-manager-detail-head, .cfg-panel-head, .fm-head, .pilotage-heading, .calendar-agenda-heading, .calendar-grid-head, .psy-panel > header, .management-journey > header, .bm-head, .bpm-project-head, .cfg-panel > h2, .us-section > h2, .budget-panel > h3, .documentation-card > h2, .management-panel > h2, .bv-card > h2, .bpm-next > h2, .bpm-trend > h2, .bpm-quick > h2, .us-section-head';
+$section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .budget-section-head:not(:has(h1)), .bw-section-head, .bw-manager-detail-head, .cfg-panel-head, .calendar-agenda-heading, .calendar-grid-head, .psy-panel > header, .bm-head, .cfg-panel > h2, .us-section > h2, .management-panel > h2, .bv-card > h2, .us-section-head';
 
 .app-shell main .page-heading {
   margin-block-end: var(--page-head-margin);
@@ -46,13 +46,6 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
   gap: var(--section-heading-gap);
   margin: 0;
 }
-.app-shell main .management-journey > header {
-  display: grid;
-}
-.app-shell main .board-tools-title {
-  flex-basis: var(--part-100);
-  justify-content: space-between;
-}
 .app-shell main :is(#{$section-headings}) :is(h2, h3),
 .app-shell main :is(h2, h3):is(#{$section-headings}) {
   margin: 0;
@@ -79,9 +72,7 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 /* La même finition sur les panneaux des modules ; les données et alertes restent intactes. */
 .app-shell
   main
-  :is(
-    .budget-panel, .bv-card, .psy-panel, .management-panel, .management-journey, .cfg-panel, .us-section, .audit-card, .documentation-card, .bpm-next, .bpm-trend, .bpm-quick
-  ) {
+  :is(.bv-card, .psy-panel, .management-panel, .cfg-panel, .us-section) {
   min-width: 0;
   box-shadow: var(--card-shadow, var(--app-panel-shadow));
 }
@@ -102,9 +93,7 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 }
 .app-shell
   main
-  :is(
-    .calendar-toolbar, .bw-manager-filters, .us-filters
-  ) {
+  :is(.calendar-toolbar, .us-filters) {
   min-width: 0;
   padding: var(--card-padding, var(--ecart-16));
   border: var(--card-border-width) solid var(--card-border);
@@ -331,11 +320,11 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 }
 /* Les filtres de tous les modules sont des barres d'outils, les formulaires
    conservent un repère de focus commun sans modifier leurs dimensions. */
-.app-shell :is(.management-context, .bw-manager-toolbar, .ta-filters) {
+.app-shell :is(.bw-manager-toolbar) {
   border-color: var(--card-border);
   background: var(--raised-surface);
 }
-.app-shell :is(.management-form, .bw-form, .us-form) :is(input, select, textarea):focus-visible {
+.app-shell :is(.management-form, .us-form) :is(input, select, textarea):focus-visible {
   outline: var(--focus-width, var(--trait-3)) solid var(--app-focus-ring);
   outline-offset: var(--focus-offset, var(--decalage-2));
 }
@@ -346,18 +335,18 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
   border-bottom: var(--trait-1) solid var(--line);
   box-shadow: none;
 }
-.app-shell main :is([data-ui-pattern~='heading'], .page-head, .plan-heading, .bpm-hero) {
+.app-shell main :is([data-ui-pattern~='heading'], .page-head, .plan-heading) {
   box-shadow:
     inset 0 var(--trait-3) 0 var(--space-bright),
     var(--app-panel-shadow);
 }
-.app-shell main :is(.plan-page-card, .plan-zone-card, .management-panel, .cfg-panel, .us-section, .bv-card, .bpm-next, .bpm-trend, .bpm-quick) {
+.app-shell main :is(.plan-page-card, .plan-zone-card, .management-panel, .cfg-panel, .us-section, .bv-card) {
   box-shadow: var(--card-shadow, var(--app-panel-shadow));
 }
 .app-shell main :is(.plan-page-head, .plan-zone-eyebrow, .cockpit-heading) {
   font-variant-numeric: tabular-nums;
 }
-.app-shell main :is(.metric-value, .metric-tile > strong, .plan-metric, .summary-band-value, .us-stats strong) {
+.app-shell main :is(.metric-value, .metric-tile > strong, .plan-metric, .us-stats strong) {
   font-variant-numeric: tabular-nums;
   letter-spacing: calc(-1 * var(--lettrage-0-02em));
 }
@@ -374,7 +363,7 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 .app-shell .btn-secondary {
   border-width: var(--trait-1);
 }
-.app-shell main :is(.plan-entry, .plan-page-card, .plan-section-card):focus-visible {
+.app-shell main :is(.plan-entry, .plan-page-card):focus-visible {
   outline: var(--trait-3) solid var(--app-focus-ring);
   outline-offset: var(--decalage-4);
 }
@@ -413,22 +402,22 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 }
 
 /* Choix comparables : le même relief dans les parcours et dans les réglages. */
-.app-shell main :is(.bpm-choice, .bp-toggle label, .cfg-module-chip) {
+.app-shell main :is(.bp-toggle label, .cfg-module-chip) {
   border-radius: var(--card-radius);
   border-color: var(--line);
   background: var(--raised-surface);
   min-height: var(--control-height);
 }
-.app-shell main :is(.bpm-choice.is-selected, .bp-toggle label.is-selected, .cfg-module-chip.current) {
+.app-shell main :is(.bp-toggle label.is-selected, .cfg-module-chip.current) {
   border-color: var(--app-accent);
   background: var(--app-accent-soft);
   box-shadow: inset 0 0 0 var(--trait-1) var(--app-accent);
   color: var(--ink);
 }
-.app-shell main :is(.bpm-choice, .bp-toggle label, .cfg-module-chip):hover {
+.app-shell main :is(.bp-toggle label, .cfg-module-chip):hover {
   border-color: var(--app-accent);
 }
-.app-shell main :is(.bpm-choice, .bp-toggle label):focus-within {
+.app-shell main :is(.bp-toggle label):focus-within {
   outline: var(--trait-3) solid var(--app-focus-ring);
   outline-offset: var(--decalage-4);
 }
@@ -454,18 +443,10 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
   padding-bottom: var(--ecart-12);
   border-bottom: var(--trait-1) solid var(--line);
 }
-.record-facts,
 .detail-project-facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(var(--part-100), var(--dim-160)), var(--fr-1)));
   gap: var(--ecart-12);
-}
-.record-facts > div {
-  min-width: 0;
-  padding: var(--ecart-12);
-  border-radius: var(--rayon-8);
-  background: var(--soft);
-  overflow-wrap: anywhere;
 }
 
 /* BPM : les raccourcis occupent une vraie rangée, sans colonne de boutons empilés. */
@@ -524,8 +505,7 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
   border-top: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-25), transparent);
   border-bottom: 0;
 }
-.app-shell main [data-sticky-hero] .site-page-tools :is(a,button),
-.app-shell main .plan-heading > .portal-jumps > a {
+.app-shell main [data-sticky-hero] .site-page-tools :is(a, button),.app-shell main .plan-heading > .portal-jumps > a {
   min-height: var(--dim-36); padding: var(--ecart-6) var(--ecart-12); margin: 0;
   border: var(--trait-1) solid color-mix(in srgb, var(--white) var(--part-35), transparent);
   border-radius: var(--rayon-8); background: transparent; color: var(--white);
@@ -533,8 +513,7 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 }
 .app-shell main [data-sticky-hero] .site-page-tools .project-detail-actions { display: flex; flex-wrap: wrap; gap: var(--ecart-8); }
 .app-shell main .plan-heading > .portal-jumps span { color: inherit; }
-.app-shell main [data-sticky-hero] .site-page-tools :is(a,button):hover,
-.app-shell main .plan-heading > .portal-jumps > a:hover { background: color-mix(in srgb,var(--white) var(--part-10),transparent); }
+.app-shell main [data-sticky-hero] .site-page-tools :is(a, button):hover,.app-shell main .plan-heading > .portal-jumps > a:hover { background: color-mix(in srgb,var(--white) var(--part-10),transparent); }
 
 .flow-direction[data-flow] { position: relative; font-size: 0; line-height: 0; }
 .flow-direction[data-flow]::before {

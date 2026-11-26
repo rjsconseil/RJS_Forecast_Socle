@@ -1,4 +1,4 @@
-// BPM-Astra · écrans métier de BPM · projets de la vie et tâches (tableaux par statut, budget de chaque projet).
+/* BPM-Astra · écrans métier de BPM · projets de la vie et tâches (tableaux par statut, budget de chaque projet).*/
 @use 'functions' as *;
 
 /* Projets de la vie dans BPM : les tableaux par statut du noyau (`_workspace.scss`), enrichis du budget de chaque
@@ -171,64 +171,6 @@
 }
 
 /* ---------- panneau du budget de vie (à droite de l'en-tête) ---------- */
-.bpm-life-panel {
-  display: grid;
-  align-content: start;
-  gap: var(--ecart-12);
-  margin-bottom: var(--ecart-24);
-  padding: var(--ecart-20);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--board-column-surface);
-  box-shadow: var(--app-panel-shadow);
-}
-.bpm-life-panel h2 {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: scaled(var(--fs-lg));
-}
-.bpm-life-panel > p {
-  margin: 0;
-  color: var(--muted);
-  font-size: scaled(var(--fs-xs));
-  line-height: var(--lh-normal);
-}
-.bpm-life-figures {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--ecart-8);
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-.bpm-life-figures div {
-  padding: var(--ecart-8) var(--ecart-10);
-  border-radius: var(--radius-md);
-  background: var(--raised-surface);
-}
-.bpm-life-figures dt {
-  color: var(--muted);
-  font-size: scaled(var(--fs-2xs));
-}
-.bpm-life-figures dd {
-  margin: 0;
-  font-size: scaled(var(--fs-md));
-  font-weight: var(--fw-bold);
-}
-.bpm-life-figures .is-danger dd {
-  color: var(--bpm-danger);
-}
-.bpm-adopt {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--ecart-8);
-  align-items: end;
-}
-.bpm-adopt label {
-  display: grid;
-  gap: var(--ecart-4);
-  font-size: scaled(var(--fs-2xs));
-  font-weight: var(--fw-semibold);
-}
 
 /* ---------- demande de dépassement (décision du budget de vie) ---------- */
 .bpm-overrun {
@@ -260,27 +202,6 @@
   gap: var(--ecart-28);
   padding-bottom: var(--ecart-56);
 }
-.bpm-project-head {
-  display: grid;
-  gap: var(--ecart-10);
-  padding-bottom: var(--ecart-20);
-  border-bottom: var(--trait-1) solid var(--line);
-}
-.bpm-project-head h1 {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: clamp(var(--texte-32), var(--texte-3-5vw), var(--texte-48, 3rem));
-  letter-spacing: calc(-1 * var(--lettrage-0-04em));
-}
-.bpm-project-head .page-intro {
-  margin: 0;
-}
-.bpm-project-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ecart-8) var(--ecart-16);
-}
 .bpm-section {
   display: grid;
   gap: var(--ecart-14);
@@ -308,42 +229,6 @@
   border-radius: var(--radius-lg);
   background: var(--board-column-surface);
   box-shadow: var(--app-panel-shadow);
-}
-.bpm-kpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: var(--ecart-10);
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-.bpm-kpis div {
-  display: grid;
-  gap: var(--ecart-2);
-  padding: var(--ecart-12) var(--ecart-14);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--raised-surface);
-}
-.bpm-kpis dt {
-  color: var(--muted);
-  font-size: scaled(var(--fs-2xs));
-  font-weight: var(--fw-semibold);
-}
-.bpm-kpis dd {
-  margin: 0;
-  font-size: scaled(var(--fs-lg));
-  font-weight: var(--fw-bold);
-}
-.bpm-kpis small {
-  color: var(--muted);
-  font-size: scaled(var(--fs-2xs));
-}
-.bpm-kpis .is-danger {
-  border-color: var(--bpm-danger);
-  background: var(--bpm-danger-soft);
-}
-.bpm-kpis .is-danger dd {
-  color: var(--bpm-danger);
 }
 .bpm-inline-form {
   display: flex;
@@ -471,37 +356,6 @@
 }
 
 /* Tâches à rattacher. */
-.bpm-attachable {
-  display: grid;
-  gap: var(--ecart-8);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.bpm-attachable li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ecart-8) var(--ecart-16);
-  padding: var(--ecart-10) var(--ecart-14);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--board-column-surface);
-  font-size: scaled(var(--fs-xs));
-}
-.bpm-attachable small {
-  color: var(--muted);
-}
-
-@media (max-width: 900px) {
-  .bpm-adopt {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .bpm-life-figures {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 
 /* ---------- ajustements après relecture visuelle ---------- */
 .bpm-budget-head bpm-budget-state {
@@ -550,171 +404,22 @@
 .bpm-table select {
   max-width: 8.5rem;
 }
-@media (min-width: 1200px) {
-  .bpm-kpis {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-}
 
 /* Gestion de projet : une synthèse aérée, prolongée par le détail de ses tâches. */
 .bpm-management {
   gap: var(--ecart-24);
 }
-.bpm-management > .bpm-project-head {
-  padding-block: var(--ecart-12) var(--ecart-20);
-  gap: var(--ecart-10);
-}
-.bpm-management > .bpm-project-head .page-intro {
-  max-width: 76ch;
-  font-size: scaled(var(--fs-sm));
-  line-height: 1.6;
-}
-.bpm-management-summary {
-  background: var(--raised-surface);
-}
-.bpm-management-summary .bpm-kpis > div {
-  border: none;
-  border-left: 2px solid var(--line);
-  border-radius: 0;
-  padding: var(--ecart-8) var(--ecart-12);
-  background: transparent;
-}
-.bpm-management-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--ecart-16);
-}
-.bpm-management-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(260px, 20%, 320px);
-  align-items: stretch;
-  gap: var(--ecart-12);
-  min-width: 0;
-}
-.pm-project-overview {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-  align-content: stretch;
-  gap: var(--ecart-8) var(--ecart-16);
-  min-width: 0;
-  padding: var(--ecart-16);
-  background: var(--raised-surface);
-  border-color: color-mix(in srgb, var(--ink) 12%, var(--line));
-}
-.bpm-management-card.is-expanded > .pm-project-overview {
-  align-self: start;
-}
-.bpm-management-card h3 {
-  min-width: 0;
-  max-inline-size: 100%;
-  margin: 0;
-  font-size: scaled(var(--fs-2xl));
-  line-height: 1.3;
-  letter-spacing: -0.025em;
-}
-.bpm-management-card h3 a {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  color: var(--ink);
-  text-decoration: none;
-}
-.bpm-management-card h3 a:hover {
-  text-decoration: underline;
-}
-.bpm-management-card .bpm-project-links {
-  font-size: scaled(var(--fs-sm));
-  gap: var(--ecart-12);
-}
-.bpm-management-card .pm-project-status,
-.bpm-management-card .pm-project-priority {
-  --pm-badge-ink: #171717;
-  --pm-badge-surface: #f3f4f6;
-  --pm-badge-line: #cdd1d5;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ecart-6);
-  padding: var(--ecart-6) var(--ecart-10);
-  border: 1px solid var(--pm-badge-line);
-  border-radius: var(--radius-pill);
-  color: var(--pm-badge-ink);
-  background: var(--pm-badge-surface);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-semibold);
-  line-height: 1.4;
-}
-.bpm-management-card .pm-project-status::before {
-  content: '';
-  width: var(--ecart-6);
-  height: var(--ecart-6);
-  flex: 0 0 var(--ecart-6);
-  border-radius: 50%;
-  background: currentColor;
-}
-.bpm-management-card .pm-project-status[data-status='done'] {
-  --pm-badge-ink: #166534;
-  --pm-badge-surface: #ecfdf3;
-  --pm-badge-line: #92d4ad;
-}
 /* Projet abandonné : sobre, il ne réclame plus rien. */
-.bpm-management-card .pm-project-status[data-status='abandoned'] {
-  --pm-badge-ink: #4b5563;
-  --pm-badge-surface: #f1f2f4;
-  --pm-badge-line: #c7ccd3;
-}
-.bpm-management-card[data-abandoned] {
-  opacity: 0.82;
-}
 /* Le noyau nomme « onHold » le statut affiché « En pause ». */
-.bpm-management-card .pm-project-status[data-status='onHold'] {
-  --pm-badge-ink: #765300;
-  --pm-badge-surface: #fff2b3;
-  --pm-badge-line: #d6b540;
-}
-.bpm-management-card .pm-project-status[data-status='paused'],
-.bpm-management-card .pm-project-status[data-status='toResume'],
-.bpm-management-card .pm-project-priority[data-priority='medium'] {
-  --pm-badge-ink: #1754b5;
-  --pm-badge-surface: #edf4ff;
-  --pm-badge-line: #a6c3f7;
-}
-.bpm-management-card .pm-project-priority[data-priority='high'] {
-  --pm-badge-ink: #b42318;
-  --pm-badge-surface: #fff1f1;
-  --pm-badge-line: #f3b8b3;
-}
-.pm-project-description {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  min-block-size: 0;
-  margin: 0;
-  color: var(--muted);
-  font-size: scaled(var(--fs-md));
-  line-height: 1.5;
-  text-align: right;
-  white-space: pre-line;
-  overflow-wrap: anywhere;
-}
-.pm-project-description.is-empty {
-  font-style: italic;
-}
-.pm-project-facts,
-.pm-finance-summary,
-.pm-task-cash {
+.pm-finance-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--ecart-12);
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
-.pm-project-facts > div,
-.pm-finance-summary > div,
-.pm-task-cash > div {
+.pm-finance-summary > div {
   display: grid;
-  align-content: center;
   gap: var(--ecart-6);
   min-width: 0;
   padding: var(--ecart-12) var(--ecart-8);
@@ -722,39 +427,26 @@
   background: color-mix(in srgb, var(--line) 22%, var(--raised-surface));
   text-align: center;
 }
-.pm-project-facts dt,
-.pm-finance-summary dt,
-.pm-task-cash dt,
-.pm-task-dates dt {
+.pm-finance-summary dt {
   color: var(--muted);
   font-size: scaled(var(--fs-sm));
   line-height: 1.4;
 }
-.pm-project-facts dd,
-.pm-finance-summary dd,
-.pm-task-cash dd,
-.pm-task-dates dd {
+.pm-finance-summary dd {
   margin: 0;
   color: var(--ink);
   font-size: scaled(var(--fs-md));
   font-weight: var(--fw-semibold);
   line-height: 1.35;
 }
-.pm-project-facts dd small,
-.pm-project-facts > div > small,
 .pm-finance-summary small {
   font-size: scaled(var(--fs-xs));
   color: var(--muted);
   font-weight: 400;
 }
-.pm-project-facts dd {
-  font-size: scaled(var(--fs-lg));
-}
-.pm-project-facts,
 .pm-finance-summary {
   grid-template-rows: auto auto auto;
 }
-.pm-project-facts > div,
 .pm-finance-summary > div {
   grid-row: span 3;
   grid-template-rows: subgrid;
@@ -769,20 +461,6 @@
   border-radius: var(--radius-md);
   color: var(--bpm-warn);
   font-size: scaled(var(--fs-sm));
-}
-.bpm-management-card .pm-project-facts > div {
-  padding-block: var(--ecart-6);
-  row-gap: var(--ecart-4);
-}
-.bpm-management-card .pm-project-status,
-.bpm-management-card .pm-project-priority {
-  padding-block: var(--ecart-2);
-}
-.bpm-management-filters {
-  justify-content: space-between;
-}
-.bpm-management-filters input {
-  min-width: min(24rem, 70vw);
 }
 .bpm-management details > summary {
   cursor: pointer;
@@ -1057,9 +735,6 @@
   font-size: scaled(var(--fs-sm));
   line-height: 1.5;
 }
-.bpm-management .pm-budget.is-unfunded .pm-money {
-  display: block;
-}
 
 /* Les petits cadres empilent les montants autour de la jauge pour garder des chiffres lisibles. */
 @container project-metrics (max-width: 27rem) {
@@ -1085,77 +760,12 @@
 }
 
 /* La bande ouverte et la liste restent dans le même cadre que la synthèse. */
-.bpm-management .pm-project-disclosure {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ecart-16);
-  width: 100%;
-  padding: var(--ecart-6) var(--ecart-12);
-  border: 1px solid color-mix(in srgb, var(--app-accent) 20%, var(--line));
-  border-radius: var(--radius-md);
-  color: var(--ink);
-  background: color-mix(in srgb, var(--app-accent) 5%, var(--raised-surface));
-  text-align: left;
-  cursor: pointer;
-}
-.bpm-management .pm-project-disclosure:hover {
-  border-color: var(--app-accent);
-}
-.bpm-management .pm-project-disclosure[aria-expanded='true'] {
-  border-color: var(--app-accent);
-  background: var(--app-accent-soft);
-}
-.bpm-management .pm-project-disclosure > span:first-child {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--ecart-8) var(--ecart-16);
-}
-.bpm-management .pm-project-disclosure strong {
-  font-size: scaled(var(--fs-md));
-}
-.bpm-management .pm-project-disclosure > span:first-child > span {
-  font-size: scaled(var(--fs-sm));
-  color: var(--muted);
-}
-.bpm-management .pm-disclosure-sign {
-  display: grid;
-  place-items: center;
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
-  border: 1px solid color-mix(in srgb, var(--app-accent) 25%, var(--line));
-  border-radius: 50%;
-  color: var(--app-accent);
-  background: var(--raised-surface);
-  font-size: scaled(var(--fs-2xl));
-  line-height: 1;
-}
-.bpm-management .pm-project-tasks {
-  grid-column: 1 / -1;
-  display: grid;
-  min-width: 0;
-  margin-top: 0;
-  border: 1px solid color-mix(in srgb, var(--app-accent) 20%, var(--line));
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--app-accent) 3%, var(--raised-surface));
-}
-.bpm-management .pm-project-detail {
-  display: grid;
-  padding: var(--ecart-20);
-  grid-template-columns: minmax(0, 1fr) 11rem;
-  gap: var(--ecart-20);
-  align-items: start;
-}
 .bpm-management .pm-project-finance {
   display: grid;
   gap: var(--ecart-16);
   min-width: 0;
 }
-.bpm-management .pm-detail-eyebrow,
-.bpm-management .pm-task-eyebrow {
+.bpm-management .pm-detail-eyebrow {
   margin: 0;
   color: var(--muted);
   font-size: scaled(var(--fs-xs));
@@ -1171,143 +781,9 @@
 .bpm-management .pm-finance-summary dd {
   font-size: scaled(var(--fs-xl));
 }
-.bpm-management .pm-finance-details {
-  font-size: scaled(var(--fs-sm));
-}
-.bpm-management .pm-finance-details summary {
-  color: var(--app-accent);
-}
-.bpm-management .pm-task-list {
-  display: grid;
-  gap: var(--ecart-20);
-  margin: 0 0 0 var(--ecart-12);
-  padding: 0 0 0 var(--ecart-24);
-  border-left: 2px solid color-mix(in srgb, var(--app-accent) 24%, var(--line));
-  list-style: none;
-  min-width: 0;
-}
-.bpm-management .pm-task-list > li {
-  position: relative;
-  min-width: 0;
-}
-.bpm-management .pm-task-index {
-  position: absolute;
-  top: var(--ecart-24);
-  left: -40px;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid color-mix(in srgb, var(--app-accent) 22%, var(--line));
-  border-radius: 50%;
-  color: var(--app-accent);
-  background: var(--raised-surface);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-semibold);
-}
 .bpm-management bpm-managed-task {
   display: block;
   min-width: 0;
-}
-.bpm-management .pm-task-summary {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-content: start;
-  gap: var(--ecart-20);
-  min-width: 0;
-}
-.bpm-management .pm-task-heading {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--ecart-8);
-  text-align: left;
-}
-.bpm-management .pm-task-heading h4 {
-  margin: 0;
-}
-.bpm-management .pm-task-heading h4 button {
-  display: block;
-  width: 100%;
-  white-space: normal;
-  color: var(--ink);
-  font-size: scaled(var(--fs-2xl));
-  font-weight: var(--fw-bold);
-  line-height: 1.4;
-  text-align: left;
-  overflow-wrap: anywhere;
-}
-.bpm-management .pm-task-heading .bpm-note {
-  font-size: scaled(var(--fs-md));
-  line-height: 1.65;
-  text-align: left;
-}
-.bpm-management .pm-task-status {
-  display: grid;
-  gap: var(--ecart-8);
-  font-size: scaled(var(--fs-md));
-  font-weight: var(--fw-semibold);
-  color: var(--muted);
-}
-.bpm-management .pm-task-status select {
-  width: 100%;
-  min-width: 0;
-  text-align: center;
-  font-size: scaled(var(--fs-md));
-}
-.bpm-management .pm-task-dates {
-  display: grid;
-  gap: var(--ecart-16);
-  margin: 0;
-}
-.bpm-management .pm-task-dates > div {
-  display: grid;
-  gap: var(--ecart-4);
-}
-.bpm-management .pm-task-actions {
-  display: grid;
-  gap: var(--ecart-10);
-  padding-top: var(--ecart-16);
-  border-top: 1px solid var(--line);
-}
-.bpm-management .pm-task-actions .text-link {
-  justify-self: center;
-  font-size: scaled(var(--fs-sm));
-}
-.bpm-management .pm-task-cash {
-  grid-template-rows: auto auto;
-  gap: var(--ecart-8);
-}
-.bpm-management .pm-task-cash > div {
-  grid-row: span 2;
-  grid-template-rows: subgrid;
-  align-items: center;
-}
-.bpm-management .pm-task-cash dt {
-  font-size: scaled(var(--fs-sm));
-}
-.bpm-management .pm-task-cash dd {
-  font-size: scaled(var(--fs-xl));
-}
-.bpm-management .pm-task-footnote {
-  font-size: scaled(var(--fs-sm));
-  line-height: 1.65;
-}
-.bpm-management .pm-task-decision {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ecart-16);
-  padding-top: var(--ecart-16);
-  border-top: 1px solid var(--line);
-}
-.bpm-management .pm-task-decision strong {
-  font-size: scaled(var(--fs-md));
-}
-.bpm-management .pm-tasks-empty {
-  padding: var(--ecart-12);
-  font-size: scaled(var(--fs-sm));
 }
 
 @media (max-width: 1050px) {
@@ -1315,26 +791,10 @@
     grid-template-columns: minmax(0, 1fr) minmax(3rem, 0.5fr) minmax(0, 1fr);
     gap: var(--ecart-8);
   }
-  .bpm-management .pm-project-detail {
-    grid-template-columns: minmax(0, 1fr) 9.5rem;
-    padding: var(--ecart-16);
-  }
 }
 @media (max-width: 900px) {
   .bpm-request {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .bpm-management .pm-project-detail {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .bpm-management .pm-task-sidebar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .bpm-management .pm-task-sidebar > .pm-detail-eyebrow {
-    grid-column: 1 / -1;
-  }
-  .bpm-management .pm-task-sidebar .pm-task-dates {
-    grid-row: span 2;
   }
 }
 @media (max-width: 600px) {
@@ -1343,21 +803,6 @@
   }
   .bpm-management-form {
     padding: var(--ecart-12);
-  }
-  .pm-project-overview {
-    padding: var(--ecart-12);
-  }
-  .bpm-management .pm-project-detail {
-    padding: 0;
-  }
-  .pm-project-facts {
-    gap: var(--ecart-6);
-  }
-  .pm-project-facts dt {
-    font-size: scaled(var(--fs-xs));
-  }
-  .pm-project-facts dd {
-    font-size: scaled(var(--fs-sm));
   }
   .bpm-management .pm-money {
     grid-template-columns: minmax(0, 1fr);
@@ -1376,9 +821,6 @@
   .bpm-management .pm-budget-percent {
     font-size: scaled(var(--fs-sm));
   }
-  .bpm-management .pm-project-tasks {
-    padding: var(--ecart-16) var(--ecart-10);
-  }
   .bpm-management .pm-finance-summary {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
@@ -1395,26 +837,6 @@
   }
   .bpm-management .pm-finance-summary small {
     grid-column: 1 / -1;
-  }
-  .bpm-management .pm-task-list {
-    margin-left: var(--ecart-4);
-    padding-left: var(--ecart-14);
-  }
-  .bpm-management .pm-task-index {
-    width: 24px;
-    height: 24px;
-    left: -27px;
-  }
-  .bpm-management .pm-task-cash {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-  }
-  .bpm-management .pm-task-cash > div {
-    grid-row: auto;
-    grid-template-rows: auto;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    padding: var(--ecart-10);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1510,17 +932,6 @@
     grid-row: 2;
     width: min(100%, 18rem);
     justify-self: center;
-  }
-}
-
-@media (max-width: 600px) {
-}
-@media (max-width: 800px) {
-  .bpm-management-card {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .pm-project-overview {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -1623,24 +1034,6 @@
     }
   }
 }
-.bpm-management .pm-project-overview > .pm-project-disclosure {
-  align-self: end;
-  min-width: 0;
-  min-height: 40px;
-  padding: 4px 10px;
-  > span:first-child {
-    flex-wrap: nowrap;
-    min-width: 0;
-    > span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    strong {
-      flex-shrink: 0;
-    }
-  }
-}
 @media (max-width: 600px) {
   .bpm-management .pm-budget.pm-vertical-metrics {
     .pm-money {
@@ -1653,15 +1046,6 @@
     }
     > .pm-time {
       grid-template-columns: minmax(0, 1fr) 44px 10px;
-    }
-  }
-  .bpm-management .pm-project-overview > .pm-project-disclosure {
-    gap: 8px;
-    > span:first-child {
-      gap: 8px;
-    }
-    strong {
-      font-size: scaled(var(--fs-sm));
     }
   }
 }
@@ -1710,32 +1094,6 @@
     }
   }
 }
-.bpm-management .pm-project-overview {
-  padding: 12px;
-  gap: 6px 12px;
-  .pm-project-facts > div {
-    padding: 6px;
-  }
-  .pm-project-facts dd {
-    font-size: scaled(var(--fs-sm));
-  }
-  .pm-budget.pm-vertical-metrics {
-    padding: 10px;
-    gap: 6px;
-  }
-  .pm-budget.pm-vertical-metrics .pm-track {
-    height: 44px;
-  }
-  .pm-project-disclosure {
-    min-height: 34px;
-    padding-block: 2px;
-  }
-  .pm-disclosure-sign {
-    width: 26px;
-    height: 26px;
-    flex-basis: 26px;
-  }
-}
 .bpm-management .pm-budget.pm-vertical-metrics {
   align-content: start;
   .pm-money {
@@ -1772,309 +1130,10 @@
 }
 
 /* Tâches dépliées : identité et flux réels, estimation budget/temps, puis commandes. */
-.bpm-management .pm-project-tasks {
-  gap: 12px;
-  padding: 12px;
-  .pm-project-detail {
-    padding: 0;
-    gap: 12px;
-    grid-template-columns: minmax(0, 1fr) 180px;
-  }
-  .pm-project-finance {
-    gap: 6px;
-  }
-  .pm-finance-summary {
-    margin: 0;
-    gap: 8px;
-  }
-  .pm-finance-summary > div {
-    padding: 6px;
-    background: transparent;
-  }
-  .pm-finance-summary dd {
-    font-size: scaled(var(--fs-lg));
-  }
-  .pm-project-detail .btn {
-    font-size: scaled(var(--fs-sm));
-    min-height: 36px;
-    padding: 6px 10px;
-  }
-  .pm-task-list {
-    gap: 10px;
-    margin-left: 0;
-    padding-left: 24px;
-  }
-  .pm-task-index {
-    top: 12px;
-    left: -37px;
-    width: 24px;
-    height: 24px;
-    font-size: scaled(var(--fs-xs));
-  }
-  .pm-task-summary {
-    gap: 10px;
-  }
-  .pm-task-heading {
-    gap: 6px;
-  }
-  .pm-task-heading h4 button {
-    font-size: scaled(var(--fs-lg));
-    line-height: 1.3;
-    padding: 0;
-  }
-  .pm-task-heading .pm-task-description {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    font-size: scaled(var(--fs-sm));
-    line-height: 1.4;
-    margin: 0;
-  }
-  .pm-task-dates {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .pm-task-dates > div {
-    gap: 2px;
-  }
-  .pm-task-dates dt {
-    font-size: scaled(var(--fs-xs));
-    color: var(--muted);
-  }
-  .pm-task-dates dd {
-    margin: 0;
-    font-size: scaled(var(--fs-sm));
-    font-weight: var(--fw-semibold);
-  }
-  .pm-task-cash {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: auto auto;
-    gap: 4px 8px;
-    margin: 0;
-    padding-top: 8px;
-    border-top: 1px solid var(--line);
-  }
-  .pm-task-cash > div {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: subgrid;
-    grid-row: span 2;
-    padding: 0;
-    background: transparent;
-    text-align: left;
-  }
-  .pm-task-cash dt {
-    font-size: scaled(var(--fs-xs));
-    line-height: 1.35;
-  }
-  .pm-task-cash dd {
-    margin: 0;
-    font-size: scaled(var(--fs-sm));
-  }
-  .pm-task-sidebar {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 0 0 0 12px;
-    border-top: 0;
-    border-left: 1px solid var(--line);
-    gap: 8px;
-  }
-  .pm-task-status {
-    gap: 4px;
-    font-size: scaled(var(--fs-xs));
-    text-align: left;
-  }
-  .pm-task-status select {
-    font-size: scaled(var(--fs-sm));
-    min-height: 36px;
-    padding: 6px;
-  }
-  .pm-task-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    padding: 0;
-    border: 0;
-  }
-  .pm-task-actions .btn {
-    font-size: scaled(var(--fs-xs));
-    padding: 6px;
-    min-height: 36px;
-  }
-  .pm-task-actions .text-link {
-    grid-column: 1 / -1;
-  }
-  .pm-task-sidebar .bpm-note {
-    font-size: scaled(var(--fs-xs));
-    margin: 0;
-  }
-  .pm-budget.pm-vertical-metrics {
-    padding: 10px;
-    gap: 8px;
-  }
-  .pm-budget.pm-vertical-metrics .pm-track {
-    height: 44px;
-  }
-  .pm-budget.pm-vertical-metrics .pm-metric-heading {
-    font-size: scaled(var(--fs-xs));
-    gap: 4px;
-  }
-  .pm-budget.pm-vertical-metrics .pm-time-note {
-    font-size: scaled(var(--fs-xs));
-  }
-  .pm-task-decision {
-    padding-top: 8px;
-    gap: 8px;
-  }
-  .pm-task-decision .bpm-note {
-    margin: 4px 0 0;
-  }
-  .pm-task-decision .btn {
-    min-height: 36px;
-    padding: 6px 10px;
-  }
-}
-@media (max-width: 1150px) {
-  .bpm-management .pm-project-tasks {
-    .pm-task-sidebar {
-      grid-column: 1 / -1;
-      grid-template-columns: 150px minmax(0, 1fr);
-      align-items: end;
-      padding: 8px 0 0;
-      border-left: 0;
-      border-top: 1px solid var(--line);
-    }
-    .pm-task-actions {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      align-items: center;
-    }
-    .pm-task-actions .text-link {
-      grid-column: auto;
-    }
-    .pm-task-sidebar .bpm-note {
-      grid-column: 1 / -1;
-    }
-  }
-}
-@media (max-width: 650px) {
-  .bpm-management .pm-project-tasks {
-    padding: 10px;
-    .pm-project-detail {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .pm-finance-summary {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    .pm-finance-summary > div {
-      padding: 0;
-    }
-    .pm-finance-summary dd {
-      font-size: scaled(var(--fs-sm));
-    }
-    .pm-task-list {
-      padding-left: 0;
-      border-left: 0;
-    }
-    .pm-task-index {
-      display: none;
-    }
-    .pm-task-sidebar {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .pm-task-cash > div {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: subgrid;
-    }
-  }
-}
-.bpm-management .pm-project-tasks {
-  .pm-budget.pm-vertical-metrics.is-unfunded .pm-envelope {
-    grid-column: 1 / -1;
-  }
-  .pm-budget.pm-vertical-metrics.is-unfunded .pm-envelope > small {
-    min-height: 0;
-  }
-  .pm-task-status[data-status='done'] select {
-    color: var(--status-success);
-  }
-  .pm-task-status[data-status='todo'] select {
-    color: var(--ink);
-  }
-}
-@media (max-width: 650px) {
-}
 
 /* Même sémantique que le cockpit : disponible vert, consommé rouge, engagements ambre. */
-.bpm-management .pm-project-tasks {
-  .pm-finance-summary > div:nth-child(1) dd {
-    color: var(--status-warning);
-  }
-  .pm-finance-summary > div:nth-child(2) dd {
-    color: var(--status-success);
-  }
-  .pm-finance-summary > div:nth-child(3) dd {
-    color: var(--status-danger);
-  }
-  .pm-task-cash > div:nth-child(1) dd {
-    color: var(--status-warning);
-  }
-  .pm-task-cash > div:nth-child(2) dd {
-    color: var(--status-danger);
-  }
-  .pm-task-cash > div:nth-child(3) dd {
-    color: var(--status-success);
-  }
-  .pm-finance-summary > div dd.is-deficit,
-  .pm-task-cash > div dd.is-deficit {
-    color: var(--status-danger);
-  }
-  .pm-task-cash dt,
-  .pm-finance-summary dt {
-    font-weight: var(--fw-semibold);
-  }
-  .pm-task-status select {
-    color: var(--task-state-color);
-    background: color-mix(in srgb, var(--task-state-color) 7%, var(--raised-surface));
-    border-color: color-mix(in srgb, var(--task-state-color) 30%, var(--line));
-    font-weight: var(--fw-semibold);
-  }
-  .pm-task-status[data-status='blocked'] select {
-    color: #3979df;
-  }
-  .pm-task-decision,
-  .pm-task-warning {
-    padding: 10px;
-    border: 1px solid color-mix(in srgb, var(--status-warning) 35%, var(--line));
-    border-radius: var(--radius-md);
-    background: color-mix(in srgb, var(--status-warning) 7%, var(--raised-surface));
-  }
-  .pm-task-decision strong {
-    color: var(--status-warning);
-  }
-  .pm-task-warning {
-    color: var(--status-warning);
-  }
-}
 
 /* Sans enveloppe, le message dispose de sa propre mise en page plutôt que de la grille des montants. */
-.bpm-management .pm-budget-empty {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-  text-align: center;
-  > strong {
-    color: var(--ink);
-    font-size: scaled(var(--fs-lg));
-    font-weight: var(--fw-bold);
-    line-height: 1.3;
-  }
-  > p {
-    margin: 0;
-    color: var(--muted);
-    font-size: scaled(var(--fs-sm));
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-  }
-}
 .bpm-management .pm-budget.pm-vertical-metrics > .pm-time[data-tone='unknown'] {
   grid-template-columns: minmax(0, 1fr) auto 10px;
 }

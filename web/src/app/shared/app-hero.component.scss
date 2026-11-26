@@ -23,12 +23,6 @@ rjs-app-hero {
   background: var(--heading-surface);
   box-shadow: var(--app-panel-shadow);
 }
-.app-hero-copy {
-  display: grid;
-  justify-items: start;
-  gap: var(--ecart-10);
-  min-width: 0;
-}
 .app-hero-heading .app-hero-title > :is(h1, h2) {
   margin: 0;
   color: var(--white);
@@ -57,23 +51,6 @@ rjs-app-hero {
   gap: var(--ecart-24);
   min-width: 0;
 }
-.app-hero-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--ecart-8);
-  min-width: 0;
-}
-.app-hero-tools:empty {
-  display: none;
-}
-.app-hero-tools .app-hero-action {
-  padding-inline: var(--ecart-16);
-  font-size: scaled(var(--fs-sm));
-}
-.app-hero-tools rjs-modal {
-  display: contents;
-}
 .app-hero-heading > .app-hero-title {
   grid-column: 3;
   grid-row: 1;
@@ -85,11 +62,6 @@ rjs-app-hero {
   text-align: center;
   align-self: start;
 }
-.app-hero-tools {
-  grid-column: 1;
-  grid-row: 1;
-}
-.app-hero-copy:has(> .app-hero-actions:only-child:empty),
 .app-hero-visual:empty {
   display: none;
 }
@@ -133,9 +105,6 @@ rjs-app-hero {
 .app-hero-bottom:has(> .app-hero-meta:not(:empty)) > .app-hero-footer {
   padding-top: 0;
   border-top: 0;
-}
-.app-hero-copy > p {
-  margin: 0;
 }
 .app-hero-kicker {
   color: var(--white);
@@ -270,10 +239,6 @@ rjs-app-hero {
     color-mix(in srgb, var(--white) var(--part-8), transparent)
   );
 }
-.app-hero-copy {
-  position: relative;
-  z-index: var(--plan-1);
-}
 .app-hero-actions {
   align-items: center;
 }
@@ -382,10 +347,6 @@ rjs-app-hero {
 }
 .app-hero-toolbar:not(:has(a, button, input, select)) {
   display: none;
-}
-.app-hero-toolbar .app-hero-tools,
-.app-hero-toolbar .app-hero-copy {
-  display: contents;
 }
 .app-hero-toolbar .app-hero-actions {
   margin: 0;
@@ -530,20 +491,6 @@ rjs-app-hero {
 }
 
 /* Le poste fixe distingue commandes et navigation locale, sur toutes les pages. */
-.app-hero-commandbar {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-8);
-  flex-wrap: wrap;
-  min-width: 0;
-  flex-basis: var(--part-100);
-}
-.app-hero-commandbar:not(:has(a, button, input, select)) {
-  display: none;
-}
-.app-hero-commandbar .app-hero-actions {
-  display: contents;
-}
 .app-shell main .app-hero-toolbar .app-hero-action:not(.is-secondary) {
   background: var(--white);
   color: var(--slate-900);
@@ -578,9 +525,6 @@ rjs-app-hero {
   .app-shell main .app-hero-toolbar {
     flex-wrap: wrap;
     overflow-x: visible;
-  }
-  .app-hero-commandbar {
-    flex-wrap: wrap;
   }
   .app-shell main .app-hero-page-tools > nav {
     flex-wrap: nowrap;
@@ -627,12 +571,6 @@ rjs-app-hero {
     align-items: end;
     gap: 10px;
     min-width: 0;
-  }
-  .app-hero-toolbar .app-hero-tools {
-    display: contents;
-  }
-  .app-hero-toolbar .app-hero-tools:empty {
-    display: none;
   }
   .app-hero-toolbar .app-hero-page-tools label {
     display: grid;

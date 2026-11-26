@@ -156,13 +156,19 @@ test('P5 · Données gérées : un schéma par module, une base SQLite rangée p
   assert.equal(JSON.stringify(again.state), before);
   await again.close();
 });
-test('P5 · Données gérées : le moteur se choisit ; SQLite en service, PostgreSQL déclaré mais pas encore codé', async () => {
+test('P5 · Données gérées : le moteur se choisit ; SQLite par défaut, PostgreSQL exige son adresse (SOCLE_PG_URL)', async () => {
   const { createSocle } = await import('../src/socle/index.mjs');
   const { mkdtemp } = await import('node:fs/promises');
   const { tmpdir } = await import('node:os');
   const { join } = await import('node:path');
   const dir = await mkdtemp(join(tmpdir(), 'socle-engine-'));
-  await assert.rejects(createSocle({ dataFile: join(dir, 'a.json'), modules: SOCLE_MODULES, dataEngine: 'sgbd' }), fails('DATA_ENGINE_UNAVAILABLE'));
+  const pgUrl = process.env.SOCLE_PG_URL;
+  delete process.env.SOCLE_PG_URL; // l'intégration continue fournit une base : ce contrôle porte sur son absence
+  try {
+    await assert.rejects(createSocle({ dataFile: join(dir, 'a.json'), modules: SOCLE_MODULES, dataEngine: 'sgbd' }), fails('DATA_ENGINE_UNAVAILABLE'));
+  } finally {
+    if (pgUrl !== undefined) process.env.SOCLE_PG_URL = pgUrl;
+  }
   await assert.rejects(createSocle({ dataFile: join(dir, 'b.json'), modules: SOCLE_MODULES, dataEngine: 'inconnu' }), fails('DATA_ENGINE_UNAVAILABLE'));
   await assert.rejects(createSocle({ dataFile: join(dir, 'c.json'), modules: SOCLE_MODULES, dataEngine: 'json-fichiers' }), fails('DATA_ENGINE_UNAVAILABLE'), 'les fichiers JSON ne sont plus un moteur');
   const socle = await createSocle({ dataFile: join(dir, 'd.json'), modules: SOCLE_MODULES });

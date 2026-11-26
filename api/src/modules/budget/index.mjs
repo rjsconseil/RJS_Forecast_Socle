@@ -8,7 +8,8 @@ import { check } from '../../socle/object-management/inspect.mjs';
 import { integer, money, text } from '../../socle/validation.mjs';
 import { budgetLines, CAP_LEVEL_PCT, capLevelOf, capReport, isNearCap, NEAR_CAP_USED_PCT, periodSum, STD } from './lines.mjs';
 export { budgetLines, CAP_LEVEL_PCT, capLevelOf, capReport, isNearCap, NEAR_CAP_USED_PCT };
-import { createFunding, fundingExtensions } from './funding.mjs';
+import { createFunding } from './funding-commands.mjs';
+import { fundingExtensions } from './funding-extensions.mjs';
 
 import { createBudgetViews, DIRECTIONS } from './views.mjs';
 import { createBudgetGuards } from './guards.mjs';

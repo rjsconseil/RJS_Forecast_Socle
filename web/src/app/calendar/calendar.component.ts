@@ -1,4 +1,5 @@
 import { TopLayerDirective } from './top-layer.directive';
+import { MonthPeek, PeekHost, YearPeek } from './calendar-peeks';
 import {
   ChangeDetectionStrategy,
   afterNextRender,
@@ -23,7 +24,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
   CalendarView,
-  DayPeekPosition,
   gridWindow,
   inPeriod,
   localToday,
@@ -31,7 +31,6 @@ import {
   periodBounds,
   monthTitle,
   periodLabel,
-  positionDayPeek,
   shiftDate,
   shiftPeriod,
   validDate,
@@ -354,43 +353,47 @@ export class CalendarComponent {
   });
 
   // ---------- aperçus (mois / semaine, année) ----------
-  protected readonly expandedDay = signal<string | null>(null);
-  protected readonly hoveredMonthDay = signal<string | null>(null);
-  protected readonly focusedMonthDay = signal<string | null>(null);
-  protected readonly pinnedMonthDay = signal<string | null>(null);
-  protected readonly monthPeekPosition = signal<DayPeekPosition>({
-    x: 0,
-    top: 0,
-    maxHeight: 0,
-    bridgeHeight: 0,
-  });
-  protected readonly visibleMonthDay = computed(
-    () => this.pinnedMonthDay() ?? this.hoveredMonthDay() ?? this.focusedMonthDay(),
-  );
-  private monthPointerStart: { day: string; x: number; y: number } | null = null;
-  private monthPeekSide: -1 | 1 = 1;
-  private monthPeekSideLocked = false;
-  private monthPeekCloseTimer: ReturnType<typeof setTimeout> | null = null;
-  private pointerPosition: { x: number; y: number } | null = null;
-
-  protected readonly hoveredYearDay = signal<string | null>(null);
-  protected readonly focusedYearDay = signal<string | null>(null);
-  protected readonly pinnedYearDay = signal<string | null>(null);
-  protected readonly expandedYearPeekDay = signal<string | null>(null);
-  protected readonly yearPeekPosition = signal<DayPeekPosition>({
-    x: 0,
-    top: 0,
-    maxHeight: 0,
-    bridgeHeight: 0,
-  });
-  private yearPeekCloseTimer: ReturnType<typeof setTimeout> | null = null;
-  private yearPointerStart: { day: string; x: number; y: number } | null = null;
-  private yearPeekSide: -1 | 1 = 1;
-  private yearPeekSideLocked = false;
-  protected readonly visibleYearDay = computed(() => {
-    const day = this.pinnedYearDay() ?? this.hoveredYearDay() ?? this.focusedYearDay();
-    return day && this.byDay().has(day) ? day : null;
-  });
+  // ---------- aperçus (mois / semaine, année) : voir calendar-peeks.ts ----------
+  private readonly pointer: PeekHost['pointer'] = { at: null };
+  private readonly peekHost: PeekHost = {
+    hasDay: (day) => this.byDay().has(day),
+    selectDay: (day) => this.selectDay(day),
+    closeDelay: () => this.closeDelay(),
+    view: () => this.view(),
+    closeDetails: () => this.closePeekDetails(),
+    pointer: this.pointer,
+  };
+  private readonly monthPeek = new MonthPeek(this.peekHost);
+  private readonly yearPeek = new YearPeek(this.peekHost);
+  protected readonly expandedDay = this.monthPeek.expandedDay;
+  protected readonly hoveredMonthDay = this.monthPeek.hoveredMonthDay;
+  protected readonly focusedMonthDay = this.monthPeek.focusedMonthDay;
+  protected readonly pinnedMonthDay = this.monthPeek.pinnedMonthDay;
+  protected readonly monthPeekPosition = this.monthPeek.monthPeekPosition;
+  protected readonly visibleMonthDay = this.monthPeek.visibleMonthDay;
+  protected readonly hoveredYearDay = this.yearPeek.hoveredYearDay;
+  protected readonly focusedYearDay = this.yearPeek.focusedYearDay;
+  protected readonly pinnedYearDay = this.yearPeek.pinnedYearDay;
+  protected readonly expandedYearPeekDay = this.yearPeek.expandedYearPeekDay;
+  protected readonly yearPeekPosition = this.yearPeek.yearPeekPosition;
+  protected readonly visibleYearDay = this.yearPeek.visibleYearDay;
+  protected toggleDayExpansion(day: string, event: MouseEvent) { this.monthPeek.toggleDayExpansion(day, event); }
+  protected enterMonthDay(day: string, event: PointerEvent) { this.monthPeek.enterMonthDay(day, event); }
+  protected orientMonthPeek(day: string, event: PointerEvent) { this.monthPeek.orientMonthPeek(day, event); }
+  protected leaveMonthDay(day: string) { this.monthPeek.leaveMonthDay(day); }
+  protected toggleMonthPeekPin(day: string, event: MouseEvent) { this.monthPeek.toggleMonthPeekPin(day, event); }
+  protected cancelMonthPeekClose() { this.monthPeek.cancelMonthPeekClose(); }
+  protected scheduleMonthPeekClose(day: string) { this.monthPeek.scheduleMonthPeekClose(day); }
+  protected focusMonthDay(day: string, event: FocusEvent) { this.monthPeek.focusMonthDay(day, event); }
+  protected clearMonthDayFocus(event: FocusEvent) { this.monthPeek.clearMonthDayFocus(event); }
+  protected toggleYearDay(day: string, event: MouseEvent) { this.yearPeek.toggleYearDay(day, event); }
+  protected enterYearDay(day: string, event: PointerEvent) { this.yearPeek.enterYearDay(day, event); }
+  protected orientYearPeek(day: string, event: PointerEvent) { this.yearPeek.orientYearPeek(day, event); }
+  protected leaveYearDay(day: string) { this.yearPeek.leaveYearDay(day); }
+  protected positionYearPeekOnFocus(event: FocusEvent) { this.yearPeek.positionYearPeekOnFocus(event); }
+  protected clearYearDayFocus(event: FocusEvent) { this.yearPeek.clearYearDayFocus(event); }
+  protected cancelYearPeekClose() { this.yearPeek.cancelYearPeekClose(); }
+  protected scheduleYearPeekClose(day = this.visibleYearDay()) { this.yearPeek.scheduleYearPeekClose(day); }
 
   protected readonly activePeekDay = signal<string | null>(null);
   protected readonly activePeekStat = signal<CalendarIndicatorKey | null>(null);
@@ -786,7 +789,7 @@ export class CalendarComponent {
     }
     const target = click.currentTarget;
     const day = target instanceof Element ? target.closest<HTMLElement>('.calendar-day') : null;
-    if (!wasPinned && day) this.setGridDayPin(event.date, day);
+    if (!wasPinned && day) this.monthPeek.setGridDayPin(event.date, day);
     else if (wasPinned && this.pinnedMonthDay() === event.date) {
       this.pinnedMonthDay.set(null);
       this.expandedDay.set(null);
@@ -830,259 +833,9 @@ export class CalendarComponent {
       this.expandedYearPeekDay.update((current) => (current === day ? null : day));
     } else this.expandedDay.update((current) => (current === day ? null : day));
   }
-  protected toggleDayExpansion(day: string, event: MouseEvent) {
-    event.stopPropagation();
-    const target = event.currentTarget;
-    if (target instanceof HTMLElement)
-      this.setGridDayPin(day, target.closest('.calendar-day') as HTMLElement, true);
-    this.expandedDay.set(day);
-  }
-  protected enterMonthDay(day: string, event: PointerEvent) {
-    if (!this.byDay().has(day)) return;
-    this.pointerPosition = { x: event.clientX, y: event.clientY };
-    this.cancelMonthPeekClose();
-    if (this.pinnedMonthDay()) {
-      this.hoveredMonthDay.set(day);
-      return;
-    }
-    const target = event.currentTarget;
-    if (!(target instanceof HTMLElement)) return;
-    const bounds = target.getBoundingClientRect();
-    this.monthPointerStart = { day, x: event.clientX, y: event.clientY };
-    this.monthPeekSide = event.clientX < bounds.left + bounds.width / 2 ? -1 : 1;
-    this.monthPeekSideLocked = false;
-    this.hoveredMonthDay.set(day);
-    this.positionMonthPeek(target, this.monthPeekSide);
-  }
-  protected orientMonthPeek(day: string, event: PointerEvent) {
-    if (
-      this.pinnedMonthDay() ||
-      this.hoveredMonthDay() !== day ||
-      this.monthPointerStart?.day !== day ||
-      this.monthPeekSideLocked
-    )
-      return;
-    if (event.target instanceof Element && event.target.closest('.calendar-day-peek')) {
-      this.monthPeekSideLocked = true;
-      return;
-    }
-    if (Math.abs(event.clientY - this.monthPointerStart.y) > 20) {
-      this.monthPeekSideLocked = true;
-      return;
-    }
-    const movement = event.clientX - this.monthPointerStart.x;
-    if (Math.abs(movement) < 10) return;
-    const side = movement < 0 ? -1 : 1;
-    this.monthPeekSideLocked = true;
-    if (side !== this.monthPeekSide) {
-      this.monthPeekSide = side;
-      this.positionMonthPeek(event.currentTarget, side);
-    }
-  }
-  protected leaveMonthDay(day: string) {
-    this.scheduleMonthPeekClose(day);
-  }
-  protected toggleMonthPeekPin(day: string, event: MouseEvent) {
-    if (!this.byDay().has(day)) return;
-    const target = event.target;
-    if (
-      !(target instanceof Element) ||
-      target.closest('.calendar-day-peek, .calendar-more, .calendar-event, .calendar-day-number')
-    )
-      return;
-    if (event.currentTarget instanceof HTMLElement) this.setGridDayPin(day, event.currentTarget);
-  }
-  private setGridDayPin(day: string, target: HTMLElement | null, keep = false) {
-    const previous = this.pinnedMonthDay();
-    this.cancelMonthPeekClose();
-    if (previous === day && !keep) {
-      this.pinnedMonthDay.set(null);
-      this.expandedDay.set(null);
-      return;
-    }
-    this.expandedDay.set(null);
-    if (target) this.positionMonthPeek(target, this.monthPeekSide);
-    this.pinnedMonthDay.set(day);
-  }
-  protected cancelMonthPeekClose() {
-    if (this.monthPeekCloseTimer !== null) clearTimeout(this.monthPeekCloseTimer);
-    this.monthPeekCloseTimer = null;
-  }
-  protected scheduleMonthPeekClose(day: string) {
-    this.cancelMonthPeekClose();
-    this.monthPeekCloseTimer = setTimeout(() => this.closeMonthDay(day), this.closeDelay());
-  }
-  private closeMonthDay(day: string) {
-    this.cancelMonthPeekClose();
-    const point = this.pointerPosition;
-    const under = point ? document.elementFromPoint(point.x, point.y) : null;
-    if (under?.closest('.calendar-day')?.getAttribute('data-day') === day) return;
-    if (this.hoveredMonthDay() === day) this.hoveredMonthDay.set(null);
-    if (this.focusedMonthDay() === day) this.focusedMonthDay.set(null);
-    if (this.expandedDay() === day && this.pinnedMonthDay() !== day) this.expandedDay.set(null);
-    if (this.monthPointerStart?.day === day) this.monthPointerStart = null;
-    this.monthPeekSideLocked = false;
-    this.closePeekDetails();
-  }
-  protected focusMonthDay(day: string, event: FocusEvent) {
-    if (!this.byDay().has(day)) return;
-    this.focusedMonthDay.set(day);
-    if (this.pinnedMonthDay()) return;
-    this.positionMonthPeek(event.currentTarget, this.monthPeekSide);
-  }
-  protected clearMonthDayFocus(event: FocusEvent) {
-    const current = event.currentTarget;
-    if (
-      current instanceof Element &&
-      event.relatedTarget instanceof Node &&
-      current.contains(event.relatedTarget)
-    )
-      return;
-    this.focusedMonthDay.set(null);
-  }
-  private positionMonthPeek(target: EventTarget | null, side: -1 | 1) {
-    if (!(target instanceof HTMLElement)) return;
-    if (window.innerWidth <= 900) {
-      this.monthPeekPosition.set({ x: null, top: null, maxHeight: null, bridgeHeight: null });
-      return;
-    }
-    const scale = Number.parseFloat(getComputedStyle(target).getPropertyValue('--text-scale')) || 1;
-    this.monthPeekPosition.set(
-      positionDayPeek({
-        day: target.getBoundingClientRect(),
-        calendarTop: this.safeTop(target),
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        textScale: scale,
-        side,
-        topGap: this.view() === 'month' ? 16 : -10,
-        lateralShiftRatio: 0.2,
-      }),
-    );
-  }
 
   // ---------- aperçus : année ----------
-  protected toggleYearDay(day: string, event: MouseEvent) {
-    if (!this.byDay().has(day)) return;
-    this.cancelYearPeekClose();
-    const wasPinned = this.pinnedYearDay() === day;
-    if (event.currentTarget instanceof HTMLElement) this.setYearPeekPosition(event.currentTarget);
-    this.selectDay(day);
-    this.pinnedYearDay.set(wasPinned ? null : day);
-    this.expandedYearPeekDay.set(null);
-    this.focusedYearDay.set(day);
-  }
-  protected enterYearDay(day: string, event: PointerEvent) {
-    this.cancelYearPeekClose();
-    this.hoveredYearDay.set(day);
-    if (this.pinnedYearDay()) return;
-    const target = event.currentTarget;
-    if (!(target instanceof HTMLElement)) return;
-    const bounds = target.getBoundingClientRect();
-    this.yearPointerStart = { day, x: event.clientX, y: event.clientY };
-    this.yearPeekSide = event.clientX < bounds.left + bounds.width / 2 ? -1 : 1;
-    this.yearPeekSideLocked = false;
-    this.setYearPeekPosition(target);
-  }
-  protected orientYearPeek(day: string, event: PointerEvent) {
-    if (this.pinnedYearDay() || this.yearPointerStart?.day !== day || this.yearPeekSideLocked)
-      return;
-    if (Math.abs(event.clientY - this.yearPointerStart.y) > 12) {
-      this.yearPeekSideLocked = true;
-      return;
-    }
-    const movement = event.clientX - this.yearPointerStart.x;
-    if (Math.abs(movement) < 4) return;
-    const side = movement < 0 ? -1 : 1;
-    this.yearPeekSideLocked = true;
-    if (side !== this.yearPeekSide) {
-      this.yearPeekSide = side;
-      if (event.currentTarget instanceof HTMLElement) this.setYearPeekPosition(event.currentTarget);
-    }
-  }
-  protected leaveYearDay(day: string) {
-    if (this.hoveredYearDay() === day) this.scheduleYearPeekClose();
-  }
-  protected positionYearPeekOnFocus(event: FocusEvent) {
-    if (event.currentTarget instanceof HTMLElement && !this.pinnedYearDay())
-      this.setYearPeekPosition(event.currentTarget);
-  }
-  private setYearPeekPosition(target: HTMLElement) {
-    if (window.innerWidth <= 900) {
-      this.yearPeekPosition.set({ x: null, top: null, maxHeight: null, bridgeHeight: null });
-      return;
-    }
-    const scale = Number.parseFloat(getComputedStyle(target).getPropertyValue('--text-scale')) || 1;
-    this.yearPeekPosition.set(
-      positionDayPeek({
-        day: target.getBoundingClientRect(),
-        calendarTop: this.safeTop(target),
-        viewportWidth: window.innerWidth,
-        viewportHeight: window.innerHeight,
-        textScale: scale,
-        side: this.yearPeekSide,
-        topGap: 16,
-        lateralShiftRatio: 0.7,
-      }),
-    );
-  }
-  protected clearYearDayFocus(event: FocusEvent) {
-    const current = event.currentTarget;
-    if (
-      current instanceof Element &&
-      event.relatedTarget instanceof Node &&
-      current.contains(event.relatedTarget)
-    )
-      return;
-    this.focusedYearDay.set(null);
-    this.scheduleYearPeekClose();
-  }
-  protected cancelYearPeekClose() {
-    if (this.yearPeekCloseTimer !== null) clearTimeout(this.yearPeekCloseTimer);
-    this.yearPeekCloseTimer = null;
-  }
-  protected scheduleYearPeekClose(day = this.visibleYearDay()) {
-    this.cancelYearPeekClose();
-    this.yearPeekCloseTimer = setTimeout(() => this.closeYearDay(day), this.closeDelay());
-  }
-  private closeYearDay(day: string | null) {
-    this.cancelYearPeekClose();
-    if (!day) return;
-    const point = this.pointerPosition;
-    const under = point ? document.elementFromPoint(point.x, point.y) : null;
-    if (
-      under?.closest(
-        `.calendar-year-day[data-day="${day}"], .calendar-year-peek[data-day="${day}"]`,
-      )
-    )
-      return;
-    if (this.pinnedYearDay() !== day && this.expandedYearPeekDay() === day)
-      this.expandedYearPeekDay.set(null);
-    if (this.hoveredYearDay() === day) this.hoveredYearDay.set(null);
-    if (this.focusedYearDay() === day) this.focusedYearDay.set(null);
-    this.yearPointerStart = null;
-    this.yearPeekSideLocked = false;
-    this.closePeekDetails();
-  }
 
-  /**
-   * Haut utilisable pour un aperçu : sous le haut de la grille et sous tout bandeau resté fixé en haut de
-   * l'écran (bandeau de page figé, barre du site), pour qu'un aperçu ne passe jamais dessous.
-   */
-  private safeTop(target: HTMLElement): number {
-    let top = target.closest('.calendar-month-wrap')?.getBoundingClientRect().top ?? 12;
-    const page = target.closest('.page') ?? document.body;
-    for (const el of Array.from(
-      page.querySelectorAll<HTMLElement>('.page-head, [data-sticky-hero]'),
-    )) {
-      const position = getComputedStyle(el).position;
-      if (position !== 'sticky' && position !== 'fixed') continue;
-      // Un bandeau figé qui recouvre le haut de la grille repousse la zone permise sous lui.
-      const rect = el.getBoundingClientRect();
-      if (rect.bottom > top) top = rect.bottom + 8;
-    }
-    return top;
-  }
 
   @HostListener('window:scroll')
   @HostListener('window:resize')
@@ -1093,19 +846,19 @@ export class CalendarComponent {
       const target = this.host.nativeElement.querySelector<HTMLElement>(
         `.calendar-grid .calendar-day[data-day="${day}"]`,
       );
-      if (target) this.positionMonthPeek(target, this.monthPeekSide);
+      if (target) this.monthPeek.positionMonthPeek(target, this.monthPeek.monthPeekSide);
     }
     const yearDay = this.visibleYearDay();
     if (yearDay) {
       const target = this.host.nativeElement.querySelector<HTMLElement>(
         `.calendar-year-day[data-day="${yearDay}"]`,
       );
-      if (target) this.setYearPeekPosition(target);
+      if (target) this.yearPeek.setYearPeekPosition(target);
     }
   }
   @HostListener('window:pointermove', ['$event'])
   protected trackPointer(event: PointerEvent) {
-    this.pointerPosition = { x: event.clientX, y: event.clientY };
+    this.pointer.at = { x: event.clientX, y: event.clientY };
   }
   protected releasePeek() {
     this.pinnedMonthDay.set(null);
@@ -1216,10 +969,8 @@ export class CalendarComponent {
     this.releasePeek();
     this.cancelYearPeekClose();
     this.cancelMonthPeekClose();
-    this.monthPointerStart = null;
-    this.yearPointerStart = null;
-    this.monthPeekSideLocked = false;
-    this.yearPeekSideLocked = false;
+    this.monthPeek.resetGesture();
+    this.yearPeek.resetGesture();
     this.view.set(view);
     this.emitPeriod();
     if (chosen) this.syncUrl();

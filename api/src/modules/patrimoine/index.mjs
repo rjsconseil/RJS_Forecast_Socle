@@ -127,8 +127,8 @@ export default {
       const caps = capitalizationsOf(state, socle, p.id);
       const capitalizedCents = caps.reduce((s, c) => s + c.amountCents, 0);
       return {
-        patrimoine: { ...structuredClone(p), openingStock: toEuros(p.openingStockCents), objective: toEuros(p.objectiveCents) },
-        capitalizations: caps.map((c) => ({ ...structuredClone(c), amount: toEuros(c.amountCents) })),
+        patrimoine: { ...p, openingStock: toEuros(p.openingStockCents), objective: toEuros(p.objectiveCents) },
+        capitalizations: caps.map((c) => ({ ...c, amount: toEuros(c.amountCents) })),
         // Lecture brute de test ; les chiffres présentés à l'utilisateur passent par les métriques BPM.
         raw: { openingStock: toEuros(p.openingStockCents), capitalized: capitalizedCents / 100 },
       };

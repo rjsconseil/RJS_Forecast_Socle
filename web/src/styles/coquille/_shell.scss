@@ -88,7 +88,7 @@ body:has(.app-shell.editorial-style) {
   font-weight: var(--fw-bold);
   letter-spacing: var(--nav-label-spacing);
 }
-.sidebar-navigation a:focus-visible, .sidebar-data button:focus-visible, .brand:focus-visible, .topbar-context a:focus-visible, .topbar-home:focus-visible, .mobile-nav-toggle:focus-visible {
+.sidebar-navigation a:focus-visible, .brand:focus-visible, .topbar-context a:focus-visible, .topbar-home:focus-visible, .mobile-nav-toggle:focus-visible {
   outline: var(--trait-3) solid var(--focus-ring);
   outline-offset: var(--decalage-2);
 }
@@ -100,46 +100,6 @@ body:has(.app-shell.editorial-style) {
   font-family: var(--font-symbol);
   font-size: scaled(var(--nav-icon-size));
   font-weight: var(--fw-regular);
-}
-.nav-count {
-  margin-left: auto;
-  color: var(--nav-count-ink);
-  font-size: scaled(var(--fs-xs));
-}
-.sidebar-data {
-  padding-bottom: var(--sidebar-data-padding-bottom);
-}
-.sidebar-data .nav-label {
-  margin-bottom: var(--sidebar-data-label-margin);
-}
-.sidebar-data button {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-14);
-  width: var(--part-100);
-  min-height: var(--sidebar-data-height);
-  padding: 0 var(--ecart-14);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: none;
-  color: var(--sidebar-data-ink);
-  text-align: left;
-  font-size: scaled(var(--fs-sm));
-  text-decoration: none;
-  transition:
-    background-color var(--ease-fast),
-    color var(--ease-fast);
-}
-.sidebar-data button:hover {
-  color: var(--sidebar-data-hover);
-  background: var(--nav-hover-surface);
-}
-.sidebar-data button:active {
-  background: var(--nav-press-surface);
-}
-.sidebar-data button span {
-  width: var(--dim-20);
-  font-size: scaled(var(--fs-lg));
 }
 .appearance-picker {
   display: grid;
@@ -274,23 +234,7 @@ body:has(.app-shell.editorial-style) {
 }
 /* Avec la vue de période, le fil d'Ariane garde sa largeur : la date et le rappel du site, déjà
    présents dans la page et la barre latérale, laissent la place à la commande. */
-.topbar:has(.period-lens) .topbar-context {
-  flex: var(--flex-1);
-}
-.topbar:has(.period-lens) :is(.topbar-date, .topbar-home) {
-  display: none;
-}
 /* La vue de période (Semaine, Mois, Année) : en haut à droite, visible dans la barre collante. */
-.period-lens {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ecart-2);
-  padding: var(--ecart-4);
-  border: var(--trait-2) solid var(--app-accent-line);
-  border-radius: var(--rayon-999);
-  background: var(--raised-surface);
-  box-shadow: var(--app-panel-shadow);
-}
 .topbar-home {
   padding-left: var(--ecart-20);
   border-left: var(--trait-1) solid var(--line);
@@ -344,15 +288,6 @@ body:has(.app-shell.editorial-style) {
     display: block;
   }
   /* Sur écran étroit, la vue passe sous le fil d'Ariane, à droite, sans déborder. */
-  .topbar:has(.period-lens) {
-    flex-wrap: wrap;
-  }
-  .topbar:has(.period-lens) .topbar-actions {
-    flex: var(--flex-1);
-    justify-content: flex-end;
-    margin-left: 0;
-    padding-bottom: var(--ecart-8);
-  }
   .sidebar {
     position: sticky;
     z-index: var(--plan-50);
@@ -454,20 +389,6 @@ body:has(.app-shell.editorial-style) {
     width: var(--dim-20);
     font-size: scaled(var(--fs-lg));
   }
-  .sidebar-data {
-    display: grid;
-    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
-    gap: var(--ecart-6);
-    padding: var(--ecart-20) 0 var(--ecart-16);
-  }
-  .sidebar-data .nav-label {
-    grid-column: 1 / -1;
-  }
-  .sidebar-data button {
-    min-height: var(--dim-40);
-    padding: var(--ecart-8) var(--ecart-12);
-    font-size: scaled(var(--fs-xs));
-  }
   .appearance-picker {
     margin: 0 var(--ecart-12) var(--ecart-10);
     font-size: scaled(var(--fs-xs));
@@ -506,9 +427,6 @@ body:has(.app-shell.editorial-style) {
   }
 }
 
-@media (max-width: $rupture-600) {
-}
-
 .sidebar-account {
   margin: 0 0 var(--ecart-12);
 }
@@ -529,7 +447,7 @@ body:has(.app-shell.editorial-style) {
 .app-shell .main-shell main [data-sticky-hero][data-sticky-hero]:not(rjs-app-hero) {
   padding: var(--ecart-16);
 }
-.app-shell .main-shell main [data-sticky-hero][data-sticky-hero] > :is(.page-actions, .actions, .toolbar, nav) {
+.app-shell .main-shell main [data-sticky-hero][data-sticky-hero] > :is(.actions, .toolbar, nav) {
   flex-basis: var(--part-100);
   grid-column: 1 / -1;
 }

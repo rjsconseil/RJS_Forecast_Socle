@@ -58,7 +58,7 @@ export function createBudgetViews(socle) {
 
   function categoryView(state, k) {
     const center = costCentersOf(state, k.userId).find((c) => c.ref === k.costCenterRef);
-    return { ...structuredClone(k), capCents: k.capCents ?? null, costCenterLabel: center?.label ?? `${k.costCenterRef} (retiré)` };
+    return { ...k, capCents: k.capCents ?? null, costCenterLabel: center?.label ?? `${k.costCenterRef} (retiré)` };
   }
 
   /**
@@ -88,7 +88,7 @@ export function createBudgetViews(socle) {
   }
 
   const operationView = (state, o) => ({
-    ...structuredClone(o),
+    ...o,
     amount: toEuros(o.amountCents),
     realizedAmount: toEuros(o.realizedAmountCents),
     directionLabel: DIRECTION_LABEL[o.direction],
@@ -113,7 +113,7 @@ export function createBudgetViews(socle) {
   function budgetView(state, b) {
     const ops = om.by(state, 'operation', 'budgetId', b.id);
     return {
-      ...structuredClone(b),
+      ...b,
       projectTitle: state.coreProjects[b.coreProjectId]?.title ?? null,
       parentBudgetName: b.parentBudgetId ? state.budgets[b.parentBudgetId]?.name ?? null : null,
       operationCount: ops.length,
@@ -139,7 +139,7 @@ export function createBudgetViews(socle) {
   const note = (v) => text('note', v, { max: 1000 }) || null;
 
   const recurrenceView = (state, r) => ({
-    ...structuredClone(r),
+    ...r,
     amount: toEuros(r.amountCents),
     cadenceLabel: CADENCE_LABEL[r.cadence],
     directionLabel: DIRECTION_LABEL[r.direction],

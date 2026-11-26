@@ -3,18 +3,6 @@
   display: block;
   margin-block: var(--ecart-24);
 }
-.fe-panel {
-  padding: var(--ecart-24);
-  border: var(--trait-1) solid var(--app-accent-line);
-  border-radius: var(--card-radius);
-  background: var(--raised-surface);
-  display: grid;
-  gap: var(--ecart-16);
-}
-.fe-panel h2,
-.fe-panel p {
-  margin: 0;
-}
 .fe-selectors,
 .fe-fields {
   display: grid;
@@ -34,8 +22,7 @@
   display: grid;
   gap: var(--ecart-20);
 }
-label,
-.fe-choice {
+label {
   display: grid;
   gap: var(--ecart-8);
   min-width: 0;
@@ -71,36 +58,10 @@ input[type='radio'] {
 .fe-explanation small {
   color: var(--muted);
 }
-.fe-heading {
-  display: grid;
-  gap: var(--ecart-8);
-}
-.fe-eyebrow {
-  color: var(--app-accent);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
-}
-.fe-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-24);
-  list-style: none;
-  padding: var(--ecart-16) 0;
-  margin: 0;
-  border-block: var(--trait-1) solid var(--card-border);
-}
-.fe-steps li {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-8);
-  font-weight: var(--fw-semibold);
-}
-.fe-steps b,
 .fe-section-title span {
   color: var(--app-accent);
   font-family: var(--font-label);
 }
-.fe-scopes,
 .fe-impact-grid {
   display: grid;
   grid-template-columns: repeat(
@@ -108,30 +69,6 @@ input[type='radio'] {
     minmax(min(var(--part-100), var(--dim-240)), var(--fr-1))
   );
   gap: var(--ecart-16);
-}
-.fe-scopes button {
-  display: grid;
-  gap: var(--ecart-8);
-  padding: var(--ecart-20);
-  text-align: left;
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--card-radius);
-  background: var(--raised-surface);
-  color: var(--ink);
-  cursor: pointer;
-}
-.fe-scopes button.is-selected {
-  border-color: var(--app-accent);
-  background: var(--app-accent-soft);
-  box-shadow: inset 0 0 0 var(--trait-1) var(--app-accent);
-}
-.fe-scopes button span {
-  color: var(--muted);
-  font-size: var(--fs-sm);
-}
-.fe-scopes button:focus-visible {
-  outline: var(--trait-3) solid var(--app-accent);
-  outline-offset: var(--ecart-4);
 }
 .fe-section-title {
   display: flex;
@@ -172,60 +109,8 @@ input[type='radio'] {
   font-size: var(--fs-sm);
   color: var(--muted);
 }
-.fe-impact-grid .fe-loss strong {
-  color: var(--status-danger);
-}
-
-.fe-optional {
-  padding-block: var(--ecart-8);
-}
-.fe-optional > summary {
-  color: var(--app-accent);
-  cursor: pointer;
-  font-weight: var(--fw-semibold);
-}
-.fe-optional[open] > summary {
-  margin-bottom: var(--ecart-12);
-}
-.fe-optional > summary:focus-visible {
-  outline: var(--trait-2) solid var(--app-accent);
-  outline-offset: var(--ecart-4);
-}
 
 /* La saisie devient un poste de travail : contexte à gauche, opération à droite. */
-.fe-panel {
-  padding: 0;
-  overflow: hidden;
-  gap: 0;
-  border: var(--trait-2) solid var(--app-accent-line);
-}
-.fe-heading {
-  padding: var(--ecart-24) var(--ecart-28);
-  background: var(--app-accent-soft);
-  border-bottom: var(--trait-1) solid var(--app-accent-line);
-}
-.fe-heading h2 {
-  font-size: var(--fs-2xl);
-  color: var(--ink);
-}
-.fe-heading p {
-  color: var(--muted);
-}
-.fe-workspace {
-  display: grid;
-  grid-template-columns: minmax(var(--dim-220), var(--part-30)) minmax(0, var(--fr-1));
-  min-width: 0;
-}
-.fe-context {
-  padding: var(--ecart-24);
-  display: grid;
-  align-content: start;
-  gap: var(--ecart-20);
-  background: var(--soft);
-  border-inline-end: var(--trait-1) solid var(--card-border);
-  min-width: 0;
-}
-.fe-scopes,
 .fe-selectors {
   grid-template-columns: minmax(0, var(--fr-1));
   gap: var(--ecart-12);
@@ -233,10 +118,6 @@ input[type='radio'] {
 .fe-selectors {
   padding: 0;
   background: transparent;
-}
-.fe-scopes button {
-  padding: var(--ecart-12) var(--ecart-16);
-  gap: var(--ecart-4);
 }
 .fe-form {
   padding: var(--ecart-24);
@@ -292,41 +173,17 @@ input[type='radio'] {
   font-size: var(--fs-sm);
   color: var(--muted);
 }
-.fe-save {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-12);
-  justify-content: flex-end;
-  padding-top: var(--ecart-8);
-}
-.fe-save .btn-primary {
-  min-width: var(--dim-180);
-}
 @media (max-width: $rupture-960) {
-  .fe-workspace {
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
-  .fe-context {
-    border-inline-end: 0;
-    border-bottom: var(--trait-1) solid var(--card-border);
-  }
-  .fe-scopes,
   .fe-selectors {
     grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
   }
 }
 @media (max-width: $rupture-640) {
-  .fe-heading,
-  .fe-context,
   .fe-form {
     padding: var(--ecart-16);
   }
   .fe-fields,
-  .fe-scopes,
   .fe-selectors {
     grid-template-columns: minmax(0, var(--fr-1));
-  }
-  .fe-save .btn-primary {
-    width: var(--part-100);
   }
 }

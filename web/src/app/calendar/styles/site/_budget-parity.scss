@@ -105,7 +105,6 @@
     gap: var(--ecart-10);
   }
 
-
   .calendar-options {
     margin: 0;
     font-size: scaled(var(--fs-xs));
@@ -258,10 +257,6 @@
     font-size: scaled(var(--fs-xs));
     font-weight: var(--fw-bold);
     cursor: pointer;
-  }
-
-  .calendar-day-facts {
-    display: none;
   }
 
   .calendar-grid > .calendar-day > .calendar-event {
@@ -679,7 +674,6 @@
     gap: var(--ecart-4);
   }
 
-
   .calendar-view-switch {
     margin-right: var(--ecart-1);
   }
@@ -693,11 +687,9 @@
     font-size: scaled(var(--fs-xs));
   }
 
-
   .calendar-paging .btn {
     width: var(--dim-28);
   }
-
 
   .calendar-day-peek {
     height: min(#{scaled(var(--dim-320))}, calc(var(--dim-100dvh) - var(--dim-24)));
@@ -749,44 +741,6 @@
 
   .calendar-year-peek .calendar-day-peek-list {
     pointer-events: auto;
-  }
-
-  .calendar-day-peek .calendar-peek-event {
-    display: block;
-    min-height: var(--dim-56);
-    margin: var(--ecart-6) 0;
-    padding: var(--ecart-8) var(--ecart-10);
-    border: 0;
-    border-left: var(--trait-3) solid var(--green-700);
-    border-radius: 0;
-    background: var(--soft);
-    font-size: scaled(var(--fs-sm));
-  }
-
-  .calendar-day-peek .calendar-peek-event[data-kind='due'] {
-    border-left-color: var(--blue-700);
-  }
-
-  .calendar-day-peek .calendar-peek-event > span:first-of-type {
-    display: none;
-  }
-
-  .calendar-day-peek .calendar-peek-event.is-linked {
-    border-color: var(--app-accent);
-    background: color-mix(in srgb, var(--app-accent) var(--part-22), var(--soft));
-    box-shadow: none;
-    opacity: var(--opacite-1);
-  }
-
-  .calendar-day-peek .calendar-peek-event:hover,
-  .calendar-day-peek .calendar-peek-event:focus-within {
-    background: var(--hover-surface);
-    box-shadow: none;
-  }
-
-  .calendar-day-peek .calendar-peek-event.is-pinned {
-    border-left-width: var(--trait-6);
-    box-shadow: inset 0 0 0 var(--ombre-2) var(--app-accent);
   }
 
   .calendar-peek-more {

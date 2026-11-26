@@ -1,4 +1,4 @@
-// BPM-Astra · écrans métier de BPM · cycle budgétaire et réglages (chargé par _application.scss).
+/* BPM-Astra · écrans métier de BPM · cycle budgétaire et réglages (chargé par _application.scss).*/
 @use 'functions' as *;
 @use 'contrat-ruptures' as *;
 
@@ -61,49 +61,13 @@
 .bc-loading {
   color: var(--muted);
 }
-.bc-page :is(.bc-hero, .bc-wealth, .bc-chart, .bc-forecast, .bc-history, .bc-empty) {
+.bc-page :is(.bc-hero, .bc-wealth, .bc-history, .bc-empty) {
   display: grid;
   gap: var(--ecart-16);
   padding: var(--ecart-28);
 }
 
 /* Liaisons */
-.bc-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-10);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-.bc-links legend {
-  width: var(--part-100);
-  margin-bottom: var(--ecart-8);
-  color: var(--muted);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-bold);
-}
-.bc-link {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-10);
-  min-height: var(--dim-56);
-  padding: var(--ecart-8) var(--ecart-16);
-  border: var(--trait-2) solid var(--outline);
-  border-radius: var(--rayon-10);
-  background: var(--raised-surface);
-  cursor: pointer;
-}
-.bc-link span {
-  display: grid;
-}
-.bc-link small {
-  color: var(--muted);
-}
-.bc-link.is-selected {
-  border-color: var(--app-accent);
-  background: var(--app-accent-soft);
-}
 
 /* Période ouverte */
 .bc-hero-head {
@@ -148,79 +112,8 @@
   color: var(--muted);
   font-size: scaled(var(--fs-xs));
 }
-.bc-timeline {
-  display: grid;
-  gap: var(--ecart-6);
-}
-.bc-timeline progress {
-  width: var(--part-100);
-  height: var(--dim-14);
-  border: 0;
-  border-radius: var(--rayon-999);
-  overflow: hidden;
-  appearance: none;
-  background: var(--soft);
-  accent-color: var(--app-accent);
-}
-.bc-timeline progress::-webkit-progress-bar {
-  border-radius: var(--rayon-999);
-  background: var(--soft);
-}
-.bc-timeline progress::-webkit-progress-value {
-  border-radius: var(--rayon-999);
-  background: var(--app-accent);
-}
-.bc-timeline progress::-moz-progress-bar {
-  border-radius: var(--rayon-999);
-  background: var(--app-accent);
-}
-.bc-today {
-  color: var(--app-accent);
-  font-weight: var(--fw-bold);
-}
-.bc-tiles {
-  display: grid;
-  grid-template-columns: repeat(var(--colonnes-4), minmax(0, var(--fr-1)));
-  gap: var(--ecart-12);
-}
-.bc-tile {
-  display: grid;
-  align-content: start;
-  gap: var(--ecart-6);
-  min-width: 0;
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--rayon-10);
-  background: var(--soft);
-}
-.bc-tile small {
-  color: var(--muted);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--lettrage-0-04em);
-  text-transform: uppercase;
-}
-.bc-tile strong {
-  font-size: scaled(var(--fs-2xl));
-  line-height: var(--lh-tight);
-  overflow-wrap: anywhere;
-}
-.bc-tile > span {
-  color: var(--muted);
-  font-size: scaled(var(--fs-xs));
-}
-.bc-tile[data-tone='success'] strong {
-  color: var(--bc-positive);
-}
-.bc-tile[data-tone='danger'] strong {
-  color: var(--bc-negative);
-}
 
 /* Passage de témoin */
-.bc-relay {
-  display: grid;
-  gap: var(--ecart-12);
-}
 
 /* Patrimoine en valeur totale */
 .bc-wealth {
@@ -267,95 +160,6 @@
 }
 
 /* Graphique */
-.bc-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-16);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: scaled(var(--fs-sm));
-}
-.bc-legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ecart-8);
-}
-.bc-legend li::before {
-  content: '';
-  width: var(--dim-14);
-  height: var(--dim-14);
-  border-radius: var(--rayon-4);
-}
-.bc-legend [data-key='surplus']::before {
-  background: var(--bc-positive);
-}
-.bc-legend [data-key='deficit']::before {
-  background: var(--bc-negative);
-}
-.bc-legend [data-key='forecast']::before {
-  border: var(--trait-2) dashed var(--app-accent);
-}
-.bc-legend [data-key='wealth']::before {
-  height: var(--dim-4);
-  background: var(--app-accent);
-}
-.bc-grid {
-  stroke: var(--line);
-  stroke-dasharray: var(--ecart-4) var(--ecart-4);
-}
-.bc-zero {
-  stroke: var(--muted);
-  stroke-width: var(--trait-1);
-}
-.bc-bar[data-sign='positive'] {
-  fill: var(--bc-positive);
-}
-.bc-bar[data-sign='negative'] {
-  fill: var(--bc-negative);
-}
-.bc-bar[data-state='forecast'] {
-  fill-opacity: var(--opacite-0-35);
-  stroke: currentColor;
-  stroke-dasharray: var(--ecart-4) var(--ecart-2);
-}
-.bc-bar[data-state='forecast'][data-sign='positive'] {
-  color: var(--bc-positive);
-}
-.bc-bar[data-state='forecast'][data-sign='negative'] {
-  color: var(--bc-negative);
-}
-.bc-bar[data-state='open'] {
-  fill-opacity: var(--opacite-0-7);
-}
-.bc-line {
-  fill: none;
-  stroke: var(--app-accent);
-  stroke-width: var(--trait-3);
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-.bc-point {
-  fill: var(--raised-surface);
-  stroke: var(--app-accent);
-  stroke-width: var(--trait-2);
-  vector-effect: non-scaling-stroke;
-}
-.bc-point[data-state='open'] {
-  fill: var(--app-accent);
-}
-.bc-axis {
-  display: grid;
-  grid-auto-columns: minmax(0, var(--fr-1));
-  grid-auto-flow: column;
-  color: var(--muted);
-  font-size: scaled(var(--fs-2xs));
-  text-align: center;
-}
-.bc-axis .is-open {
-  color: var(--app-accent);
-  font-weight: var(--fw-bold);
-}
 
 /* Prévisions et tableaux */
 .bc-controls {
@@ -446,43 +250,6 @@
 }
 
 /* Mouvements, configuration et actions */
-.bc-page :is(.bc-movements, .bc-configure) {
-  padding: var(--ecart-16) var(--ecart-20);
-  border: var(--trait-1) solid var(--line);
-  border-radius: var(--rayon-12);
-  background: var(--raised-surface);
-}
-.bc-page :is(.bc-movements, .bc-configure) summary {
-  display: flex;
-  align-items: center;
-  min-height: var(--dim-48);
-  color: var(--ink);
-  font-weight: var(--fw-bold);
-  cursor: pointer;
-}
-.bc-movements ul {
-  display: grid;
-  gap: var(--ecart-6);
-  margin: var(--ecart-10) 0 0;
-  padding: 0;
-  list-style: none;
-}
-.bc-movements li {
-  display: grid;
-  grid-template-columns: var(--dim-80) minmax(0, var(--fr-1)) auto auto;
-  align-items: center;
-  gap: var(--ecart-12);
-  min-height: var(--dim-44);
-  padding: var(--ecart-6) var(--ecart-10);
-  border-bottom: var(--trait-1) solid var(--line);
-}
-.bc-movements li > span:first-of-type {
-  color: var(--ink);
-}
-.bc-movements time {
-  color: var(--muted);
-  font-size: scaled(var(--fs-xs));
-}
 .bc-actions {
   display: flex;
   flex-wrap: wrap;
@@ -537,35 +304,20 @@
 }
 
 @media (max-width: $rupture-1000) {
-  .bc-tiles {
-    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
-  }
   .bc-wealth {
     grid-template-columns: minmax(0, var(--fr-1));
   }
 }
 @media (max-width: $rupture-640) {
-  .bc-page :is(.bc-hero, .bc-wealth, .bc-chart, .bc-forecast, .bc-history, .bc-empty) {
+  .bc-page :is(.bc-hero, .bc-wealth, .bc-history, .bc-empty) {
     padding: var(--ecart-16);
   }
-  .bc-tiles, .bc-wealth-parts, .bc-steps {
+  .bc-wealth-parts, .bc-steps {
     grid-template-columns: minmax(0, var(--fr-1));
   }
   .bc-countdown {
     width: var(--part-100);
   }
-  .bc-movements li {
-    grid-template-columns: minmax(0, var(--fr-1)) auto;
-  }
 }
 
 /* Panneaux intégrés dans Patrimoine */
-.bc-panel {
-  gap: var(--ecart-14);
-  margin: var(--ecart-20) 0;
-  padding: var(--ecart-20);
-  border: var(--trait-1) solid var(--line);
-  border-inline-start: var(--trait-4) solid var(--app-accent);
-  border-radius: var(--rayon-12);
-  background: var(--raised-surface);
-}

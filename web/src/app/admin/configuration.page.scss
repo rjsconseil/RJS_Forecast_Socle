@@ -16,7 +16,6 @@
   background: var(--raised-surface);
   box-shadow: var(--app-panel-shadow);
 }
-.cfg-eyebrow,
 .cfg-number {
   display: block;
   color: var(--app-accent);
@@ -32,11 +31,6 @@
 .cfg-hero p {
   max-width: var(--dim-75ch);
   line-height: var(--lh-relaxed);
-}
-.cfg-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
-  gap: var(--layout-gap);
 }
 .cfg-panel {
   min-width: 0;
@@ -138,112 +132,14 @@
   color: var(--muted);
   font-weight: var(--fw-regular);
 }
-.cfg-token {
-  display: grid;
-  align-content: start;
-  gap: var(--ecart-6);
-  min-width: 0;
-  font-weight: var(--fw-semibold);
-}
-.cfg-range {
-  color: var(--muted);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-regular);
-}
-.cfg-search input {
-  width: var(--part-100);
-}
-.cfg-workbench {
-  display: grid;
-  grid-template-columns: minmax(var(--dim-280), var(--dim-340)) minmax(0, var(--fr-1));
-  gap: var(--ecart-20);
-  align-items: start;
-}
-.cfg-selection,
-.cfg-parameters {
-  display: grid;
-  min-width: 0;
-  gap: var(--ecart-16);
-}
-.cfg-selection {
-  position: sticky;
-  top: var(--decalage-12);
-  max-height: calc(var(--dim-100dvh) - var(--dim-24));
-  overflow-y: auto;
-  padding-right: var(--ecart-6);
-}
-.cfg-selection .cfg-panel {
-  padding: var(--ecart-20);
-}
-.cfg-selection h2 {
-  font-size: var(--fs-lg);
-}
-.cfg-selection p {
-  font-size: var(--fs-sm);
-}
-.cfg-selection .cfg-impact {
-  grid-template-columns: var(--fr-1);
-}
-.cfg-patterns button {
-  padding: var(--ecart-12);
-  border: var(--trait-1) solid var(--control-line);
-  border-radius: var(--radius-md);
-  background: var(--raised-surface);
-  color: var(--ink);
-  text-align: left;
-}
-.cfg-patterns button[aria-pressed='true'] {
-  border-color: var(--app-accent);
-  background: var(--app-accent-soft);
-  box-shadow: inset var(--ombre-4) 0 var(--app-accent);
-}
-.cfg-search {
-  display: grid;
-  gap: var(--ecart-6);
-  max-width: var(--dim-600);
-}
-.cfg-patterns {
-  display: grid;
-  grid-template-columns: var(--fr-1);
-  gap: var(--ecart-10);
-  margin-top: var(--ecart-16);
-  max-height: var(--dim-360);
-  overflow-y: auto;
-  padding: var(--ecart-4);
-}
-.cfg-patterns button {
-  display: grid;
-  align-content: start;
-  gap: var(--ecart-6);
-}
-.cfg-patterns span,
-.cfg-patterns small {
-  color: var(--muted);
-  font-size: var(--fs-sm);
-}
 .cfg-inheritance summary {
   cursor: pointer;
   font-weight: var(--fw-semibold);
   margin-bottom: var(--ecart-8);
 }
-@media (max-width: $rupture-960) {
-  .cfg-workbench {
-    grid-template-columns: var(--fr-1);
-  }
-  .cfg-selection {
-    position: static;
-    max-height: none;
-    overflow: visible;
-    padding: 0;
-  }
-}
 .cfg-page button:focus-visible, .cfg-page a:focus-visible {
   outline: var(--trait-3) solid var(--app-focus-ring);
   outline-offset: var(--decalage-2);
-}
-.cfg-default {
-  border-left: var(--trait-4) solid var(--app-accent);
-  padding-left: var(--ecart-14);
 }
 .cfg-actions {
   display: flex;
@@ -272,31 +168,7 @@
   border: var(--trait-1) solid var(--green);
   color: var(--green);
 }
-.cfg-rules {
-  display: grid;
-  gap: var(--ecart-8);
-  padding: 0;
-  list-style: none;
-}
-.cfg-rules li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--ecart-12);
-  padding: var(--ecart-8) 0;
-  border-bottom: var(--trait-1) solid var(--line);
-}
-.cfg-rules li div {
-  display: grid;
-  gap: var(--ecart-2);
-}
-.cfg-rules li span {
-  color: var(--muted);
-  font-size: var(--fs-sm);
-}
 @media (max-width: $rupture-720) {
-  .cfg-grid,
   .cfg-impact {
     grid-template-columns: var(--fr-1);
   }
@@ -346,26 +218,10 @@
   font-size: var(--texte-13);
   color: var(--muted);
 }
-.cfg-setting-range {
-  display: grid;
-  grid-template-columns: minmax(0, var(--fr-1)) var(--dim-104) auto;
-  gap: var(--ecart-8);
-  align-items: center;
-
-  > input[type='range'] {
-    accent-color: var(--app-accent);
-  }
-}
-.cfg-setting-range:not(:has(input[type='range'])) {
-  grid-template-columns: var(--dim-128) auto;
-}
 .cfg-setting-check {
   display: flex;
   gap: var(--ecart-8);
   align-items: center;
-}
-.cfg-setting-fixed {
-  font-weight: var(--fw-semibold);
 }
 .cfg-setting-help,
 .cfg-setting-meta {
@@ -400,18 +256,5 @@
   &.current {
     border-color: var(--app-accent);
     box-shadow: inset 0 calc(-1 * var(--ombre-4)) 0 var(--app-accent);
-  }
-}
-.cfg-table {
-  display: grid;
-  gap: var(--ecart-10);
-  margin-top: var(--ecart-20);
-}
-.cfg-effects {
-  margin: 0;
-  padding-left: var(--ecart-20);
-
-  .warning {
-    color: var(--status-warning, inherit);
   }
 }

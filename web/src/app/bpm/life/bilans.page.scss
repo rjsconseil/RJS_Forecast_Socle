@@ -1,4 +1,4 @@
-// Bilans : historique à gauche ; à droite le cycle lu en trois sections (résultat, dépenses, projets) ; dessous, tous les cycles.
+/* Bilans : historique à gauche ; à droite le cycle lu en trois sections (résultat, dépenses, projets) ; dessous, tous les cycles.*/
 :host { display: block; }
 .bl-layout {
   display: grid;
@@ -10,8 +10,7 @@
 .bl-muted { margin: 0; color: var(--muted); font-size: 13px; }
 .bl-kick { margin: 0 0 3px; color: var(--bpm-section-deep, var(--ink)); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .bl-history,
-.bl-block,
-.bl-detail-head {
+.bl-block {
   padding: 18px 20px;
   background: var(--bpm-surface, #fff);
   border: 1px solid var(--bpm-line, #e2e7ef);
@@ -52,7 +51,7 @@
 .bl-block { display: grid; gap: 14px; min-width: 0; h3 { margin: 0; font-size: 15px; } h2 { margin: 0; font-size: 16px; } h4 { margin: 0 0 6px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; } }
 .bl-block-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
 
-// 1. Résultat : l'équation du cycle, deux jauges, les faits à retenir.
+/* 1. Résultat : l'équation du cycle, deux jauges, les faits à retenir.*/
 .bl-result { border-top: 3px solid var(--bpm-section-accent, var(--app-accent)); }
 .bl-result-head {
   display: flex; justify-content: space-between; align-items: start; gap: 16px;
@@ -93,7 +92,7 @@
   li[data-tone='negative']::before { background: var(--status-danger); }
 }
 
-// 2. Dépenses : deux listes lisibles d'un coup d'œil.
+/* 2. Dépenses : deux listes lisibles d'un coup d'œil.*/
 .bl-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .bl-rows {
   margin: 0; padding: 0; list-style: none;
@@ -109,7 +108,7 @@
 .bl-over { margin: 0; color: var(--status-danger); font-size: 12px; font-weight: 600; }
 p.bl-over { margin-top: 6px; }
 
-// 3 et 4. Chiffres-clés en ligne, tableaux sobres.
+/* 3 et 4. Chiffres-clés en ligne, tableaux sobres.*/
 .bl-stats {
   display: grid; grid-template-columns: repeat(var(--bl-cols, 5), minmax(0, 1fr)); gap: 8px; margin: 0;
   > div { display: grid; gap: 2px; align-content: start; min-width: 0; padding: 8px 10px; border: 1px solid var(--bpm-line, #e2e7ef); border-radius: 6px; }

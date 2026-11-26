@@ -2,49 +2,6 @@
 @use 'contrat-ruptures' as *;
 
 /* Habillage limité à la lecture Graphiques & chiffres. */
-.bpm-analysis {
-  .bp-centers {
-    gap: var(--ecart-16);
-  }
-  .bp-centers li {
-    padding: var(--ecart-16);
-    border: var(--trait-1) solid var(--card-border);
-    border-radius: var(--rayon-12);
-    background: var(--soft);
-  }
-  .bp-centers strong {
-    text-align: end;
-    font-size: scaled(var(--fs-lg));
-  }
-  .bp-centers strong small {
-    display: block;
-    font-size: scaled(var(--fs-xs));
-    margin-top: var(--ecart-4);
-  }
-  .bp-bar {
-    height: var(--dim-12);
-    margin-top: var(--ecart-8);
-    background: var(--card-border);
-  }
-  .bp-progress .bpm-disclosure-body {
-    padding: var(--ecart-24);
-    background: var(--soft);
-    border-radius: var(--card-radius);
-  }
-  .bp-gauge {
-    height: var(--dim-24);
-    border: var(--trait-1) solid var(--card-border);
-    box-shadow: inset 0 var(--ombre-2) var(--ombre-4) var(--card-border);
-  }
-}
-@media (max-width: #{$rupture-640}) {
-  .bpm-analysis .bp-centers li {
-    grid-template-columns: var(--fr-1);
-  }
-  .bpm-analysis .bp-centers strong {
-    text-align: start;
-  }
-}
 
 /* Une transition explicite entre la synthèse personnelle et le budget quotidien. */
 .bp-target-facts {

@@ -74,7 +74,7 @@ export default {
     }
 
     const summary = (state, u) => {
-      const s = { ...structuredClone(u), userTypeLabel: userTypesOf(socle, state).find((t) => t.key === u.userType)?.label ?? u.userType };
+      const s = { ...u, userTypeLabel: userTypesOf(socle, state).find((t) => t.key === u.userType)?.label ?? u.userType };
       for (const ext of socle.registry.extensions('userSummary')) Object.assign(s, ext(state, u, socle));
       return s;
     };

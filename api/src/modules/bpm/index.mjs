@@ -109,7 +109,7 @@ export default {
     }
 
     function closureView(c) {
-      return { ...structuredClone(c), result: c.resultCents / 100 };
+      return { ...c, result: c.resultCents / 100 };
     }
 
     /**

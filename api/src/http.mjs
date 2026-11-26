@@ -6,6 +6,16 @@ import { AUTH_MODES, authSecret, cookieOf, createSessions, createThrottle, SESSI
 
 /** Adresses réservées à l'administration quand la connexion est exigée. */
 const ADMIN_PATHS = /^\/api\/(admin|om|_recette)(\/|$)/;
+/** Taille maximale d'un corps de requête JSON (octets) : 1 Mo par défaut, `SOCLE_BODY_LIMIT` pour la changer. */
+export const BODY_LIMIT = Number(process.env.SOCLE_BODY_LIMIT) || 1024 * 1024;
+/** En-têtes de sécurité de toutes les réponses de l'API (JSON, flux, téléchargements). */
+export const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'no-referrer',
+  'cross-origin-resource-policy': 'same-origin',
+  'content-security-policy': "default-src 'none'; frame-ancestors 'none'",
+};
 /** Adresses ouvertes sans connexion quand la connexion est exigée. */
 const PUBLIC_PATHS = new Set(['GET /api/users/types']);
 
@@ -126,8 +136,15 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
   }
 
   async function readBody(req) {
+    const declared = Number(req.headers['content-length']);
+    if (declared > BODY_LIMIT) tooLarge();
     const chunks = [];
-    for await (const c of req) chunks.push(c);
+    let size = 0;
+    for await (const c of req) {
+      size += c.length;
+      if (size > BODY_LIMIT) tooLarge();
+      chunks.push(c);
+    }
     if (!chunks.length) return {};
     try {
       return JSON.parse(Buffer.concat(chunks).toString('utf8'));
@@ -136,10 +153,15 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
     }
   }
 
+  function tooLarge() {
+    fail('PAYLOAD_TOO_LARGE', `Requête trop volumineuse : ${Math.round(BODY_LIMIT / 1024)} Ko au plus.`, { limit: BODY_LIMIT });
+  }
+
   // ---------- requêtes ----------
 
   return async function handle(req, res) {
     const url = new URL(req.url, `http://${req.headers.host}`);
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
     const send = (status, payload, headers = {}) => {
       res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...headers });
       res.end(JSON.stringify(payload));

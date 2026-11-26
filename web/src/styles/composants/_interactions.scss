@@ -34,10 +34,8 @@
 }
 
 /* Une forme commune, une couleur d'action et des états sémantiques constants. */
-.app-shell
-  :is(
-    [data-ui-pattern~='action'], .btn, .audit-actions button, .audit-archives button
-  ) {
+// `:not(svg)` garde le poids (0,2,1) de la liste d'origine, dont deux entrées visaient des classes disparues.
+.app-shell :is([data-ui-pattern~='action'], .btn):not(svg) {
   --btn-height: var(--control-height);
   min-height: var(--btn-height);
   border-radius: var(--btn-radius);
@@ -80,12 +78,12 @@
   background: var(--app-accent-soft);
   border-color: var(--app-accent);
 }
-.app-shell :is(.btn-danger, .btn.us-danger, .audit-danger) {
+.app-shell .btn-danger[class] {
   border-color: var(--status-danger);
   background: var(--status-danger);
   color: var(--app-on-accent);
 }
-.app-shell :is(.btn-danger, .btn.us-danger, .audit-danger):hover:not(:disabled) {
+.app-shell .btn-danger[class]:hover:not(:disabled) {
   background: var(--status-danger-hover);
   border-color: var(--status-danger-hover);
 }
@@ -104,9 +102,7 @@
 /* Pattern « Cartes et panneaux » : un même jeton agit sur les principaux
    conteneurs des modules, sans que Configuration importe leurs composants. */
 .app-shell
-  :is(
-    [data-ui-pattern~='panel'], .card, .us-section, .audit-card, .bw-section, .cfg-panel
-  ) {
+  :is([data-ui-pattern~='panel'], .card, .us-section, .bw-section, .cfg-panel) {
   border-radius: var(--card-radius);
   border-width: var(--card-border-width);
 }
@@ -190,7 +186,7 @@
 .app-shell :is(form) label:focus-within {
   color: var(--app-accent);
 }
-.app-shell :is(.us-form, .fs-form) {
+.app-shell :is(.us-form) {
   border-inline-start: var(--trait-3) solid var(--app-accent-line);
 }
 .app-shell :is(.us-form) :is(.us-actions) {
@@ -209,7 +205,7 @@
 }
 
 @media (max-width: $rupture-640) {
-  .app-shell :is(.btn, .us-row-actions button, .audit-actions button) {
+  .app-shell :is(.btn, .us-row-actions button) {
     min-height: var(--dim-44);
   }
   .back-to-top {

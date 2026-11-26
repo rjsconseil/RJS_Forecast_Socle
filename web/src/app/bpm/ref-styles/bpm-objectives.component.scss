@@ -49,26 +49,14 @@
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
 }
-.objectives-phases {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-12);
-  padding: 0;
-  list-style: none;
-}
-.objectives-phases li,
 .objectives-callout {
   padding: var(--ecart-16);
   border: var(--trait-1) solid var(--card-border);
   border-radius: var(--card-radius);
 }
-.objectives-phases [aria-current],
 .objectives-callout {
   background: var(--app-accent-soft);
   border-color: var(--app-accent-line);
-}
-.objectives-phases [aria-current] {
-  font-weight: var(--fw-bold);
 }
 
 .objectives-summary {
@@ -301,22 +289,6 @@
 .objectives-landmark-gap dd {
   margin: 0;
   color: var(--objective-color);
-}
-.objectives-phases {
-  display: grid;
-  grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
-  margin: 0;
-  gap: var(--ecart-8);
-}
-.objectives-phases li {
-  padding: var(--ecart-10) var(--ecart-12);
-  border-radius: var(--rayon-8);
-  color: var(--muted);
-  font-size: var(--fs-sm);
-}
-.objectives-phases [aria-current] {
-  color: var(--objective-color);
-  background: var(--objective-surface);
 }
 .objectives-settings:not(.is-fixed) {
   border: 0;

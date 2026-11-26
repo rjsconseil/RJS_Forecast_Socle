@@ -2128,5 +2128,865 @@
    "editReason": null,
    "settlementPolicy": "Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos."
   }
+ },
+ "closing": {
+  "context": {
+   "user": {
+    "id": "usr_001",
+    "label": "Camille",
+    "userType": "individuel"
+   },
+   "scope": "principal",
+   "scopeLabel": "Budget du projet de vie",
+   "budgets": [
+    {
+     "id": "bud_002",
+     "name": "Budget du projet de vie",
+     "role": "life",
+     "coreProjectId": "prj_003",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 1
+    },
+    {
+     "id": "bud_004",
+     "name": "Cuisine",
+     "role": "standard",
+     "coreProjectId": "prj_005",
+     "fundingSource": "cycle",
+     "capsCents": {},
+     "revision": 3
+    }
+   ],
+   "period": {
+    "key": "2026-11",
+    "index": 24322,
+    "start": "2026-11-01",
+    "end": "2026-11-30",
+    "label": "Novembre 2026",
+    "status": "current",
+    "closureId": null,
+    "endExclusive": "2026-12-01"
+   },
+   "periods": {
+    "firstKey": "2026-08",
+    "currentKey": "2026-11"
+   },
+   "cycleAnchorDay": 1,
+   "calculationDate": "2026-11-03",
+   "revision": 14,
+   "unit": "centimes (EUR)"
+  },
+  "phase": "to_close",
+  "period": {
+   "key": "2026-10",
+   "label": "Octobre 2026",
+   "start": "2026-10-01",
+   "end": "2026-10-31",
+   "status": "ended"
+  },
+  "next": {
+   "key": "2026-11",
+   "label": "Novembre 2026",
+   "start": "2026-11-01",
+   "end": "2026-11-30"
+  },
+  "opensOn": "2026-11-01",
+  "days": {
+   "total": 31,
+   "elapsed": 31,
+   "left": 0
+  },
+  "backlog": 1,
+  "lock": {
+   "enabled": false,
+   "active": false,
+   "from": null,
+   "message": null
+  },
+  "closingMode": {
+   "active": false,
+   "message": null
+  },
+  "percent": 0,
+  "done": 0,
+  "total": 3,
+  "counts": {
+   "total": 3,
+   "open": 3,
+   "closed": 0,
+   "deferred": 0,
+   "later": 0,
+   "inherited": 0
+  },
+  "criteria": [
+   {
+    "key": "income",
+    "label": "Entrées reçues",
+    "done": 0,
+    "total": 1,
+    "state": "todo",
+    "remaining": "1 entrée à recevoir ou décider"
+   },
+   {
+    "key": "charges",
+    "label": "Charges réglées",
+    "done": 0,
+    "total": 1,
+    "state": "todo",
+    "remaining": "1 charge à régler ou décider"
+   },
+   {
+    "key": "projects",
+    "label": "Flux des projets imputés au cycle",
+    "done": 0,
+    "total": 0,
+    "state": "none",
+    "remaining": null
+   },
+   {
+    "key": "decisions",
+    "label": "Décisions de financement",
+    "done": 0,
+    "total": 0,
+    "state": "none",
+    "remaining": null
+   },
+   {
+    "key": "account",
+    "label": "Compte vérifié",
+    "done": 0,
+    "total": 1,
+    "state": "todo",
+    "remaining": "compte à vérifier"
+   }
+  ],
+  "points": [
+   {
+    "id": "rec_006@2026-10-05",
+    "lineId": "rec_006@2026-10-05",
+    "kind": "line",
+    "group": "charges",
+    "blocking": false,
+    "lineKind": "occurrence",
+    "operationId": null,
+    "recurrenceId": "rec_006",
+    "occurrenceDate": "2026-10-05",
+    "revision": null,
+    "label": "Loyer",
+    "detail": "Logement",
+    "direction": "charge",
+    "plannedDate": "2026-10-05",
+    "plannedCents": 90000,
+    "realizedDate": null,
+    "realizedCents": null,
+    "costCenterLabel": "Logement",
+    "cadenceLabel": "Mensuelle",
+    "project": null,
+    "status": "late",
+    "statusLabel": "En retard",
+    "state": "open",
+    "openedOn": "2026-11-20",
+    "closedAt": null,
+    "closedOn": null,
+    "outcome": null,
+    "outcomeLabel": null,
+    "inheritedFrom": null,
+    "deferTo": null
+   },
+   {
+    "id": "rec_009@2026-10-28",
+    "lineId": "rec_009@2026-10-28",
+    "kind": "line",
+    "group": "income",
+    "blocking": false,
+    "lineKind": "occurrence",
+    "operationId": null,
+    "recurrenceId": "rec_009",
+    "occurrenceDate": "2026-10-28",
+    "revision": null,
+    "label": "Salaire",
+    "detail": "Salaires et revenus d'activité",
+    "direction": "income",
+    "plannedDate": "2026-10-28",
+    "plannedCents": 260000,
+    "realizedDate": null,
+    "realizedCents": null,
+    "costCenterLabel": "Salaires et revenus d'activité",
+    "cadenceLabel": "Mensuelle",
+    "project": null,
+    "status": "late",
+    "statusLabel": "En retard",
+    "state": "open",
+    "openedOn": "2026-11-20",
+    "closedAt": null,
+    "closedOn": null,
+    "outcome": null,
+    "outcomeLabel": null,
+    "inheritedFrom": null,
+    "deferTo": null
+   },
+   {
+    "id": "account",
+    "lineId": null,
+    "kind": "account",
+    "group": "account",
+    "blocking": true,
+    "label": "Vérification du compte",
+    "detail": "Sa variation vaut les entrées reçues moins les sorties payées du cycle.",
+    "status": "late",
+    "statusLabel": "À vérifier",
+    "state": "open",
+    "stale": false,
+    "openedOn": "2026-11-01",
+    "closedAt": null,
+    "closedOn": null,
+    "outcome": null,
+    "outcomeLabel": null,
+    "inheritedFrom": null,
+    "deferTo": null
+   }
+  ],
+  "targets": [
+   {
+    "key": "2026-11",
+    "label": "Novembre 2026",
+    "start": "2026-11-01"
+   },
+   {
+    "key": "2026-12",
+    "label": "Décembre 2026",
+    "start": "2026-12-01"
+   },
+   {
+    "key": "2027-01",
+    "label": "Janvier 2027",
+    "start": "2027-01-01"
+   },
+   {
+    "key": "2027-02",
+    "label": "Février 2027",
+    "start": "2027-02-01"
+   },
+   {
+    "key": "2027-03",
+    "label": "Mars 2027",
+    "start": "2027-03-01"
+   },
+   {
+    "key": "2027-04",
+    "label": "Avril 2027",
+    "start": "2027-04-01"
+   },
+   {
+    "key": "2027-05",
+    "label": "Mai 2027",
+    "start": "2027-05-01"
+   },
+   {
+    "key": "2027-06",
+    "label": "Juin 2027",
+    "start": "2027-06-01"
+   },
+   {
+    "key": "2027-07",
+    "label": "Juillet 2027",
+    "start": "2027-07-01"
+   },
+   {
+    "key": "2027-08",
+    "label": "Août 2027",
+    "start": "2027-08-01"
+   },
+   {
+    "key": "2027-09",
+    "label": "Septembre 2027",
+    "start": "2027-09-01"
+   },
+   {
+    "key": "2027-10",
+    "label": "Octobre 2027",
+    "start": "2027-10-01"
+   },
+   {
+    "key": "2027-11",
+    "label": "Novembre 2027",
+    "start": "2027-11-01"
+   },
+   {
+    "key": "2027-12",
+    "label": "Décembre 2027",
+    "start": "2027-12-01"
+   },
+   {
+    "key": "2028-01",
+    "label": "Janvier 2028",
+    "start": "2028-01-01"
+   },
+   {
+    "key": "2028-02",
+    "label": "Février 2028",
+    "start": "2028-02-01"
+   },
+   {
+    "key": "2028-03",
+    "label": "Mars 2028",
+    "start": "2028-03-01"
+   },
+   {
+    "key": "2028-04",
+    "label": "Avril 2028",
+    "start": "2028-04-01"
+   },
+   {
+    "key": "2028-05",
+    "label": "Mai 2028",
+    "start": "2028-05-01"
+   },
+   {
+    "key": "2028-06",
+    "label": "Juin 2028",
+    "start": "2028-06-01"
+   },
+   {
+    "key": "2028-07",
+    "label": "Juillet 2028",
+    "start": "2028-07-01"
+   },
+   {
+    "key": "2028-08",
+    "label": "Août 2028",
+    "start": "2028-08-01"
+   },
+   {
+    "key": "2028-09",
+    "label": "Septembre 2028",
+    "start": "2028-09-01"
+   },
+   {
+    "key": "2028-10",
+    "label": "Octobre 2028",
+    "start": "2028-10-01"
+   }
+  ],
+  "netCents": -24000,
+  "account": null,
+  "closing": {
+   "possible": true,
+   "reason": null,
+   "preview": {
+    "periodKey": "2026-10",
+    "periodLabel": "Octobre 2026",
+    "capitalizationDate": "2026-10-31",
+    "resultCents": -24000,
+    "result": -240,
+    "formula": "bpm.revenus - bpm.charges",
+    "parameter": {
+     "key": "metric.bpm.resultatPeriode",
+     "revision": 0,
+     "origin": "défaut du code",
+     "updatedAt": null,
+     "isDefault": true
+    },
+    "explanation": "0 − 240 = -240",
+    "stockBefore": 11070,
+    "stockAfter": 10830,
+    "conditions": [
+     "Période terminée",
+     "Périodes précédentes closes",
+     "Résultat connu",
+     "Capitalisation unique, même si le résultat est nul ou négatif"
+    ]
+   }
+  },
+  "canClose": false,
+  "remaining": [
+   "1 entrée à recevoir ou décider",
+   "1 charge à régler ou décider",
+   "compte à vérifier"
+  ],
+  "impacts": {
+   "next": {
+    "key": "2026-11",
+    "label": "Novembre 2026",
+    "start": "2026-11-01",
+    "end": "2026-11-30"
+   },
+   "capitalization": {
+    "resultCents": -24000,
+    "stockBefore": 11070,
+    "stockAfter": 10830,
+    "date": "2026-10-31",
+    "provisional": false
+   },
+   "recurring": {
+    "count": 2,
+    "incomeCents": 260000,
+    "chargeCents": 90000
+   },
+   "planned": {
+    "count": 1,
+    "incomeCents": 0,
+    "chargeCents": 16000
+   },
+   "projects": {
+    "count": 0,
+    "incomeCents": 0,
+    "chargeCents": 0
+   },
+   "deferred": {
+    "count": 0,
+    "incomeCents": 0,
+    "chargeCents": 0,
+    "intoNext": {
+     "count": 0,
+     "incomeCents": 0,
+     "chargeCents": 0
+    },
+    "byCycle": []
+   },
+   "decisions": {
+    "count": 0,
+    "points": []
+   },
+   "balanceCents": 154000,
+   "opensEntries": false
+  },
+  "actions": {
+   "total": 3,
+   "entries": 3,
+   "lastAt": "2026-11-26T09:00:00.000Z",
+   "firstAt": "2026-11-26T09:00:00.000Z",
+   "source": {
+    "journalFrom": "2026-11-26T09:00:00.000Z",
+    "complete": false
+   },
+   "categories": [
+    {
+     "key": "daily",
+     "label": "Argent du quotidien",
+     "part": "quotidien",
+     "text": "Dépenses et entrées saisies, prévisions, règlements, échéances écartées et annulations du budget du projet de vie.",
+     "count": 1,
+     "entries": 1,
+     "realizedCents": -24000,
+     "lastAt": "2026-11-26T09:00:00.000Z",
+     "items": [
+      {
+       "category": "daily",
+       "command": "createOperation",
+       "verb": "Dépense payée saisie",
+       "at": "2026-11-26T09:00:00.000Z",
+       "source": "journal",
+       "objectId": "op_016",
+       "label": "Courses",
+       "detail": "Alimentation · payée le 9 oct. 2026",
+       "amountCents": 24000,
+       "direction": "charge",
+       "effect": "realized",
+       "target": {
+        "kind": "line",
+        "id": "op_016",
+        "coreProjectId": null
+       },
+       "count": 1,
+       "firstAt": "2026-11-26T09:00:00.000Z"
+      }
+     ]
+    },
+    {
+     "key": "projects",
+     "label": "Projets de la vie",
+     "part": "projets",
+     "text": "Flux des projets, enveloppes attribuées, parts et retours des tâches, demandes, dépassements et décisions.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    },
+    {
+     "key": "recurring",
+     "label": "Budget récurrent",
+     "part": "quotidien",
+     "text": "Échéances récurrentes définies, modifiées ou supprimées dont des occurrences tombent dans le cycle.",
+     "count": 2,
+     "entries": 2,
+     "realizedCents": 0,
+     "lastAt": "2026-11-26T09:00:00.000Z",
+     "items": [
+      {
+       "category": "recurring",
+       "command": "createRecurrence",
+       "verb": "Échéance récurrente définie",
+       "at": "2026-11-26T09:00:00.000Z",
+       "source": "journal",
+       "objectId": "rec_009",
+       "label": "Salaire",
+       "detail": "Mensuelle · Salaires et revenus d'activité · 1 échéance dans le cycle",
+       "amountCents": 260000,
+       "direction": "income",
+       "effect": "planned",
+       "target": {
+        "kind": "recurring",
+        "id": "rec_009",
+        "coreProjectId": null
+       },
+       "count": 1,
+       "firstAt": "2026-11-26T09:00:00.000Z"
+      },
+      {
+       "category": "recurring",
+       "command": "createRecurrence",
+       "verb": "Échéance récurrente définie",
+       "at": "2026-11-26T09:00:00.000Z",
+       "source": "journal",
+       "objectId": "rec_006",
+       "label": "Loyer",
+       "detail": "Mensuelle · Logement · 1 échéance dans le cycle",
+       "amountCents": 90000,
+       "direction": "charge",
+       "effect": "planned",
+       "target": {
+        "kind": "recurring",
+        "id": "rec_006",
+        "coreProjectId": null
+       },
+       "count": 1,
+       "firstAt": "2026-11-26T09:00:00.000Z"
+      }
+     ]
+    },
+    {
+     "key": "caps",
+     "label": "Plafonds et postes",
+     "part": "quotidien",
+     "text": "Plafonds des postes, catégories et postes personnels en vigueur pendant le cycle.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    },
+    {
+     "key": "wealth",
+     "label": "Cap et patrimoine",
+     "part": "patrimoine",
+     "text": "Objectifs datés, vision et point de départ du patrimoine.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    },
+    {
+     "key": "cycle",
+     "label": "Cycle et clôture",
+     "part": "patrimoine",
+     "text": "Clôture du cycle précédent, ancrage du cycle, décisions de clôture.",
+     "count": 0,
+     "entries": 0,
+     "realizedCents": 0,
+     "lastAt": null,
+     "items": []
+    }
+   ]
+  },
+  "checks": {
+   "items": [
+    {
+     "items": [
+      {
+       "id": "rec_006@2026-10-05",
+       "label": "Loyer",
+       "detail": "En retard · Logement",
+       "amountCents": -90000,
+       "target": {
+        "kind": "line",
+        "id": "rec_006@2026-10-05",
+        "coreProjectId": null,
+        "page": "echeances"
+       }
+      },
+      {
+       "id": "rec_009@2026-10-28",
+       "label": "Salaire",
+       "detail": "En retard · Salaires et revenus d'activité",
+       "amountCents": 260000,
+       "target": {
+        "kind": "line",
+        "id": "rec_009@2026-10-28",
+        "coreProjectId": null,
+        "page": "echeances"
+       }
+      }
+     ],
+     "target": "closing-path-title",
+     "key": "points",
+     "level": "blocking",
+     "label": "Points du cycle traités",
+     "state": "fail",
+     "value": "0 / 2",
+     "text": "2 points ouverts : à valider, ou à revoir dans un cycle à venir, avant la clôture.",
+     "resolution": {
+      "problem": "2 points restent ouverts : la clôture attend qu’ils soient validés ou reportés.",
+      "why": "Chaque évènement du cycle doit être réglé, écarté ou reporté pour que le bilan et le résultat soient justes.",
+      "steps": [
+       {
+        "text": "Dans « À valider », validez chaque point ouvert : réglé à sa date prévue, ou avec une autre date, un autre montant.",
+        "target": {
+         "kind": "section",
+         "id": "closing-path-title"
+        }
+       },
+       {
+        "text": "Un point qui ne sera pas validé dans ce cycle : « Ne pas valider ici » et choisissez le cycle où le revoir.",
+        "target": {
+         "kind": "section",
+         "id": "closing-path-title"
+        }
+       },
+       {
+        "text": "Quand il n’en reste aucun, ce contrôle passe au vert."
+       }
+      ],
+      "progress": {
+       "done": 0,
+       "total": 2
+      }
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": "closing-step-account",
+     "key": "account",
+     "level": "blocking",
+     "label": "Compte vérifié",
+     "state": "fail",
+     "value": "À faire",
+     "text": "Comparez le relevé et les règlements du cycle.",
+     "resolution": {
+      "problem": "Le compte n’est pas encore vérifié.",
+      "why": "La vérification garantit que le résultat versé au patrimoine correspond à ce qui s’est réellement passé sur le compte.",
+      "steps": [
+       {
+        "text": "Ouvrez « Vérifier le compte » et comparez le relevé bancaire du cycle aux règlements enregistrés.",
+        "target": {
+         "kind": "reconciliation"
+        }
+       },
+       {
+        "text": "S’il manque un mouvement, saisissez-le comme déjà réglé : il compte dans le cycle sans ouvrir de point.",
+        "target": {
+         "kind": "page",
+         "path": "mouvements"
+        }
+       },
+       {
+        "text": "Revenez ici et confirmez « Le compte correspond ».",
+        "target": {
+         "kind": "section",
+         "id": "closing-step-account"
+        }
+       }
+      ],
+      "progress": {
+       "done": 0,
+       "total": 1
+      }
+     }
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "integrity",
+     "level": "blocking",
+     "label": "Données intègres",
+     "state": "ok",
+     "value": "Aucune anomalie",
+     "text": "Références et valeurs des objets du cycle cohérentes (contrôles du socle).",
+     "resolution": {
+      "problem": null,
+      "why": "Une référence cassée (poste, catégorie, projet ou tâche disparus) fausse les sommes et le bilan qui sera figé.",
+      "steps": [
+       {
+        "text": "Ouvrez chaque élément concerné et corrigez la référence signalée (poste, catégorie, projet, tâche)."
+       },
+       {
+        "text": "Si l’élément ne s’ouvre pas sur le site, notez son identifiant : il se corrige par l’administration."
+       },
+       {
+        "text": "Revenez ici : le contrôle se relit à l’instant."
+       }
+      ],
+      "progress": null
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": "closing-bilan-title",
+     "key": "result",
+     "level": "blocking",
+     "label": "Résultat recalculé à l’identique",
+     "state": "ok",
+     "value": "−240,00 €",
+     "text": "Entrées reçues moins sorties payées : le résultat versé au patrimoine sera celui-ci.",
+     "resolution": {
+      "problem": null,
+      "why": "Le résultat versé au patrimoine doit être celui qui se lit dans le cycle, au centime près.",
+      "steps": [
+       {
+        "text": "Relisez les règlements du cycle (montants, dates réelles) dans Mouvements.",
+        "target": {
+         "kind": "page",
+         "path": "mouvements"
+        }
+       },
+       {
+        "text": "Corrigez la saisie en cause : le résultat se recalcule aussitôt."
+       },
+       {
+        "text": "Revenez ici : si l’écart persiste, il vient des données, à signaler."
+       }
+      ],
+      "progress": null
+     }
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "centers",
+     "level": "warning",
+     "label": "Mouvements rattachés à un poste",
+     "state": "ok",
+     "value": "Tous rattachés",
+     "text": "Chaque mouvement du cycle compte dans son poste, ses plafonds et sa nature.",
+     "resolution": {
+      "problem": null,
+      "why": "Sans poste, un mouvement échappe aux plafonds et au bilan par nature du cycle.",
+      "steps": [
+       {
+        "text": "Ouvrez chaque mouvement concerné, puis « Modifier » : choisissez son poste."
+       },
+       {
+        "text": "Revenez ici : le contrôle compte ceux qui restent."
+       }
+      ],
+      "progress": {
+       "done": 3,
+       "total": 3
+      }
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "caps",
+     "level": "warning",
+     "label": "Plafonds respectés",
+     "state": "ok",
+     "value": "Tous tenus",
+     "text": "Aucun poste au-delà de son plafond.",
+     "resolution": {
+      "problem": null,
+      "why": "Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans bloquer.",
+      "steps": [
+       {
+        "text": "Si la dépense était prévue, relevez le plafond du poste.",
+        "target": {
+         "kind": "page",
+         "path": "plafonds"
+        }
+       },
+       {
+        "text": "Sinon, écartez ou reportez une échéance de ce poste qui n’a pas encore eu lieu.",
+        "target": {
+         "kind": "page",
+         "path": "echeances"
+        }
+       },
+       {
+        "text": "Ou gardez le dépassement : il sera noté dans la clôture."
+       }
+      ],
+      "progress": {
+       "done": 0,
+       "total": 0
+      }
+     }
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "variances",
+     "level": "info",
+     "label": "Règlements conformes au prévu",
+     "state": "ok",
+     "value": "Aucun écart",
+     "text": "Chaque échéance réglée l’a été au montant prévu.",
+     "resolution": {
+      "problem": null,
+      "why": "Un écart peut être réel (un prix qui change) ou une erreur de saisie : à vérifier une fois.",
+      "steps": [
+       {
+        "text": "Vérifiez chaque montant réglé ; une erreur se corrige dans le détail de la ligne."
+       },
+       {
+        "text": "Si l’écart est réel et revient chaque mois, ajustez le budget récurrent.",
+        "target": {
+         "kind": "page",
+         "path": "budget-type"
+        }
+       }
+      ],
+      "progress": null
+     },
+     "more": 0
+    },
+    {
+     "items": [],
+     "target": null,
+     "key": "late",
+     "level": "info",
+     "label": "Règlements dans le cycle",
+     "state": "ok",
+     "value": "Tous dans le cycle",
+     "text": "Les échéances du cycle ont été réglées pendant le cycle.",
+     "resolution": {
+      "problem": null,
+      "why": "Elles comptent dans le cycle de leur date réelle, pas dans celui-ci.",
+      "steps": [
+       {
+        "text": "Rien à corriger si la date réelle est juste."
+       },
+       {
+        "text": "Si elle est fausse, corrigez-la dans le détail de la ligne."
+       }
+      ],
+      "progress": null
+     },
+     "more": 0
+    }
+   ],
+   "ok": 6,
+   "warn": 0,
+   "fail": 2,
+   "later": 0,
+   "total": 8,
+   "blocking": [
+    "Points du cycle traités",
+    "Compte vérifié"
+   ]
+  },
+  "lastClosure": {
+   "periodKey": "2026-09",
+   "periodLabel": "Septembre 2026",
+   "resultCents": -71000,
+   "closedAt": "2026-11-26T09:00:00.000Z",
+   "deferredCount": 0
+  }
  }
 }

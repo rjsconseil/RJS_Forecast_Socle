@@ -87,13 +87,13 @@ export default {
     function projectSummary(state, projectId) {
       const project = om.get(state, 'coreProject', projectId);
       const { enrichment, pathways } = contextOf(state, projectId);
-      return { project: structuredClone(project), view: projectView(project, tasksOf(state, projectId)), enrichment, pathways };
+      return { project, view: projectView(project, tasksOf(state, projectId)), enrichment, pathways };
     }
 
     function taskView(state, t) {
       const project = t.projectId ? om.get(state, 'coreProject', t.projectId) : null;
       return {
-        task: structuredClone(t),
+        task: t,
         projectTitle: project?.title ?? null,
         qualification: qualificationOf(state, t),
         pathways: { canChangeProject: contextOf(state, t.projectId).pathways.tasksCanChangeProject },

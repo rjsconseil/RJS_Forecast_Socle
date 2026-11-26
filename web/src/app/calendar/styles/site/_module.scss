@@ -13,18 +13,6 @@
   --amount-out: var(--red-700);
 
   /* ---------- éléments affichés (légende cliquable, dans la barre de commandes) ---------- */
-  .calendar-elements {
-    display: flex;
-    flex: none;
-    align-self: stretch;
-    width: 100%;
-    box-sizing: border-box;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: var(--ecart-8);
-    padding-top: var(--ecart-12);
-    border-top: var(--trait-1) solid var(--outline);
-  }
 
   /* ---------- cadre commun aux trois vues ----------
      Semaine, mois et année occupent exactement le même rectangle : toute la largeur utile et une hauteur
@@ -613,10 +601,6 @@
 
   .calendar-amount[data-direction='sortie'] {
     color: var(--red-700);
-  }
-
-  .calendar-360-milestone button.task-title-link:disabled {
-    cursor: default;
   }
 }
 

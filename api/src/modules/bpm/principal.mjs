@@ -151,7 +151,7 @@ export function principalCommands(socle, kit) {
         user: { id: user.id, label: user.label, userType: user.userType, userTypeLabel },
         // Des périodes closes figent le jour d'ancrage et la date de début du cycle [P].
         cycleState: { closedPeriods, frozen: closedPeriods > 0 },
-        principal: { budgetId: comp.budgetId, coreProjectId: comp.coreProjectId, project: structuredClone(state.coreProjects[comp.coreProjectId]), patrimoine: structuredClone(state.patrimoines[comp.patrimoineId]), cycle: structuredClone(cycleOf(state, comp.id)), vision: reads.visionOf(comp), revision: comp.revision },
+        principal: { budgetId: comp.budgetId, coreProjectId: comp.coreProjectId, project: state.coreProjects[comp.coreProjectId], patrimoine: state.patrimoines[comp.patrimoineId], cycle: cycleOf(state, comp.id), vision: reads.visionOf(comp), revision: comp.revision },
         budgetType: reads.budgetType(ctx),
         suggestions,
         goals: reads.goalsOf(state, userId),
@@ -178,7 +178,7 @@ export function principalCommands(socle, kit) {
       return {
         user: { id: user.id, label: user.label, userType: user.userType, userTypeLabel: user.userTypeLabel },
         composition: { id: comp.id, budgetId: comp.budgetId, patrimoineId: comp.patrimoineId, coreProjectId: comp.coreProjectId },
-        cycle: cycle ? { ...structuredClone(cycle), periods: page.periods, periodsTotal: page.total, nextBefore: page.nextBefore, currentKey: cs?.current.key ?? null, firstOpenKey: cs?.firstOpen.key ?? null } : null,
+        cycle: cycle ? { ...cycle, periods: page.periods, periodsTotal: page.total, nextBefore: page.nextBefore, currentKey: cs?.current.key ?? null, firstOpenKey: cs?.firstOpen.key ?? null } : null,
         period,
         closure: closure ? closureView(closure) : null,
         closing: closingOf(state, userId, period, cs),

@@ -53,6 +53,7 @@ const fixtures = {
   bilan: await get('/api/bpm/bilans/2026-09'),
   projectDetail: await get(`/api/bpm/projects/${project.coreProjectId}`),
   line: await get(`/api/bpm/lines/${encodeURIComponent(firstLine.id)}?period=2026-11`),
+  closing: await get('/api/bpm/closing'),
 };
 await socle.close();
 
