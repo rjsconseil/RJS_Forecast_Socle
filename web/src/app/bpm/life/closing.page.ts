@@ -5,6 +5,7 @@ import { cents, CentsPipe, ShortDatePipe, SignedCentsPipe, signedCents } from '.
 import { localToday } from '../../calendar/calendar-dates';
 import { BpmApi } from '../data/bpm-api.service';
 import { ClosingGroup, ClosingJourney, ClosingPoint } from '../data/bpm-closing.models';
+import { Bilan } from '../data/bpm-bilans.models';
 import { BpmAmount } from '../ui/amount';
 import { BpmRouterLink } from '../ui/bpm-router-link';
 import { bpmLoader, bpmQueryState, BpmEntryFlow, BpmLineDetail, BpmPageContext, BpmPageFocus, BpmPageFrame, BpmPageResult, BpmRefresh, BpmState, newRequestKey } from '../ui';
@@ -265,6 +266,11 @@ export class BpmClosingPage {
       },
     ];
   });
+  /** Le fait qui résume le cycle (excédent ou déficit), en tête de la synthèse ; le détail reste dans le bilan. */
+  protected readonly verdict = computed(() => this.bilan()?.highlights[0] ?? null);
+  protected natureSummary(natures: Bilan['natures']): string {
+    return 'Dépenses par nature : ' + natures.map((n) => `${n.label} ${this.pct(n.sharePct ?? 0)} %`).join(', ');
+  }
   protected readonly nextBoxes = computed<KeyBox[]>(() => {
     const j = this.j();
     const im = j?.impacts;

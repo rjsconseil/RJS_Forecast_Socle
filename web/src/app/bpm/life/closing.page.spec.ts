@@ -200,6 +200,8 @@ describe('page Clôture du cycle', () => {
     expect(subs[0]).toBe('Le résultat');
     expect(subs.at(-1)).toBe('Ce que Novembre 2026 laisse à Décembre 2026');
     expect(result.querySelector('.closing-fold')).toBeNull();
+    // Synthèse seulement : ni liste des faits marquants ni liste des reports, le détail est dans le bilan.
+    expect(result.querySelector('.closing-highlights, .closing-impact-list, .closing-natures')).toBeNull();
     expect(texts('.kb-label', result)).toEqual(['Reçu', 'Dépensé', 'Résultat', 'Épargne', 'Solde prévu de Décembre 2026', 'Versé au patrimoine', 'Budget récurrent', 'Reports et décisions']);
     expect(texts('.kb-value', result)[2]).toMatch(/^\+1\s300,00\s€$/);
     expect([...result.querySelectorAll('.kb-box')].map((b) => b.getAttribute('data-tone'))).toEqual(['ok', 'n1', 'ok', 'ok', 'ok', 'ok', 'n1', 'n2']);
@@ -314,7 +316,7 @@ describe('page Clôture du cycle', () => {
     await open(journey());
     expect(dom().querySelector('.closing-lock[role="status"]')!.textContent).toContain('est en clôture : ses points sont figés');
     expect(dom().querySelector('.closing-final-hint')!.textContent).toContain('Encore : 1 charge à régler ou décider, 1 décision à prendre ou reporter, compte à vérifier.');
-    expect(dom().querySelector('[data-impact="deferred"]')!.textContent).toContain('1 point revu en Février 2027');
+    expect(dom().querySelector('.closing-result')!.textContent).toContain('1 point reporté');
 
     button('Payée le').click();
     await settle();

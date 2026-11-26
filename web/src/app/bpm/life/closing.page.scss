@@ -124,39 +124,28 @@
 .closing-items.is-closed .closing-item-main strong { font-weight: 600; }
 .closing-item.is-fresh { border-color: var(--al-ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--al-ok) 20%, transparent); }
 
-// ---------- 3. compte rendu : résultat et cycle suivant ----------
-// Des parties numérotées, l'une sous l'autre, séparées d'un filet : on lit le cycle comme un rapport.
-.closing-report-parts { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; counter-reset: report; }
-.closing-report-part {
-  display: grid; gap: 10px; min-width: 0; padding: 14px 0; border-top: 1px solid var(--cl-line); counter-increment: report;
-  &:first-child { padding-top: 4px; border-top: 0; }
-  &:last-child { padding-bottom: 0; }
-  > .closing-sub { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--ink, #222237); font-size: 12px; }
-  > .closing-sub::before { content: counter(report, upper-roman) '.'; color: var(--cl-accent-ink); font-weight: 800; letter-spacing: 0; }
+// ---------- 3. synthèse : résultat et cycle suivant ----------
+// Une phrase qui résume le cycle, puis les chiffres clés côte à côte ; le détail reste dans le bilan.
+.closing-verdict {
+  margin: 0; padding: 8px 14px; border-radius: var(--cl-radius-sm); border-left: 3px solid var(--cl-muted); background: var(--cl-soft);
+  color: var(--cl-muted); font-size: 13px; line-height: 1.5;
+  strong { margin-right: 6px; color: var(--ink, #222237); }
 }
-.closing-report-empty { margin: 0; color: var(--cl-muted); font-size: 12.5px; font-style: italic; }
-.closing-natures { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.closing-natures li { display: grid; grid-template-columns: minmax(110px, 160px) minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: 13px; }
-.closing-nature-bar { height: 8px; border-radius: 999px; background: var(--cl-soft); overflow: hidden; }
-.closing-nature-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--cl-accent); }
-.closing-natures li[data-nature='indispensable'] .closing-nature-bar > span { background: var(--al-n1); }
-.closing-natures li[data-nature='projet'] .closing-nature-bar > span { background: var(--al-n2); }
-.closing-nature-value { color: var(--cl-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.closing-highlights { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.closing-highlights li { display: grid; gap: 2px; padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--cl-muted); background: var(--cl-soft); font-size: 12.5px; }
-.closing-highlights li span { color: var(--cl-muted); line-height: 1.5; }
-.closing-highlights li[data-tone='positive'] { border-left-color: var(--al-ok); }
-.closing-highlights li[data-tone='negative'] { border-left-color: var(--al-n4); }
-.closing-highlights li[data-tone='warning'] { border-left-color: var(--al-n3); }
-.closing-impact-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.closing-impact-list li {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'label value' 'text value'; gap: 2px 14px; align-items: center;
-  padding: 9px 12px; border: 1px solid var(--cl-line); border-radius: 8px; background: var(--cl-surface);
-}
-.closing-impact-label { grid-area: label; font-size: 13.5px; font-weight: 650; }
-.closing-impact-text { grid-area: text; color: var(--cl-muted); font-size: 12.5px; line-height: 1.5; }
-.closing-impact-list li > strong { grid-area: value; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.closing-impact-list li[data-impact='deferred'] { border-style: dashed; border-color: color-mix(in srgb, var(--al-n1) 40%, var(--cl-line)); }
+.closing-verdict[data-tone='positive'] { border-left-color: var(--al-ok); strong { color: var(--al-ok); } }
+.closing-verdict[data-tone='negative'] { border-left-color: var(--al-n4); strong { color: var(--al-n4); } }
+.closing-verdict[data-tone='warning'] { border-left-color: var(--al-n3); strong { color: var(--al-n3); } }
+.closing-synthesis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; min-width: 0; }
+.closing-synthesis-part { display: grid; align-content: start; gap: 10px; min-width: 0; }
+.closing-synthesis-part + .closing-synthesis-part { padding-left: 20px; border-left: 1px solid var(--cl-line); }
+// Répartition des dépenses en une barre : indispensables, courantes, projets.
+.closing-mix { display: grid; gap: 6px; }
+.closing-mix-bar { display: flex; height: 8px; overflow: hidden; border-radius: 999px; background: var(--cl-soft); }
+.closing-mix-bar i { display: block; height: 100%; background: var(--cl-accent); }
+.closing-mix-legend { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--cl-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.closing-mix-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.closing-mix-legend span::before { content: ''; width: 8px; height: 8px; border-radius: 2px; background: var(--cl-accent); }
+.closing-mix-bar i[data-nature='indispensable'], .closing-mix-legend span[data-nature='indispensable']::before { background: var(--al-n1); }
+.closing-mix-bar i[data-nature='projet'], .closing-mix-legend span[data-nature='projet']::before { background: var(--al-n2); }
 
 // ---------- 4. clôturer ----------
 // « Clôturer le cycle » reste grisé tant que la clôture n'est pas débloquée.
@@ -185,12 +174,11 @@
 
 // ---------- largeurs réduites ----------
 @container closing (max-width: 680px) {
-  .closing-natures li { grid-template-columns: minmax(0, 1fr) auto; }
-  .closing-nature-bar { grid-column: 1 / -1; grid-row: 2; }
   .closing-account { padding-left: 0; }
   .closing-step-head { grid-template-columns: auto minmax(0, 1fr); }
   .closing-step-count { grid-column: 2; padding-top: 0; }
-  .closing-impact-list li { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'label' 'text' 'value'; }
+  .closing-synthesis { grid-template-columns: minmax(0, 1fr); }
+  .closing-synthesis-part + .closing-synthesis-part { padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--cl-line); }
   .closing-defer label { flex-wrap: wrap; }
 }
 
