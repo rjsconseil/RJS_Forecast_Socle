@@ -39,8 +39,9 @@ try {
   throw err;
 }
 try {
-  if (Object.values(socle.state.users).some((u) => u.label === LABEL)) refuse(`Un user « ${LABEL} » existe déjà. Choisissez un autre nom : npm run seed:projets -- --nom "TEST PROJETS · autre foyer"`);
-  if (await access(DATA_FILE).then(() => true, () => false)) {
+  if (!socle.store.engine.sync) refuse('Ce jeu d’essai rejoue ses scénarios dans le processus, sur la base SQLite du poste (SOCLE_DATA_ENGINE=sqlite). Sur PostgreSQL, utiliser npm run seed contre une API de recette.');
+  if ((await socle.modules.users.listUsers()).some((u) => u.label === LABEL)) refuse(`Un user « ${LABEL} » existe déjà. Choisissez un autre nom : npm run seed:projets -- --nom "TEST PROJETS · autre foyer"`);
+  if (socle.store.engine.sync && await access(DATA_FILE).then(() => true, () => false)) {
     const backup = join(DATA_FILE, '..', `store.before-seed-projets-${now.toISOString().replace(/[:.]/g, '-')}.json`);
     await snapshotStore(DATA_FILE, backup);
     console.log(`Sauvegarde : ${backup}`);

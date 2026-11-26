@@ -109,3 +109,18 @@ test('sgbd · lecture d’une partition en un seul instantané : une écriture i
   await one.close();
   await two.close();
 });
+
+test('sgbd · un service appelé hors requête entre de lui-même dans la partition de son user (scripts, mesure de charge)', { skip }, async () => {
+  await freshBase();
+  const socle = await open();
+  await socle.modules.administration.setParameter('bpm.verrouCycleSuivant', { value: false, expectedRevision: 0, note: 'Tests' });
+  const { ctx } = await camille(socle);
+  // Sans `within` : avant, PARTITION_NOT_LOADED (vue complète inexistante avec un moteur asynchrone).
+  const created = await operation(socle, ctx, { direction: 'charge', amount: 12, date: '2026-11-01' });
+  assert.ok(created);
+  // Une lecture synchrone, elle, se fait dans la partition (comme le serveur le fait pour chaque requête).
+  const register = await socle.store.within(ctx.userId, () => socle.modules.bpm.reads.register(ctx, { period: '2026-11' }));
+  assert.equal(register.lines.length, 1);
+  assert.equal((await socle.modules.users.listUsers()).length, 1);
+  await socle.close();
+});

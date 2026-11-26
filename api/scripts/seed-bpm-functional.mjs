@@ -40,6 +40,10 @@ try {
   if (original) await writeFile(backup, original, { flag: "wx" });
   // La recette saisit des cycles passés sans les clôturer : le verrou du cycle suivant est levé le temps des saisies,
   // puis remis à sa valeur d'avant (la base garde les règles de production).
+  if (!socle.store.engine.sync)
+    throw new Error(
+      "La recette BPM rejoue ses scénarios dans le processus, sur la base SQLite du poste (SOCLE_DATA_ENGINE=sqlite).",
+    );
   const admin = socle.modules.administration;
   const lockBefore = admin.parameter("bpm.verrouCycleSuivant");
   if (lockBefore.value !== false)
