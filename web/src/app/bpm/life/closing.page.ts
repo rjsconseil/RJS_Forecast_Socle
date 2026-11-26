@@ -10,10 +10,11 @@ import { BpmAmount } from '../ui/amount';
 import { BpmRouterLink } from '../ui/bpm-router-link';
 import { bpmLoader, bpmQueryState, BpmEntryFlow, BpmLineDetail, BpmPageContext, BpmPageFocus, BpmPageFrame, BpmPageResult, BpmRefresh, BpmState, newRequestKey } from '../ui';
 import { EntryInput, RegisterLine } from '../data/bpm-models';
-import { AlertTone, BpmClosingBoxes, BpmClosingTable, KeyBox, KeyColumn, worst } from './closing-kit';
+import { AlertTone, BpmClosingBoxes, BpmClosingTable, worst } from './closing-kit';
 import { BpmClosingJournal, whenOf } from './closing-journal';
 import { BpmClosingResolution, ChecksBaseline, checkTone, ClosingFix } from './closing-resolution';
 import { BpmClosingAccount, BpmClosingCap, BpmClosingDecision } from './closing-dialogs';
+import { BlockingPoint, checkBoxes, checkColumns, closeBoxes, closeConditions, closeTone, isUrgent, nextBoxes, pathBoxes, pathColumns, pct, plural, resultBoxes, resultTone, shortDay } from './closing-boxes';
 
 const STEP_TEXT: Record<ClosingGroup, string> = {
   income: 'Chaque entrée prévue du cycle est reçue, écartée parce qu’elle n’aura pas lieu, ou revue dans un cycle à venir.',
@@ -22,11 +23,8 @@ const STEP_TEXT: Record<ClosingGroup, string> = {
   decisions: 'Les parts de budget demandées et les dépassements à autoriser reçoivent leur décision, ou se revoient au cycle suivant.',
   account: 'Votre compte raconte la même chose que le cycle : sa variation vaut les entrées reçues moins les sorties payées. Point bloquant.',
 };
-/** Libellés courts des étapes, pour le tableau. */
-const STEP_LABEL: Record<ClosingGroup, string> = { income: 'Entrées reçues', charges: 'Charges réglées', projects: 'Flux des projets', decisions: 'Décisions de financement', account: 'Compte vérifié' };
 /** Un point clos depuis moins de deux minutes est signalé « à l'instant ». */
 const FRESH_MS = 120_000;
-const isUrgent = (p: ClosingPoint) => p.status === 'late' || p.status === 'due';
 
 /**
  * Clôture du cycle : quatre sections du plus important au moins crucial (1 à valider, 2 cohérence, 3 synthèse du résultat
@@ -113,7 +111,7 @@ export class BpmClosingPage {
   protected readonly blockingPoints = computed(() => {
     const j = this.j();
     if (!j?.period) return [];
-    const list: { label: string; detail: string; tone: AlertTone }[] = [];
+    const list: BlockingPoint[] = [];
     const account = j.points.find((p) => p.kind === 'account');
     if (account && account.state !== 'closed') {
       list.push({ label: 'Vérification du compte', detail: account.state === 'later' ? `à faire après le ${shortDay(j.period.end)}` : account.stale ? 'à refaire' : 'à faire', tone: account.state === 'later' ? 'n1' : 'n4' });
@@ -181,175 +179,27 @@ export class BpmClosingPage {
     try { sessionStorage.setItem(key, JSON.stringify(snapshot)); } catch { /* stockage indisponible : pas de comparaison au prochain passage */ }
   }
 
-  // ---------- 1. à valider ----------
-  protected readonly pathBoxes = computed<KeyBox[]>(() => {
-    const j = this.j();
-    if (!j?.counts || !j.period) return [];
-    const n = j.counts;
-    const open = this.openPoints();
-    const urgent = this.urgentCount();
-    const upcoming = open.filter((p) => !isUrgent(p)).length;
-    const last = this.closedPoints()[0];
-    const blocking = this.blockingPoints();
-    const since = this.closedSinceVisit();
-    return [
-      {
-        label: 'Points à valider', value: String(open.length), tone: this.openTone(),
-        part: open.length ? { value: String(urgent), label: urgent > 1 ? 'urgents' : 'urgent', tone: urgent ? 'n4' : 'ok' } : null,
-        lines: keep([this.openVerdict(), upcoming && !this.closing() ? `${upcoming} à venir d’ici le ${shortDay(j.period.end)}` : null]),
-      },
-      {
-        label: 'Points clos', value: String(n.closed), tone: n.closed ? 'ok' : 'neutral',
-        part: n.deferred ? { value: String(n.deferred), label: 'à revoir plus tard', tone: 'n1' } : null,
-        bar: { pct: j.percent, tone: 'ok' },
-        lines: keep([
-          `sur ${this.plural(n.total, 'point')} du cycle, ${j.percent} % traités`,
-          last ? `dernier : ${last.label}${last.closedOn ? `, le ${shortDay(last.closedOn)}` : ''}` : null,
-          since && this.baselineTime() ? `+${since} depuis votre passage de ${this.baselineTime()}` : null,
-        ]),
-      },
-      {
-        label: 'Points bloquants', value: String(blocking.length), tone: blocking.length ? worst(...blocking.map((b) => b.tone)) : 'ok',
-        lines: blocking.length ? blocking.map((b) => `${b.label} : ${b.detail}`) : ['Aucun point bloquant', 'la clôture n’attend que les points à valider'],
-      },
-    ];
-  });
-  /** Une colonne par étape : son libellé, puis ce qui est fait sur ce qu'il fallait faire. */
-  protected readonly pathColumns = computed<KeyColumn[]>(() => {
-    const j = this.j();
-    if (!j?.period) return [];
-    const end = shortDay(j.period.end);
-    return j.criteria.map((c) => {
-      const urgentHere = this.openPoints().filter((p) => p.group === c.key && isUrgent(p)).length;
-      const tone: AlertTone = c.state === 'done' ? 'ok' : c.state === 'none' ? 'neutral' : c.state === 'later' ? 'n1' : this.closing() ? 'n4' : !urgentHere ? 'n1' : urgentHere > 2 ? 'n3' : 'n2';
-      const later = c.key === 'account' && c.state === 'later';
-      return {
-        label: STEP_LABEL[c.key],
-        value: c.state === 'none' ? '—' : `${c.done} / ${c.total}`,
-        tone,
-        sub: c.state === 'none' ? 'sans objet' : later ? `après le ${end}` : urgentHere ? `${urgentHere} en retard` : c.state === 'done' ? 'fait' : c.state === 'later' ? 'à venir' : 'en cours',
-      };
-    });
-  });
-
-  // ---------- 2. résultat et cycle suivant ----------
-  protected readonly resultTone = computed<AlertTone>(() => {
-    const f = this.bilan()?.flows;
-    const result = f?.resultCents ?? this.j()?.netCents ?? null;
-    if (result === null) return 'neutral';
-    return result >= 0 ? 'ok' : -result <= (f?.receivedCents ?? 0) * 0.1 ? 'n3' : 'n4';
-  });
-  protected readonly resultBoxes = computed<KeyBox[]>(() => {
-    const b = this.bilan();
-    const j = this.j();
-    if (!b) return j ? [{ label: 'Résultat à ce jour', value: signed(j.netCents), tone: this.resultTone() }] : [];
-    const f = b.flows;
-    const received = f.receivedCents ?? 0;
-    const spent = f.spentCents ?? 0;
-    const max = Math.max(1, received, spent);
-    const ratio = received ? spent / received : spent ? 2 : 0;
-    const spentTone: AlertTone = ratio <= 0.6 ? 'n1' : ratio <= 0.85 ? 'n2' : ratio <= 1 ? 'n3' : 'n4';
-    const result = f.resultCents ?? received - spent;
-    const rate = f.savingsRatePct;
-    const target = f.savingsTargetCents ?? null;
-    const savingTone: AlertTone = target
-      ? result >= target ? 'ok' : result >= target / 2 ? 'n2' : result > 0 ? 'n3' : 'n4'
-      : rate === null ? 'neutral' : rate >= 20 ? 'ok' : rate >= 10 ? 'n1' : rate >= 0 ? 'n2' : 'n4';
-    return [
-      { label: 'Reçu', value: cents(received), tone: 'ok', bar: { pct: (received * 100) / max, tone: 'ok' }, lines: [this.plural(f.receivedCount ?? 0, 'entrée')] },
-      { label: 'Dépensé', value: cents(spent), tone: spentTone, bar: { pct: (spent * 100) / max, tone: spentTone }, lines: keep([this.plural(f.paidCount ?? 0, 'paiement'), received ? `${this.pct(ratio * 100)} % des entrées` : null]) },
-      { label: 'Résultat', value: signedCents(result), tone: this.resultTone(), lines: [b.source === 'provisoire' ? 'à ce jour, figé à la clôture' : 'figé à la clôture'] },
-      {
-        label: 'Épargne', value: rate === null ? '—' : `${this.pct(rate)} %`, tone: savingTone,
-        bar: rate === null ? null : { pct: Math.max(0, Math.min(100, rate)), tone: savingTone },
-        lines: [target ? (result >= target ? `objectif ${cents(target)} atteint` : `objectif ${cents(target)} : manque ${cents(target - result)}`) : 'des entrées conservées'],
-      },
-    ];
-  });
+  // ---------- chiffres clés des sections (closing-boxes.ts) ----------
+  protected readonly pathBoxes = computed(() => pathBoxes({
+    j: this.j(), open: this.openPoints(), closed: this.closedPoints(), blocking: this.blockingPoints(), openTone: this.openTone(),
+    openVerdict: this.openVerdict(), closing: this.closing(), since: this.closedSinceVisit(), baselineTime: this.baselineTime(),
+  }));
+  protected readonly pathColumns = computed(() => pathColumns(this.j(), this.openPoints(), this.closing()));
+  protected readonly resultTone = computed(() => resultTone(this.bilan(), this.j()));
+  protected readonly resultBoxes = computed(() => resultBoxes(this.bilan(), this.j()));
   /** Le fait qui résume le cycle (excédent ou déficit), en tête de la synthèse ; le détail reste dans le bilan. */
   protected readonly verdict = computed(() => this.bilan()?.highlights[0] ?? null);
   protected natureSummary(natures: Bilan['natures']): string {
-    return 'Dépenses par nature : ' + natures.map((n) => `${n.label} ${this.pct(n.sharePct ?? 0)} %`).join(', ');
+    return 'Dépenses par nature : ' + natures.map((n) => `${n.label} ${pct(n.sharePct ?? 0)} %`).join(', ');
   }
-  protected readonly nextBoxes = computed<KeyBox[]>(() => {
-    const j = this.j();
-    const im = j?.impacts;
-    if (!j?.period || !im) return [];
-    const parts = [im.recurring, im.planned, im.projects, im.deferred.intoNext];
-    const income = parts.reduce((t, p) => t + p.incomeCents, 0);
-    const charge = parts.reduce((t, p) => t + p.chargeCents, 0);
-    const balanceTone: AlertTone = im.balanceCents >= 0 ? 'ok' : -im.balanceCents <= income * 0.05 ? 'n3' : 'n4';
-    const cap = im.capitalization.resultCents ?? 0;
-    const waiting = im.deferred.count + im.decisions.count;
-    return [
-      { label: `Solde prévu de ${im.next.label}`, value: signedCents(im.balanceCents), tone: balanceTone, lines: [`entrées ${cents(income)} · charges ${cents(charge)}`, im.opensEntries ? 'entrées rouvertes par la clôture' : `entrées ouvertes à la clôture de ${j.period.label}`] },
-      {
-        label: 'Versé au patrimoine', value: signedCents(cap), tone: cap >= 0 ? 'ok' : 'n4',
-        lines: keep([im.capitalization.provisional ? 'à ce jour, versé à la clôture' : `au ${shortDay(im.capitalization.date)}`, im.capitalization.stockBefore !== null && im.capitalization.stockAfter !== null ? `stock ${cents(im.capitalization.stockBefore * 100)} → ${cents(im.capitalization.stockAfter * 100)}` : null]),
-      },
-      { label: 'Budget récurrent', value: this.plural(im.recurring.count, 'échéance'), tone: 'n1', lines: [`entrées ${cents(im.recurring.incomeCents)}`, `charges ${cents(im.recurring.chargeCents)}`] },
-      { label: 'Reports et décisions', value: String(waiting), tone: waiting ? 'n2' : 'ok', lines: [this.plural(im.deferred.count, 'point reporté', 'points reportés'), this.plural(im.decisions.count, 'décision en attente', 'décisions en attente')] },
-    ];
-  });
-
-  // ---------- 3. cohérence ----------
-  protected readonly checkBoxes = computed<KeyBox[]>(() => {
-    const c = this.checks();
-    if (!c) return [];
-    const toSee = c.items.filter((x) => x.level !== 'blocking' && x.state === 'warn');
-    const blocking = c.items.filter((x) => x.level === 'blocking' && (x.state === 'fail' || x.state === 'warn'));
-    return [
-      { label: 'Contrôles bons', value: `${c.ok} / ${c.total}`, tone: c.ok === c.total ? 'ok' : 'neutral', bar: { pct: (c.ok * 100) / Math.max(1, c.total), tone: 'ok' }, lines: [c.later ? `${this.plural(c.later, 'contrôle')} après le dernier jour` : 'tous vérifiables aujourd’hui'] },
-      { label: 'À voir', value: String(toSee.length), tone: toSee.length ? worst(...toSee.map(checkTone)) : 'ok', lines: toSee.length ? toSee.map((x) => `${x.label} : ${x.value}`) : ['Rien à voir'] },
-      {
-        label: 'Bloquants', value: String(blocking.length), tone: blocking.length ? worst(...blocking.map(checkTone)) : 'ok',
-        lines: blocking.length ? blocking.map((x) => `${x.label} : ${x.value}${x.state === 'warn' ? ' (bloquera la clôture)' : ''}`) : ['Aucun bloquant : rien n’arrête la clôture'],
-      },
-    ];
-  });
-  protected readonly checkColumns = computed<KeyColumn[]>(() =>
-    (this.checks()?.items ?? []).map((x) => ({ label: x.label, value: x.value, tone: checkTone(x), sub: CHECK_STATE[x.state] })),
-  );
+  protected readonly nextBoxes = computed(() => nextBoxes(this.j()));
+  protected readonly checkBoxes = computed(() => checkBoxes(this.checks()));
+  protected readonly checkColumns = computed(() => checkColumns(this.checks()));
   protected readonly checksTone = computed<AlertTone>(() => worst(...(this.checks()?.items ?? []).map(checkTone)));
-
-  // ---------- 4. clôturer ----------
   /** Ce qui manque encore pour clôturer : points à valider, points bloquants. */
-  protected readonly conditions = computed(() => {
-    const j = this.j();
-    if (!j?.period) return [];
-    const list: { label: string; tone: AlertTone }[] = [];
-    const open = this.openPoints().length;
-    if (open) list.push({ label: this.plural(open, 'point à valider', 'points à valider'), tone: this.closing() ? 'n4' : this.openTone() === 'neutral' ? 'n1' : this.openTone() });
-    for (const b of this.blockingPoints()) list.push({ label: `${b.label} (${b.detail})`, tone: b.tone });
-    return list;
-  });
-  protected readonly closeTone = computed<AlertTone>(() => {
-    const j = this.j();
-    if (!j?.period) return 'neutral';
-    if (j.canClose) return 'ok';
-    return j.phase === 'to_close' ? (this.conditions().length > 2 ? 'n4' : 'n3') : 'n1';
-  });
-  protected readonly closeBoxes = computed<KeyBox[]>(() => {
-    const j = this.j();
-    if (!j?.period) return [];
-    const conditions = this.conditions();
-    const a = j.actions;
-    const c = j.checks;
-    const pv = this.preview();
-    const state: KeyBox = j.canClose
-      ? { label: 'État de la clôture', value: 'Prête', tone: 'ok', bar: { pct: 100, tone: 'ok' }, lines: ['tout est traité et cohérent'] }
-      : j.phase === 'to_close'
-        ? { label: 'État de la clôture', value: `${j.percent} %`, tone: this.closeTone(), bar: { pct: j.percent, tone: this.closeTone() }, lines: ['en clôture : à finaliser sur cette page'] }
-        : { label: 'État de la clôture', value: `Le ${shortDay(j.opensOn!)}`, tone: 'n1', bar: { pct: j.percent, tone: 'n1' }, lines: [`dans ${this.plural(j.days?.left ?? 0, 'jour')}, à la fin du dernier jour`, `cycle complété à ${j.percent} %`] };
-    return [
-      state,
-      { label: 'Conditions restantes', value: String(conditions.length), tone: conditions.length ? worst(...conditions.map((x) => x.tone)) : 'ok', lines: conditions.length ? conditions.map((x) => x.label) : ['Toutes les conditions sont remplies'] },
-      {
-        label: 'Ce qui sera figé', value: a ? this.plural(a.total, 'action') : '—', tone: 'n1',
-        lines: keep([`${c ? this.plural(c.total, 'contrôle') : 'les contrôles'}, le bilan et le résultat ${signed(pv?.resultCents ?? j.netCents)}`, j.lastClosure ? `dernière clôture : ${j.lastClosure.periodLabel} (${signed(j.lastClosure.resultCents)})` : null]),
-      },
-    ];
-  });
+  protected readonly conditions = computed(() => closeConditions(this.j(), this.openPoints().length, this.closing(), this.openTone(), this.blockingPoints()));
+  protected readonly closeTone = computed(() => closeTone(this.j(), this.conditions()));
+  protected readonly closeBoxes = computed(() => closeBoxes(this.j(), this.conditions()));
 
   // ---------- synthèse : une tuile par section ----------
   /** Aller à un endroit de la page (étape de résolution) : la section qui le porte se déplie. */
@@ -577,20 +427,13 @@ export class BpmClosingPage {
   protected readonly cents = cents;
   protected readonly dateText = dateText;
   protected readonly whenOf = whenOf;
-  protected pct(value: number) { return value.toLocaleString('fr-FR', { maximumFractionDigits: 1 }); }
-  protected plural(n: number, one: string, many = `${one}s`) { return `${n} ${n > 1 ? many : one}`; }
+  protected readonly pct = pct;
+  protected readonly plural = plural;
 }
 
 function dateText(ymd: string) {
   return new Date(`${ymd}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
-/** « 1 déc. » */
-function shortDay(ymd: string) {
-  return new Date(`${ymd}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-}
-const signed = (c: number | null | undefined) => (c === null || c === undefined ? '—' : signedCents(c));
-const keep = <T>(xs: (T | false | null | undefined | 0 | '')[]) => xs.filter(Boolean) as T[];
-const CHECK_STATE: Record<string, string> = { ok: 'bon', warn: 'à voir', fail: 'bloque', later: 'après le cycle' };
 
 /** Sections de la page, du plus important au moins crucial. */
 type SectionKey = 'path' | 'checks' | 'close';
