@@ -146,6 +146,18 @@
       [data-astra-icon] { font-size: 16px; color: #acaac4; }
       &:hover { color: #fff; background: #2f2d45; }
       &[aria-current='page'] { color: #f8f5ff; font-weight: 640; background: #403953;  }
+      // Page ouverte sur l'une de ses pages secondaires : nommée, sans fond.
+      &[aria-current='true'] { color: #f8f5ff; font-weight: 600; }
+    }
+    // Pages secondaires de la page ouverte : un filet fin sous son icône, le texte plus discret.
+    .astra-nav-sub {
+      display: grid; gap: 1px; margin: 2px 0 6px 18px; padding: 0; list-style: none; border-left: 1px solid #3b394f;
+      a {
+        min-height: 27px; margin-left: -1px; padding: 4px 10px 4px 16px; border-left: 1px solid transparent; border-radius: 0 6px 6px 0;
+        font-size: 12.5px; font-weight: 450; color: #b4b1cb;
+        &:hover { color: #fff; background: #2a283e; }
+        &[aria-current='page'] { color: #f8f5ff; font-weight: 600; background: #2f2c43; border-left-color: var(--nav-part, #c9b8ff); box-shadow: none; }
+      }
     }
   }
   .topbar {

@@ -35,6 +35,7 @@ import {
   sectionMark,
 } from './plan/site-plan';
 import { planOrder } from './plan/plan-order';
+import { astraSubpages, astraUrl } from './astra/astra-parts';
 import { NavigationSystem } from './navigation/navigation.service';
 
 /**
@@ -73,7 +74,7 @@ export class App implements OnInit {
     // Avant la première navigation, le routeur ne connaît que « / » : l'adresse du navigateur situe déjà la zone.
     { initialValue: this.router.navigated ? this.router.url : window.location.pathname + window.location.search },
   );
-  private path = computed(() => this.url().split(/[?#]/)[0]);
+  protected readonly path = computed(() => this.url().split(/[?#]/)[0]);
   /** Où se trouve l'adresse courante dans le plan : zone, section, page. */
   protected location = computed(() => locate(this.url()));
   protected readonly isAstra = computed(() => this.location().zone?.id === 'bpm-astra');
@@ -274,6 +275,10 @@ export class App implements OnInit {
   }
   protected entryOf(zone: PlanZone, section: PlanSection) {
     return sectionEntry(zone, section);
+  }
+  /** Pages secondaires d'une page d'Astra, affichées sous elle dans le menu quand elle est ouverte. */
+  protected astraSubpagesOf(link: string) {
+    return astraSubpages(link.replace(/^\/bpm-astra\/?/, '')).map(sub => ({ link: astraUrl(sub.slug), label: sub.label }));
   }
   protected visiblePages(section: PlanSection) {
     return menuPages(section);

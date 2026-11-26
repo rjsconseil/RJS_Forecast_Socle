@@ -65,10 +65,22 @@
                     <span class="astra-nav-label">{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</span>
                     @for (page of visiblePages(section); track page.link) {
                       <a [routerLink]="page.link" [queryParams]="astraReading()" data-navigation-level="page"
-                         [attr.aria-current]="location().page?.link === page.link ? 'page' : null">
+                         [attr.aria-current]="location().page?.link === page.link ? (path() === page.link ? 'page' : 'true') : null">
                         <span [attr.data-astra-icon]="page.link.split('/').at(-1)" aria-hidden="true"></span>
                         {{ page.label | navigationLabel:page.link }}
                       </a>
+                      <!-- Les pages secondaires de la page ouverte, juste sous elle. -->
+                      @if (location().page?.link === page.link) {
+                        @if (astraSubpagesOf(page.link); as subs) {
+                          @if (subs.length) {
+                            <ul class="astra-nav-sub" [attr.aria-label]="'Pages de ' + page.label">
+                              @for (sub of subs; track sub.link) {
+                                <li><a [routerLink]="sub.link" [queryParams]="astraReading()" data-navigation-level="detail" [attr.aria-current]="path() === sub.link ? 'page' : null">{{ sub.label | navigationLabel:sub.link }}</a></li>
+                              }
+                            </ul>
+                          }
+                        }
+                      }
                     }
                   </div>
                 }
