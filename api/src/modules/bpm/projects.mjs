@@ -488,7 +488,7 @@ export function createProjects(socle, h) {
         if (!comp) fail('NOT_FOUND', 'Espace BPM à préparer avant de budgéter un projet.');
         const p = om.owned(tx.draft, 'coreProject', input.coreProjectId, tx.userId);
         if (p.id === comp.coreProjectId) fail('FORBIDDEN_BY_RULE', 'Le projet de vie est la racine du budget de vie : il ne devient pas un projet standard.', { field: 'coreProjectId' });
-        if (Object.values(tx.draft.patrimoines ?? {}).some((x) => x.coreProjectId === p.id)) fail('FORBIDDEN_BY_RULE', 'Ce projet est la racine d’un Patrimoine.', { field: 'coreProjectId' });
+        if (om.by(tx.draft, 'patrimoine', 'coreProjectId', p.id).length) fail('FORBIDDEN_BY_RULE', 'Ce projet est la racine d’un Patrimoine.', { field: 'coreProjectId' });
         const name = text('name', input.name, { max: 200 }) || p.title;
         const b = budgetModule().buildStandardBudget(tx, { coreProjectId: p.id, parentBudgetId: comp.budgetId, name });
         return { budgetId: b.id, coreProjectId: p.id };

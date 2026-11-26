@@ -63,7 +63,7 @@ export function abandonedRefusal(b) {
 
 export function requestView(state, x) {
   const b = state.budgets[x.budgetId];
-  return { ...structuredClone(x), statusLabel: REQUEST_STATUS[x.status], taskTitle: state.tasks[x.taskId]?.title ?? '', budgetName: b?.name ?? '', coreProjectId: b?.coreProjectId ?? null, grantedCents: sharesOf(b ?? {})[x.taskId] ?? null };
+  return { ...x, statusLabel: REQUEST_STATUS[x.status], taskTitle: state.tasks[x.taskId]?.title ?? '', budgetName: b?.name ?? '', coreProjectId: b?.coreProjectId ?? null, grantedCents: sharesOf(b ?? {})[x.taskId] ?? null };
 }
 
 /** Charge d'un projet validée comme réglée pour ses besoins, depuis l'attribution : comptée dans le budget de vie. */
@@ -111,7 +111,7 @@ export function chargeItems(state, b, now) {
 export function overrunView(state, x) {
   const b = state.budgets[x.budgetId];
   return {
-    ...structuredClone(x),
+    ...x,
     statusLabel: OVERRUN_STATUS[x.status],
     reasonLabel: OVERRUN_REASONS[x.reason],
     taskTitle: x.taskId ? state.tasks[x.taskId]?.title ?? null : null,
@@ -190,7 +190,7 @@ export function fundingFigures(state, b, now = today()) {
     byTask,
     beforeByTask,
     shares: { ...shares },
-    returns: structuredClone(returnsOf(b)),
+    returns: returnsOf(b),
     abandoned: isAbandoned(b) ? { at: b.abandonedAt, reason: b.abandonReason ?? null, ...(b.abandonment ?? {}) } : null,
     life: null,
   };

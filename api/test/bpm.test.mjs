@@ -160,7 +160,7 @@ test('clôture : périodes terminées, dans l’ordre, résultat nul ou négatif
   assert.equal(c.calculation.metric, 'bpm.resultatPeriode');
   assert.equal(c.calculation.formula, 'bpm.revenus - bpm.charges');
   assert.equal(c.calculation.parameter.revision, 0);
-  assert.deepEqual(c.sourceOperationIds.sort(), [sal.operation.id, loyer.operation.id].sort());
+  assert.deepEqual([...c.sourceOperationIds].sort(), [sal.operation.id, loyer.operation.id].sort());
   const cap = socle.state.capitalizations[c.capitalizationId];
   assert.equal(cap.amountCents, 175000);
   assert.equal(cap.date, '2026-08-31');

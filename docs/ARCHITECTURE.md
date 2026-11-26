@@ -453,6 +453,10 @@ objets. Désormais :
 - `om.simulate` (aperçu d'une saisie) suit la même copie à la demande, puis rend un brouillon figé que les métriques
   et les index relisent sans recopier.
 
+Une commande ne parcourt jamais toute une collection du brouillon : `api/test/draft-reads.test.mjs` refuse
+`Object.values(tx.draft.x)` et ses variantes hors des migrations. Les lectures des modules ne recopient plus les objets
+publiés (`structuredClone`) : ils sont gelés, une réponse les décompose ou les sérialise sans risque.
+
 Contrat inchangé pour les modules : la façade se lit et s'écrit comme l'objet d'avant (`draft.x[id]`, `in`,
 `Object.keys/values/entries`, `for…in`, décomposition, JSON, affectation, `delete`). Un parcours complet écrit par un
 module (`Object.values(tx.draft.x)`) copie encore chaque objet lu : préférer `om.list` ou `om.by` dans les commandes.
@@ -467,6 +471,8 @@ Mêmes façades, mêmes services, fichiers par sujet ; réponses de l'API identi
 | `modules/budget/index.mjs` | 1 087 → 345 lignes | `views`, `guards`, `operations`, `recurrence-commands`, `structure` |
 | `modules/bpm/index.mjs` | 916 → 269 lignes | `cycle-state`, `extensions`, `principal`, `inspection` |
 | `modules/bpm/reads.mjs` | 894 → 160 lignes | `reads-shared`, `reads-register`, `reads-centers`, `reads-outlook` |
+| `modules/budget/funding.mjs` | 698 → 141 lignes | `funding-extensions` (gardes, retour au budget de vie), `funding-commands` (enveloppes, parts, demandes, règlements financés), `funding-project` (dépassements, abandon, reprise) |
+| `modules/calendar/engine.mjs` | 636 → 267 lignes | `constants`, `dates`, `config-validation` ; `engine.mjs` garde la lecture et réexporte le reste |
 
 `npm run api:check` (`scripts/api-check.mjs`) contrôle tout le code de l'API avec le vérificateur TypeScript du site,
 en mode JavaScript : aucun nom inconnu, aucune importation ni variable inutilisée.
