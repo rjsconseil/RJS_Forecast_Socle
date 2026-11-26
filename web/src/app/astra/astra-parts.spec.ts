@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ASTRA_APPLICATION } from './astra.application';
-import { ASTRA_LINKS, ASTRA_ORDER, ASTRA_PARTS, ASTRA_TAB_LABELS, astraPartOf, astraSubpages, astraTabsOf } from './astra-parts';
+import { ASTRA_LINKS, ASTRA_ORDER, ASTRA_PARTS, ASTRA_TAB_LABELS, astraPartOf, astraTabsOf } from './astra-parts';
 
 const routes = ASTRA_APPLICATION.routes.filter(r => !r.redirectTo);
 const routed = new Set(routes.map(r => (r.path ?? '').replace(/^bpm-astra\/?/, '')));
@@ -64,13 +64,4 @@ describe('navigation secondaire de BPM-Astra', () => {
   });
 
 
-  it('menu latéral : sous une page, seulement ses propres pages secondaires (ni fiches, ni pages des autres parties)', () => {
-    const labels = (slug: string) => astraSubpages(slug).map(s => s.label);
-    expect(labels('cloture')).toEqual(['Vérifier le compte', 'Ancrage du cycle']);
-    expect(labels('projets')).toEqual(['Règlements par cycle']);
-    expect(labels('mouvements')).toEqual(['Échéances']);
-    expect(labels('objectif')).toEqual(['Objectifs datés']);
-    expect(labels('bilans')).toEqual([]);
-    expect(labels('')).toEqual([]);
-  });
 });

@@ -114,6 +114,10 @@ try {
   const menuOpened = await page.locator('.astra-new-menu').waitFor({ timeout: 3000 }).then(() => true, () => false);
   check(menuOpened, 'Touche + : le menu « Nouveau » ne s’ouvre pas');
   await page.keyboard.press('Escape');
+  // Menu latéral : sous la page ouverte, ses seules pages secondaires (pas celles des autres sections).
+  await open('cloture/compte');
+  const subs = await page.evaluate(() => [...document.querySelectorAll('.astra-nav-sub a')].map(a => a.textContent.trim() + (a.getAttribute('aria-current') === 'page' ? '*' : '')));
+  check(JSON.stringify(subs) === JSON.stringify(['Vérifier le compte*', 'Ancrage du cycle']), `Menu latéral sous « Clôture du cycle » : ${subs.join(', ')}`);
   // Flèche « suivant » des onglets : mène à l'onglet suivant.
   await open('cloture/compte');
   await page.locator('.astra-tabs .astra-tab-step').last().click();

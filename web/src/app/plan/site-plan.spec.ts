@@ -100,7 +100,7 @@ describe('plan du site', () => {
     expect(budget.crumbs.map(c => c.label).slice(-2)).toEqual(['Cuisine', 'Budget du projet']);
     expect(budget.eyebrow).toBe('Mes projets · Projets de la vie');
     const menu = pageChildren(locate('/bpm-astra/projets').page!, '/bpm-astra/projets/prj_42/taches', 'Cuisine');
-    expect(menu.map(c => [c.label, c.depth])).toEqual([['Projets financés', 1], ['Cuisine', 1], ['Budget du projet', 2], ['Tâches du projet', 2]]);
+    expect(menu.map(c => [c.label, c.depth])).toEqual([['Règlements par cycle', 1], ['Cuisine', 1], ['Budget du projet', 2], ['Tâches du projet', 2]]);
   });
 
   it('rattache un détail à sa page et donne le chemin de retour', () => {

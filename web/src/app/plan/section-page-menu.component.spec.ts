@@ -18,7 +18,7 @@ describe('navigation hiérarchique commune', () => {
     const dom = fixture.nativeElement as HTMLElement;
     expect(dom.querySelectorAll('.section-subpages')).toHaveLength(1);
     const active = dom.querySelector('.section-subpages [aria-current="page"]') as HTMLAnchorElement;
-    expect(active.textContent).toContain('Rapprochement bancaire');
+    expect(active.textContent).toContain('Vérifier le compte');
     expect(active.getAttribute('href')).toContain('period=2026-10');
     expect(active.getAttribute('href')).not.toContain('entry=');
     expect(dom.querySelector('.section-page-link.is-ancestor')?.getAttribute('aria-current')).toBeNull();

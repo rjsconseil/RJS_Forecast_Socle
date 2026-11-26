@@ -101,7 +101,8 @@ const secondaryWorkspaces = ASTRA_SECONDARY.map(([slug, parent, source]) => {
   const workspace = sourceWorkspaces.find(view => view.path === source);
   if (!workspace) throw new Error('Vue métier BPM introuvable : ' + source);
   // Une étape d'un processus porte le nom de l'étape (« Vérifier le compte ») dans le fil d'Ariane.
-  return { ...workspace, title: astraGuidance[slug]?.title ?? workspace.title, path: astraUrl(slug).slice(1), parent: astraUrl(parent), existing: true };
+  const title = astraGuidance[slug]?.title;
+  return { ...workspace, title: title ?? workspace.title, label: title ?? workspace.label, path: astraUrl(slug).slice(1), parent: astraUrl(parent), existing: true };
 });
 
 const menuTitles = new Map(allPages.map(page => [page.slug, page.label]));

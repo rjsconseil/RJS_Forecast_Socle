@@ -71,7 +71,7 @@
                       </a>
                       <!-- Les pages secondaires de la page ouverte, juste sous elle. -->
                       @if (location().page?.link === page.link) {
-                        @if (astraSubpagesOf(page.link); as subs) {
+                        @if (subpagesOf(page); as subs) {
                           @if (subs.length) {
                             <ul class="astra-nav-sub" [attr.aria-label]="'Pages de ' + page.label">
                               @for (sub of subs; track sub.link) {

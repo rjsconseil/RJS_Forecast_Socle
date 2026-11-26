@@ -23,6 +23,8 @@ import {
   hasSectionHome,
   locate,
   menuPages,
+  pageChildren,
+  PlanPage,
   orderedZones,
   planContext,
   PLAN_OVERVIEW_TONE,
@@ -35,7 +37,6 @@ import {
   sectionMark,
 } from './plan/site-plan';
 import { planOrder } from './plan/plan-order';
-import { astraSubpages, astraUrl } from './astra/astra-parts';
 import { NavigationSystem } from './navigation/navigation.service';
 
 /**
@@ -276,9 +277,9 @@ export class App implements OnInit {
   protected entryOf(zone: PlanZone, section: PlanSection) {
     return sectionEntry(zone, section);
   }
-  /** Pages secondaires d'une page d'Astra, affichées sous elle dans le menu quand elle est ouverte. */
-  protected astraSubpagesOf(link: string) {
-    return astraSubpages(link.replace(/^\/bpm-astra\/?/, '')).map(sub => ({ link: astraUrl(sub.slug), label: sub.label }));
+  /** Pages secondaires d'une page du menu (ses sous-pages du plan, sans fiche ouverte), affichées sous elle quand elle est ouverte. */
+  protected subpagesOf(page: PlanPage) {
+    return pageChildren(page).filter((child) => (child.depth ?? 1) === 1 && child.id !== 'object' && child.id !== 'current-detail' && !child.link.includes(':'));
   }
   protected visiblePages(section: PlanSection) {
     return menuPages(section);

@@ -198,11 +198,3 @@ export function astraMenuSlug(slug: string): string {
 }
 
 
-/**
- * Pages secondaires d'une page du menu, pour le menu latéral : ses propres écrans et listes (pas les fiches « :id »,
- * ni les pages des autres parties que montrent les onglets), dans l'ordre des onglets.
- */
-export function astraSubpages(slug: string): { slug: string; label: string }[] {
-  return ASTRA_ORDER.filter(s => s !== slug && !s.includes(':') && parentOf.get(s) === slug && s in ASTRA_TAB_LABELS)
-    .map(s => ({ slug: s, label: ASTRA_TAB_LABELS[s] }));
-}
