@@ -2,6 +2,7 @@
 // des plafonds. Fonctions pures sur l'état, sans écriture ; Budget et ses lecteurs les partagent.
 import { date } from '../../socle/validation.mjs';
 import { occurrenceDates, occurrenceKey } from './recurrence.mjs';
+import { indexBy, memo, positions } from '../../socle/indexes.mjs';
 
 export const STD = 'std:';
 const toEuros = (cents) => (cents === null || cents === undefined ? null : cents / 100);
@@ -66,18 +67,28 @@ export const lineOfOccurrence = (r, date) => ({
  * Une occurrence réglée est une opération : elle ne figure jamais deux fois.
  */
 export function budgetLines(state, budgetIds, { from, to, by = 'planned' }) {
-  const ids = new Set(budgetIds);
+  const ids = [...new Set(budgetIds)];
   const out = [];
-  const materialized = new Set();
-  for (const o of Object.values(state.operations)) {
-    if (o.recurrenceId) materialized.add(occurrenceKey(o.recurrenceId, o.occurrenceDate));
-    if (!ids.has(o.budgetId) || o.status === 'cancelled') continue;
+  // Index mémorisés par version de partition : opérations et définitions par Budget, occurrences déjà réglées.
+  const ofBudgets = (collection) => {
+    const index = indexBy(collection, 'budgetId');
+    const list = ids.flatMap((id) => index.get(id) ?? []);
+    if (ids.length > 1) { const at = positions(collection); list.sort((a, b) => at.get(a.id) - at.get(b.id)); }
+    return list;
+  };
+  const materialized = memo(state.operations, 'materialized-occurrences', (ops) => {
+    const keys = new Set();
+    for (const o of Object.values(ops)) if (o.recurrenceId) keys.add(occurrenceKey(o.recurrenceId, o.occurrenceDate));
+    return keys;
+  });
+  for (const o of ofBudgets(state.operations)) {
+    if (o.status === 'cancelled') continue;
     const d = by === 'planned' ? o.date : o.status === 'realized' ? o.realizedDate : null;
     if (d && d >= from && d <= to) out.push(lineOfOperation(o));
   }
   if (by === 'planned') {
-    for (const r of Object.values(state.recurrences ?? {})) {
-      if (!ids.has(r.budgetId) || r.cancelledAt) continue;
+    for (const r of ofBudgets(state.recurrences ?? {})) {
+      if (r.cancelledAt) continue;
       for (const d of occurrenceDates(r, from, to)) if (!materialized.has(occurrenceKey(r.id, d))) out.push(lineOfOccurrence(r, d));
     }
   }

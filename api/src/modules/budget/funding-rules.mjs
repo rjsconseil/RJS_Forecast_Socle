@@ -3,6 +3,7 @@
 import { fail } from '../../socle/errors.mjs';
 import { today } from '../../socle/clock.mjs';
 import { CADENCES, occurrenceDates } from './recurrence.mjs';
+import { objectsWith } from '../../socle/indexes.mjs';
 
 const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' });
 export const fmt = (cents) => euro.format(cents / 100).replace(/[\u00a0\u202f]/g, ' ');
@@ -87,8 +88,7 @@ export function chargeItems(state, b, now) {
   const horizon = addDays(now, HORIZON_DAYS);
   const items = [];
   const materialized = new Set();
-  for (const o of Object.values(state.operations)) {
-    if (o.budgetId !== b.id) continue;
+  for (const o of objectsWith(state.operations, 'budgetId', b.id)) {
     if (o.recurrenceId) materialized.add(`${o.recurrenceId}@${o.occurrenceDate}`);
     if (o.status === 'cancelled') continue;
     if (isValidatedRefund(o, b)) items.push({ taskId: o.taskId ?? null, cents: -o.realizedAmountCents, paid: true, refund: true });

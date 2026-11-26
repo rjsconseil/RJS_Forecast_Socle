@@ -20,6 +20,7 @@ import { addDays, periodByIndex, periodContaining, today } from '../budget/api.m
 
 export { inRegime, isValidatedCharge, isValidatedRefund, isValidatedMove, projectMoveCents, OVERRUN_REASONS, OVERRUN_STATUS, countsInCycle, drawsOnPatrimoine, fundingSourceOf } from '../budget/api.mjs';
 import { countsInCycle, drawsOnPatrimoine, projectAccountingDate, projectFundingSource } from '../budget/api.mjs';
+import { objectsWith } from '../../socle/indexes.mjs';
 
 const compositionOf = (state, userId) => Object.values(state.bpmCompositions ?? {}).find((c) => c.userId === userId) ?? null;
 const cycleOf = (state, compositionId) => Object.values(state.cycleLinks ?? {}).find((c) => c.bpmCompositionId === compositionId) ?? null;
@@ -192,7 +193,7 @@ export function lifeFunding(state, children, cs, { limit = 12 } = {}) {
   const rows = children.map((c) => {
     const b = state.budgets[c.budgetId];
     const byPeriod = Object.fromEntries(periods.map((p) => [p.key, 0]));
-    for (const o of Object.values(state.operations)) {
+    for (const o of objectsWith(state.operations, 'budgetId', b?.id)) {
       if (!isValidatedMove(o, b)) continue;
       if (projectFundingSource(o, b) !== 'cycle') continue;
       const k = keyOf(projectAccountingDate(o));

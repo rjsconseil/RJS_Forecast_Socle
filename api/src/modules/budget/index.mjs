@@ -330,7 +330,7 @@ export default {
     }
 
     function budgetView(state, b) {
-      const ops = om.list(state, 'operation', (o) => o.budgetId === b.id);
+      const ops = om.by(state, 'operation', 'budgetId', b.id);
       return {
         ...structuredClone(b),
         projectTitle: state.coreProjects[b.coreProjectId]?.title ?? null,
@@ -367,7 +367,7 @@ export default {
       categoryId: r.categoryId ?? null,
       categoryLabel: categoryLabel(state, r),
       budgetName: state.budgets[r.budgetId]?.name ?? null,
-      settlementIds: om.list(state, 'operation', (o) => o.recurrenceId === r.id).map((o) => o.id),
+      settlementIds: om.by(state, 'operation', 'recurrenceId', r.id).map((o) => o.id),
     });
 
     /** Ligne de `budgetLines` enrichie pour l'affichage (centre, Budget, cadence). */

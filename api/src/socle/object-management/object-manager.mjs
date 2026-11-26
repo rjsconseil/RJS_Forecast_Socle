@@ -4,6 +4,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { DomainError, fail } from '../errors.mjs';
 import { baseOf, touchedIn } from '../data/data-manager.mjs';
+import { objectsWith } from '../indexes.mjs';
 
 const JOURNAL_LIMIT = 2000;
 
@@ -94,6 +95,14 @@ export class ObjectManager {
 
   list(state, kind, predicate = () => true) {
     return Object.values(state[this.registry.kind(kind).collection]).filter(predicate);
+  }
+
+  /**
+   * Objets d'une nature dont `field` vaut `value`, par un index mémorisé sur la vue publiée de la partition (refait
+   * seulement quand la partition change) ; sur un brouillon de transaction, simple parcours.
+   */
+  by(state, kind, field, value) {
+    return objectsWith(state[this.registry.kind(kind).collection] ?? {}, field, value);
   }
 
   requireUser(state, ctx) {

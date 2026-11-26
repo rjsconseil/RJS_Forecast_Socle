@@ -4,6 +4,7 @@
 import { fail } from '../../socle/errors.mjs';
 import { today } from '../../socle/clock.mjs';
 import { expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
+import { objectsWith } from '../../socle/indexes.mjs';
 import { CADENCE_LABEL, CADENCES, occurrenceDates } from './recurrence.mjs';
 import { fmt, frDate, sum, OVERRUN_REASONS, RETURN_CADENCES, inRegime, FUNDING_SOURCES, fundingSourceOf, standardOfProject, sharesOf, returnsOf, overrunsOf, requestsOf, openRequest, isAbandoned, abandonedRefusal, requestView, isValidatedCharge, overrunView, fundingFigures } from './funding-rules.mjs';
 export * from './funding-rules.mjs';
@@ -112,7 +113,7 @@ export function abandonPlan(state, b, now = today()) {
       .map((taskId) => [taskId, fig.byTask[taskId]?.paidCents ?? 0])
       .filter(([, cents]) => cents > 0),
   );
-  const plannedIds = Object.values(state.operations).filter((o) => o.budgetId === b.id && o.status === 'planned').map((o) => o.id);
+  const plannedIds = objectsWith(state.operations, 'budgetId', b.id).filter((o) => o.status === 'planned').map((o) => o.id);
   const recurrenceIds = Object.values(state.recurrences ?? {}).filter((r) => r.budgetId === b.id && !r.cancelledAt && (!r.endDate || r.endDate >= now)).map((r) => r.id);
   const requestIds = requestsOf(state, b.id).filter(openRequest).map((x) => x.id);
   const pendingOverrunIds = overruns.filter((x) => x.status === 'pending').map((x) => x.id);
@@ -176,7 +177,7 @@ export const fundingExtensions = {
     if (task.id in sharesOf(b)) links.push('une part de budget');
     if (task.id in returnsOf(b)) links.push('un retour au budget de vie');
     if (requestsOf(state, b.id).some((x) => x.taskId === task.id && openRequest(x))) links.push('une demande de montant en attente (à annuler avant le rattachement)');
-    const entries = Object.values(state.operations).filter((o) => o.taskId === task.id).length + Object.values(state.recurrences ?? {}).filter((r) => r.taskId === task.id).length;
+    const entries = objectsWith(state.operations, 'taskId', task.id).length + objectsWith(state.recurrences ?? {}, 'taskId', task.id).length;
     if (entries) links.push(entries > 1 ? `${entries} dépenses ou entrées` : 'une dépense ou entrée');
     if (links.length) {
       fail('FORBIDDEN_BY_RULE', `« ${task.title} » porte des données de l’enveloppe du projet « ${b.name} » (${links.join(', ')}) : retirez-les avant de changer la tâche de projet.`, {

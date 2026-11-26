@@ -1,5 +1,6 @@
 import { check } from '../../socle/object-management/inspect.mjs';
 import { today } from '../../socle/clock.mjs';
+import { objectsWith } from '../../socle/indexes.mjs';
 // Contrôles financiers des projets. Le contexte de période est fourni par l'appelant ;
 // ce middleware ne dépend d'aucune composition ni d'aucun service BPM.
 import {
@@ -15,7 +16,7 @@ import {
 export const periodPaidCents = (state, budget, period) =>
   period
     ? sum(
-        Object.values(state.operations).filter(
+        objectsWith(state.operations, 'budgetId', budget?.id).filter(
           (o) =>
             isValidatedMove(o, budget) &&
             projectAccountingDate(o) >= period.start &&
@@ -41,7 +42,7 @@ export function projectChecks(
     message: `Réglé sur l’enveloppe depuis son attribution : ${fmt(fig.paidCents)} sur ${fmt(fig.ceilingCents)} (enveloppe et dépassements autorisés)${fig.paidBeforeAllocationCents ? ` ; ${fmt(fig.paidBeforeAllocationCents)} réglés avant, hors enveloppe` : ''}.`,
   });
   if (period) {
-    const charges = Object.values(state.operations).filter(
+    const charges = objectsWith(state.operations, 'budgetId', b?.id).filter(
       (o) =>
         isValidatedMove(o, b) &&
         projectAccountingDate(o) >= period.start &&

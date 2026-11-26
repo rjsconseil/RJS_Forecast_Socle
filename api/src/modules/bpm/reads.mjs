@@ -387,7 +387,7 @@ export function createReads(socle, h) {
     let rec = null;
     if (occ) {
       rec = om.owned(state, 'recurrence', occ.recurrenceId, b.userId);
-      const settled = om.list(state, 'operation', (o) => o.recurrenceId === rec.id && o.occurrenceDate === occ.date)[0];
+      const settled = om.by(state, 'operation', 'recurrenceId', rec.id).find((o) => o.occurrenceDate === occ.date);
       line = budget().budgetLines(state, [rec.budgetId], { from: occ.date, to: occ.date, by: 'planned' }).find((l) => l.occurrenceKey === lineId || l.operationId === settled?.id);
     } else {
       const o = om.owned(state, 'operation', lineId, b.userId);
@@ -441,7 +441,7 @@ export function createReads(socle, h) {
         canCancelEntry: view.kind === 'operation' && !view.recurrenceId && !editClosure,
         // Échéance d'une définition : elle s'écarte tant qu'elle n'est pas réglée ; la définition se supprime tant qu'aucune n'est réglée.
         canSkipOccurrence: !!rec && !view.settled,
-        canDeleteDefinition: !!rec && !om.list(state, 'operation', (o) => o.recurrenceId === rec.id && o.status === 'realized').length,
+        canDeleteDefinition: !!rec && !om.by(state, 'operation', 'recurrenceId', rec.id).some((o) => o.status === 'realized'),
         editReason: canEdit ? null : `La période ${editClosure.periodLabel ?? editClosure.periodKey} est close : cette opération est conservée dans son historique.`,
         settlementPolicy: pb?.role === 'standard' ? 'La date du paiement garde la trace bancaire. Seule la date d’imputation validée affecte le cycle choisi ; le patrimoine est traité hors cycle.' : 'Une échéance d’une période close peut être réglée plus tard, à sa date réelle, sans modifier l’historique clos.',
       },

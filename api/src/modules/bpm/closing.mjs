@@ -29,6 +29,7 @@ import { addDays, linkedProjectBudgets, OVERRUN_REASONS, periodByIndex, periodBy
 import { actionsSnapshot, cycleActions } from './cycle-actions.mjs';
 import { closingChecks } from './closing-checks.mjs';
 import { frDate, cents, sum, plural } from './format.mjs';
+import { objectsWith, positions } from '../../socle/indexes.mjs';
 
 export const LOCK_PARAMETER = 'bpm.verrouCycleSuivant';
 const RESULT = 'bpm.resultatPeriode';
@@ -178,8 +179,10 @@ export function createClosing(socle, h, reads, bilans) {
 
     // Échéances écartées (ou prévisions annulées) dans le cycle : des points clos, avec leur heure.
     const scope = new Set([comp.budgetId, ...funded.map((x) => x.id)]);
-    for (const o of Object.values(state.operations)) {
-      if (!scope.has(o.budgetId) || o.status !== 'cancelled' || o.cancelledFrom !== 'planned' || o.carriedTo || /^Reportée/.test(o.cancelReason ?? '')) continue;
+    const order = positions(state.operations);
+    const inScope = [...scope].flatMap((id) => objectsWith(state.operations, 'budgetId', id)).sort((a, b) => order.get(a.id) - order.get(b.id));
+    for (const o of inScope) {
+      if (o.status !== 'cancelled' || o.cancelledFrom !== 'planned' || o.carriedTo || /^Reportée/.test(o.cancelReason ?? '')) continue;
       if (o.date < period.start || o.date > period.end) continue;
       const project = o.budgetId === comp.budgetId ? null : projectOf(state, o.budgetId);
       if (project && projectFundingSource(o, state.budgets[o.budgetId]) === 'patrimoine') continue;
