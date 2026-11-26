@@ -89,9 +89,12 @@ export interface MetricTile {
     </div>
     <ng-template #body let-tile>
       @if (tile.symbol) {
-        <span class="metric-symbol" aria-hidden="true">{{
-          tile.symbol === 'income' ? '↑' : tile.symbol === 'expense' ? '↓' : '='
-        }}</span>
+        <span class="metric-symbol" aria-hidden="true">
+          @if (tile.symbol === 'balance') { = } @else {
+            <!-- Flèche dessinée (tracé net à toute taille) : vers le haut pour une entrée, vers le bas pour une sortie. -->
+            <svg class="metric-arrow" viewBox="0 0 24 24" focusable="false"><path d="M12 19.5V4.5" /><path d="M5.5 11 12 4.5 18.5 11" /></svg>
+          }
+        </span>
       }
       @if (tile.detailsPlacement === 'between') {
         <div class="metric-flow-layout">

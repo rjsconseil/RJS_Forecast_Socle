@@ -58,13 +58,13 @@
     [data-bpm-amount][data-bpm-arrow]::before {
       content: '' / attr(data-bpm-arrow);
       display: inline-block;
-      inline-size: .82em;
-      block-size: .82em;
+      inline-size: .92em;
+      block-size: .92em;
       margin-inline-end: .3em;
       vertical-align: -.06em;
       background: var(--bpm-flow-ink);
-      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
-      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
     }
     [data-bpm-amount][data-bpm-flow='expense'][data-bpm-arrow]::before { transform: rotate(180deg); }
     [data-bpm-flow='income'] { --bpm-flow-ink: var(--status-success); }

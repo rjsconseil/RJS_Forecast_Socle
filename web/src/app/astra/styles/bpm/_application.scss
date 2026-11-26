@@ -688,7 +688,11 @@
     }
     // Solde (« = ») : le signe garde sa place à gauche du montant ; la marge lui laisse sa case, sans recouvrir le montant.
     .metric-tile[data-symbol='balance'] {
-      padding-inline-start: 64px;
+      padding-inline-start: 76px;
+    }
+    // Entrées et charges : la case de la flèche (44 px) garde sa place à droite, sans toucher le libellé.
+    .metric-tile:is([data-symbol='income'], [data-symbol='expense']) {
+      padding-inline-end: 76px;
     }
     .metric-label {
       font-size: 11px;
@@ -748,12 +752,16 @@
       border-color: var(--bpm-section-line);
       box-shadow: none;
     }
+    // Case du sens du flux : 44 px, bordure de 2 px, flèche de 24 px au centre exact ; la case se place
+    // sur un pixel entier (round) pour que bordure et tracé restent nets.
     :is(.metric-symbol, .metric-tile[data-symbol] > .metric-symbol) {
-      width: 36px;
-      height: 36px;
-      font-size: 22px;
-      border-width: 1px;
-      border-radius: 8px;
+      width: 44px;
+      height: 44px;
+      font-size: 24px;
+      border-width: 2px;
+      border-radius: 10px;
+      top: round(down, 50% - 22px, 1px);
+      transform: none;
     }
     .metric-tile:is([data-symbol='income'], [data-symbol='expense']) > .metric-symbol {
       font-size: 0;

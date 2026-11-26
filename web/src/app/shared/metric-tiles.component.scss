@@ -396,20 +396,17 @@ a.metric-tile:focus-visible {
   position: relative;
   inset: auto;
 }
-/* Flèche du sens du flux : un tracé fin à bouts arrondis (même dessin que les pictogrammes du site), */
-/* centré dans sa case ; la charge est la même flèche, tournée vers le bas. */
-.metric-tile:is([data-symbol='income'], [data-symbol='expense']) > .metric-symbol::before {
-  content: '';
-  position: absolute;
-  left: var(--part-50);
-  top: var(--part-50);
-  width: 20px;
-  height: 20px;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
-  transform: translate(-50%, -50%);
+/* Flèche du sens du flux : un SVG en trait (net à toute taille), centré par la grille de sa case. */
+.metric-arrow {
+  display: block;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.metric-tile[data-symbol='expense'] > .metric-symbol::before {
-  transform: translate(-50%, -50%) rotate(180deg);
+.metric-tile[data-symbol='expense'] .metric-arrow {
+  transform: rotate(180deg);
 }
