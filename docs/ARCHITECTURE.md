@@ -34,10 +34,11 @@ gestion des projets et la page projet de vie.
 ## 2. Socle technique (`api/src/socle`)
 
 - `registry.mjs` — `Registry` : modules, natures d'objets, préfixes, `collect(field)`, `extensions(name)`, `composition(name)`.
-- `store.mjs` — `JsonStore` : fichier JSON révisé, mutations sérialisées, écriture atomique. **Écrivain unique** : verrou `<fichier>.lock` (PID) — une seconde instance, du même processus ou d'un autre, est refusée (`STORE_LOCKED`) ; avant chaque écriture, l'empreinte du fichier est comparée à la dernière lue/écrite et un fichier modifié par ailleurs est refusé (`PERSISTENCE_CONFLICT`), sans rien écraser. Garantie : pas de perte silencieuse entre instances sur un même disque local ; pas de multi-écrivain.
+- `data/data-manager.mjs` — `DataManager` (`socle.store`, alias `socle.data`) : la couche de gestion des données, **partitionnée par user** (voir §9 et §16). `store.mjs` ne fait plus que réexporter ses outils pour les scripts. Écritures en série par partition, en parallèle entre partitions ; une écriture concurrente venue d'une autre instance sur la même base est détectée par la révision (`PERSISTENCE_CONFLICT`), relue puis rejouée, sans rien écraser.
+- `indexes.mjs` — index mémorisés par version de partition (`memo`, `indexBy`, `objectsWith`, `positions`) : voir §16.
 - Migrations : chaque module déclare `migrations: [{ from, id, description, apply(draft, tx, socle) }]` ; au chargement d'un schéma ancien (`j1-store/0.2`, `socle-store/0.3`, `socle-store/0.4`), elles s'exécutent dans une seule mutation, conservent les IDs et sont tracées dans `state.migrations`. Schéma courant : `socle-store/0.6` (migration depuis 0.5 incluse).
 - `clock.mjs` — `today()` : date du jour du socle (`SOCLE_TODAY` en recette).
-- `object-management/object-manager.mjs` — `ObjectManager` (`socle.om`) :
+- `object-management/object-manager.mjs` — `ObjectManager` (`socle.om`) ; le brouillon `tx.draft` est copié objet par objet, à la lecture (voir §16.3) :
   - `om.command(action, ctx, input, fn, { creation?, anonymous? })` → **seul chemin d'écriture**. Une écriture atomique ; `creation: true` exige `input.requestKey` (idempotence) ; journal automatique.
   - dans `fn(tx)` : `om.create(tx, kind, fields)`, `om.update(tx, obj, patch)`, `om.checkRevision(obj, n)`, `om.owned(tx.draft, kind, id, tx.userId)`, `om.reference(tx.draft, {field, id, kinds, userId})`. `tx = { draft, userId, command, requestKey, now, created, updated, unchanged, input }`.
   - les références déclarées dans `kinds[k].references` sont contrôlées à chaque `create`/`update` (existence, nature, même user).
@@ -141,9 +142,9 @@ transaction : user → projet noyau principal → Budget « Projet de vie » →
 - Parcours de clôture (`bpm/closing.mjs`, page « Clôture du cycle ») : suivi des **points** du cycle, puis clôture. Un point est un évènement qui demande une revue : échéance prévue du budget de vie (récurrente, ou saisie comme prévision : `entryStatus: 'planned'`), flux prévu d'un projet financé par le cycle, décision de financement en attente (`projectOverrun`, `taskBudgetRequest`), vérification du compte (bloquante, après le dernier jour). Il s'ouvre quand l'évènement entre dans le cycle (`enteredOn`, ou premier jour du cycle) et se clôt là où il vit (`closedAt` / `closedOn` posés par Budget au règlement ou à l'écart ; `decidedAt` d'une décision). `closingJourney(ctx)` : phase `running` (suivi, sans action de clôture) / `to_close` (mode clôture), points ouverts / clos / reportés / hérités, complétude = (clos + reportés) / points, impacts sur le cycle suivant ; `closingBrief(ctx)` (`GET /api/bpm/closing/brief`) : résumé lu par le cadre Astra (bandeau du mode clôture, point clos signalé à l'instant). `closingDecision(ctx, {periodKey, defer?: {pointId, toPeriodKey}, account?})` (décisions gardées sur la liaison de cycle, `closingPlan`, valables seulement en clôture) : un point non bloquant non validé se revoit dans le cycle choisi (le suivant pour une décision, jusqu'à 24 cycles pour une échéance). `finalizeClosing(ctx, {requestKey, periodKey, expectedResultCents})` : refusée sous 100 % (`CLOSING_INCOMPLETE`) ; en une écriture, clôture (marques des points reportés dans `journey.deferred`) + reports inscrits au premier jour de leur cycle (`budget.carryOverLine`, `carriedFrom` / `carriedTo`). Paramètre `bpm.verrouCycleSuivant` (actif par défaut) : tant qu'un cycle terminé attend sa clôture, il est en clôture (aucune prévision n'y entre : `CYCLE_IN_CLOSING`, gardes `operationGuard` via `opens` et `recurrenceGuard` via `opens`) et le cycle suivant attend (toute entrée datée de lui ou après : `CYCLE_AWAITING_CLOSURE`). `closePeriod` reste la clôture comptable seule (reprises de données, scénarios).
   - **Actions du cycle** (`bpm/cycle-actions.mjs`) : tout ce qui a été enregistré sur Astra et touche le cycle, classé en catégories (argent du quotidien, projets de la vie, budget récurrent, plafonds et postes, cap et patrimoine, cycle et clôture, autres). Sources : le journal du socle (limité aux 2 000 dernières commandes, tous users) et, avant son début, la création (`provenance`) et la dernière modification (`lastChange`) de chaque objet. Une écriture datée touche le cycle par ses dates (même faite en clôture) ; un réglage, s'il a été fait pendant le cycle. **Catalogue** : une commande du site = une ligne (objet principal, catégorie, verbe) ; une commande inconnue paraît dans « Autres actions », les commandes sans effet sur un cycle sont écartées. Toute nouvelle action du site s'ajoute au catalogue.
   - **Contrôles de cohérence** (`bpm/closing-checks.mjs`) : bloquants (points traités, compte vérifié, données intègres via l'inspecteur du socle, résultat recalculé à l'identique), à voir (mouvements sans poste, plafonds dépassés), pour information (écarts au prévu, règlements après le dernier jour). `finalizeClosing` est refusée tant qu'un contrôle bloquant échoue (`CLOSING_INCOHERENT`) et fige dans la clôture `journey.actions` (actions compactes) et `journey.checks` (historisation du cycle).
-  - Page : une synthèse (anneau de complétude et une tuile par section) puis quatre sections, du plus important au moins crucial : 1 à valider, 2 résultat et cycle suivant, 3 cohérence, 4 clôturer ; les actions du cycle, consultatives, tiennent sur une ligne dépliable (`closing-journal.ts`). La page s'ouvre repliée : chaque section garde ses encadrés de chiffres clés et son tableau sur deux lignes (`closing-kit.ts`), le détail se déplie. Code couleur d'alerte commun (`AlertTone`) : vert pour ce qui est bon, puis bleu, jaune, orange et rouge selon la gravité. Chaque contrôle porte sa résolution (`resolution` : ce qui ne va pas, pourquoi, étapes avec l'endroit où agir, progression ; éléments avec leur cible), présentée par `closing-resolution.ts` ; l'état au dernier passage (stockage de session) dit, au retour, ce que l'action a changé. Partout où un problème s'affiche (points à valider, compte, étapes et éléments de la cohérence, barre d'actions), « Régler le problème », à gauche du lien vers la page qui le corrige, ouvre le formulaire du site **en fenêtre sur la page de clôture même** (`closing-dialogs.ts`), pour continuer à vérifier et corriger ce qui reste : fiche de l'échéance (`bpm-line-detail`, échéances et flux des projets), carte de décision du projet (`bpm-overrun-request`, `bpm-task-requests`, gestes `ProjectFunding`), comparaison du Rapprochement bancaire (`bpm-bank-reconciliation`, confirmation du compte en clôture), plafond du poste (`bpm-cap-dialog`), saisie d'un mouvement manquant déjà réglé (`bpm-entry-flow`, `defaults.status: realized`). Une page de liste sans formulaire unique garde seulement son lien ; ses éléments ont chacun leur fenêtre.
+  - Page (état du 26 novembre 2026) : **plus de synthèse en tête** ; quatre sections, du plus important au moins crucial : 1 à valider, 2 cohérence du cycle, 3 **synthèse** du résultat et de ce que le cycle laisse au suivant (encadrés de chiffres clés et répartition par nature, provisoire tant que le cycle n'est pas clos ; le détail reste dans le bilan, « Lire le bilan détaillé → »), 4 clôturer. Dans la section 4, le bouton « Clôturer le cycle » reste **grisé** (avec l'explication en bulle) tant que la clôture n'est pas débloquée, c'est-à-dire tant que tous ses critères ne sont pas réunis ; il ouvre alors le détail de la clôture ; les actions du cycle, consultatives, tiennent sur une ligne dépliable (`closing-journal.ts`). La page s'ouvre repliée : chaque section garde ses encadrés de chiffres clés et son tableau sur deux lignes (`closing-kit.ts`), le détail se déplie. Code couleur d'alerte commun (`AlertTone`) : vert pour ce qui est bon, puis bleu, jaune, orange et rouge selon la gravité. Chaque contrôle porte sa résolution (`resolution` : ce qui ne va pas, pourquoi, étapes avec l'endroit où agir, progression ; éléments avec leur cible), présentée par `closing-resolution.ts` ; l'état au dernier passage (stockage de session) dit, au retour, ce que l'action a changé. Partout où un problème s'affiche (points à valider, compte, étapes et éléments de la cohérence, barre d'actions), « Régler le problème », à gauche du lien vers la page qui le corrige, ouvre le formulaire du site **en fenêtre sur la page de clôture même** (`closing-dialogs.ts`), pour continuer à vérifier et corriger ce qui reste : fiche de l'échéance (`bpm-line-detail`, échéances et flux des projets), carte de décision du projet (`bpm-overrun-request`, `bpm-task-requests`, gestes `ProjectFunding`), comparaison du Rapprochement bancaire (`bpm-bank-reconciliation`, confirmation du compte en clôture), plafond du poste (`bpm-cap-dialog`), saisie d'un mouvement manquant déjà réglé (`bpm-entry-flow`, `defaults.status: realized`). Une page de liste sans formulaire unique garde seulement son lien ; ses éléments ont chacun leur fenêtre.
 - Préparation (C06) : `preparation(ctx)` (prêt / à préparer / incohérent, sans écriture) et `prepareComposition(ctx)` ; contrôle BPM-01 « exactement un » ensemble principal.
-- Lectures communes (`reads.mjs`, `s.reads`) : `summary`, `register`, `lineDetail`, `centers`, `centerDetail`, `incomes`, `balance` (avec rapprochement), `history` (paginé), `impact`, `budgetType`, `due`, `events`, `directives`, `projection` (+ simulation `extra`, comparaison des apports), `previewEntry` (aucune mutation). Chaque lecture porte le contexte commun (user, périmètre, budgets, période début inclus/fin exclue, date de calcul, révision).
+- Lectures communes (`reads.mjs`, `s.reads`, assemblée depuis `reads-shared`, `reads-register`, `reads-centers` et `reads-outlook` : voir §16.4) : `summary`, `register`, `lineDetail`, `centers`, `centerDetail`, `incomes`, `balance` (avec rapprochement), `history` (paginé), `impact`, `budgetType`, `due`, `events`, `directives`, `projection` (+ simulation `extra`, comparaison des apports), `previewEntry` (aucune mutation). Chaque lecture porte le contexte commun (user, périmètre, budgets, période début inclus/fin exclue, date de calcul, révision).
 - Partir de zéro : `setupProfile(ctx)` et `setupProject(ctx, input)` — une commande rejouable ; mode `principal` (configure l'ensemble existant, met à jour les lignes du budget type sans les recréer) ou `branch` (Budget standard + projet noyau + ≥ 1 tâche, sans second Patrimoine).
 - Vision et objectifs : `updateVision`, `goals`, `createGoal`, `updateGoal`, `removeGoal` (archivage `removed`) ; projection déléguée à `patrimoine/projection.mjs` (convention annuelle de la spec, objectifs consommant/réservant le capital).
 
@@ -232,7 +233,7 @@ Il en va de même des niveaux de consommation d'un plafond (`CAP_LEVEL_PCT` : 50
 rend le niveau de chaque poste et les seuils, et le site colore ses jauges avec eux sans écrire aucun seuil.
 Le relief et les effets visuels viennent des jetons d'ombre (`_tokens.scss`) et de `_elevation.scss`.
 
-## 8. Principes d'architecture appliqués par le socle — 16 novembre 2026
+## 9. Principes d'architecture appliqués par le socle — 16 novembre 2026
 
 Cinq principes nommés (`api/src/socle/principles.mjs`, exposés par `GET /api/om/architecture`). Ce ne sont pas des
 conventions : le socle refuse leur contournement et `api/test/principles.test.mjs` les vérifie.
@@ -274,17 +275,18 @@ l'assemblage du socle, aux scripts et aux tests ; absente de la portée des modu
     **Reprise des fichiers JSON** : au premier démarrage sans base, un stockage JSON (`store.json`, toutes dispositions)
     est copié dans une base neuve, relu et comparé clé par clé, puis rangé dans `store.archives/json-avant-sqlite-<date>/`.
     Les fichiers JSON ne sont plus un moteur (`json-files.mjs` ne sert qu'à cette reprise et aux copies d'un bloc).
-  - **Copie à la demande** (`DataManager.mutate`) : une transaction ne copie que les collections qu'elle lit ou
-    écrit ; les autres gardent l'objet publié, et le moteur ne les resérialise pas. Le contrôle de sortie (P2)
-    ignore les collections jamais touchées.
+  - **Partitions par user** (`DataManager`, depuis le 26 novembre 2026) : chaque user est une partition ; une requête
+    ne charge que la sienne et la partition système. Détail au §16.
+  - **Copie à la demande, objet par objet** (`DataManager.mutate`) : une transaction ne copie que les objets qu'elle lit,
+    et seuls les objets lus, écrits ou supprimés sont comparés puis réécrits (§16.3). Le contrôle de sortie (P2)
+    lit le carnet du brouillon et ignore les collections jamais touchées.
   - **Outils d'administration** (`socle/store.mjs`, réservés aux scripts) : `readStoredState` (lire l'état de la base, ou d'un
     stockage JSON pas encore repris), `snapshotStore` (copie d'un seul bloc, rouvrable telle quelle comme stockage),
     `removeStore` (effacer la base). Les scripts d'import et de jeux d'essai les utilisent.
-  - `sgbd` (PostgreSQL, pour un site hébergé à plusieurs) : contrat posé (`open`, `read`, `assertUnchanged`, `write`, `close`, `describe`), **non codé** ; le choisir
+  - `sgbd` (PostgreSQL, pour un site hébergé à plusieurs) : **non codé**. Le contrat à suivre est celui du moteur SQLite partitionné (`open`, `meta`, `readPartition`, `revisions`, `allRevisions`, `commit`, `ensureTables`, `directory`, `findObject`, `counts`, `close`, `describe`, en asynchrone : `sync` faux) ; `sgbd.mjs` liste encore l'ancien contrat d'un seul bloc et sera revu avec le chantier 5 ; le choisir
     lève `DATA_ENGINE_UNAVAILABLE`.
-- Non traités à ce stade : historique des objets, identité des utilisateurs. Une commande copie encore en mémoire
-  chaque collection qu'elle lit (environ 80 ms par enregistrement sur les données de recette) : lire sans copier
-  demande qu'Object Management cesse de modifier les objets en place.
+- Non traités à ce stade : historique des objets, identité des utilisateurs (chantier 5, avant toute mise en ligne).
+  La copie mémoire de chaque collection lue par une commande est supprimée depuis le 26 novembre 2026 (§16.3).
 
 ### Limites connues
 
@@ -294,7 +296,7 @@ l'assemblage du socle, aux scripts et aux tests ; absente de la portée des modu
 - Patrimoine dépend de Budget ; la notion de cycle vit dans Budget.
 - Côté site, la structure de navigation reste déclarée dans des fichiers centraux.
 
-## 9. Middlewares typés et indépendants (P6) — 16 novembre 2026
+## 10. Middlewares typés et indépendants (P6) — 16 novembre 2026
 
 Le niveau 2 distingue trois rôles, portés par le champ `role` du contrat de module et contrôlés par le registre :
 
@@ -313,7 +315,7 @@ Le niveau 2 distingue trois rôles, portés par le champ `role` du contrat de mo
   noyau (existence, même utilisateur), sans dépendance de module.
 - Les modules de niveau 0 (`users`, `administration`, `object-management`) restent le socle technique commun.
 
-## 10. Applications déclarées — 16 novembre 2026
+## 11. Applications déclarées — 16 novembre 2026
 
 Une application de niveau 3 s'ajoute par deux déclarations (module serveur, déclaration d'application
 du site) et deux lignes d'inscription (`SOCLE_MODULES`, `APPLICATIONS`). L'application BPM est déclarée
@@ -321,7 +323,7 @@ par BPM-Astra (`web/src/app/astra/astra.application.ts`) ; le plan, les sous-pag
 contenu, les fiches et les routes sont assemblés par la plateforme (`web/src/app/platform/`).
 Mode d'emploi, contrôles et limites : `docs/APPLICATIONS.md`.
 
-## 11. Feuille de styles globale — 24 novembre 2026
+## 12. Feuille de styles globale — 24 novembre 2026
 
 Une seule feuille globale, `web/src/styles.scss`, réunit dans l'ordre de la cascade toutes les couches de
 `web/src/styles/` (socle visuel, calendrier, habillages, présentation BPM, passerelle des composants, module
@@ -335,7 +337,7 @@ Chargement initial : environ 1,17 Mo (200 Ko transférés) ; limite dans `angula
 Sans utilisateur choisi, le site n'envoie plus les lectures qui en exigent un : il répond lui-même
 `CONTEXT_REQUIRED` (`core/api.service.ts`, liste gardée par `api/test/anonymous-reads.test.mjs`).
 
-## 12. Vue d'ensemble recentrée et présentation sobre — 17 novembre 2026
+## 13. Vue d'ensemble recentrée et présentation sobre — 17 novembre 2026
 
 L'accueil de BPM (`/zones/bpm`, `bpm/pages/overview.ts`) est la synthèse des deux visions, toujours dans
 cet ordre : 1 · Ma vision budgétaire (entrées, sorties, solde prévu, santé), 2 · Mes projets de la vie
@@ -344,7 +346,7 @@ lus tels quels dans le calendrier de l'application), puis le patrimoine. Aucun c
 La présentation sobre des applications tient dans une seule feuille, dernière de la cascade
 (`styles/_bpm-sober.scss`) : angles nets, étiquettes rectangulaires, chiffres alignés ; couleurs inchangées.
 
-## 13. BPM en cockpit — 17 novembre 2026
+## 14. BPM en cockpit — 17 novembre 2026
 
 Règle d'interface : toute information présentée s'accompagne du geste qui permet d'agir dessus, sur
 place. Première page convertie : la Synthèse (`/zones/bpm`, page « Synthèse », onglet « Ma synthèse »).
@@ -373,7 +375,7 @@ relit la ligne complète avant d'écrire. La place des gestes sur les lignes est
 | Projets et financement | Accorder / Refuser une demande sur place ; attribuer une enveloppe dans le tableau ; prochaine action par projet |
 | Calendrier | Inchangé : il reflète les événements ; ouvrir et replanifier un repère existaient déjà |
 
-## 12. BPM-Astra devient l'application BPM — 21 novembre 2026
+## 15. BPM-Astra devient l'application BPM — 21 novembre 2026
 
 L'ancienne application BPM (zone « Budget/Patrimoine Management », sections MPV, tableau de bord, cockpit
 « Mon projet de vie », page Financement, pages de création) est retirée du site. **BPM-Astra est la seule
@@ -391,3 +393,123 @@ le portail des zones est à `/modules`.
 - Écrans BPM devenus inatteignables supprimés (tableau de bord, cockpit, financement, création, gestion de
   projet, et leurs composants) ; la compilation et l'atteignabilité sont vérifiées.
 - L'API ne change pas : `/api/bpm/*` reste l'API de l'application BPM, servie à BPM-Astra.
+
+## 16. Noyau partitionné et montée en charge — 26 novembre 2026
+
+Le parti pris du noyau : **chaque user est une partition** de données. Tout ce qui sert un grand nombre d'utilisateurs
+en découle : une requête ne coûte que la taille des données de son user, et deux users n'attendent jamais l'un
+l'autre. Les couches du dessus n'ont pas changé de contrat : elles lisent toujours « l'état » (`socle.state`,
+`scope.store.state`) et écrivent toujours par `om.command`.
+
+### 16.1 Partitions (`api/src/socle/data/data-manager.mjs`, `engines/tables.mjs`)
+
+- **Ce qu'est une partition.** Les objets d'un user (`partitionOf(objet)` : son `userId`), son journal et sa révision.
+  La **partition système** (clé `''`) porte les paramètres, les valeurs simples du socle (version, migrations) et les
+  objets sans user. En base SQLite, chaque table garde la colonne `user_id` ; la révision de chaque partition est notée.
+- **Lecture.** `store.within(userId, fn)` revalide la partition du user et la partition système contre la base
+  (révisions), puis exécute `fn` dans un contexte asynchrone (`AsyncLocalStorage`) : pendant la requête, l'état lu par
+  les modules est la **vue de cette partition** (`viewOf(userId)`), gelée et mémorisée tant que sa révision et celle
+  de la partition système ne changent pas. Le serveur (`api/src/server.mjs`) ouvre chaque requête par `within`.
+  Hors requête (scripts, tests, administration), l'état est la **vue complète** (`fullView`), réunion de toutes les
+  partitions : pratique, mais elle ne passe pas à l'échelle et ne sert pas aux pages.
+- **Cache borné.** Les partitions en mémoire sont gardées au plus `SOCLE_PARTITION_CACHE` (2 000 par défaut) ; les
+  moins récemment utilisées en sortent, jamais la partition système ni une partition en cours d'écriture. Une
+  partition sortie est relue à la demande.
+- **Écriture.** `mutate(fn, { partition })` : en série sur une même partition, **en parallèle entre partitions**.
+  Une commande d'un user n'écrit que sa partition, la partition système et des partitions neuves (création d'un
+  user) ; toucher la partition d'un autre user est refusé (`WRITE_OUTSIDE_PARTITION`), comme faire changer un objet
+  de user. Sans `partition`, l'écriture porte sur toute la base (administration, migrations) et passe seule.
+- **Plusieurs instances sur une base.** Chaque écriture annonce la révision attendue de chaque partition ; si une
+  autre instance l'a changée entre-temps, l'écriture est refusée par le moteur (`PERSISTENCE_CONFLICT`), la partition
+  relue et la transaction rejouée (4 essais au plus). Rien n'est jamais écrasé.
+- **Reprise.** Une base d'avant le partitionnement (un seul écrivain) est partitionnée au premier démarrage, sans
+  changer ses données (`partitions.test.mjs`).
+- **Ce que voit l'administration.** `describe()` rend, en plus des schémas, l'état du cache : partitions en mémoire,
+  chargements, écritures, rejeux, évictions. `directory()` rend l'annuaire des users sans charger leurs partitions ;
+  `receipt(clé)` retrouve un reçu de création dans toute la base (idempotence d'une clé, quelle que soit la partition).
+
+### 16.2 Index mémorisés (`api/src/socle/indexes.mjs`)
+
+Une vue publiée est gelée et **remplacée** dès que sa partition change : un calcul fait sur une collection gelée reste
+juste tant que c'est la même collection. `memo(collection, nom, calcul)` mémorise un calcul contre l'objet collection
+lui-même (il disparaît avec lui) ; `indexBy` range les objets par la valeur d'un champ, `objectsWith` en rend une
+liste, `positions` donne le rang de chaque objet. `om.by(state, nature, champ, valeur)` s'appuie dessus. Budget et
+BPM lisent ainsi les opérations d'un Budget, d'une récurrence ou d'une tâche (lignes, postes, coûts des projets,
+lignes et points de clôture) sans parcourir toute la collection. Sur un brouillon, rien n'est mémorisé (§16.3).
+
+### 16.3 Lecture sans copie dans Object Management (chantier 4)
+
+Avant, une commande copiait (`structuredClone`) toute collection qu'elle lisait, puis comparait au JSON tous ses
+objets. Désormais :
+
+- chaque collection du brouillon (`tx.draft.<collection>`) est une **façade** (Proxy) posée sur la collection publiée,
+  gelée. Un objet n'est copié qu'à sa **première lecture** (la même copie revient ensuite) ; un objet écrit ou supprimé
+  est noté dans le carnet du brouillon ;
+- à la fin de la transaction, **seuls les objets copiés, écrits ou supprimés** sont comparés à la vue publiée ; seuls
+  ceux qui ont changé sont écrits, puis gelés. Les autres objets gardent leur référence d'avant ;
+- `om.list` et `om.by` sur un brouillon **filtrent sur les originaux gelés** et ne copient que les objets retenus ;
+- le contrôle de sortie (P2 : aucun objet apparu sans `om.create`, aucun disparu) lit le carnet au lieu de parcourir
+  la collection ;
+- `om.simulate` (aperçu d'une saisie) suit la même copie à la demande, puis rend un brouillon figé que les métriques
+  et les index relisent sans recopier.
+
+Contrat inchangé pour les modules : la façade se lit et s'écrit comme l'objet d'avant (`draft.x[id]`, `in`,
+`Object.keys/values/entries`, `for…in`, décomposition, JSON, affectation, `delete`). Un parcours complet écrit par un
+module (`Object.values(tx.draft.x)`) copie encore chaque objet lu : préférer `om.list` ou `om.by` dans les commandes.
+Tests : `api/test/lecture-sans-copie.test.mjs`.
+
+### 16.4 Découpage des gros fichiers d'entrée (chantier 1)
+
+Mêmes façades, mêmes services, fichiers par sujet ; réponses de l'API identiques avant et après.
+
+| Fichier d'entrée | Avant → après | Fichiers par sujet |
+|---|---|---|
+| `modules/budget/index.mjs` | 1 087 → 345 lignes | `views`, `guards`, `operations`, `recurrence-commands`, `structure` |
+| `modules/bpm/index.mjs` | 916 → 269 lignes | `cycle-state`, `extensions`, `principal`, `inspection` |
+| `modules/bpm/reads.mjs` | 894 → 160 lignes | `reads-shared`, `reads-register`, `reads-centers`, `reads-outlook` |
+
+`npm run api:check` (`scripts/api-check.mjs`) contrôle tout le code de l'API avec le vérificateur TypeScript du site,
+en mode JavaScript : aucun nom inconnu, aucune importation ni variable inutilisée.
+
+### 16.5 Tests des écrans BPM les plus utilisés (chantier 2)
+
+Les écrans sont testés sur les **réponses de la vraie API** : `npm run fixtures:web` (`api/scripts/web-fixtures.mjs`)
+construit un profil de recette par les vraies commandes et enregistre les réponses des lectures dans
+`web/src/app/bpm/testing/api-fixtures.json` ; `api/test/web-fixtures.test.mjs` vérifie qu'elles sont à jour. Écrans
+couverts : Mouvements (`bpm/pages/expenses.spec.ts` : registre, filtres par l'adresse, fiche d'une ligne), Budget
+récurrent (`act-budget-type.contract.spec.ts` : lecture figée, montants), fiche d'un projet
+(`projects/project-contract.spec.ts` : enveloppe, tâches, règlements), Bilans (`life/bilans.page.spec.ts` :
+historique, équation du cycle, cycle demandé). Une évolution d'une réponse de l'API se voit donc dans les tests
+du site.
+
+### 16.6 Menu latéral
+
+Le menu latéral montre, sous la page ouverte, ses **sous-pages lues dans le plan du site** (`pageChildren`, premier
+niveau seulement, sans fiche d'objet ni adresse à paramètre : `App.subpagesOf`, `web/src/app/app.ts`). Le cadre
+commun n'importe plus rien d'Astra ; les libellés des sous-pages sont ceux des titres de leurs pages
+(`astra.application.ts`). Style : filet et trait de couleur de la section (`astra/styles/_shell.scss`).
+
+### 16.7 Mesure de charge
+
+`node api/scripts/bench-noyau.mjs [users] [opérations par user]` (base temporaire, aucune donnée réelle) : écritures en
+parallèle sur plusieurs partitions, écriture sur une grosse partition, lecture du registre avec un cache borné.
+
+| Mesure (20 users × 20 opérations) | Avant le chantier 4 | Après |
+|---|---|---|
+| Écriture sur une partition de 2 070 opérations (poste de travail) | environ 11,5 ms | à mesurer sur le poste |
+| Même mesure, machine de développement en ligne (plus lente) | 37 à 49 ms | 7 à 9 ms |
+| Écritures en parallèle, 50 users (machine en ligne) | 700 à 800 par seconde | environ 950 par seconde |
+| Lecture du registre (cache de 100 partitions) | environ 1 ms | environ 1 ms |
+
+Le coût d'une écriture suit désormais ce que la commande touche ; il reste une part proportionnelle à la taille de la
+partition (copie superficielle de la collection publiée écrite, écriture SQLite).
+
+### 16.8 Limites et suite
+
+- **Avant toute mise en ligne (chantier 5)** : authentification des utilisateurs (aujourd'hui, le user est celui que le site
+  annonce dans l'en-tête `x-user-id`, sans preuve), puis le moteur PostgreSQL (`sgbd`), qui permet plusieurs serveurs sur une même base.
+  SQLite reste un écrivain par fichier : il suffit pour un poste, pas pour un site hébergé à grande échelle.
+- La vue complète (`fullView`) et les contrôles de l'inspecteur parcourent toutes les partitions : réservés à
+  l'administration et aux scripts.
+- Le journal en mémoire est limité aux 2 000 dernières entrées par partition (toute l'histoire reste en base) ; les
+  actions du cycle qui le lisent en tiennent compte.
