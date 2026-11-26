@@ -3,7 +3,7 @@
 // Les règles métier restent dans les modules ; ce gestionnaire garantit identités et liens.
 import { createHash, randomUUID } from 'node:crypto';
 import { DomainError, fail } from '../errors.mjs';
-import { baseOf, touchedIn } from '../data/data-manager.mjs';
+import { baseOf, draftDelta, draftOf, filterCollection, readableDraft, touchedIn } from '../data/data-manager.mjs';
 import { objectsWith } from '../indexes.mjs';
 
 const JOURNAL_LIMIT = 2000;
@@ -62,6 +62,13 @@ export class ObjectManager {
       if (!touchedIn(draft, collection)) continue; // jamais lue ni écrite : inchangée par construction
       const was = before[collection] ?? {};
       const now = draft[collection] ?? {};
+      const delta = draftDelta(now);
+      if (delta) {
+        // Lecture sans copie : le brouillon sait ce qui est apparu et disparu, sans parcourir la collection.
+        for (const id of delta.added) if (!created.has(id)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} est apparu dans « ${collection} » sans passer par om.create.`, { principle: 'P2', collection, id, command: tx.command });
+        for (const id of delta.removed) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} a disparu de « ${collection} ».`, { principle: 'P2', collection, id, command: tx.command });
+        continue;
+      }
       for (const id in now) if (!(id in was) && !created.has(id)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} est apparu dans « ${collection} » sans passer par om.create.`, { principle: 'P2', collection, id, command: tx.command });
       for (const id in was) if (!(id in now)) fail('UNTRACKED_WRITE', `Écriture unique : l'objet ${id} a disparu de « ${collection} ».`, { principle: 'P2', collection, id, command: tx.command });
     }
@@ -93,16 +100,20 @@ export class ObjectManager {
     return obj;
   }
 
+  /** Sur un brouillon, le filtre lit les originaux gelés : seuls les objets retenus sont copiés (lecture sans copie). */
   list(state, kind, predicate = () => true) {
-    return Object.values(state[this.registry.kind(kind).collection]).filter(predicate);
+    return filterCollection(state[this.registry.kind(kind).collection], predicate);
   }
 
   /**
    * Objets d'une nature dont `field` vaut `value`, par un index mémorisé sur la vue publiée de la partition (refait
-   * seulement quand la partition change) ; sur un brouillon de transaction, simple parcours.
+   * seulement quand la partition change) ; sur un brouillon de transaction, parcours des originaux gelés qui ne copie
+   * que les objets retenus.
    */
   by(state, kind, field, value) {
-    return objectsWith(state[this.registry.kind(kind).collection] ?? {}, field, value);
+    const collection = state[this.registry.kind(kind).collection] ?? {};
+    if (Object.isFrozen(collection)) return objectsWith(collection, field, value);
+    return filterCollection(collection, (o) => o?.[field] === value);
   }
 
   requireUser(state, ctx) {
@@ -202,10 +213,11 @@ export class ObjectManager {
    * sans écriture, journal ni clé de demande. Renvoie l'état simulé pour le lire avec les mêmes métriques.
    */
   simulate(action, ctx, input, fn) {
-    const draft = structuredClone(this.store.state);
+    const draft = draftOf(this.store.state); // copie à la demande, objet par objet, comme une transaction
     const tx = { draft, command: action, now: new Date().toISOString(), created: [], updated: [], unchanged: false, input };
     tx.userId = this.requireUser(draft, ctx);
-    return { draft, result: fn(tx) };
+    const result = fn(tx);
+    return { draft: readableDraft(draft), result };
   }
 
   // ---------- commandes ----------

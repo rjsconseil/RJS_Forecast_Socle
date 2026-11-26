@@ -51,14 +51,103 @@ export function deepFreeze(value) {
   return value;
 }
 
-/** Brouillons paresseux : la copie d'une collection n'est faite qu'au premier accès (copie à la demande). */
+/**
+ * Brouillons paresseux, copie OBJET PAR OBJET (lecture sans copie).
+ * Une collection du brouillon est une façade (Proxy) posée sur la collection publiée, gelée : rien n'est copié tant
+ * qu'on ne lit pas un objet ; un objet lu est copié une seule fois (la même copie revient ensuite), un objet écrit ou
+ * supprimé est noté. À la fin de la transaction, seuls les objets copiés, écrits ou supprimés sont comparés à la vue
+ * publiée : le coût d'une commande suit ce qu'elle touche, plus la taille de la partition.
+ * Pour les modules, la façade se comporte comme l'objet ordinaire d'avant (lecture, `in`, `Object.values`, écriture,
+ * `delete`) ; les parcours d'Object Management (`list`, `by`) filtrent sur les originaux gelés sans les copier.
+ */
 const TOUCHED = new WeakMap();
 const BASES = new WeakMap();
+/** Façade de collection → { base, local: Map(id → copie ou objet écrit), deleted: Set(id) }. */
+const LOGS = new WeakMap();
+const own = (o, id) => typeof id === 'string' && Object.prototype.hasOwnProperty.call(o, id);
+
+function draftCollection(base) {
+  const local = new Map();
+  const deleted = new Set();
+  const read = (id) => {
+    if (deleted.has(id)) return undefined;
+    if (local.has(id)) return local.get(id);
+    if (!own(base, id)) return undefined;
+    const copy = structuredClone(base[id]);
+    local.set(id, copy);
+    return copy;
+  };
+  const present = (id) => typeof id === 'string' && !deleted.has(id) && (local.has(id) || own(base, id));
+  const proxy = new Proxy({}, {
+    get(target, id) { return present(id) ? read(id) : Reflect.get(target, id); },
+    set(target, id, value) {
+      if (typeof id !== 'string') return Reflect.set(target, id, value);
+      deleted.delete(id);
+      local.set(id, value);
+      return true;
+    },
+    deleteProperty(target, id) {
+      if (typeof id !== 'string') return Reflect.deleteProperty(target, id);
+      local.delete(id);
+      if (own(base, id)) deleted.add(id);
+      return true;
+    },
+    has(target, id) { return present(id) || Reflect.has(target, id); },
+    ownKeys() {
+      const keys = deleted.size ? Object.keys(base).filter((id) => !deleted.has(id)) : Object.keys(base);
+      for (const id of local.keys()) if (!own(base, id)) keys.push(id);
+      return keys;
+    },
+    getOwnPropertyDescriptor(target, id) {
+      if (!present(id)) return undefined;
+      // Le descripteur ne copie pas (parcours `for…in`, `Object.hasOwn`) ; la lecture de la valeur, elle, copie.
+      return { value: local.has(id) ? local.get(id) : base[id], writable: true, enumerable: true, configurable: true };
+    },
+    defineProperty(target, id, desc) {
+      if (typeof id !== 'string' || !('value' in desc)) return false;
+      deleted.delete(id);
+      local.set(id, desc.value);
+      return true;
+    },
+  });
+  LOGS.set(proxy, { base, local, deleted });
+  return proxy;
+}
 
 /** Une collection de ce brouillon a-t-elle pu changer ? Faux seulement si la transaction ne l'a jamais lue ni écrite. */
 export const touchedIn = (draft, key) => !TOUCHED.has(draft) || TOUCHED.get(draft).has(key);
 /** La vue publiée d'où part un brouillon (contrôle de sortie d'Object Management). */
 export const baseOf = (draft) => BASES.get(draft) ?? null;
+
+/**
+ * Ce qui a bougé dans une collection de brouillon, sans la parcourir : ids apparus, ids disparus.
+ * `null` si ce n'est pas une façade de brouillon (collection remplacée en bloc, objet ordinaire).
+ */
+export function draftDelta(collection) {
+  const log = collection && LOGS.get(collection);
+  if (!log) return null;
+  const added = [];
+  for (const id of log.local.keys()) if (!own(log.base, id)) added.push(id);
+  return { added, removed: [...log.deleted] };
+}
+
+/**
+ * Les objets d'une collection qui satisfont `predicate`, dans l'ordre de la collection. Sur une façade de brouillon,
+ * le filtre lit les originaux gelés (ou la copie déjà faite) et seuls les objets retenus sont copiés ; ailleurs,
+ * simple filtre.
+ */
+export function filterCollection(collection, predicate) {
+  const log = collection && LOGS.get(collection);
+  if (!log) return Object.values(collection ?? {}).filter(predicate);
+  const { base, local, deleted } = log;
+  const out = [];
+  for (const id of Object.keys(base)) {
+    if (deleted.has(id)) continue;
+    if (predicate(local.has(id) ? local.get(id) : base[id])) out.push(collection[id]);
+  }
+  for (const [id, value] of local) if (!own(base, id) && predicate(value)) out.push(value);
+  return out;
+}
 
 function lazyDraft(state) {
   const draft = {};
@@ -73,9 +162,34 @@ function lazyDraft(state) {
     Object.defineProperty(draft, key, {
       enumerable: true,
       configurable: true,
-      get() { if (!touched.has(key)) { touched.add(key); copy = structuredClone(value); } return copy; },
+      get() {
+        if (!touched.has(key)) { touched.add(key); copy = isCollection(value) ? draftCollection(value) : structuredClone(value); }
+        return copy;
+      },
       set(next) { touched.add(key); copy = next; },
     });
+  }
+  return draft;
+}
+
+/** Brouillon de simulation : même copie à la demande qu'une transaction, sans écriture. */
+export const draftOf = (state) => lazyDraft(state);
+
+/**
+ * Fige un brouillon de simulation pour le relire (métriques, index) : chaque collection touchée devient un objet gelé
+ * qui reprend les originaux non copiés et les copies faites, sans rien recopier.
+ */
+export function readableDraft(draft) {
+  const state = BASES.get(draft);
+  if (!state) return draft;
+  settle(draft, state);
+  for (const key of Object.keys(draft)) {
+    const log = LOGS.get(draft[key]);
+    if (!log) continue;
+    const out = {};
+    for (const id of Object.keys(log.base)) if (!log.deleted.has(id)) out[id] = log.local.has(id) ? log.local.get(id) : log.base[id];
+    for (const [id, value] of log.local) if (!own(log.base, id)) out[id] = value;
+    draft[key] = Object.freeze(out);
   }
   return draft;
 }
@@ -94,6 +208,8 @@ function settle(draft, state) {
 
 const isCollection = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const EMPTY = Object.freeze({});
+/** Une collection a-t-elle au moins un objet ? (sans construire la liste de ses clés) */
+const hasObjects = (o) => { for (const _ in o) return true; return false; };
 const sameJson = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
 
 export class DataManager {
@@ -222,7 +338,7 @@ export class DataManager {
     view.migrations ??= [];
     view.journal = journal;
     for (const c of Object.keys(sys.collections)) {
-      const pieces = [sys.collections[c], ...parts.map((p) => p.collections[c] ?? EMPTY)].filter((o) => Object.keys(o).length);
+      const pieces = [sys.collections[c], ...parts.map((p) => p.collections[c] ?? EMPTY)].filter(hasObjects);
       view[c] = pieces.length === 0 ? EMPTY : pieces.length === 1 ? pieces[0] : Object.freeze(Object.assign({}, ...pieces));
     }
     for (const p of parts) for (const c of Object.keys(p.collections)) if (!(c in view)) view[c] = p.collections[c];
@@ -367,6 +483,14 @@ export class DataManager {
       }
       return c;
     };
+    const upsert = (c, id, prev, next) => {
+      if (prev !== undefined && sameJson(prev, next)) return;
+      const key = partitionOf(next);
+      if (prev !== undefined && partitionOf(prev) !== key) {
+        fail('WRITE_OUTSIDE_PARTITION', `L'objet ${id} ne peut pas changer de user.`, { principle: 'P5', collection: c, id });
+      }
+      change(key).upserts.push([c, id, next, prev === undefined]);
+    };
     // Valeurs simples du socle → partition système.
     for (const k of new Set([...Object.keys(base), ...Object.keys(draft)])) {
       if (VIEW_SCALARS.has(k)) continue;
@@ -381,16 +505,14 @@ export class DataManager {
       if (!touchedIn(draft, c) && draft[c] === base[c]) continue;
       const before = base[c] ?? EMPTY;
       const after = draft[c] ?? EMPTY;
-      for (const id of Object.keys(after)) {
-        const prev = before[id];
-        const next = after[id];
-        if (prev !== undefined && sameJson(prev, next)) continue;
-        const key = partitionOf(next);
-        if (prev !== undefined && partitionOf(prev) !== key) {
-          fail('WRITE_OUTSIDE_PARTITION', `L'objet ${id} ne peut pas changer de user.`, { principle: 'P5', collection: c, id });
-        }
-        change(key).upserts.push([c, id, next, prev === undefined]);
+      const log = LOGS.get(after);
+      if (log && log.base === before) {
+        // Façade de brouillon : seuls les objets copiés, écrits ou supprimés sont comparés.
+        for (const [id, next] of log.local) upsert(c, id, own(before, id) ? before[id] : undefined, next);
+        for (const id of log.deleted) change(partitionOf(before[id])).deletes.push([c, id]);
+        continue;
       }
+      for (const id of Object.keys(after)) upsert(c, id, before[id], after[id]);
       for (const id of Object.keys(before)) if (!(id in after)) change(partitionOf(before[id])).deletes.push([c, id]);
     }
     // Journal : seules les entrées nouvelles sont ajoutées ; un journal vidé repart de zéro dans la vue.
@@ -427,9 +549,10 @@ export class DataManager {
       const collections = { ...part.collections };
       const edited = new Map();
       const edit = (c) => edited.get(c) ?? edited.set(c, { ...(collections[c] ?? {}) }).get(c);
-      for (const [c, id, object] of change.upserts) edit(c)[id] = object;
+      // Seuls les objets écrits sont gelés en profondeur ; les autres le sont déjà (même référence que la vue d'avant).
+      for (const [c, id, object] of change.upserts) edit(c)[id] = deepFreeze(object);
       for (const [c, id] of change.deletes) delete edit(c)[id];
-      for (const [c, objects] of edited) collections[c] = deepFreeze(objects);
+      for (const [c, objects] of edited) collections[c] = Object.freeze(objects);
       const scalars = { ...part.scalars };
       for (const [k, v] of change.scalars) { if (v === undefined) delete scalars[k]; else scalars[k] = v; }
       const journal = change.journalReset ? [...change.journal] : [...part.journal, ...change.journal].slice(-JOURNAL_WINDOW);
