@@ -39,6 +39,9 @@ export class SgbdEngine {
 
   get sync() { return false; }
 
+  /** Base joignable ? (point de santé) */
+  async ping() { await this.pool.query('SELECT 1'); }
+
   async open() {
     if (!this.url) throw new DomainError('DATA_ENGINE_UNAVAILABLE', 'Moteur PostgreSQL : SOCLE_PG_URL manquante (adresse de la base).', { principle: 'P5', engine: SgbdEngine.id });
     let pg;

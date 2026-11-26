@@ -22,7 +22,8 @@
     "e2e:astra": "node e2e/astra.e2e.mjs",
     "styles:audit": "node scripts/styles-audit.mjs",
     "api:check": "node scripts/api-check.mjs",
-    "fixtures:web": "node api/scripts/web-fixtures.mjs"
+    "fixtures:web": "node api/scripts/web-fixtures.mjs",
+    "seeds:check": "node scripts/seeds-check.mjs"
   },
   "engines": {
     "node": ">=22"

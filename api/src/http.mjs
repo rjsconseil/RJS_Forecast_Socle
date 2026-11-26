@@ -214,6 +214,16 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
     };
     try {
       checkRequest(req);
+      // Point de santé (sonde d'un hébergeur ou d'un proxy) : ouvert sans connexion, ne dit rien des données.
+      if (req.method === 'GET' && url.pathname === '/api/health') {
+        const engine = socle.store.engine;
+        try {
+          await engine.ping?.();
+          return send(200, { status: 'ok', engine: engine.constructor.id, auth: authMode });
+        } catch {
+          return send(503, { status: 'unavailable', engine: engine.constructor.id, auth: authMode });
+        }
+      }
       const ctxFull = await contextOf(req);
       const ctx = { userId: ctxFull.userId };
       if (req.method === 'GET' && url.pathname === '/api/changes') return await openChanges(req, res, url, ctxFull);

@@ -36,13 +36,20 @@ const dayOf = (mo, day) => `${mo.key}-${pad(Math.min(Math.max(day, 1), mo.last))
 
 // ---------- réinitialisation ----------
 
+// Les jeux d'essai passent par l'API locale du poste (profils choisis par `x-user-id`) : en connexion exigée, la
+// création directe de profils et la remise à zéro sont refusées, le script s'arrête donc tout de suite, clairement.
+{
+  const status = await fetch(`${BASE}/api/auth/status`).then((r) => r.json()).catch(() => null);
+  if (!status) throw new Error(`API injoignable sur ${BASE} : lancer d'abord \`npm run api:recette\`.`);
+  if (status.mode === 'required') throw new Error('Jeux d’essai : API en connexion exigée (SOCLE_AUTH=required). Lancer une API de recette en mode local (`npm run api:recette`).');
+}
 await call('POST', '/api/_recette/reset');
 // Les jeux d'essai saisissent trois mois passés puis le mois courant sans clôturer les cycles passés : le verrou du
-// cycle suivant (`bpm.verrouCycleSuivant`), qui refuserait les entrées du mois courant, est levé pour la recette.
-{
-  const lock = await call('GET', '/api/admin/parameters/bpm.verrouCycleSuivant');
-  await call('PUT', '/api/admin/parameters/bpm.verrouCycleSuivant', { value: false, expectedRevision: lock.revision ?? 0, note: 'Jeux d’essai : cycles passés laissés ouverts' });
-}
+// cycle suivant (`bpm.verrouCycleSuivant`), qui refuserait ces saisies, est levé le temps de les écrire, puis REMIS à
+// sa valeur d'avant à la fin : la recette tourne ensuite avec les règles de production (le mois passé attend sa clôture).
+const LOCK = '/api/admin/parameters/bpm.verrouCycleSuivant';
+const lockBefore = await call('GET', LOCK);
+await call('PUT', LOCK, { value: false, expectedRevision: lockBefore.revision ?? 0, note: 'Jeux d’essai : saisie des cycles passés' });
 
 // ---------- user 1 : Camille Martin (individuel, cycle au 1er, stock et objectif connus) ----------
 
@@ -189,6 +196,11 @@ await call('POST', '/api/bpm/operations', { requestKey: key('op'), direction: 'c
 
 // ---------- résumé ----------
 
+{
+  const lock = await call('GET', LOCK);
+  await call('PUT', LOCK, { value: lockBefore.value, expectedRevision: lock.revision ?? 0, note: 'Jeux d’essai : règle rétablie' });
+}
+
 const dash = await call('GET', '/api/bpm/dashboard', null, C);
 const checks = await call('GET', '/api/om/checks');
 const count = (r) => checks.filter((c) => c.result === r).length;
@@ -201,4 +213,5 @@ console.log(`    Périodes closes : ${closures.map((c) => `${c.periodLabel} (${c
 console.log(`    Projets de la vie : Voyage au Japon ${japon.coreProjectId}, Rénovation de la cuisine ${cuisine.coreProjectId}`);
 console.log(`    Période ${dash.period?.label} : résultat ${fmt(dash.figures['bpm.resultatPeriode'])}, patrimoine constitué ${fmt(dash.figures['bpm.patrimoineConstitue'])}`);
 console.log(`  Famille Durand   ${D}  (famille, stock inconnu, cycle à configurer)`);
+console.log(`  Verrou du cycle suivant : ${lockBefore.value ? 'actif' : 'inactif'} (comme avant les jeux d’essai).`);
 console.log(`  Contrôles Object Management : ${count('passed')} réussis, ${count('warning')} avertissements, ${count('failed')} en échec, ${count('not-run')} non exécutés.`);

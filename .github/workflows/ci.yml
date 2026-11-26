@@ -48,6 +48,9 @@ jobs:
         run: npm run api:check
       - name: Audit des styles
         run: npm run styles:audit
+      # Les quatre jeux d'essai, de bout en bout, sur des bases temporaires (API de recette lancée par le script).
+      - name: Jeux d'essai
+        run: npm run seeds:check
 
   web:
     name: Site (tests, build de production)

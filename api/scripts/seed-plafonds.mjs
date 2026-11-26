@@ -29,7 +29,10 @@ if (existingReview && (Object.keys(existingReview.charges).length || Object.keys
   const last = `${month}-${pad(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate())}`;
   const past = new Date(now.getFullYear(), now.getMonth() - 2, 1);
   const recurrenceStart = `${past.getFullYear()}-${pad(past.getMonth() + 1)}-01`;
-  const u = existing ? { userId: existing.id } : await call('POST', '/api/users', { requestKey: key(), label, userType: 'individuel', anchorDay: 1, cycleStartDate: recurrenceStart, openingStock: 2000, objective: 5000 });
+  // Le cycle démarre au mois courant : aucun cycle passé n'attend sa clôture, les saisies du jour passent avec le verrou
+  // du cycle suivant actif (règle de production) ; les récurrences, elles, commencent deux mois plus tôt.
+  const cycleStart = `${month}-01`;
+  const u = existing ? { userId: existing.id } : await call('POST', '/api/users', { requestKey: key(), label, userType: 'individuel', anchorDay: 1, cycleStartDate: cycleStart, openingStock: 2000, objective: 5000 });
   const id = u.userId;
   const caps = await call('GET', '/api/bpm/spending-caps', null, id);
   await call('PUT', '/api/bpm/caps', { requestKey: key(), expectedRevision: caps.lifeBudget.revision, caps: { 'std:alimentation': 400, 'std:loisirs': 200, 'std:transport': 150, 'std:sante': 120, 'std:logement': 900 } }, id);

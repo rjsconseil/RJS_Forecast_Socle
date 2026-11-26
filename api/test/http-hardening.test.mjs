@@ -98,3 +98,17 @@ test('http · mode local : un nom d’hôte étranger (DNS rebinding) est refus�
     await close();
   }
 });
+
+test('http · point de santé ouvert sans connexion, sans aucune donnée', async () => {
+  const { socle, dataFile } = await makeSocle();
+  const server = createServer(createHttpHandler(socle, { dataFile, authMode: 'required' }));
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  try {
+    const res = await fetch(`http://127.0.0.1:${server.address().port}/api/health`);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { status: 'ok', engine: 'sqlite', auth: 'required' });
+  } finally {
+    server.close();
+    await socle.close();
+  }
+});
