@@ -228,4 +228,6 @@ process.once('exit', () => {
     }
   }
 });
-for (const sig of ['SIGINT', 'SIGTERM']) process.once(sig, () => process.exit(0));
+// Un signal libère le verrou en quittant (événement « exit »), sauf si le programme gère lui-même l'arrêt (le serveur
+// de l'API termine d'abord ses requêtes, voir server.mjs) : il quitte alors à son heure.
+for (const sig of ['SIGINT', 'SIGTERM']) process.once(sig, () => { if (process.listenerCount(sig) === 0) process.exit(0); });

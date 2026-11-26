@@ -2,7 +2,7 @@
 // (authentification), la fait travailler dans la partition de son user et annonce les changements aux pages ouvertes.
 // Aucune règle métier ici : les comptes et leurs règles sont dans le module users, les outils dans socle/auth.mjs.
 import { DomainError, ERROR_HTTP, fail } from './socle/errors.mjs';
-import { AUTH_MODES, authSecret, cookieOf, createSessions, createThrottle, SESSION_COOKIE } from './socle/auth.mjs';
+import { AUTH_MODES, authSecret, clientAddress, cookieOf, createSessions, createThrottle, SESSION_COOKIE } from './socle/auth.mjs';
 
 /** Adresses réservées à l'administration quand la connexion est exigée. */
 const ADMIN_PATHS = /^\/api\/(admin|om|_recette)(\/|$)/;
@@ -67,8 +67,9 @@ export function createRequestGuard({ required, env = process.env } = {}) {
 export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCLE_AUTH || 'local' } = {}) {
   if (!AUTH_MODES.includes(authMode)) throw new Error(`SOCLE_AUTH inconnu : ${authMode} (attendu : ${AUTH_MODES.join(', ')})`);
   const required = authMode === 'required';
-  const sessions = createSessions({ secret: authSecret(dataFile) });
-  const throttle = createThrottle();
+  const engine = socle.store.engine;
+  const sessions = createSessions({ secret: authSecret(dataFile, { shared: required && !engine.sync }) });
+  const throttle = createThrottle(engine.throttleStore ? { store: engine.throttleStore() } : {});
   const users = socle.modules.users;
   const checkRequest = createRequestGuard({ required });
 
@@ -91,7 +92,8 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
     if (!session) return null;
     const account = await socle.store.within(session.userId, () => users.accountOf(session.userId));
     if (!account || session.issuedAt < account.sessionsFrom) return null;
-    return { userId: session.userId, role: account.role, email: account.email };
+    if (session.sessionId && account.revokedSessions.includes(session.sessionId)) return null;
+    return { userId: session.userId, role: account.role, email: account.email, sessionId: session.sessionId, expiresAt: session.expiresAt };
   }
 
   /** Mode local : le jeton s'il y en a un, sinon le profil choisi sur le poste (`x-user-id`). Mode exigé : le jeton seul. */
@@ -130,19 +132,24 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
         return { status: result.replayed ? 200 : 201, payload: { userId: result.userId, replayed: result.replayed }, ...login(result.userId), created: result };
       }
       case 'POST /api/auth/login': {
-        const keys = [`login:${String(body.email ?? '').trim().toLowerCase()}`, `ip:${req.socket.remoteAddress}`];
-        throttle.check(keys);
+        const keys = [`login:${String(body.email ?? '').trim().toLowerCase()}`, `ip:${clientAddress(req)}`];
+        await throttle.check(keys);
         try {
           const { userId } = await users.authenticate(body.email, body.password);
-          throttle.succeeded(keys);
+          // Un succès ne remet à zéro que l'identifiant : l'adresse garde ses échecs (essais sur d'autres comptes).
+          await throttle.succeeded(keys.slice(0, 1));
           return { payload: await status(userId), ...login(userId) };
         } catch (err) {
-          if (err instanceof DomainError && err.code === 'AUTH_INVALID') throttle.failed(keys);
+          if (err instanceof DomainError && err.code === 'AUTH_INVALID') await throttle.failed(keys);
           throw err;
         }
       }
-      case 'POST /api/auth/logout':
+      case 'POST /api/auth/logout': {
+        // Se déconnecter : le jeton de CET appareil est révoqué (refusé même s'il a été copié), pas seulement le cookie.
+        const id = ctx.identity;
+        if (id?.sessionId) await socle.store.within(id.userId, () => users.revokeSession({ userId: id.userId }, id.sessionId, id.expiresAt));
         return { payload: { mode: authMode, user: null }, ...logout };
+      }
       case 'POST /api/auth/logout-all':
         if (!ctx.userId) fail('AUTH_REQUIRED', 'Connexion requise.');
         await socle.store.within(ctx.userId, () => users.revokeSessions(ctx));

@@ -20,6 +20,8 @@ const BASE_SCHEMA = `
   CREATE TABLE IF NOT EXISTS "SY_tables" (collection TEXT PRIMARY KEY, table_name TEXT NOT NULL UNIQUE, section TEXT NOT NULL, space TEXT, ord BIGSERIAL);
   CREATE TABLE IF NOT EXISTS "SY_journal" (seq BIGSERIAL PRIMARY KEY, at TEXT, command TEXT, user_id TEXT, outcome TEXT, data TEXT NOT NULL);
   CREATE INDEX IF NOT EXISTS "SY_journal_user" ON "SY_journal" (user_id, seq);
+  CREATE TABLE IF NOT EXISTS "SY_throttle" (key TEXT NOT NULL, at BIGINT NOT NULL);
+  CREATE INDEX IF NOT EXISTS "SY_throttle_key" ON "SY_throttle" (key, at);
   CREATE TABLE IF NOT EXISTS "SY_partitions" (user_id TEXT PRIMARY KEY, revision BIGINT NOT NULL, updated_at TEXT, journal_from BIGINT NOT NULL DEFAULT 0, ord BIGSERIAL);
 `;
 
@@ -38,6 +40,18 @@ export class SgbdEngine {
   }
 
   get sync() { return false; }
+
+  /** Compteurs d'échecs de connexion partagés par tous les serveurs (voir createThrottle, socle/auth.mjs). */
+  throttleStore() {
+    return {
+      count: async (key, since) => Number((await this.pool.query('SELECT COUNT(*) AS n FROM "SY_throttle" WHERE key = $1 AND at > $2', [key, since])).rows[0].n),
+      add: async (keys, now, since) => {
+        await this.pool.query('INSERT INTO "SY_throttle" (key, at) SELECT k, $2 FROM unnest($1::text[]) AS k', [keys, now]);
+        await this.pool.query('DELETE FROM "SY_throttle" WHERE at <= $1', [since]);
+      },
+      clear: async (keys) => { await this.pool.query('DELETE FROM "SY_throttle" WHERE key = ANY($1::text[])', [keys]); },
+    };
+  }
 
   /** Base joignable ? (point de santé) */
   async ping() { await this.pool.query('SELECT 1'); }

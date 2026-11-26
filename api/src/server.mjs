@@ -4,6 +4,9 @@
 //   SOCLE_HOST                    adresse d'écoute : le poste seul (localhost) par défaut en mode local, toutes les
 //                                 interfaces (0.0.0.0) en connexion exigée ; à fixer derrière un proxy
 //   SOCLE_BODY_LIMIT              taille maximale d'un corps de requête, en octets (1 Mo par défaut)
+//   SOCLE_ALLOWED_HOSTS / SOCLE_ALLOWED_ORIGINS  domaine(s) du site en ligne (voir http.mjs, docs/DEPLOIEMENT.md)
+//   SOCLE_TRUST_PROXY=1           derrière un proxy d'hébergement : l'adresse du client est lue dans X-Forwarded-For
+// Arrêt propre (SIGTERM, SIGINT) : plus de nouvelle requête, celles en cours se terminent, puis la base est fermée.
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { createSocle } from './socle/index.mjs';
@@ -28,7 +31,27 @@ socle.config = { dataFile: DATA_FILE, recetteReset: process.env.J1_ENABLE_RECETT
 const authMode = process.env.SOCLE_AUTH || 'local';
 const HOST = process.env.SOCLE_HOST || (authMode === 'required' ? '0.0.0.0' : 'localhost');
 const server = createServer(createHttpHandler(socle, { dataFile: DATA_FILE, authMode }));
+const engineId = socle.store.engine.constructor.id;
+const where = engineId === 'sgbd' ? 'base PostgreSQL (SOCLE_PG_URL)' : DATA_FILE;
 server.listen(PORT, HOST, () => {
-  console.log(`RJS Forecast — socle sur http://${HOST}:${PORT} (données : ${DATA_FILE}, partitions par user, connexion : ${authMode}, moteur : ${socle.store.engine.constructor.id}${Object.keys(siteConfig).length ? `, configuration : ${SITE_CONFIG}` : ''})`);
+  console.log(`RJS Forecast — socle sur http://${HOST}:${PORT} (données : ${where}, partitions par user, connexion : ${authMode}, moteur : ${engineId}${Object.keys(siteConfig).length ? `, configuration : ${SITE_CONFIG}` : ''})`);
   console.log(`Modules : ${socle.registry.describe().map((m) => `${m.id}(N${m.level})`).join(', ')}`);
 });
+
+let stopping = false;
+async function stop(signal) {
+  if (stopping) return;
+  stopping = true;
+  console.log(`Arrêt demandé (${signal}) : fin des requêtes en cours, puis fermeture de la base.`);
+  const force = setTimeout(() => process.exit(1), 10000);
+  force.unref();
+  // Les flux de changements (SSE) ne se terminent jamais d'eux-mêmes : fermés au bout de 2 s.
+  server.closeIdleConnections?.();
+  server.close(async () => {
+    await socle.close();
+    process.exit(0);
+  });
+  setTimeout(() => server.closeAllConnections?.(), 2000).unref();
+}
+process.on('SIGTERM', () => stop('SIGTERM'));
+process.on('SIGINT', () => stop('SIGINT'));

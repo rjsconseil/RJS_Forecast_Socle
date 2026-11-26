@@ -123,7 +123,7 @@ export default {
       /** Les identifiants d'un user (dans sa partition), sans leur empreinte. */
       accountOf(userId) {
         const c = om.list(socle.store.viewOf(userId), 'credential', (x) => x.userId === userId)[0];
-        return c ? { email: c.login, role: c.role ?? 'member', sessionsFrom: c.sessionsFrom ?? 0 } : null;
+        return c ? { email: c.login, role: c.role ?? 'member', sessionsFrom: c.sessionsFrom ?? 0, revokedSessions: Object.keys(c.revokedSessions ?? {}) } : null;
       },
 
       /**
@@ -167,6 +167,21 @@ export default {
         if (!c) { verifyDecoy(password); fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.'); }
         if (!verifyPassword(String(password ?? ''), c.auth)) fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.');
         return { userId: c.userId, role: c.role ?? 'member' };
+      },
+
+      /**
+       * Se déconnecter sur un appareil : la session `sessionId` est révoquée jusqu'à son expiration (au-delà, le jeton est
+       * refusé de toute façon ; les révocations échues sont retirées à chaque nouvelle révocation).
+       */
+      revokeSession(ctx, sessionId, expiresAt) {
+        return om.command('revokeSession', ctx, {}, (tx) => {
+          const c = om.list(tx.draft, 'credential', (x) => x.userId === tx.userId)[0];
+          if (!c) return { userId: tx.userId };
+          const now = Date.now();
+          const kept = Object.fromEntries(Object.entries(c.revokedSessions ?? {}).filter(([, exp]) => exp > now));
+          om.update(tx, c, { revokedSessions: { ...kept, [sessionId]: Number(expiresAt) || now } });
+          return { userId: tx.userId };
+        });
       },
 
       /** Se déconnecter partout : tout jeton émis avant maintenant est refusé. */
