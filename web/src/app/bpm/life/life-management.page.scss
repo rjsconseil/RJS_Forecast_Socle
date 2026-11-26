@@ -1,4 +1,4 @@
-// The life workspace uses the application surfaces, typography and status tokens.
+/* The life workspace uses the application surfaces, typography and status tokens.*/
 :host { display: block; min-width: 0; }
 :host .bpm-life-management {
   --period-nav-accent: var(--app-accent);
@@ -14,7 +14,7 @@
   .bpm-actions { gap: 10px; }
   :is(button, a, summary, [tabindex]):focus-visible { outline: 2px solid var(--app-focus-ring); outline-offset: 4px; }
 
-  // All subpages have the same inset, heading rhythm and table boundary.
+  /* All subpages have the same inset, heading rhythm and table boundary.*/
   .bpm-section {
     gap: 20px;
     min-width: 0;
@@ -61,7 +61,7 @@
   .life-line-status { display: inline-flex; padding: 4px 8px; border-radius: 6px; background: var(--life-soft); font-size: 11px; font-weight: 600; white-space: nowrap; }
   .life-line-status[data-status='late'] { color: var(--status-danger); background: var(--status-danger-surface); }
   .life-line-status[data-status='due'] { color: var(--status-warning); background: var(--status-warning-surface); }
-  // Échéance reportée d'un cycle clôturé : elle garde sa marque et se revoit dans ce cycle.
+  /* Échéance reportée d'un cycle clôturé : elle garde sa marque et se revoit dans ce cycle.*/
   .life-line-carried { display: block; margin-top: 3px; color: var(--status-warning); font-size: 11px; font-weight: 600; white-space: nowrap; }
   .life-line-status[data-status='settled'] { color: var(--status-success); background: var(--status-success-surface); }
   .life-line-task { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
@@ -69,10 +69,10 @@
   .is-deficit, .bpm-table tr.is-over th { color: var(--status-danger); }
   .life-closing-workspace { display: grid; gap: 24px; min-width: 0; }
   .life-workspace-context { margin: 0; color: var(--muted); font-size: 12px; }
-  :is(.bpm-kpis, .pm-finance-summary) { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(200px,100%),1fr)); gap: 12px; margin: 0; }
-  :is(.bpm-kpis, .pm-finance-summary) > div { min-width: 0; padding: 18px 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--life-soft); gap: 10px; }
-  :is(.bpm-kpis, .pm-finance-summary) dt { font-size: 12px; color: var(--muted); line-height: 1.5; }
-  :is(.bpm-kpis, .pm-finance-summary) dd { font-size: 24px; line-height: 1.35; letter-spacing: -.035em; font-weight: 650; font-variant-numeric: tabular-nums; margin: 10px 0 0; overflow-wrap: anywhere; }
+  :is(.pm-finance-summary) { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(200px,100%),1fr)); gap: 12px; margin: 0; }
+  :is(.pm-finance-summary) > div { min-width: 0; padding: 18px 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--life-soft); gap: 10px; }
+  :is(.pm-finance-summary) dt { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  :is(.pm-finance-summary) dd { font-size: 24px; line-height: 1.35; letter-spacing: -.035em; font-weight: 650; font-variant-numeric: tabular-nums; margin: 10px 0 0; overflow-wrap: anywhere; }
   .pm-finance-summary small { display: block; color: var(--muted); margin-top: 8px; font-size: 12px; }
   .life-conditions { display: grid; gap: 10px; padding: 18px 18px 18px 36px; margin: 0; border-radius: 10px; background: var(--life-soft); color: var(--muted); font-size: 13px; line-height: 1.65; }
   .life-task-requests { display: grid; gap: 12px; list-style: none; margin: 0; padding: 0; }
@@ -88,8 +88,7 @@
     gap: 18px;
     .life-limit-strip { gap: 12px; }
     .life-limit-strip > div { flex: 1 1 100%; justify-content: space-between; }
-    :is(.bpm-kpis, .pm-finance-summary) { grid-template-columns: minmax(0,1fr); }
+    :is(.pm-finance-summary) { grid-template-columns: minmax(0,1fr); }
     .bpm-table th, .bpm-table td { padding: 12px; }
   }
 }
-@media(prefers-reduced-motion: reduce) { }

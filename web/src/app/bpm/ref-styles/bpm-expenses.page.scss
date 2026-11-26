@@ -1,6 +1,5 @@
 @use 'contrat-ruptures' as *;
-.expense-filters,
-.expense-facts {
+.expense-filters {
   display: grid;
   grid-template-columns: repeat(
     auto-fit,
@@ -25,8 +24,7 @@
   justify-self: start;
   align-self: end;
 }
-.expense-group,
-.expense-body {
+.expense-group {
   display: grid;
   gap: var(--ecart-16);
 }
@@ -70,55 +68,11 @@
   background: var(--soft);
   font-size: var(--fs-xs);
 }
-.expense-body {
-  padding: var(--ecart-20);
-  border-block-start: var(--trait-1) solid var(--card-border);
-}
-.expense-body h3,
-.expense-body p {
-  margin: 0;
-}
-.expense-body section {
-  display: grid;
-  gap: var(--ecart-12);
-}
-.expense-facts {
-  margin: 0;
-}
-.expense-facts dt {
-  color: var(--muted);
-  font-size: var(--fs-sm);
-}
-.expense-facts dd {
-  margin: var(--ecart-4) 0 0;
-  font-weight: var(--fw-semibold);
-}
-.expense-prose {
-  white-space: pre-wrap;
-  font-weight: var(--fw-regular);
-}
 .expense-note {
   padding: var(--ecart-16);
   border-inline-start: var(--trait-3) solid var(--app-accent);
   border-radius: var(--rayon-12);
   background: var(--app-accent-soft);
-}
-.expense-history {
-  max-height: var(--dim-320);
-  overflow: auto;
-}
-.expense-history li {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-8);
-  margin-block: var(--ecart-8);
-}
-.expense-body footer {
-  display: grid;
-  gap: var(--ecart-16);
-}
-.expense-body footer a {
-  justify-self: start;
 }
 @media (max-width: $rupture-640) {
   .expense-row > summary,
@@ -130,17 +84,6 @@
     grid-column: 1 / -1;
     justify-self: start;
   }
-}
-
-.expense-projects {
-  display: grid;
-  gap: var(--ecart-12);
-}
-@media (max-width: $rupture-640) {
-}
-.funding-total {
-  font-size: var(--fs-2xl);
-  font-variant-numeric: tabular-nums;
 }
 .expense-date small {
   display: block;
@@ -231,7 +174,7 @@
   white-space: normal;
   font-weight: var(--fw-regular);
 }
-// Échéance reportée d'un cycle clôturé : elle garde sa marque et se revoit ici.
+/* Échéance reportée d'un cycle clôturé : elle garde sa marque et se revoit ici.*/
 .expense-carried { display: block; color: var(--status-warning, #945b09); font-size: 11px; font-weight: 600; }
 .expense-state {
   font-weight: var(--fw-semibold);
@@ -245,21 +188,6 @@
   color: var(--status-warning);
   background: color-mix(in srgb, var(--status-warning) var(--part-10), var(--raised-surface));
 }
-.expense-body > :is(h3, .expense-prose, .expense-note, .expense-facts, footer) {
-  grid-column: 1 / -1;
-}
-.expense-body h3 {
-  font-size: var(--fs-md);
-}
-.expense-history {
-  padding-inline-start: 0;
-  list-style: none;
-}
-.expense-history li {
-  justify-content: space-between;
-  padding-block: var(--ecart-8);
-  border-bottom: var(--trait-1) solid var(--line);
-}
 @media (max-width: $rupture-640) {
   .expense-amount {
     white-space: normal;
@@ -268,9 +196,6 @@
     padding: var(--ecart-12);
     padding-inline-end: var(--ecart-32);
   }
-}
-.expense-project .record-details > section {
-  grid-column: 1 / -1;
 }
 
 /* Le sens et la couleur des flux se renforcent ; les badges gardent leur état. */
@@ -304,47 +229,6 @@
 }
 
 /* Une famille fermée conserve son nom, son montant global et ses états. */
-.expense-category {
-  display: block;
-  border: var(--trait-1) solid var(--section-heading-line);
-  border-radius: var(--card-radius);
-  overflow: hidden;
-}
-.expense-category > .expense-center-heading {
-  position: relative;
-  padding-inline-end: var(--ecart-48);
-  border: 0;
-  border-radius: 0;
-  border-inline-start: var(--trait-4) solid var(--section-heading-ink);
-  list-style: none;
-  cursor: pointer;
-}
-.expense-category > summary::-webkit-details-marker {
-  display: none;
-}
-.expense-category > summary::after {
-  content: '⌄';
-  position: absolute;
-  inset-inline-end: var(--ecart-20);
-  inset-block-start: var(--ecart-20);
-  color: var(--section-heading-ink);
-  font-size: var(--fs-xl);
-  font-weight: var(--fw-bold);
-}
-.expense-category[open] > summary::after {
-  transform: rotate(var(--angle-180));
-}
-.expense-category > summary:hover {
-  background: color-mix(
-    in srgb,
-    var(--section-heading-ink) var(--part-10),
-    var(--section-heading-surface)
-  );
-}
-.expense-category > summary:focus-visible {
-  outline: var(--trait-3) solid var(--section-heading-ink);
-  outline-offset: calc(-1 * var(--trait-3));
-}
 
 /* Une charge se lit de gauche à droite : objet, date, montant, état. */
 .expense-row > summary:has(.expense-date) {
@@ -401,15 +285,6 @@
 .expense-pending-total strong {
   color: var(--status-warning);
 }
-.expense-body > footer {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ecart-12) var(--ecart-24);
-}
-.expense-body > footer > details {
-  width: var(--part-100);
-}
 @media (max-width: $rupture-820) {
   .expense-row > summary:has(.expense-date) {
     grid-template-columns: minmax(0, var(--fr-1)) auto;
@@ -430,12 +305,6 @@
     grid-row: 2;
     justify-self: end;
   }
-}
-.expense-category h4 {
-  margin: 0;
-  font-size: var(--fs-lg);
-}
-@media (max-width: $rupture-640) {
 }
 
 /* Le relevé met les montants et les échéances avant les réglages et références. */
@@ -590,18 +459,6 @@
       outline-offset: calc(-1 * var(--trait-2));
     }
   }
-  .expense-detail-heading {
-    padding-block-end: var(--ecart-12);
-    border-block-end: var(--trait-1) solid var(--card-border);
-  }
-  .expense-body > .expense-facts {
-    padding: var(--ecart-16);
-    background: var(--soft);
-    border-radius: var(--rayon-12);
-  }
-  .expense-body .expense-secondary > p {
-    margin-block-start: var(--ecart-12);
-  }
   .expense-filters {
     grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1)) auto auto;
     align-items: end;
@@ -641,8 +498,7 @@
     gap: var(--ecart-12);
     padding-block-start: var(--ecart-12);
   }
-  .expense-list-heading,
-  .expense-detail-heading {
+  .expense-list-heading {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -681,22 +537,6 @@
   }
   .expense-pending-total strong {
     color: var(--status-warning);
-  }
-  .expense-body > :is(.expense-detail-heading, section, .expense-secondary) {
-    grid-column: 1 / -1;
-  }
-  .expense-secondary {
-    padding: var(--ecart-12) var(--ecart-16);
-    border: var(--trait-1) solid var(--card-border);
-    border-radius: var(--card-radius);
-    background: var(--soft);
-  }
-  .expense-secondary > summary {
-    font-weight: var(--fw-semibold);
-    cursor: pointer;
-  }
-  .expense-secondary > .expense-facts {
-    padding-block-start: var(--ecart-16);
   }
   .expense-filters > .bpm-link {
     grid-column: 4;

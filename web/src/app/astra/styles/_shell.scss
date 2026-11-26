@@ -1,9 +1,9 @@
-// BPM-Astra · identité dans la coquille du site (menu latéral, barre du haut, repères de lecture)
+/* BPM-Astra · identité dans la coquille du site (menu latéral, barre du haut, repères de lecture)*/
 @use 'sass:list';
 @use 'sass:map';
 @use 'tokens' as *;
 
-// L'identité d'Astra reste attachée au module, y compris sur les écrans métier partagés.
+/* L'identité d'Astra reste attachée au module, y compris sur les écrans métier partagés.*/
 #{$app-dense} {
   --astra-iris: #5947b8;
   --astra-link: #5141a5;
@@ -146,10 +146,10 @@
       [data-astra-icon] { font-size: 16px; color: #acaac4; }
       &:hover { color: #fff; background: #2f2d45; }
       &[aria-current='page'] { color: #f8f5ff; font-weight: 640; background: #403953;  }
-      // Page ouverte sur l'une de ses pages secondaires : nommée, sans fond.
+      /* Page ouverte sur l'une de ses pages secondaires : nommée, sans fond.*/
       &[aria-current='true'] { color: #f8f5ff; font-weight: 600; }
     }
-    // Pages secondaires de la page ouverte : un filet fin sous son icône, le texte plus discret.
+    /* Pages secondaires de la page ouverte : un filet fin sous son icône, le texte plus discret.*/
     .astra-nav-sub {
       display: grid; gap: 1px; margin: 2px 0 6px 18px; padding: 0; list-style: none; border-left: 1px solid #3b394f;
       a {
@@ -180,26 +180,24 @@
     .account-chip[data-variant='topbar'] small { color: var(--bpm-muted); font-size: 10px; }
   }
   .main-shell #main {
-    :is(rjs-page-banner.rjs-page-banner, .life-projects-banner, rjs-app-hero .app-hero, .ov-hero, .calendar-module-page .page-head) {
+    :is(rjs-page-banner.rjs-page-banner, .life-projects-banner, rjs-app-hero .app-hero, .calendar-module-page .page-head) {
       background: var(--bpm-surface);
       border: 1px solid var(--bpm-line);
       box-shadow: inset 0 3px 0 var(--astra-iris), var(--bpm-shadow);
       border-radius: var(--sober-radius);
       :is(h1, h1.display) { color: var(--bpm-text); font-weight: 650; letter-spacing: -.045em; }
-      :is(.eyebrow, .ov-kicker, .bpm-banner-back, .app-hero-back) { color: var(--astra-link); }
+      :is(.eyebrow, .bpm-banner-back) { color: var(--astra-link); }
     }
     .page-tabs .page-tab.is-current { color: var(--astra-link); border-color: var(--astra-iris); }
     .page-toolbar-frame.page-toolbar-frame { background: transparent; }
     .page-toolbar-frame .page-toolbar-toggle { border-color: var(--control-line); }
-    // Boutons principaux dans la page. Celui de la barre de titre (action de l’écran) a son style dans _toolbar.scss.
+    /* Boutons principaux dans la page. Celui de la barre de titre (action de l’écran) a son style dans _toolbar.scss.*/
     .page .btn-primary {
       background: var(--astra-iris); color: white; border-color: var(--astra-iris); border-radius: 8px;
       &:hover:not(:disabled) { background: var(--astra-iris-hover); border-color: var(--astra-iris-hover); }
     }
-    .funding-path, .expense-charge-summary { border: 1px solid var(--bpm-line); border-radius: var(--sober-radius); background: var(--bpm-surface); }
-    .funding-path { padding: var(--astra-panel-pad); }
-    .funding-path > div > div { border-radius: 8px; }
-    :is(.bpm-section, .bl-block, .project-register, .objectives-panel) { border-color: var(--bpm-line); }
+    .expense-charge-summary { border: 1px solid var(--bpm-line); border-radius: var(--sober-radius); background: var(--bpm-surface); }
+    :is(.bpm-section, .bl-block, .objectives-panel) { border-color: var(--bpm-line); }
     > rjs-journey { border: none; }
   }
   .context-dock { margin-inline: var(--page-gutter); }
@@ -238,7 +236,7 @@
   }
 }
 
-// Repères de lecture dans les écrans de travail.
+/* Repères de lecture dans les écrans de travail.*/
 #{$main} {
   .page-guidance-next {
     display: inline-flex; align-items: center; gap: 7px; width: fit-content;
@@ -254,23 +252,20 @@
     > span { color: var(--bpm-muted); font-size: 11px; white-space: nowrap; }
     select { width: auto; min-width: min(100%, 24ch); max-width: 100%; padding: 5px 8px; color: var(--bpm-text); background: var(--bpm-surface); border: 1px solid var(--control-line); border-radius: 6px; font: 570 12px/1.4 var(--font-sans); }
   }
-  .page :is(.vision-panel, .mt-block, .bl-block, .objectives-panel, .caps-cockpit, .bc-hero, .funding-path, .calendar-360-overview, .bpm-section) {
+  .page :is(.vision-panel, .mt-block, .bl-block, .objectives-panel, .bc-hero, .calendar-360-overview, .bpm-section) {
     background-color: var(--bpm-surface); border: 1px solid var(--bpm-line); border-radius: var(--sober-radius);
     padding: var(--astra-panel-pad); box-shadow: var(--bpm-shadow);
   }
-  .page :is(.vision-panel, .mt-block, .bl-block, .objectives-panel, .caps-cockpit, .bc-hero, .funding-path, .bpm-section) > header {
+  .page :is(.vision-panel, .mt-block, .bl-block, .objectives-panel, .bc-hero, .bpm-section) > header {
     margin-bottom: 14px;
     p:not(.eyebrow) { max-width: 78ch; line-height: 1.55; }
   }
-  .page :is(.bpm-table,.bl-table,.data-table) thead th {
+  .page :is(.bpm-table, .bl-table, .data-table) thead th {
     background: var(--bpm-soft); color: var(--bpm-muted); font-size: 12px; font-weight: 620;
     border-bottom: 1px solid var(--bpm-line);
   }
-  .page :is(.bpm-table,.bl-table,.data-table) tbody tr:focus-within { background: var(--astra-wash); }
+  .page :is(.bpm-table, .bl-table, .data-table) tbody tr:focus-within { background: var(--astra-wash); }
   .bl-history a[aria-current='true'] { box-shadow: inset 3px 0 var(--astra-iris); background: var(--astra-wash); }
-  .funding-path ol { gap: 12px; }
-  .funding-path li { border-radius: 8px; padding: 12px; background: var(--bpm-soft); line-height: 1.45; }
-  .funding-path li a { color: var(--astra-link); margin-top: auto; }
   .vision-panel > p { font-size: 14px; line-height: 1.55; max-width: 78ch; }
   .board-column-head { border-bottom: 1px solid var(--bpm-line); }
   @media (max-width: 600px) {

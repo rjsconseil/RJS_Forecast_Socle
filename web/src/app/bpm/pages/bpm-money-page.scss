@@ -18,12 +18,6 @@
 }
 
 /* Les lignes qui ouvrent un détail sont des boutons : elles gardent la mise en forme des liens source. */
-button.bm-line {
-  width: var(--part-100);
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-}
 button.expense-charge-summary {
   width: var(--part-100);
   border: 0;
@@ -127,10 +121,7 @@ a.expense-charge-summary {
   }
 }
 
-// Les listes imbriquées disposent de moins de place que la largeur de la fenêtre.
-.bm-period-list {
-  container: period-flows / inline-size;
-}
+/* Les listes imbriquées disposent de moins de place que la largeur de la fenêtre.*/
 @container period-flows (max-width: 360px) {
   .expense-row > .expense-charge-summary,
   .expense-row > .expense-charge-summary:has(.expense-date) {

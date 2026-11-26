@@ -17,18 +17,6 @@
   --bm-6: var(--blue-300);
   --bm-7: var(--indigo-300);
 }
-
-.bm-badge {
-  padding: var(--ecart-2) var(--ecart-8);
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--rayon-999);
-  color: var(--muted);
-  font-family: var(--font-label);
-  font-size: scaled(var(--fs-2xs));
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--lettrage-0-08em);
-  text-transform: uppercase;
-}
 .bm-empty {
   margin: 0;
   padding: var(--ecart-16);
@@ -38,7 +26,6 @@
 }
 
 /* La barre du parcours : tout l'argent qui a circulé, poste par poste, puis le reste. */
-.bm-flow,
 .bm-statement {
   display: grid;
   gap: var(--ecart-12);
@@ -47,122 +34,12 @@
   border-radius: var(--card-radius);
   background: var(--raised-surface);
 }
-.bm-flow h3,
 .bm-statement h3 {
   margin: 0;
   font-size: scaled(var(--fs-lg));
 }
-.bm-hundred {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-6) var(--ecart-12);
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-.bm-hundred span {
-  padding: var(--ecart-2) var(--ecart-10);
-  border-radius: var(--rayon-999);
-  background: var(--soft);
-}
-.bm-hundred span[data-nature='reste'] {
-  background: var(--status-success-surface);
-}
-.bm-lines {
-  display: grid;
-  gap: var(--ecart-6);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.bm-line {
-  --bm-tone: var(--bm-0);
-  display: grid;
-  grid-template-columns: var(--dim-28) minmax(0, var(--fr-1)) auto auto;
-  align-items: center;
-  gap: var(--ecart-12);
-  min-height: var(--dim-64);
-  padding: var(--ecart-10) var(--ecart-16);
-  border: var(--trait-1) solid var(--card-border);
-  border-inline-start: var(--trait-4) solid var(--bm-tone);
-  border-radius: var(--card-radius);
-  color: var(--ink);
-  background: var(--raised-surface);
-  text-decoration: none;
-  transition:
-    background-color var(--ease-fast),
-    transform var(--ease-fast);
-}
-.bm-line:hover {
-  background: var(--app-accent-soft);
-  transform: translateX(var(--decalage-2));
-}
-.bm-line:focus-visible {
-  outline: var(--trait-3) solid var(--app-accent);
-  outline-offset: var(--decalage-2);
-}
-.bm-line[data-index='1'] {
-  --bm-tone: var(--bm-1);
-}
-.bm-line[data-index='2'] {
-  --bm-tone: var(--bm-2);
-}
-.bm-line[data-index='3'] {
-  --bm-tone: var(--bm-3);
-}
-.bm-line[data-index='4'] {
-  --bm-tone: var(--bm-4);
-}
-.bm-line[data-index='5'] {
-  --bm-tone: var(--bm-5);
-}
-.bm-line[data-index='6'] {
-  --bm-tone: var(--bm-6);
-}
-.bm-line[data-index='7'] {
-  --bm-tone: var(--bm-7);
-}
-.bm-line[data-nature='entrees'] {
-  --bm-tone: var(--status-success);
-}
-.bm-line[data-nature='a-preciser'] {
-  --bm-tone: var(--status-warning);
-  background: var(--status-warning-surface);
-}
-.bm-line[data-nature='reste'] {
-  --bm-tone: var(--status-success);
-}
-.bm-line[data-nature='reste'][data-sign='negative'] {
-  --bm-tone: var(--status-danger);
-}
 
 /* Préciser : des cartes d'action courtes, chacune mène à sa page dédiée. */
-.bm-actions {
-  display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--part-100), var(--dim-260)), var(--fr-1))
-  );
-  gap: var(--ecart-12);
-}
-.bm-action {
-  display: grid;
-  align-content: space-between;
-  gap: var(--ecart-12);
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--card-radius);
-  background: var(--raised-surface);
-}
-.bm-action[data-state='todo'] {
-  border-color: color-mix(in srgb, var(--status-warning) var(--part-50), var(--raised-surface));
-  background: var(--status-warning-surface);
-}
-.bm-action[data-state='done'] {
-  border-color: color-mix(in srgb, var(--status-success) var(--part-50), var(--raised-surface));
-}
-.bm-action p {
-  margin: 0;
-}
 .bm-action-link {
   justify-self: start;
   color: var(--app-accent);
@@ -173,119 +50,18 @@
   text-decoration: underline;
 }
 
-@media (max-width: $rupture-640) {
-  .bm-line {
-    grid-template-columns: var(--dim-28) minmax(0, var(--fr-1)) auto;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .bm-line {
-    transition: none;
-  }
-  .bm-line:hover {
-    transform: none;
-  }
-}
-
 /* Trois grands blocs, puis trois sections distinctes dans le cadre budgétaire. */
 .page.bpm-money {
   display: grid;
   gap: var(--ecart-40);
 }
-.bm-period-section {
-  min-width: 0;
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--card-radius);
-  background: var(--raised-surface);
-  overflow: hidden;
-}
-.bm-period-section {
-  display: grid;
-  gap: var(--ecart-20);
-}
-.bm-period-section > .bm-period-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ecart-20);
-  padding: var(--ecart-24);
-  border: 0;
-  border-inline-start: var(--trait-3) solid var(--section-heading-ink);
-  border-block-end: var(--trait-1) solid var(--section-heading-line);
-  border-radius: 0;
-  background: var(--raised-surface);
-}
-.is-income > .bm-period-heading {
-  --section-heading-ink: var(--status-success);
-  --section-heading-surface: var(--raised-surface);
-  --section-heading-line: var(--card-divider);
-  --bm-mark-surface: var(--status-success-surface);
-}
-.is-expense > .bm-period-heading {
-  --section-heading-ink: var(--status-danger);
-  --section-heading-surface: var(--raised-surface);
-  --section-heading-line: var(--card-divider);
-  --bm-mark-surface: var(--status-danger-surface);
-}
-.bm-period-heading h3 {
-  margin: 0;
-  color: var(--ink);
-  font-size: scaled(var(--fs-xl));
-  line-height: var(--lh-tight);
-}
-.bm-period-heading p {
-  margin: var(--ecart-8) 0 0;
-}
-.bm-period-section > :is(rjs-bpm-income-list, rjs-bpm-period-expenses) {
-  padding: 0 var(--ecart-24) var(--ecart-24);
-}
-.bm-line[data-nature='poste'] {
-  --bm-tone: var(--status-danger);
-}
 @media (max-width: $rupture-640) {
   .page.bpm-money {
     gap: var(--ecart-32);
   }
-  .bm-period-section > .bm-period-heading {
-    padding: var(--ecart-16);
-  }
-  .bm-period-section > :is(rjs-bpm-income-list, rjs-bpm-period-expenses) {
-    padding-inline: var(--ecart-12);
-  }
 }
 
 /* Les trois tiroirs du tableau de bord gardent leur signe et leur total fermés. */
-.bpm-money details.bm-period-section {
-  display: block;
-}
-.bpm-money .bm-period-section > .bm-period-heading {
-  display: grid;
-  grid-template-columns: var(--dim-48) minmax(0, var(--fr-1)) auto var(--dim-24);
-  cursor: pointer;
-  list-style: none;
-  gap: var(--ecart-16);
-  border-block-end: 0;
-}
-.bm-period-heading::-webkit-details-marker {
-  display: none;
-}
-.bm-period-heading:focus-visible {
-  outline: var(--trait-3) solid var(--app-accent);
-  outline-offset: calc(var(--decalage-4) * -1);
-}
-.bpm-money .bm-period-section[open] > .bm-period-heading {
-  border-block-end: var(--trait-1) solid var(--section-heading-line);
-  margin-bottom: var(--ecart-20);
-}
-.is-projects > .bm-period-heading {
-  --section-heading-ink: var(--app-accent);
-  --section-heading-surface: var(--app-accent-soft);
-  --section-heading-line: var(--app-accent-line);
-}
-.bm-period-section > rjs-bpm-project-costs {
-  display: block;
-  padding: 0 var(--ecart-16) var(--ecart-16);
-}
 .bm-calculation {
   margin-top: var(--ecart-16);
   padding-top: var(--ecart-12);
@@ -298,20 +74,4 @@
 }
 .bm-calculation .record-details {
   margin-top: var(--ecart-16);
-}
-@media (max-width: $rupture-640) {
-  .bpm-money .bm-period-section > .bm-period-heading {
-    grid-template-columns: var(--dim-36) minmax(0, var(--fr-1)) var(--dim-20);
-    gap: var(--ecart-12);
-  }
-  .bm-period-heading > div:first-of-type {
-    grid-column: 2;
-  }
-  .bm-period-heading h3 {
-    font-size: scaled(var(--fs-xl));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-}
-@media (max-width: $rupture-640) {
 }

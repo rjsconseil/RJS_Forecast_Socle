@@ -5,31 +5,9 @@
 .landing-page {
   padding-bottom: var(--landing-padding-bottom);
 }
-.landing-hero {
-  display: grid;
-  grid-template-columns: minmax(0, var(--fr-1-275)) minmax(var(--dim-320), var(--fr-0-825));
-  align-items: stretch;
-  gap: var(--column-gap);
-}
-.landing-hero .display {
-  max-width: var(--dim-960);
-  font-size: scaled(var(--fs-hero));
-  line-height: var(--lh-tight);
-}
 /* Le texte de présentation s’étend dans l’écart de colonnes, jusqu’à --intro-panel-gap du cadre voisin. */
-.landing-hero .page-intro,
 .section-home-hero .page-intro {
   width: calc(var(--part-100) + max(0, var(--column-gap) - var(--intro-panel-gap)));
-}
-.landing-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--ecart-24);
-  margin-top: var(--ecart-40);
-}
-.landing-actions .text-link {
-  font-size: scaled(var(--fs-sm));
 }
 .landing-manifesto {
   display: flex;
@@ -54,65 +32,21 @@
   font-size: scaled(var(--fs-sm));
   line-height: var(--lh-normal);
 }
-.landing-paths {
-  margin-top: var(--ecart-64);
-}
 
 /* Cartes de l’accueil : le motif .card, avec ses réglages par défaut. */
-.landing-card {
-  display: flex;
-  flex-direction: column;
-  min-height: scaled(var(--dim-260));
-  padding: clamp(var(--ecart-24), var(--ecart-2vw), var(--ecart-32));
-}
-.landing-card h3 {
-  margin: var(--ecart-12) 0 var(--ecart-4);
-  color: var(--board-card-ink);
-  font-family: var(--font-serif);
-  font-size: scaled(var(--fs-xl));
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-tight);
-}
-.landing-card p {
-  max-width: var(--dim-480);
-  margin: 0 0 var(--ecart-24);
-  color: var(--board-card-ink);
-  font-size: scaled(var(--fs-lg));
-  font-weight: var(--fw-regular);
-  line-height: var(--lh-relaxed);
-}
 
 /* Projets prioritaires : le projet à gauche, ses tâches à droite. */
 /* Paire libellé / valeur, comme dans les fiches : le libellé s’efface, la valeur ressort. */
-
-@media (max-width: $rupture-1100) {
-  .landing-hero {
-    grid-template-columns: minmax(0, var(--fr-1-2)) minmax(var(--dim-280), var(--fr-0-8125));
-  }
-}
 @media (max-width: $rupture-760) {
-  .landing-hero .page-intro,
   .section-home-hero .page-intro {
     width: var(--part-100);
-  }
-  .landing-hero {
-    grid-template-columns: var(--fr-1);
   }
   .landing-manifesto {
     min-height: var(--dim-300);
   }
-  .landing-paths {
-    margin-top: var(--ecart-40);
-  }
 }
 @media (max-width: $rupture-560) {
-  .landing-hero .display {
-    font-size: scaled(var(--fs-hero-compact));
-  }
   .landing-manifesto {
     min-height: var(--dim-280);
-  }
-  .landing-card {
-    min-height: var(--dim-240);
   }
 }

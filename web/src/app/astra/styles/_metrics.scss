@@ -1,23 +1,16 @@
-// BPM-Astra · chiffres récapitulatifs (typographie et densité)
+/* BPM-Astra · chiffres récapitulatifs (typographie et densité)*/
 @use 'sass:list';
 @use 'sass:map';
 @use 'tokens' as *;
 
-// Typographie et densité des chiffres récapitulatifs de BPM-Astra.
+/* Typographie et densité des chiffres récapitulatifs de BPM-Astra.*/
 #{$frame} {
   --astra-summary-size: clamp(16px, 1.25vw, 20px);
   --astra-summary-line: 1.25;
   --astra-summary-gap: 8px;
 
   .astra-screen {
-    :is(
-    .vision-net, .expense-center-total, .has-late, .summary-band-total, .summary-band-stat, .metric-tile, .life-stat, .life-financial-stat, .summary-covered, .summary-attention
-  ) :is(strong, dd, .metric-value),
-    .vision-metrics article > strong,
-    .topic-summary dl.amounts dd,
-    .envelope-balances dl dd,
-    .objectives-summary-band dd,
-    .bc-wealth-total, .bc-wealth-parts dd, .bc-countdown strong {
+    :is(.vision-net, .expense-center-total, .has-late, .summary-band-total, .summary-band-stat, .metric-tile, .life-stat, .life-financial-stat, .summary-covered, .summary-attention) :is(strong, dd, .metric-value), .vision-metrics article > strong, .topic-summary dl.amounts dd, .objectives-summary-band dd, .bc-wealth-total, .bc-wealth-parts dd, .bc-countdown strong {
       font-size: var(--astra-summary-size);
       line-height: var(--astra-summary-line);
       letter-spacing: -.02em;
@@ -25,7 +18,7 @@
       overflow-wrap: anywhere;
     }
 
-    :is(.vision-metrics, .envelope-balances) { align-items: stretch; }
+    :is(.vision-metrics) { align-items: stretch; }
 
     .vision-metrics {
       gap: var(--astra-summary-gap);

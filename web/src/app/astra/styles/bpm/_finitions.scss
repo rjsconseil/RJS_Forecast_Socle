@@ -1,10 +1,10 @@
-// Finitions des écrans métier BPM (présentés par BPM-Astra), dans l'ordre de la cascade :
-// 1. rythme des pages de travail, 2. place des gestes sur les lignes (cockpit), 3. présentation sobre (dernier mot).
+/* Finitions des écrans métier BPM (présentés par BPM-Astra), dans l'ordre de la cascade :*/
+/* 1. rythme des pages de travail, 2. place des gestes sur les lignes (cockpit), 3. présentation sobre (dernier mot).*/
 
-// ---------- 1. Rythme des pages de travail ----------
-// Harmonisation des espaces BPM, sans modification des données.
+/* ---------- 1. Rythme des pages de travail ----------*/
+/* Harmonisation des espaces BPM, sans modification des données.*/
 
-/// Rythme commun des pages de travail BPM (titres, champs, tableaux, actions, petits écrans) : écrit une fois.
+/*/ Rythme commun des pages de travail BPM (titres, champs, tableaux, actions, petits écrans) : écrit une fois.*/
 @mixin page-rhythm {
   h2 { line-height: 1.3; }
   h3 { line-height: 1.4; }
@@ -12,8 +12,7 @@
   .bpm-table-wrap { max-width: 100%; overflow: auto; }
   .bpm-actions { flex-wrap: wrap; gap: 10px; }
   @media (max-width: 700px) {
-    .bpm-section, .pm-project-overview, .pm-project-tasks, .objectives-panel, .objective-card, .bc-hero, .bc-wealth, .bc-history, .bc-centers { padding: 16px; }
-    .bpm-management-card, .pm-project-overview { grid-template-columns: minmax(0, 1fr); }
+    .bpm-section, .objectives-panel, .objective-card, .bc-hero, .bc-wealth, .bc-history, .bc-centers { padding: 16px; }
   }
 }
 
@@ -35,7 +34,7 @@
 
 .app-shell[data-density][data-module='bpm'] .main-shell main .bpm-caps-page {
  gap:24px; min-width:0;
- .caps-section,.caps-review {gap:24px} .caps-card {gap:16px} .pm-project-overview {padding:24px;gap:20px} .pm-project-description {padding:0;border:0;white-space:normal}
+ .caps-review {gap:24px}
  @include page-rhythm;
 }
 
@@ -53,11 +52,11 @@
 
 .app-shell[data-density][data-module='bpm'] .main-shell main .bpm-projects:not(.bpm-life-management) {
  gap:24px; min-width:0;
- .bpm-section {padding:24px;gap:24px} .bpm-management-grid {gap:24px} .pm-project-overview {padding:24px;gap:20px} .pm-project-description {padding:0;border:0;white-space:normal;line-height:1.65} .pm-project-description span {white-space:normal;overflow:visible} .pm-project-tasks {padding:24px;gap:24px} .pm-project-facts {gap:12px} .pm-project-facts > div {padding:12px} .pm-project-disclosure {min-height:44px} .pm-project-disclosure > span:first-child > span {white-space:normal}
+ .bpm-section {padding:24px;gap:24px}
  @include page-rhythm;
 }
 
-// Navigation horizontale compacte ; les titres de contenu restent lisibles à l'arrivée d'une ancre.
+/* Navigation horizontale compacte ; les titres de contenu restent lisibles à l'arrivée d'une ancre.*/
 .app-shell[data-module='bpm'] .rjs-page-banner {
   row-gap: 10px;
   padding-block: 18px;
@@ -67,7 +66,7 @@
 .app-shell[data-module='bpm'] main h2[tabindex='-1']:focus-visible {
   outline:2px solid var(--app-focus-ring);outline-offset:6px;border-radius:4px;
 }
-// Les titres de projet restent lisibles dans les cartes de tâches étroites.
+/* Les titres de projet restent lisibles dans les cartes de tâches étroites.*/
 .bpm-projects .task-card-meta {
   flex-wrap: wrap;
   gap: 8px;
@@ -75,10 +74,10 @@
   .due-date { flex-shrink: 0; }
 }
 
-// ---------- 2. Cockpit : la place des gestes ----------
-// Cockpit : la place des gestes offerts sur les lignes (régler, ouvrir, décider), commune à toutes les pages BPM.
+/* ---------- 2. Cockpit : la place des gestes ----------*/
+/* Cockpit : la place des gestes offerts sur les lignes (régler, ouvrir, décider), commune à toutes les pages BPM.*/
 .app-shell[data-density][data-application] main {
-  // Une échéance réglable porte son bouton à droite de sa ligne, hors du lien qui ouvre la fiche.
+  /* Une échéance réglable porte son bouton à droite de sa ligne, hors du lien qui ouvre la fiche.*/
   .expense-row:has(> bpm-quick-settle:not(:empty)) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -109,29 +108,27 @@
   }
 }
 
-// ---------- 3. Présentation sobre ----------
-// Présentation sobre des applications (BPM et toute zone numérotée) : dernière couche de la cascade.
-// Elle ne change ni les couleurs ni la disposition : angles plus nets, étiquettes rectangulaires,
-// chiffres alignés. Pour revenir à la présentation précédente, retirer cette feuille de
-// `styles.scss` ; pour doser, changer les deux rayons ci-dessous.
+/* ---------- 3. Présentation sobre ----------*/
+/* Présentation sobre des applications (BPM et toute zone numérotée) : dernière couche de la cascade.*/
+/* Elle ne change ni les couleurs ni la disposition : angles plus nets, étiquettes rectangulaires,*/
+/* chiffres alignés. Pour revenir à la présentation précédente, retirer cette feuille de*/
+/* `styles.scss` ; pour doser, changer les deux rayons ci-dessous.*/
 .app-shell[data-density][data-application] {
   --sober-radius: 6px;
   --sober-radius-small: 4px;
 
-  // Surfaces : cadres de page, cartes, panneaux et lignes de relevé. `[class][class]` donne à cette
-  // dernière couche le dernier mot sur les règles plus anciennes, sans `!important`.
-  :is(
-    .rjs-page-banner, .bpm-management-card, .bpm-section, .bpm-panel, .bpm-disclosure, .bm-period-section, .bm-statement, .bm-line, .expense-row, .expense-group, .expense-charge-summary, .life-summary, .life-financial-stat, .life-limit-strip, .dashboard-wealth, .objectives-panel, .objective-card, .objectives-summary-band, .summary-band, .metric-tile, .pm-budget, .project-register, .caps-compensation, .ov-panel, .ov-stage, .ov-project, .ov-root, .section-page-group, .section-band, .zone-identity-head, .period-navigation, .calendar-agenda, .calendar-month-wrap, .calendar-grid-head, .calendar-360-project, .calendar-360-timeline, .calendar-360-heading, .calendar-control-row, .cal-personalization
-  )[class][class][class] {
+  /* Surfaces : cadres de page, cartes, panneaux et lignes de relevé. `[class][class]` donne à cette*/
+  /* dernière couche le dernier mot sur les règles plus anciennes, sans `!important`.*/
+  :is(.rjs-page-banner, .bpm-section, .bpm-panel, .bpm-disclosure, .bm-statement, .expense-row, .expense-group, .expense-charge-summary, .life-summary, .life-financial-stat, .life-limit-strip, .dashboard-wealth, .objectives-panel, .objective-card, .objectives-summary-band, .summary-band, .metric-tile, .pm-budget, .section-page-group, .section-band, .zone-identity-head, .period-navigation, .calendar-agenda, .calendar-month-wrap, .calendar-grid-head, .calendar-360-project, .calendar-360-timeline, .calendar-360-heading, .calendar-control-row, .cal-personalization)[class][class][class] {
     border-radius: var(--sober-radius);
   }
 
-  // Étiquettes d'état : rectangulaires plutôt qu'en pastille.
-  main :is(.ov-chip, .status-chip, .bpm-chip, .bpm-status, .result, .calendar-360-task)[class][class] {
+  /* Étiquettes d'état : rectangulaires plutôt qu'en pastille.*/
+  main :is(.status-chip, .result, .calendar-360-task)[class][class] {
     border-radius: var(--sober-radius-small);
   }
 
-  // Les montants s'alignent en colonnes partout.
+  /* Les montants s'alignent en colonnes partout.*/
   main {
     font-variant-numeric: tabular-nums;
   }

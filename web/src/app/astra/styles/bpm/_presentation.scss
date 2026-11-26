@@ -1,4 +1,4 @@
-// BPM-Astra · écrans métier de BPM · présentation commune du module (bilan, analyse, action).
+/* BPM-Astra · écrans métier de BPM · présentation commune du module (bilan, analyse, action).*/
 @use 'contrat-ruptures' as *;
 
 /* Présentation commune du module : bilan, analyse, puis action.
@@ -7,7 +7,7 @@
   display: none;
 }
 
-// Marge sous l'en-tête d'un cadre : spécificité nulle, un cadre qui règle ses espacements par gap (Plafonds) l'emporte.
+/* Marge sous l'en-tête d'un cadre : spécificité nulle, un cadre qui règle ses espacements par gap (Plafonds) l'emporte.*/
 :where(.app-shell main .bpm-reading [data-bpm-frame] > header:first-child) {
   margin-block-end: var(--ecart-16);
 }
@@ -70,9 +70,6 @@
   .app-hero-toolbar {
     gap: var(--ecart-8);
     padding-block-start: var(--ecart-10);
-  }
-  .app-hero-commandbar {
-    gap: var(--ecart-8);
   }
   .app-hero-page-tools > nav {
     gap: var(--ecart-4);
@@ -154,51 +151,6 @@
   .metric-value {
     letter-spacing: -0.035em;
   }
-
-  :is(.bc-tiles) > :is(li, div) {
-    min-width: 0;
-    padding: var(--ecart-16);
-    border: 1px solid var(--bpm-frame-line);
-    border-block-start: 3px solid var(--app-accent);
-    border-radius: var(--rayon-8);
-    background: var(--raised-surface);
-  }
-  .bc-tiles > [data-tone='success'] {
-    border-block-start-color: var(--status-success);
-  }
-  .bc-tiles > [data-tone='danger'] {
-    border-block-start-color: var(--status-danger);
-  }
-  :is(.bv-chart-frame) {
-    border: 1px solid var(--bpm-frame-line);
-    border-radius: var(--rayon-8);
-    padding: var(--ecart-12);
-    background: var(--raised-surface);
-  }
-  .bpm-keynumbers {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-    gap: var(--ecart-16);
-    margin: 0;
-  }
-  .bpm-keynumbers > div {
-    display: grid;
-    gap: var(--ecart-8);
-    padding: var(--ecart-20);
-    border: 1px solid var(--bpm-frame-line);
-    border-radius: var(--rayon-8);
-    background: var(--soft);
-  }
-  .bpm-keynumbers dt {
-    color: var(--muted);
-    font-size: var(--fs-sm);
-  }
-  .bpm-keynumbers dd {
-    margin: 0;
-    color: var(--app-accent);
-    font-size: var(--fs-3xl);
-    font-weight: var(--fw-bold);
-  }
   .expense-filters:not(:has(> .bpm-link)) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
   }
@@ -208,14 +160,6 @@
   }
   .bc-hero {
     container-type: inline-size;
-  }
-  .bc-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .bc-tile strong {
-    overflow-wrap: normal;
-    word-break: normal;
-    font-variant-numeric: tabular-nums;
   }
   .objectives-summary > div {
     border: 1px solid var(--bpm-frame-line);
@@ -229,7 +173,7 @@
   .expense-overview-card[data-status='pending'] {
     border-block-start: 3px solid var(--status-warning);
   }
-  :is(.bpm-project, .bv-card) {
+  :is(.bv-card) {
     border-color: var(--bpm-frame-line);
     border-radius: var(--bpm-frame-radius);
   }
@@ -248,17 +192,6 @@
   .app-shell main .bpm-reading .period-nav-year { font-size: clamp(16px, 10cqi, 24px); }
   .app-shell main .bpm-reading .period-nav-arrow > svg { width: 24px; height: 24px; }
   .app-shell main .bpm-reading .period-nav-return { gap: 2px; font-size: 10px; }
-}
-
-@container (min-width: 1040px) {
-  .app-shell main .bpm-reading .bc-tiles {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-@container (max-width: 440px) {
-  .app-shell main .bpm-reading .bc-tiles {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @container (max-width: #{$rupture-640}) {
@@ -312,7 +245,7 @@
     padding: 22px 24px 18px;
     border: 1px solid var(--bpm-banner-border);
     border-radius: 16px;
-    color: #fff; // fond et ombre : _hero-glow.scss
+    color: #fff; /* fond et ombre : _hero-glow.scss*/
   }
   .bpm-banner-copy, .life-banner-copy {
     grid-column: 1;
@@ -399,9 +332,9 @@
   .bpm-banner-back { display: inline-block; margin-bottom: 10px; font-size: 13px; color: #e2ecf8; }
   &.bpm-tasks-page .life-banner-tools { grid-template-columns: minmax(180px, 1fr) minmax(240px, 2fr); }
   .life-summary { background: var(--raised-surface); border-color: var(--line); border-radius: 14px; }
-  :is(.bpm-section, .caps-settings, [data-bpm-frame]) > header h2 { font-size: 21px; line-height: 1.3; }
-  :is(.bpm-section, .caps-settings) > header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; }
-  :is(.bpm-table, .caps-charges) th { font-weight: 650; }
+  :is(.bpm-section, [data-bpm-frame]) > header h2 { font-size: 21px; line-height: 1.3; }
+  :is(.bpm-section) > header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; }
+  :is(.bpm-table) th { font-weight: 650; }
   .num { font-variant-numeric: tabular-nums; }
 
   &.bpm-reading { display: grid; gap: 24px; }

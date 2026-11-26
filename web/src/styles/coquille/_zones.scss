@@ -189,7 +189,6 @@
 }
 .section-switch-entry:focus-visible,
 .plan-entry:focus-visible,
-.plan-tool:focus-visible,
 .plan-destination:focus-visible {
   outline: var(--trait-2) solid var(--app-focus-ring);
   outline-offset: var(--decalage-2);
@@ -230,14 +229,12 @@
 }
 
 /* Pages secondaires : uniquement celles de la section active, en retrait sous elle. */
-.section-pages,
-.tool-nav {
+.section-pages {
   display: flex;
   flex-direction: column;
   gap: var(--ecart-1);
 }
 .section-pages a,
-.tool-nav a,
 .zone-resets a {
   --item-marker: var(--page-marker, var(--tone, var(--app-accent)));
   position: relative;
@@ -257,23 +254,19 @@
     background-color var(--ease-fast),
     color var(--ease-fast);
 }
-.section-pages a:hover,
-.tool-nav a:hover {
+.section-pages a:hover {
   background: var(--nav-hover-surface);
   color: var(--nav-hover-ink);
 }
-.section-pages a:active,
-.tool-nav a:active {
+.section-pages a:active {
   background: var(--nav-press-surface);
 }
-.section-pages a.active,
-.tool-nav a.active {
+.section-pages a.active {
   color: var(--nav-active-ink);
   background: var(--app-accent-soft);
   font-weight: var(--fw-semibold);
 }
-.section-pages a.active::before,
-.tool-nav a.active::before {
+.section-pages a.active::before {
   position: absolute;
   inset-block: var(--ecart-8);
   inset-inline-start: calc(-1 * var(--ecart-8));
@@ -283,14 +276,12 @@
   content: '';
 }
 .section-pages a:focus-visible,
-.tool-nav a:focus-visible,
 .zone-resets a:focus-visible,
 .zone-identity-switch:focus-visible {
   outline: var(--trait-2) solid var(--app-focus-ring);
   outline-offset: var(--decalage-2);
 }
 .section-pages .nav-icon,
-.tool-nav .nav-icon,
 .zone-resets .nav-icon {
   display: inline-grid;
   place-items: center;
@@ -305,25 +296,11 @@
     background-color var(--ease-fast),
     color var(--ease-fast);
 }
-.section-pages a:hover .nav-icon,
-.tool-nav a:hover .nav-icon {
+.section-pages a:hover .nav-icon {
   color: var(--sidebar-ink);
 }
-.section-pages a.active .nav-icon,
-.tool-nav a.active .nav-icon {
+.section-pages a.active .nav-icon {
   color: var(--item-marker);
-}
-.section-pages .nav-count {
-  min-width: var(--dim-24);
-  margin-inline-start: auto;
-  padding: var(--ecart-1) var(--ecart-8);
-  border-radius: var(--radius-pill);
-  background: var(--state-surface);
-  color: var(--sidebar-muted);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-semibold);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
 }
 
 /* Outils communs : un bloc distinct au bas du flux, jamais superposé. */
@@ -337,14 +314,6 @@
   margin-top: var(--ecart-12);
   padding-top: var(--ecart-14);
   border-top: var(--trait-1) solid var(--sidebar-line);
-}
-.sidebar-tools .tool-nav a {
-  font-size: scaled(var(--fs-sm));
-}
-.sidebar-tools .tool-nav .nav-icon {
-  width: var(--dim-28);
-  height: var(--dim-28);
-  font-size: scaled(var(--fs-sm));
 }
 
 /* Tête mobile : la zone courante reste nommée quand le menu est replié. */
@@ -383,14 +352,12 @@
       minmax(min(var(--part-100), var(--dim-220)), var(--fr-1))
     );
   }
-  .section-pages,
-  .tool-nav {
+  .section-pages {
     flex-direction: row;
     flex-wrap: wrap;
     gap: var(--ecart-6);
   }
-  .section-pages a,
-  .tool-nav a {
+  .section-pages a {
     flex: var(--flex-1) var(--flex-1) var(--dim-200);
     border-color: var(--sidebar-line);
     border-radius: var(--rayon-12);
@@ -624,19 +591,13 @@
   grid-column: span 2;
   padding: var(--ecart-24);
 }
-.app-shell .plan-zone-card.is-locked {
-  border-style: dashed;
-  background: var(--soft);
-}
-.plan-zone-head,
-.plan-section-head {
+.plan-zone-head {
   display: flex;
   align-items: center;
   gap: var(--ecart-16);
   min-width: 0;
 }
-.plan-zone-head > div,
-.plan-section-head > div {
+.plan-zone-head > div {
   flex: var(--flex-1);
   min-width: 0;
 }
@@ -695,8 +656,7 @@
 }
 /* Gros boutons des accueils : la même carte arrondie que la navigation primaire,
    une flèche qui avance au survol, une pression qui s'enfonce légèrement. */
-.plan-entry,
-.plan-tool {
+.plan-entry {
   position: relative;
   display: flex;
   align-items: center;
@@ -716,8 +676,7 @@
     box-shadow var(--ease-fast),
     transform var(--ease-fast);
 }
-.plan-entry::after,
-.plan-tool::after {
+.plan-entry::after {
   position: absolute;
   inset-inline-end: var(--ecart-14);
   inset-block-start: var(--ecart-12);
@@ -727,8 +686,7 @@
   content: '→' / '';
   transition: transform var(--ease-fast);
 }
-.plan-entry .plan-entry-mark,
-.plan-tool .plan-entry-mark {
+.plan-entry .plan-entry-mark {
   min-width: var(--dim-36);
   height: var(--dim-36);
   font-size: scaled(var(--fs-xs));
@@ -750,39 +708,21 @@
   font-size: scaled(var(--fs-xs));
   line-height: var(--lh-snug);
 }
-.plan-entry:hover,
-.plan-tool:hover {
+.plan-entry:hover {
   border-color: var(--card-border-hover);
   background: var(--raised-surface);
   box-shadow: var(--card-glow);
 }
-.plan-entry:hover::after,
-.plan-tool:hover::after {
+.plan-entry:hover::after {
   color: var(--app-accent);
   transform: translateX(var(--decalage-2));
 }
-.plan-entry:active,
-.plan-tool:active {
+.plan-entry:active {
   background: var(--card-hover-surface);
   box-shadow: none;
 }
-.plan-zone-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ecart-6);
-  align-self: flex-start;
-  min-height: var(--touch-target);
-  color: var(--app-accent);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-semibold);
-  text-decoration: none;
-}
-.plan-tool {
-  background: var(--raised-surface);
-}
 
 /* Accueil de zone : une carte par section */
-.plan-section-grid,
 .plan-page-grid {
   display: grid;
   grid-template-columns: repeat(
@@ -791,7 +731,6 @@
   );
   gap: var(--journey-gap);
 }
-.plan-section-card,
 .plan-page-card {
   display: flex;
   flex-direction: column;
@@ -800,14 +739,12 @@
   padding: var(--journey-padding);
   --card-radius: var(--rayon-12);
 }
-.plan-section-card h2,
 .plan-page-card h2 {
   margin: 0;
   color: var(--ink);
   font-size: var(--journey-title-size);
   line-height: var(--lh-snug);
 }
-.plan-section-card > p,
 .plan-page-card > p {
   margin: 0;
   color: var(--muted);
@@ -947,7 +884,6 @@
 @media (max-width: $rupture-480) {
   .plan-heading,
   .plan-zone-card,
-  .plan-section-card,
   .plan-page-card {
     padding: var(--ecart-16);
   }
@@ -961,24 +897,18 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .plan-entry:hover,
-  .plan-tool:hover,
   .plan-entry:active,
-  .plan-tool:active,
   .section-switch-entry:hover,
   .section-switch-entry:active,
   .zone-identity-switch:hover span {
     transform: none;
   }
-  :is(.plan-entry, .plan-tool):hover::after,
-  .plan-destination:hover .plan-action > span {
+  :is(.plan-entry):hover::after, .plan-destination:hover .plan-action > span {
     transform: none;
   }
 }
 
 /* Outils du bas : mêmes cibles tactiles que la navigation. */
-.app-shell :is(.sidebar-data button) {
-  min-height: var(--touch-target);
-}
 .app-shell .profile-switcher a {
   display: inline-flex;
   align-items: center;
@@ -1012,30 +942,6 @@
   height: var(--dim-28);
   font-size: scaled(var(--fs-sm));
 }
-.plan-resets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-10);
-  padding-top: var(--ecart-20);
-  border-top: var(--trait-1) dashed var(--outline);
-}
-.plan-reset {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ecart-8);
-  min-height: var(--touch-target);
-  padding: 0 var(--ecart-14);
-  border: var(--trait-1) dashed color-mix(in srgb, var(--danger) var(--part-38), var(--outline));
-  border-radius: var(--rayon-8);
-  color: var(--ink);
-  background: var(--raised-surface);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-semibold);
-  text-decoration: none;
-}
-.plan-reset span {
-  color: var(--danger);
-}
 
 /*
  * Un seul format d'en-tête de page pour tous les modules : le bandeau d'accueil
@@ -1044,7 +950,7 @@
  * inversés dans le bandeau : les en-têtes historiques des modules s'y lisent
  * sans copie de feuille, et Configuration peut toujours régler le pattern.
  */
-$page-headings: '[data-ui-pattern~="heading"], .page-head, .pilotage-intro, .fm-hero, .cfg-hero, .page-heading, .test-archive > header, .reset-hero, .documentation-hero, .audit-header, .plan-heading, .budget-section-head:has(> div > h1), .budget-section-head:has(> div > .page-hero-title > h1)';
+$page-headings: '[data-ui-pattern~="heading"], .page-head, .pilotage-intro, .fm-hero, .cfg-hero, .page-heading, .reset-hero, .documentation-hero, .audit-header, .plan-heading, .budget-section-head:has(> div > h1), .budget-section-head:has(> div > .page-hero-title > h1)';
 .app-shell main :is(#{$page-headings}) {
   --ink: var(--heading-ink);
   --muted: color-mix(in srgb, var(--heading-ink) var(--part-94), transparent);
@@ -1083,7 +989,7 @@ $page-headings: '[data-ui-pattern~="heading"], .page-head, .pilotage-intro, .fm-
   line-height: var(--lh-tight);
   letter-spacing: calc(-1 * var(--lettrage-0-02em));
 }
-.app-shell main :is(#{$page-headings}) :is(.eyebrow, .fm-kicker, .cfg-eyebrow, .audit-kicker, .plan-kicker) {
+.app-shell main :is(#{$page-headings}) :is(.eyebrow, .plan-kicker) {
   color: color-mix(in srgb, var(--heading-ink) var(--part-75), transparent);
   font-family: var(--font-label);
   font-size: scaled(var(--fs-xs));
@@ -1119,30 +1025,14 @@ $page-headings: '[data-ui-pattern~="heading"], .page-head, .pilotage-intro, .fm-
   display: none;
 }
 /* Budget : l'en-tête allégé ne garde que ses commandes quand la page a son titre. */
-.app-shell main .bw-brand .plan-mark {
-  min-width: var(--dim-56);
-  height: var(--dim-56);
-  font-size: scaled(var(--fs-lg));
-}
 
 /* Budget : les commandes et le contexte du projet suivent l'en-tête, sans second cadre. */
-.app-shell main .budget-workspace.budget-navigation {
-  display: grid;
-  gap: var(--ecart-14);
-  padding: 0;
-  border: 0;
-  background: none;
-  box-shadow: none;
-}
 
 /* Accueils : une grande boîte par destination, un gros bouton qui l'ouvre. */
-.app-shell :is(.plan-section-card, .plan-page-card) .plan-action {
+.app-shell :is(.plan-page-card) .plan-action {
   align-self: stretch;
   min-height: max(var(--touch-target), var(--journey-action-height));
   font-size: var(--journey-action-size);
-}
-.plan-section-head h2 {
-  margin: 0;
 }
 
 /* La continuité de lecture : les mêmes cartes du portail aux outils. */
@@ -1221,24 +1111,6 @@ rjs-plan-cards {
   color: var(--tone);
   font-weight: var(--fw-bold);
 }
-.sidebar-disclosure {
-  margin-top: var(--ecart-12);
-  border-block: var(--trait-1) solid var(--sidebar-line);
-}
-.sidebar-disclosure > summary {
-  min-height: var(--touch-target);
-  padding: var(--ecart-12);
-  color: var(--sidebar-ink);
-  font-size: scaled(var(--fs-md));
-  font-weight: var(--fw-semibold);
-  cursor: pointer;
-}
-.sidebar-disclosure[open] > summary {
-  border-bottom: var(--trait-1) solid var(--sidebar-line);
-}
-.sidebar-disclosure .sidebar-data {
-  padding-top: var(--ecart-12);
-}
 .app-shell .appearance-picker select {
   min-height: var(--touch-target);
   font-size: scaled(var(--fs-sm));
@@ -1250,18 +1122,17 @@ rjs-plan-cards {
   white-space: normal;
   text-align: center;
 }
-.app-shell :is(.plan-entry, .plan-tool, .plan-action) {
+.app-shell :is(.plan-entry, .plan-action) {
   overflow-wrap: break-word;
   hyphens: auto;
 }
 @media (max-width: $rupture-1000) {
-  .plan-section-grid,
   .plan-page-grid {
     grid-template-columns: minmax(0, var(--fr-1));
   }
 }
 @mixin zone-touch-controls {
-  :is(.btn, .mobile-nav-toggle, .section-pages a, .tool-nav a, main summary, main select) {
+  :is(.btn, .mobile-nav-toggle, .section-pages a, main summary, main select) {
     min-height: var(--touch-target);
   }
 }
@@ -1338,11 +1209,11 @@ rjs-plan-cards {
 }
 
 /* Les destinations gardent leur teinte de repère ; le texte suit le thème. */
-.app-shell :is(.section-switch-entry, .plan-entry, .plan-tool)[data-tone] {
+.app-shell :is(.section-switch-entry, .plan-entry)[data-tone] {
   --tone: var(--destination-color);
   --tone-on: var(--white);
 }
-.app-shell.editorial-style :is(.section-switch-entry, .plan-entry, .plan-tool)[data-tone] {
+.app-shell.editorial-style :is(.section-switch-entry, .plan-entry)[data-tone] {
   --tone: var(--destination-bright);
   --tone-on: var(--slate-950);
 }
@@ -1362,23 +1233,10 @@ rjs-plan-cards {
 
 /* Le haut du badge suit les capitales, pas le centre du bloc titre + description.
    Le navigateur retire uniquement l’espace typographique au-dessus du texte. */
-:is(
-  .plan-zone-head,
-  .plan-section-head,
-  .plan-title-with-mark,
-  .plan-entry,
-  .plan-tool,
-  .section-switch-entry
-) {
+:is(.plan-zone-head, .plan-title-with-mark, .plan-entry, .section-switch-entry) {
   align-items: flex-start;
 }
-:is(
-  .plan-zone-head :is(h2, h3),
-  .plan-section-head h2,
-  .plan-title-text,
-  .plan-entry-text strong,
-  .section-switch-text strong
-) {
+:is(.plan-zone-head :is(h2, h3), .plan-title-text, .plan-entry-text strong, .section-switch-text strong) {
   text-box-trim: trim-start;
   text-box-edge: cap alphabetic;
 }
@@ -1406,27 +1264,16 @@ rjs-plan-cards {
 /* La lecture progressive est limitée à l'application BPM. */
 .bpm-reading .app-hero { padding: var(--ecart-24); gap: var(--ecart-16); }
 .bpm-reading .app-hero h1 { font-size: scaled(var(--fs-3xl)); }
-.bpm-reading .app-hero-copy { gap: var(--ecart-8); }
 .bpm-disclosure { display: block; }
 .bpm-disclosure > summary { cursor: pointer; color: var(--ink); }
-.bpm-disclosure > summary :is(h2,h3) { display: inline; font-size: scaled(var(--fs-lg)); }
+.bpm-disclosure > summary :is(h2, h3) { display: inline; font-size: scaled(var(--fs-lg)); }
 .bpm-disclosure > summary:focus-visible { outline: var(--trait-3) solid var(--app-accent); outline-offset: var(--decalage-2); }
 .bpm-disclosure-body { display: grid; gap: var(--ecart-16); margin-top: var(--ecart-16); }
 
 .plan-zone-home.bpm-reading .plan-overview-start { order: -1; }
-@media (max-width: $rupture-1000) {
-}
-
-.bpm-project.bpm-disclosure:not([open]) { padding: var(--ecart-16); }
-.bpm-project.bpm-disclosure > summary::after { content: '▾'; color: var(--app-accent); }
-.bpm-project.bpm-disclosure[open] > summary::after { content: '▴'; }
 
 @media (max-width: $rupture-600) {
-  .app-shell:has(.bpm-reading) .topbar:has(.period-lens) .topbar-actions { flex-basis: var(--part-100); flex-wrap: wrap; gap: var(--ecart-8); min-width: 0; }
-  .app-shell:has(.bpm-reading) .period-lens { flex-wrap: wrap; gap: var(--ecart-2); }
   .bpm-reading .app-hero { padding: var(--ecart-16); }
   .bpm-reading .app-hero h1 { font-size: scaled(var(--fs-2xl)); }
   .bpm-reading .app-hero-actions { gap: var(--ecart-8); }
-  .app-shell .bpm-reading .bpm-ring { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-  .app-shell .bpm-reading .bpm-ring svg { display: none; }
 }

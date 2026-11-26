@@ -86,14 +86,6 @@
   font-weight: var(--fw-medium);
   letter-spacing: calc(-1 * var(--lettrage-0-04em));
 }
-.section-title {
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: scaled(var(--fs-heading));
-  font-weight: var(--fw-regular);
-  line-height: var(--lh-tight);
-}
 .status-heading {
   font-family: var(--font-serif);
   font-size: scaled(var(--fs-2xl));
@@ -186,26 +178,6 @@
 .text-link span {
   font-size: scaled(var(--fs-lg));
   font-weight: var(--fw-regular);
-}
-.danger-link {
-  min-height: var(--dim-36);
-  padding: var(--ecart-8) var(--ecart-12);
-  border: var(--trait-1) solid var(--urgent-surface);
-  border-radius: var(--radius-sm);
-  background: var(--urgent-surface);
-  color: var(--urgent-ink);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-bold);
-}
-.danger-link:hover:not(:disabled) {
-  text-decoration: underline;
-  text-underline-offset: var(--decalage-0-2em);
-  box-shadow: 0 var(--ombre-2) 0
-    color-mix(in srgb, var(--urgent-surface) var(--part-70), var(--ink));
-}
-.danger-link:active:not(:disabled) {
-  box-shadow: inset 0 var(--ombre-2) var(--ombre-4)
-    color-mix(in srgb, var(--ink) var(--part-18), transparent);
 }
 
 /* Urgences : une échéance signalée devient une pastille, pleine si elle est dépassée, teintée si
@@ -352,9 +324,6 @@
   border-radius: inherit;
   background: var(--progress-fill);
   transition: width var(--duree-200) ease;
-}
-.progress-track.is-overrun > span {
-  background: var(--progress-overrun);
 }
 
 /* Carte : surface claire posée sur la page, avec la même bordure, le même survol et le même

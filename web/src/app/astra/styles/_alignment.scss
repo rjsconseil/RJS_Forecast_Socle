@@ -1,21 +1,19 @@
-// BPM-Astra · bas des blocs alignés
+/* BPM-Astra · bas des blocs alignés*/
 @use 'sass:list';
 @use 'sass:map';
 @use 'tokens' as *;
 
-// ---------- Bas des blocs alignés ----------
-// Dans une rangée, les blocs ont la même hauteur ; leur dernière ligne (pied, bouton, valeur, précision)
-// se cale en bas pour finir sur la même ligne que celle des voisins. Une liste prend la hauteur restante.
+/* ---------- Bas des blocs alignés ----------*/
+/* Dans une rangée, les blocs ont la même hauteur ; leur dernière ligne (pied, bouton, valeur, précision)*/
+/* se cale en bas pour finir sur la même ligne que celle des voisins. Une liste prend la hauteur restante.*/
 #{$frame} {
-  :is(.astra-marks, .astra-cycle-grid, .astra-composition-legend) > div,
-  .astra-screen :is(.vision-metrics > article, dl.amounts > div, .pm-project-facts > *, .envelope-balances dl > div) {
+  :is(.astra-marks, .astra-cycle-grid, .astra-composition-legend) > div, .astra-screen :is(.vision-metrics > article, dl.amounts > div) {
     display: flex; flex-direction: column;
   }
-  :is(.astra-marks, .astra-cycle-grid, .astra-composition-legend) > div > :last-child,
-  .astra-screen :is(.vision-metrics > article, dl.amounts > div, .pm-project-facts > *, .envelope-balances dl > div) > :last-child {
+  :is(.astra-marks, .astra-cycle-grid, .astra-composition-legend) > div > :last-child, .astra-screen :is(.vision-metrics > article, dl.amounts > div) > :last-child {
     margin-top: auto;
   }
-  // Cartes d'Astra : le pied en bas, la liste ou le contenu principal remplit l'espace.
+  /* Cartes d'Astra : le pied en bas, la liste ou le contenu principal remplit l'espace.*/
   .astra-card > :is(.astra-card-foot, .astra-pagination, .astra-actions:last-child) { margin-top: auto; }
   .astra-spending .astra-natures { flex: 1; grid-auto-rows: 1fr; }
   .astra-spending .astra-nature { display: flex; flex-direction: column; dl { margin-top: auto; } }

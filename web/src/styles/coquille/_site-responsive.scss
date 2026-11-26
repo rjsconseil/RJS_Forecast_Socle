@@ -25,23 +25,18 @@
   .main-shell,
   .main-shell main,
   .page,
-  .budget-page,
-  .documentation-layout {
+  .budget-page {
     min-width: 0;
     max-width: var(--part-100);
   }
 
-  .budget-filters input, .budget-filters select, .budget-form-inline input, .budget-form-inline select {
+  .budget-form-inline input, .budget-form-inline select {
     width: var(--part-100);
     max-width: var(--part-100);
   }
 
-  .budget-list-card h4, .budget-section-head h1, .budget-section-head h2, .documentation-article {
+  .budget-list-card h4, .budget-section-head h1, .budget-section-head h2 {
     overflow-wrap: anywhere;
-  }
-
-  .bulk-import-stats {
-    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
   }
 }
 
@@ -85,31 +80,19 @@
     flex-basis: var(--part-100);
   }
 
-  .budget-form-inline label, .budget-filters label {
+  .budget-form-inline label {
     flex: var(--flex-1) var(--flex-1) var(--part-100);
-  }
-
-  .budget-timeline summary {
-    flex-wrap: wrap;
   }
 
   .budget-list-card > div:first-child {
     overflow-wrap: anywhere;
   }
 
-  .reset-overview {
-    padding: var(--ecart-20);
-  }
-
 }
 
 @media (max-width: $rupture-440) {
-  .sidebar-data {
-    display: grid;
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
 
-  .sidebar-data button, .appearance-picker select {
+  .appearance-picker select {
     width: var(--part-100);
   }
 
@@ -120,10 +103,6 @@
   .section-heading {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .bulk-import-stats {
-    grid-template-columns: minmax(0, var(--fr-1));
   }
 
 }

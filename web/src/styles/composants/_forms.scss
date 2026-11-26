@@ -106,7 +106,7 @@
 }
 .editor-form .form-actions,
 .budget-page
-  :is(.budget-form-actions, .bw-manager-config-actions) {
+  :is(.bw-manager-config-actions) {
   position: sticky;
   bottom: calc(-1 * var(--decalage-2));
   z-index: var(--plan-2);
@@ -156,24 +156,16 @@ rjs-form-status {
   background: var(--status-success-surface);
   color: var(--status-success);
 }
-.budget-page :is(.budget-guidance) {
-  border-radius: var(--radius-md);
-  background: var(--app-accent-soft);
-}
-.budget-page :is(.budget-guidance) {
-  border-inline-start: var(--trait-3) solid var(--app-accent);
-}
-.budget-page :is(.bw-panel, .bw-manager-list-panel, .bw-manager-detail-panel) {
+.budget-page :is(.bw-manager-list-panel, .bw-manager-detail-panel) {
   box-shadow: var(--app-panel-shadow);
 }
-.budget-page .bw-manager-config-actions .btn,
-.budget-page .budget-form-actions .btn {
+.budget-page .bw-manager-config-actions .btn {
   white-space: normal;
 }
 
 @media (max-width: $rupture-600) {
   .editor-form .form-actions > button,
-  .budget-page :is(.budget-form-actions, .bw-manager-config-actions) > .btn {
+  .budget-page :is(.bw-manager-config-actions) > .btn {
     flex: var(--flex-1) var(--flex-1) auto;
     min-height: var(--dim-44);
   }
@@ -203,6 +195,4 @@ rjs-form-status {
 }
 .budget-page label:has(> input[type='date'].ng-invalid.ng-touched)::after {
   content: 'Date à vérifier · respecter le début de la période';
-}
-@media (max-width: $rupture-700) {
 }

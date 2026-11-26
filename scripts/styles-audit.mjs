@@ -12,7 +12,11 @@ const code = [...walk(path.join(root, 'web/src/app')).filter((f) => /\.(ts|html)
   ...walk(path.join(root, 'api/src')).filter((f) => f.endsWith('.mjs'))].map((f) => fs.readFileSync(f, 'utf8')).join('\n');
 // Classes posées par les bibliothèques ou construites à l'exécution (préfixe + valeur) : jamais comptées mortes.
 const LIBRARY = /^(cdk-|ng-|mat-)/;
-const alive = (c) => LIBRARY.test(c) || code.includes(c) || code.includes(c.replace(/-[^-]+$/, '-'));
+// Une classe vit si le code la nomme telle quelle (mot entier) ou la construit à partir d'un préfixe
+// (`'tone-' + x`, `tone-${x}`, `tone-{{ x }}`). Une simple ressemblance de préfixe ne suffit plus.
+const TOKENS = new Set(code.match(/[A-Za-z][\w-]*/g));
+const BUILT = [...code.matchAll(/([a-z][\w-]*-)(?:'\s*\+|"\s*\+|\$\{|\{\{)/g)].map((m) => m[1]);
+const alive = (c) => LIBRARY.test(c) || TOKENS.has(c) || BUILT.some((p) => c.startsWith(p));
 const all = [...walk(path.join(root, 'web/src/styles')), ...walk(path.join(root, 'web/src/app'))].filter((f) => f.endsWith('.scss'));
 // Copies faites par le système de fichiers (« nom 2.scss ») : jamais chargées, signalées à part.
 const copies = all.filter((f) => / \d+\.scss$/.test(f));
@@ -36,8 +40,8 @@ function forcedOf(file, text) {
 }
 const sheets = all.filter((f) => !copies.includes(f));
 const rows = sheets.map((f) => {
-  const s = fs.readFileSync(f, 'utf8').replace(/meta\.load-css\([^)]*\)/g, '').replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/url\([^)]*\)/g, '');
-  const classes = [...new Set([...s.matchAll(/\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]))];
+  const s = fs.readFileSync(f, 'utf8').replace(/meta\.load-css\([^)]*\)/g, '').replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/url\([^)]*\)/g, '').replace(/#\{[^}]*\}/g, '').replace(/:not\([^)]*\)/g, ''); // une classe absente sous :not() ne vise rien et ne coûte rien
+  const classes = [...new Set([...s.matchAll(/(?<![\w$-])\.([a-zA-Z][\w-]*)/g)].map((m) => m[1]))];
   return { file: path.relative(root, f), dead: classes.filter((c) => !alive(c)), important: (s.match(/!important/g) ?? []).length, forced: forcedOf(f, s), lines: s.split('\n').length };
 });
 const dead = rows.filter((r) => r.dead.length);

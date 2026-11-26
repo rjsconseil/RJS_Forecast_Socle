@@ -49,9 +49,4 @@
     overflow: visible;
   }
   .calendar-agenda-item { max-width: none; }
-  .calendar-elements {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
-    gap: 12px;
-  }
 }
