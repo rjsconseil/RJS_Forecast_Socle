@@ -562,3 +562,41 @@ expirés, d'une autre clé ; profil d'un autre inaccessible ; limitation ; déco
   même partition en même temps, comptes) ; la base réelle reprise dans PostgreSQL donne des réponses identiques
   octet pour octet à SQLite (synthèse, registre, clôture, projets, bilans, annuaire) et le test d'interface Astra passe.
 
+
+## 18. Intégration continue, durcissement, styles et écrans — 26 novembre 2026
+
+### 18.1 Intégration continue (`.github/workflows/ci.yml`)
+
+À chaque PR et à chaque poussée sur `main`, deux tâches. Côté API, sur un service postgres:16 (`SOCLE_PG_URL`) :
+`npm test` (les tests `sgbd` compris), `npm run api:check`, `npm run styles:audit`. Côté site : `ng test` et le build
+de production.
+
+### 18.2 Durcissement du serveur (`api/src/http.mjs`, `server.mjs`)
+
+- Corps de requête limité à `SOCLE_BODY_LIMIT` octets (1 Mo par défaut), refusé en `413 PAYLOAD_TOO_LARGE`, que la
+  taille soit annoncée ou non.
+- En-têtes sur chaque réponse : `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`,
+  `Cross-Origin-Resource-Policy: same-origin`, CSP `default-src 'none'; frame-ancestors 'none'`.
+- Adresse d'écoute `SOCLE_HOST` : le poste seul (`localhost`) en mode local, toutes les interfaces en connexion exigée.
+- Vérifié par `api/test/http-hardening.test.mjs`.
+
+### 18.3 Styles : règles mortes retirées, audit strict
+
+Environ 4 400 lignes retirées : ce sont des sélecteurs, et des entrées de listes `:is()`, qui ne nommaient que des
+classes jamais écrites dans le code. Les classes sous `:not()` sont gardées, parce qu'elles portent du poids. Une liste
+`:is()` raccourcie garde la spécificité de la liste d'origine : sa spécificité est celle de sa plus lourde entrée.
+Les styles calculés sont identiques, élément par élément, sur 48 vues en 1440 et 375 px
+(`e2e/style-fingerprint.mjs save|compare`).
+
+`scripts/styles-audit.mjs` est maintenant strict. Une classe n'y est vivante que si elle apparaît au mot près dans le
+code, ou si elle commence par un préfixe construit (`'x-' +`, `${`, `{{`). L'audit échoue sur toute classe morte et
+sur toute déclaration toujours écrasée.
+
+### 18.4 Écrans
+
+- Clôture : les chiffres clés des sections passent dans `bpm/life/closing-boxes.ts`, des fonctions pures testées
+  seules. `closing.page.ts` passe de 600 à 443 lignes.
+- Projet et calendrier : `project-write-flow.ts`, `project-focus.ts`, `project-task-funding.ts` et `calendar-peeks.ts`
+  sont sortis des écrans.
+- Le parcours de clôture rejoint les réponses de recette (`npm run fixtures:web`). `closing.contract.spec.ts` teste
+  l'écran sur la vraie réponse de l'API.
