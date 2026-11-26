@@ -75,3 +75,37 @@ test('sgbd · comptes : e-mail unique sur tout le site, connexion', { skip }, as
   await rejects(socle.modules.users.register({ requestKey: key('i'), email: 'a@example.org', password: 'mot de passe solide', label: 'B', userType: 'individuel' }), 'UNIQUENESS_VIOLATION');
   await socle.close();
 });
+
+test('sgbd · lecture d’une partition en un seul instantané : une écriture intercalée n’est ni vue à moitié ni écrasée', { skip }, async () => {
+  await freshBase();
+  const one = await open();
+  await one.modules.administration.setParameter('bpm.verrouCycleSuivant', { value: false, expectedRevision: 0, note: 'Tests' });
+  const { ctx } = await camille(one);
+  const two = await open();
+  await op(two, ctx, { direction: 'charge', amount: 1, date: '2026-11-01' });
+  // Pendant que « one » relit la partition (révision déjà lue, objets pas encore), « two » écrit.
+  let intercalated = 0;
+  let seen = null;
+  const engine = one.store.engine;
+  const read = engine.readPartition.bind(engine);
+  engine.readPartition = async (key) => {
+    const part = await read(key);
+    if (key === ctx.userId && intercalated === 1 && !seen) seen = part;
+    return part;
+  };
+  engine.afterRevisionRead = async (key) => {
+    if (key !== ctx.userId || intercalated) return;
+    intercalated = 1;
+    await op(two, ctx, { direction: 'charge', amount: 2, date: '2026-11-01' });
+  };
+  await op(one, ctx, { direction: 'charge', amount: 3, date: '2026-11-01' });
+  engine.afterRevisionRead = null;
+  assert.equal(intercalated, 1, 'une écriture a bien été intercalée pendant la lecture');
+  assert.ok(seen, 'la lecture intercalée a été observée');
+  // L'instantané est cohérent : sa révision est celle de ses objets (l'écriture intercalée n'y est pas).
+  assert.equal(Object.keys(seen.collections.operations).length, 1);
+  const total = await two.store.within(ctx.userId, () => count(two.state, 'operations'));
+  assert.equal(total, 3, 'aucune écriture n’a été écrasée');
+  await one.close();
+  await two.close();
+});

@@ -33,6 +33,8 @@ export class SgbdEngine {
     this.url = url;
     this.pool = null;
     this.tables = new Map();
+    /** Tests seulement : appelé entre la lecture de la révision et celle des objets d'une partition. */
+    this.afterRevisionRead = /** @type {null | ((key: string) => Promise<void>)} */ (null);
   }
 
   get sync() { return false; }
@@ -95,22 +97,38 @@ export class SgbdEngine {
     return new Map(rows.map((r) => [r.user_id, { revision: Number(r.revision), updatedAt: r.updated_at }]));
   }
 
-  /** Une partition en un aller-retour : ses objets de toutes les tables, la fin de son journal, sa révision. */
+  /**
+   * Une partition lue d'un seul instantané : objets, révision et fin du journal dans UNE transaction en lecture seule
+   * (REPEATABLE READ) sur UNE connexion. Sans cela, une écriture d'un autre serveur entre deux requêtes donnerait des
+   * objets anciens sous une révision nouvelle : une écriture calculée dessus passerait le contrôle de révision et
+   * écraserait l'autre sans erreur (faiblesse n° 2 du rapport « architecture et faiblesses »).
+   */
   async readPartition(key) {
     const user = userParam(key);
     const collections = Object.fromEntries([...this.tables.keys()].map((c) => [c, {}]));
     const where = user === null ? 'user_id IS NULL' : 'user_id = $1';
     const params = user === null ? [] : [user];
     const union = [...this.tables].map(([c, t]) => `SELECT ${pgText(c)} AS c, id, data, ord FROM ${q(t)} WHERE ${where}`).join(' UNION ALL ');
-    const [objects, rev, journal, scalars] = await Promise.all([
-      union ? this.pool.query(`SELECT c, id, data FROM (${union}) x ORDER BY c, ord`, params) : { rows: [] },
-      this.pool.query('SELECT revision, updated_at, journal_from FROM "SY_partitions" WHERE user_id = $1', [key]),
-      this.pool.query(`SELECT data FROM (SELECT seq, data FROM "SY_journal" WHERE ${user === null ? 'user_id IS NULL' : 'user_id = $1'}
+    const client = await this.pool.connect();
+    let rev, objects, journal, scalars;
+    try {
+      await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
+      // La révision d'abord : l'instantané est pris à la première requête, toutes les suivantes le voient.
+      rev = await client.query('SELECT revision, updated_at, journal_from FROM "SY_partitions" WHERE user_id = $1', [key]);
+      if (this.afterRevisionRead) await this.afterRevisionRead(key);
+      objects = union ? await client.query(`SELECT c, id, data FROM (${union}) x ORDER BY c, ord`, params) : { rows: [] };
+      journal = await client.query(`SELECT data FROM (SELECT seq, data FROM "SY_journal" WHERE ${user === null ? 'user_id IS NULL' : 'user_id = $1'}
         AND seq > (SELECT COALESCE((SELECT journal_from FROM "SY_partitions" WHERE user_id = ${user === null ? "''" : '$1'}), 0))
-        ORDER BY seq DESC LIMIT ${JOURNAL_WINDOW}) j ORDER BY seq`, params),
-      key === SYSTEM_PARTITION ? this.pool.query('SELECT key, value FROM "SY_store"') : { rows: [] },
-    ]);
-    for (const r of objects.rows) (collections[r.c] ??= {})[r.id] = JSON.parse(r.data);
+        ORDER BY seq DESC LIMIT ${JOURNAL_WINDOW}) j ORDER BY seq`, params);
+      scalars = key === SYSTEM_PARTITION ? await client.query('SELECT key, value FROM "SY_store"') : { rows: [] };
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
+    for (const r of objects.rows) (collections[r.c] ??= {})[r.id] = r.data && typeof r.data === 'object' ? r.data : JSON.parse(r.data);
     const sc = {};
     for (const r of scalars.rows) if (!r.key.startsWith('@') && !PARTITION_SCALARS.has(r.key)) sc[r.key] = JSON.parse(r.value);
     const p = rev.rows[0];
