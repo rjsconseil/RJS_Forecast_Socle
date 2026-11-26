@@ -43,11 +43,12 @@ async function waitFor(url, ms = 20000) {
 try {
   const apiPort = await freePort();
   const sitePort = await freePort();
-  start(['api/src/server.mjs'], { J1_API_PORT: String(apiPort), J1_DATA_FILE: join(dir, 'e2e.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local' });
-  start(['scripts/site-server.mjs'], { J1_API_PORT: String(apiPort), SOCLE_SITE_PORT: String(sitePort) });
-  const site = `http://localhost:${sitePort}`;
+  start(['api/src/server.mjs'], { J1_API_PORT: String(apiPort), J1_DATA_FILE: join(dir, 'e2e.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' });
+  start(['scripts/site-server.mjs'], { J1_API_PORT: String(apiPort), SOCLE_SITE_PORT: String(sitePort), SOCLE_SITE_HOST: '127.0.0.1' });
+  // Adresses en IPv4 explicite : sur les machines de CI, « localhost » peut désigner ::1, où rien n'écoute.
+  const site = `http://127.0.0.1:${sitePort}`;
   await waitFor(`${site}/api/health`);
-  await run('Jeux d’essai', ['api/scripts/seed.mjs'], { J1_API_PORT: String(apiPort) });
+  await run('Jeux d’essai', ['api/scripts/seed.mjs'], { J1_API_URL: `http://127.0.0.1:${apiPort}` });
   // Le site envoie ses en-têtes de sécurité, et l'API refuse une écriture venue d'un autre site à travers le proxy.
   const page = await fetch(site + '/');
   assert.match(page.headers.get('content-security-policy') ?? '', /frame-ancestors 'none'/, 'CSP du site absente');
