@@ -17,6 +17,8 @@ const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.ge
 const mainRoutes: Routes = [
   // Connexion et inscription (connexion exigée par le serveur, SOCLE_AUTH=required).
   { path: 'connexion', title: 'Connexion · RJS Forecast', loadComponent: () => import('./core/login.page').then(m => m.LoginPage) },
+  // Mon compte : adresse e-mail et mot de passe du profil actif (et déconnexion de toutes les sessions).
+  { path: 'compte', title: 'Mon compte · RJS Forecast', loadComponent: () => import('./core/account.page').then(m => m.AccountPage) },
   { path: 'navigation', canDeactivate: [navigationSettingsGuard], title: 'Navigation system — RJS Forecast', loadComponent: () => import('./navigation/navigation-settings.page').then(m => m.NavigationSettingsPage) },
   // L'application par défaut (la première du registre) s'ouvre à la racine, en gardant la lecture.
   { path: '', pathMatch: 'full', redirectTo: ({ queryParams }) => inject(Router).createUrlTree([defaultApplicationHome()], { queryParams }) },
