@@ -53,13 +53,20 @@
     [data-bpm-value-tone='danger'] { --bpm-value-ink: var(--status-danger); }
     [data-bpm-value-tone='warning'] { --bpm-value-ink: var(--status-warning); }
     [data-bpm-value-tone='info'] { --bpm-value-ink: var(--status-info); }
+    // Sens du flux devant un montant : la même flèche dessinée que dans les tuiles (tracé fin, bouts arrondis),
+    // vers le haut pour une entrée, vers le bas pour une sortie ; le caractère reste lu par les aides techniques.
     [data-bpm-amount][data-bpm-arrow]::before {
-      content: attr(data-bpm-arrow) / '';
-      display: inline;
+      content: '' / attr(data-bpm-arrow);
+      display: inline-block;
+      inline-size: .82em;
+      block-size: .82em;
       margin-inline-end: .3em;
-      font-weight: 750;
-      color: var(--bpm-flow-ink);
+      vertical-align: -.06em;
+      background: var(--bpm-flow-ink);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
     }
+    [data-bpm-amount][data-bpm-flow='expense'][data-bpm-arrow]::before { transform: rotate(180deg); }
     [data-bpm-flow='income'] { --bpm-flow-ink: var(--status-success); }
     [data-bpm-flow='expense'] { --bpm-flow-ink: var(--status-danger); }
 
@@ -141,8 +148,8 @@
     .metric-tile .metric-value[data-value-tone='danger'] { color: var(--status-danger); }
     .metric-tile .metric-value[data-value-tone='warning'] { color: var(--status-warning); }
     .metric-tile .metric-value:is([data-value-tone='accent'], [data-value-tone='neutral']) { color: var(--status-info); }
-    .metric-tile[data-symbol='income'] > .metric-symbol { color: var(--status-success); background: var(--status-success-surface); }
-    .metric-tile[data-symbol='expense'] > .metric-symbol { color: var(--status-danger); background: var(--status-danger-surface); }
+    .metric-tile[data-symbol='income'] > .metric-symbol { color: var(--status-success); background: var(--status-success-surface); border-color: color-mix(in srgb, var(--status-success) 30%, transparent); }
+    .metric-tile[data-symbol='expense'] > .metric-symbol { color: var(--status-danger); background: var(--status-danger-surface); border-color: color-mix(in srgb, var(--status-danger) 30%, transparent); }
     // Les tuiles compactes masquent leur grand pictogramme : le sens reste près du chiffre.
     .metric-tiles[data-layout='last-wide'] .metric-tile[data-symbol='income'] .metric-value::before {
       content: '↑' / ''; color: var(--status-success); margin-inline-end: .3em;
