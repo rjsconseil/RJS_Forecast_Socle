@@ -7,7 +7,7 @@ import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents } from '../..
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { bpmLoader, BpmRefresh, BpmState, newRequestKey } from '../ui';
 import { BpmDrafts } from '../ui/drafts';
-import { localToday } from '../../calendar/calendar-dates';
+import { localToday, shiftDate } from '../../calendar/calendar-dates';
 
 type RecCadence = Exclude<Cadence, 'once'>;
 const CADENCE_LABEL: Record<RecCadence, string> = { weekly: 'Hebdomadaire', monthly: 'Mensuelle', yearly: 'Annuelle' };
@@ -104,7 +104,7 @@ const toCents = (raw: string) => {
                     <tbody>
                       @for (r of rowsOf(dir); track r.id) {
                         <tr [class.is-leaving]="isLeaving(r)">
-                          <th scope="row">{{ r.orig.label }}@if (isLeaving(r)) { <span class="chip warn">Retirée au prochain cycle</span> }</th>
+                          <th scope="row">{{ r.orig.label }}@if (isLeaving(r)) { <span class="chip warn">Retirée</span> }</th>
                           <td>{{ cadenceLabel[r.orig.cadence] }}</td>
                           <td class="num">{{ r.orig.amountCents | cents }}</td>
                           <td class="num"><strong [bpmAmount]="r.averageCents" [bpmFlow]="r.direction">{{ r.averageCents | cents }}</strong></td>
@@ -156,7 +156,7 @@ const toCents = (raw: string) => {
                       <div role="cell" class="bm-row-note">
                         <span>Moyenne / mois : <strong class="num" [bpmAmount]="r.averageCents" [bpmFlow]="r.direction">{{ r.averageCents | cents }}</strong></span>
                         @if (isLeaving(r)) {
-                          <span class="chip warn">Retirée au prochain cycle · dernière échéance le {{ r.endDate! | shortDate }}</span>
+                          <span class="chip warn">Retirée · dernière échéance le {{ r.endDate! | shortDate }}</span>
                           <button type="button" class="btn btn-secondary small" (click)="keepLine(r)" [disabled]="busy() || removing() === r.id">Annuler la suppression</button>
                         }
                         @if (confirmRemove() === r.id) {
@@ -266,8 +266,6 @@ export class BpmActBudgetType {
   /** Ligne dont la suppression attend sa confirmation, puis ligne en cours de suppression. */
   protected confirmRemove = signal<string | null>(null);
   protected removing = signal<string | null>(null);
-  /** Dernier jour du cycle budgétaire en cours : une ligne supprimée y reste jusque-là. */
-  private cycleEnd = computed(() => this.bt.data()?.context.period?.end ?? null);
 
   readonly pendingChanges = computed(() => this.pendingCount());
   readonly saving = computed(() => this.busy());
@@ -351,19 +349,17 @@ export class BpmActBudgetType {
     this.news.update((ns) => [...ns, { key: newRequestKey('budget-type'), direction, label: '', amount: '', cadence: 'monthly', firstDate: localToday(), center: this.centersOf(direction)[0]?.ref ?? '', error: null }]);
   }
 
-  /** Une ligne supprimée reste jusqu'à la fin du cycle en cours, puis ne revient plus. */
+  /** Une ligne supprimée a une dernière échéance : elle ne revient plus (elle quitte la liste le lendemain). */
   protected isLeaving(r: RowDraft) {
-    const end = this.cycleEnd();
-    return !!r.endDate && (!end || r.endDate <= end);
+    return !!r.endDate;
   }
-  /** La ligne n'a encore aucune échéance dans le cycle en cours : elle peut partir tout de suite. */
-  private startsLater(r: RowDraft) {
-    return r.firstDate > (this.cycleEnd() ?? localToday());
+  /** La ligne n'a encore eu aucune échéance (première date aujourd'hui ou plus tard) : elle peut être retirée entièrement. */
+  private notStarted(r: RowDraft) {
+    return r.firstDate >= localToday();
   }
   protected removalNotice(r: RowDraft) {
-    if (this.startsLater(r)) return `« ${r.orig.label} » n'a encore aucune échéance : elle sera retirée du budget récurrent dès maintenant.`;
-    const end = this.cycleEnd();
-    return `« ${r.orig.label} » reste dans le cycle en cours${end ? ` jusqu'au ${new Date(end + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}` : ''}. Le changement sera pris en compte au prochain cycle budgétaire : elle n'y reviendra plus.`;
+    if (this.notStarted(r)) return `« ${r.orig.label} » n'a encore aucune échéance : elle sera retirée du budget récurrent dès maintenant.`;
+    return `« ${r.orig.label} » sera retirée dès maintenant : ses prochaines échéances disparaissent du cycle en cours et des suivants. Ce qui a déjà été réglé reste enregistré.`;
   }
   protected askRemove(id: string) {
     this.message.set(null);
@@ -371,24 +367,31 @@ export class BpmActBudgetType {
   }
 
   /**
-   * Supprime une ligne du budget récurrent. Elle garde ses échéances du cycle en cours (dernière échéance à la
-   * fin du cycle) et disparaît au cycle suivant ; une ligne qui ne commence qu'après le cycle part tout de suite.
+   * Supprime une ligne du budget récurrent, tout de suite : sa dernière échéance devient la veille (aucune échéance
+   * à venir, ni dans le cycle en cours ni après). Ce qui est réglé reste : si une échéance a été réglée en avance,
+   * la fin se pose sur elle. Une ligne qui n'a encore eu aucune échéance est retirée entièrement.
    */
   async removeLine(r: RowDraft) {
     if (this.removing()) return;
     this.removing.set(r.id);
-    const later = this.startsLater(r);
+    const end = async (endDate: string) => {
+      const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: r.revision, endDate });
+      this.patch(r.id, { endDate: recurrence.endDate, revision: recurrence.revision, error: null });
+    };
     try {
-      if (later) {
+      if (this.notStarted(r)) {
         await this.bpm.cancelRecurrence(r.id, r.revision, 'Supprimée depuis le budget récurrent');
       } else {
-        const end = this.cycleEnd() ?? localToday();
-        const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: r.revision, endDate: end });
-        this.patch(r.id, { endDate: recurrence.endDate, revision: recurrence.revision, error: null });
+        try {
+          await end(shiftDate(localToday(), -1));
+        } catch (e) {
+          // Une échéance déjà réglée après la veille : la dernière échéance devient celle-là.
+          const lastSettled = toApiError(e).body.details?.['lastSettled'];
+          if (typeof lastSettled !== 'string') throw e;
+          await end(lastSettled);
+        }
       }
-      this.message.set(later
-        ? `« ${r.orig.label} » est retirée du budget récurrent.`
-        : `« ${r.orig.label} » est supprimée : le changement sera pris en compte au prochain cycle budgétaire.`);
+      this.message.set(`« ${r.orig.label} » est retirée du budget récurrent : ses prochaines échéances ne sont plus prévues.`);
       this.confirmRemove.set(null);
       this.refresh.bump();
     } catch (e) {

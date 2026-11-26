@@ -648,12 +648,19 @@ export default {
           const firstDate = patch.firstDate ?? r.firstDate;
           const endDate = 'endDate' in patch ? patch.endDate : r.endDate;
           if (endDate && endDate < firstDate) fail('VALIDATION', 'La fin ne peut pas précéder la première date.', { field: 'endDate' });
+          // Une fin posée garde tout ce qui a eu lieu : aucune échéance réglée après la dernière échéance prévue.
+          // Les échéances encore attendues au-delà (prévisions modifiées, matérialisées) tombent avec la définition.
+          const beyond = patch.endDate ? settlements.filter((o) => o.occurrenceDate && o.occurrenceDate > patch.endDate) : [];
+          const settledBeyond = beyond.filter((o) => o.status === 'realized').map((o) => o.occurrenceDate).sort();
+          if (settledBeyond.length)
+            fail('VALIDATION', `Une échéance du ${settledBeyond.at(-1)} est déjà réglée : la dernière échéance ne peut pas la précéder.`, { field: 'endDate', lastSettled: settledBeyond.at(-1) });
           if ('costCenterRef' in input) Object.assign(patch, costCenterFields(tx.draft, tx.userId, input.costCenterRef, r.direction));
           Object.assign(patch, categoryPatch(tx.draft, tx.userId, r, input, { direction: r.direction, ...patch }));
           if ('taskId' in input) patch.taskId = taskFor(tx.draft, tx.userId, tx.draft.budgets[r.budgetId], input.taskId);
           // Occurrences touchées : celles de la définition avant et après la modification.
           definitionGuard(tx.draft, r, firstDate < r.firstDate ? firstDate : r.firstDate, endDate == null || r.endDate == null ? null : endDate > r.endDate ? endDate : r.endDate, true);
           om.update(tx, r, patch);
+          for (const o of beyond) if (o.status === 'planned') om.update(tx, o, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: 'Après la dernière échéance de la définition', closedAt: tx.now, closedOn: today() });
           return { recurrence: r, scope: { appliesTo: 'occurrences encore attendues', settledUntouched: settlements.length } };
       },
 

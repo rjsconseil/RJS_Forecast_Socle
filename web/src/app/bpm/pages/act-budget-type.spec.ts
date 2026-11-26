@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { BpmApi } from '../data/bpm-api.service';
+import { ApiError } from '../../core/api.service';
 import { Recurrence } from '../data/bpm-models';
 import { BpmActBudgetType } from './act-budget-type';
+import { localToday, shiftDate } from '../../calendar/calendar-dates';
 
 const line = (id: string, label: string, firstDate: string, endDate: string | null = null): Recurrence => ({
   id, budgetId: 'bud_vie', budgetName: 'Projet de vie', direction: 'charge', directionLabel: 'Charge', label,
@@ -16,7 +18,8 @@ const context = {
   calculationDate: '2026-11-22', revision: 1, unit: 'centimes (EUR)',
 };
 
-// Chaque ligne du budget récurrent se supprime par le bouton à sa droite ; le changement vaut au prochain cycle.
+// Chaque ligne du budget récurrent se supprime par le bouton à sa droite ; la suppression vaut tout de suite
+// (dernière échéance la veille) : ce qui est réglé reste, les échéances à venir disparaissent.
 describe('budget récurrent · suppression d’une ligne', () => {
   let lines: Recurrence[];
   let bpm: { budgetType: ReturnType<typeof vi.fn>; costCenters: ReturnType<typeof vi.fn>; updateRecurrence: ReturnType<typeof vi.fn>; cancelRecurrence: ReturnType<typeof vi.fn> };
@@ -53,7 +56,7 @@ describe('budget récurrent · suppression d’une ligne', () => {
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: BpmApi, useValue: bpm }] });
   });
 
-  it('chaque ligne a son bouton de suppression à droite ; la ligne reste jusqu’à la fin du cycle en cours', async () => {
+  it('chaque ligne a son bouton de suppression à droite ; la suppression vaut tout de suite (fin la veille)', async () => {
     const { dom, row, button, settle, edit } = await create();
     await edit();
     expect(dom.querySelectorAll('.bm-row:not(.bm-row-head) .bm-row-del .bm-del')).toHaveLength(2);
@@ -61,14 +64,14 @@ describe('budget récurrent · suppression d’une ligne', () => {
 
     row('Loyer').querySelector<HTMLButtonElement>('.bm-del')!.click();
     await settle();
-    expect(row('Loyer').querySelector('.bm-confirm')!.textContent).toContain('pris en compte au prochain cycle budgétaire');
+    expect(row('Loyer').querySelector('.bm-confirm')!.textContent).toContain('dès maintenant');
     expect(bpm.updateRecurrence).not.toHaveBeenCalled();
 
     button(row('Loyer'), 'Confirmer la suppression').click();
     await settle();
-    expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_loyer', { expectedRevision: 4, endDate: '2026-11-30' });
-    expect(dom.querySelector('.bm-saved')!.textContent).toContain('pris en compte au prochain cycle budgétaire');
-    expect(row('Loyer').textContent).toContain('Retirée au prochain cycle');
+    expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_loyer', { expectedRevision: 4, endDate: shiftDate(localToday(), -1) });
+    expect(dom.querySelector('.bm-saved')!.textContent).toContain('ses prochaines échéances ne sont plus prévues');
+    expect(row('Loyer').textContent).toContain('Retirée · dernière échéance');
     expect(row('Loyer').querySelector('.bm-del')).toBeNull();
 
     button(row('Loyer'), 'Annuler la suppression').click();
@@ -77,7 +80,22 @@ describe('budget récurrent · suppression d’une ligne', () => {
     expect(row('Loyer').querySelector('.bm-del')).not.toBeNull();
   });
 
-  it('une ligne qui ne commence qu’après le cycle en cours est retirée tout de suite', async () => {
+  it('une échéance déjà réglée en avance : la dernière échéance se pose sur elle', async () => {
+    const { row, button, settle, edit } = await create();
+    await edit();
+    const inner = bpm.updateRecurrence.getMockImplementation()!;
+    bpm.updateRecurrence.mockImplementationOnce(async () => { throw new ApiError(422, { code: 'VALIDATION', action: null, message: 'réglée', details: { lastSettled: '2099-01-05' } }); });
+    bpm.updateRecurrence.mockImplementationOnce(inner);
+    row('Loyer').querySelector<HTMLButtonElement>('.bm-del')!.click();
+    await settle();
+    button(row('Loyer'), 'Confirmer la suppression').click();
+    // Deux écritures s'enchaînent (refus, puis fin sur l'échéance réglée) : on laisse tout se poser.
+    for (let i = 0; i < 3; i++) await settle();
+    expect(bpm.updateRecurrence).toHaveBeenLastCalledWith('rec_loyer', { expectedRevision: 4, endDate: '2099-01-05' });
+    expect(row('Loyer').textContent).toContain('Retirée · dernière échéance');
+  });
+
+  it('une ligne qui n’a encore eu aucune échéance est retirée entièrement', async () => {
     const { row, button, settle, dom, edit } = await create();
     await edit();
     row('Salle de sport').querySelector<HTMLButtonElement>('.bm-del')!.click();
