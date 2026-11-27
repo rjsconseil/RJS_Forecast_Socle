@@ -17,7 +17,7 @@ async function setup() {
   return { socle, ctx, project, task, cal: socle.modules.calendar };
 }
 
-const setCalendar = (socle, id, value, expectedRevision = socle.modules.administration.parameter(`calendrier.${id}`).revision) =>
+const setCalendar = (socle, id, value, expectedRevision = socle.modules.administration.parameter(null, `calendrier.${id}`).revision) =>
   socle.modules.administration.setParameter(`calendrier.${id}`, { value, expectedRevision });
 
 test('calendrier : trois calendriers livrés, chacun réglé par son paramètre `calendrier.<id>`', async () => {
@@ -122,7 +122,7 @@ test('calendrier : une configuration invalide est refusée avec son emplacement'
     assert.match(err.message, message);
   }
   await rejects(() => setCalendar(socle, 'noyau', ['pas', 'un', 'objet']), 'VALIDATION');
-  assert.equal(socle.modules.administration.parameter('calendrier.noyau').origin, 'défaut du code');
+  assert.equal(socle.modules.administration.parameter(null, 'calendrier.noyau').origin, 'défaut du code');
   await socle.close();
 });
 
@@ -191,7 +191,7 @@ test('calendrier : répétitions — jour conservé et ramené à la fin du mois
 
 test('calendrier : indisponibilité exclut les données, masquage conserve une source proposée', async () => {
   const { socle, ctx, cal } = await setup();
-  const config = structuredClone(socle.modules.administration.parameter('calendrier.noyau').value);
+  const config = structuredClone(socle.modules.administration.parameter(null, 'calendrier.noyau').value);
   config.elements[0].disponible = false;
   config.elements[1].affiche = false;
   config.interaction = { access: 'hidden', controls: { sources: false }, fields: { status: true }, includeDone: false };
@@ -210,7 +210,7 @@ test('calendrier : indisponibilité exclut les données, masquage conserve une s
 
 test('calendrier : contrat des commandes et sources validé avant sauvegarde', async () => {
   const { socle } = await setup();
-  const original = socle.modules.administration.parameter('calendrier.noyau').value;
+  const original = socle.modules.administration.parameter(null, 'calendrier.noyau').value;
   for (const interaction of [{ access: 'invalid' }, { controls: { sources: 'oui' } }, { fields: { unknown: true } }, { includeDone: 1 }]) {
     assert.throws(() => socle.parameters.validate(socle.state, 'calendrier.noyau', { ...original, interaction }), /attendu|interaction/);
   }

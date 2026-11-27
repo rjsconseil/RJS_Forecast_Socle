@@ -37,7 +37,7 @@ export function createProjectCommands(socle, { lifeBudgetOf, standardOf, taskOf,
       },
       { creation: true },
     );
-    return { ...r, overrun: overrunView(socle.state, socle.state.projectOverruns[r.overrunId]) };
+    return { ...r, overrun: overrunView(socle.stateOf(ctx), socle.stateOf(ctx).projectOverruns[r.overrunId]) };
   }
 
   /**
@@ -72,8 +72,8 @@ export function createProjectCommands(socle, { lifeBudgetOf, standardOf, taskOf,
       }
       return { overrunId: id };
     });
-    const x = socle.state.projectOverruns[id];
-    return { overrun: overrunView(socle.state, x), notice };
+    const x = socle.stateOf(ctx).projectOverruns[id];
+    return { overrun: overrunView(socle.stateOf(ctx), x), notice };
   }
 
   /**

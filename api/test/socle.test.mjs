@@ -519,9 +519,12 @@ test('exports CSV : chaque fichier déclaré s’exporte avec un en-tête', asyn
 
 test('persistance : rechargement depuis le disque à l’identique', async () => {
   const { socle, reload } = await seedLike();
+  // Vue complète et contrôles lus avant le rechargement, qui ferme la première instance.
+  const state = socle.state;
+  const checks = socle.inspector.checks(state);
   const s2 = await reload();
-  assert.deepEqual(s2.state, socle.state);
-  assert.deepEqual(s2.inspector.checks(s2.state), socle.inspector.checks(socle.state));
+  assert.deepEqual(s2.state, state);
+  assert.deepEqual(s2.inspector.checks(s2.state), checks);
 });
 
 // ---------- registre ----------

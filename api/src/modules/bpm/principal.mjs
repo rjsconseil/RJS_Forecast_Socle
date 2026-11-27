@@ -21,8 +21,9 @@ export function principalCommands(socle, kit) {
         applyVision(tx, comp, input);
         return { bpmCompositionId: comp.id };
       });
-      const comp = compositionOf(socle.state, ctx.userId);
-      return { revision: comp.revision, vision: reads.visionOf(comp) };
+      const state = socle.stateOf(ctx);
+      const comp = compositionOf(state, ctx.userId);
+      return { revision: comp.revision, vision: reads.visionOf(state, comp) };
     },
 
     goals: (ctx) => socle.modules.patrimoine.goals(ctx),
@@ -139,7 +140,7 @@ export function principalCommands(socle, kit) {
 
     /** Profil de départ : lignes existantes et suggestions de libellés (sans montant inventé). */
     setupProfile(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const { userId, comp } = requireComposition(state, ctx);
       const user = state.users[userId];
       const centers = socle.modules.budget.costCentersOf(state, userId);
@@ -151,7 +152,7 @@ export function principalCommands(socle, kit) {
         user: { id: user.id, label: user.label, userType: user.userType, userTypeLabel },
         // Des périodes closes figent le jour d'ancrage et la date de début du cycle [P].
         cycleState: { closedPeriods, frozen: closedPeriods > 0 },
-        principal: { budgetId: comp.budgetId, coreProjectId: comp.coreProjectId, project: state.coreProjects[comp.coreProjectId], patrimoine: state.patrimoines[comp.patrimoineId], cycle: cycleOf(state, comp.id), vision: reads.visionOf(comp), revision: comp.revision },
+        principal: { budgetId: comp.budgetId, coreProjectId: comp.coreProjectId, project: state.coreProjects[comp.coreProjectId], patrimoine: state.patrimoines[comp.patrimoineId], cycle: cycleOf(state, comp.id), vision: reads.visionOf(state, comp), revision: comp.revision },
         budgetType: reads.budgetType(ctx),
         suggestions,
         goals: reads.goalsOf(state, userId),
@@ -162,7 +163,7 @@ export function principalCommands(socle, kit) {
     },
 
     dashboard(ctx, { periodKey } = {}) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const { userId, comp, cycle } = requireComposition(state, ctx);
       const user = socle.modules.users.userSummary(userId);
       const mctx = metricContext(state, userId, socle, { periodKey });
@@ -193,7 +194,7 @@ export function principalCommands(socle, kit) {
 
     /** Historique des périodes par pages (C10), du plus récent au plus ancien. */
     periods(ctx, { before, limit } = {}) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const { cycle } = requireComposition(state, ctx);
       const cs = cycleState(state, cycle);
       if (!cs) return { periods: [], total: 0, nextBefore: null };
@@ -202,14 +203,14 @@ export function principalCommands(socle, kit) {
 
     /** Aperçu de clôture (C02) : même contrat que la commande. */
     closingPreview(ctx, periodKey) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       return closingContract(state, om.requireUser(state, ctx), socle, periodKey).preview;
     },
 
     figure: evaluateFigure,
 
     preparation(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       return preparationOf(state, om.requireUser(state, ctx));
     },
 
@@ -255,7 +256,7 @@ export function principalCommands(socle, kit) {
         },
         { creation: true },
       );
-      return { replayed: r.replayed, created: r.created, preparation: preparationOf(socle.state, socle.state.bpmCompositions[r.bpmCompositionId].userId) };
+      return { replayed: r.replayed, created: r.created, preparation: preparationOf(socle.stateOf(ctx), socle.stateOf(ctx).bpmCompositions[r.bpmCompositionId].userId) };
     },
 
     async configureCycle(ctx, input = {}) {
@@ -283,13 +284,13 @@ export function principalCommands(socle, kit) {
       // une clôture refusée (période non terminée, aperçu périmé…) est signalée par la commande elle-même.
       let bilan = null;
       try {
-        const contract = closingContract(socle.state, om.requireUser(socle.state, ctx), socle, input.periodKey);
+        const contract = closingContract(socle.stateOf(ctx), om.requireUser(socle.stateOf(ctx), ctx), socle, input.periodKey);
         bilan = { ...bilans.forClosure(ctx, contract.period, contract.preview.resultCents), recordedAt: today() };
       } catch (err) {
         if (!err.code) throw err;
       }
       const r = await om.command('closePeriod', ctx, input, (tx) => recordClosure(tx, input, bilan), { creation: true });
-      return { replayed: r.replayed, closure: closureView(socle.state.closures[r.closureId]) };
+      return { replayed: r.replayed, closure: closureView(socle.stateOf(ctx).closures[r.closureId]) };
     },
 
     // Parcours de clôture de la page « Clôture du cycle » (voir closing.mjs).
@@ -299,7 +300,7 @@ export function principalCommands(socle, kit) {
     finalizeClosing: (ctx, input) => closing.finalize(ctx, input),
 
     closures(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const { cycle } = requireComposition(state, ctx);
       return closuresOf(state, cycle?.id).reverse().map(closureView);
     },
@@ -331,7 +332,7 @@ export function principalCommands(socle, kit) {
     },
 
     lifeProjects(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       return lifeProjects(state, requireComposition(state, ctx).comp);
     },
   };

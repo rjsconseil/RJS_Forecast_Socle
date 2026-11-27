@@ -326,7 +326,7 @@ export function createProjects(socle, h) {
 
   /** Tableau des projets BPM : projet de vie et projets standards du user, avec leur budget. */
   function overview(ctx) {
-    const state = socle.state;
+    const state = socle.stateOf(ctx);
     const { userId, comp } = h.requireComposition(state, ctx);
     const now = today();
     const { standards, projectIds } = budgetedProjects(state, comp);
@@ -372,7 +372,7 @@ export function createProjects(socle, h) {
 
   /** Tâches des projets du budget de vie, et tâches du noyau qu'on peut y rattacher. */
   function tasksOverview(ctx) {
-    const state = socle.state;
+    const state = socle.stateOf(ctx);
     const { userId, comp } = h.requireComposition(state, ctx);
     const now = today();
     const { standards, projectIds } = budgetedProjects(state, comp);
@@ -391,7 +391,7 @@ export function createProjects(socle, h) {
 
   /** Fiche BPM d'un projet : projet du noyau, budget, tâches, charges, dépassements et contrôles de fin de cycle. */
   function projectDetail(ctx, coreProjectId) {
-    const state = socle.state;
+    const state = socle.stateOf(ctx);
     const { userId, comp } = h.requireComposition(state, ctx);
     const now = today();
     om.owned(state, 'coreProject', coreProjectId, userId);
@@ -500,7 +500,7 @@ export function createProjects(socle, h) {
 
   // ---------- commandes du financement : exécutées par le middleware Budget, rendues avec la fiche du projet ----------
 
-  const detailOf = (ctx, budgetId) => projectDetail(ctx, socle.state.budgets[budgetId].coreProjectId);
+  const detailOf = (ctx, budgetId) => projectDetail(ctx, socle.stateOf(ctx).budgets[budgetId].coreProjectId);
 
   async function requestTaskBudget(ctx, budgetId, taskId, input = {}) {
     return funding().requestTaskBudget(ctx, budgetId, taskId, input);
@@ -545,7 +545,7 @@ export function createProjects(socle, h) {
   /** Fin de cycle : facturation par le middleware, puis contrôles de fin de cycle de chaque projet concerné. */
   async function billOverruns(ctx, input = {}) {
     const r = await funding().billOverruns(ctx, input);
-    const state = socle.state;
+    const state = socle.stateOf(ctx);
     return {
       projects: r.budgetIds.map((id) => {
         const b = state.budgets[id];

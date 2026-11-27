@@ -37,6 +37,8 @@ export const ERROR_HTTP = {
   LAYER_VIOLATION: 500,
   WRITE_OUTSIDE_DOMAIN: 500,
   UNTRACKED_WRITE: 500,
+  // Lecture d'état sans contexte explicite pendant une requête, ou avec le contexte d'un autre user.
+  AMBIENT_STATE: 500,
   DATA_ENGINE_UNAVAILABLE: 503,
   // Authentification (socle/auth.mjs) : connexion requise, identifiants refusés, trop d'essais, droit manquant.
   AUTH_REQUIRED: 401,

@@ -31,11 +31,11 @@ export function structureCommands(socle, kit) {
         this.patchCaps(tx, budgetId, input);
         return { budgetId };
       });
-      return budgetView(socle.state, socle.state.budgets[budgetId]);
+      return budgetView(socle.stateOf(ctx), socle.stateOf(ctx).budgets[budgetId]);
     },
 
     recurrences(ctx, { budgetId } = {}) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const userId = om.requireUser(state, ctx);
       return om
         .list(state, 'recurrence', (r) => r.userId === userId && !r.cancelledAt && (!budgetId || r.budgetId === budgetId))
@@ -55,13 +55,13 @@ export function structureCommands(socle, kit) {
         (tx) => ({ costCenterId: this.buildCostCenter(tx, input).id }),
         { creation: true },
       );
-      return { replayed: r.replayed, costCenters: costCentersOf(socle.state, ctx.userId), costCenterId: r.costCenterId };
+      return { replayed: r.replayed, costCenters: costCentersOf(socle.stateOf(ctx), ctx.userId), costCenterId: r.costCenterId };
     },
 
     // ---------- catégories de dépenses (plafond facultatif, jamais bloquant) ----------
 
     categories(ctx, { archived = false } = {}) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const userId = om.requireUser(state, ctx);
       return categoriesOf(state, userId, { archived }).map((k) => categoryView(state, k));
     },
@@ -82,7 +82,7 @@ export function structureCommands(socle, kit) {
         },
         { creation: true },
       );
-      return { replayed: r.replayed, category: categoryView(socle.state, socle.state.chargeCategories[r.categoryId]) };
+      return { replayed: r.replayed, category: categoryView(socle.stateOf(ctx), socle.stateOf(ctx).chargeCategories[r.categoryId]) };
     },
 
     /** Libellé, plafond (vide = sans plafond) ; `archived: true` retire la catégorie des choix sans toucher aux dépenses. */
@@ -99,13 +99,13 @@ export function structureCommands(socle, kit) {
         om.update(tx, k, patch);
         return { categoryId: id };
       });
-      return { category: categoryView(socle.state, socle.state.chargeCategories[id]) };
+      return { category: categoryView(socle.stateOf(ctx), socle.stateOf(ctx).chargeCategories[id]) };
     },
 
     // ---------- lectures (interfaces de test) ----------
 
     listBudgets(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const userId = om.requireUser(state, ctx);
       return om
         .list(state, 'budget', (b) => b.userId === userId)
@@ -114,13 +114,13 @@ export function structureCommands(socle, kit) {
     },
 
     readBudget(ctx, id) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const b = om.owned(state, 'budget', id, om.requireUser(state, ctx));
       return { budget: budgetView(state, b), operations: operationsOf(state, id) };
     },
 
     costCenters(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       return costCentersOf(state, om.requireUser(state, ctx));
     },
   };

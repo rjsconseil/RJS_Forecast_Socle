@@ -97,9 +97,9 @@ export default {
     }
 
     /** Sources des calendriers que la page hôte propose, offertes au branchement sous un identifiant qualifié. */
-    function foreignOf(id, offer) {
+    function foreignOf(ctx, id, offer) {
       return offer.filter((other) => other !== id).flatMap((other) => {
-        const config = parameters.effective(socle.state, parameterKey(other)).value;
+        const config = parameters.effective(socle.stateOf(ctx), parameterKey(other)).value;
         return config.elements.filter((el) => el.disponible !== false)
           .map((el) => ({ el: { ...el, id: `${other}.${el.id}` }, origin: { calendar: other, label: config.libelle } }));
       });
@@ -121,31 +121,31 @@ export default {
 
     /** Applique une configuration aux données du user du contexte sur une fenêtre. Aucune écriture. */
     function run(ctx, config, q, options = {}) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const userId = om.requireUser(state, ctx);
       const win = windowOf(q);
       const reader = readerFor(state, registry, parameters, userId, today(), providedFor(ctx, win));
       return { window: win, today: reader.today, ...readCalendar(config, reader, win, options) };
     }
 
-    function calendarParameter(id) {
+    function calendarParameter(ctx, id) {
       if (!Object.hasOwn(CALENDARS, id)) fail('NOT_FOUND', 'Calendrier inconnu.', { calendar: id, calendars: Object.keys(CALENDARS) });
-      return parameters.effective(socle.state, parameterKey(id));
+      return parameters.effective(socle.stateOf(ctx), parameterKey(id));
     }
 
     return {
-      list() {
+      list(ctx) {
         return Object.keys(CALENDARS).map((id) => {
-          const p = calendarParameter(id);
+          const p = calendarParameter(ctx, id);
           return { id, label: p.value.libelle, description: p.value.description ?? null, parameter: p.key, revision: p.revision, origin: p.origin };
         });
       },
 
       /** Calendrier nommé : sa configuration est le paramètre `calendrier.<id>`. */
       read(ctx, id, q = {}) {
-        const p = calendarParameter(id);
-        const userId = om.requireUser(socle.state, ctx);
-        const saved = preferenceOf(socle.state, userId, id);
+        const p = calendarParameter(ctx, id);
+        const userId = om.requireUser(socle.stateOf(ctx), ctx);
+        const saved = preferenceOf(socle.stateOf(ctx), userId, id);
         // Sans `sources` dans l'appel : celles que la personne a enregistrées, sinon celles de la configuration.
         // `personnel=non` : lecture de référence (un autre module qui lit le calendrier), sans les choix personnels.
         const personal = q.personnel !== 'non';
@@ -154,7 +154,7 @@ export default {
         return {
           calendar: { id, label: p.value.libelle, description: p.value.description ?? null },
           parameter: { key: p.key, revision: p.revision, origin: p.origin },
-          ...run(ctx, p.value, q, { plugged, foreign: foreignOf(id, offerOf(q)), ownFormats: ownFormatsOf(socle.state, userId) }),
+          ...run(ctx, p.value, q, { plugged, foreign: foreignOf(ctx, id, offerOf(q)), ownFormats: ownFormatsOf(socle.stateOf(ctx), userId) }),
           preferences: { display: saved?.display ?? null, revision: saved?.revision ?? null },
         };
       },
@@ -174,7 +174,7 @@ export default {
 
       /** Préférences de la personne pour ce calendrier : affichage et/ou sources branchées (nul : revenir au défaut). */
       async savePreferences(ctx, id, input = {}) {
-        calendarParameter(id);
+        calendarParameter(ctx, id);
         const patch = {};
         if (input.display !== undefined) patch.display = validateDisplayPreferences(input.display);
         if (input.plugged !== undefined) {
@@ -226,7 +226,7 @@ export default {
   routes(socle) {
     const s = socle.modules.calendar;
     return [
-      ['GET', '/api/calendar', () => s.list()],
+      ['GET', '/api/calendar', ({ ctx }) => s.list(ctx)],
       ['GET', '/api/calendar/catalog', () => s.catalog()],
       ['POST', '/api/calendar/preview', ({ ctx, body }) => s.preview(ctx, body)],
       ['GET', '/api/calendar/:id', ({ ctx, params, query }) => s.read(ctx, params.id, Object.fromEntries(query))],

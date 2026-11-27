@@ -101,7 +101,7 @@ export default {
     }
 
     function readProjectDetail(ctx, id) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const userId = om.requireUser(state, ctx);
       om.owned(state, 'coreProject', id, userId);
       const summary = projectSummary(state, id);
@@ -114,7 +114,7 @@ export default {
     }
 
     function readTask(ctx, id) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       return taskView(state, om.owned(state, 'task', id, om.requireUser(state, ctx)));
     }
 
@@ -150,7 +150,7 @@ export default {
       });
       const view = readTask(ctx, id);
       const affected = [...new Set([before, view.task.projectId].filter(Boolean))];
-      return { written: r.written, ...view, affectedProjects: affected.map((pid) => projectSummary(socle.state, pid)), effects: r.effects ?? [] };
+      return { written: r.written, ...view, affectedProjects: affected.map((pid) => projectSummary(socle.stateOf(ctx), pid)), effects: r.effects ?? [] };
     }
 
     return {
@@ -231,7 +231,7 @@ export default {
       },
 
       listProjects(ctx) {
-        const state = socle.state;
+        const state = socle.stateOf(ctx);
         const userId = om.requireUser(state, ctx);
         return om
           .list(state, 'coreProject', (p) => p.userId === userId)
@@ -240,7 +240,7 @@ export default {
       },
 
       listTasks(ctx) {
-        const state = socle.state;
+        const state = socle.stateOf(ctx);
         const userId = om.requireUser(state, ctx);
         return om
           .list(state, 'task', (t) => t.userId === userId)

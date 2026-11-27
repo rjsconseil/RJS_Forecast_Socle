@@ -141,9 +141,9 @@ test('métrique administrée : la nouvelle formule change la valeur, la révisio
   assert.equal(r.parameter.isDefault, false);
   // Les métriques dépendantes suivent.
   assert.equal(fig(socle, ctx, 'bpm.patrimoineFinPeriode').value, 12000 + 1650);
-  assert.equal(admin.metric('bpm.resultatPeriode').parameter.history.length, 1);
-  assert.deepEqual(admin.metric('bpm.resultatPeriode').references.sort(), ['bpm.charges', 'bpm.revenus']);
-  const j = admin.journal(1)[0];
+  assert.equal(admin.metric(null, 'bpm.resultatPeriode').parameter.history.length, 1);
+  assert.deepEqual(admin.metric(null, 'bpm.resultatPeriode').references.sort(), ['bpm.charges', 'bpm.revenus']);
+  const j = admin.journal(null, 1)[0];
   assert.equal(j.command, 'setParameter');
   assert.deepEqual(j.updated, [k]);
 });
@@ -158,7 +158,7 @@ test('métrique : version attendue 0 au premier enregistrement, puis STALE_VERSI
   const err = await rejects(admin.setParameter(k, { value: 'bpm.revenus', expectedRevision: 0 }), 'STALE_VERSION');
   assert.equal(err.details.currentRevision, 1);
   await admin.setParameter(k, { value: 'bpm.revenus', expectedRevision: 1 });
-  assert.equal(admin.parameter(k).revision, 2);
+  assert.equal(admin.parameter(null, k).revision, 2);
   await rejects(() => admin.setParameter('metric.inconnue', { value: '1', expectedRevision: 0 }), 'NOT_FOUND');
 });
 
@@ -173,7 +173,7 @@ test('métrique : référence inconnue et dépendance circulaire refusées sans 
   await rejects(admin.setParameter('metric.bpm.revenus', { value: 'budget.revenusRealises +', expectedRevision: 0 }), 'FORMULA_INVALID');
   await rejects(admin.setParameter('metric.bpm.revenus', { value: 42, expectedRevision: 0 }), 'VALIDATION');
   assert.equal(socle.state.revision, before);
-  assert.equal(admin.parameter('metric.bpm.revenus').revision, 0);
+  assert.equal(admin.parameter(null, 'metric.bpm.revenus').revision, 0);
 });
 
 test('métrique : retour au défaut du code', async () => {
@@ -215,13 +215,13 @@ test('aperçu de formule : évalué sur les données du user, rien n’est enreg
 
 test('catalogue : métriques, variables et fonctions disponibles pour l’éditeur', async () => {
   const { socle } = await makeSocle();
-  const cat = socle.modules.administration.metricCatalog();
+  const cat = socle.modules.administration.metricCatalog(null);
   assert.ok(cat.metrics.some((m) => m.key === 'bpm.resultatPeriode' && m.defaultFormula === 'bpm.revenus - bpm.charges'));
   assert.ok(cat.references.some((r) => r.name === 'budget.revenusRealises' && r.type === 'variable'));
   assert.ok(cat.references.some((r) => r.name === 'patrimoine.stockOuverture' && r.type === 'variable'));
   assert.ok(cat.functions.includes('siInconnu'));
   // Les formules ne sont pas listées parmi les paramètres ordinaires.
-  assert.ok(socle.modules.administration.parameters().every((p) => p.type !== 'formula'));
+  assert.ok(socle.modules.administration.parameters(null).every((p) => p.type !== 'formula'));
 });
 
 test('validation des paramètres : centres standards et tableau de bord', async () => {
@@ -233,7 +233,7 @@ test('validation des paramètres : centres standards et tableau de bord', async 
   await rejects(admin.setParameter('bpm.tableauDeBord', { value: [{ id: 's', title: 'S', metrics: ['bpm.inexistant'] }], expectedRevision: 0 }), 'VALIDATION');
   await rejects(admin.setParameter('bpm.tableauDeBord', { value: [{ id: 's', title: 'S', metrics: [] }], expectedRevision: 0 }), 'VALIDATION');
   await rejects(admin.setParameter('users.types', { value: [{ key: 'Avec espace', label: 'x' }], expectedRevision: 0 }), 'VALIDATION');
-  assert.equal(admin.parameter('budget.centresStandards').revision, 0);
+  assert.equal(admin.parameter(null, 'budget.centresStandards').revision, 0);
   const ok = await admin.setParameter('budget.centresStandards', { value: [{ key: 'salaires', label: 'Salaires', direction: 'income' }, { key: 'divers', label: 'Divers', direction: 'charge' }], expectedRevision: 0 });
   assert.equal(ok.parameter.value.length, 2);
 });

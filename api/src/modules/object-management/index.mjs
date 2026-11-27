@@ -17,22 +17,22 @@ export default {
       [
         'GET',
         '/api/om/objects',
-        ({ query }) => inspector.inventory(socle.state, { q: query.get('q') || undefined, kind: query.get('kind') || undefined, scope: scopeOf(query) }),
+        ({ ctx, query }) => inspector.inventory(socle.stateOf(ctx), { q: query.get('q') || undefined, kind: query.get('kind') || undefined, scope: scopeOf(query) }),
       ],
       [
         'GET',
         '/api/om/objects/:id',
-        ({ params }) => inspector.inspectObject(socle.state, params.id) ?? fail('NOT_FOUND', 'Objet introuvable.', { id: params.id }),
+        ({ ctx, params }) => inspector.inspectObject(socle.stateOf(ctx), params.id) ?? fail('NOT_FOUND', 'Objet introuvable.', { id: params.id }),
       ],
       ['GET', '/api/om/kinds', () => [...socle.registry.kinds.values()].map(({ kind, label, prefix, module, level, domain, references }) => ({ kind, label, prefix, module, level, domain, references }))],
-      ['GET', '/api/om/checks', () => inspector.checks(socle.state)],
-      ['GET', '/api/om/debug', ({ query }) => inspector.exportDebug(socle.state, scopeOf(query))],
+      ['GET', '/api/om/checks', ({ ctx }) => inspector.checks(socle.stateOf(ctx))],
+      ['GET', '/api/om/debug', ({ ctx, query }) => inspector.exportDebug(socle.stateOf(ctx), scopeOf(query))],
       ['GET', '/api/om/csv', () => inspector.csvFiles()],
       [
         'GET',
         '/api/om/csv/:file',
-        ({ params, query }) => {
-          const body = inspector.exportCsv(socle.state, params.file, scopeOf(query));
+        ({ ctx, params, query }) => {
+          const body = inspector.exportCsv(socle.stateOf(ctx), params.file, scopeOf(query));
           if (body === null) fail('NOT_FOUND', 'Fichier CSV inconnu.', { file: params.file, files: inspector.csvFiles() });
           return { __download: params.file, __type: 'text/csv; charset=utf-8', __body: body };
         },
@@ -40,9 +40,9 @@ export default {
       [
         'GET',
         '/api/om/export.zip',
-        ({ query }) => {
+        ({ ctx, query }) => {
           // Un seul état lu, figé pour tout le dossier de preuve : aucune écriture ne s'y mélange.
-          const { manifest, zip } = inspector.exportArchive(socle.state, scopeOf(query));
+          const { manifest, zip } = inspector.exportArchive(socle.stateOf(ctx), scopeOf(query));
           return { __download: `preuve-om-${manifest.snapshotId}.zip`, __type: 'application/zip', __body: zip };
         },
       ],

@@ -120,7 +120,7 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
     const login = (userId) => ({ cookie: sessionCookie(req, sessions.issue(userId), sessions.ttlSeconds) });
     const logout = { cookie: sessionCookie(req, '', 0) };
     const status = (userId) => (!userId ? { mode: authMode, user: null, account: null } : socle.store.within(userId, () => {
-      const u = socle.state.users[userId];
+      const u = socle.stateOf({ userId }).users[userId];
       const a = users.accountOf(userId);
       return { mode: authMode, user: u ? { id: u.id, label: u.label } : null, account: a ? { email: a.email, role: a.role } : null };
     }));
@@ -179,7 +179,7 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
       res.writeHead(401, { 'content-type': 'application/json; charset=utf-8' });
       return res.end(JSON.stringify({ error: { code: 'AUTH_REQUIRED', message: 'Connexion requise.' } }));
     }
-    const revision = userId ? await socle.store.within(userId, () => socle.store.state.revision).catch(() => null) : null;
+    const revision = userId ? await socle.store.within(userId, () => socle.store.viewOf(userId).revision).catch(() => null) : null;
     res.writeHead(200, { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store', connection: 'keep-alive', 'x-accel-buffering': 'no' });
     res.write(`event: ready\ndata: ${JSON.stringify({ revision })}\n\n`);
     const listener = { res, userId };

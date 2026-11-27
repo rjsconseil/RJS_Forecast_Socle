@@ -7,7 +7,7 @@
 // sur une même partition, elles sont en série, et une écriture concurrente venue d'une autre instance (même base) est
 // détectée par la révision, relue puis rejouée, sans jamais rien écraser.
 //
-// Les modules ne changent pas : ils lisent « l'état » (`socle.state`, `scope.store.state`), qui est la vue de la
+// Les modules lisent « l'état » de leur contexte (`socle.stateOf(ctx)`, `scope.store.stateOf(ctx)`), qui est la vue de la
 // partition du user de la requête en cours (contexte asynchrone posé par `within`). Hors requête (scripts, tests,
 // administration), l'état est la vue complète, réunion de toutes les partitions.
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -381,10 +381,24 @@ export class DataManager {
     return view;
   }
 
-  /** L'état lu par les modules : la vue du user de la requête en cours, sinon la vue complète. */
+  /**
+   * L'état d'un contexte explicite : la vue du user de `ctx` (sa partition et la partition système), sinon la vue
+   * complète. Pendant une requête, le contexte reçu doit être celui de la requête : une lecture ne passe jamais, sans
+   * le dire, à la partition d'un autre user (non revalidée contre la base).
+   */
+  stateOf(ctx) {
+    const userId = ctx?.userId || null;
+    const current = DATA_CONTEXT.getStore();
+    if (current && (current.userId || null) !== userId) {
+      fail('AMBIENT_STATE', 'Le contexte lu n’est pas celui de la requête en cours.', { requestUserId: current.userId || null, userId });
+    }
+    return userId ? this.viewOf(userId) : this.fullView();
+  }
+
+  /** Vue complète, hors requête (scripts, tests, outils) ; pendant une requête, l'état se lit par `stateOf(ctx)`. */
   get state() {
-    const ctx = DATA_CONTEXT.getStore();
-    return ctx?.userId ? this.viewOf(ctx.userId) : this.fullView();
+    if (DATA_CONTEXT.getStore()) fail('AMBIENT_STATE', 'Pendant une requête, l’état se lit avec son contexte (stateOf(ctx)).');
+    return this.fullView();
   }
 
   /** Révision de la vue d'un user (ou de la vue complète). */

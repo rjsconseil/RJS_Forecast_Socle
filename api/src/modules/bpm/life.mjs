@@ -87,7 +87,7 @@ export function createLife(socle, h, reads, projects, calendar = () => socle.mod
     const f = (k) => cents(figures[k]?.value);
     const core = state.coreProjects[comp.coreProjectId];
     const pat = state.patrimoines[comp.patrimoineId];
-    const v = reads.visionOf(comp);
+    const v = reads.visionOf(state, comp);
     const closures = h.closuresOf(state, cycle?.id);
 
     // ---------- lignes du budget de vie ----------

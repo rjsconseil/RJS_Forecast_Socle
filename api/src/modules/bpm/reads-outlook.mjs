@@ -108,11 +108,11 @@ export function createOutlookReads(socle, h, kit) {
     };
   }
 
-  const visionOf = (comp) => ({ ...socle.modules.patrimoine.projectionSettingsOf(socle.state, comp.patrimoineId), ...socle.modules.budget.objectivesOf(socle.state, comp.budgetId) });
+  const visionOf = (state, comp) => ({ ...socle.modules.patrimoine.projectionSettingsOf(state, comp.patrimoineId), ...socle.modules.budget.objectivesOf(state, comp.budgetId) });
   const goalsOf = (state, userId) => socle.modules.patrimoine.goalsOf(state, userId);
   function events(ctx) {
     const b = base(ctx);
-    const v = visionOf(b.comp);
+    const v = visionOf(b.state, b.comp);
     const now = today();
     return {
       context: contextOf(b),
@@ -129,7 +129,7 @@ export function createOutlookReads(socle, h, kit) {
   function directives(ctx) {
     const s = summary(ctx);
     const b = base(ctx);
-    const v = visionOf(b.comp);
+    const v = visionOf(b.state, b.comp);
     const ev = events(ctx);
     const surplus = surplusProgress(b, v);
     const caps = Object.values(b.state.budgets[b.comp.budgetId].capsCents ?? {});
@@ -191,7 +191,7 @@ export function createOutlookReads(socle, h, kit) {
   }
 
   function hypotheses(b, q = {}) {
-    const v = visionOf(b.comp);
+    const v = visionOf(b.state, b.comp);
     const horizon = Number(q.horizon);
     const horizonYears = q.horizon !== undefined && q.horizon !== '' && Number.isFinite(horizon)
       ? Math.min(Math.max(Math.round(horizon), 1), 80) : v.horizonYears;

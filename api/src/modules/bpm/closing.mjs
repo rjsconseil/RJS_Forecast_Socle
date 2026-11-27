@@ -432,7 +432,7 @@ export function createClosing(socle, h, reads, bilans) {
 
     /** Lecture de la page : phase, complétude, points ouverts et clos, aperçu de la clôture, impacts, verrou. */
     journey(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const { userId } = h.requireComposition(state, ctx);
       return { context: reads.contextOf(reads.base(ctx)), ...journeyOf(state, userId) };
     },
@@ -442,7 +442,7 @@ export function createClosing(socle, h, reads, bilans) {
      * point qui vient de se clore, et le mode clôture sur tout le site).
      */
     brief(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const { userId } = h.requireComposition(state, ctx);
       const s = pointsState(state, userId);
       if (s.phase === 'to_configure') return { phase: 'to_configure', period: null, next: null, percent: 0, counts: null, points: [], closingMode: { active: false, message: null } };
@@ -509,7 +509,7 @@ export function createClosing(socle, h, reads, bilans) {
       // Le bilan est établi avant l'écriture, avec les données qui produisent le résultat versé (comme `closePeriod`).
       let bilan = null;
       try {
-        const contract = h.closingContract(socle.state, om.requireUser(socle.state, ctx), input.periodKey);
+        const contract = h.closingContract(socle.stateOf(ctx), om.requireUser(socle.stateOf(ctx), ctx), input.periodKey);
         bilan = { ...bilans.forClosure(ctx, contract.period, contract.preview.resultCents), recordedAt: today() };
       } catch (err) {
         if (!err.code) throw err;
@@ -553,7 +553,7 @@ export function createClosing(socle, h, reads, bilans) {
         },
         { creation: true },
       );
-      return { replayed: r.replayed, closure: h.closureView(socle.state.closures[r.closureId]), carriedCount: r.carriedCount ?? 0, deferredCount: r.deferredCount ?? 0, journey: this.journey(ctx) };
+      return { replayed: r.replayed, closure: h.closureView(socle.stateOf(ctx).closures[r.closureId]), carriedCount: r.carriedCount ?? 0, deferredCount: r.deferredCount ?? 0, journey: this.journey(ctx) };
     },
   };
 }

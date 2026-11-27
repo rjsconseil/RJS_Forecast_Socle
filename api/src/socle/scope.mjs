@@ -22,7 +22,8 @@ export function moduleScope(socle, mod) {
   });
   // P2 : pas d'écrivain. Le stockage se lit ; il ne s'écrit que par une commande d'Object Management.
   const store = Object.freeze({
-    get state() { return socle.store.state; },
+    /** L'état d'un contexte explicite (voir DataManager.stateOf). */
+    stateOf: (ctx) => socle.store.stateOf(ctx),
     get path() { return socle.store.path; },
     /** Vue de la partition d'un user (lecture seule) et annuaire des users : ce qui passe à l'échelle. */
     viewOf: (userId) => socle.store.viewOf(userId),

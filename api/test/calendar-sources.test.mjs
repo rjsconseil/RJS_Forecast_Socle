@@ -7,7 +7,7 @@ import { at, camille, key, makeSocle, operation } from './helpers.mjs';
 const WINDOW = { from: '2026-10-26', to: '2026-12-06' };
 const P = (s) => s.modules.bpm.projects;
 const setCalendar = (socle, id, value) =>
-  socle.modules.administration.setParameter(`calendrier.${id}`, { value, expectedRevision: socle.modules.administration.parameter(`calendrier.${id}`).revision });
+  socle.modules.administration.setParameter(`calendrier.${id}`, { value, expectedRevision: socle.modules.administration.parameter(null, `calendrier.${id}`).revision });
 
 async function setup() {
   const { socle } = await makeSocle();

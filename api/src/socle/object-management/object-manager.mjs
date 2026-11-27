@@ -56,7 +56,7 @@ export class ObjectManager {
 
   /** Contrôle de sortie : tout objet apparu a été créé par `om.create`, et aucun n'a disparu. */
   #auditDraft(draft, tx) {
-    const before = baseOf(draft) ?? this.store.state;
+    const before = baseOf(draft) ?? this.store.stateOf(tx);
     const created = new Set(tx.created.map((c) => c.id));
     for (const collection of this.registry.collections()) {
       if (!touchedIn(draft, collection)) continue; // jamais lue ni écrite : inchangée par construction
@@ -213,7 +213,7 @@ export class ObjectManager {
    * sans écriture, journal ni clé de demande. Renvoie l'état simulé pour le lire avec les mêmes métriques.
    */
   simulate(action, ctx, input, fn) {
-    const draft = draftOf(this.store.state); // copie à la demande, objet par objet, comme une transaction
+    const draft = draftOf(this.store.stateOf(ctx)); // copie à la demande, objet par objet, comme une transaction
     const tx = { draft, command: action, now: new Date().toISOString(), created: [], updated: [], unchanged: false, input };
     tx.userId = this.requireUser(draft, ctx);
     const result = fn(tx);

@@ -30,7 +30,7 @@ const within = (d, p) => !!d && d >= p.start && d <= p.end;
 export function createBilans(socle, h, reads) {
   /** Tous les faits d'une période, lus avec les mêmes règles que le registre et les chiffres administrés. */
   function build(ctx, period) {
-    const state = socle.state;
+    const state = socle.stateOf(ctx);
     const { userId, comp, cycle } = h.requireComposition(state, ctx);
     const key = period.key;
     const register = reads.register(ctx, { period: key, dateBasis: 'realized', groupBy: 'none' });
@@ -229,14 +229,14 @@ export function createBilans(socle, h, reads) {
 
   /** Le bilan d'une période : enregistré à la clôture, recalculé pour une clôture ancienne, provisoire sinon. */
   function bilanOf(ctx, period) {
-    const closure = period.closureId ? socle.state.closures[period.closureId] : null;
+    const closure = period.closureId ? socle.stateOf(ctx).closures[period.closureId] : null;
     if (closure?.bilan) return { ...closure.bilan, status: 'closed', source: 'enregistré', closureId: closure.id, closedAt: closure.createdAt };
     return { ...build(ctx, period), status: period.status, source: closure ? 'recalculé' : 'provisoire', closureId: closure?.id ?? null, closedAt: closure?.createdAt ?? null };
   }
 
   function periodsOf(ctx) {
-    const { cycle } = h.requireComposition(socle.state, ctx);
-    const cs = cycle ? h.cycleState(socle.state, cycle) : null;
+    const { cycle } = h.requireComposition(socle.stateOf(ctx), ctx);
+    const cs = cycle ? h.cycleState(socle.stateOf(ctx), cycle) : null;
     if (!cs) return [];
     return cs.page({ limit: MAX_PERIODS }).periods.filter((p) => p.status !== 'future');
   }
@@ -262,12 +262,12 @@ export function createBilans(socle, h, reads) {
     /** Le bilan à enregistrer dans une clôture : le résultat est celui qui est versé au patrimoine. */
     forClosure(ctx, period, resultCents) {
       const f = build(ctx, period);
-      const { cycle } = h.requireComposition(socle.state, ctx);
+      const { cycle } = h.requireComposition(socle.stateOf(ctx), ctx);
       const p = f.patrimoine;
       const patrimoine = { ...p, capitalizedCents: resultCents, stockAfterCents: p.stockBeforeCents === null ? null : p.stockBeforeCents + resultCents - (p.withdrawnCents ?? 0) };
       if (p.objectiveCents && patrimoine.stockAfterCents !== null) patrimoine.progressAfterPct = pct(patrimoine.stockAfterCents, p.objectiveCents);
       const facts = { ...f, patrimoine };
-      return { ...facts, highlights: highlightsOf(facts, { closed: h.closuresOf(socle.state, cycle?.id), closure: { id: null, resultCents }, status: 'closed' }) };
+      return { ...facts, highlights: highlightsOf(facts, { closed: h.closuresOf(socle.stateOf(ctx), cycle?.id), closure: { id: null, resultCents }, status: 'closed' }) };
     },
 
     /** Tous les bilans, du plus récent au plus ancien, et ce que chaque projet a coûté à chaque cycle. */

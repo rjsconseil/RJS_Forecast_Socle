@@ -97,7 +97,7 @@ export function createFunding(socle, { lifeBudgetOf }) {
       const x = om.create(tx, 'taskBudgetRequest', { budgetId, taskId, amountCents, note: text('note', input.note, { max: 1000 }) || null, status: 'pending', requestedAt: today(), decidedAt: null, overrunId: null });
       return { requestId: x.id };
     }, { creation: true });
-    return { ...r, request: requestView(socle.state, socle.state.taskBudgetRequests[r.requestId]) };
+    return { ...r, request: requestView(socle.stateOf(ctx), socle.stateOf(ctx).taskBudgetRequests[r.requestId]) };
   }
 
   /** Valider accorde la part, ou transmet le seul manque au budget du projet de vie, sans dépense. */
@@ -129,7 +129,7 @@ export function createFunding(socle, { lifeBudgetOf }) {
       }
       return { requestId: id };
     });
-    return { request: requestView(socle.state, socle.state.taskBudgetRequests[id]) };
+    return { request: requestView(socle.stateOf(ctx), socle.stateOf(ctx).taskBudgetRequests[id]) };
   }
 
   function grantRequest(tx, b, x) {

@@ -139,7 +139,7 @@ export default {
     }
 
     function evaluateFigure(ctx, key, { periodKey } = {}) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const userId = om.requireUser(state, ctx);
       if (!metrics.metrics.has(key)) fail('NOT_FOUND', 'Chiffre inconnu.', { key });
       const { figures, comparison } = figuresFor(state, userId, [key], { periodKey });
