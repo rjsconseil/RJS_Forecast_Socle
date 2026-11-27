@@ -8,13 +8,13 @@ import { readFileSync } from 'node:fs';
 const catalog = JSON.parse(readFileSync(new URL('./sections.json', import.meta.url), 'utf8'));
 
 /** Les sections, dans l'ordre du site ; `systeme` (le socle commun) en dernier. */
-export const SECTION_LIST = Object.freeze(catalog.sections.map((s) => Object.freeze({ ...s, collections: Object.freeze([...s.collections]) })));
+export const SECTION_LIST = Object.freeze(catalog.sections.map((s) => Object.freeze({ ...s, collections: Object.freeze([...s.collections]), applicationCollections: Object.freeze([...(s.applicationCollections ?? [])]) })));
 /** Les neuf flux entre sections (la boucle du projet de vie). */
 export const SECTION_FLOWS = Object.freeze(catalog.flows.map((f) => Object.freeze({ ...f })));
 export const SYSTEM_SECTION = 'systeme';
 
 const byKey = new Map(SECTION_LIST.map((s) => [s.key, s]));
-const byCollection = new Map(SECTION_LIST.flatMap((s) => s.collections.map((c) => [c, s.key])));
+const byCollection = new Map(SECTION_LIST.flatMap((s) => [...s.collections, ...s.applicationCollections].map((c) => [c, s.key])));
 
 export const sectionByKey = (key) => byKey.get(key) ?? null;
 /** Section d'une collection ; une collection hors catalogue appartient au système. */
@@ -30,7 +30,7 @@ function validate() {
   };
   seen(SECTION_LIST.map((s) => s.key), 'clé');
   seen(SECTION_LIST.map((s) => s.prefix), 'préfixe');
-  seen(SECTION_LIST.flatMap((s) => s.collections), 'collection');
+  seen(SECTION_LIST.flatMap((s) => [...s.collections, ...s.applicationCollections]), 'collection');
   if (!byKey.has(SYSTEM_SECTION)) throw new Error('Catalogue des sections : la section système manque.');
   for (const f of SECTION_FLOWS) {
     if (!byKey.has(f.from) || !byKey.has(f.to) || f.from === SYSTEM_SECTION || f.to === SYSTEM_SECTION) throw new Error(`Catalogue des sections : flux ${f.n} entre sections inconnues.`);

@@ -31,6 +31,25 @@ export interface ActionInscrite {
   vers?: string;
 }
 
+/**
+ * Espace propre d'une application autonome, hors de BPM-Astra : sa propre adresse, servie dans l'interface habituelle
+ * du site, et un lien dans la section « Applications autonomes » de la zone Noyau transverse.
+ */
+export interface EspaceInscrit {
+  /** Adresse de l'application, sans « / » de tête (par exemple `mes-projets`). */
+  chemin: string;
+  /** Nom de l'application : le nom de sa section, ou celui de l'application hybride. */
+  titre: string;
+  /** L'application en une phrase (carte de la section Applications autonomes). */
+  description: string;
+  /** Ce que l'on y obtient, en une phrase. */
+  resultat: string;
+  /** Symbole court de la carte (un caractère). */
+  symbole?: string;
+  /** L'écran d'accueil de l'application, chargé à la demande. */
+  ecran: () => Promise<Type<unknown>>;
+}
+
 export interface InscriptionApplication {
   /** Clé de l'application : la clé de sa section, ou le nom de l'application hybride. */
   cle: string;
@@ -38,6 +57,8 @@ export interface InscriptionApplication {
   section: SectionKey;
   pages: PageInscrite[];
   actions?: ActionInscrite[];
+  /** Son espace propre hors de BPM-Astra, s'il y en a un. */
+  espace?: EspaceInscrit;
   /** Jeux d'essai lancés par `npm run app` en plus du jeu commun (chemins depuis la racine du dépôt). */
   essais?: string[];
 }

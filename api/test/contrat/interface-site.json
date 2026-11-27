@@ -815,10 +815,21 @@
       ],
       "statique": []
     },
+    "EspaceInscrit": {
+      "type": [
+        "chemin: string",
+        "description: string",
+        "ecran: () => Promise<Type<unknown>>",
+        "resultat: string",
+        "symbole?: string | undefined",
+        "titre: string"
+      ]
+    },
     "InscriptionApplication": {
       "type": [
         "actions?: ActionInscrite[] | undefined",
         "cle: string",
+        "espace?: EspaceInscrit | undefined",
         "essais?: string[] | undefined",
         "pages: PageInscrite[]",
         "section: SectionKey"

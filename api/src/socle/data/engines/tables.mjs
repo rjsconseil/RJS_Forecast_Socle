@@ -3,6 +3,8 @@ import { SECTION_LIST } from '../../sections.mjs';
 // P5 · Données gérées — rangement des collections en tables, commun aux moteurs SQL (SQLite, PostgreSQL).
 // Les tables sont rangées à l'image des cinq sections du site, par préfixe :
 //   MQ_ Mon quotidien · MP_ Mes projets · MB_ Mon budget · PT_ Patrimoine · CL_ Cycles · SY_ système (socle).
+// Les tables propres à une application autonome prennent en plus « AA_ » devant le préfixe de sa section
+// (AA_MP_ pour l'application Mes projets, AA_SY_ pour un système autonome) : catalogue `applicationCollections`.
 
 /**
  * Sections du site et collections qu'elles portent, par préfixe ; une collection hors de ces sections va dans le système (SY_).
@@ -10,9 +12,21 @@ import { SECTION_LIST } from '../../sections.mjs';
  */
 export const SECTIONS = Object.fromEntries(SECTION_LIST.map((s) => [s.prefix, { label: s.label, key: s.key, collections: [...s.collections] }]));
 const SECTION_OF = new Map(Object.entries(SECTIONS).flatMap(([prefix, s]) => s.collections.map((c) => [c, prefix])));
+/** Préfixe des tables propres aux applications autonomes, placé devant celui de la section. */
+export const APPLICATION_PREFIX = 'AA';
+const APPLICATION_OF = new Map(SECTION_LIST.flatMap((s) => s.applicationCollections.map((c) => [c, s.prefix])));
 const snake = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-/** Table d'une collection : préfixe de sa section, puis son nom (« taskBudgetRequests » → « MP_task_budget_requests »). */
-export const tableOf = (collection) => `${SECTION_OF.get(collection) ?? 'SY'}_${snake(collection)}`;
+/**
+ * Nom de table : préfixe de la section, puis le nom de la collection (« taskBudgetRequests » → « MP_task_budget_requests ») ;
+ * pour une collection d'application autonome, « AA_ » d'abord (« AA_MP_plan_items »).
+ */
+export const tableName = (prefix, collection, { application = false } = {}) => `${application ? `${APPLICATION_PREFIX}_` : ''}${prefix}_${snake(collection)}`;
+/** Table d'une collection, selon le catalogue des sections ; hors catalogue, le système (SY_). */
+export const tableOf = (collection) => APPLICATION_OF.has(collection)
+  ? tableName(APPLICATION_OF.get(collection), collection, { application: true })
+  : tableName(SECTION_OF.get(collection) ?? 'SY', collection);
+/** Préfixe de section d'une table (« AA_MP_plan_items » → « MP »), tel que l'enregistre SY_tables. */
+export const sectionPrefixOfTable = (table) => (table.startsWith(`${APPLICATION_PREFIX}_`) ? table.slice(APPLICATION_PREFIX.length + 1) : table).slice(0, 2);
 /** Nom SQL entre guillemets. */
 export const q = (name) => `"${String(name).replace(/"/g, '""')}"`;
 

@@ -5,6 +5,8 @@ import { ASTRA_APPLICATION } from "../astra/astra.application";
  */
 import type { Type } from '@angular/core';
 import { ApplicationDeclaration } from './application';
+import { APPLICATIONS_INSCRITES } from '../sections/inscriptions';
+import { espacesAutonomes } from './applications-autonomes';
 
 // BPM-Astra est l'application BPM du site : elle présente les écrans métier de `bpm/` (catalogue `bpm.screens.ts`).
 export const APPLICATIONS: ApplicationDeclaration[] = [ASTRA_APPLICATION];
@@ -17,3 +19,5 @@ export const loadUserCreation = (): Promise<Type<unknown>> =>
 export const defaultApplicationId = (): string => APPLICATIONS[0]?.id ?? '';
 /** L'accueil de l'application par défaut : la racine du site l'ouvre (sinon le portail des modules). */
 export const defaultApplicationHome = (): string => APPLICATIONS[0]?.zone.home ?? '/modules';
+/** Les applications autonomes qui ont leur propre espace hors de BPM-Astra (lien dans la zone Noyau transverse). */
+export const ESPACES_AUTONOMES = espacesAutonomes(APPLICATIONS_INSCRITES);

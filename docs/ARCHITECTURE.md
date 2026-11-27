@@ -620,6 +620,18 @@ Le développement se fait désormais en **mode application autonome**. Six prote
 | P5 | Protection de `main` | réglages du dépôt sur GitHub | Fusion seulement par PR, vérifications au vert |
 | P6 | Poste de travail d'une application | `npm run app -- <clé>`, `npm run test:app -- <clé>`, `npm run e2e:app -- <clé>` | Le site sur une base temporaire avec les jeux d'essai de l'application ; seulement ses tests et les gardes ; seulement ses parcours |
 
+### 20.1 L'espace propre d'une application autonome, et le nommage de ses tables (27 novembre 2026)
+
+- **Espace propre.** Une application autonome peut déclarer, dans son inscription, un `espace` : son adresse
+  (`/mes-projets` pour Mes projets), son titre, sa description et son écran d'accueil. Le site la sert dans son interface
+  habituelle (`platform/applications-autonomes.ts`, routes ajoutées par `app.routes.ts`), **hors de BPM-Astra** qui reste
+  intact. La zone **Noyau transverse** reçoit la section **« Applications autonomes »** (N0 · 05) : un lien par application
+  qui repose sur le noyau. Sans application inscrite, la section n'apparaît pas.
+- **Tables des applications autonomes.** Une collection propre à une application autonome se déclare dans
+  `applicationCollections` de sa section (`api/src/socle/sections.json`). Sa table prend **« AA_ »** devant le préfixe de
+  la section : `AA_MP_…` pour Mes projets, `AA_MQ_…`, `AA_MB_…`, `AA_PT_…`, `AA_CL_…`, et `AA_SY_…` pour un système
+  autonome (`tableName`, `tableOf` dans `engines/tables.mjs`). Les tables du grand noyau gardent leurs noms (`MP_projects`…).
+
 ## 21. Journal des changements
 
 Le détail daté des PR (intégration continue, corrections des rapports successifs, retrait du centre de commande,

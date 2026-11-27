@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Registry } from '../src/socle/registry.mjs';
 import { SECTION_FLOWS, SECTION_LIST, sectionOfCollection } from '../src/socle/sections.mjs';
-import { tableOf } from '../src/socle/data/engines/tables.mjs';
+import { sectionPrefixOfTable, tableName, tableOf } from '../src/socle/data/engines/tables.mjs';
 import { at, makeSocle, makeUser } from './helpers.mjs';
 
 test('catalogue : cinq sections du site et le système, neuf flux entre sections', () => {
@@ -33,6 +33,19 @@ test('les tables gardent leurs noms : le préfixe vient du catalogue', () => {
   assert.equal(tableOf('cycleLinks'), 'CL_cycle_links');
   assert.equal(tableOf('credentials'), 'SY_credentials');
   assert.equal(tableOf('inconnue'), 'SY_inconnue');
+});
+
+test('applications autonomes : leurs tables prennent « AA_ » devant le préfixe de la section (AA_MP_, AA_SY_)', () => {
+  assert.equal(tableName('MP', 'planItems', { application: true }), 'AA_MP_plan_items');
+  assert.equal(tableName('SY', 'autonomousJobs', { application: true }), 'AA_SY_autonomous_jobs');
+  assert.equal(tableName('MP', 'projects'), 'MP_projects');
+  assert.equal(sectionPrefixOfTable('AA_MP_plan_items'), 'MP');
+  assert.equal(sectionPrefixOfTable('MP_projects'), 'MP');
+  // Le catalogue range les collections d'application à part ; aucune ne recoupe une collection du socle.
+  for (const s of SECTION_LIST) {
+    assert.ok(Array.isArray(s.applicationCollections), s.key);
+    for (const c of s.applicationCollections) assert.equal(tableOf(c), `AA_${s.prefix}_${c.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase()}`);
+  }
 });
 
 test('un fait, une section propriétaire : chaque nature du site est rangée dans une section du catalogue', async () => {
