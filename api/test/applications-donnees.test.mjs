@@ -48,6 +48,12 @@ test('applications autonomes : tables AA_ + préfixe de la section, catalogue co
     assert.equal(aa.list(ctx, 'essai', 'essaiRefLivrables').items[0].catalogue, 'essai-1');
     await assert.rejects(aa.create(ctx, 'essai', 'essaiRefLivrables', { requestKey: key(), code: 'x' }), /se lit seulement/);
     assert.equal(aa.describe()[0].collections.length, 4);
+    // Le catalogue des sections liste à part les natures des applications autonomes.
+    const projets = socle.registry.sections().sections.find((s) => s.key === 'projets');
+    assert.ok(projets.applicationKinds.some((k) => k.kind === 'essaiDossier'));
+    assert.ok(!projets.kinds.some((k) => k.kind === 'essaiDossier'));
+    // Le remplissage du catalogue est la seule écriture de démarrage, une seule fois.
+    assert.equal(socle.state.journal.filter((j) => j.command === 'aa.catalogue.sync').length, 1);
   } finally { await socle.close(); }
 });
 

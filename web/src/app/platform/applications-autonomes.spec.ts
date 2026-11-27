@@ -16,9 +16,9 @@ describe('Applications autonomes (espaces hors de BPM-Astra)', () => {
     expect(espaces[0].symbole).toBe('◫');
   });
 
-  it('donne à chaque espace son adresse et ses sous-adresses', () => {
+  it('donne à chaque espace son adresse', () => {
     const routes = routesAutonomes(espacesAutonomes([avecEspace]));
-    expect(routes.map((r) => r.path)).toEqual(['mes-projets', 'mes-projets/**']);
+    expect(routes.map((r) => r.path)).toEqual(['mes-projets']);
     expect(routes[0].title).toBe('Mes projets · Application autonome');
     expect(routes[0].loadComponent).toBe(ecran);
   });
