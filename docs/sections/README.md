@@ -34,6 +34,14 @@ applications de section qui l'entourent.
 
 On ne mélange jamais les deux modes dans une même PR.
 
+## Applications composées
+
+En plus des cinq applications de section, le site pourra offrir des **applications composées** qui regroupent des
+fonctionnalités de plusieurs sections (par exemple un peu de Mes projets et un peu de Mon budget). Elles reposent sur les
+fondations communes du socle : c'est pourquoi une fondation est écrite de façon générique, sans nommer la section qui l'a
+fait naître. Une application composée assemble ; elle ne rend pas une section dépendante d'une autre. Chacune aura sa
+fiche, sur le même gabarit, avec en plus la liste des sections dont elle reprend des fonctionnalités.
+
 ## Cycle de vie d'une fonctionnalité : la section garde l'application, le socle reçoit les fondations
 
 Les fonctionnalités avancées d'une section **restent dans la section** : elles forment son application autonome (pour
