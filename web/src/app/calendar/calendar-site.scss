@@ -1,0 +1,6 @@
+// Habillage de la page du calendrier, chargé avec elle (CalendarSpace, sans encapsulation) au lieu de la feuille
+// globale : mêmes sélecteurs, même ordre entre eux. Il suit la grille globale (styles/site/_grid.scss).
+// Trois feuilles, dans l'ordre de la cascade, pour rester sous le budget par feuille de composant :
+// ici la parité avec le budget, puis calendar-site-controls.scss et calendar-site-module.scss.
+// Contrôle : e2e/styles-order-check.mjs sur chaque feuille (aucune égalité de spécificité inversée), puis les empreintes.
+@use 'styles/site/budget-parity';

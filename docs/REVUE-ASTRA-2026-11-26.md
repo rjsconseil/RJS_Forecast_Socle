@@ -177,7 +177,7 @@ Les 41 feuilles globales ont été classées : **6 habillent les écrans métier
 | Couche | Où | Contenu |
 |---|---|---|
 | Site et socle | `web/src/styles/` (29 feuilles) | ce qui sert tout le site, Astra compris |
-| Calendrier | `web/src/app/calendar/styles/site/` (6 feuilles + `_index`) | grille et vues, parité Budget, formats, commandes, pleine largeur, module branchable |
+| Calendrier | `web/src/app/calendar/styles/site/` (6 feuilles + `_index`) | grille et vues (globales) ; parité Budget, formats, commandes, pleine largeur, module branchable chargés avec `CalendarSpace` depuis le 27/11 (`calendar-site*.scss`) |
 | BPM-Astra | `web/src/app/astra/styles/` | `bpm/` : les écrans métier que présente Astra (présentation commune, projets et tâches, système de l'application et cycle budgétaire, finitions, sens des couleurs), puis le cadre d'Astra (16 fichiers) |
 
 `styles.scss` tient maintenant en 6 blocs commentés et une seule ligne par couche déplacée (`@use './app/calendar/styles/site'`, `@use './app/astra/styles'`).
