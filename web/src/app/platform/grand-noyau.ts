@@ -13,6 +13,7 @@
 
 // Accès à l'API du grand noyau (lectures, commandes, utilisateur courant).
 export { Api, ApiError, RecetteContext, toApiError, newRequestKey } from '../core/api.service';
+export type { LigneApplication } from '../core/api.service';
 // Modèles des objets du noyau et des middlewares.
 export type * from '../core/models';
 // Mise en forme commune (heures, dates, montants).

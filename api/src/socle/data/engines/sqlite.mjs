@@ -19,7 +19,7 @@ import { basename, dirname, join } from 'node:path';
 import { DomainError } from '../../errors.mjs';
 import { acquireLock, releaseLock } from './lock.mjs';
 import { JsonFilesEngine } from './json-files.mjs';
-import { JOURNAL_WINDOW, partitionOf, q, SECTIONS, SYSTEM_PARTITION, tableOf } from './tables.mjs';
+import { JOURNAL_WINDOW, partitionOf, q, SECTIONS, SYSTEM_PARTITION, sectionPrefixOfTable, tableOf } from './tables.mjs';
 
 /** La base d'un stockage : `store.json` (nom historique) ou `store.sqlite` désignent `store.sqlite`. */
 export const sqlitePathOf = (path) => (path.endsWith('.json') ? path.slice(0, -5) + '.sqlite' : path);
@@ -62,7 +62,7 @@ function ensureTable(db, tables, collection, space) {
     id TEXT PRIMARY KEY, user_id TEXT, revision INTEGER NOT NULL, data TEXT NOT NULL CHECK (json_valid(data)));
     CREATE INDEX IF NOT EXISTS ${q(table + '_user')} ON ${q(table)} (user_id);`);
   db.prepare('INSERT INTO SY_tables (collection, table_name, section, space) VALUES (?, ?, ?, ?) ON CONFLICT(collection) DO NOTHING')
-    .run(collection, table, table.slice(0, 2), space ?? null);
+    .run(collection, table, sectionPrefixOfTable(table), space ?? null);
   tables.set(collection, table);
   return table;
 }

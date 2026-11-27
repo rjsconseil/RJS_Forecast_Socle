@@ -17,8 +17,22 @@ const byKey = new Map(SECTION_LIST.map((s) => [s.key, s]));
 const byCollection = new Map(SECTION_LIST.flatMap((s) => s.collections.map((c) => [c, s.key])));
 
 export const sectionByKey = (key) => byKey.get(key) ?? null;
+
+// Collections des applications autonomes : déclarées par chaque application (donnees.json, voir applications.mjs),
+// rangées dans leur section, en tables « AA_ » + préfixe de la section (engines/tables.mjs).
+const byApplicationCollection = new Map();
+/** Range une collection d'application autonome dans sa section ; refusé si elle recoupe une collection du socle. */
+export function declareApplicationCollection(collection, sectionKey) {
+  if (!byKey.has(sectionKey)) throw new Error(`Section inconnue pour la collection d'application ${collection} : ${sectionKey}`);
+  if (byCollection.has(collection)) throw new Error(`La collection ${collection} appartient déjà au socle : une application autonome a ses propres collections.`);
+  const known = byApplicationCollection.get(collection);
+  if (known && known !== sectionKey) throw new Error(`La collection d'application ${collection} est déjà rangée dans ${known}.`);
+  byApplicationCollection.set(collection, sectionKey);
+}
+/** Section d'une collection d'application autonome, sinon null. */
+export const applicationSectionOf = (collection) => byApplicationCollection.get(collection) ?? null;
 /** Section d'une collection ; une collection hors catalogue appartient au système. */
-export const sectionOfCollection = (collection) => byCollection.get(collection) ?? SYSTEM_SECTION;
+export const sectionOfCollection = (collection) => byCollection.get(collection) ?? byApplicationCollection.get(collection) ?? SYSTEM_SECTION;
 /** Collection rangée explicitement dans une section (et pas seulement par défaut au système). */
 export const isCataloguedCollection = (collection) => byCollection.has(collection);
 

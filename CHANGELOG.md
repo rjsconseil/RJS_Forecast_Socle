@@ -3,6 +3,19 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : espace des applications autonomes et tables AA_ — 27 novembre 2026
+
+Évolution en **mode socle**, BPM-Astra inchangé. Référence : `docs/ARCHITECTURE.md` §20.1.
+- **Espace propre d'une application autonome** : l'inscription peut déclarer un `espace` (adresse, titre, description,
+  écran). Le site sert l'application à cette adresse dans son interface habituelle (`platform/applications-autonomes.ts`).
+- **Section « Applications autonomes »** (zone Noyau transverse, N0 · 05) : un lien par application qui repose sur le
+  noyau, cachée tant qu'aucune n'est inscrite.
+- **Base commune des données des applications autonomes** (§20.2) : modèle déclaré dans `donnees.json` du dossier de
+  l'application, module transverse « applications », tables `AA_` + préfixe de la section (`AA_MP_…`, `AA_SY_…`),
+  catalogue de référence commun en lecture seule, instanciation par règles, routes `/api/aa/…`.
+- Site : accès générique `Api.aaList`, `aaCreate`, `aaUpdate`, `aaInstancier` et le type `LigneApplication` (grand-noyau.ts).
+- Contrat mis à jour : 99 exports côté site (+ `EspaceInscrit`, `LigneApplication`, `InscriptionApplication` étendue), 160 routes (+ 6 `/api/aa`).
+
 ## Grand noyau (socle) : le socle à l'abri pour les applications autonomes — 27 novembre 2026
 
 Évolution en **mode socle**, sans aucune fonctionnalité nouvelle ni écran modifié. Référence : `docs/ARCHITECTURE.md` §20.
