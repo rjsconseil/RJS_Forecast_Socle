@@ -15,6 +15,7 @@ import {
   navigationDestination,
 } from './navigation-generator';
 import { SITE_NAVIGATION } from '../plan/navigation-adapter';
+import { NAVIGATION_PREVIEW_SCRIPT, NAVIGATION_PREVIEW_SCRIPT_HASH } from './navigation-preview-script';
 
 const escape = (value: string) =>
   value.replace(
@@ -241,7 +242,7 @@ export function staticNavigationPreview(
   const stylesheetLinks = stylesheets
     .map((href) => '<link rel="stylesheet" href="' + escape(href) + '">')
     .join('');
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${escape(origins)}; font-src data: ${escape(origins)}; img-src data: ${escape(origins)}; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'">${stylesheetLinks}<style>
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${escape(origins)}; font-src data: ${escape(origins)}; img-src data: ${escape(origins)}; script-src '${NAVIGATION_PREVIEW_SCRIPT_HASH}'; connect-src 'none'; form-action 'none'">${stylesheetLinks}<style>
 ${fontStyles}
 ${PAGE_TABS_STYLES.replaceAll(':host', '.rjs-page-tabs')}
 body{margin:0}
@@ -271,35 +272,5 @@ body{margin:0}
  .simulation-shell .submenu{position:fixed;top:30%;left:8%;max-width:84vw}
  .simulation-shell .page-tabs{flex-wrap:wrap}
 }
-</style></head><body><header class="simulation-toolbar"><button class="mobile" id="menu">☰ Menu</button><button id="back">← Retour</button><span>Simulation statique · données de démonstration</span></header><div id="screen"></div><script>
-const data=${data};
-const history=[];
-function show(key,record=true){
- const target=data.destinations[key]||key;
- if(!data.screens[target])return;
- if(record)history.push(target);
- document.querySelector('#screen').innerHTML=data.screens[target];
- document.body.classList.remove('menu');
- document.querySelectorAll('.tab').forEach(tab=>{
-  let timer;
-  const menu=tab.querySelector('.submenu');
-  if(menu?.dataset.trigger==='hover'){
-   tab.addEventListener('mouseenter',()=>{clearTimeout(timer);tab.classList.add('open')});
-   tab.addEventListener('mouseleave',()=>{timer=setTimeout(()=>tab.classList.remove('open'),Number(menu.dataset.delay))});
-  }
- });
- const anchor=document.getElementById(key);
- if(anchor)anchor.scrollIntoView({behavior:'smooth'});else window.scrollTo(0,0);
-}
-document.addEventListener('click',event=>{
- const more=event.target.closest('.more');
- if(more){const tab=more.parentElement;tab.classList.toggle('open');more.setAttribute('aria-expanded',String(tab.classList.contains('open')));return;}
- const button=event.target.closest('[data-key]');
- if(button){event.preventDefault();show(button.dataset.key);}
-});
-document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.tab.open').forEach(tab=>tab.classList.remove('open'))});
-document.querySelector('#menu').onclick=()=>document.body.classList.toggle('menu');
-document.querySelector('#back').onclick=()=>{if(history.length>1){history.pop();show(history[history.length-1],false)}};
-show(data.initial);
-</script></body></html>`;
+</style></head><body><header class="simulation-toolbar"><button class="mobile" id="menu">☰ Menu</button><button id="back">← Retour</button><span>Simulation statique · données de démonstration</span></header><div id="screen"></div><script type="application/json" id="preview-data">${data}</script><script>${NAVIGATION_PREVIEW_SCRIPT}</script></body></html>`;
 }

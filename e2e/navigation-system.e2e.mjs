@@ -18,6 +18,8 @@ const page = await context.newPage();
 page.setDefaultTimeout(10000);
 const errors = [];
 page.on('pageerror', e => errors.push(`${page.url()} : ${e.message}`));
+// Toute violation de la CSP (script ou feuille refusés), dans la page ou dans le cadre de l'aperçu, est une erreur.
+page.on('console', m => { if (m.type() === 'error' && /Content Security Policy/i.test(m.text())) errors.push(`CSP : ${m.text()}`); });
 const endpoint = base + '/api/navigation/settings';
 const original = await (await context.request.get(endpoint)).json();
 let wrote = false;
@@ -62,7 +64,20 @@ try {
   assert(menu.includes(LABEL), 'Le menu d’Astra ne reprend pas le libellé enregistré');
   check('Enregistrement : relu par l’API et repris par le menu d’Astra');
 
-  // 4. Écran étroit : la page de réglages ne déborde pas.
+  // 4. Simulation : l'aperçu tourne dans son cadre isolé, sous la CSP du site (script autorisé par son empreinte).
+  await open('/navigation');
+  await page.getByRole('button', { name: 'Simuler' }).click();
+  const frame = await (await page.waitForSelector('iframe[title="Aperçu interactif du module BPM"]')).contentFrame();
+  await frame.waitForSelector('.simulation-hero h1');
+  const title = () => frame.evaluate(() => document.querySelector('.current-title')?.textContent ?? '');
+  const before = await title();
+  const links = frame.locator('.section-pages [data-key]');
+  assert((await links.count()) > 1, 'Simulation : aucune page dans le menu de l’aperçu');
+  await links.last().click();
+  await frame.waitForFunction((b) => document.querySelector('.current-title')?.textContent !== b, before);
+  check('Simulation : l’aperçu s’affiche et navigue, sans violation de la CSP');
+
+  // 5. Écran étroit : la page de réglages ne déborde pas.
   await page.setViewportSize({ width: 390, height: 844 });
   await open('/navigation');
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Débordement de côté à 390 px');

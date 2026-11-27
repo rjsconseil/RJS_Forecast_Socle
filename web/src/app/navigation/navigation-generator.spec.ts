@@ -7,6 +7,7 @@ import {
 } from './navigation-generator';
 import { NavigationConfiguration } from './navigation-model';
 import { staticNavigationPreview } from './navigation-static-preview';
+import { NAVIGATION_PREVIEW_SCRIPT, NAVIGATION_PREVIEW_SCRIPT_HASH } from './navigation-preview-script';
 
 const source = SITE_NAVIGATION.tree.find((node) => node.key === 'zone:bpm-astra')!;
 const defaults: NavigationConfiguration = { version: 1, scopes: {} };
@@ -108,7 +109,7 @@ describe('document statique régénéré', () => {
     });
     const document = new DOMParser().parseFromString(html, 'text/html');
     HTMLElement.prototype.scrollIntoView = () => {};
-    const script = document.querySelector('script')!.textContent!;
+    const script = document.querySelector('script:not([type])')!.textContent!;
     new Function('document', 'window', script)(document, { scrollTo() {} });
 
     expect(document.querySelector('h1')?.textContent).toBe(initial.nodes.get('/bpm-astra/plafonds')!.label);
@@ -135,7 +136,7 @@ it('charge les feuilles réelles et expose les classes et variables de navigatio
   expect([...document.querySelectorAll('link[rel="stylesheet"]')].map(link=>link.getAttribute('href'))).toEqual([
     'http://localhost:4300/styles-ABC.css','http://localhost:4300/styles-rest-DEF.css',
   ]);
-  new Function('document','window',document.querySelector('script')!.textContent!)(document,{scrollTo(){}});
+  new Function('document','window',document.querySelector('script:not([type])')!.textContent!)(document,{scrollTo(){}});
   const shell=document.querySelector('.app-shell')!;
   expect(shell.classList.contains('editorial-style')).toBe(true);
   expect(shell.getAttribute('data-density')).toBe('compact');
@@ -145,4 +146,21 @@ it('charge les feuilles réelles et expose les classes et variables de navigatio
   expect(tab.style.getPropertyValue('--navigation-detail-size')).toBe('18px');
   expect(tab.hasAttribute('data-navigation-detail-hoverColor')).toBe(true);
   expect(document.querySelectorAll('iframe,script[src]')).toHaveLength(0);
+});
+
+describe('script de l’aperçu sous la CSP du site', () => {
+  it('a l’empreinte déclarée dans navigation-preview-csp.json, et le document n’autorise que lui', async () => {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(NAVIGATION_PREVIEW_SCRIPT));
+    const hash = 'sha256-' + btoa(String.fromCharCode(...new Uint8Array(digest)));
+    // En cas d'échec : recopier cette valeur dans navigation-preview-csp.json (lu par scripts/site-server.mjs).
+    expect(NAVIGATION_PREVIEW_SCRIPT_HASH).toBe(hash);
+    const html = staticNavigationPreview(defaults, '/bpm-astra/plafonds', {
+      focus: false, density: 'comfortable', visualStyle: 'classic', touchTargets: false,
+    });
+    const document = new DOMParser().parseFromString(html, 'text/html');
+    const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]')!.getAttribute('content')!;
+    expect(csp).toContain(`script-src '${hash}'`);
+    expect(csp).not.toMatch(/script-src[^;]*unsafe-inline/);
+    expect([...document.querySelectorAll('script:not([type])')].map((s) => s.textContent)).toEqual([NAVIGATION_PREVIEW_SCRIPT]);
+  });
 });
