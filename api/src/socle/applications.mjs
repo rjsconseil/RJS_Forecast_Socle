@@ -6,6 +6,9 @@
 // (lignes communes à tous, en lecture seule) et les règles d'instanciation d'un projet en cours.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { declareApplicationCollection, sectionByKey, SYSTEM_SECTION } from './sections.mjs';
+import { SYSTEM_COLLECTIONS, SYSTEM_LISTS } from './data/schemas.mjs';
+
+const RESERVED = new Set([...SYSTEM_LISTS, ...SYSTEM_COLLECTIONS, 'schemaVersion']);
 
 const ROOT = new URL('../../../web/src/app/', import.meta.url);
 export const FIELD_TYPES = Object.freeze(['texte', 'nombre', 'entier', 'date', 'booleen', 'choix', 'liste', 'json']);
@@ -39,6 +42,7 @@ export function normalizeApplication(decl) {
   const collections = {};
   for (const [name, c] of Object.entries(decl.collections ?? {})) {
     if (!/^[a-z][A-Za-z0-9]*$/.test(name)) bad(app, `nom de collection invalide : ${name}.`);
+    if (RESERVED.has(name)) bad(app, `le nom de collection ${name} est réservé par le socle.`);
     if (typeof c.nature !== 'string' || !/^[a-z][A-Za-z0-9]*$/.test(c.nature)) bad(app, `nature invalide pour ${name}.`);
     if (typeof c.prefixe !== 'string' || !/^aa[a-z0-9]{2,10}$/.test(c.prefixe)) bad(app, `préfixe d'identifiant invalide pour ${name} (aa + 2 à 10 lettres ou chiffres).`);
     const champs = {};
