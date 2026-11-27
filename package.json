@@ -23,6 +23,7 @@
     "e2e:astra": "node e2e/astra.e2e.mjs",
     "e2e:ci": "node scripts/e2e-ci.mjs",
     "styles:audit": "node scripts/styles-audit.mjs",
+    "styles:extract": "node scripts/styles-extract.mjs",
     "api:check": "node scripts/api-check.mjs",
     "fixtures:web": "node api/scripts/web-fixtures.mjs",
     "seeds:check": "node scripts/seeds-check.mjs",
