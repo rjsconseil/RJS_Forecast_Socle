@@ -2,6 +2,10 @@
   "Grand noyau (platform/grand-noyau.ts)": {
     "Api": {
       "classe": [
+        "aaCreate: <T = LigneApplication>(app: string, collection: string, body: Record<string, unknown>) => Promise<{ replayed: boolean; item: T; }>",
+        "aaInstancier: (app: string, body: { declencheur: string; projectId?: string; etapeId?: string; }) => Promise<{ declencheur: string; created: { collection: string; id: string; regle: string; }[]; }>",
+        "aaList: <T = LigneApplication>(app: string, collection: string, filters?: Record<string, string>) => Promise<{ collection: string; items: T[]; }>",
+        "aaUpdate: <T = LigneApplication>(app: string, collection: string, id: string, body: Record<string, unknown>) => Promise<{ item: T; }>",
         "adminModules: () => Promise<ModuleDescription[]>",
         "adminParameter: (key: string) => Promise<EffectiveParameter>",
         "adminParameters: () => Promise<EffectiveParameter[]>",
@@ -382,6 +386,21 @@
         "name: string",
         "project: CoreProject",
         "view: ProjectView"
+      ]
+    },
+    "LigneApplication": {
+      "type": [
+        "application: string",
+        "catalogue?: string | null | undefined",
+        "code?: string | undefined",
+        "createdAt: string",
+        "id: string",
+        "kind: string",
+        "projectId?: string | null | undefined",
+        "refCode?: string | null | undefined",
+        "revision: number",
+        "updatedAt: string",
+        "userId: string | null"
       ]
     },
     "MetricCatalog": {
