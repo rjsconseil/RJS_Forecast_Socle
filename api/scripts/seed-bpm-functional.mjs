@@ -2,6 +2,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { createSocle } from "../src/socle/index.mjs";
+import { sqlitePathOf } from "../src/socle/data/engines/sqlite.mjs";
 import { SOCLE_MODULES } from "../src/modules/index.mjs";
 import { runBpmFunctionalScenarios } from "./bpm-functional-scenarios.mjs";
 
@@ -9,7 +10,9 @@ const arg = (key, fallback) => {
   const i = process.argv.indexOf(`--${key}`);
   return i < 0 ? fallback : process.argv[i + 1];
 };
-const dataFile = resolve(arg("data", "api/data/store.json"));
+const dataFile = resolve(
+  arg("data", process.env.J1_DATA_FILE ?? "api/data/store.sqlite"),
+);
 const until = arg("until", "2026-11-06");
 if (until !== "2026-11-06")
   throw new Error(
@@ -27,14 +30,41 @@ if (output === dataFile)
   );
 let socle;
 try {
-  const original = await readFile(dataFile).catch((e) => {
+  // Sauvegarde de la base réelle (le fichier SQLite, `store.json` n'étant plus qu'un nom historique).
+  const original = await readFile(sqlitePathOf(dataFile)).catch((e) => {
     if (e.code !== "ENOENT") throw e;
     return null;
   });
   socle = await createSocle({ dataFile, modules: SOCLE_MODULES });
-  const backup = `/tmp/rjs-bpm-avant-recette-${Date.now()}.json`;
+  const backup = `/tmp/rjs-bpm-avant-recette-${Date.now()}.sqlite`;
   if (original) await writeFile(backup, original, { flag: "wx" });
-  const report = await runBpmFunctionalScenarios(socle, { until, prefix });
+  // La recette saisit des cycles passés sans les clôturer : le verrou du cycle suivant est levé le temps des saisies,
+  // puis remis à sa valeur d'avant (la base garde les règles de production).
+  if (!socle.store.engine.sync)
+    throw new Error(
+      "La recette BPM rejoue ses scénarios dans le processus, sur la base SQLite du poste (SOCLE_DATA_ENGINE=sqlite).",
+    );
+  const admin = socle.modules.administration;
+  const lockBefore = admin.parameter("bpm.verrouCycleSuivant");
+  if (lockBefore.value !== false)
+    await admin.setParameter("bpm.verrouCycleSuivant", {
+      value: false,
+      expectedRevision: lockBefore.revision ?? 0,
+      note: "Recette BPM : saisie des cycles passés",
+    });
+  let report;
+  try {
+    report = await runBpmFunctionalScenarios(socle, { until, prefix });
+  } finally {
+    if (lockBefore.value !== false) {
+      const lock = admin.parameter("bpm.verrouCycleSuivant");
+      await admin.setParameter("bpm.verrouCycleSuivant", {
+        value: lockBefore.value,
+        expectedRevision: lock.revision ?? 0,
+        note: "Recette BPM : règle rétablie",
+      });
+    }
+  }
   // Un second lancement garde les profils et les résultats de la première recette.
   if (report.profiles.every((u) => u.existing)) {
     const previous = await readFile(output, "utf8")

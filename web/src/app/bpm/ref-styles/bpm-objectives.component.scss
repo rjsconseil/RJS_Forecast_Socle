@@ -6,7 +6,6 @@
   gap: var(--ecart-16);
 }
 .objectives {
-  padding: var(--ecart-20);
   border: var(--trait-1) solid var(--card-border);
   border-radius: var(--card-radius);
   background: var(--raised-surface);
@@ -35,11 +34,6 @@
 .objectives-metrics {
   margin: 0;
 }
-.objectives-metrics > div {
-  padding: var(--ecart-16);
-  border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--card-radius);
-}
 .objectives-metrics dt {
   color: var(--muted);
 }
@@ -60,13 +54,10 @@
 }
 
 .objectives-summary {
-  display: flex;
   flex-wrap: wrap;
   gap: var(--ecart-16) var(--ecart-32);
   margin: 0;
-  padding: var(--ecart-16);
   border-inline-start: var(--trait-3) solid var(--app-accent);
-  background: var(--app-accent-soft);
 }
 .objectives-summary dt {
   color: var(--muted);
@@ -74,7 +65,6 @@
 }
 .objectives-summary dd {
   margin: var(--ecart-4) 0 0;
-  font-size: var(--fs-xl);
   font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
 }
@@ -260,9 +250,7 @@
   color: var(--ink);
 }
 .objectives-landmark-target .objectives-landmark-icon {
-  border-color: var(--app-accent-line);
   color: var(--objective-color);
-  background: var(--objective-surface);
 }
 .objectives-landmark-icon svg {
   width: var(--dim-24);

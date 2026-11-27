@@ -15,7 +15,7 @@ import { projectLink } from '../bpm/bpm.screens';
 import { PAGE_TOOLBAR_SLOT, type PageToolbarSlot } from '../shared/page-toolbar.component';
 import { ASTRA_PARTS, astraMenuSlug, astraPartOf, astraTabsOf, astraUrl } from './astra-parts';
 import { astraBridges } from './astra-bridges';
-import { ASTRA_CREATE_MENU, AstraActions, type AstraCreateKind } from './astra-actions';
+import { ASTRA_CREATE_MENU, AstraActions, astraLinkDoublesTab, type AstraCreateKind } from './astra-actions';
 
 /**
  * Cadre commun des pages d'Astra, comme une application :
@@ -331,9 +331,7 @@ export class AstraPartFrame {
     if (!actions) return;
     const tabs = new Set(this.nav().tabs.map(t => t.url));
     for (const link of Array.from(actions.querySelectorAll<HTMLAnchorElement>('a[href]'))) {
-      const url = new URL(link.href, location.href);
-      const action = url.hash || ['entry', 'editProject', 'editTask', 'goal'].some(k => url.searchParams.has(k));
-      const duplicate = url.origin === location.origin && !action && tabs.has(url.pathname);
+      const duplicate = astraLinkDoublesTab(link.href, location.href, tabs, link.hasAttribute('data-astra-keep'));
       if (duplicate !== link.hasAttribute('data-astra-tab')) link.toggleAttribute('data-astra-tab', duplicate);
     }
   }

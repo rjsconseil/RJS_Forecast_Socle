@@ -384,7 +384,9 @@ export class BpmExpensesPage {
   protected createDefaults = computed<Partial<EntryInput>>(() => {
     const center = this.ctx.q('center')();
     const budgetId = this.ctx.q('budgetId')();
-    const dir: Direction = this.direction() === 'income' ? 'income' : 'charge';
+    // Un lien de saisie dit son sens (« Saisir une entrée d’argent ») ; sinon, celui du filtre de la page.
+    const asked = this.ctx.q('entryDirection')();
+    const dir: Direction = (asked ?? this.direction()) === 'income' ? 'income' : 'charge';
     return {
       direction: dir,
       ...(center && center !== '__none__' ? { costCenterRef: center } : {}),

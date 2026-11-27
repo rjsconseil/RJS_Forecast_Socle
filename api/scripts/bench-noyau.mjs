@@ -1,5 +1,7 @@
 // Mesure de charge du noyau partitionné (aucune donnée réelle touchée : base temporaire).
 //   node api/scripts/bench-noyau.mjs [users=200] [opsParUser=200]
+//   Sur PostgreSQL (base de test VIDE, elle reçoit les users de la mesure) :
+//   SOCLE_DATA_ENGINE=sgbd SOCLE_PG_URL=postgres://… node api/scripts/bench-noyau.mjs 20 20
 // Mesure : écritures en série sur une grosse partition, écritures en parallèle sur plusieurs partitions, lecture d'une
 // page (registre) dans la partition d'un user, mémoire et partitions en cache.
 import { performance } from 'node:perf_hooks';
@@ -16,6 +18,7 @@ const op = (socle, ctx, i, day = '2026-11-02') => socle.modules.budget.createOpe
 });
 
 const { socle, dataFile } = await makeSocle();
+console.log(`Moteur : ${socle.store.engine.constructor.id}`);
 const users = [];
 let t = performance.now();
 for (let u = 0; u < USERS; u += 1) users.push((await camille(socle, { label: `User ${u}` })).ctx);

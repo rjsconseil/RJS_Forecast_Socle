@@ -12,7 +12,6 @@
   padding: var(--ecart-24);
   border: var(--trait-1) solid var(--card-border);
   border-radius: var(--card-radius);
-  background: var(--raised-surface);
   color: var(--ink);
 }
 .wealth-heading,
@@ -25,8 +24,6 @@
 }
 .wealth-heading h2 {
   margin: 0;
-  color: var(--app-accent);
-  font-size: scaled(var(--fs-lg));
 }
 .wealth-heading > span,
 .wealth-label,
@@ -36,9 +33,6 @@
 }
 .wealth-overview {
   display: grid;
-  grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
-  gap: var(--ecart-24);
-  align-items: start;
 }
 .wealth-total,
 .wealth-contribution,
@@ -49,7 +43,6 @@
   align-content: start;
 }
 .wealth-total > strong {
-  font-size: scaled(var(--fs-4xl));
   font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   font-variant-numeric: tabular-nums;
@@ -61,12 +54,10 @@
 }
 .wealth-contribution,
 .wealth-target {
-  padding-inline-start: var(--ecart-24);
   border-inline-start: var(--trait-1) solid var(--card-border);
 }
 .wealth-contribution > strong,
 .wealth-target > strong {
-  font-size: scaled(var(--fs-xl));
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
@@ -159,7 +150,6 @@ summary:focus-visible {
     padding: var(--ecart-16);
   }
   .wealth-overview {
-    grid-template-columns: repeat(var(--colonnes-2), minmax(0, var(--fr-1)));
     gap: var(--ecart-20) var(--ecart-16);
   }
   .wealth-total {
@@ -169,7 +159,6 @@ summary:focus-visible {
     font-size: scaled(var(--fs-3xl));
   }
   .wealth-contribution {
-    padding-inline-start: 0;
     border-inline-start: 0;
   }
   .wealth-target {
@@ -182,7 +171,6 @@ summary:focus-visible {
     grid-template-columns: minmax(0, var(--fr-1));
   }
   .wealth-target {
-    padding-inline-start: 0;
     padding-block-start: var(--ecart-16);
     border-inline-start: 0;
     border-block-start: var(--trait-1) solid var(--card-border);
@@ -201,12 +189,7 @@ summary:focus-visible {
 .wealth-total > strong {
   color: var(--app-accent);
 }
-.wealth-overview {
-  grid-template-columns: minmax(0, var(--fr-1)) minmax(0, var(--fr-1));
-}
 .wealth-total {
-  grid-row: span 2;
-  align-self: center;
   padding-inline-end: var(--ecart-16);
 }
 .wealth-contribution,
@@ -220,9 +203,6 @@ summary:focus-visible {
 .wealth-target {
   padding-top: var(--ecart-16);
   border-top: var(--trait-1) solid var(--app-accent-line);
-}
-.wealth-contribution p {
-  display: none;
 }
 @container (max-width: #{$rupture-640}) {
   .wealth-total {
@@ -294,7 +274,6 @@ summary:focus-visible {
   width: var(--dim-32);
   height: var(--dim-32);
   border: var(--trait-1) solid var(--app-accent-line);
-  border-radius: 50%;
   font-size: scaled(var(--fs-lg));
 }
 .wealth-cap-gap {

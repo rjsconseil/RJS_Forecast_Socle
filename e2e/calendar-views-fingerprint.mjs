@@ -1,19 +1,22 @@
 // Empreinte du calendrier dans chacune de ses vues (mois, semaine, année), dans Astra et hors Astra, à 1440 et 375 px.
 // node e2e/calendar-views-fingerprint.mjs save|compare <fichier.json> — complète e2e/style-fingerprint.mjs (vue par défaut seulement).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 const [mode, file] = process.argv.slice(2);
-const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+// Mêmes réglages que style-fingerprint.mjs : BPM_BASE_URL et CHROME_PATH (Chrome du poste par défaut).
+const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
+const chrome = process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium'].find(existsSync) ?? chromium.executablePath();
+const browser = await chromium.launch({ executablePath: chrome, headless: true });
 const out = {};
 for (const width of [1440, 375]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' });
-  const users = await (await ctx.request.get('http://localhost:4300/api/users')).json();
+  const users = await (await ctx.request.get(base + '/api/users')).json();
   const uid = (users.find(u => u.entryCount > 0) ?? users[0]).id;
   await ctx.addInitScript(id => localStorage.setItem('rjs.activeUserId', id), uid);
   const page = await ctx.newPage();
   for (const path of ['/bpm-astra/calendrier', '/calendrier']) {
     for (const view of ['Mois', 'Semaine', 'Année', 'Agenda', 'Jour']) {
-      await page.goto('http://localhost:4300' + path, { waitUntil: 'networkidle' });
+      await page.goto(base + path, { waitUntil: 'networkidle' });
       const choice = page.locator('.cal-view-options label, .calendar-view-switch button, [role=radiogroup] label').filter({ hasText: new RegExp('^\\s*' + view) }).first();
       if (!(await choice.count())) continue;
       await choice.click({ force: true }).catch(() => {});

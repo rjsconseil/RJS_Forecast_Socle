@@ -2,7 +2,7 @@
 // (authentification), la fait travailler dans la partition de son user et annonce les changements aux pages ouvertes.
 // Aucune règle métier ici : les comptes et leurs règles sont dans le module users, les outils dans socle/auth.mjs.
 import { DomainError, ERROR_HTTP, fail } from './socle/errors.mjs';
-import { AUTH_MODES, authSecret, cookieOf, createSessions, createThrottle, SESSION_COOKIE } from './socle/auth.mjs';
+import { AUTH_MODES, authSecret, clientAddress, cookieOf, createSessions, createThrottle, SESSION_COOKIE } from './socle/auth.mjs';
 
 /** Adresses réservées à l'administration quand la connexion est exigée. */
 const ADMIN_PATHS = /^\/api\/(admin|om|_recette)(\/|$)/;
@@ -18,13 +18,60 @@ export const SECURITY_HEADERS = {
 };
 /** Adresses ouvertes sans connexion quand la connexion est exigée. */
 const PUBLIC_PATHS = new Set(['GET /api/users/types']);
+/** Méthodes sans effet : seules à échapper au contrôle de l'origine et du type de contenu. */
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+/** Noms d'hôte du poste : seuls acceptés en mode local, sauf liste explicite (`SOCLE_ALLOWED_HOSTS`). */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
+const listOf = (value) => String(value ?? '').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean);
+/** Nom d'hôte d'un en-tête `Host` (sans le port). */
+export function hostnameOf(host) {
+  const h = String(host ?? '').trim().toLowerCase();
+  if (h.startsWith('[')) return h.slice(0, h.indexOf(']') + 1);
+  return h.split(':')[0];
+}
+
+/**
+ * Garde contre les requêtes venues d'un autre site (CSRF) et le « DNS rebinding » :
+ * - `Host` : en mode local, le poste seul (localhost, 127.0.0.1, ::1) ; sinon la liste `SOCLE_ALLOWED_HOSTS` si elle
+ *   est fixée (le domaine du site en ligne) ;
+ * - écriture (toute méthode hors GET/HEAD/OPTIONS) : refusée si le navigateur la dit venue d'un autre site
+ *   (`Sec-Fetch-Site: cross-site`), ou si son `Origin` n'est ni celui de la requête ni dans `SOCLE_ALLOWED_ORIGINS` ;
+ *   son corps, s'il y en a un, doit être déclaré `application/json` (un formulaire ou un `text/plain` d'une autre page
+ *   ne passe plus).
+ */
+export function createRequestGuard({ required, env = process.env } = {}) {
+  const hosts = listOf(env.SOCLE_ALLOWED_HOSTS);
+  const origins = new Set(listOf(env.SOCLE_ALLOWED_ORIGINS));
+  return function check(req) {
+    const host = hostnameOf(req.headers.host);
+    if (hosts.length ? !hosts.includes(host) && !LOOPBACK_HOSTS.has(host) : !required && !LOOPBACK_HOSTS.has(host)) {
+      fail('FORBIDDEN', 'Adresse du site non reconnue.', { host });
+    }
+    if (SAFE_METHODS.has(req.method)) return;
+    if (String(req.headers['sec-fetch-site'] ?? '').toLowerCase() === 'cross-site') fail('FORBIDDEN', 'Requête venue d’un autre site : refusée.');
+    const origin = req.headers.origin;
+    if (origin && origin !== 'null') {
+      let o;
+      try { o = new URL(origin); } catch { fail('FORBIDDEN', 'Origine de la requête invalide.'); }
+      const same = o.host.toLowerCase() === String(req.headers.host ?? '').toLowerCase();
+      if (!same && !origins.has(o.origin.toLowerCase())) fail('FORBIDDEN', 'Requête venue d’un autre site : refusée.', { origin: o.origin });
+    } else if (origin === 'null') fail('FORBIDDEN', 'Requête d’origine opaque : refusée.');
+    const type = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase();
+    const hasBody = Number(req.headers['content-length'] || 0) > 0 || req.headers['transfer-encoding'] !== undefined;
+    if ((type && type !== 'application/json') || (hasBody && !type)) {
+      fail('UNSUPPORTED_MEDIA_TYPE', 'Le corps d’une requête doit être du JSON (content-type: application/json).', { contentType: type || null });
+    }
+  };
+}
 
 export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCLE_AUTH || 'local' } = {}) {
   if (!AUTH_MODES.includes(authMode)) throw new Error(`SOCLE_AUTH inconnu : ${authMode} (attendu : ${AUTH_MODES.join(', ')})`);
   const required = authMode === 'required';
-  const sessions = createSessions({ secret: authSecret(dataFile) });
-  const throttle = createThrottle();
+  const engine = socle.store.engine;
+  const sessions = createSessions({ secret: authSecret(dataFile, { shared: required && !engine.sync }) });
+  const throttle = createThrottle(engine.throttleStore ? { store: engine.throttleStore() } : {});
   const users = socle.modules.users;
+  const checkRequest = createRequestGuard({ required });
 
   const routes = [];
   for (const m of socle.registry.modules.values()) {
@@ -45,7 +92,8 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
     if (!session) return null;
     const account = await socle.store.within(session.userId, () => users.accountOf(session.userId));
     if (!account || session.issuedAt < account.sessionsFrom) return null;
-    return { userId: session.userId, role: account.role, email: account.email };
+    if (session.sessionId && account.revokedSessions.includes(session.sessionId)) return null;
+    return { userId: session.userId, role: account.role, email: account.email, sessionId: session.sessionId, expiresAt: session.expiresAt };
   }
 
   /** Mode local : le jeton s'il y en a un, sinon le profil choisi sur le poste (`x-user-id`). Mode exigé : le jeton seul. */
@@ -84,19 +132,24 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
         return { status: result.replayed ? 200 : 201, payload: { userId: result.userId, replayed: result.replayed }, ...login(result.userId), created: result };
       }
       case 'POST /api/auth/login': {
-        const keys = [`login:${String(body.email ?? '').trim().toLowerCase()}`, `ip:${req.socket.remoteAddress}`];
-        throttle.check(keys);
+        const keys = [`login:${String(body.email ?? '').trim().toLowerCase()}`, `ip:${clientAddress(req)}`];
+        await throttle.check(keys);
         try {
           const { userId } = await users.authenticate(body.email, body.password);
-          throttle.succeeded(keys);
+          // Un succès ne remet à zéro que l'identifiant : l'adresse garde ses échecs (essais sur d'autres comptes).
+          await throttle.succeeded(keys.slice(0, 1));
           return { payload: await status(userId), ...login(userId) };
         } catch (err) {
-          if (err instanceof DomainError && err.code === 'AUTH_INVALID') throttle.failed(keys);
+          if (err instanceof DomainError && err.code === 'AUTH_INVALID') await throttle.failed(keys);
           throw err;
         }
       }
-      case 'POST /api/auth/logout':
+      case 'POST /api/auth/logout': {
+        // Se déconnecter : le jeton de CET appareil est révoqué (refusé même s'il a été copié), pas seulement le cookie.
+        const id = ctx.identity;
+        if (id?.sessionId) await socle.store.within(id.userId, () => users.revokeSession({ userId: id.userId }, id.sessionId, id.expiresAt));
         return { payload: { mode: authMode, user: null }, ...logout };
+      }
       case 'POST /api/auth/logout-all':
         if (!ctx.userId) fail('AUTH_REQUIRED', 'Connexion requise.');
         await socle.store.within(ctx.userId, () => users.revokeSessions(ctx));
@@ -167,6 +220,17 @@ export function createHttpHandler(socle, { dataFile, authMode = process.env.SOCL
       res.end(JSON.stringify(payload));
     };
     try {
+      checkRequest(req);
+      // Point de santé (sonde d'un hébergeur ou d'un proxy) : ouvert sans connexion, ne dit rien des données.
+      if (req.method === 'GET' && url.pathname === '/api/health') {
+        const engine = socle.store.engine;
+        try {
+          await engine.ping?.();
+          return send(200, { status: 'ok', engine: engine.constructor.id, auth: authMode });
+        } catch {
+          return send(503, { status: 'unavailable', engine: engine.constructor.id, auth: authMode });
+        }
+      }
       const ctxFull = await contextOf(req);
       const ctx = { userId: ctxFull.userId };
       if (req.method === 'GET' && url.pathname === '/api/changes') return await openChanges(req, res, url, ctxFull);

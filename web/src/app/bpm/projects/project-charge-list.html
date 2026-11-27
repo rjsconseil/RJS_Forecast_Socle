@@ -1,0 +1,91 @@
+<div class="task-charge-list">
+  @for (c of charges(); track c.id) {
+    <article class="task-charge" [id]="'charge-' + c.id" tabindex="-1">
+      <div class="task-charge-heading">
+        <button
+          type="button"
+          class="text-link"
+          [disabled]="busy()"
+          (click)="open.emit(c)"
+          [attr.aria-label]="'Ouvrir la dépense ' + c.label"
+        >
+          {{ c.label }}
+        </button>
+        <span
+          class="bpm-charge-state"
+          [attr.data-state]="c.validated ? 'validated' : 'planned'"
+          >{{ chargeState(c) }}</span
+        >
+      </div>
+      <dl>
+        <div>
+          <dt>Prévu le {{ c.plannedDate | shortDate }}</dt>
+          <dd [bpmAmount]="c.plannedCents" [bpmFlow]="c.direction">{{ c.plannedCents | cents }}</dd>
+        </div>
+        @if (c.settled) {
+          <div>
+            <dt>{{ c.refund ? 'Reçu' : 'Réglé' }} le {{ c.realizedDate | shortDate }}</dt>
+            <dd [bpmAmount]="c.realizedCents" [bpmFlow]="c.direction">{{ c.realizedCents | cents }}</dd>
+          </div>
+        }
+      </dl>
+      <small>{{ c.cadenceLabel }}</small>
+      @if (c.refund) {
+        <p class="bpm-note">
+          Le gain reçu augmente les entrées du cycle d’imputation ou le patrimoine, selon la source choisie.
+        </p>
+      } @else if (c.beforeAllocation) {
+        <p class="bpm-note">
+          La date réelle précède l’enveloppe : ce règlement reste hors du Dépensé du projet de
+          vie.
+        </p>
+      } @else if (c.settled && !c.validated) {
+        <p class="bpm-note">
+          Projet sans enveloppe : ce règlement reste dans son historique, hors budget de vie.
+        </p>
+      } @else if (!c.settled) {
+        <p class="bpm-note">
+          Le flux est imputé au cycle ou au patrimoine lors de sa validation. Sa date réelle de paiement reste conservée.
+        </p>
+      }
+      <div class="task-charge-actions">
+        <button type="button" class="text-link" [disabled]="busy()" (click)="open.emit(c)">Détail et modification</button>
+        @if (!c.settled && settlingId() !== c.id) {
+          <button type="button" class="text-link" [disabled]="busy()" (click)="open.emit(c)">Valider le règlement</button>
+        }
+      </div>
+      @if (!c.settled) {
+        @if (settlingId() === c.id) {
+          <form [bpmFormDraft]="'settlement:' + c.id" #settlementDraft="bpmFormDraft" (submit)="$event.preventDefault(); settle.emit({ charge: c, fields: $any($event.target).elements, draft: settlementDraft })">
+            <label
+              >Date réelle<input
+                name="date"
+                type="date"
+                required
+                [max]="today()"
+                [value]="defaultDate(c)"
+            /></label>
+            <label
+              >Montant réglé (€)<input
+                name="amount"
+                inputmode="decimal"
+                required
+                [value]="(c.plannedCents / 100).toString().replace('.', ',')"
+            /></label>
+            <button class="btn btn-primary" [disabled]="busy()">Valider le règlement</button
+            ><button
+              type="button"
+              class="text-link"
+              [disabled]="busy()"
+              (click)="settlementDraft.clear(); cancelSettle.emit()"
+            >
+              Annuler
+            </button>
+          </form>
+        }
+      }
+    </article>
+  } @empty {
+    <p class="bpm-note">Aucune dépense sur les douze derniers et prochains mois.</p>
+  }
+</div>

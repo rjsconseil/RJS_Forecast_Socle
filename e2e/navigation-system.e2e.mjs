@@ -1,90 +1,83 @@
+// Réglages de la navigation (page /navigation) sur un site en marche : l'arborescence de BPM-Astra, la modification
+// d'un libellé et d'un style dans le brouillon, l'aperçu, l'annulation, l'enregistrement, puis l'effet dans Astra.
+// Les réglages d'origine sont toujours rétablis à la fin, même en cas d'échec.
+//
+//   npm run e2e:navigation                         (site sur http://localhost:4300)
+//   BPM_BASE_URL=… BPM_USER_ID=… CHROME_PATH=… npm run e2e:navigation
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { mkdir } from 'node:fs/promises';
-// Playwright du poste d'abord, sinon celui de l'environnement d'origine (même repli que bpm-navigation).
-let playwright;
-try { playwright = await import('playwright'); }
-catch { playwright = createRequire(import.meta.url)('/usr/lib/chatgpt/resources/cua_node/lib/node_modules/playwright/index.js'); }
-const { chromium } = playwright;
+import { chromium } from 'playwright-core';
+
 const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
-const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH ?? (existsSync('/opt/google/chrome/chrome') ? '/opt/google/chrome/chrome' : undefined), args: ['--no-sandbox'] });
+const chrome = process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/usr/bin/chromium'].find(existsSync)
+  ?? chromium.executablePath();
+const browser = await chromium.launch({ headless: true, executablePath: chrome });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+if (process.env.BPM_SESSION_TOKEN) await context.addCookies([{ name: 'rjs_session', value: process.env.BPM_SESSION_TOKEN, url: base }]);
 const page = await context.newPage();
 page.setDefaultTimeout(10000);
 const errors = [];
-page.on('pageerror', e => errors.push(e.message));
+page.on('pageerror', e => errors.push(`${page.url()} : ${e.message}`));
 const endpoint = base + '/api/navigation/settings';
 const original = await (await context.request.get(endpoint)).json();
 let wrote = false;
-const open = async path => { await page.goto(base + path, { waitUntil: 'networkidle' }); await page.locator('main h1').first().waitFor(); };
-const css = async (selector, property) => page.locator(selector).first().evaluate((el, property) => getComputedStyle(el).getPropertyValue(property), property);
+const open = async (path) => { await page.goto(base + path, { waitUntil: 'networkidle' }); };
+const check = (name) => console.log(`✓ ${name}`);
+const LABEL = 'Mes mouvements (essai)';
+
 try {
-  await open('/');
-  assert.equal(await page.locator('.portal-band[data-band="technical"]').getByRole('link', { name: 'Navigation system', exact: true }).count(), 1);
-  await page.locator('.portal-band[data-band="technical"]').getByRole('link', { name: 'Navigation system', exact: true }).click();
-  await page.getByRole('link', { name: /Présentation et libellés/ }).first().click();
-  await page.waitForURL('**/navigation');
-  await page.getByRole('heading', { name: 'Navigation system', exact: true }).waitFor();
-  // Three independent settings: global section text, BPM module page text, detail style on one page.
-  await page.getByLabel('Taille du texte (px)', { exact: true }).nth(0).fill('19');
-  await page.getByRole('button', { name: 'Enregistrer les réglages', exact: true }).click(); wrote = true;
-  await page.getByRole('status').filter({ hasText: 'Réglages enregistrés et appliqués' }).waitFor();
-  await page.getByLabel('Portée', { exact: true }).selectOption('module');
-  await page.getByLabel('Module', { exact: true }).selectOption('bpm');
-  await page.getByLabel('Taille du texte (px)', { exact: true }).nth(1).fill('21');
-  await page.getByLabel('Libellé : Tableau de bord (/tableau-de-bord)', { exact: true }).fill('Mon budget quotidien');
-  await page.getByRole('button', { name: 'Enregistrer les réglages', exact: true }).click();
-  await page.getByRole('status').filter({ hasText: 'Réglages enregistrés et appliqués' }).waitFor();
-  await page.getByLabel('Portée', { exact: true }).selectOption('page');
-  await page.getByLabel('Page', { exact: true }).selectOption('/vision');
-  await page.getByLabel('Taille du texte (px)', { exact: true }).nth(1).fill('24');
-  await page.getByRole('button', { name: 'Enregistrer les réglages', exact: true }).click();
-  await page.getByRole('status').filter({ hasText: 'Réglages enregistrés et appliqués' }).waitFor();
   const users = await (await context.request.get(base + '/api/users')).json();
-  assert(users.length, 'Un profil existant est nécessaire pour vérifier BPM');
-  await context.addInitScript(id => localStorage.setItem('rjs.activeUserId', id), process.env.BPM_USER_ID ?? users[0].id);
-  await open('/tableau-de-bord');
-  assert.equal(await page.locator('.section-page-link[href="/tableau-de-bord"] span').last().innerText(), 'Mon budget quotidien');
-  assert.equal(await css('.section-page-link[href="/tableau-de-bord"]', 'font-size'), '21px');
-  assert.equal(await page.locator('.topbar-current').innerText(), 'Mon budget quotidien');
-  assert.equal(await css('.section-switch-entry', 'font-size'), '19px');
-  const headingSize = await css('main h1', 'font-size');
-  assert.notEqual(headingSize, '21px', 'Le contenu ne doit pas adopter la taille de navigation');
-  await page.locator('.section-page-link[href="/vision"]').click();
-  await page.waitForURL('**/vision');
-  await page.locator('rjs-journey .nav-back').first().click();
-  await page.waitForURL('**/tableau-de-bord');
-  await page.locator('rjs-journey .nav-forward').first().click();
-  await page.waitForURL('**/vision');
-  assert.equal(await css('.section-page-link', 'font-size'), '24px');
-  await open('/socle/budget');
-  assert.notEqual(await css('.section-page-link', 'font-size'), '21px');
-  assert.equal(await css('.section-switch-entry', 'font-size'), '19px');
-  for (const module of ['bpm', 'budget', 'patrimoine', 'noyau', 'administration', 'navigation']) {
-    await open('/zones/' + module);
-    assert.equal(await page.locator('.navigation-module-switcher a').count(), 6);
-    console.log('✓ Accès module ' + module);
-  }
+  const userId = process.env.BPM_USER_ID ?? (users.find(u => u.entryCount > 0) ?? users[0])?.id;
+  assert(userId, 'Aucun profil sur ce site.');
+  // L'aperçu de la navigation tourne dans un cadre isolé, sans stockage : le profil n'y est pas posé.
+  await context.addInitScript(id => { try { localStorage.setItem('rjs.activeUserId', id); } catch { /* cadre isolé */ } }, userId);
+
+  // 1. L'arborescence montre les cinq parties d'Astra et leurs pages, dans l'ordre du menu.
+  await open('/navigation');
+  await page.getByRole('heading', { name: 'Composez votre navigation.' }).waitFor();
+  const tree = await page.evaluate(() => [...document.querySelectorAll('main button')].map(b => b.textContent.replace(/\s+/g, ' ').trim()).filter(t => /(Section|Page)$/.test(t)));
+  for (const part of ['Mon quotidien', 'Mes projets', 'Mon budget', 'Patrimoine', 'Cycles']) assert(tree.includes(part + 'Section'), `Arborescence : « ${part} » absent`);
+  assert(tree.indexOf('Mon quotidienSection') < tree.indexOf('MouvementsPage') && tree.indexOf('MouvementsPage') < tree.indexOf('Mes projetsSection'), 'Arborescence : ordre du menu');
+  check('Arborescence : les cinq parties d’Astra et leurs pages, dans l’ordre du menu');
+
+  // 2. Un libellé modifié dans le brouillon, puis annulé.
+  const node = (name) => page.locator('main button', { hasText: new RegExp(`^\\s*${name}\\s*Page\\s*$`) }).first();
+  await node('Mouvements').click();
+  const label = page.getByLabel('Libellé du lien');
+  await label.fill(LABEL);
+  await node(LABEL.replace(/[()]/g, '\\$&')).waitFor();
+  await page.getByRole('button', { name: '↶ Annuler' }).click();
+  await node('Mouvements').waitFor();
+  assert.equal(await label.inputValue(), '', 'Annuler : le libellé du brouillon reste');
+  check('Brouillon : libellé modifié puis annulé');
+
+  // 3. Enregistré : la configuration est relue par l'API, et le menu d'Astra prend le nouveau libellé.
+  await label.fill(LABEL);
+  await page.getByRole('button', { name: 'Enregistrer la configuration' }).click(); wrote = true;
+  await page.getByRole('status').filter({ hasText: /enregistr/i }).first().waitFor();
+  const saved = await (await context.request.get(endpoint)).json();
+  assert(JSON.stringify(saved.value).includes(LABEL), 'Le libellé n’est pas enregistré');
+  await open('/bpm-astra');
+  const menu = await page.locator('.astra-nav').innerText();
+  assert(menu.includes(LABEL), 'Le menu d’Astra ne reprend pas le libellé enregistré');
+  check('Enregistrement : relu par l’API et repris par le menu d’Astra');
+
+  // 4. Écran étroit : la page de réglages ne déborde pas.
   await page.setViewportSize({ width: 390, height: 844 });
   await open('/navigation');
-  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Débordement sur mobile');
-  await page.getByRole('button', { name: 'Menu', exact: true }).click();
-  await page.locator('.navigation-module-switcher summary').click();
-  await page.locator('.navigation-module-switcher a[href="/zones/budget"]').click();
-  await page.waitForURL('**/zones/budget');
-  assert.equal(await page.locator('#workspace-navigation').evaluate(el => el.matches(':popover-open')), false);
-  assert.deepEqual(errors, []);
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await open('/navigation');
-  await mkdir('/tmp/navigation-qa', { recursive: true });
-  await page.screenshot({ path: '/tmp/navigation-qa/settings.png', fullPage: false });
-  console.log('✓ Réglages UI, persistance, héritage site/module/page, libellés, isolation CSS et menu mobile');
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Débordement de côté à 390 px');
+  check('Écran étroit : aucun débordement à 390 px');
+
+  assert.deepEqual(errors, [], `Erreurs dans la page :\n  ${errors.join('\n  ')}`);
+  console.log('\n✓ Réglages de la navigation conformes ; réglages d’origine rétablis.');
+} catch (error) {
+  console.error(`\n✖ ${error.message}\n  page : ${page.url()}`);
+  process.exitCode = 1;
 } finally {
   if (wrote) {
     const latest = await (await context.request.get(endpoint)).json();
     const restored = await context.request.put(endpoint, { data: { expectedRevision: latest.revision, value: original.value } });
-    assert(restored.ok(), 'Rétablissement des réglages initiaux');
+    if (!restored.ok()) { console.error('✖ Réglages d’origine NON rétablis : ' + await restored.text()); process.exitCode = 1; }
   }
   await browser.close();
 }

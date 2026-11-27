@@ -14,13 +14,10 @@
   align-items: end;
 }
 .fe-selectors {
-  padding: var(--ecart-16);
-  background: var(--app-accent-soft);
   border-radius: var(--rayon-12);
 }
 .fe-form {
   display: grid;
-  gap: var(--ecart-20);
 }
 label {
   display: grid;
@@ -79,8 +76,6 @@ input[type='radio'] {
 }
 .fe-impact {
   display: grid;
-  gap: var(--ecart-16);
-  padding: var(--ecart-24);
   border: var(--trait-1) solid var(--app-accent-line);
   border-radius: var(--card-radius);
   background: var(--app-accent-soft);

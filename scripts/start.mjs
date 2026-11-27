@@ -1,7 +1,7 @@
 // `npm start` : démarre ensemble l'API locale (http://localhost:3410) et le site (http://localhost:4300),
 // comme le site de référence. Aucune dépendance : Node lance les deux serveurs, préfixe leurs messages et les
 // arrête ensemble (Ctrl+C, ou dès que l'un s'arrête). La réinitialisation de recette n'est pas activée ici :
-// pour les jeux d'essai (`npm run seed`), lancer l'API avec `npm run api`.
+// pour les jeux d'essai (`npm run seed`), lancer l'API avec `npm run api:recette`.
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { createServer } from 'node:net';

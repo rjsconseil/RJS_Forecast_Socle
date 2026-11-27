@@ -396,6 +396,11 @@ export class DataManager {
    * Exécute `fn` dans le contexte de données d'une requête : la partition du user (et la partition système) est
    * revalidée contre la base, puis l'état lu par les modules est sa vue. Sans user : vue complète (administration).
    */
+  /** Vrai pendant une requête (ou un appel `within`) : l'état lu par les modules est alors celui de son contexte. */
+  inContext() {
+    return DATA_CONTEXT.getStore() !== undefined;
+  }
+
   async within(userId, fn) {
     if (userId) await this.#refresh([SYSTEM_PARTITION, userId]);
     else if (!this.engine.sync || this.fullMode) await this.#refreshAll();

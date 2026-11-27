@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createHttpHandler } from '../src/http.mjs';
-import { createSessions, hashPassword, verifyPassword } from '../src/socle/auth.mjs';
+import { authSecret, clientAddress, createSessions, createThrottle, hashPassword, memoryThrottleStore, verifyPassword } from '../src/socle/auth.mjs';
 import { key, makeSocle } from './helpers.mjs';
 
 async function serve(authMode) {
@@ -118,4 +118,50 @@ test('auth · mode local (poste de travail) : le profil choisi suffit ; un profi
   // Changer d'identifiants exige le mot de passe actuel.
   const change = await call('POST', '/api/auth/credentials', { email: 'poste@example.org', password: 'nouveau mot de passe', currentPassword: 'faux mot de passe' });
   assert.equal(change.body.error.code, 'AUTH_INVALID');
+});
+
+// Faiblesses n° 5, 6 et 9 du rapport « architecture et faiblesses ».
+test('auth · se déconnecter révoque le jeton de cet appareil, même copié ; les autres appareils restent connectés', async (t) => {
+  const app = await serve('required');
+  t.after(app.close);
+  await signup(app.browser(), 'camille@example.org');
+  const phone = app.browser();
+  const laptop = app.browser();
+  const login = await phone('POST', '/api/auth/login', { email: 'camille@example.org', password: 'mot de passe solide' });
+  await laptop('POST', '/api/auth/login', { email: 'camille@example.org', password: 'mot de passe solide' });
+  const stolen = login.setCookie.split(';')[0];
+  assert.equal((await phone('POST', '/api/auth/logout')).status, 200);
+  const replay = await app.browser()('GET', '/api/bpm/summary', null, { cookie: stolen });
+  assert.equal(replay.status, 401, 'le jeton copié avant la déconnexion est refusé');
+  assert.equal((await laptop('GET', '/api/bpm/summary')).status, 200, 'l’autre appareil reste connecté');
+});
+
+test('auth · limitation des essais : adresse réelle derrière le proxy du site, compteurs purgés, succès sans effacer l’adresse', async () => {
+  const req = (remote, xff) => ({ socket: { remoteAddress: remote }, headers: xff ? { 'x-forwarded-for': xff } : {} });
+  assert.equal(clientAddress(req('127.0.0.1', '203.0.113.5')), '203.0.113.5', 'proxy du poste : adresse transmise');
+  assert.equal(clientAddress(req('198.51.100.7', '203.0.113.5'), {}), '198.51.100.7', 'proxy inconnu : en-tête ignoré');
+  assert.equal(clientAddress(req('198.51.100.7', '10.0.0.1, 203.0.113.5'), { SOCLE_TRUST_PROXY: '1' }), '203.0.113.5', 'proxy de confiance : dernière adresse ajoutée');
+  const store = memoryThrottleStore();
+  const throttle = createThrottle({ max: 2, windowMs: 1000, store });
+  await throttle.failed(['a'], 0);
+  await throttle.failed(['a'], 10);
+  await assert.rejects(throttle.check(['a'], 20), { code: 'AUTH_THROTTLED' });
+  await throttle.check(['a'], 2000);
+  await throttle.failed(['b'], 2000);
+  assert.deepEqual([...store.failures.keys()], ['b'], 'les compteurs échus sont purgés');
+});
+
+test('auth · secret des jetons : exigé avec une base partagée, assez long', () => {
+  const saved = process.env.SOCLE_AUTH_SECRET;
+  try {
+    delete process.env.SOCLE_AUTH_SECRET;
+    assert.throws(() => authSecret('/tmp/x.sqlite', { shared: true }), /SOCLE_AUTH_SECRET/);
+    process.env.SOCLE_AUTH_SECRET = 'court';
+    assert.throws(() => authSecret('/tmp/x.sqlite'), /trop court/);
+    process.env.SOCLE_AUTH_SECRET = 'x'.repeat(40);
+    assert.equal(authSecret('/tmp/x.sqlite', { shared: true }), 'x'.repeat(40));
+  } finally {
+    if (saved === undefined) delete process.env.SOCLE_AUTH_SECRET;
+    else process.env.SOCLE_AUTH_SECRET = saved;
+  }
 });

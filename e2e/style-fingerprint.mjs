@@ -44,13 +44,14 @@ try {
         await page.locator('dialog[open]').first().waitFor();
       }
       await page.waitForTimeout(400);
-      result[`${width}:/${name ?? slug}`] = await page.evaluate((props) => [...document.querySelectorAll('.app-shell *')]
-        .filter(e => !e.closest('svg, .astra-toast'))
+      // FP_IGNORE=bpm-x,bpm-y : éléments hôtes sans boîte (display: contents) ajoutés en découpant un écran, ignorés.
+      result[`${width}:/${name ?? slug}`] = await page.evaluate(([props, ignore]) => [...document.querySelectorAll('.app-shell *')]
+        .filter(e => !e.closest('svg, .astra-toast') && !ignore.includes(e.tagName.toLowerCase()))
         .map(e => {
           const cs = getComputedStyle(e);
           const id = e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
           return [id, props.map(p => cs.getPropertyValue(p)).join(';')];
-        }), PROPS);
+        }), [PROPS, (process.env.FP_IGNORE ?? '').split(',').filter(Boolean)]);
     }
     await context.close();
   }

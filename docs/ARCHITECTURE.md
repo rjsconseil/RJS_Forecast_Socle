@@ -600,3 +600,56 @@ sur toute déclaration toujours écrasée.
   sont sortis des écrans.
 - Le parcours de clôture rejoint les réponses de recette (`npm run fixtures:web`). `closing.contract.spec.ts` teste
   l'écran sur la vraie réponse de l'API.
+
+## 19. Correction des 14 faiblesses du rapport du 26 novembre 2026
+
+### 19.1 Sécurité
+
+- Garde des requêtes (`createRequestGuard` dans `http.mjs`), dans tous les modes : `Host` limité au poste et à
+  `SOCLE_ALLOWED_HOSTS` (contre le « DNS rebinding ») ; toute écriture d'une autre origine refusée (`Origin`,
+  `Sec-Fetch-Site`, `SOCLE_ALLOWED_ORIGINS`) ; corps JSON exigé (`415` sinon).
+- La remise à zéro de recette n'est plus dans `npm run api`, seulement dans `npm run api:recette`.
+- Limitation des essais de connexion : adresse lue dans `X-Forwarded-For` derrière un proxy de confiance
+  (`SOCLE_TRUST_PROXY=1`), compteurs dans la table `SY_throttle` avec PostgreSQL (communs à tous les serveurs),
+  entrées expirées purgées.
+- Jetons avec un identifiant de session (`sid`) : « se déconnecter » révoque le jeton de l'appareil.
+- `SOCLE_AUTH_SECRET` (32 caractères au moins) exigé au démarrage en `required` + `sgbd`.
+- Site : CSP et en-têtes de sécurité (`scripts/site-server.mjs`). Mise en ligne : `docs/DEPLOIEMENT.md`.
+
+### 19.2 Données et moteur PostgreSQL
+
+- `readPartition` lit dans une seule transaction `REPEATABLE READ READ ONLY` : objets, révision et journal viennent du
+  même instantané. Un test intercale une écriture entre deux lectures.
+- Les services asynchrones appelés hors requête s'exécutent dans la partition demandée (`inPartition`), ce qui rend
+  la mesure de charge et les scripts utilisables sur PostgreSQL.
+- Écritures groupées par table (`unnest`) : une requête par table et par type d'écriture, au lieu d'une par objet.
+  La colonne des objets reste en `TEXT`, pour que le JSON reste identique octet pour octet à SQLite.
+- `GET /api/health` (base interrogée), arrêt propre sur `SIGTERM`, liste des users paginée (`?limit&offset`).
+
+### 19.3 Jeux d'essai, tests et dépôt
+
+- Les quatre jeux d'essai passent, remettent le verrou du cycle suivant à la fin et tournent en CI
+  (`npm run seeds:check`).
+- CI : job `e2e` (site servi comme en production, CSP vérifiée, test Astra dans Chromium) ; couverture du site mesurée
+  avec un plancher (`scripts/coverage-threshold.mjs`).
+- Fiche projet et calendrier : cockpit du projet de vie, liste des dépenses et lecture d'une journée sortis en
+  composants ou fonctions pures testées, rendu vérifié identique par `e2e/style-fingerprint.mjs`.
+- Astra : la règle des liens qui doublent un onglet est une fonction pure testée (`astraLinkDoublesTab`), avec un
+  opt-out déclaré (`data-astra-keep`).
+- `.trash/` et `output/` ne sont plus suivis.
+
+### 19.4 Suite : points restés ouverts (27 novembre 2026)
+
+- e2e réécrits pour Astra et lancés par `npm run e2e:ci` (job `e2e`) : `projets` (scénario de mai à novembre dans les
+  écrans, 32/32), `bpm-navigation` (anciennes adresses, brouillons dans l'historique et au rechargement, contrôle du
+  compte, agenda), `navigation-system` (arborescence, brouillon, enregistrement repris par le menu d'Astra ; réglages
+  d'origine rétablis). `e2e-ci.mjs` enchaîne `seed` puis `seed:projets` (API arrêtée) sur la base temporaire.
+- Bugs trouvés et corrigés : « Saisir une entrée d'argent » depuis Mouvements s'ouvrait en dépense (`entryDirection`
+  ignoré) ; l'agenda était écrasé à la hauteur de son titre (`calendar/styles/_variants.scss` de nouveau chargé, sans
+  la règle de la vue mois) ; les réponses de recette des écrans gardaient la date réelle et le test qui les compare à
+  l'API échouait chaque lendemain (horodatages ramenés au jour de recette).
+- Navigation : règles de la page de réglages en fonctions pures testées (`navigation-settings-rules.ts`) ; la page
+  passe de 681 à 534 lignes.
+- Styles : 42 déclarations toujours écrasées retirées des feuilles de composants, empreintes identiques (48 vues et
+  12 vues du calendrier). `calendar/styles/_responsive.scss` et `_personalization.scss` ne sont chargées nulle part :
+  les charger change le rendu du calendrier, elles sont gardées en attendant une décision.

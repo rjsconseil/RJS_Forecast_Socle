@@ -75,3 +75,69 @@ test('sgbd · comptes : e-mail unique sur tout le site, connexion', { skip }, as
   await rejects(socle.modules.users.register({ requestKey: key('i'), email: 'a@example.org', password: 'mot de passe solide', label: 'B', userType: 'individuel' }), 'UNIQUENESS_VIOLATION');
   await socle.close();
 });
+
+test('sgbd · lecture d’une partition en un seul instantané : une écriture intercalée n’est ni vue à moitié ni écrasée', { skip }, async () => {
+  await freshBase();
+  const one = await open();
+  await one.modules.administration.setParameter('bpm.verrouCycleSuivant', { value: false, expectedRevision: 0, note: 'Tests' });
+  const { ctx } = await camille(one);
+  const two = await open();
+  await op(two, ctx, { direction: 'charge', amount: 1, date: '2026-11-01' });
+  // Pendant que « one » relit la partition (révision déjà lue, objets pas encore), « two » écrit.
+  let intercalated = 0;
+  let seen = null;
+  const engine = one.store.engine;
+  const read = engine.readPartition.bind(engine);
+  engine.readPartition = async (key) => {
+    const part = await read(key);
+    if (key === ctx.userId && intercalated === 1 && !seen) seen = part;
+    return part;
+  };
+  engine.afterRevisionRead = async (key) => {
+    if (key !== ctx.userId || intercalated) return;
+    intercalated = 1;
+    await op(two, ctx, { direction: 'charge', amount: 2, date: '2026-11-01' });
+  };
+  await op(one, ctx, { direction: 'charge', amount: 3, date: '2026-11-01' });
+  engine.afterRevisionRead = null;
+  assert.equal(intercalated, 1, 'une écriture a bien été intercalée pendant la lecture');
+  assert.ok(seen, 'la lecture intercalée a été observée');
+  // L'instantané est cohérent : sa révision est celle de ses objets (l'écriture intercalée n'y est pas).
+  assert.equal(Object.keys(seen.collections.operations).length, 1);
+  const total = await two.store.within(ctx.userId, () => count(two.state, 'operations'));
+  assert.equal(total, 3, 'aucune écriture n’a été écrasée');
+  await one.close();
+  await two.close();
+});
+
+test('sgbd · un service appelé hors requête entre de lui-même dans la partition de son user (scripts, mesure de charge)', { skip }, async () => {
+  await freshBase();
+  const socle = await open();
+  await socle.modules.administration.setParameter('bpm.verrouCycleSuivant', { value: false, expectedRevision: 0, note: 'Tests' });
+  const { ctx } = await camille(socle);
+  // Sans `within` : avant, PARTITION_NOT_LOADED (vue complète inexistante avec un moteur asynchrone).
+  const created = await operation(socle, ctx, { direction: 'charge', amount: 12, date: '2026-11-01' });
+  assert.ok(created);
+  // Une lecture synchrone, elle, se fait dans la partition (comme le serveur le fait pour chaque requête).
+  const register = await socle.store.within(ctx.userId, () => socle.modules.bpm.reads.register(ctx, { period: '2026-11' }));
+  assert.equal(register.lines.length, 1);
+  assert.equal((await socle.modules.users.listUsers()).length, 1);
+  await socle.close();
+});
+
+test('sgbd · limitation des essais de connexion commune à tous les serveurs (table SY_throttle)', { skip }, async () => {
+  await freshBase();
+  const { createThrottle } = await import('../src/socle/auth.mjs');
+  const one = await open();
+  const two = await open();
+  const a = createThrottle({ max: 3, windowMs: 60000, store: one.store.engine.throttleStore() });
+  const b = createThrottle({ max: 3, windowMs: 60000, store: two.store.engine.throttleStore() });
+  await a.failed(['login:x@example.org', 'ip:1']);
+  await b.failed(['login:x@example.org', 'ip:2']);
+  await a.failed(['login:x@example.org', 'ip:1']);
+  await assert.rejects(b.check(['login:x@example.org']), { code: 'AUTH_THROTTLED' });
+  await b.succeeded(['login:x@example.org']);
+  await a.check(['login:x@example.org']);
+  await one.close();
+  await two.close();
+});

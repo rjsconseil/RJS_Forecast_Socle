@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node scripts/start.mjs",
     "start:production": "node scripts/start.mjs --production",
-    "api": "J1_ENABLE_RECETTE_RESET=1 node api/src/server.mjs",
+    "api": "node api/src/server.mjs",
+    "api:recette": "J1_ENABLE_RECETTE_RESET=1 node api/src/server.mjs",
     "web": "npm --prefix web start",
     "seed": "node api/scripts/seed.mjs",
     "seed:plafonds": "node api/scripts/seed-plafonds.mjs",
@@ -17,11 +18,14 @@
     "test": "node --test 'api/test/*.test.mjs'",
     "e2e:projets": "node e2e/projets.e2e.mjs",
     "e2e:bpm": "node e2e/bpm-navigation.e2e.mjs",
+    "e2e:navigation": "node e2e/navigation-system.e2e.mjs",
     "build": "npm --prefix web run build",
     "e2e:astra": "node e2e/astra.e2e.mjs",
+    "e2e:ci": "node scripts/e2e-ci.mjs",
     "styles:audit": "node scripts/styles-audit.mjs",
     "api:check": "node scripts/api-check.mjs",
-    "fixtures:web": "node api/scripts/web-fixtures.mjs"
+    "fixtures:web": "node api/scripts/web-fixtures.mjs",
+    "seeds:check": "node scripts/seeds-check.mjs"
   },
   "engines": {
     "node": ">=22"

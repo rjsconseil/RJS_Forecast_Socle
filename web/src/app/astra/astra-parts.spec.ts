@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ASTRA_APPLICATION } from './astra.application';
+import { astraLinkDoublesTab } from './astra-actions';
 import { ASTRA_LINKS, ASTRA_ORDER, ASTRA_PARTS, ASTRA_TAB_LABELS, astraPartOf, astraTabsOf } from './astra-parts';
 
 const routes = ASTRA_APPLICATION.routes.filter(r => !r.redirectTo);
@@ -64,4 +65,17 @@ describe('navigation secondaire de BPM-Astra', () => {
   });
 
 
+});
+
+describe('liens des commandes d’un écran dans le cadre Astra', () => {
+  const here = 'https://site.example/bpm-astra/mouvements';
+  const tabs = new Set(['/bpm-astra/mouvements', '/bpm-astra/calendrier']);
+  it('un lien vers une page déjà en onglet la double ; une action, une ancre, un autre site ou un lien gardé non', () => {
+    expect(astraLinkDoublesTab('/bpm-astra/calendrier', here, tabs)).toBe(true);
+    expect(astraLinkDoublesTab('/bpm-astra/calendrier?entry=1', here, tabs)).toBe(false);
+    expect(astraLinkDoublesTab('/bpm-astra/calendrier#jour', here, tabs)).toBe(false);
+    expect(astraLinkDoublesTab('/bpm-astra/budget', here, tabs)).toBe(false);
+    expect(astraLinkDoublesTab('https://ailleurs.example/bpm-astra/calendrier', here, tabs)).toBe(false);
+    expect(astraLinkDoublesTab('/bpm-astra/calendrier', here, tabs, true)).toBe(false);
+  });
 });

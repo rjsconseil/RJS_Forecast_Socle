@@ -40,7 +40,7 @@ export async function createSocle({ dataFile, modules, faultInjection = false, d
   // P1 · Sens unique : chaque module travaille dans sa portée, jamais avec le socle entier.
   socle.scopeOf = (id) => registry.scopes.get(id);
   for (const m of registry.modules.values()) registry.scopes.set(m.id, moduleScope(socle, m));
-  for (const m of registry.modules.values()) socle.modules[m.id] = m.setup?.(registry.scopes.get(m.id)) ?? {};
+  for (const m of registry.modules.values()) socle.modules[m.id] = inPartition(socle.store, m.setup?.(registry.scopes.get(m.id)) ?? {});
   /** Les routes d'un module, construites dans sa portée. */
   socle.routesOf = (m) => m.routes?.(registry.scopes.get(m.id)) ?? [];
   try {
@@ -50,6 +50,41 @@ export async function createSocle({ dataFile, modules, faultInjection = false, d
     throw err;
   }
   return socle;
+}
+
+/**
+ * Services d'un module appelés hors requête (scripts, mesure de charge, tests) : avec un moteur asynchrone
+ * (PostgreSQL), l'état n'existe que dans le contexte d'une requête. Un service ASYNCHRONE (commande, lecture qui
+ * attend la base) appelé hors contexte y entre donc de lui-même, dans la partition du user de son premier argument
+ * (`ctx.userId`), sinon dans la vue complète (administration). Un service synchrone ne peut pas attendre la base : hors
+ * requête, il se lit dans `socle.store.within(userId, () => …)` (sinon PARTITION_NOT_LOADED, message explicite).
+ * Avec SQLite (synchrone), rien ne change : les services restent appelables tels quels.
+ * Faiblesse n° 4 du rapport « architecture et faiblesses » : la vue n'est plus « ambiante » hors requête.
+ */
+export function inPartition(store, services) {
+  if (store.engine.sync) return services;
+  const cache = new WeakMap();
+  const wrap = (target) => {
+    if (!target || typeof target !== 'object' || Array.isArray(target) || Object.getPrototypeOf(target) !== Object.prototype) return target;
+    if (cache.has(target)) return cache.get(target);
+    const proxy = new Proxy(target, {
+      get(obj, prop, receiver) {
+        const value = Reflect.get(obj, prop, receiver);
+        if (typeof value === 'function') {
+          if (value.constructor?.name !== 'AsyncFunction') return value;
+          return function partitioned(...args) {
+            if (store.inContext()) return value.apply(this === proxy ? obj : this, args);
+            const userId = typeof args[0]?.userId === 'string' ? args[0].userId : null;
+            return store.within(userId, () => value.apply(this === proxy ? obj : this, args));
+          };
+        }
+        return wrap(value);
+      },
+    });
+    cache.set(target, proxy);
+    return proxy;
+  };
+  return wrap(services);
 }
 
 /**

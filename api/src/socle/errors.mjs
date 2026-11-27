@@ -4,6 +4,8 @@ export const ERROR_HTTP = {
   VALIDATION: 400,
   // Corps de requête au-delà de la limite (SOCLE_BODY_LIMIT).
   PAYLOAD_TOO_LARGE: 413,
+  // Corps d'écriture qui n'est pas du JSON (formulaire, text/plain : signe d'une requête venue d'un autre site).
+  UNSUPPORTED_MEDIA_TYPE: 415,
   NOT_FOUND: 404,
   CONTEXT_REQUIRED: 401,
   REFERENCE_NOT_FOUND: 422,

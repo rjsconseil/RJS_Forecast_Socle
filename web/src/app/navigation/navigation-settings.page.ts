@@ -16,6 +16,17 @@ import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { FormsModule } from '@angular/forms';
 import { NavigationSystem } from './navigation.service';
+import {
+  NAVIGATION_NUMERIC_FIELDS,
+  NAVIGATION_PRESETS,
+  findNavigationNode,
+  levelAllowedOnSurface,
+  levelOfSurface,
+  navigationChanges,
+  navigationNodeKind,
+  navigationSampleStyle,
+  navigationValidationErrors,
+} from './navigation-settings-rules';
 import { auditNavigation, navigationLoop } from './navigation-engine';
 import {
   ContentMenuOptions,
@@ -70,17 +81,7 @@ export class NavigationSettingsPage {
     });
   }
   readonly selectedKey = signal(defaultApplicationHome());
-  readonly selected = computed(() => {
-    const find = (nodes: NavigationNode[]): NavigationNode | undefined => {
-      for (const n of nodes) {
-        if (n.key === this.selectedKey()) return n;
-        const found = find(n.children ?? []);
-        if (found) return found;
-      }
-      return undefined;
-    };
-    return find([this.generated().root]) ?? this.generated().root;
-  });
+  readonly selected = computed(() => findNavigationNode([this.generated().root], this.selectedKey()) ?? this.generated().root);
   readonly canvasMode = signal<'map' | 'preview'>('map');
   readonly previewNarrow = signal(false);
   readonly propertyTab = signal<'identity' | 'relations' | 'style' | 'behavior'>('identity');
@@ -106,17 +107,7 @@ export class NavigationSettingsPage {
     return effectiveLabel(this.draft(), this.context(), node.key, node.label);
   }
   nodeKind(node: NavigationNode) {
-    return node.key.endsWith('#main')
-      ? 'Sous-page d’accueil'
-      : node.key.includes('?')
-        ? 'Action'
-        : node.level === 'content'
-          ? 'Section de contenu'
-          : node.level === 'section'
-            ? 'Section'
-            : node.level === 'page'
-              ? 'Page'
-              : 'Sous-page';
+    return navigationNodeKind(node);
   }
   expandAll(folded: boolean) {
     for (const part of this.parts()) this.fold(part, folded);
@@ -125,28 +116,7 @@ export class NavigationSettingsPage {
     return this.levels.find((l) => l.id === this.selectedLevel())?.label;
   }
   sampleStyle(state: string) {
-    const s = this.preview(this.selectedLevel());
-    return {
-      'font-size': (s.size ?? 14) + 'px',
-      'font-weight': s.weight ?? 600,
-      padding: (s.spacing ?? 10) + 'px ' + (s.horizontalPadding ?? 16) + 'px',
-      'min-height': (s.minHeight ?? 44) + 'px',
-      'border-radius': (s.radius ?? 10) + 'px',
-      border: (s.borderWidth ?? 1) + 'px solid ' + (s.borderColor ?? '#dbe2ec'),
-      'letter-spacing': (s.letterSpacing ?? 0) + 'px',
-      color:
-        state === 'active'
-          ? (s.activeColor ?? '#ffffff')
-          : state === 'hover'
-            ? (s.hoverColor ?? s.color ?? '#24344b')
-            : (s.color ?? '#24344b'),
-      background:
-        state === 'active'
-          ? (s.activeBackground ?? '#364cc5')
-          : state === 'hover'
-            ? (s.hoverBackground ?? '#edf0fc')
-            : (s.background ?? '#ffffff'),
-    };
+    return navigationSampleStyle(this.preview(this.selectedLevel()), state);
   }
 
   readonly sectionFilter = signal('');
@@ -185,15 +155,7 @@ export class NavigationSettingsPage {
   }
   chooseSurface(surface: NavigationSurface) {
     this.surface.set(surface);
-    this.selectedLevel.set(
-      surface === 'contents'
-        ? 'content'
-        : surface === 'actions' || surface === 'secondary'
-          ? 'detail'
-          : surface === 'tertiary' || surface === 'portal'
-            ? 'page'
-            : 'section',
-    );
+    this.selectedLevel.set(levelOfSurface(surface));
   }
   /** Le moteur contrôle la navigation de chaque module applicatif (règles N2 à N9). */
   readonly audits = computed(() =>
@@ -203,109 +165,15 @@ export class NavigationSettingsPage {
       subpages: navigationLoop(app).length,
     })),
   );
-  readonly validationErrors = computed(() => {
-    const errors: string[] = [...this.generated().errors];
-    for (const [scope, settings] of Object.entries(this.draft().scopes)) {
-      if (scope !== ('module:' + defaultApplicationId()) && !this.pages().some((p) => scope === 'page:' + p.link)) continue;
-      const menu = settings.contentMenu;
-      if (
-        menu?.width !== undefined &&
-        (!Number.isInteger(menu.width) || menu.width < 220 || menu.width > 480)
-      )
-        errors.push(scope + ' : largeur du menu entre 220 et 480 px.');
-      if (
-        menu?.closeDelay !== undefined &&
-        (!Number.isInteger(menu.closeDelay) || menu.closeDelay < 0 || menu.closeDelay > 600)
-      )
-        errors.push(scope + ' : délai de fermeture entre 0 et 600 ms.');
-      for (const [surface, levels] of Object.entries(settings.styles ?? {}))
-        for (const [level, style] of Object.entries(levels ?? {}))
-          for (const [key, value] of Object.entries(style)) {
-            const field = this.numericFields.find((f) => f.key === key);
-            if (
-              field &&
-              (!Number.isInteger(value) || Number(value) < field.min || Number(value) > field.max)
-            )
-              errors.push(
-                surface +
-                  ' · ' +
-                  level +
-                  ' : ' +
-                  field.label +
-                  ' doit être compris entre ' +
-                  field.min +
-                  ' et ' +
-                  field.max +
-                  '.',
-              );
-            else if (!field && (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value)))
-              errors.push(surface + ' · ' + level + ' : couleur ' + key + ' invalide (#RRGGBB).');
-          }
-    }
-    return errors;
-  });
+  readonly validationErrors = computed(() =>
+    navigationValidationErrors(this.draft(), 'module:' + defaultApplicationId(), this.pages().map((p) => p.link), this.generated().errors),
+  );
   readonly history = signal<NavigationConfiguration[]>([]);
   readonly selectedLevel = signal<NavigationLevel>('section');
-  readonly availableLevels = computed(() =>
-    this.levels.filter((level) =>
-      this.surface() === 'contents'
-        ? level.id === 'content'
-        : this.surface() === 'actions' || this.surface() === 'secondary'
-          ? level.id === 'detail'
-          : this.surface() === 'portal'
-            ? level.id === 'page'
-            : level.id !== 'content',
-    ),
-  );
+  readonly availableLevels = computed(() => this.levels.filter((level) => levelAllowedOnSurface(this.surface(), level.id)));
   readonly activeLevels = computed(() => this.levels.filter((l) => l.id === this.selectedLevel()));
-  readonly numericFields = [
-    { key: 'size', label: 'Taille du texte', min: 12, max: 28, step: 1, unit: 'px' },
-    { key: 'weight', label: 'Graisse du texte', min: 400, max: 800, step: 100, unit: '' },
-    { key: 'spacing', label: 'Marge intérieure verticale', min: 0, max: 20, step: 1, unit: 'px' },
-    {
-      key: 'horizontalPadding',
-      label: 'Marge intérieure horizontale',
-      min: 0,
-      max: 40,
-      step: 1,
-      unit: 'px',
-    },
-    { key: 'minHeight', label: 'Hauteur minimale', min: 28, max: 72, step: 1, unit: 'px' },
-    { key: 'radius', label: 'Arrondi des liens', min: 0, max: 32, step: 1, unit: 'px' },
-    { key: 'borderWidth', label: 'Épaisseur de bordure', min: 0, max: 4, step: 1, unit: 'px' },
-    { key: 'letterSpacing', label: 'Espacement des lettres', min: 0, max: 4, step: 1, unit: 'px' },
-  ] as const;
-  readonly changes = computed(() => {
-    const a = this.nav.configuration(),
-      b = this.draft();
-    return [...new Set([...Object.keys(a.scopes), ...Object.keys(b.scopes)])]
-      .filter((k) => JSON.stringify(a.scopes[k]) !== JSON.stringify(b.scopes[k]))
-      .map((key) => ({
-        key,
-        label: key === ('module:' + defaultApplicationId()) ? 'Présentation du module' : 'Réglages d’une page',
-        description: 'Libellés, styles ou comportement des menus.',
-      }))
-      .concat(
-        [...new Set([...Object.keys(a.order ?? {}), ...Object.keys(b.order ?? {})])]
-          .filter((k) => JSON.stringify(a.order?.[k]) !== JSON.stringify(b.order?.[k]))
-          .map((key) => ({
-            key,
-            label: 'Ordre des liens',
-            description: 'Position des enfants dans la navigation.',
-          })),
-      )
-      .concat(
-        JSON.stringify(a.relations) === JSON.stringify(b.relations)
-          ? []
-          : [
-              {
-                key: 'relations',
-                label: 'Relations entre les liens',
-                description: 'Parents, accueils et zones d’affichage.',
-              },
-            ],
-      );
-  });
+  readonly numericFields = NAVIGATION_NUMERIC_FIELDS;
+  readonly changes = computed(() => navigationChanges(this.nav.configuration(), this.draft(), 'module:' + defaultApplicationId()));
   readonly changeCount = computed(() => this.changes().length);
   revisionValue(key: string, draft: boolean) {
     const c = draft ? this.draft() : this.nav.configuration();
@@ -342,22 +210,7 @@ export class NavigationSettingsPage {
   preset(kind: 'compact' | 'comfortable' | 'contrast') {
     this.change((c) => {
       const levels = (((c.scopes[this.scope()] ??= {}).styles ??= {})[this.surface()] ??= {});
-      levels[this.selectedLevel()] = {
-        ...levels[this.selectedLevel()],
-        ...(kind === 'compact'
-          ? { size: 13, spacing: 5, horizontalPadding: 10, minHeight: 32, radius: 6 }
-          : kind === 'comfortable'
-            ? { size: 15, spacing: 10, horizontalPadding: 16, minHeight: 44, radius: 10 }
-            : {
-                color: '#182b45',
-                background: '#ffffff',
-                activeColor: '#ffffff',
-                activeBackground: '#183b63',
-                hoverColor: '#183b63',
-                hoverBackground: '#e6eff9',
-                weight: 700,
-              }),
-      };
+      levels[this.selectedLevel()] = { ...levels[this.selectedLevel()], ...NAVIGATION_PRESETS[kind] };
     });
   }
   exportBpm() {

@@ -40,3 +40,92 @@ test('http · un corps au-delà de la limite est refusé (413) sans être lu en 
     await close();
   }
 });
+
+// Faiblesse n° 1 du rapport « architecture et faiblesses » : une page d'un autre site ne doit rien pouvoir écrire.
+async function serveRecette(authMode = 'local') {
+  const { socle, dataFile } = await makeSocle();
+  socle.config = { recetteReset: true };
+  const server = createServer(createHttpHandler(socle, { dataFile, authMode }));
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const port = server.address().port;
+  return { base: `http://127.0.0.1:${port}`, port, socle, close: async () => { server.close(); await socle.close(); } };
+}
+
+/** Requête brute (fetch impose son propre Host) : méthode, chemin, en-têtes, corps. */
+async function raw(port, method, path, headers = {}, body = '') {
+  const { request } = await import('node:http');
+  return new Promise((resolve, reject) => {
+    const req = request({ host: '127.0.0.1', port, method, path, headers: { 'content-length': Buffer.byteLength(body), ...headers } }, (res) => {
+      let data = '';
+      res.on('data', (c) => { data += c; });
+      res.on('end', () => resolve({ status: res.statusCode, body: data ? JSON.parse(data) : null }));
+    });
+    req.on('error', reject);
+    req.end(body);
+  });
+}
+
+test('http · une page d’un autre site ne peut ni remettre la recette à zéro ni écrire (Origin, Sec-Fetch-Site, type)', async () => {
+  const { port, close } = await serveRecette();
+  try {
+    const host = `127.0.0.1:${port}`;
+    const evil = await raw(port, 'POST', '/api/_recette/reset', { host, origin: 'https://evil.example', 'content-type': 'text/plain' });
+    assert.equal(evil.status, 403);
+    const cross = await raw(port, 'POST', '/api/_recette/reset', { host, 'sec-fetch-site': 'cross-site' });
+    assert.equal(cross.status, 403);
+    const opaque = await raw(port, 'POST', '/api/_recette/reset', { host, origin: 'null' });
+    assert.equal(opaque.status, 403);
+    const plain = await raw(port, 'POST', '/api/users', { host, 'content-type': 'text/plain' }, '{"label":"x"}');
+    assert.equal(plain.status, 415);
+    const form = await raw(port, 'POST', '/api/users', { host, 'content-type': 'application/x-www-form-urlencoded' }, 'label=x');
+    assert.equal(form.status, 415);
+    // Le site lui-même (même origine) et les scripts du poste (sans Origin) passent.
+    const same = await raw(port, 'POST', '/api/_recette/reset', { host, origin: `http://${host}`, 'content-type': 'application/json' });
+    assert.equal(same.status, 200);
+    const script = await raw(port, 'POST', '/api/_recette/reset', { host, 'content-type': 'application/json' });
+    assert.equal(script.status, 200);
+  } finally {
+    await close();
+  }
+});
+
+test('http · mode local : un nom d’hôte étranger (DNS rebinding) est refusé, même en lecture', async () => {
+  const { port, close } = await serveRecette();
+  try {
+    assert.equal((await raw(port, 'GET', '/api/users', { host: `evil.example:${port}` })).status, 403);
+    assert.equal((await raw(port, 'GET', '/api/users', { host: `localhost:${port}` })).status, 200);
+  } finally {
+    await close();
+  }
+});
+
+test('http · point de santé ouvert sans connexion, sans aucune donnée', async () => {
+  const { socle, dataFile } = await makeSocle();
+  const server = createServer(createHttpHandler(socle, { dataFile, authMode: 'required' }));
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  try {
+    const res = await fetch(`http://127.0.0.1:${server.address().port}/api/health`);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { status: 'ok', engine: 'sqlite', auth: 'required' });
+  } finally {
+    server.close();
+    await socle.close();
+  }
+});
+
+test('http · annuaire paginé : une page de users et le total, sans charger les autres partitions', async () => {
+  const { socle, dataFile } = await makeSocle();
+  const { camille } = await import('./helpers.mjs');
+  for (let i = 0; i < 5; i += 1) await camille(socle, { label: `User ${i}` });
+  const server = createServer(createHttpHandler(socle, { dataFile, authMode: 'local' }));
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  try {
+    const base = `http://127.0.0.1:${server.address().port}`;
+    const page = await (await fetch(`${base}/api/users?limit=2&offset=1`)).json();
+    assert.deepEqual([page.total, page.offset, page.limit, page.users.map((u) => u.label)], [5, 1, 2, ['User 1', 'User 2']]);
+    assert.equal((await (await fetch(`${base}/api/users`)).json()).length, 5, 'sans paramètre : tout l’annuaire, comme avant');
+  } finally {
+    server.close();
+    await socle.close();
+  }
+});

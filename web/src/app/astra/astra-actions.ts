@@ -37,3 +37,18 @@ export class AstraActions {
     this.timer = setTimeout(() => this.toast.set(null), 6000);
   }
 }
+
+/** Paramètres d'adresse qui font d'un lien une action (ouvrir une fenêtre de saisie), pas une navigation. */
+export const ASTRA_ACTION_PARAMS = ['entry', 'editProject', 'editTask', 'goal'] as const;
+
+/**
+ * Règle du cadre Astra pour les liens des commandes d'un écran : un lien qui mène, sur le site, à une page déjà
+ * présente en onglet (sans ancre ni paramètre d'action) double l'onglet ; le cadre le masque (`data-astra-tab`).
+ * Un écran peut garder un lien visible en le déclarant `data-astra-keep`. Fonction pure, testée.
+ */
+export function astraLinkDoublesTab(href: string, current: string, tabs: ReadonlySet<string>, keep = false): boolean {
+  if (keep) return false;
+  const url = new URL(href, current);
+  const action = !!url.hash || ASTRA_ACTION_PARAMS.some(k => url.searchParams.has(k));
+  return url.origin === new URL(current).origin && !action && tabs.has(url.pathname);
+}
