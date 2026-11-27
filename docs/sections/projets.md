@@ -12,8 +12,8 @@ Repère : projets et tâches (objets du noyau), changement d'état d'une tâche,
 Repère : page Pilotage (portefeuille, tableau des tâches, planning). À venir dans la section : jalons, dépendances entre tâches, responsable, étiquettes, modèles de projet, charge.
 
 ## 4. Liens avec les autres sections
-## 5. Ajouts demandés au socle
-Aucun à ce jour.
+## 5. Remontées vers le socle
+Repère : Mes projets est la première source de fonctionnalités appelées à remonter au socle (le noyau porte déjà projets, tâches et leur lien). Candidates pressenties : santé et retard d'un ensemble d'éléments datés, tableau par état, planning dans le temps, puis jalons, dépendances, responsable, étiquettes, modèles. Aucune remontée à ce jour.
 ## 6. Écrans
 ## 7. Recette et tests
 ## 8. Journal de développement et de débogage
