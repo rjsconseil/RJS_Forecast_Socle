@@ -94,7 +94,7 @@
                   <a [routerLink]="projectLink(row.project.id)">{{ row.project.label }}</a>
                   <div class="pilotage-plan-track">
                     @if (plan().todayLeft !== null) { <i class="pilotage-today" [style.left.%]="plan().todayLeft"></i> }
-                    <span class="pilotage-plan-bar" [attr.data-health]="row.project.health" [class.point]="row.project.point" [style.left.%]="row.project.left" [style.width.%]="row.project.width" [title]="shortDate(row.project.start) + ' → ' + shortDate(row.project.end)">
+                    <span class="pilotage-plan-bar" [attr.data-health]="row.project.health" [class.point]="row.project.point" [style.left.%]="row.project.left" [style.width.%]="row.project.point ? null : row.project.width" [title]="shortDate(row.project.start) + ' → ' + shortDate(row.project.end)">
                       <i [style.width.%]="row.project.completion ?? 0"></i>
                     </span>
                   </div>
@@ -103,7 +103,7 @@
                   <div class="pilotage-plan-row task">
                     <span>{{ t.label }}</span>
                     <div class="pilotage-plan-track">
-                      <span class="pilotage-plan-bar task" [class.late]="t.late" [class.done]="t.completion === 100" [class.point]="t.point" [style.left.%]="t.left" [style.width.%]="t.width" [title]="shortDate(t.start) + ' → ' + shortDate(t.end)"></span>
+                      <span class="pilotage-plan-bar task" [class.late]="t.late" [class.done]="t.completion === 100" [class.point]="t.point" [style.left.%]="t.left" [style.width.%]="t.point ? null : t.width" [title]="shortDate(t.start) + ' → ' + shortDate(t.end)"></span>
                     </div>
                   </div>
                 }
