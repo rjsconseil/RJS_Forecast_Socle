@@ -34,6 +34,8 @@ async function render(projects: ProjectSummary[], tasks: TaskView[], url = '/') 
     projects: vi.fn(async () => projects), tasks: vi.fn(async () => tasks),
     createProject: vi.fn(async () => ({})), createTask: vi.fn(async () => ({})),
     attachTask: vi.fn(async () => ({})), detachTask: vi.fn(async () => ({})), changeTaskStatus: vi.fn(async () => ({})),
+    aaList: vi.fn(async (_app: string, collection: string) => ({ collection, items: [] })),
+    aaCreate: vi.fn(async () => ({ replayed: false, item: {} })), aaInstancier: vi.fn(async () => ({ declencheur: 'creation-dossier', created: [] })),
   };
   TestBed.configureTestingModule({ providers: [provideRouter([{ path: '**', children: [] }]), { provide: Api, useValue: api }] });
   TestBed.inject(RecetteContext).userId.set('usr_1');
@@ -54,6 +56,15 @@ describe('Mes projets · application de gestion de projet (PRINCE2)', () => {
     expect(el.querySelector('.mp-table tbody td .mp-code')?.textContent).toBe('CS');
     expect([...el.querySelectorAll('.mp-board .mp-lane')].map((c) => c.querySelectorAll('.mp-card').length)).toEqual([1, 1, 0, 0]);
     expect(el.querySelectorAll('.mp-lanes .mp-lane')).toHaveLength(1);
+  });
+
+  it('ouvre le dossier PRINCE2 d’un projet : le dossier, puis l’instanciation du catalogue', async () => {
+    const { f, api, el } = await render([project('prj_1', 'Lancement', 'active')], []);
+    (el.querySelector('.mp-table .mp-btn.small') as HTMLButtonElement).click();
+    await settle(f);
+    expect(api.aaCreate).toHaveBeenCalledWith('projets', 'dossiers', { projectId: 'prj_1', processusCourant: 'CS' });
+    expect(api.aaInstancier).toHaveBeenCalledWith('projets', { declencheur: 'creation-dossier', projectId: 'prj_1' });
+    expect(el.querySelector('.mp-alert.success')?.textContent).toContain('Dossier PRINCE2 ouvert');
   });
 
   it('crée un projet et une tâche seule par les commandes du grand noyau', async () => {

@@ -24,6 +24,7 @@
 .mp-head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .mp-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 0 14px; border: 1px solid var(--control-line, #c9d2e3); border-radius: 8px; background: var(--mp-surface); color: var(--mp-ink); font: 600 13px/1.3 var(--font-sans); cursor: pointer; }
 .mp-btn.primary { border-color: var(--mp-accent); background: var(--mp-accent); color: #fff; }
+.mp-btn.small { min-height: 28px; padding: 0 10px; font-size: 12px; }
 .mp-btn:disabled { opacity: .55; cursor: default; }
 .mp-link { padding: 0; border: 0; background: none; color: var(--mp-accent); font: 600 12px/1.3 var(--font-sans); cursor: pointer; }
 
@@ -83,7 +84,7 @@
 
 // ---------- tableau des projets ----------
 .mp-table-wrap { overflow-x: auto; }
-.mp-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 13px; }
+.mp-table { width: 100%; min-width: 820px; border-collapse: collapse; font-size: 13px; }
 .mp-table th, .mp-table td { padding: 9px 10px; border-bottom: 1px solid var(--mp-line); text-align: left; vertical-align: top; }
 .mp-table thead th { color: var(--mp-muted); font-size: 12px; font-weight: 600; }
 .mp-table tbody th a { color: var(--mp-accent); font-weight: 650; text-decoration: none; }

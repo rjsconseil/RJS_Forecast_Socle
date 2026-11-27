@@ -161,13 +161,20 @@
             <div class="mp-table-wrap">
               <table class="mp-table">
                 <caption class="sr-only">Projets, leur état et leur repère PRINCE2</caption>
-                <thead><tr><th scope="col">Projet</th><th scope="col">État</th><th scope="col">Repère PRINCE2</th><th scope="col">Avancement</th><th scope="col">Tâches</th><th scope="col">Échéance</th></tr></thead>
+                <thead><tr><th scope="col">Projet</th><th scope="col">État</th><th scope="col">Repère PRINCE2</th><th scope="col">Dossier PRINCE2</th><th scope="col">Avancement</th><th scope="col">Tâches</th><th scope="col">Échéance</th></tr></thead>
                 <tbody>
                   @for (r of rows(); track r.id) {
                     <tr>
                       <th scope="row"><a [routerLink]="projectLink(r.id)">{{ r.title }}</a><small>{{ r.priorityLabel }}</small></th>
                       <td><span class="mp-pill" [attr.data-tone]="healthTone(r.health)">{{ r.statusLabel }}</span><small>{{ r.healthLabel }}</small></td>
                       <td>@if (r.repere.processus) {<span class="mp-code">{{ r.repere.processus }}</span>}{{ r.repere.label }}</td>
+                      <td>
+                        @if (r.dossier; as d) {
+                          <span class="mp-code">{{ d.processus ?? '—' }}</span>{{ d.approuves }} / {{ d.livrables }} produits approuvés<small>{{ d.avancement }} %</small>
+                        } @else {
+                          <button type="button" class="mp-btn small" [disabled]="busy()" (click)="openDossier(r.id, r.title, r.repere.processus)">Ouvrir le dossier</button>
+                        }
+                      </td>
                       <td><span class="mp-bar" role="img" [attr.aria-label]="r.completion + ' % fait'"><i [style.width.%]="r.completion"></i></span><small>{{ r.completion }} %</small></td>
                       <td>{{ r.openTaskCount }} ouverte{{ r.openTaskCount > 1 ? 's' : '' }} / {{ r.taskCount }}@if (r.lateTaskCount) {<small class="late">{{ r.lateTaskCount }} en retard</small>}</td>
                       <td>{{ r.dueDate ? shortDate(r.dueDate) : '—' }}@if (r.daysLeft !== null && r.health !== 'done') {<small>{{ r.daysLeft < 0 ? 'dépassée de ' + (-r.daysLeft) + ' j' : 'dans ' + r.daysLeft + ' j' }}</small>}</td>

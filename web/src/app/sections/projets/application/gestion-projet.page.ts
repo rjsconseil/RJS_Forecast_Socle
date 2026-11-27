@@ -6,6 +6,7 @@ import {
 } from '../../../platform/grand-noyau';
 import { BpmPageContext, BpmRefresh, bpmLoader, astraUrl } from '../../../astra/cadre';
 import { BOARD_COLUMNS, board, isWorkProject, localToday, portfolio, totals, type Health } from '../fonctionnalites/portfolio';
+import { APPLICATION, COLLECTIONS, dossiersParProjet } from '../fonctionnalites/dossiers';
 import { commandeProjet, commandeTache, erreurSaisie, projetsParStatut, tachesDuProjet, tachesSansProjet } from '../fonctionnalites/gestion';
 import {
   PRINCE2_THEMES, SEQUENCE, livrable, livrablesDuTheme, processusDuTheme, processusPrince2, reperePrince2, themePrince2,
@@ -44,8 +45,12 @@ export class ProjetsGestionProjetPage {
   protected readonly priorities: { id: Priority; label: string }[] = [{ id: 'high', label: 'Haute' }, { id: 'medium', label: 'Moyenne' }, { id: 'low', label: 'Basse' }];
 
   protected readonly data = bpmLoader(() => 0, async () => {
-    const [projects, tasks] = await Promise.all([this.api.projects(), this.api.tasks()]);
-    return { projects, tasks };
+    const [projects, tasks, dossiers, livrables] = await Promise.all([
+      this.api.projects(), this.api.tasks(),
+      // Données propres à l'application (tables AA_MP_…) : dossiers PRINCE2 et produits de management.
+      this.api.aaList(APPLICATION, COLLECTIONS.dossiers), this.api.aaList(APPLICATION, COLLECTIONS.livrables),
+    ]);
+    return { projects, tasks, dossiers: dossiersParProjet(dossiers.items, livrables.items) };
   });
 
   // ---------- navigation de l'application : l'accueil, puis un thème ----------
@@ -67,7 +72,7 @@ export class ProjetsGestionProjetPage {
     const byId = new Map(this.work().map((p) => [p.project.id, p]));
     return portfolio(d.projects, d.tasks, this.today).map((r) => {
       const p = byId.get(r.id)!;
-      return { ...r, repere: reperePrince2({ status: p.view.status, taskCount: r.taskCount }) };
+      return { ...r, repere: reperePrince2({ status: p.view.status, taskCount: r.taskCount }), dossier: d.dossiers.get(r.id) ?? null };
     });
   });
   protected readonly totals = computed(() => totals(this.rows(), this.data.data()?.tasks ?? [], this.today));
@@ -149,6 +154,17 @@ export class ProjetsGestionProjetPage {
       for (const t of chosen) await this.api.attachTask(t.task.id, projectId, t.task.revision);
     }, `${chosen.length} tâche${chosen.length > 1 ? 's rattachées' : ' rattachée'} à « ${this.targetTitle()} ».`);
     if (ok) this.picked.set(new Set());
+  }
+
+  /**
+   * Ouvrir le dossier PRINCE2 d'un projet du noyau : le dossier, puis les lignes prévues par le catalogue à sa création
+   * (rôles attendus, séquence d'initialisation, produits de management du démarrage et de l'initialisation).
+   */
+  protected openDossier(projectId: string, title: string, processus: string | null) {
+    return this.run(async () => {
+      await this.api.aaCreate(APPLICATION, COLLECTIONS.dossiers, { projectId, processusCourant: processus ?? 'SU' });
+      await this.api.aaInstancier(APPLICATION, { declencheur: 'creation-dossier', projectId });
+    }, `Dossier PRINCE2 ouvert pour « ${title} » : rôles, séquence d’initialisation et produits de management prévus.`);
   }
 
   protected detach(t: TaskView) {

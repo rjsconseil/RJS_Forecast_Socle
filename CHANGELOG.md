@@ -3,6 +3,16 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Mes projets · application autonome PRINCE2 — 27 novembre 2026
+
+Évolution en **mode application** (Mes projets seulement). Référence : `docs/sections/projets.md`.
+- **Application autonome Mes projets** à `/mes-projets`, dans l'interface habituelle du site, avec un lien dans
+  Noyau transverse › Applications autonomes. BPM-Astra est inchangé. Elle comprend un accueil de gestion de projet
+  (état des projets et tâches, séquence PRINCE2, vues par état, création et rattachement) et les 7 thèmes PRINCE2
+  (but, processus associés, livrables).
+- **Modèle de données** (`donnees.json`, tables `AA_MP_…`) : catalogue PRINCE2 standard, 9 tables d'instanciation et
+  31 règles. Le bouton « Ouvrir le dossier » crée le dossier PRINCE2 d'un projet et ses premières lignes.
+
 ## Grand noyau (socle) : espace des applications autonomes et tables AA_ — 27 novembre 2026
 
 Évolution en **mode socle**, BPM-Astra inchangé. Référence : `docs/ARCHITECTURE.md` §20.1.
