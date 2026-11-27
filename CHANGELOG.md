@@ -3,6 +3,21 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Mes projets · mode section, étape 1 : page « Pilotage » — 27 novembre 2026
+
+Première évolution de Mes projets en **mode section** (aucun impact sur le grand noyau : ni API, ni base, ni autre
+section). Rangée dans les trois étages : calculs dans les **fonctionnalités Mes projets**
+(`sections/projets/fonctionnalites/`), écran dans l'**application autonome Mes projets** (`sections/projets/application/`),
+le grand noyau appelé par `platform/grand-noyau.ts` et BPM-Astra par `astra/cadre.ts`.
+- **Pilotage** (`/bpm-astra/pilotage`, ajoutée après les pages existantes : l'entrée de Mes projets ne change pas) : l'accueil autonome de la section, bâti sur
+  l'accueil de section commun (`<app-section-home>`) ; utilisable sans budget ni cycle. Indicateurs (projets en cours,
+  en retard, tâches ouvertes et à échéance sous 7 jours, avancement moyen, temps passé / prévu).
+- Trois vues sur les mêmes lectures du noyau (`/api/projects`, `/api/tasks`) : **Portefeuille** (santé de chaque
+  projet expliquée : en retard, à surveiller, dans les temps, pas commencé, terminé), **Tableau des tâches** (colonnes
+  par état, filtres projet / recherche / retard, changement d'état par la commande du noyau), **Planning** (projets et
+  tâches dans le temps, repère du jour). Le projet de vie (racine du budget) n'est pas un projet à mener : il est écarté.
+- Un projet financé le dit seulement ; son financement reste dans sa fiche (liens par `sourceLink`).
+- Tests : `sections/projets/fonctionnalites/portfolio.spec.ts`, `sections/projets/application/pilotage.page.spec.ts` ; la page est vérifiée par `e2e/astra.e2e.mjs`.
 
 ## Grand noyau (socle) : trois étages pour les applications autonomes — 27 novembre 2026
 

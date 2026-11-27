@@ -17,12 +17,12 @@ assert(chrome, 'Navigateur introuvable : indiquez CHROME_PATH.');
 // Les pages d'Astra et leur section (même déclaration que le menu : web/src/app/astra/astra-parts.ts).
 const PAGES = {
   quotidien: ['', 'mouvements', 'mouvements/echeances', 'calendrier', 'calendrier/agenda'],
-  projets: ['projets', 'financement/enveloppes', 'taches'],
+  projets: ['projets', 'financement/enveloppes', 'taches', 'pilotage'],
   budget: ['budget', 'plafonds', 'plafonds/postes'],
   patrimoine: ['objectif', 'objectif/echeances', 'patrimoine', 'patrimoine/reglages'],
   cycles: ['cloture/compte', 'cloture', 'cloture/reglages', 'bilans'],
 };
-const MOBILE = ['', 'mouvements', 'projets', 'budget', 'objectif', 'cloture', 'bilans'];
+const MOBILE = ['', 'mouvements', 'projets', 'pilotage', 'budget', 'objectif', 'cloture', 'bilans'];
 
 const browser = await chromium.launch({ executablePath: chrome, headless: true });
 const failures = [];

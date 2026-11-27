@@ -50,6 +50,9 @@ export const ASTRA_PARTS: AstraPart[] = [
     pages: [
       { slug: 'projets', label: 'Projets de la vie', source: 'projet-de-vie/projets' },
       { slug: 'taches', label: 'Tâches', source: 'app/taches' },
+      // Fonctionnalités propres à Mes projets (portefeuille, tableau, planning), bâties sur le socle sans le modifier.
+      // Placée après les pages existantes : l'entrée de la section reste « Projets de la vie ».
+      { slug: 'pilotage', label: 'Pilotage', own: () => import('../sections/projets/application/pilotage.page').then(m => m.ProjetsPilotagePage) },
     ],
   },
   {
@@ -113,7 +116,7 @@ export const ASTRA_DETAILS: [slug: string, label: string, source: string, parent
  */
 export const ASTRA_TAB_LABELS: Record<string, string> = {
   '': 'Mon projet de vie', mouvements: 'Mouvements', 'mouvements/echeances': 'Échéances', calendrier: 'Calendrier', 'calendrier/agenda': 'Agenda',
-  projets: 'Projets de la vie', 'projets/:id': 'Fiche', 'projets/:id/budget': 'Budget du projet', 'projets/:id/taches': 'Tâches du projet',
+  pilotage: 'Pilotage', projets: 'Projets de la vie', 'projets/:id': 'Fiche', 'projets/:id/budget': 'Budget du projet', 'projets/:id/taches': 'Tâches du projet',
   'financement/enveloppes': 'Règlements par cycle', taches: 'Tâches',
   budget: 'Budget récurrent', plafonds: 'Plafonds', 'plafonds/:poste': 'Poste', 'plafonds/postes': 'Postes et revenus',
   objectif: 'Objectif et projection', 'objectif/echeances': 'Objectifs datés', patrimoine: 'Patrimoine', 'patrimoine/reglages': 'Point de départ',
