@@ -15,7 +15,28 @@ Repère : page Pilotage, application autonome Mes projets, avec ses calculs dans
 ## 5. Fondations pour le socle
 Repère : les fonctionnalités avancées (Pilotage, puis jalons, dépendances, responsable, étiquettes, modèles, charge) restent dans Mes projets. Leurs fondations de gestion de projet de base sont appelées à entrer au socle, utiles aux autres sections (Mon budget pour les investissements). Repérée, à décider : imputer une charge à un projet autrement que par ses tâches (aujourd'hui le budget et les dépenses d'un projet ne passent que par ses tâches). Aucune intégrée à ce jour.
 ## 6. Écrans
+- **Application autonome Mes projets** (`/mes-projets`, hors de BPM-Astra ; lien dans Noyau transverse › Applications
+  autonomes). Gestion de projet selon PRINCE2 :
+  - un accueil qui fait l'état des projets et de leurs tâches, avec la séquence PRINCE2 et le dossier PRINCE2 de chaque projet ;
+  - une page pour chacun des 7 thèmes : son but, ses processus associés et leurs livrables.
+  Écran : `application/gestion-projet.page.*`. Calculs : `fonctionnalites/gestion.ts`, `prince2.ts` et `dossiers.ts`.
+- **Pilotage** (`/bpm-astra/pilotage`), inchangé.
+
+### Modèle de données (`application/donnees.json`, tables AA_MP_…)
+- **Catalogue PRINCE2 standard**, en lecture seule et commun à tous : `refThemes`, `refProcessus`, `refActivites`,
+  `refLivrables`, `refRoles`, `refPrincipes`, `refThemeProcessus`, `refProcessusLivrables` et `refReglesInstanciation`
+  (version `prince2-2017-fr`).
+- **Tables d'instanciation d'un projet en cours**, liées au projet du noyau par `projectId` : `dossiers` (un par
+  projet), `roles`, `etapes` (séquences), `produits`, `livrables`, `risques`, `problemes` (incidences), `qualite` et
+  `journalProjet`. Le nom `journal` est réservé par le socle.
+- **Instanciation par règles**, sans correspondance une pour une avec le catalogue :
+  - à la création du dossier : 4 rôles, la séquence d'initialisation et les 17 produits de management de SU et IP ;
+  - à chaque ouverture de séquence : plan de séquence, rapport de fin de séquence et rapport de situation ;
+  - à la clôture : les produits de CP.
+
 ## 7. Recette et tests
+`npm run test:app -- projets` couvre les fonctionnalités, l'écran et la vérification que le catalogue de la base reprend le référentiel de l'écran.
 ## 8. Journal de développement et de débogage
 | Date | Version / PR | Changement ou correction | Effet pour l'utilisateur |
 |---|---|---|---|
+| 27/11/2026 | PR « Mes projets PRINCE2 » | Application autonome à `/mes-projets` ; modèle de données AA_MP_ (catalogue PRINCE2 standard, tables d'instanciation, règles) ; dossier PRINCE2 par projet | Un outil de gestion de projet PRINCE2 dans l'interface habituelle, ouvert depuis le noyau, BPM-Astra inchangé |

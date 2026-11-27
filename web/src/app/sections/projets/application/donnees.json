@@ -1,0 +1,1980 @@
+{
+  "$commentaire": "Modèle de données de l’application autonome Mes projets (PRINCE2). Lu par le socle (api/src/socle/applications.mjs) : tables AA_MP_…, catalogue PRINCE2 standard (lecture seule) et règles d’instanciation. Catalogue tiré de fonctionnalites/prince2.ts (vérifié par donnees.spec.ts).",
+  "application": "projets",
+  "section": "projets",
+  "libelle": "Mes projets",
+  "regles": "refReglesInstanciation",
+  "collections": {
+    "refThemes": {
+      "nature": "mpRefTheme",
+      "prefixe": "aamprth",
+      "libelle": "Thème PRINCE2",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "nom": {
+          "type": "texte"
+        },
+        "nomAnglais": {
+          "type": "texte"
+        },
+        "question": {
+          "type": "texte"
+        },
+        "but": {
+          "type": "texte"
+        }
+      }
+    },
+    "refProcessus": {
+      "nature": "mpRefProcessus",
+      "prefixe": "aamprpr",
+      "libelle": "Processus PRINCE2",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "nom": {
+          "type": "texte"
+        },
+        "nomAnglais": {
+          "type": "texte"
+        },
+        "moment": {
+          "type": "texte"
+        },
+        "resume": {
+          "type": "texte"
+        }
+      }
+    },
+    "refActivites": {
+      "nature": "mpRefActivite",
+      "prefixe": "aampract",
+      "libelle": "Activité d’un processus",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "processusCode": {
+          "type": "texte"
+        },
+        "nom": {
+          "type": "texte"
+        }
+      }
+    },
+    "refLivrables": {
+      "nature": "mpRefLivrable",
+      "prefixe": "aamprlv",
+      "libelle": "Produit de management PRINCE2",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "nom": {
+          "type": "texte"
+        },
+        "nomAnglais": {
+          "type": "texte"
+        },
+        "famille": {
+          "type": "choix",
+          "valeurs": [
+            "reference",
+            "registre",
+            "rapport"
+          ]
+        }
+      }
+    },
+    "refRoles": {
+      "nature": "mpRefRole",
+      "prefixe": "aamprro",
+      "libelle": "Rôle PRINCE2",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "nom": {
+          "type": "texte"
+        },
+        "niveau": {
+          "type": "choix",
+          "valeurs": [
+            "direction",
+            "gestion",
+            "livraison"
+          ]
+        },
+        "cumulable": {
+          "type": "booleen"
+        }
+      }
+    },
+    "refPrincipes": {
+      "nature": "mpRefPrincipe",
+      "prefixe": "aamprpc",
+      "libelle": "Principe PRINCE2",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "nom": {
+          "type": "texte"
+        },
+        "resume": {
+          "type": "texte"
+        }
+      }
+    },
+    "refThemeProcessus": {
+      "nature": "mpRefThemeProcessus",
+      "prefixe": "aamprtp",
+      "libelle": "Thème dans un processus",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "themeCode": {
+          "type": "texte"
+        },
+        "processusCode": {
+          "type": "texte"
+        },
+        "action": {
+          "type": "texte"
+        }
+      }
+    },
+    "refProcessusLivrables": {
+      "nature": "mpRefProcessusLivrable",
+      "prefixe": "aamprpl",
+      "libelle": "Livrable d’un processus",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "processusCode": {
+          "type": "texte"
+        },
+        "livrableCode": {
+          "type": "texte"
+        },
+        "usage": {
+          "type": "choix",
+          "valeurs": [
+            "cree",
+            "met-a-jour",
+            "utilise"
+          ]
+        },
+        "themeCode": {
+          "type": "texte"
+        }
+      }
+    },
+    "refReglesInstanciation": {
+      "nature": "mpRefRegle",
+      "prefixe": "aamprri",
+      "libelle": "Règle d’instanciation",
+      "catalogue": true,
+      "champs": {
+        "code": {
+          "type": "texte"
+        },
+        "ordre": {
+          "type": "entier"
+        },
+        "declencheur": {
+          "type": "choix",
+          "valeurs": [
+            "creation-dossier",
+            "ouverture-etape",
+            "cloture"
+          ]
+        },
+        "cible": {
+          "type": "texte"
+        },
+        "refCode": {
+          "type": "texte"
+        },
+        "multiplicite": {
+          "type": "choix",
+          "valeurs": [
+            "projet",
+            "etape"
+          ]
+        },
+        "obligatoire": {
+          "type": "booleen"
+        },
+        "valeurs": {
+          "type": "json"
+        }
+      }
+    },
+    "dossiers": {
+      "nature": "mpDossier",
+      "prefixe": "aampdos",
+      "libelle": "Dossier PRINCE2",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "processusCourant": {
+          "type": "choix",
+          "valeurs": [
+            "SU",
+            "DP",
+            "IP",
+            "CS",
+            "MP",
+            "SB",
+            "CP"
+          ]
+        },
+        "etapeCouranteId": {
+          "type": "texte"
+        },
+        "objectif": {
+          "type": "texte"
+        },
+        "perimetre": {
+          "type": "texte"
+        },
+        "tolerances": {
+          "type": "json"
+        }
+      },
+      "unique": [
+        "projectId"
+      ]
+    },
+    "roles": {
+      "nature": "mpRole",
+      "prefixe": "aampro",
+      "libelle": "Rôle tenu",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "role": {
+          "type": "texte",
+          "obligatoire": true
+        },
+        "personne": {
+          "type": "texte"
+        },
+        "contact": {
+          "type": "texte"
+        }
+      }
+    },
+    "etapes": {
+      "nature": "mpEtape",
+      "prefixe": "aampet",
+      "libelle": "Séquence de management",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "numero": {
+          "type": "entier"
+        },
+        "nom": {
+          "type": "texte"
+        },
+        "type": {
+          "type": "choix",
+          "valeurs": [
+            "initiation",
+            "livraison",
+            "cloture"
+          ]
+        },
+        "statut": {
+          "type": "choix",
+          "valeurs": [
+            "a-venir",
+            "en-cours",
+            "close"
+          ]
+        },
+        "debutPrevu": {
+          "type": "date"
+        },
+        "finPrevue": {
+          "type": "date"
+        },
+        "tolerances": {
+          "type": "json"
+        }
+      }
+    },
+    "produits": {
+      "nature": "mpProduit",
+      "prefixe": "aamppr",
+      "libelle": "Produit à livrer",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "parentId": {
+          "type": "texte"
+        },
+        "nom": {
+          "type": "texte",
+          "obligatoire": true
+        },
+        "description": {
+          "type": "texte"
+        },
+        "criteresQualite": {
+          "type": "texte"
+        },
+        "statut": {
+          "type": "choix",
+          "valeurs": [
+            "a-faire",
+            "en-cours",
+            "livre",
+            "accepte"
+          ]
+        },
+        "etapeId": {
+          "type": "texte"
+        },
+        "taskIds": {
+          "type": "liste"
+        }
+      }
+    },
+    "livrables": {
+      "nature": "mpLivrable",
+      "prefixe": "aamplv",
+      "libelle": "Produit de management du projet",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "nom": {
+          "type": "texte"
+        },
+        "processus": {
+          "type": "choix",
+          "valeurs": [
+            "SU",
+            "DP",
+            "IP",
+            "CS",
+            "MP",
+            "SB",
+            "CP"
+          ]
+        },
+        "etapeId": {
+          "type": "texte"
+        },
+        "statut": {
+          "type": "choix",
+          "valeurs": [
+            "a-faire",
+            "brouillon",
+            "approuve"
+          ]
+        },
+        "version": {
+          "type": "texte"
+        },
+        "approuvePar": {
+          "type": "texte"
+        },
+        "approuveLe": {
+          "type": "date"
+        },
+        "lien": {
+          "type": "texte"
+        }
+      }
+    },
+    "risques": {
+      "nature": "mpRisque",
+      "prefixe": "aamprq",
+      "libelle": "Risque",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "intitule": {
+          "type": "texte",
+          "obligatoire": true
+        },
+        "cause": {
+          "type": "texte"
+        },
+        "evenement": {
+          "type": "texte"
+        },
+        "effet": {
+          "type": "texte"
+        },
+        "probabilite": {
+          "type": "choix",
+          "valeurs": [
+            "faible",
+            "moyenne",
+            "forte"
+          ]
+        },
+        "impact": {
+          "type": "choix",
+          "valeurs": [
+            "faible",
+            "moyen",
+            "fort"
+          ]
+        },
+        "proximite": {
+          "type": "texte"
+        },
+        "reponse": {
+          "type": "texte"
+        },
+        "proprietaire": {
+          "type": "texte"
+        },
+        "statut": {
+          "type": "choix",
+          "valeurs": [
+            "ouvert",
+            "clos"
+          ]
+        }
+      }
+    },
+    "problemes": {
+      "nature": "mpProbleme",
+      "prefixe": "aamppb",
+      "libelle": "Incidence",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "intitule": {
+          "type": "texte",
+          "obligatoire": true
+        },
+        "type": {
+          "type": "choix",
+          "valeurs": [
+            "demande-changement",
+            "hors-specification",
+            "probleme"
+          ]
+        },
+        "gravite": {
+          "type": "choix",
+          "valeurs": [
+            "faible",
+            "moyenne",
+            "forte"
+          ]
+        },
+        "priorite": {
+          "type": "choix",
+          "valeurs": [
+            "basse",
+            "normale",
+            "haute"
+          ]
+        },
+        "statut": {
+          "type": "choix",
+          "valeurs": [
+            "ouvert",
+            "decide",
+            "clos"
+          ]
+        },
+        "decision": {
+          "type": "texte"
+        },
+        "decideLe": {
+          "type": "date"
+        }
+      }
+    },
+    "qualite": {
+      "nature": "mpQualite",
+      "prefixe": "aampqa",
+      "libelle": "Activité qualité",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "produitId": {
+          "type": "texte"
+        },
+        "methode": {
+          "type": "texte"
+        },
+        "responsable": {
+          "type": "texte"
+        },
+        "prevuLe": {
+          "type": "date"
+        },
+        "faitLe": {
+          "type": "date"
+        },
+        "resultat": {
+          "type": "choix",
+          "valeurs": [
+            "a-faire",
+            "conforme",
+            "non-conforme"
+          ]
+        }
+      }
+    },
+    "journalProjet": {
+      "nature": "mpJournal",
+      "prefixe": "aampjo",
+      "libelle": "Note, leçon ou rapport",
+      "liens": {
+        "projectId": {
+          "nature": "coreProject",
+          "obligatoire": true
+        }
+      },
+      "champs": {
+        "type": {
+          "type": "choix",
+          "valeurs": [
+            "note",
+            "lecon",
+            "rapport-situation",
+            "rapport-point-controle",
+            "rapport-fin-sequence",
+            "rapport-exception",
+            "rapport-fin-projet"
+          ]
+        },
+        "date": {
+          "type": "date"
+        },
+        "etapeId": {
+          "type": "texte"
+        },
+        "contenu": {
+          "type": "texte"
+        }
+      }
+    }
+  },
+  "catalogue": {
+    "version": "prince2-2017-fr",
+    "lignes": {
+      "refThemes": [
+        {
+          "code": "cas-affaire",
+          "ordre": 1,
+          "nom": "Cas d’affaire",
+          "nomAnglais": "Business Case",
+          "question": "Pourquoi ?",
+          "but": "Établir des mécanismes pour juger si le projet est (et reste) souhaitable, viable et réalisable, afin de soutenir la prise de décision sur la poursuite de l’investissement."
+        },
+        {
+          "code": "organisation",
+          "ordre": 2,
+          "nom": "Organisation",
+          "nomAnglais": "Organization",
+          "question": "Qui ?",
+          "but": "Définir et établir la structure de responsabilités et de redevabilité du projet : qui décide, qui pilote, qui réalise, et comment chacun communique."
+        },
+        {
+          "code": "qualite",
+          "ordre": 3,
+          "nom": "Qualité",
+          "nomAnglais": "Quality",
+          "question": "Quoi ?",
+          "but": "Définir et mettre en œuvre les moyens qui permettront au projet de créer et de vérifier des produits adaptés à leur usage."
+        },
+        {
+          "code": "plans",
+          "ordre": 4,
+          "nom": "Plans",
+          "nomAnglais": "Plans",
+          "question": "Comment ? Combien ? Quand ?",
+          "but": "Faciliter la communication et le contrôle en définissant les moyens de livrer les produits : où, comment, par qui, quand et pour combien."
+        },
+        {
+          "code": "risque",
+          "ordre": 5,
+          "nom": "Risque",
+          "nomAnglais": "Risk",
+          "question": "Et si… ?",
+          "but": "Identifier, évaluer et maîtriser l’incertitude, menaces comme opportunités, pour améliorer les chances de réussite du projet."
+        },
+        {
+          "code": "changement",
+          "ordre": 6,
+          "nom": "Changement",
+          "nomAnglais": "Change",
+          "question": "Quel impact ?",
+          "but": "Identifier, évaluer et maîtriser tout changement potentiel ou approuvé de la base de référence (les produits approuvés)."
+        },
+        {
+          "code": "progression",
+          "ordre": 7,
+          "nom": "Progression",
+          "nomAnglais": "Progress",
+          "question": "Où en sommes-nous ? Où allons-nous ? Devons-nous continuer ?",
+          "but": "Établir les mécanismes pour suivre et comparer le réalisé au prévu, prévoir les objectifs du projet et sa viabilité, et maîtriser les écarts inacceptables."
+        }
+      ],
+      "refProcessus": [
+        {
+          "code": "SU",
+          "ordre": 1,
+          "nom": "Élaborer le projet",
+          "nomAnglais": "Starting up a Project",
+          "moment": "Avant le projet",
+          "resume": "Vérifier que le projet vaut la peine d’être initialisé : le mandat, l’équipe, l’approche et le plan de l’initialisation."
+        },
+        {
+          "code": "DP",
+          "ordre": 2,
+          "nom": "Diriger le projet",
+          "nomAnglais": "Directing a Project",
+          "moment": "Tout le projet",
+          "resume": "Le comité de pilotage autorise l’initialisation, le projet, chaque séquence et la clôture, et donne ses orientations."
+        },
+        {
+          "code": "IP",
+          "ordre": 3,
+          "nom": "Initialiser le projet",
+          "nomAnglais": "Initiating a Project",
+          "moment": "Séquence d’initialisation",
+          "resume": "Poser les fondations : les approches de gestion, les contrôles, le plan de projet et le cas d’affaire détaillé."
+        },
+        {
+          "code": "CS",
+          "ordre": 4,
+          "nom": "Contrôler une séquence",
+          "nomAnglais": "Controlling a Stage",
+          "moment": "Chaque séquence de livraison",
+          "resume": "Confier le travail, en suivre l’avancement, traiter les incidences et les risques, rendre compte au comité."
+        },
+        {
+          "code": "MP",
+          "ordre": 5,
+          "nom": "Gérer la livraison des produits",
+          "nomAnglais": "Managing Product Delivery",
+          "moment": "Chaque séquence de livraison",
+          "resume": "L’équipe accepte un lot de travaux, réalise les produits, en vérifie la qualité et les livre."
+        },
+        {
+          "code": "SB",
+          "ordre": 6,
+          "nom": "Gérer une limite de séquence",
+          "nomAnglais": "Managing a Stage Boundary",
+          "moment": "Fin de chaque séquence",
+          "resume": "Faire le bilan de la séquence, préparer la suivante (ou un plan d’exception) et mettre à jour le plan et le cas d’affaire."
+        },
+        {
+          "code": "CP",
+          "ordre": 7,
+          "nom": "Clôturer le projet",
+          "nomAnglais": "Closing a Project",
+          "moment": "Dernière séquence",
+          "resume": "Faire accepter le produit du projet, évaluer le projet, recommander les actions de suivi et libérer l’équipe."
+        }
+      ],
+      "refLivrables": [
+        {
+          "code": "approcheBenefices",
+          "nom": "Approche de gestion des bénéfices",
+          "nomAnglais": "Benefits Management Approach",
+          "famille": "reference"
+        },
+        {
+          "code": "casAffaire",
+          "nom": "Cas d’affaire",
+          "nomAnglais": "Business Case",
+          "famille": "reference"
+        },
+        {
+          "code": "approcheChangements",
+          "nom": "Approche de maîtrise des changements",
+          "nomAnglais": "Change Control Approach",
+          "famille": "reference"
+        },
+        {
+          "code": "rapportPointControle",
+          "nom": "Rapport de point de contrôle",
+          "nomAnglais": "Checkpoint Report",
+          "famille": "rapport"
+        },
+        {
+          "code": "approcheCommunication",
+          "nom": "Approche de gestion de la communication",
+          "nomAnglais": "Communication Management Approach",
+          "famille": "reference"
+        },
+        {
+          "code": "ficheConfiguration",
+          "nom": "Fiche d’élément de configuration",
+          "nomAnglais": "Configuration Item Record",
+          "famille": "reference"
+        },
+        {
+          "code": "journalQuotidien",
+          "nom": "Journal quotidien",
+          "nomAnglais": "Daily Log",
+          "famille": "registre"
+        },
+        {
+          "code": "rapportFinProjet",
+          "nom": "Rapport de fin de projet",
+          "nomAnglais": "End Project Report",
+          "famille": "rapport"
+        },
+        {
+          "code": "rapportFinSequence",
+          "nom": "Rapport de fin de séquence",
+          "nomAnglais": "End Stage Report",
+          "famille": "rapport"
+        },
+        {
+          "code": "rapportException",
+          "nom": "Rapport d’exception",
+          "nomAnglais": "Exception Report",
+          "famille": "rapport"
+        },
+        {
+          "code": "rapportSituation",
+          "nom": "Rapport de situation",
+          "nomAnglais": "Highlight Report",
+          "famille": "rapport"
+        },
+        {
+          "code": "registreIncidences",
+          "nom": "Registre des incidences",
+          "nomAnglais": "Issue Register",
+          "famille": "registre"
+        },
+        {
+          "code": "rapportIncidence",
+          "nom": "Rapport d’incidence",
+          "nomAnglais": "Issue Report",
+          "famille": "rapport"
+        },
+        {
+          "code": "journalLecons",
+          "nom": "Journal des leçons",
+          "nomAnglais": "Lessons Log",
+          "famille": "registre"
+        },
+        {
+          "code": "rapportLecons",
+          "nom": "Rapport des leçons",
+          "nomAnglais": "Lessons Report",
+          "famille": "rapport"
+        },
+        {
+          "code": "planProjet",
+          "nom": "Plan de projet",
+          "nomAnglais": "Project Plan",
+          "famille": "reference"
+        },
+        {
+          "code": "planSequence",
+          "nom": "Plan de séquence",
+          "nomAnglais": "Stage Plan",
+          "famille": "reference"
+        },
+        {
+          "code": "planEquipe",
+          "nom": "Plan d’équipe",
+          "nomAnglais": "Team Plan",
+          "famille": "reference"
+        },
+        {
+          "code": "planException",
+          "nom": "Plan d’exception",
+          "nomAnglais": "Exception Plan",
+          "famille": "reference"
+        },
+        {
+          "code": "descriptionProduit",
+          "nom": "Description de produit",
+          "nomAnglais": "Product Description",
+          "famille": "reference"
+        },
+        {
+          "code": "etatProduits",
+          "nom": "État des produits",
+          "nomAnglais": "Product Status Account",
+          "famille": "reference"
+        },
+        {
+          "code": "exposeProjet",
+          "nom": "Exposé du projet",
+          "nomAnglais": "Project Brief",
+          "famille": "reference"
+        },
+        {
+          "code": "documentationInitialisation",
+          "nom": "Documentation d’initialisation du projet",
+          "nomAnglais": "Project Initiation Documentation",
+          "famille": "reference"
+        },
+        {
+          "code": "descriptionProduitProjet",
+          "nom": "Description du produit du projet",
+          "nomAnglais": "Project Product Description",
+          "famille": "reference"
+        },
+        {
+          "code": "approcheQualite",
+          "nom": "Approche de gestion de la qualité",
+          "nomAnglais": "Quality Management Approach",
+          "famille": "reference"
+        },
+        {
+          "code": "registreQualite",
+          "nom": "Registre qualité",
+          "nomAnglais": "Quality Register",
+          "famille": "registre"
+        },
+        {
+          "code": "approcheRisques",
+          "nom": "Approche de gestion des risques",
+          "nomAnglais": "Risk Management Approach",
+          "famille": "reference"
+        },
+        {
+          "code": "registreRisques",
+          "nom": "Registre des risques",
+          "nomAnglais": "Risk Register",
+          "famille": "registre"
+        },
+        {
+          "code": "lotTravaux",
+          "nom": "Lot de travaux",
+          "nomAnglais": "Work Package",
+          "famille": "reference"
+        }
+      ],
+      "refThemeProcessus": [
+        {
+          "code": "cas-affaire:SU",
+          "themeCode": "cas-affaire",
+          "processusCode": "SU",
+          "action": "Esquisser le cas d’affaire à partir du mandat."
+        },
+        {
+          "code": "cas-affaire:DP",
+          "themeCode": "cas-affaire",
+          "processusCode": "DP",
+          "action": "Vérifier que le projet reste justifié à chaque décision."
+        },
+        {
+          "code": "cas-affaire:IP",
+          "themeCode": "cas-affaire",
+          "processusCode": "IP",
+          "action": "Détailler le cas d’affaire et définir la gestion des bénéfices."
+        },
+        {
+          "code": "cas-affaire:SB",
+          "themeCode": "cas-affaire",
+          "processusCode": "SB",
+          "action": "Mettre à jour le cas d’affaire et les bénéfices à chaque fin de séquence."
+        },
+        {
+          "code": "cas-affaire:CP",
+          "themeCode": "cas-affaire",
+          "processusCode": "CP",
+          "action": "Confirmer les bénéfices obtenus et planifier la revue des bénéfices à venir."
+        },
+        {
+          "code": "organisation:SU",
+          "themeCode": "organisation",
+          "processusCode": "SU",
+          "action": "Nommer l’exécutif et le chef de projet, concevoir l’équipe de gestion de projet."
+        },
+        {
+          "code": "organisation:DP",
+          "themeCode": "organisation",
+          "processusCode": "DP",
+          "action": "Le comité de pilotage assume ses responsabilités de décision."
+        },
+        {
+          "code": "organisation:IP",
+          "themeCode": "organisation",
+          "processusCode": "IP",
+          "action": "Définir l’approche de gestion de la communication."
+        },
+        {
+          "code": "organisation:SB",
+          "themeCode": "organisation",
+          "processusCode": "SB",
+          "action": "Revoir l’équipe de gestion de projet pour la séquence suivante."
+        },
+        {
+          "code": "organisation:CP",
+          "themeCode": "organisation",
+          "processusCode": "CP",
+          "action": "Libérer les ressources et dissoudre l’équipe du projet."
+        },
+        {
+          "code": "qualite:SU",
+          "themeCode": "qualite",
+          "processusCode": "SU",
+          "action": "Saisir les attentes qualité du client et la description du produit du projet."
+        },
+        {
+          "code": "qualite:IP",
+          "themeCode": "qualite",
+          "processusCode": "IP",
+          "action": "Définir l’approche de gestion de la qualité et ouvrir le registre qualité."
+        },
+        {
+          "code": "qualite:MP",
+          "themeCode": "qualite",
+          "processusCode": "MP",
+          "action": "Réaliser les contrôles qualité des produits et les consigner."
+        },
+        {
+          "code": "qualite:SB",
+          "themeCode": "qualite",
+          "processusCode": "SB",
+          "action": "Vérifier que les produits de la séquence sont approuvés."
+        },
+        {
+          "code": "qualite:CP",
+          "themeCode": "qualite",
+          "processusCode": "CP",
+          "action": "Obtenir l’acceptation du produit du projet."
+        },
+        {
+          "code": "plans:SU",
+          "themeCode": "plans",
+          "processusCode": "SU",
+          "action": "Planifier la séquence d’initialisation."
+        },
+        {
+          "code": "plans:IP",
+          "themeCode": "plans",
+          "processusCode": "IP",
+          "action": "Établir le plan de projet et ses descriptions de produits."
+        },
+        {
+          "code": "plans:MP",
+          "themeCode": "plans",
+          "processusCode": "MP",
+          "action": "L’équipe établit son plan pour le lot de travaux (facultatif)."
+        },
+        {
+          "code": "plans:SB",
+          "themeCode": "plans",
+          "processusCode": "SB",
+          "action": "Planifier la séquence suivante, ou produire un plan d’exception."
+        },
+        {
+          "code": "risque:SU",
+          "themeCode": "risque",
+          "processusCode": "SU",
+          "action": "Noter les premiers risques dans le journal quotidien."
+        },
+        {
+          "code": "risque:IP",
+          "themeCode": "risque",
+          "processusCode": "IP",
+          "action": "Définir l’approche de gestion des risques et ouvrir le registre des risques."
+        },
+        {
+          "code": "risque:CS",
+          "themeCode": "risque",
+          "processusCode": "CS",
+          "action": "Surveiller les risques, en identifier de nouveaux, mettre en œuvre les réponses."
+        },
+        {
+          "code": "risque:SB",
+          "themeCode": "risque",
+          "processusCode": "SB",
+          "action": "Réévaluer les risques du projet avant la séquence suivante."
+        },
+        {
+          "code": "risque:DP",
+          "themeCode": "risque",
+          "processusCode": "DP",
+          "action": "Le comité arbitre les risques qui dépassent les tolérances."
+        },
+        {
+          "code": "changement:SU",
+          "themeCode": "changement",
+          "processusCode": "SU",
+          "action": "Consigner les premières incidences dans le journal quotidien."
+        },
+        {
+          "code": "changement:IP",
+          "themeCode": "changement",
+          "processusCode": "IP",
+          "action": "Définir l’approche de maîtrise des changements et la gestion de configuration."
+        },
+        {
+          "code": "changement:CS",
+          "themeCode": "changement",
+          "processusCode": "CS",
+          "action": "Saisir, examiner et traiter les incidences et les demandes de changement."
+        },
+        {
+          "code": "changement:MP",
+          "themeCode": "changement",
+          "processusCode": "MP",
+          "action": "Tenir à jour les fiches de configuration des produits livrés."
+        },
+        {
+          "code": "changement:DP",
+          "themeCode": "changement",
+          "processusCode": "DP",
+          "action": "Le comité décide des demandes de changement hors délégation."
+        },
+        {
+          "code": "progression:DP",
+          "themeCode": "progression",
+          "processusCode": "DP",
+          "action": "Fixer les tolérances et décider à chaque point de contrôle du comité."
+        },
+        {
+          "code": "progression:CS",
+          "themeCode": "progression",
+          "processusCode": "CS",
+          "action": "Autoriser les lots de travaux, suivre l’avancement, rendre compte au comité."
+        },
+        {
+          "code": "progression:MP",
+          "themeCode": "progression",
+          "processusCode": "MP",
+          "action": "L’équipe rend compte de son avancement au chef de projet."
+        },
+        {
+          "code": "progression:SB",
+          "themeCode": "progression",
+          "processusCode": "SB",
+          "action": "Faire le bilan de la séquence et en tirer les leçons."
+        },
+        {
+          "code": "progression:CP",
+          "themeCode": "progression",
+          "processusCode": "CP",
+          "action": "Évaluer le projet et transmettre les leçons apprises."
+        }
+      ],
+      "refProcessusLivrables": [
+        {
+          "code": "SU:exposeProjet",
+          "processusCode": "SU",
+          "livrableCode": "exposeProjet",
+          "usage": "cree",
+          "themeCode": "cas-affaire"
+        },
+        {
+          "code": "SU:descriptionProduitProjet",
+          "processusCode": "SU",
+          "livrableCode": "descriptionProduitProjet",
+          "usage": "cree",
+          "themeCode": "qualite"
+        },
+        {
+          "code": "SU:casAffaire",
+          "processusCode": "SU",
+          "livrableCode": "casAffaire",
+          "usage": "cree",
+          "themeCode": "cas-affaire"
+        },
+        {
+          "code": "SU:journalQuotidien",
+          "processusCode": "SU",
+          "livrableCode": "journalQuotidien",
+          "usage": "cree",
+          "themeCode": "risque"
+        },
+        {
+          "code": "SU:journalLecons",
+          "processusCode": "SU",
+          "livrableCode": "journalLecons",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "SU:planSequence",
+          "processusCode": "SU",
+          "livrableCode": "planSequence",
+          "usage": "cree",
+          "themeCode": "plans"
+        },
+        {
+          "code": "DP:exposeProjet",
+          "processusCode": "DP",
+          "livrableCode": "exposeProjet",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "DP:documentationInitialisation",
+          "processusCode": "DP",
+          "livrableCode": "documentationInitialisation",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "DP:planSequence",
+          "processusCode": "DP",
+          "livrableCode": "planSequence",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "DP:planException",
+          "processusCode": "DP",
+          "livrableCode": "planException",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "DP:rapportSituation",
+          "processusCode": "DP",
+          "livrableCode": "rapportSituation",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "DP:rapportException",
+          "processusCode": "DP",
+          "livrableCode": "rapportException",
+          "usage": "cree",
+          "themeCode": "risque"
+        },
+        {
+          "code": "DP:rapportFinSequence",
+          "processusCode": "DP",
+          "livrableCode": "rapportFinSequence",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "DP:rapportFinProjet",
+          "processusCode": "DP",
+          "livrableCode": "rapportFinProjet",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "IP:approcheRisques",
+          "processusCode": "IP",
+          "livrableCode": "approcheRisques",
+          "usage": "cree",
+          "themeCode": "risque"
+        },
+        {
+          "code": "IP:approcheChangements",
+          "processusCode": "IP",
+          "livrableCode": "approcheChangements",
+          "usage": "cree",
+          "themeCode": "changement"
+        },
+        {
+          "code": "IP:approcheQualite",
+          "processusCode": "IP",
+          "livrableCode": "approcheQualite",
+          "usage": "cree",
+          "themeCode": "qualite"
+        },
+        {
+          "code": "IP:approcheCommunication",
+          "processusCode": "IP",
+          "livrableCode": "approcheCommunication",
+          "usage": "cree",
+          "themeCode": "organisation"
+        },
+        {
+          "code": "IP:registreRisques",
+          "processusCode": "IP",
+          "livrableCode": "registreRisques",
+          "usage": "cree",
+          "themeCode": "risque"
+        },
+        {
+          "code": "IP:registreIncidences",
+          "processusCode": "IP",
+          "livrableCode": "registreIncidences",
+          "usage": "cree",
+          "themeCode": "changement"
+        },
+        {
+          "code": "IP:registreQualite",
+          "processusCode": "IP",
+          "livrableCode": "registreQualite",
+          "usage": "cree",
+          "themeCode": "qualite"
+        },
+        {
+          "code": "IP:ficheConfiguration",
+          "processusCode": "IP",
+          "livrableCode": "ficheConfiguration",
+          "usage": "cree",
+          "themeCode": "changement"
+        },
+        {
+          "code": "IP:planProjet",
+          "processusCode": "IP",
+          "livrableCode": "planProjet",
+          "usage": "cree",
+          "themeCode": "plans"
+        },
+        {
+          "code": "IP:casAffaire",
+          "processusCode": "IP",
+          "livrableCode": "casAffaire",
+          "usage": "cree",
+          "themeCode": "cas-affaire"
+        },
+        {
+          "code": "IP:approcheBenefices",
+          "processusCode": "IP",
+          "livrableCode": "approcheBenefices",
+          "usage": "cree",
+          "themeCode": "cas-affaire"
+        },
+        {
+          "code": "IP:documentationInitialisation",
+          "processusCode": "IP",
+          "livrableCode": "documentationInitialisation",
+          "usage": "cree",
+          "themeCode": "organisation"
+        },
+        {
+          "code": "CS:lotTravaux",
+          "processusCode": "CS",
+          "livrableCode": "lotTravaux",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "CS:rapportSituation",
+          "processusCode": "CS",
+          "livrableCode": "rapportSituation",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "CS:rapportIncidence",
+          "processusCode": "CS",
+          "livrableCode": "rapportIncidence",
+          "usage": "cree",
+          "themeCode": "changement"
+        },
+        {
+          "code": "CS:registreIncidences",
+          "processusCode": "CS",
+          "livrableCode": "registreIncidences",
+          "usage": "cree",
+          "themeCode": "changement"
+        },
+        {
+          "code": "CS:registreRisques",
+          "processusCode": "CS",
+          "livrableCode": "registreRisques",
+          "usage": "cree",
+          "themeCode": "risque"
+        },
+        {
+          "code": "CS:rapportException",
+          "processusCode": "CS",
+          "livrableCode": "rapportException",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "CS:etatProduits",
+          "processusCode": "CS",
+          "livrableCode": "etatProduits",
+          "usage": "cree",
+          "themeCode": "changement"
+        },
+        {
+          "code": "MP:planEquipe",
+          "processusCode": "MP",
+          "livrableCode": "planEquipe",
+          "usage": "cree",
+          "themeCode": "plans"
+        },
+        {
+          "code": "MP:rapportPointControle",
+          "processusCode": "MP",
+          "livrableCode": "rapportPointControle",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "MP:registreQualite",
+          "processusCode": "MP",
+          "livrableCode": "registreQualite",
+          "usage": "cree",
+          "themeCode": "qualite"
+        },
+        {
+          "code": "MP:ficheConfiguration",
+          "processusCode": "MP",
+          "livrableCode": "ficheConfiguration",
+          "usage": "cree",
+          "themeCode": "changement"
+        },
+        {
+          "code": "SB:rapportFinSequence",
+          "processusCode": "SB",
+          "livrableCode": "rapportFinSequence",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "SB:planSequence",
+          "processusCode": "SB",
+          "livrableCode": "planSequence",
+          "usage": "cree",
+          "themeCode": "plans"
+        },
+        {
+          "code": "SB:planException",
+          "processusCode": "SB",
+          "livrableCode": "planException",
+          "usage": "cree",
+          "themeCode": "plans"
+        },
+        {
+          "code": "SB:planProjet",
+          "processusCode": "SB",
+          "livrableCode": "planProjet",
+          "usage": "cree",
+          "themeCode": "plans"
+        },
+        {
+          "code": "SB:casAffaire",
+          "processusCode": "SB",
+          "livrableCode": "casAffaire",
+          "usage": "cree",
+          "themeCode": "cas-affaire"
+        },
+        {
+          "code": "SB:rapportLecons",
+          "processusCode": "SB",
+          "livrableCode": "rapportLecons",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "CP:rapportFinProjet",
+          "processusCode": "CP",
+          "livrableCode": "rapportFinProjet",
+          "usage": "cree",
+          "themeCode": "cas-affaire"
+        },
+        {
+          "code": "CP:rapportLecons",
+          "processusCode": "CP",
+          "livrableCode": "rapportLecons",
+          "usage": "cree",
+          "themeCode": "progression"
+        },
+        {
+          "code": "CP:approcheBenefices",
+          "processusCode": "CP",
+          "livrableCode": "approcheBenefices",
+          "usage": "cree",
+          "themeCode": "cas-affaire"
+        },
+        {
+          "code": "CP:ficheConfiguration",
+          "processusCode": "CP",
+          "livrableCode": "ficheConfiguration",
+          "usage": "cree",
+          "themeCode": null
+        },
+        {
+          "code": "CP:etatProduits",
+          "processusCode": "CP",
+          "livrableCode": "etatProduits",
+          "usage": "cree",
+          "themeCode": null
+        }
+      ],
+      "refRoles": [
+        {
+          "code": "executif",
+          "ordre": 1,
+          "nom": "Exécutif",
+          "niveau": "direction",
+          "cumulable": false
+        },
+        {
+          "code": "utilisateur-principal",
+          "ordre": 2,
+          "nom": "Utilisateur principal",
+          "niveau": "direction",
+          "cumulable": true
+        },
+        {
+          "code": "fournisseur-principal",
+          "ordre": 3,
+          "nom": "Fournisseur principal",
+          "niveau": "direction",
+          "cumulable": true
+        },
+        {
+          "code": "assurance-projet",
+          "ordre": 4,
+          "nom": "Assurance projet",
+          "niveau": "direction",
+          "cumulable": true
+        },
+        {
+          "code": "autorite-changement",
+          "ordre": 5,
+          "nom": "Autorité de changement",
+          "niveau": "direction",
+          "cumulable": true
+        },
+        {
+          "code": "chef-projet",
+          "ordre": 6,
+          "nom": "Chef de projet",
+          "niveau": "gestion",
+          "cumulable": false
+        },
+        {
+          "code": "support-projet",
+          "ordre": 7,
+          "nom": "Support projet",
+          "niveau": "gestion",
+          "cumulable": true
+        },
+        {
+          "code": "chef-equipe",
+          "ordre": 8,
+          "nom": "Chef d'équipe",
+          "niveau": "livraison",
+          "cumulable": true
+        }
+      ],
+      "refPrincipes": [
+        {
+          "code": "justification-continue",
+          "ordre": 1,
+          "nom": "Justification commerciale continue",
+          "resume": "Le projet reste justifié du début à la fin."
+        },
+        {
+          "code": "experience",
+          "ordre": 2,
+          "nom": "Tirer les leçons de l'expérience",
+          "resume": "Les leçons sont recherchées, notées et appliquées."
+        },
+        {
+          "code": "roles-definis",
+          "ordre": 3,
+          "nom": "Rôles et responsabilités définis",
+          "resume": "Chacun sait qui décide, qui gère et qui livre."
+        },
+        {
+          "code": "sequences",
+          "ordre": 4,
+          "nom": "Management par séquences",
+          "resume": "Le projet se planifie, se suit et se pilote séquence par séquence."
+        },
+        {
+          "code": "exception",
+          "ordre": 5,
+          "nom": "Management par exception",
+          "resume": "Des tolérances fixées à chaque niveau, une remontée seulement au-delà."
+        },
+        {
+          "code": "produits",
+          "ordre": 6,
+          "nom": "Orientation produits",
+          "resume": "On définit et on livre des produits, avec leurs critères de qualité."
+        },
+        {
+          "code": "adaptation",
+          "ordre": 7,
+          "nom": "Adaptation à l'environnement du projet",
+          "resume": "La méthode s’ajuste à la taille, à la complexité et au risque."
+        }
+      ],
+      "refReglesInstanciation": [
+        {
+          "code": "role:executif",
+          "ordre": 1,
+          "declencheur": "creation-dossier",
+          "cible": "roles",
+          "refCode": "executif",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "role": "executif"
+          }
+        },
+        {
+          "code": "role:utilisateur-principal",
+          "ordre": 2,
+          "declencheur": "creation-dossier",
+          "cible": "roles",
+          "refCode": "utilisateur-principal",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "role": "utilisateur-principal"
+          }
+        },
+        {
+          "code": "role:fournisseur-principal",
+          "ordre": 3,
+          "declencheur": "creation-dossier",
+          "cible": "roles",
+          "refCode": "fournisseur-principal",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "role": "fournisseur-principal"
+          }
+        },
+        {
+          "code": "role:chef-projet",
+          "ordre": 4,
+          "declencheur": "creation-dossier",
+          "cible": "roles",
+          "refCode": "chef-projet",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "role": "chef-projet"
+          }
+        },
+        {
+          "code": "etape:initialisation",
+          "ordre": 5,
+          "declencheur": "creation-dossier",
+          "cible": "etapes",
+          "refCode": "initialisation",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "numero": 1,
+            "nom": "Séquence d’initialisation",
+            "type": "initiation",
+            "statut": "a-venir"
+          }
+        },
+        {
+          "code": "livrable:SU:exposeProjet",
+          "ordre": 6,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "exposeProjet",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SU",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SU:descriptionProduitProjet",
+          "ordre": 7,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "descriptionProduitProjet",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SU",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SU:casAffaire",
+          "ordre": 8,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "casAffaire",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SU",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SU:journalQuotidien",
+          "ordre": 9,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "journalQuotidien",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SU",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SU:journalLecons",
+          "ordre": 10,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "journalLecons",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SU",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SU:planSequence",
+          "ordre": 11,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "planSequence",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SU",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:approcheRisques",
+          "ordre": 12,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "approcheRisques",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:approcheChangements",
+          "ordre": 13,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "approcheChangements",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:approcheQualite",
+          "ordre": 14,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "approcheQualite",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:approcheCommunication",
+          "ordre": 15,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "approcheCommunication",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:registreRisques",
+          "ordre": 16,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "registreRisques",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:registreIncidences",
+          "ordre": 17,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "registreIncidences",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:registreQualite",
+          "ordre": 18,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "registreQualite",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:ficheConfiguration",
+          "ordre": 19,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "ficheConfiguration",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:planProjet",
+          "ordre": 20,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "planProjet",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:casAffaire",
+          "ordre": 21,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "casAffaire",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:approcheBenefices",
+          "ordre": 22,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "approcheBenefices",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:IP:documentationInitialisation",
+          "ordre": 23,
+          "declencheur": "creation-dossier",
+          "cible": "livrables",
+          "refCode": "documentationInitialisation",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "IP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SB:planSequence",
+          "ordre": 24,
+          "declencheur": "ouverture-etape",
+          "cible": "livrables",
+          "refCode": "planSequence",
+          "multiplicite": "etape",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SB",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SB:rapportFinSequence",
+          "ordre": 25,
+          "declencheur": "ouverture-etape",
+          "cible": "livrables",
+          "refCode": "rapportFinSequence",
+          "multiplicite": "etape",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "SB",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:SB:rapportSituation",
+          "ordre": 26,
+          "declencheur": "ouverture-etape",
+          "cible": "livrables",
+          "refCode": "rapportSituation",
+          "multiplicite": "etape",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "CS",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:CP:rapportFinProjet",
+          "ordre": 27,
+          "declencheur": "cloture",
+          "cible": "livrables",
+          "refCode": "rapportFinProjet",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "CP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:CP:rapportLecons",
+          "ordre": 28,
+          "declencheur": "cloture",
+          "cible": "livrables",
+          "refCode": "rapportLecons",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "CP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:CP:approcheBenefices",
+          "ordre": 29,
+          "declencheur": "cloture",
+          "cible": "livrables",
+          "refCode": "approcheBenefices",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "CP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:CP:ficheConfiguration",
+          "ordre": 30,
+          "declencheur": "cloture",
+          "cible": "livrables",
+          "refCode": "ficheConfiguration",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "CP",
+            "statut": "a-faire"
+          }
+        },
+        {
+          "code": "livrable:CP:etatProduits",
+          "ordre": 31,
+          "declencheur": "cloture",
+          "cible": "livrables",
+          "refCode": "etatProduits",
+          "multiplicite": "projet",
+          "obligatoire": true,
+          "valeurs": {
+            "processus": "CP",
+            "statut": "a-faire"
+          }
+        }
+      ]
+    }
+  }
+}
