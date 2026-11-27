@@ -114,10 +114,6 @@
   gap: var(--ecart-20) var(--ecart-28);
   margin-bottom: var(--ecart-20);
 }
-.calendar-options {
-  justify-content: flex-start;
-  gap: var(--ecart-14) var(--ecart-20);
-}
 .calendar input,
 .calendar-options select {
   max-width: var(--part-100);
@@ -133,6 +129,8 @@
   border-color: var(--control-line-hover);
 }
 .calendar-options {
+  justify-content: flex-start;
+  gap: var(--ecart-14) var(--ecart-20);
   margin-bottom: var(--ecart-24);
   font-size: scaled(var(--texte-18));
 }
@@ -366,9 +364,7 @@
 .calendar.is-360 .calendar-actions .btn {
   white-space: nowrap;
 }
-.calendar.is-360 .calendar-actions > .btn {
-  min-width: 0;
-}
+.calendar.is-360 .calendar-actions > .btn,
 .calendar.is-360 .calendar-month-trigger {
   min-width: 0;
 }
@@ -488,6 +484,9 @@
   font-size: scaled(var(--texte-14));
   text-decoration: none;
   cursor: pointer;
+  transition:
+    transform var(--ease-fast),
+    box-shadow var(--ease-fast);
 }
 .calendar-year-empty-day {
   display: grid;
@@ -519,13 +518,6 @@
 .calendar-year-days a:active,
 .calendar-year-days button:active {
   background: var(--press-surface);
-}
-.calendar-year-day,
-.calendar-year-days a,
-.calendar-year-days button {
-  transition:
-    transform var(--ease-fast),
-    box-shadow var(--ease-fast);
 }
 .calendar-year-day:hover,
 .calendar-year-days a:hover,
@@ -923,7 +915,8 @@
   max-width: none;
 }
 .calendar-360-top rjs-workspace-content,
-.calendar-360-top rjs-calendar {
+.calendar-360-top rjs-calendar,
+.calendar-360-page > rjs-workspace-content {
   display: contents;
 }
 .calendar-360-overview {
@@ -970,9 +963,6 @@
     grid-column: 1 / -1;
     grid-row: 7;
   }
-}
-.calendar-360-page > rjs-workspace-content {
-  display: contents;
 }
 /* La liste sous la légende s’adapte à la largeur de sa colonne de calendrier. */
 .calendar-360-content {
@@ -1557,9 +1547,7 @@
   }
 }
 @media (max-width: $rupture-760) {
-  .calendar-360-overview {
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
+  .calendar-360-overview,
   .calendar-360-overview-body {
     grid-template-columns: minmax(0, var(--fr-1));
   }

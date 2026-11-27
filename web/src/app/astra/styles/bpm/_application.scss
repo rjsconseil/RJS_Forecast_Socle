@@ -100,7 +100,10 @@
     color: #fff;
     font-size: 24px;
   }
-  .brand-mark > span {
+  .brand-mark > span,
+  .section-switch-entry::before,
+  .sidebar .section-switch-entry .section-switch-text small,
+  .topbar-home {
     display: none;
   }
   .brand-name {
@@ -160,16 +163,10 @@
     border-radius: 9px;
     box-shadow: none;
   }
-  .section-switch-entry::before {
-    display: none;
-  }
   .section-switch-text strong {
     font-size: 13px;
     font-weight: 550;
     line-height: 1.4;
-  }
-  .sidebar .section-switch-entry .section-switch-text small {
-    display: none;
   }
   .section-mark {
     min-width: 27px;
@@ -221,9 +218,6 @@
   }
   .topbar-context {
     font-size: 12px;
-  }
-  .topbar-home {
-    display: none;
   }
   .main-footer {
     border-top: 1px solid var(--bpm-line);
@@ -706,7 +700,8 @@
       .metric-tiles[data-layout='last-wide'] .metric-value {
         font-size: clamp(24px, 2.2vw, 32px);
       }
-      .metric-tiles[data-layout='last-wide'] .metric-symbol {
+      .metric-tiles[data-layout='last-wide'] .metric-symbol,
+      .metric-tiles[data-layout='last-wide'] .metric-controls::before {
         display: none;
       }
       .metric-tiles[data-layout='last-wide'] .metric-aside {
@@ -719,9 +714,6 @@
       }
       .metric-tiles[data-layout='last-wide'] .metric-controls {
         gap: 8px;
-      }
-      .metric-tiles[data-layout='last-wide'] .metric-controls::before {
-        display: none;
       }
     }
     .metric-tile.is-emphasis {

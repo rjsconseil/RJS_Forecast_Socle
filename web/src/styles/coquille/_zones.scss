@@ -31,8 +31,6 @@
 /* Mouvements communs des boutons de navigation ; supprimés si le système le demande. */
 .app-shell {
   --press-scale: scale(var(--facteur-0-98));
-}
-.app-shell {
   --touch-target: var(--dim-44);
   --zone-entry-height: var(--dim-64);
 }
@@ -189,7 +187,10 @@
 }
 .section-switch-entry:focus-visible,
 .plan-entry:focus-visible,
-.plan-destination:focus-visible {
+.plan-destination:focus-visible,
+.section-pages a:focus-visible,
+.zone-resets a:focus-visible,
+.zone-identity-switch:focus-visible {
   outline: var(--trait-2) solid var(--app-focus-ring);
   outline-offset: var(--decalage-2);
 }
@@ -274,12 +275,6 @@
   border-radius: var(--rayon-999);
   background: var(--item-marker);
   content: '';
-}
-.section-pages a:focus-visible,
-.zone-resets a:focus-visible,
-.zone-identity-switch:focus-visible {
-  outline: var(--trait-2) solid var(--app-focus-ring);
-  outline-offset: var(--decalage-2);
 }
 .section-pages .nav-icon,
 .zone-resets .nav-icon {
@@ -861,9 +856,7 @@
   }
 }
 @media (max-width: $rupture-1000) {
-  .plan-heading {
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
+  .plan-heading,
   .plan-portal-grid {
     grid-template-columns: minmax(0, var(--fr-1));
   }
@@ -900,9 +893,7 @@
   .plan-entry:active,
   .section-switch-entry:hover,
   .section-switch-entry:active,
-  .zone-identity-switch:hover span {
-    transform: none;
-  }
+  .zone-identity-switch:hover span,
   :is(.plan-entry):hover::after, .plan-destination:hover .plan-action > span {
     transform: none;
   }
