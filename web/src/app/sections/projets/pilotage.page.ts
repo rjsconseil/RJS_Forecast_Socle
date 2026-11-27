@@ -8,7 +8,7 @@ import { astraSectionHome, astraUrl } from '../../astra/astra-parts';
 import { SectionHome, type SectionAlone, type SectionIndicator } from '../../platform/section-home';
 import type { SectionKey } from '../../platform/sections';
 import { sourceLink } from '../../platform/source-link';
-import { BOARD_COLUMNS, board, isWorkProject, localToday, portfolio, PRIORITY_LABEL, timeline, totals, type Health } from './portfolio';
+import { BOARD_COLUMNS, board, localToday, portfolio, PRIORITY_LABEL, timeline, totals, type Health } from './portfolio';
 
 type View = 'portefeuille' | 'tableau' | 'planning';
 const VIEWS: { id: View; label: string }[] = [
