@@ -77,7 +77,8 @@ const GRAND_NOYAU = 'platform/grand-noyau.ts';
 const CADRE = 'astra/cadre.ts';
 const FONCTIONNALITES = /^sections\/[^/]+\/fonctionnalites\//;
 const APP_ROOT = (rel) => rel.match(/^(sections\/[^/]+\/application|hybrides\/[^/]+)\//)?.[1] ?? null;
-const relativeImports = (text) => [...text.matchAll(/(?:from\s+|import\(\s*)['"](\.[^'"]+)['"]/g)].map((m) => m[1]);
+// Toute forme d'import relatif : `from '…'`, `import '…'` (effet de bord) et `import('…')`.
+const relativeImports = (text) => [...text.matchAll(/(?:from\s+|import\s*\(?\s*)['"](\.[^'"]+)['"]/g)].map((m) => m[1]);
 const resolveTs = (file, spec) => { const t = relative(app, join(file, '..', spec)); return /\.(ts|json|scss|html)$/.test(t) ? t : t + '.ts'; };
 
 test('trois étages : chaque fichier de sections/ et hybrides/ est dans les fonctionnalités d’une section ou dans une application autonome', async () => {
