@@ -61,7 +61,7 @@ export class BpmCycleSetup {
       <div class="bpm-error bpm-state-error" role="alert">
         <p>{{ e.message }}</p>
         @if (e.body.details?.['field']) {
-          <p><small>Champ concerné : {{ e.body.details?.['field'] }}</small></p>
+          <p><small>Champ concerné : {{ e.body.details['field'] }}</small></p>
         }
         <div class="bpm-actions">
           <button type="button" class="btn btn-secondary" (click)="retry.emit()">Réessayer</button>

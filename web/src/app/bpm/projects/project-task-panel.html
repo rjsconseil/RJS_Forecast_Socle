@@ -9,7 +9,7 @@
   [headed]="true"
   [title]="t.task.title"
   [busy]="page.busy()"
-  (closed)="page.closeTaskPanel()"
+  (closed)="page.taskWindow.close()"
 >
   <div class="task-panel">
     @if (page.notice(); as n) {
@@ -60,7 +60,7 @@
           [funded]="b.regime"
           (decide)="page.decideRequest($event)"
         />
-      } @else if (page.fundingTask() === t.task.id) {
+      } @else if (page.taskWindow.fundingTask() === t.task.id) {
         <form
           class="task-funding-box"
           [bpmFormDraft]="'request:' + b.budgetId + ':' + t.task.id + ':' + b.revision"
@@ -98,7 +98,7 @@
             <button
               type="button"
               class="btn btn-secondary"
-              (click)="requestDraft.clear(); page.fundingTask.set(null)"
+              (click)="requestDraft.clear(); page.taskWindow.fundingTask.set(null)"
             >
               Annuler
             </button>
@@ -108,7 +108,7 @@
         <button
           class="btn btn-secondary"
           [disabled]="page.busy()"
-          (click)="page.fundingTask.set(t.task.id)"
+          (click)="page.taskWindow.fundingTask.set(t.task.id)"
         >
           Demander un montant
         </button>
@@ -120,13 +120,13 @@
           <button
             class="text-link"
             [disabled]="page.busy()"
-            (click)="page.closeTaskPanel(); page.editAllocation()"
+            (click)="page.taskWindow.close(); page.editAllocation()"
           >
             Attribuer l’enveloppe
           </button>
         </p>
       }
-      @for (o of page.taskOverruns(t.task.id); track o.id) {
+      @for (o of page.taskWindow.overruns(t.task.id); track o.id) {
         <bpm-overrun-request [overrun]="o" [busy]="page.busy()" (decide)="page.decide(o, $event)" />
       }
       @if (b.regime) {
@@ -160,7 +160,7 @@
     </section>
     <section id="task-panel-charges" class="task-panel-section">
       <header class="task-panel-section-head">
-        <h3>Dépenses et gains de la tâche · {{ page.taskCharges(t.task.id).length }}</h3>
+        <h3>Dépenses et gains de la tâche · {{ page.taskWindow.charges(t.task.id).length }}</h3>
         <button
           class="btn btn-secondary"
           [disabled]="page.busy()"
@@ -183,13 +183,13 @@
         </p>
       }
       <bpm-project-charge-list
-        [charges]="page.taskCharges(t.task.id)"
+        [charges]="page.taskWindow.charges(t.task.id)"
         [busy]="page.busy()"
-        [settlingId]="page.settling()"
+        [settlingId]="page.taskWindow.settling()"
         [today]="page.today"
         (open)="page.openCharge($event)"
         (settle)="page.settle($event.charge, $event.fields, $event.draft)"
-        (cancelSettle)="page.settling.set(null)"
+        (cancelSettle)="page.taskWindow.settling.set(null)"
       />
     </section>
     <section class="task-panel-section">
@@ -209,7 +209,7 @@
             </button>
           }
         </p>
-      } @else if (page.returnEditor() === t.task.id) {
+      } @else if (page.taskWindow.returnEditor() === t.task.id) {
         <form
           class="bpm-inline-form"
           [bpmFormDraft]="'return:' + b.budgetId + ':' + t.task.id + ':' + b.revision"
@@ -246,21 +246,21 @@
           <button
             type="button"
             class="btn btn-secondary"
-            (click)="returnDraft.clear(); page.returnEditor.set(null)"
+            (click)="returnDraft.clear(); page.taskWindow.returnEditor.set(null)"
           >
             Annuler
           </button>
         </form>
       } @else {
-        <button type="button" class="text-link" (click)="page.returnEditor.set(t.task.id)">
+        <button type="button" class="text-link" (click)="page.taskWindow.returnEditor.set(t.task.id)">
           Prévoir un retour
         </button>
       }
     </section>
-    @if (page.taskHistory(t.task.id).length) {
+    @if (page.taskWindow.history(t.task.id).length) {
       <details class="task-panel-section">
-        <summary>Historique des demandes · {{ page.taskHistory(t.task.id).length }}</summary>
-        <bpm-task-requests [requests]="page.taskHistory(t.task.id)" [busy]="page.busy()" />
+        <summary>Historique des demandes · {{ page.taskWindow.history(t.task.id).length }}</summary>
+        <bpm-task-requests [requests]="page.taskWindow.history(t.task.id)" [busy]="page.busy()" />
       </details>
     }
     <div class="bpm-actions task-panel-actions">
@@ -278,7 +278,7 @@
         class="btn btn-primary"
         type="button"
         [disabled]="page.busy()"
-        (click)="page.closeTaskPanel()"
+        (click)="page.taskWindow.close()"
       >
         Fermer
       </button>

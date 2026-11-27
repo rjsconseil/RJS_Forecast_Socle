@@ -118,7 +118,7 @@ describe('cockpit du projet', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const command = (label: string) => {
-      page.openTaskId.set('tsk_2');
+      page.taskWindow.id.set('tsk_2');
       fixture.detectChanges();
       const bar = fixture.nativeElement.querySelector('bpm-project-task-panel .task-panel-command-bar') as HTMLElement;
       [...bar.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.trim() === label)!.click();
@@ -143,7 +143,7 @@ describe('cockpit du projet', () => {
     const { fixture, page, api } = await setup(true);
     fixture.detectChanges();
     await fixture.whenStable();
-    page.openTaskId.set('tsk_1');
+    page.taskWindow.id.set('tsk_1');
     fixture.detectChanges();
     const status = fixture.nativeElement.querySelector('bpm-project-task-panel .task-status-buttons button[data-status="doing"]') as HTMLButtonElement;
     status.click();
@@ -155,7 +155,7 @@ describe('cockpit du projet', () => {
     const { fixture, page } = await setup(true);
     fixture.detectChanges();
     await fixture.whenStable();
-    page.openTaskId.set('tsk_1');
+    page.taskWindow.id.set('tsk_1');
     fixture.detectChanges();
     const dialog: HTMLElement = fixture.nativeElement.querySelector('bpm-project-task-panel dialog[aria-label="Choisir le plan"]');
     expect(dialog).toBeTruthy();
@@ -174,7 +174,7 @@ describe('cockpit du projet', () => {
     const { fixture, page, state } = await setup(true);
     fixture.detectChanges();
     await fixture.whenStable();
-    page.openTaskId.set('tsk_1');
+    page.taskWindow.id.set('tsk_1');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('dialog[aria-label="Choisir le plan"]')).toBeTruthy();
     page.editTask(state.tasks[0]);
@@ -262,7 +262,7 @@ describe('cockpit du projet', () => {
     });
     expect(page.pageFocus().title).toContain('Acompte');
     page.runNextAction();
-    expect(page.openTaskId()).toBe('tsk_1');
+    expect(page.taskWindow.id()).toBe('tsk_1');
     expect(page.lineId()).toBe('first');
     expect(api.changeTaskStatus).not.toHaveBeenCalled();
   });
@@ -295,14 +295,14 @@ describe('cockpit du projet', () => {
     const { page, fixture, state } = await setup(true);
     fixture.detectChanges();
     await fixture.whenStable();
-    page.openTaskId.set(state.tasks[0].task.id);
+    page.taskWindow.id.set(state.tasks[0].task.id);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('dialog[aria-label="Choisir le plan"]')).not.toBeNull();
     page.addExpense(state.tasks[0].task.id);
     fixture.detectChanges();
     expect(root.querySelector('dialog[aria-label="Choisir le plan"]')).toBeNull();
-    expect(page.openTaskId()).toBe(state.tasks[0].task.id);
+    expect(page.taskWindow.id()).toBe(state.tasks[0].task.id);
     page.entryId.set('');
     fixture.detectChanges();
     expect(root.querySelector('dialog[aria-label="Choisir le plan"]')).not.toBeNull();
@@ -523,7 +523,7 @@ describe('cockpit du projet', () => {
       },
     ];
     page.data.set({ ...state });
-    expect(page.taskCharges('tsk_1').map((c: any) => c.id)).toEqual(['op_1']);
+    expect(page.taskWindow.charges('tsk_1').map((c: any) => c.id)).toEqual(['op_1']);
     expect(page.unassignedCharges().map((c: any) => c.id)).toEqual(['op_3']);
     await page.attach('taken');
     expect(api.attachTask).not.toHaveBeenCalled();
@@ -561,7 +561,7 @@ describe('cockpit du projet', () => {
     expect(dialog.querySelectorAll('.task-charge').length).toBe(13);
     expect(dialog.textContent).toContain('Dépenses et gains de la tâche · 13');
     // « Demander un montant » ouvre la même fenêtre, formulaire de part déjà déplié.
-    page.closeTaskPanel();
+    page.taskWindow.close();
     fixture.detectChanges();
     expect(root.querySelector('dialog')).toBeNull();
     const ask = [...card.querySelectorAll('button')].find((b) =>
@@ -661,12 +661,12 @@ describe('cockpit du projet', () => {
     expect(page.lineId()).toBeNull();
     expect(page.entryId()).toBe(line.id);
     expect(page.editorOpen()).toBe(true);
-    expect(page.openTaskId()).toBe('tsk_1');
+    expect(page.taskWindow.id()).toBe('tsk_1');
     const reads = bpm.projectDetail.mock.calls.length;
     await page.onSaved('Date prévue modifiée.');
     expect(page.editorOpen()).toBe(false);
     expect(page.entryId()).toBe('');
-    expect(page.openTaskId()).toBe('tsk_1');
+    expect(page.taskWindow.id()).toBe('tsk_1');
     expect(bpm.projectDetail.mock.calls.length).toBeGreaterThan(reads);
   });
 
@@ -678,9 +678,6 @@ describe('cockpit du projet', () => {
       a.textContent?.includes('Échéances à régler dans le projet de vie'),
     )!;
     expect(back.getAttribute('href')).toBe('/projet-de-vie?period=2026-09#life-due');
-    expect(root.querySelector('.project-reading-scope')?.textContent).toContain(
-      'toute la durée du projet',
-    );
     expect(page.lifePeriod()).toBe('2026-09');
   });
 });

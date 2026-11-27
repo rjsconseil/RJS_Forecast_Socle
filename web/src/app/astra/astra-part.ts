@@ -181,7 +181,8 @@ export class AstraPartFrame {
     const own = this.part().key;
     const list = tabs.map(t => ({ ...t, url: astraUrl(fill(t.slug)), other: t.part !== own }));
     const at = list.findIndex(t => t.current);
-    return { tabs: list, period, prev: list[at - 1] ?? null, next: list[at + 1] ?? null };
+    const tab = (i: number) => (i >= 0 && i < list.length ? list[i] : null);
+    return { tabs: list, period, prev: tab(at - 1), next: tab(at + 1) };
   });
   protected readonly screen = signal<Type<unknown> | null>(null);
   protected readonly menu = signal(false);

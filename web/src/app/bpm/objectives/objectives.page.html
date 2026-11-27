@@ -177,7 +177,7 @@
                 @for (row of pr.rows; track row.n) { <tr><th>{{ row.date ? (row.date | shortDate) : row.year }}</th><td class="num" [bpmAmount]="row.nominalCents">{{ row.nominalCents | signedCents }}</td><td class="num" [bpmAmount]="row.realCents">{{ row.realCents | signedCents }}</td><td class="num" [bpmAmount]="row.reservedCents" bpmTone="info">{{ row.reservedCents | cents }}</td></tr> }
               </tbody></table></div></details>
             } @else { <div class="objectives-empty"><h3>Complétez votre scénario</h3><p>{{ pr.reason ?? 'Le patrimoine initial et une hypothèse de rendement sont nécessaires au calcul.' }}</p>
-              @if (pr.hypotheses?.startCents == null) { <a class="btn btn-secondary" routerLink="/app/reglages/patrimoine" fragment="bc-wealth-title">Renseigner le patrimoine initial</a> }</div> }
+              @if (pr.hypotheses.startCents == null) { <a class="btn btn-secondary" routerLink="/app/reglages/patrimoine" fragment="bc-wealth-title">Renseigner le patrimoine initial</a> }</div> }
           }
           <p class="objectives-callout">{{ savingsProjection ? 'Les achats et les réserves liés aux objectifs datés sont simulés à leur échéance. L’inflation ajuste les montants et le pouvoir d’achat projeté.' : 'Le calcul applique les objectifs par année, dans l’ordre de leurs dates. Un achat consomme du capital simulé et une réserve en affecte une part.' }}</p>
         </div>

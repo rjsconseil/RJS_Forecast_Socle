@@ -1,0 +1,154 @@
+// Généré par scripts/styles-extract.mjs à partir des feuilles de l'hôte : ne pas modifier à la main.
+// Règles de calendar-skin.scss, calendar-skin-views.scss, calendar-skin-compact.scss, calendar-skin-design.scss, calendar-skin-effects.scss qui peuvent s'appliquer à calendar-personalization.html.
+/* ---- calendar-skin.scss ---- */
+@charset "UTF-8";
+/*
+ * Présentation canonique du calendrier (la même pour chaque calendrier), une feuille par rôle. L'ordre compte :
+ * chaque feuille complète la précédente.
+ *   tokens           les réglages : largeur de l'agenda, arrondi, proportions du carré, ombres, fondus
+ *   base             commandes, grille et agenda
+ *   relief           ombres, fondus, survol, cases sans repère
+ *   square           le carré commun au mois et à l'année
+ *   variants         les étapes Agenda et Sources : une seule surface de travail, la liste à sa hauteur
+ */
+/*
+ * Réglages du calendrier. Tout ce qui se règle est ici : changer une valeur suffit, les feuilles
+ * `_square` (forme) et `_relief` (ombres, fondus) la lisent. Une page peut aussi redéfinir une variable
+ * sur `rjs-calendar` pour sa propre présentation.
+ */
+:host {
+  /* Forme : la bande de l'agenda à droite, l'arrondi des deux cartes. */
+  --cal-agenda-width: 240px;
+  --cal-radius: 20px;
+  /* Le carré se lit sur un module de 1/7 de côté. L'habillage s'en partage un : en-tête, initiales, légende
+     (0,44 + 0,28 + 0,28 = 1 module). Les six autres modules sont les six semaines : une case est carrée. */
+  --cal-head-share: calc(0.44 / 7);
+  --cal-weekdays-share: calc(0.28 / 7);
+  --cal-legend-share: calc(0.28 / 7);
+  /* Relief : teinte des ombres. */
+  --cal-shade: color-mix(in srgb, var(--app-accent) 55%, #10131c);
+  /* Trois forces d'ombre, de la plus légère à la plus marquée ; l'ombre portée des cartes les combine. */
+  --cal-shadow-soft: color-mix(in srgb, var(--cal-shade) 12%, transparent);
+  --cal-shadow-mid: color-mix(in srgb, var(--cal-shade) 40%, transparent);
+  --cal-shadow-strong: color-mix(in srgb, var(--cal-shade) 58%, transparent);
+  --cal-lift:
+    0 1px 2px var(--cal-shadow-soft),
+    0 14px 30px -14px var(--cal-shadow-mid),
+    0 36px 70px -36px var(--cal-shadow-mid);
+  /* Voile de fin de semaine. */
+  --cal-weekend: color-mix(in srgb, var(--app-accent) 4%, transparent);
+  /* Fondus : apparition d'un jour, d'un mois de l'année, d'un aperçu ; estompe des jours voisins et vides. */
+  --cal-fade-day: 240ms;
+  --cal-fade-month: 320ms;
+  --cal-fade-peek: 160ms;
+  --cal-outside-opacity: 0.5;
+  --cal-idle-tint: 7%;
+}
+
+/* Variante de présentation exclusivement activée pour calendrier.budgetPatrimoine. */
+
+/*
+ * Relief du calendrier : ombres portées, fondus d'apparition, réponse au survol, cases sans repère.
+ * Aucune transformation ni masque sur le cadre : l'aperçu d'une journée s'y place en position fixe.
+ */
+@keyframes cal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * Carré du calendrier. Mois et année occupent le même carré : son côté ne dépend ni de la vue ni du
+ * mois affiché. Il prend toute la largeur de la page, moins la bande de l'agenda à droite.
+ * Les proportions viennent de `_tokens` : un module (1/7 du côté) d'habillage, six modules de semaines.
+ * En vue année, le même corps range douze mois en 4 × 3, chacun avec ses cases carrées.
+ */
+
+/* Une seule surface de travail pour les étapes Agenda et Sources. */
+
+/* ---- calendar-skin-views.scss ---- */
+@charset "UTF-8";
+/*
+ * Vues et formats du calendrier, pour chaque calendrier : disposition des événements selon le format choisi,
+ * et vue semaine qui montre tous les événements. Même chaîne que la présentation canonique, sans astuce.
+ */
+:host .calendar.is-360.is-canonical .calendar-layout.is-week ::ng-deep .calendar-360-content {
+  grid-row: 3;
+}
+
+/* ---- calendar-skin-compact.scss ---- */
+@charset "UTF-8";
+/*
+ * Présentation resserrée du calendrier (entrée `compact` du module), demandée par une page hôte qui porte déjà
+ * titre et commandes. Elle complète la présentation canonique (même chaîne de sélecteurs, une classe de plus) :
+ * aucune astuce de priorité, et l'hôte ne règle que des jetons publics (--host-*, --frame-pad-*, --tile-pad-*).
+ * Le contenu projeté par la page (`.calendar-360-content`) est placé dans la grille du module.
+ */
+:host .calendar.is-360.is-canonical.is-compact-host:not(.is-specialized-calendar) ::ng-deep .calendar-360-content {
+  grid-row: 2;
+}
+@container calendar-compact (max-width: 740px) {
+  :host .calendar.is-360.is-canonical.is-compact-host:not(.is-specialized-calendar) .calendar-layout.is-week ::ng-deep .calendar-360-content {
+    grid-row: 3;
+  }
+}
+@container calendar-compact (max-width: 555px) {
+  :host .calendar.is-360.is-canonical.is-compact-host:not(.is-specialized-calendar) .calendar-layout:is(.is-month, .is-year) ::ng-deep .calendar-360-content {
+    grid-row: 3;
+  }
+}
+
+/* ---- calendar-skin-design.scss ---- */
+@charset "UTF-8";
+/*
+ * Peau de DESIGN du calendrier : elle lit les jetons d'un design (`presentation/calendar-design.ts`,
+ * variables `--cal-d-*`) et ne s'applique qu'à un design autre que « standard ». Le design standard
+ * garde donc l'apparence d'origine, intacte. Aucune règle de mouvement ici : les effets ont leur peau.
+ *
+ * Un jeton absent prend une valeur de repli neutre, proche de l'apparence d'origine.
+ * Couleurs d'état : rouge = dépassement ou négatif, vert = gain ou positif, bleu = situation standard.
+ * Elles ne servent qu'à dire un état ; le reste du design n'emploie que leurs variantes (accent, traits).
+ */
+
+/* ---- calendar-skin-effects.scss ---- */
+@charset "UTF-8";
+/*
+ * Peau des EFFETS D'AFFICHAGE du calendrier : les primitives de mouvement qu'un effet choisit
+ * (`presentation/calendar-effects.ts`), réglées par ses variables `--cal-fx-*`. Elles ne s'appliquent
+ * que si l'effet les nomme : l'effet « standard » garde les fondus courts d'origine (`_relief.scss`).
+ * Aucune couleur ni forme ici : le design a sa peau. Tout s'efface si la personne demande moins
+ * d'animations.
+ *
+ *   data-fx-enter   apparition : fade · fade-up · fade-scale (cascade : --cal-i × --cal-fx-stagger)
+ *   data-fx-leave   disparition : fade · fade-down (classe `cal-fx-leaving`, posée par animate.leave)
+ *   data-fx-hover   survol : lift · glow
+ *   data-fx-period  changement de période : crossfade (classe `is-period-leaving`)
+ */
+@keyframes cal-fx-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes cal-fx-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--cal-fx-distance, 6px));
+  }
+}
+@keyframes cal-fx-fade-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.965);
+  }
+}
+@keyframes cal-fx-out-fade {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes cal-fx-out-down {
+  to {
+    opacity: 0;
+    transform: translateY(var(--cal-fx-distance, 6px));
+  }
+}

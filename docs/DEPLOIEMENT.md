@@ -45,6 +45,8 @@ Le site : `SOCLE_SITE_HOST` (adresse d'écoute, `127.0.0.1` par défaut), `SOCLE
    superviseur (systemd, conteneur) qui redémarre en cas d'arrêt.
 5. Créer le premier administrateur : `node api/scripts/make-admin.mjs <email>` (le compte doit exister).
 6. Configurer le proxy : HTTPS, redirection HTTP → HTTPS, `X-Forwarded-For` et `X-Forwarded-Proto` transmis.
+7. Contrôler les réglages avec `npm run deploy:check` (dans l'environnement de l'API), puis le site ouvert avec
+   `npm run deploy:check -- https://forecast.exemple.fr` : variables, CSP et nonce, HSTS, santé, refus attendus.
 
 ## 4. Exploitation
 
@@ -56,14 +58,21 @@ Le site : `SOCLE_SITE_HOST` (adresse d'écoute, `127.0.0.1` par défaut), `SOCLE
   Aucun script en ligne n'est accepté : le seul, celui de l'aperçu de la navigation, est autorisé par son empreinte
   SHA-256 (`web/src/app/navigation/navigation-preview-csp.json`, lu par `scripts/site-server.mjs`). Si le proxy
   d'hébergement pose sa propre CSP, il doit reprendre celle de `site-server.mjs` telle quelle (empreinte comprise),
-  sans rajouter `'unsafe-inline'` aux scripts. Les styles gardent `'unsafe-inline'` (styles des composants Angular).
+  sans rajouter `'unsafe-inline'`. Les balises `<style>` n'y passent qu'avec le **nonce de la page** : `site-server.mjs`
+  en tire un neuf à chaque envoi de `index.html` (jamais mis en cache), l'écrit dans la CSP (`style-src-elem`) et sur
+  `<app-root ngCspNonce>`, où Angular le lit pour les feuilles de ses composants. Un proxy qui mettrait la page en
+  cache ou réécrirait la CSP casserait l'affichage : il doit transmettre les deux telles quelles. Seuls les attributs
+  `style` restent permis (`style-src-attr`). Derrière un proxy HTTPS (`X-Forwarded-Proto: https`), le site envoie
+  aussi `Strict-Transport-Security` (un an).
 - **Connexion** : 8 échecs par identifiant ou par adresse en 15 minutes bloquent les essais suivants ; avec PostgreSQL,
   les compteurs sont dans la base (`SY_throttle`), communs à tous les serveurs. « Se déconnecter » révoque le jeton de
   l'appareil ; « se déconnecter partout » révoque tous les jetons du compte.
 
 ## 5. Vérifications avant ouverture
 
-- `curl -I https://forecast.exemple.fr/` montre `content-security-policy` et `x-frame-options`.
+- `npm run deploy:check -- https://forecast.exemple.fr` fait les contrôles ci-dessous d'un coup.
+- `curl -I https://forecast.exemple.fr/` montre `content-security-policy` (avec `'nonce-…'`), `strict-transport-security`
+  et `x-frame-options`.
 - `curl https://forecast.exemple.fr/api/bpm/summary` rend `401`.
 - `curl -X POST -H 'Origin: https://autre.exemple' https://forecast.exemple.fr/api/auth/logout` rend `403`.
 - `curl https://forecast.exemple.fr/api/health` rend `200`.

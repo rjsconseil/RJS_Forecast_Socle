@@ -168,8 +168,8 @@
               <div class="bc-countdown">
                 <strong>{{ day }}</strong>
                 <span>jour d'ancrage</span>
-                @if (d.cycle?.startDate) {
-                  <small>Depuis le {{ d.cycle?.startDate | shortDate }}</small>
+                @if (d.cycle.startDate) {
+                  <small>Depuis le {{ d.cycle.startDate | shortDate }}</small>
                 }
               </div>
             }

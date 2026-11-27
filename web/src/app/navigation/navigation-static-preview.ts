@@ -30,6 +30,8 @@ export function staticNavigationPreview(
   appearance: { focus: boolean; density: string; visualStyle: string; touchTargets: boolean },
   stylesheets: string[] = [],
   fontStyles = '',
+  /** Nonce de la page (CSP du site) : le cadre `srcdoc` hérite de sa CSP, qui n'accepte une balise `<style>` qu'avec lui. */
+  nonce = '',
 ): string {
   const source = SITE_NAVIGATION.tree.find((node) => node.key === ('zone:' + defaultApplicationId()))!;
   const graph = generateNavigation(source, config);
@@ -242,7 +244,7 @@ export function staticNavigationPreview(
   const stylesheetLinks = stylesheets
     .map((href) => '<link rel="stylesheet" href="' + escape(href) + '">')
     .join('');
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${escape(origins)}; font-src data: ${escape(origins)}; img-src data: ${escape(origins)}; script-src '${NAVIGATION_PREVIEW_SCRIPT_HASH}'; connect-src 'none'; form-action 'none'">${stylesheetLinks}<style>
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${escape(origins)}; font-src data: ${escape(origins)}; img-src data: ${escape(origins)}; script-src '${NAVIGATION_PREVIEW_SCRIPT_HASH}'; connect-src 'none'; form-action 'none'">${stylesheetLinks}<style${nonce ? ' nonce="' + escape(nonce) + '"' : ''}>
 ${fontStyles}
 ${PAGE_TABS_STYLES.replaceAll(':host', '.rjs-page-tabs')}
 body{margin:0}

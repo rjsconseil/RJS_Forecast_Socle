@@ -1,0 +1,170 @@
+// Généré par scripts/styles-extract.mjs à partir des feuilles de l'hôte : ne pas modifier à la main.
+// Règles de projects.page.scss, project.page.scss qui peuvent s'appliquer à project-task-panel.html.
+/* ---- projects.page.scss ---- */
+@charset "UTF-8";
+:host {
+  display: block;
+}
+
+/* Le bandeau seul est figé : son frère de synthèse et le tableau restent dans le flux. */
+
+bpm-project-overview-summary {
+  display: block;
+  margin-top: 20px;
+}
+
+/* Projets par statut : chaque carte ouvre les tâches du projet, rangées par statut.*/
+
+/* Vision tâches : noter une idée d'un geste, sans choisir de projet.*/
+
+/* ---- project.page.scss ---- */
+@charset "UTF-8";
+:host {
+  display: block;
+}
+
+.task-alert {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.task-alert[data-tone=warning] {
+  border-color: var(--status-warning);
+}
+
+.task-alert[data-tone=danger] {
+  border-color: var(--status-danger);
+}
+
+.task-alert .btn {
+  font-size: 12px;
+  min-height: 34px;
+  padding: 6px 10px;
+  white-space: normal;
+}
+
+.task-funding-box form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.task-funding-box label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.task-funding-box input {
+  width: 100%;
+  min-width: 0;
+}
+
+.task-funding-box .btn {
+  font-size: 12px;
+  min-height: 38px;
+  padding: 10px;
+  white-space: normal;
+}
+
+.task-funding-box {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--app-accent-line);
+  background: var(--app-accent-soft);
+  margin-bottom: 14px;
+}
+
+.task-funding-box p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--muted);
+}
+
+.is-error {
+  color: var(--status-danger);
+}
+
+/* Fenêtre d'une tâche : tout le détail que la carte de taille fixe ne montre pas. */
+.task-panel {
+  display: grid;
+  gap: 18px;
+  padding: 20px 28px 24px;
+  font-size: 13px;
+}
+
+.task-panel-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.task-panel-description {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* Gabarits de la page rendus dans la fenêtre de la tâche (project-task-panel.ts) : ils portent la marque de la page,
+   seul l'hôte de la fenêtre la porte aussi ; il les situe donc à la place de .task-panel. */
+
+.task-panel-section {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 140px;
+}
+
+.task-panel-section h3 {
+  margin: 0;
+  font: 700 14px/1.5 var(--font-sans);
+}
+
+.task-panel-section summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.task-panel-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.task-panel .task-funding-box {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.task-panel .task-funding-box label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.task-panel-actions {
+  justify-content: flex-end;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 640px) {
+  .task-panel {
+    padding: 16px;
+  }
+}
+/* Dépenses dans la fenêtre : une ligne par échéance (libellé, montants, action). */
+/* Abandon d'un projet : l'aperçu de ce qui revient au budget de vie et de ce qui s'arrête, avant confirmation. */
+
+/* La part d'une tâche se décide depuis son chiffre : « À demander » ou le montant ouvrent la fenêtre de part.*/

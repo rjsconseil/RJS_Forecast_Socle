@@ -24,9 +24,10 @@ export interface ProjectTaskPanelViews {
   imports: [NgTemplateOutlet, CentsPipe, BpmFormDraft, BpmModal, BpmProjectChargeList, BpmOverrunRequestComponent, BpmTaskRequestsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-task-panel.html',
-  // Sans boîte propre, mêmes feuilles que la fiche projet : le rendu ne change pas (e2e/style-fingerprint.mjs).
+  // Sans boîte propre. Des feuilles de la fiche projet, seules les règles qui peuvent viser ce gabarit
+  // (project-task-panel.host.scss, tiré par scripts/styles-extract.mjs) : le rendu ne change pas.
   host: { style: 'display: contents' },
-  styleUrls: ['./projects.page.scss', './project.page.scss', './project-task-panel.scss'],
+  styleUrls: ['./project-task-panel.host.scss', './project-task-panel.scss'],
 })
 export class BpmProjectTaskPanel {
   protected readonly page = inject(PROJECT_PAGE);
