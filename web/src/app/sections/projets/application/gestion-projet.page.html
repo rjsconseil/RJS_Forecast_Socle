@@ -85,6 +85,10 @@
             </ol>
           </section>
 
+          @if (registre(); as reg) {
+            <projets-registre [registre]="reg" [projets]="projetsAvecDossier()" />
+          }
+
           <section class="mp-section" aria-labelledby="mp-liv-theme">
             <h3 id="mp-liv-theme">Livrables du thème <span class="mp-count">{{ themeLivrables().length }}</span></h3>
             <ul class="mp-chips">

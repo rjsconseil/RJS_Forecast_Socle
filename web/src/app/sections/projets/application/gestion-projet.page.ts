@@ -7,6 +7,12 @@ import {
 import { BpmPageContext, BpmRefresh, bpmLoader, astraUrl } from '../../../astra/cadre';
 import { BOARD_COLUMNS, board, isWorkProject, localToday, portfolio, totals, type Health } from '../fonctionnalites/portfolio';
 import { APPLICATION, COLLECTIONS, dossiersParProjet } from '../fonctionnalites/dossiers';
+import { registreDuTheme, registresDepuis, type ModeleCollections } from '../fonctionnalites/registres';
+import donnees from './donnees.json';
+
+/** Les registres PRINCE2, un par thème, d'après le modèle de données de l'application. */
+const REGISTRES = registresDepuis(donnees.collections as unknown as ModeleCollections);
+import { ProjetsRegistre } from './registre-projet';
 import { commandeProjet, commandeTache, erreurSaisie, projetsParStatut, tachesDuProjet, tachesSansProjet } from '../fonctionnalites/gestion';
 import {
   PRINCE2_THEMES, SEQUENCE, livrable, livrablesDuTheme, processusDuTheme, processusPrince2, reperePrince2, themePrince2,
@@ -25,7 +31,7 @@ type Panneau = 'projet' | 'tache' | null;
 @Component({
   selector: 'projets-gestion-projet',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, ProjetsRegistre],
   providers: [BpmPageContext],
   templateUrl: './gestion-projet.page.html',
   styleUrl: './gestion-projet.page.scss',
@@ -61,6 +67,9 @@ export class ProjetsGestionProjetPage {
   protected readonly themeProcessus = computed(() => (this.theme() ? processusDuTheme(this.theme()!.id) : []));
   protected readonly themeLivrables = computed(() => (this.theme() ? livrablesDuTheme(this.theme()!.id) : []));
   protected readonly themeProcessusIds = computed(() => new Set(this.themeProcessus().map((p) => p.processus.id)));
+  /** Le registre PRINCE2 du thème ouvert, et les projets qui ont leur dossier (ceux qui ont des registres). */
+  protected readonly registre = computed(() => registreDuTheme(REGISTRES, this.theme()?.id));
+  protected readonly projetsAvecDossier = computed(() => this.rows().filter((r) => r.dossier).map((r) => ({ id: r.id, title: r.title })));
   protected livrableNom(id: LivrableId) { return livrable(id).nom; }
   protected isThemeLivrable(list: Livrable[], id: LivrableId) { return list.some((l) => l.id === id); }
 
