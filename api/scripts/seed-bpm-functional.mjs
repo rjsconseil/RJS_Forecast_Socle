@@ -45,7 +45,7 @@ try {
       "La recette BPM rejoue ses scénarios dans le processus, sur la base SQLite du poste (SOCLE_DATA_ENGINE=sqlite).",
     );
   const admin = socle.modules.administration;
-  const lockBefore = admin.parameter("bpm.verrouCycleSuivant");
+  const lockBefore = admin.parameter(null, "bpm.verrouCycleSuivant");
   if (lockBefore.value !== false)
     await admin.setParameter("bpm.verrouCycleSuivant", {
       value: false,
@@ -57,7 +57,7 @@ try {
     report = await runBpmFunctionalScenarios(socle, { until, prefix });
   } finally {
     if (lockBefore.value !== false) {
-      const lock = admin.parameter("bpm.verrouCycleSuivant");
+      const lock = admin.parameter(null, "bpm.verrouCycleSuivant");
       await admin.setParameter("bpm.verrouCycleSuivant", {
         value: lockBefore.value,
         expectedRevision: lock.revision ?? 0,
