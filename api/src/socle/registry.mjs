@@ -13,7 +13,8 @@ export const LEVELS = {
  * Contrat d'un module :
  * {
  *   id, label, level (0 transverse, 1, 2, 3), dependsOn: [moduleId],
- *   kinds: { kindName: { collection, prefix, label, references: { field: { kind, required?, sameUser? } } } },
+ *   kinds: { kindName: { collection, prefix, label, section?, references: { field: { kind, required?, sameUser? } } } },
+ *     // section : section propriétaire (catalogue `sections.json`), déduite de la collection si elle n'est pas donnée
  *   parameters: [ParameterDefinition],   // administrés par le module Administration
  *   variables:  [VariableDefinition],    // données sources des calculs (calc/metrics)
  *   metrics:    [MetricDefinition],      // chiffres présentés, formule par défaut administrable
@@ -25,6 +26,7 @@ export const LEVELS = {
  * }
  */
 import { inScope } from './scope.mjs';
+import { SECTION_FLOWS, SECTION_LIST, sectionByKey, sectionOfCollection } from './sections.mjs';
 
 /** Le rôle d'un module de niveau 2 : `metier` (défaut), `technique` (sert les middlewares métier) ou `transverse` (sert métier et applications). */
 export const MIDDLEWARE_ROLES = { metier: 'Middleware métier', technique: 'Middleware technique', transverse: 'Middleware transverse' };
@@ -58,7 +60,13 @@ export class Registry {
     for (const [kind, def] of Object.entries(mod.kinds ?? {})) {
       if (this.kinds.has(kind)) throw new Error(`Nature d'objet déjà déclarée : ${kind}`);
       if (this.prefixes.has(def.prefix)) throw new Error(`Préfixe d'ID déjà utilisé : ${def.prefix}`);
-      this.kinds.set(kind, { kind, module: mod.id, level: mod.level, domain: mod.label, references: {}, ...def });
+      // Un fait, une section propriétaire : la section d'une nature est celle de sa collection dans le catalogue.
+      const section = sectionOfCollection(def.collection);
+      if (def.section !== undefined && !sectionByKey(def.section)) throw new Error(`Section inconnue pour la nature ${kind} : ${def.section}`);
+      if (def.section !== undefined && def.section !== section) {
+        throw new Error(`La nature ${kind} se déclare dans la section ${def.section}, mais sa collection ${def.collection} est rangée dans ${section} (sections.json).`);
+      }
+      this.kinds.set(kind, { kind, module: mod.id, level: mod.level, domain: mod.label, references: {}, ...def, section });
       this.prefixes.set(def.prefix, kind);
     }
     // P4 · Lecture déclarée : on ne lit que ses natures et celles de ses dépendances.
@@ -107,6 +115,23 @@ export class Registry {
     return null;
   }
 
+  /** Section propriétaire d'une nature d'objet (clé du catalogue). */
+  sectionOf(kind) {
+    return this.kind(kind).section;
+  }
+
+  /** Le catalogue des sections avec les natures que chacune possède, et les flux qui les relient. */
+  sections() {
+    const kinds = [...this.kinds.values()];
+    return {
+      sections: SECTION_LIST.map((s) => ({
+        key: s.key, prefix: s.prefix, order: s.order, label: s.label, verb: s.verb, tone: s.tone, promise: s.promise, decides: s.decides,
+        kinds: kinds.filter((k) => k.section === s.key).map((k) => ({ kind: k.kind, label: k.label, module: k.module, prefix: k.prefix })),
+      })),
+      flows: SECTION_FLOWS.map((f) => ({ ...f })),
+    };
+  }
+
   describe() {
     return [...this.modules.values()].map((m) => ({
       id: m.id,
@@ -118,6 +143,7 @@ export class Registry {
       dependsOn: m.dependsOn ?? [],
       reads: m.reads ?? [],
       kinds: Object.keys(m.kinds ?? {}),
+      sections: [...new Set(Object.keys(m.kinds ?? {}).map((k) => this.kinds.get(k)?.section).filter(Boolean))],
       parameters: (m.parameters ?? []).length,
       variables: (m.variables ?? []).length,
       metrics: (m.metrics ?? []).length,

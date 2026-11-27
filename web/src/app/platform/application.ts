@@ -86,6 +86,24 @@ export interface ApplicationDeclaration {
   profilePicker?: () => Promise<Type<unknown>>;
   /** Les actions rapides propres à l'application, proposées dans la palette de commandes. */
   quickActions?: (context: ApplicationActionContext) => QuickLink[];
+  /**
+   * Un fait, une section propriétaire : où ouvrir un objet de chaque nature, dans la section qui le gère.
+   * Une page qui montre un objet d'une autre section y renvoie par `sourceLink` (platform/source-link.ts),
+   * sans écrire son adresse en dur.
+   */
+  sources?: Record<string, (ref: SourceRef) => SourceLink>;
+}
+
+/** L'objet à ouvrir à sa source : son ID, et ce qu'on sait de lui quand l'adresse en dépend (son projet…). */
+export interface SourceRef {
+  id: string;
+  projectId?: string | null;
+}
+
+/** Une adresse de la section propriétaire, avec sa lecture éventuelle (filtres, fenêtre ouverte). */
+export interface SourceLink {
+  link: string;
+  query?: Record<string, string>;
 }
 
 /** La section « Vue d'ensemble » d'une zone : son accueil commun. */

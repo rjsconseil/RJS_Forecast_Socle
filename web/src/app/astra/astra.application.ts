@@ -249,6 +249,21 @@ export const ASTRA_APPLICATION: ApplicationDeclaration = {
     pattern: /^\/bpm-astra\/projets\/([^/?#]+)(?:\/|$)/, fallback: 'Fiche du projet',
   }],
   workspaces: secondaryWorkspaces,
+  // Un fait, une section propriétaire : la page qui gère chaque nature d'objet.
+  sources: {
+    coreProject: ({ id }) => ({ link: astraUrl('projets') + '/' + encodeURIComponent(id) }),
+    task: ({ projectId }) => projectId ? { link: astraUrl('projets') + '/' + encodeURIComponent(projectId) + '/taches' } : { link: astraUrl('taches') },
+    projectOverrun: ({ projectId }) => projectId ? { link: astraUrl('projets') + '/' + encodeURIComponent(projectId) } : { link: astraUrl('projets') },
+    taskBudgetRequest: ({ projectId }) => projectId ? { link: astraUrl('projets') + '/' + encodeURIComponent(projectId) } : { link: astraUrl('projets') },
+    operation: () => ({ link: astraUrl('mouvements') }),
+    recurrence: () => ({ link: astraUrl('budget') }),
+    costCenter: () => ({ link: astraUrl('plafonds/postes') }),
+    lifeGoal: () => ({ link: astraUrl('objectif/echeances') }),
+    patrimoine: () => ({ link: astraUrl('patrimoine') }),
+    capitalization: () => ({ link: astraUrl('patrimoine') }),
+    closure: () => ({ link: astraUrl('bilans') }),
+    cycleLink: () => ({ link: astraUrl('cloture/reglages') }),
+  },
   details: [
     { pattern: /^\/bpm-astra\/plafonds\/[^/]+$/, section: sectionOfPage('plafonds'), parent: astraUrl('plafonds'), label: 'Détail du poste' },
     { pattern: /^\/bpm-astra\/objectif\/echeances$/, section: sectionOfPage('objectif'), parent: astraUrl('objectif'), label: 'Objectifs datés' },

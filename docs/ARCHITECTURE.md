@@ -564,7 +564,25 @@ expirés, d'une autre clé ; profil d'un autre inaccessible ; limitation ; déco
   même partition en même temps, comptes) ; la base réelle reprise dans PostgreSQL donne des réponses identiques
   octet pour octet à SQLite (synthèse, registre, clôture, projets, bilans, annuaire) et le test d'interface Astra passe.
 
-## 18. Journal des changements
+## 18. Sections du site — notion commune du socle (27 novembre 2026)
+
+Vision : cinq sections (Mon quotidien, Mes projets, Mon budget, Patrimoine, Cycles) **autonomes dans ce qu'elles
+décident**, **interdépendantes par ce qu'elles reçoivent et donnent** ; le code reste **un seul site**.
+
+| Élément | Où | Rôle |
+|---|---|---|
+| Catalogue | `api/src/socle/sections.json`, `sections.mjs` | Sections (clé, préfixe de table, nom, verbe, teinte, promesse, responsabilité exclusive, collections) et neuf flux. Seule source : base, API et site le lisent. |
+| Section propriétaire | `Registry` (`kind.section`, `sectionOf`, `sections()`) | Section de chaque nature, déduite de sa collection ; une déclaration contraire est refusée. |
+| Tables | `engines/tables.mjs` | Préfixes dérivés du catalogue (noms inchangés). |
+| Catalogue exposé | `GET /api/navigation/sections` | Sections, natures de chacune, flux. |
+| Horloge commune | `GET /api/bpm/cycle/clock` | Phase, période, période courante, jours restants, verrou : la même lecture pour toutes les sections. Le verrou reste une garde d'écriture. |
+| Site | `platform/sections.ts`, `source-link.ts`, `section-home.ts` | Catalogue typé, ouverture d'un fait à sa source (`sources` d'une application), accueil générique d'une section. |
+
+Règles de cohabitation : une responsabilité exclusive par section ; un fait, une section propriétaire (les autres le
+montrent et renvoient à elle) ; chaque dépendance est visible ; chaque section tient debout seule quand ce qu'elle
+reçoit est vide. Une nouvelle collection se range dans `sections.json` (test `sections.test.mjs`).
+
+## 19. Journal des changements
 
 Le détail daté des PR (intégration continue, corrections des rapports successifs, retrait du centre de commande,
 mise en ligne) est tenu dans [`CHANGELOG.md`](../CHANGELOG.md) à la racine. Ce document ne garde que la référence.

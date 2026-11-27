@@ -3,6 +3,25 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Sections du site, notion commune du socle (évolution 1) — 27 novembre 2026
+
+Vision « cinq sections autonomes, un seul site » : le code reste un seul site ; la section devient une notion commune
+à la base, à l'API et au site, pour que chaque section se développe ensuite seule en s'appuyant sur les autres.
+- **Catalogue unique** `api/src/socle/sections.json` (+ `sections.mjs`) : les cinq sections et le système (clé,
+  préfixe de table, nom, verbe, teinte, promesse, ce que la section est seule à décider, collections) et les neuf flux
+  entre sections. Les tables en dérivent (`engines/tables.mjs`, noms inchangés) ; le site lit le même fichier
+  (`web/src/app/platform/sections.ts`) et les parties d'Astra en tirent leur nom et leur teinte.
+- **Un fait, une section propriétaire** : le registre donne à chaque nature la section de sa collection
+  (`registry.sectionOf(kind)`) et refuse une nature déclarée dans une autre section. `GET /api/navigation/sections` :
+  le catalogue, les natures de chaque section et les flux.
+- **Horloge commune** : `GET /api/bpm/cycle/clock` (`bpm.cycleClock`) donne à toutes les sections la même lecture du
+  cycle (phase `to_configure` / `running` / `to_close`, période, période courante, jours restants, verrou).
+- **Ouvrir un fait à sa source** : une application déclare où se gère chaque nature (`sources`) ; une page le retrouve
+  par `sourceLink(kind, ref)` / `sourceLinkOfId(id)` (`platform/source-link.ts`) au lieu d'écrire une adresse en dur.
+- **Accueil de section générique** `platform/section-home.ts` (`<app-section-home>`) : promesse, indicateurs, état
+  « section seule », contenu propre, ce que la section reçoit et donne, ce qu'elle est seule à décider.
+- Aucun écran ni aucune réponse existante ne change. Tests : `api/test/sections.test.mjs`, `platform/sections.spec.ts`.
+
 ## Contexte explicite à la place de l'état ambiant — 27 novembre 2026
 
 - **Lecture de l'état** : les modules ne lisent plus `socle.state`, dont la valeur dépendait de la requête en cours
