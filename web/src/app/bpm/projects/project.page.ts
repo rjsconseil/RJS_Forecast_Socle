@@ -25,7 +25,7 @@ import {
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { BPM_CORE_LINKS, BPM_PAGE_PATH, BPM_PROJECT_DETAIL_PANELS } from '../ui/bpm-page-path';
+import { BPM_CORE_LINKS, BPM_PAGE_PATH } from '../ui/bpm-page-path';
 import { BpmRouterLink } from '../ui/bpm-router-link';
 import { Api, newRequestKey, toApiError } from '../../core/api.service';
 import { BpmApi } from '../data/bpm-api.service';
@@ -113,7 +113,6 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
 export class BpmProjectPage {
   protected readonly modulePath = inject(BPM_PAGE_PATH);
   protected readonly coreLinks = inject(BPM_CORE_LINKS);
-  protected readonly detailPanels = inject(BPM_PROJECT_DETAIL_PANELS);
   protected readonly workspace = injectPageWorkspace();
   protected readonly workspaceKey = computed(() => this.workspace()?.key);
   protected ctx = inject(BpmPageContext);

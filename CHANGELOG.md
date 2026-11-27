@@ -10,8 +10,10 @@ Les PR du socle, de la plus récente à la plus ancienne. La référence de l'ar
   chaque envoi d'`index.html` (jamais mis en cache) et l'écrit sur `<app-root ngCspNonce>` ; l'aperçu de la navigation
   le recopie sur sa feuille. HSTS derrière un proxy HTTPS. `npm run deploy:check [https://hôte]` contrôle les réglages
   de l'API et le site ouvert (voir `docs/DEPLOIEMENT.md`). `e2e/style-fingerprint.mjs` relève les violations de la CSP.
-- **Fiche projet** : la note de portée et « Ventilation et cycle actuel », jamais affichées (Astra fournit
-  `BPM_PROJECT_DETAIL_PANELS = false`), sont retirées. L'état de la fenêtre d'une tâche (tâche ouverte, demande,
+- **Fiche projet** : la note de portée et « Ventilation et cycle actuel », jamais affichées, sont retirées. Le
+  drapeau `BPM_PROJECT_DETAIL_PANELS`, qu'Astra mettait à faux, est retiré : Astra affiche de nouveau le parcours de
+  financement de la page, la décision d'un dépassement demandé sans tâche, « Contrôles et fin de cycle » et
+  « Dépenses sans tâche » (ouverts dans l'onglet Budget, repliés ailleurs). L'état de la fenêtre d'une tâche (tâche ouverte, demande,
   retour, règlement) et ses lectures passent dans `ProjectTaskWindow` (`project-task-window.ts`).
 - **Feuilles tirées des hôtes** : `scripts/styles-extract.mjs` donne à la fenêtre d'une tâche et à la personnalisation
   du calendrier les seules règles de leur hôte qui peuvent viser leur gabarit (`*.host.scss`, générés ; la CI vérifie
