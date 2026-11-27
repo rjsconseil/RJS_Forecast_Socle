@@ -5,7 +5,7 @@ import { NavigationCatalog } from '../navigation/navigation.service';
 import { NavigationEntry, NavigationNode } from '../navigation/navigation-model';
 import { PLAN_BANDS, PLAN_ZONES, PlanPage, PlanZone, locate, portalBands, sectionEntry, zoneHomeLink, objectTemplate, menuPages } from './site-plan';
 import { PAGE_WORKSPACES, matchWorkspace } from './page-workspaces';
-import { bandKey, objectKey, PORTAL_KEY, sectionKey, zoneKey } from './plan-order';
+import { bandKey, PORTAL_KEY, sectionKey, zoneKey } from './plan-order';
 import { applicationModules, applicationNavigation } from './application-navigation';
 import { TAB_LINKS, tabLinkKey, tabLinksKey, tabLinksOf } from './tab-links';
 const entries: NavigationEntry[] = [{ key: PORTAL_KEY, label: 'Accueil', link: '/modules', module: '', level: 'section' }];

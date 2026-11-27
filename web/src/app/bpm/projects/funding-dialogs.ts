@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
 import { BpmApi } from '../data/bpm-api.service';
 import { BpmTaskCard, FundingSource, ProjectBudget } from '../data/bpm-projects.models';
 import { cents, CentsPipe, parseAmount } from '../../core/format';
@@ -73,7 +73,7 @@ const FORM_STYLES = `
     </bpm-modal>
   `,
 })
-export class BpmEnvelopeDialog {
+export class BpmEnvelopeDialog implements OnInit {
   private readonly bpm = inject(BpmApi);
   readonly budget = input.required<ProjectBudget>();
   readonly closed = output<void>();
@@ -159,7 +159,7 @@ export class BpmEnvelopeDialog {
     </bpm-modal>
   `,
 })
-export class BpmTaskShareDialog {
+export class BpmTaskShareDialog implements OnInit {
   private readonly bpm = inject(BpmApi);
   readonly budget = input.required<ProjectBudget>();
   readonly task = input.required<BpmTaskCard>();

@@ -24,17 +24,6 @@ const summary = (expected = 20000) => ({
     'bpm.patrimoineConstitue': figure(100000),
   },
 });
-const line = (id: string, plannedDate: string, extra = {}) => ({
-  id,
-  label: id,
-  plannedDate,
-  plannedCents: 10000,
-  status: 'due',
-  settled: false,
-  direction: 'charge',
-  ...extra,
-});
-
 async function settle(fixture: ComponentFixture<unknown>) {
   fixture.detectChanges();
   TestBed.tick();

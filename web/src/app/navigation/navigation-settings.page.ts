@@ -521,9 +521,9 @@ export class NavigationSettingsPage {
       this.message.set(
         'Configuration enregistrée. Les relations sont utilisées par la simulation statique.',
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.message.set(
-        error?.error?.code === 'STALE_VERSION'
+        (error as { error?: { code?: string } } | null)?.error?.code === 'STALE_VERSION'
           ? 'Les réglages ont changé ailleurs. Rechargez la page pour relire leur dernière version avant de modifier.'
           : 'Enregistrement impossible. Vérifiez les limites indiquées et les couleurs (#RRGGBB). Vos modifications sont conservées.',
       );

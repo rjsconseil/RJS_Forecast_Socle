@@ -17,7 +17,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       >
         {{ busy() ? 'Enregistrement…' : label() }}
       </button>
-      <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="cancel.emit()">
+      <button class="btn btn-secondary" type="button" [disabled]="busy()" (click)="cancelled.emit()">
         {{ cancelLabel() }}
       </button>
       <ng-content />
@@ -43,5 +43,5 @@ export class BpmFormActions {
   readonly valid = input(true);
   readonly label = input('Enregistrer');
   readonly cancelLabel = input('Annuler');
-  readonly cancel = output<void>();
+  readonly cancelled = output<void>();
 }

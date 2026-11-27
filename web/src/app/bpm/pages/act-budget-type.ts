@@ -494,8 +494,14 @@ export class BpmActBudgetType {
     let updated = 0;
     let created = 0;
     let failed = 0;
-    for (const r of this.rows().filter((x) => this.isDirty(x))) (await this.persistRow(r)) ? updated++ : failed++;
-    for (const n of this.news()) (await this.persistNew(n)) ? created++ : failed++;
+    for (const r of this.rows().filter((x) => this.isDirty(x))) {
+      if (await this.persistRow(r)) updated++;
+      else failed++;
+    }
+    for (const n of this.news()) {
+      if (await this.persistNew(n)) created++;
+      else failed++;
+    }
     this.busy.set(false);
     if (updated || created) this.refresh.bump();
     if (!failed) this.editing.set(false);

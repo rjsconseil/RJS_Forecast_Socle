@@ -64,6 +64,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci --prefix web
+      - name: Lint du site (TypeScript et gabarits Angular)
+        run: npm run lint
+        working-directory: web
       # Tests du site avec mesure de couverture : la CI échoue sous le plancher (scripts/coverage-threshold.mjs).
       - name: Tests du site et couverture
         run: npm run test:coverage

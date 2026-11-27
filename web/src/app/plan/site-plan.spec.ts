@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasPageMenu, hasSectionHome, locate, menuPages, pageChildren, planContext, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink, zoneSections } from './site-plan';
+import { hasPageMenu, hasSectionHome, locate, pageChildren, planContext, planTitle, planZone, PLAN_ZONES, sectionEntry, zoneHomeLink, zoneSections } from './site-plan';
 import { PAGE_WORKSPACES } from './page-workspaces';
 
 describe('plan du site', () => {

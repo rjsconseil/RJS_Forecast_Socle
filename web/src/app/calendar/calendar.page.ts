@@ -10,7 +10,6 @@ import {
   viewChild,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { injectPageWorkspace } from '../plan/page-workspace';
 import { injectPlanContext } from '../plan/plan-context';

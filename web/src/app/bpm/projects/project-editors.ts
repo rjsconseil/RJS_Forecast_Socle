@@ -79,7 +79,7 @@ import { BpmModal } from '../ui/modal';
           [busy]="busy()"
           [valid]="!!title.trim()"
           [label]="project() ? 'Enregistrer le projet' : 'Créer le projet'"
-          (cancel)="cancel()"
+          (cancelled)="cancel()"
         />
       </form>
     </ng-template>
@@ -272,7 +272,7 @@ export interface TaskProjectOption {
           [busy]="busy()"
           [valid]="!!title.trim()"
           [label]="task() ? 'Enregistrer la tâche' : 'Créer la tâche'"
-          (cancel)="cancel()"
+          (cancelled)="cancel()"
         />
       </form>
     </ng-template>

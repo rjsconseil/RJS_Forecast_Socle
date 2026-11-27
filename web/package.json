@@ -7,6 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "lint": "eslint src",
     "test:coverage": "ng test --watch=false --coverage --coverage-include='src/app/**/*.ts' --coverage-exclude='src/app/**/*.spec.ts' --coverage-reporters=text-summary --coverage-reporters=json-summary && node ../scripts/coverage-threshold.mjs coverage/web/coverage-summary.json"
   },
   "private": true,
@@ -31,9 +32,12 @@
     "@angular/cli": "^22.2.5",
     "@angular/compiler-cli": "^22.2.0",
     "@vitest/coverage-v8": "^5.1.0",
+    "angular-eslint": "^22.8.0",
+    "eslint": "^10.15.0",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2",
+    "typescript-eslint": "^8.74.0",
     "vitest": "^5.0.0"
   }
 }

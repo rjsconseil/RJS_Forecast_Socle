@@ -3,7 +3,7 @@ import { Component, computed, inject, input, linkedSignal, output } from '@angul
 import { BpmRouterLink } from '../ui/bpm-router-link';
 import { BpmApi } from '../data/bpm-api.service';
 import { Cadence } from '../data/bpm-models';
-import { cents, CentsPipe, parseAmount, percentText, SignedCentsPipe } from '../../core/format';
+import { CentsPipe, parseAmount, percentText, SignedCentsPipe } from '../../core/format';
 import { bpmLoader, BpmPageContext, BpmSeriesChart, BpmState, ChartSeries } from '../ui';
 
 const CADENCE_TEXT: Record<string, string> = { weekly: 'semaine', monthly: 'mois', yearly: 'année' };

@@ -1,15 +1,10 @@
 import { navigationSettingsGuard } from './navigation/navigation-settings.guard';
 import { inject } from '@angular/core';
-import { RedirectFunction, ResolveFn, Router, Routes } from '@angular/router';
+import { ResolveFn, Router, Routes } from '@angular/router';
 import { loadCalendarPage } from './calendar/calendar.route';
-import { RecetteContext } from './core/api.service';
 import { planTitle } from './plan/site-plan';
 import { PAGE_WORKSPACES } from './plan/page-workspaces';
 import { APPLICATIONS, defaultApplicationHome, loadUserCreation } from './platform/applications';
-
-/** Une seule adresse par écran : les anciennes adresses y mènent en gardant la période et les filtres. */
-const canonical = (target: (params: Record<string, string>) => string[]): RedirectFunction => ({ params, queryParams, fragment }) =>
-  inject(Router).createUrlTree(target(params as Record<string, string>), { queryParams, fragment: fragment ?? undefined });
 
 /** Titre des accueils génériques du plan : « Section · Zone · RJS Forecast ». */
 const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.get('zone'), route.paramMap.get('section'));

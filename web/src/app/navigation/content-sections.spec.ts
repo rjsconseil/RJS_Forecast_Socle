@@ -2,7 +2,6 @@ import { describe,it,expect,afterEach } from 'vitest';
 import { ContentSections } from './content-sections.service';
 import { contentSectionsOf, CONTENT_SECTION_CATALOG } from './content-section-catalog';
 import { planOrder } from '../plan/plan-order';
-import { planContext } from '../plan/site-plan';
 describe('navigation des sections de contenu',()=>{
  afterEach(()=>planOrder.set({}));
  it('propose les sections avant la première visite, sans paramètre de commande',()=>{

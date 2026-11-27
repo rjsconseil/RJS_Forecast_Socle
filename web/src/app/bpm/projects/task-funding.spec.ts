@@ -1,11 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 import { Api, ApiError } from '../../core/api.service';
 import { BpmApi } from '../data/bpm-api.service';
 import { BpmProjectDetail, BpmTaskCard, TaskBudgetRequest } from '../data/bpm-projects.models';
 import { BpmProjectPage } from './project.page';
-import { BpmTaskRequestsComponent } from './project-parts';
 
 const task = {
   task: {
