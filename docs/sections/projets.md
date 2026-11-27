@@ -13,7 +13,7 @@ Repère : page Pilotage (portefeuille, tableau des tâches, planning). À venir 
 
 ## 4. Liens avec les autres sections
 ## 5. Fondations pour le socle
-Repère : les fonctionnalités avancées (Pilotage, puis jalons, dépendances, responsable, étiquettes, modèles, charge) restent dans Mes projets. Leurs fondations de gestion de projet de base sont appelées à entrer au socle, utiles aux autres sections (Mon budget pour les investissements). Aucune intégrée à ce jour.
+Repère : les fonctionnalités avancées (Pilotage, puis jalons, dépendances, responsable, étiquettes, modèles, charge) restent dans Mes projets. Leurs fondations de gestion de projet de base sont appelées à entrer au socle, utiles aux autres sections (Mon budget pour les investissements). Repérée, à décider : imputer une charge à un projet autrement que par ses tâches (aujourd'hui le budget et les dépenses d'un projet ne passent que par ses tâches). Aucune intégrée à ce jour.
 ## 6. Écrans
 ## 7. Recette et tests
 ## 8. Journal de développement et de débogage

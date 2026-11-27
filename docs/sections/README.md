@@ -35,6 +35,13 @@ Chaque fonctionnalité se lit donc en deux couches :
 | **Couche avancée** (l'outil, l'écran, les règles propres) | La section : `web/src/app/sections/<clé>/`, données `<préfixe>_` | Fiche de la section, §3 |
 | **Fondation** (la brique de base générique qu'elle utilise) | D'abord repérée dans la section, puis intégrée au socle et disponible aux cinq sections | Fiche de la section, §5 (fondation repérée), puis [`../socle/`](../socle/README.md) avec son origine et ses effets sur les cinq sections |
 
+**Exemple.** Aujourd'hui, le budget et les dépenses d'un projet ne passent que par ses tâches. Une application de
+gestion de projet aura besoin d'autres façons d'imputer des charges à un projet (par exemple une charge posée
+directement sur le projet). La **fondation**, « imputer une charge à un projet autrement que par une tâche », touche le
+noyau, le financement, la clôture et les bilans : elle entre au socle, avec ses effets sur les cinq sections, et
+devient utilisable par exemple par Mon budget pour ses investissements. La **couche avancée** (saisie, ventilation,
+suivi de la charge dans l'outil de gestion de projet) reste dans Mes projets.
+
 Pour que la fondation puisse entrer au socle sans réécrire la couche avancée, on les sépare dès le départ : calculs
 purs à part de l'écran, fondation sans nommer la section, lecture du socle par ses lectures et commandes publiques.
 
