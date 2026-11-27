@@ -3,6 +3,22 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Mes projets · fonctionnalités propres à la section, étape 1 : page « Pilotage » — 27 novembre 2026
+
+- **Documentation** : plan en deux étages posé (`docs/socle/` et `docs/sections/`, gabarit de fiche de section), sans contenu livré.
+
+Première évolution propre à la section Mes projets (fonctions internes, **aucun impact socle** : ni API, ni base, ni
+autre section). Dossier de la section : `web/src/app/sections/projets/` (règles de rangement dans son `README.md`).
+- **Pilotage** (`/bpm-astra/pilotage`, ajoutée après les pages existantes : l'entrée de Mes projets ne change pas) : l'accueil autonome de la section, bâti sur
+  l'accueil de section commun (`<app-section-home>`) ; utilisable sans budget ni cycle. Indicateurs (projets en cours,
+  en retard, tâches ouvertes et à échéance sous 7 jours, avancement moyen, temps passé / prévu).
+- Trois vues sur les mêmes lectures du noyau (`/api/projects`, `/api/tasks`) : **Portefeuille** (santé de chaque
+  projet expliquée : en retard, à surveiller, dans les temps, pas commencé, terminé), **Tableau des tâches** (colonnes
+  par état, filtres projet / recherche / retard, changement d'état par la commande du noyau), **Planning** (projets et
+  tâches dans le temps, repère du jour). Le projet de vie (racine du budget) n'est pas un projet à mener : il est écarté.
+- Un projet financé le dit seulement ; son financement reste dans sa fiche (liens par `sourceLink`).
+- Tests : `sections/projets/portfolio.spec.ts` ; la page est vérifiée par `e2e/astra.e2e.mjs`.
+
 ## Sections du site, notion commune du socle (évolution 1) — 27 novembre 2026
 
 Vision « cinq sections autonomes, un seul site » : le code reste un seul site ; la section devient une notion commune

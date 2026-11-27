@@ -176,6 +176,8 @@ const actions: TabLink[] = [
   { tab: astraUrl('projets'), label: 'Créer un projet de la vie', query: { editProject: 'new' } },
   { tab: astraUrl('projets'), label: 'Créer une tâche', query: { editTask: 'new' }, link: astraUrl('taches') },
   { tab: astraUrl('taches'), label: 'Créer une tâche', query: { editTask: 'new' } },
+  { tab: astraUrl('pilotage'), label: 'Créer un projet de la vie', query: { editProject: 'new' }, link: astraUrl('projets') },
+  { tab: astraUrl('pilotage'), label: 'Créer une tâche', query: { editTask: 'new' }, link: astraUrl('taches') },
   { tab: astraUrl('objectif'), label: 'Créer un objectif daté', query: { goal: 'new' } },
   openAction(astraUrl('patrimoine'), 'Corriger le point de départ', astraUrl('patrimoine/reglages')),
   openAction(astraUrl('cloture'), 'Vérifier le compte', astraUrl('cloture/compte')),

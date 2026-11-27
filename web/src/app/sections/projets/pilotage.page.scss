@@ -1,0 +1,65 @@
+// Mes projets · Pilotage — styles propres à la page (propres à la section), jetons du système de design seulement.
+:host { display: block; }
+.pilotage { padding: var(--page-padding-top, 24px) var(--page-gutter, 24px) 32px; color: var(--bpm-text, #1d2330); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.pilotage-bar { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.pilotage-views { display: inline-flex; border: 1px solid var(--control-line, #c9d2e3); border-radius: 8px; overflow: hidden; }
+.pilotage-views button { padding: 7px 14px; border: 0; background: var(--bpm-surface, #fff); color: inherit; font: 600 13px/1.3 var(--font-sans); cursor: pointer; }
+.pilotage-views button + button { border-left: 1px solid var(--control-line, #c9d2e3); }
+.pilotage-views button[aria-pressed='true'] { background: var(--astra-wash, #e9eefc); color: var(--astra-link, #2f5bd0); }
+.pilotage-create { display: flex; gap: 8px; }
+.pilotage-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 0 14px; border: 1px solid var(--control-line, #c9d2e3); border-radius: 8px; font: 600 13px/1.3 var(--font-sans); color: var(--bpm-text, #1d2330); background: var(--bpm-surface, #fff); text-decoration: none; }
+.pilotage-btn.primary { color: #fff; background: var(--astra-link, #2f5bd0); border-color: var(--astra-link, #2f5bd0); }
+.pilotage-error { color: var(--danger-text, #b42318); }
+.pilotage-loading, .pilotage-empty { color: var(--bpm-muted, #555); font-size: 13px; }
+.pilotage-sub { display: block; font-size: 12px; color: var(--bpm-muted, #555); }
+.pilotage-sub.late { color: var(--danger-text, #b42318); }
+.pilotage-tag { margin-left: 6px; padding: 1px 6px; border-radius: 4px; font-size: 11px; background: var(--astra-wash, #e9eefc); color: var(--astra-link, #2f5bd0); }
+
+.pilotage-table-wrap { overflow-x: auto; }
+.pilotage-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.pilotage-table th, .pilotage-table td { padding: 9px 10px; border-bottom: 1px solid var(--bpm-line, #dde3ee); text-align: left; vertical-align: top; }
+.pilotage-table thead th { font-size: 12px; color: var(--bpm-muted, #555); font-weight: 600; }
+.pilotage-table tbody th a { font-weight: 640; color: var(--astra-link, #2f5bd0); text-decoration: none; }
+.pilotage-health { font-weight: 640; }
+.pilotage-health[data-tone='danger'] { color: var(--danger-text, #b42318); }
+.pilotage-health[data-tone='warning'] { color: var(--warning-text, #9a5b00); }
+.pilotage-health[data-tone='success'] { color: var(--success-text, #1a7f37); }
+.pilotage-progress { display: block; width: 90px; height: 6px; margin: 6px 0 3px; border-radius: 3px; background: var(--bpm-line, #dde3ee); overflow: hidden; }
+.pilotage-progress i { display: block; height: 100%; background: var(--astra-link, #2f5bd0); }
+
+.pilotage-filters { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; font-size: 13px; }
+.pilotage-filters label { display: grid; gap: 3px; font-weight: 600; }
+.pilotage-filters select, .pilotage-filters input[type='search'] { min-height: 32px; padding: 0 8px; border: 1px solid var(--control-line, #c9d2e3); border-radius: 6px; font: inherit; font-weight: 400; }
+.pilotage-check { display: flex !important; align-items: center; gap: 6px; }
+.pilotage-board { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 12px; overflow-x: auto; }
+.pilotage-column { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 10px; border-radius: 8px; background: var(--astra-wash, #f5f7fb); }
+.pilotage-column h2 { margin: 0; font: 640 14px/1.3 var(--font-sans); display: flex; justify-content: space-between; }
+.pilotage-column h2 span { color: var(--bpm-muted, #555); font-weight: 500; }
+.pilotage-card { display: grid; gap: 3px; padding: 10px; border: 1px solid var(--bpm-line, #dde3ee); border-radius: 7px; background: var(--bpm-surface, #fff); font-size: 13px; }
+.pilotage-card.late { border-left: 3px solid var(--danger-text, #b42318); }
+.pilotage-card a { font-weight: 620; color: inherit; text-decoration: none; }
+.pilotage-card small { color: var(--bpm-muted, #555); font-size: 12px; }
+.pilotage-moves { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.pilotage-moves button { padding: 2px 7px; border: 1px solid var(--control-line, #c9d2e3); border-radius: 5px; background: transparent; color: inherit; font-size: 11px; cursor: pointer; }
+.pilotage-moves button:disabled { opacity: .5; cursor: default; }
+
+.pilotage-plan { display: grid; gap: 2px; overflow-x: auto; font-size: 12px; }
+.pilotage-plan-head, .pilotage-plan-row { display: grid; grid-template-columns: minmax(140px, 220px) minmax(480px, 1fr); gap: 10px; align-items: center; }
+.pilotage-plan-scale, .pilotage-plan-track { position: relative; height: 22px; }
+.pilotage-plan-scale span { position: absolute; top: 0; padding-left: 4px; border-left: 1px solid var(--bpm-line, #dde3ee); color: var(--bpm-muted, #555); white-space: nowrap; overflow: hidden; }
+.pilotage-plan-row.project a { font-weight: 640; color: var(--astra-link, #2f5bd0); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pilotage-plan-row.task > span { padding-left: 12px; color: var(--bpm-muted, #555); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pilotage-today { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--danger-text, #b42318); opacity: .55; }
+.pilotage-plan-bar { position: absolute; top: 4px; height: 14px; border-radius: 4px; background: var(--astra-wash, #c5d3f6); border: 1px solid var(--astra-link, #2f5bd0); overflow: hidden; }
+.pilotage-plan-bar i { display: block; height: 100%; background: var(--astra-link, #2f5bd0); opacity: .55; }
+.pilotage-plan-bar[data-health='late'] { border-color: var(--danger-text, #b42318); }
+.pilotage-plan-bar[data-health='watch'] { border-color: var(--warning-text, #9a5b00); }
+.pilotage-plan-bar.task { top: 6px; height: 10px; background: var(--bpm-line, #dde3ee); border-color: var(--control-line, #c9d2e3); }
+.pilotage-plan-bar.task.done { background: var(--astra-link, #2f5bd0); opacity: .45; }
+.pilotage-plan-bar.task.late { border-color: var(--danger-text, #b42318); }
+.pilotage-plan-bar.point { width: 10px !important; border-radius: 50%; }
+
+@media (max-width: 720px) {
+  .pilotage-board { grid-template-columns: repeat(4, minmax(220px, 80vw)); }
+}

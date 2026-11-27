@@ -1,0 +1,122 @@
+<div class="pilotage">
+  <app-section-home key="projets" title="Pilotage des projets" [indicators]="data.data() ? indicators() : []" [alone]="alone()" [linkOf]="sectionLink">
+    <div class="pilotage-bar">
+      <nav class="pilotage-views" aria-label="Vues du pilotage">
+        @for (v of views; track v.id) {
+          <button type="button" [attr.aria-pressed]="view() === v.id" (click)="setView(v.id)">{{ v.label }}</button>
+        }
+      </nav>
+      <div class="pilotage-create">
+        <a class="pilotage-btn primary" [routerLink]="newProject.link" [queryParams]="newProject.query">Nouveau projet</a>
+        <a class="pilotage-btn" [routerLink]="newTask.link" [queryParams]="newTask.query">Nouvelle tâche</a>
+      </div>
+    </div>
+
+    @if (data.error(); as e) {
+      <p class="pilotage-error" role="alert">{{ e.message }}</p>
+    } @else if (!data.data()) {
+      <p class="pilotage-loading" role="status">Chargement des projets…</p>
+    } @else {
+      @if (failure(); as f) { <p class="pilotage-error" role="alert">{{ f }}</p> }
+
+      @switch (view()) {
+        @case ('portefeuille') {
+          @if (rows().length) {
+            <div class="pilotage-table-wrap">
+              <table class="pilotage-table">
+                <caption class="sr-only">Portefeuille des projets</caption>
+                <thead><tr><th scope="col">Projet</th><th scope="col">Santé</th><th scope="col">Avancement</th><th scope="col">Échéance</th><th scope="col">Tâches</th><th scope="col">Temps</th><th scope="col">Priorité</th></tr></thead>
+                <tbody>
+                  @for (r of rows(); track r.id) {
+                    <tr [attr.data-health]="r.health">
+                      <th scope="row"><a [routerLink]="projectLink(r.id)">{{ r.title }}</a>@if (r.funded) {<small class="pilotage-tag" title="Projet financé : son budget se gère dans sa fiche">Financé</small>}<small class="pilotage-sub">{{ r.statusLabel }}</small></th>
+                      <td><span class="pilotage-health" [attr.data-tone]="healthTone(r.health)">{{ r.healthLabel }}</span><small class="pilotage-sub">{{ r.reason }}</small></td>
+                      <td><span class="pilotage-progress" role="img" [attr.aria-label]="r.completion + ' % fait'"><i [style.width.%]="r.completion"></i></span><small>{{ r.completion }} %</small></td>
+                      <td>{{ r.dueDate ? shortDate(r.dueDate) : '—' }}@if (r.daysLeft !== null && r.health !== 'done') {<small class="pilotage-sub">{{ r.daysLeft < 0 ? 'dépassée de ' + (-r.daysLeft) + ' j' : 'dans ' + r.daysLeft + ' j' }}</small>}</td>
+                      <td>{{ r.openTaskCount }} / {{ r.taskCount }}@if (r.lateTaskCount) {<small class="pilotage-sub late">{{ r.lateTaskCount }} en retard</small>}@if (r.blockedTaskCount) {<small class="pilotage-sub">{{ r.blockedTaskCount }} à prioriser</small>}</td>
+                      <td>{{ hours(r.spentHours) }}<small class="pilotage-sub">sur {{ hours(r.plannedHours) }}{{ r.timeUse !== null ? ' · ' + r.timeUse + ' %' : '' }}</small></td>
+                      <td>{{ r.priorityLabel }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+
+        @case ('tableau') {
+          <div class="pilotage-filters">
+            <label>Projet
+              <select [value]="projectFilter()" (change)="setProject($any($event.target).value)">
+                <option value="">Tous les projets</option>
+                @for (p of projectOptions(); track p.id) { <option [value]="p.id">{{ p.title }}</option> }
+                <option value="none">Tâches sans projet</option>
+              </select>
+            </label>
+            <label>Rechercher <input type="search" [value]="search()" (input)="setSearch($any($event.target).value)" placeholder="Tâche ou projet" /></label>
+            <label class="pilotage-check"><input type="checkbox" [checked]="onlyLate()" (change)="toggleLate()" /> En retard seulement</label>
+          </div>
+          <div class="pilotage-board">
+            @for (col of board(); track col.id) {
+              <section class="pilotage-column" [attr.data-status]="col.id" [attr.aria-label]="col.label">
+                <h2>{{ col.label }} <span>{{ col.cards.length }}</span></h2>
+                @if (col.hours) { <p class="pilotage-sub">{{ hours(col.hours) }} prévues</p> }
+                @for (c of col.cards; track c.view.task.id) {
+                  <article class="pilotage-card" [class.late]="c.late">
+                    <a [routerLink]="taskLink(c.view)">{{ c.view.task.title }}</a>
+                    <small>{{ c.view.projectTitle ?? 'Sans projet' }}</small>
+                    <small>@if (c.view.task.dueDate) {Échéance {{ shortDate(c.view.task.dueDate) }}@if (c.late) { · en retard}} @else {Sans échéance}@if (c.view.task.plannedHours !== null) { · {{ hours(c.view.task.plannedHours) }}}</small>
+                    <div class="pilotage-moves" role="group" aria-label="Changer l'état">
+                      @for (n of neighbours(c.view.task.status); track n.id) {
+                        <button type="button" [disabled]="busy() !== null" (click)="move(c.view, n.id)">{{ n.label }}</button>
+                      }
+                    </div>
+                  </article>
+                } @empty {
+                  <p class="pilotage-empty">Aucune tâche.</p>
+                }
+              </section>
+            }
+          </div>
+        }
+
+        @case ('planning') {
+          @if (plan().rows.length) {
+            <div class="pilotage-plan" role="img" [attr.aria-label]="'Planning des projets du ' + shortDate(plan().from) + ' au ' + shortDate(plan().to)">
+              <div class="pilotage-plan-head">
+                <span></span>
+                <div class="pilotage-plan-scale">
+                  @for (m of plan().months; track m.key) { <span [style.left.%]="m.left" [style.width.%]="m.width">{{ m.label }}</span> }
+                </div>
+              </div>
+              @for (row of plan().rows; track row.project.id) {
+                <div class="pilotage-plan-row project">
+                  <a [routerLink]="projectLink(row.project.id)">{{ row.project.label }}</a>
+                  <div class="pilotage-plan-track">
+                    @if (plan().todayLeft !== null) { <i class="pilotage-today" [style.left.%]="plan().todayLeft"></i> }
+                    <span class="pilotage-plan-bar" [attr.data-health]="row.project.health" [class.point]="row.project.point" [style.left.%]="row.project.left" [style.width.%]="row.project.width" [title]="shortDate(row.project.start) + ' → ' + shortDate(row.project.end)">
+                      <i [style.width.%]="row.project.completion ?? 0"></i>
+                    </span>
+                  </div>
+                </div>
+                @for (t of row.tasks; track t.id) {
+                  <div class="pilotage-plan-row task">
+                    <span>{{ t.label }}</span>
+                    <div class="pilotage-plan-track">
+                      <span class="pilotage-plan-bar task" [class.late]="t.late" [class.done]="t.completion === 100" [class.point]="t.point" [style.left.%]="t.left" [style.width.%]="t.width" [title]="shortDate(t.start) + ' → ' + shortDate(t.end)"></span>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          } @else if (rows().length) {
+            <p class="pilotage-empty">Aucun projet daté : donnez une date de début ou d'échéance à vos projets ou à leurs tâches pour les voir dans le temps.</p>
+          }
+          @if (plan().undated.length) {
+            <p class="pilotage-sub">Sans date : @for (u of plan().undated; track u.id; let last = $last) {<a [routerLink]="projectLink(u.id)">{{ u.title }}</a>@if (!last) {, }}</p>
+          }
+        }
+      }
+    }
+  </app-section-home>
+</div>
