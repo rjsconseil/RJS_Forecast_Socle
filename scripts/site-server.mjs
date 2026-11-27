@@ -1,5 +1,6 @@
+import { randomBytes } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { createServer, request } from 'node:http';
 import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,20 +17,30 @@ const host = process.env.SOCLE_SITE_HOST || '127.0.0.1';
  * Aucun script en ligne n'est accepté (`script-src` sans `'unsafe-inline'`) : le build n'en ajoute pas (feuilles
  * critiques non intégrées, angular.json), et le seul script en ligne, celui de l'aperçu de la navigation (cadre
  * `srcdoc` isolé, qui hérite de cette CSP), est autorisé par son empreinte SHA-256 (navigation-preview-csp.json).
- * `'unsafe-inline'` reste pour les styles : Angular injecte ceux de ses composants dans des balises `<style>`.
+ * Balises `<style>` : seules celles qui portent le nonce de la page (`style-src-elem`). Angular le lit sur
+ * `<app-root ngCspNonce>`, que le serveur remplit à chaque envoi de index.html, et le pose sur les feuilles de ses
+ * composants ; l'aperçu de la navigation le recopie. Les attributs `style` restent permis (`style-src-attr`) : Angular
+ * écrit ainsi les styles statiques des gabarits, et un attribut ne peut ni charger ni exfiltrer de ressource
+ * (`img-src`, `font-src` et `connect-src` restent fermés aux autres sites).
  * Les scripts d'un autre site, les cadres d'un autre site et l'envoi de données ailleurs sont refusés.
  */
-export const SITE_HEADERS = {
+export const siteHeaders = (nonce) => ({
   'x-content-type-options': 'nosniff',
   'x-frame-options': 'DENY',
   'referrer-policy': 'same-origin',
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
   'content-security-policy': [
-    "default-src 'self'", `script-src 'self' '${preview.script}'`, "style-src 'self' 'unsafe-inline'", "img-src 'self' data:",
+    "default-src 'self'", `script-src 'self' '${preview.script}'`,
+    nonce ? `style-src 'self' 'nonce-${nonce}'` : "style-src 'self'",
+    nonce ? `style-src-elem 'self' 'nonce-${nonce}'` : "style-src-elem 'self'",
+    "style-src-attr 'unsafe-inline'", "img-src 'self' data:",
     "font-src 'self' data:", "connect-src 'self'", "frame-src 'self'", "object-src 'none'", "base-uri 'self'",
     "form-action 'self'", "frame-ancestors 'none'",
   ].join('; '),
-};
+});
+/** En-têtes des réponses autres que la page : aucune balise `<style>` en ligne n'y est attendue. */
+export const SITE_HEADERS = siteHeaders(null);
+const NONCE_MARK = 'RJS_CSP_NONCE';
 const types = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
@@ -64,12 +75,23 @@ const server = createServer(async (req, res) => {
       if (extname(path)) { res.writeHead(404); res.end(); return; }
       file = join(dist, 'index.html');
     }
+    // HTTPS au proxy : le navigateur ne doit plus jamais revenir en HTTP sur ce nom (HSTS, un an).
+    const hsts = req.headers['x-forwarded-proto'] === 'https' ? { 'strict-transport-security': 'max-age=31536000' } : {};
+    if (file === join(dist, 'index.html')) {
+      // Un nonce neuf à chaque envoi de la page : il n'est jamais mis en cache ni réutilisé.
+      const nonce = randomBytes(16).toString('base64');
+      const page = Buffer.from((await readFile(file, 'utf8')).replaceAll(NONCE_MARK, nonce));
+      res.writeHead(200, { 'content-type': types['.html'], 'content-length': page.length, 'cache-control': 'no-store', ...siteHeaders(nonce), ...hsts });
+      res.end(req.method === 'HEAD' ? undefined : page);
+      return;
+    }
     const details = await stat(file);
     res.writeHead(200, {
       'content-type': types[extname(file)] ?? 'application/octet-stream',
       'content-length': details.size,
       'cache-control': /-[A-Z0-9]{8}\./.test(file) ? 'public, max-age=31536000, immutable' : 'no-cache',
       ...SITE_HEADERS,
+      ...hsts,
     });
     if (req.method === 'HEAD') res.end();
     else createReadStream(file).on('error', () => res.destroy()).pipe(res);

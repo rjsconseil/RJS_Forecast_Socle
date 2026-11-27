@@ -2,7 +2,7 @@ import { defaultApplicationHome } from '../platform/applications';
 import { DOCUMENT } from '@angular/common';
 import { previewFonts } from './navigation-preview-fonts';
 import { staticNavigationPreview } from './navigation-static-preview';
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, CSP_NONCE, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NavigationConfiguration } from './navigation-model';
@@ -251,6 +251,8 @@ export class NavigationLivePreview {
   readonly visualStyle = signal<'classic' | 'editorial'>('classic');
   readonly touchTargets = signal(false);
   private readonly hostDocument = inject(DOCUMENT);
+  /** Nonce de la page fourni par le serveur du site (ngCspNonce) : la feuille en ligne de l'aperçu le porte. */
+  private readonly nonce = inject(CSP_NONCE, { optional: true });
   private readonly sanitizer = inject(DomSanitizer);
   readonly document = signal<ReturnType<DomSanitizer['bypassSecurityTrustHtml']> | string>('');
   readonly error = signal('');
@@ -277,6 +279,7 @@ export class NavigationLivePreview {
               .map((link) => link.href)
               .filter((href) => new URL(href).origin === this.hostDocument.location.origin),
             fontStyles,
+            this.nonce ?? '',
           ),
         ),
       );

@@ -18,6 +18,7 @@ const PROPS = ['display', 'position', 'color', 'background-color', 'font-size', 
   'margin-top', 'margin-left', 'border-top-width', 'border-top-style', 'border-top-color', 'border-left-width', 'border-radius', 'gap', 'grid-template-columns', 'flex-direction',
   'justify-content', 'align-items', 'box-shadow', 'opacity', 'text-transform', 'white-space', 'overflow-x', 'width', 'height'];
 
+const cspErrors = new Set();
 const browser = await chromium.launch({ executablePath: chrome, headless: true });
 const result = {};
 try {
@@ -27,6 +28,8 @@ try {
     const userId = process.env.BPM_USER_ID ?? (users.find(u => u.entryCount > 0) ?? users[0])?.id;
     await context.addInitScript(id => localStorage.setItem('rjs.activeUserId', id), userId);
     const page = await context.newPage();
+    // Toute violation de la CSP (feuille ou script refusés) fausserait la mesure : elle est relevée.
+    page.on('console', m => { if (m.type() === 'error' && /Content Security Policy/i.test(m.text())) cspErrors.add(m.text().slice(0, 160)); });
     // Fiches (premier projet, premier poste plafonné) et fenêtres de saisie : mesurées comme les pages.
     const life = await (await context.request.get(base + '/api/bpm/life-management', { headers: { 'x-user-id': userId } })).json().catch(() => null);
     const project = life?.projects?.projects?.[0]?.coreProjectId;
@@ -67,6 +70,7 @@ try {
 
 if (mode === 'save') {
   writeFileSync(file, JSON.stringify(result));
+  if (cspErrors.size) console.log(`✗ Violations de la CSP :\n  ${[...cspErrors].join('\n  ')}`);
   console.log(`Empreinte enregistrée : ${Object.keys(result).length} vues, ${Object.values(result).reduce((n, v) => n + v.length, 0)} éléments.`);
 } else {
   const before = JSON.parse(readFileSync(file, 'utf8'));
@@ -84,6 +88,7 @@ if (mode === 'save') {
     });
     if (diffs.length) { changed++; console.log(`${view} :\n  ${diffs.slice(0, 6).join('\n  ')}${diffs.length > 6 ? `\n  … +${diffs.length - 6}` : ''}`); }
   }
+  if (cspErrors.size) { console.log(`✗ Violations de la CSP :\n  ${[...cspErrors].join('\n  ')}`); changed++; }
   console.log(changed ? `\n✗ ${changed} vue(s) au rendu changé.` : '\n✓ Rendu identique sur toutes les vues.');
   process.exit(changed ? 1 : 0);
 }

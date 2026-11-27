@@ -25,7 +25,8 @@
     "styles:audit": "node scripts/styles-audit.mjs",
     "api:check": "node scripts/api-check.mjs",
     "fixtures:web": "node api/scripts/web-fixtures.mjs",
-    "seeds:check": "node scripts/seeds-check.mjs"
+    "seeds:check": "node scripts/seeds-check.mjs",
+    "deploy:check": "node scripts/deploy-check.mjs"
   },
   "engines": {
     "node": ">=22"

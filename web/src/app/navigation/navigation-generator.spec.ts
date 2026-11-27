@@ -164,3 +164,12 @@ describe('script de l’aperçu sous la CSP du site', () => {
     expect([...document.querySelectorAll('script:not([type])')].map((s) => s.textContent)).toEqual([NAVIGATION_PREVIEW_SCRIPT]);
   });
 });
+
+it('recopie le nonce de la page sur sa feuille en ligne, dont la CSP du site hérite dans le cadre srcdoc', () => {
+  const options = { focus: false, density: 'comfortable', visualStyle: 'classic', touchTargets: false };
+  const withNonce = new DOMParser().parseFromString(
+    staticNavigationPreview(defaults, '/bpm-astra/plafonds', options, [], '', 'a"b<c'), 'text/html');
+  expect([...withNonce.querySelectorAll('style')].map((s) => s.getAttribute('nonce'))).toEqual(['a"b<c']);
+  const without = new DOMParser().parseFromString(staticNavigationPreview(defaults, '/bpm-astra/plafonds', options), 'text/html');
+  expect(without.querySelector('style')!.hasAttribute('nonce')).toBe(false);
+});

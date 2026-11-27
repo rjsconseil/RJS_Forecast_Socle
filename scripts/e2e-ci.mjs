@@ -58,10 +58,17 @@ try {
   await waitFor(`${site}/api/health`);
   // Le site envoie ses en-têtes de sécurité, et l'API refuse une écriture venue d'un autre site à travers le proxy.
   const page = await fetch(site + '/');
-  assert.match(page.headers.get('content-security-policy') ?? '', /frame-ancestors 'none'/, 'CSP du site absente');
+  const csp = page.headers.get('content-security-policy') ?? '';
+  assert.match(csp, /frame-ancestors 'none'/, 'CSP du site absente');
+  // Balises <style> : seulement avec le nonce de la page, neuf à chaque envoi et recopié sur <app-root ngCspNonce>.
+  const nonce = /style-src-elem 'self' 'nonce-([^']+)'/.exec(csp)?.[1];
+  assert.ok(nonce && !/style-src(-elem)? [^;]*'unsafe-inline'/.test(csp), 'styles en ligne sans nonce acceptés');
+  assert.ok((await page.text()).includes(`ngcspnonce="${nonce}"`), 'nonce absent de la page');
+  const again = (await fetch(site + '/')).headers.get('content-security-policy') ?? '';
+  assert.ok(!again.includes(nonce), 'le nonce doit changer à chaque envoi');
   const evil = await fetch(site + '/api/_recette/reset', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'text/plain' } });
   assert.equal(evil.status, 403, 'une écriture d’un autre site doit être refusée');
-  console.log('✓ En-têtes du site et refus des écritures d’un autre site');
+  console.log('✓ En-têtes du site (nonce des styles) et refus des écritures d’un autre site');
   const browserEnv = { BPM_BASE_URL: site, CHROME_PATH: chrome };
   await run('Tests d’interface Astra', ['e2e/astra.e2e.mjs'], browserEnv);
   await run('Parcours de navigation de BPM', ['e2e/bpm-navigation.e2e.mjs'], browserEnv);
