@@ -16,6 +16,7 @@ import {
   afterNextRender,
   Component,
   computed,
+  forwardRef,
   HostListener,
   inject,
   Injector,
@@ -48,6 +49,8 @@ import { BpmOverflowDirective } from '../ui/overflow';
 import { BpmModal } from '../ui/modal';
 import { BpmLifeProjectCockpit } from './life-project-cockpit';
 import { BpmProjectChargeList } from './project-charge-list';
+import { PROJECT_PAGE } from './project-page-host';
+import { BpmProjectTaskPanel } from './project-task-panel';
 import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-parts';
 import {
   CdkDrag,
@@ -82,7 +85,7 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
  */
 @Component({
   selector: 'app-bpm-project',
-  providers: [BpmPageContext],
+  providers: [BpmPageContext, { provide: PROJECT_PAGE, useExisting: forwardRef(() => BpmProjectPage) }],
   imports: [BpmAmount, BpmProjectFlowsPanel, BpmCompass, BpmTaskShareDialog,
     BpmPageBanner,
     NgTemplateOutlet,
@@ -105,6 +108,7 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
     BpmTaskEditor,
     BpmOverflowDirective,
     BpmModal,
+    BpmProjectTaskPanel,
   ],
   templateUrl: './project.page.html',
   styleUrls: ['./projects.page.scss', './project.page.scss', './project-command-center.scss'],
@@ -121,7 +125,7 @@ export class BpmProjectPage {
   /** Gestes de financement partagés avec la fiche d'échéance et la page projet de vie. */
   private funding = inject(ProjectFunding);
   protected readonly L = FUNDING;
-  protected readonly act = FUNDING_ACTIONS;
+  readonly act = FUNDING_ACTIONS;
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private injector = inject(Injector);
@@ -130,9 +134,9 @@ export class BpmProjectPage {
   private pendingSection: string | null = null;
   private loadSequence = 0;
   protected columns = COLUMNS;
-  protected cadences = RETURN_CADENCES;
-  protected readonly today = today();
-  protected data = signal<BpmProjectDetail | null>(null);
+  cadences = RETURN_CADENCES;
+  readonly today = today();
+  data = signal<BpmProjectDetail | null>(null);
   protected availableTasks = computed(() =>
     (this.data()?.attachable ?? []).filter((t) => !t.task.projectId && t.pathways.canChangeProject),
   );
@@ -147,8 +151,8 @@ export class BpmProjectPage {
     requestSent: () => this.fundingTask.set(null),
     returnSaved: () => this.returnEditor.set(null),
   });
-  protected busy = this.writes.busy;
-  protected notice = this.writes.notice;
+  busy = this.writes.busy;
+  notice = this.writes.notice;
   protected toolbarResult = computed(() => {
     const notice = this.notice();
     return notice ? { message: notice.text, tone: notice.error ? 'danger' as const : 'success' as const } : null;
@@ -184,8 +188,8 @@ export class BpmProjectPage {
     this.allocation.set(mode === 'add' ? '' : String(this.allocationBase() / 100).replace('.', ','));
     this.allocationError.set(null);
   }
-  protected returnEditor = bpmQueryState<string | null>('retour', null, { overlay: true });
-  protected settling = bpmQueryState<string | null>('reglement', null, { overlay: true });
+  returnEditor = bpmQueryState<string | null>('retour', null, { overlay: true });
+  settling = bpmQueryState<string | null>('reglement', null, { overlay: true });
   protected entryId = bpmQueryState('entry', '', { overlay: true });
   protected editorOpen = computed(() => !!this.entryId());
   protected lineId = bpmQueryState<string | null>('ligne', null, { overlay: true });
@@ -266,10 +270,10 @@ export class BpmProjectPage {
   protected allocationRevision = signal(0);
   protected allocationError = signal<string | null>(null);
   protected query = bpmQueryState('q', '', { replace: true });
-  protected fundingTask = bpmQueryState<string | null>('demande', null, { overlay: true });
+  fundingTask = bpmQueryState<string | null>('demande', null, { overlay: true });
   /** Tâche ouverte dans sa fenêtre : la carte du tableau garde une taille fixe. */
   protected openTaskId = bpmQueryState<string | null>('task', null, { overlay: true });
-  protected openTask = computed(() => {
+  openTask = computed(() => {
     const id = this.openTaskId();
     return id ? ((this.data()?.tasks ?? []).find((t) => t.task.id === id) ?? null) : null;
   });
@@ -279,7 +283,7 @@ export class BpmProjectPage {
   protected dragActive = signal(false);
   protected dropTarget = signal<TaskStatus | null>(null);
   private dragCancelled = false;
-  protected readonly date = displayDate;
+  readonly date = displayDate;
   protected readonly urgency = dueUrgency;
   protected readonly dueTitle = dueTitle;
   protected doneCount = computed(
@@ -463,7 +467,7 @@ export class BpmProjectPage {
     );
   }
 
-  protected statusLabel(s: TaskStatus) {
+  statusLabel(s: TaskStatus) {
     return TASK_STATUS_LABEL[s];
   }
   /** Ouvre la fenêtre de la tâche, au besoin sur sa part (demande) ou ses dépenses. */
@@ -484,20 +488,20 @@ export class BpmProjectPage {
         { injector: this.injector },
       );
   }
-  protected closeTaskPanel() {
+  closeTaskPanel() {
     this.openTaskId.set(null);
     this.fundingTask.set(null);
     this.returnEditor.set(null);
     this.settling.set(null);
   }
 
-  protected taskCharges(id: string) {
+  taskCharges(id: string) {
     return (this.data()?.charges ?? []).filter((c) => c.taskId === id);
   }
-  protected taskHistory(id: string) {
+  taskHistory(id: string) {
     return this.requestHistory().filter((r) => r.taskId === id);
   }
-  protected taskOverruns(id: string) {
+  taskOverruns(id: string) {
     return (this.data()?.overruns ?? []).filter(
       (o) => o.taskId === id && o.status === 'pending' && o.id !== this.flow()?.request?.id,
     );
@@ -509,21 +513,21 @@ export class BpmProjectPage {
   protected createTask() {
     this.taskEditorId.set('new');
   }
-  protected editTask(t: BpmTaskCard) {
+  editTask(t: BpmTaskCard) {
     this.taskEditorId.set(t.task.id);
   }
-  protected addExpense(taskId: string | null) {
+  addExpense(taskId: string | null) {
     if (!taskId) { this.notice.set({ text: 'Choisissez une tâche pour saisir sa dépense.', error: true }); return; }
     this.expenseTaskId.set(taskId);
     this.expenseDirection.set('charge');
     this.entryId.set('new');
   }
-  protected addRefund(taskId: string) {
+  addRefund(taskId: string) {
     this.expenseTaskId.set(taskId);
     this.expenseDirection.set('income');
     this.entryId.set('new');
   }
-  protected openCharge(c: ProjectChargeLine) {
+  openCharge(c: ProjectChargeLine) {
     this.lineId.set(c.id);
   }
   protected async closeCharge() {
@@ -540,7 +544,7 @@ export class BpmProjectPage {
     this.expenseDirection.set('charge');
     this.entryId.set('');
   }
-  protected editAllocation() {
+  editAllocation() {
     if (this.workspaceKey() === 'project-tasks') {
       this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'budget'], {
         queryParams: { task: null }, queryParamsHandling: 'merge', fragment: 'enveloppe',
@@ -709,7 +713,7 @@ export class BpmProjectPage {
     }
   }
 
-  protected cadenceLabel(c: ReturnCadence) {
+  cadenceLabel(c: ReturnCadence) {
     return RETURN_CADENCES.find((x) => x.id === c)?.label.toLowerCase() ?? c;
   }
 
@@ -737,7 +741,7 @@ export class BpmProjectPage {
   protected requestAuthorization() { return this.writes.requestAuthorization(); }
   protected decideFlow(decision: 'approve' | 'refuse') { return this.writes.decideFlow(decision); }
 
-  protected decide(o: ProjectOverrun, decision: 'approve' | 'refuse') {
+  decide(o: ProjectOverrun, decision: 'approve' | 'refuse') {
     return this.run(
       () => this.funding.decide(o, decision),
       (r) => r.message,
@@ -823,16 +827,16 @@ export class BpmProjectPage {
   }
 
   /** Gestes de financement d'une tâche : voir `ProjectTaskFunding`. */
-  protected saveShare(budgetId: string, t: BpmTaskCard, raw: string, revision: number, onSaved?: () => void) {
+  saveShare(budgetId: string, t: BpmTaskCard, raw: string, revision: number, onSaved?: () => void) {
     return this.taskFunding.saveShare(budgetId, t, raw, revision, onSaved);
   }
-  protected releaseShare(budgetId: string, t: BpmTaskCard, revision: number) {
+  releaseShare(budgetId: string, t: BpmTaskCard, revision: number) {
     return this.taskFunding.releaseShare(budgetId, t, revision);
   }
-  protected requestBudget(budgetId: string, t: BpmTaskCard, controls: HTMLFormControlsCollection, draft?: BpmFormDraft) {
+  requestBudget(budgetId: string, t: BpmTaskCard, controls: HTMLFormControlsCollection, draft?: BpmFormDraft) {
     return this.taskFunding.requestBudget(budgetId, t, controls, draft);
   }
-  protected decideRequest(e: { request: TaskBudgetRequest; decision: 'approve' | 'refuse' | 'cancel' }) {
+  decideRequest(e: { request: TaskBudgetRequest; decision: 'approve' | 'refuse' | 'cancel' }) {
     return this.taskFunding.decideRequest(e);
   }
 
@@ -850,10 +854,10 @@ export class BpmProjectPage {
     this.notice.set({ text: 'Projet enregistré.', error: false });
   }
 
-  protected saveReturn(budgetId: string, t: BpmTaskCard, f: HTMLFormControlsCollection, revision: number, draft?: BpmFormDraft) {
+  saveReturn(budgetId: string, t: BpmTaskCard, f: HTMLFormControlsCollection, revision: number, draft?: BpmFormDraft) {
     return this.taskFunding.saveReturn(budgetId, t, f, revision, draft);
   }
-  protected removeReturn(budgetId: string, t: BpmTaskCard, revision: number) {
+  removeReturn(budgetId: string, t: BpmTaskCard, revision: number) {
     return this.taskFunding.removeReturn(budgetId, t, revision);
   }
 
@@ -898,14 +902,14 @@ export class BpmProjectPage {
     );
   }
 
-  protected detach(t: BpmTaskCard) {
+  detach(t: BpmTaskCard) {
     return this.run(
       () => this.api.detachTask(t.task.id, t.task.revision),
       `« ${t.task.title} » détachée du projet. Elle reste disponible pour un autre rattachement.`,
     );
   }
 
-  protected settle(c: ProjectChargeLine, f: HTMLFormControlsCollection, draft?: BpmFormDraft) {
+  settle(c: ProjectChargeLine, f: HTMLFormControlsCollection, draft?: BpmFormDraft) {
     const get = (n: string) => (f.namedItem(n) as HTMLInputElement | null)?.value ?? '';
     const amount = parseAmount(get('amount'));
     const realizedDate = get('date');
