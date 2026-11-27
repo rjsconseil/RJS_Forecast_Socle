@@ -27,6 +27,9 @@ export async function createSocle({ dataFile, modules, faultInjection = false, d
   socle.data = socle.store;
   socle.om = new ObjectManager({ registry, store: socle.store, faultInjection });
   socle.inspector = new Inspector(socle);
+  // L'état se lit avec un contexte explicite : `socle.stateOf(ctx)` (vue du user de ctx, sinon vue complète).
+  // `socle.state` reste la vue complète des scripts et des tests, refusée pendant une requête.
+  socle.stateOf = (ctx) => socle.store.stateOf(ctx);
   Object.defineProperty(socle, 'state', { get: () => socle.store.state });
   socle.close = () => socle.store.close();
   /** Remise à zéro de recette : primitive d'administration du socle, hors des commandes métier. */

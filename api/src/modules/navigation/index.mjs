@@ -79,7 +79,7 @@ export default {
   setup(socle) {
     const key = 'navigation.presentation';
     return {
-      read: () => socle.parameters.effective(socle.state, key),
+      read: (ctx) => socle.parameters.effective(socle.stateOf(ctx), key),
       write: input => {
         if (!Number.isInteger(input?.expectedRevision) || input.expectedRevision < 0)
           fail('VALIDATION', 'La révision attendue est requise.');
@@ -91,7 +91,7 @@ export default {
   },
   routes(socle) {
     return [
-      ['GET', '/api/navigation/settings', () => socle.modules.navigation.read()],
+      ['GET', '/api/navigation/settings', ({ ctx }) => socle.modules.navigation.read(ctx)],
       ['PUT', '/api/navigation/settings', ({ body }) => socle.modules.navigation.write(body)],
     ];
   },

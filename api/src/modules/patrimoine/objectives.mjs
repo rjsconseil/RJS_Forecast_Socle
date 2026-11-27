@@ -208,7 +208,7 @@ export function createObjectives(socle) {
       );
     },
     goals(ctx) {
-      const state = socle.state;
+      const state = socle.stateOf(ctx);
       const userId = om.requireUser(state, ctx);
       return goalsOf(state, userId).map((g) => ({
         ...g,
@@ -227,7 +227,7 @@ export function createObjectives(socle) {
       );
       return {
         replayed: r.replayed,
-        goal: socle.state.lifeGoals[r.goalId],
+        goal: socle.stateOf(ctx).lifeGoals[r.goalId],
       };
     },
 
@@ -238,7 +238,7 @@ export function createObjectives(socle) {
         this.patchGoal(tx, id, input);
         return { goalId: id };
       });
-      return { goal: socle.state.lifeGoals[id] };
+      return { goal: socle.stateOf(ctx).lifeGoals[id] };
     },
 
     /** Retrait d'un objectif : conservé dans l'historique (traçabilité), exclu des projections. */

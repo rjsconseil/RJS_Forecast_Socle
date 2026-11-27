@@ -180,11 +180,11 @@ export default {
           this.patchPatrimoine(tx, id, input);
           return { patrimoineId: id };
         });
-        return view(socle.state, socle.state.patrimoines[id]);
+        return view(socle.stateOf(ctx), socle.stateOf(ctx).patrimoines[id]);
       },
 
       read(ctx) {
-        const state = socle.state;
+        const state = socle.stateOf(ctx);
         const p = patrimoineOf(state, om.requireUser(state, ctx));
         if (!p) fail('NOT_FOUND', 'Aucun Patrimoine pour ce user.');
         return view(state, p);

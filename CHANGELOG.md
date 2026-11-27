@@ -3,6 +3,18 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Contexte explicite à la place de l'état ambiant — 27 novembre 2026
+
+- **Lecture de l'état** : les modules ne lisent plus `socle.state`, dont la valeur dépendait de la requête en cours
+  (contexte asynchrone). Ils lisent `socle.stateOf(ctx)` avec le contexte qu'ils reçoivent : les 89 lectures des
+  modules, `ObjectManager.simulate` et le serveur HTTP. Les lecteurs qui n'avaient pas de contexte le reçoivent en
+  premier argument : paramètres, métriques et journal de l'administration, liste des calendriers, réglages de la
+  navigation, types de users, routes d'Object Management, vision de la composition (`visionOf(state, comp)`).
+- **Garde-fous** : pendant une requête, `socle.state` est refusé et `stateOf` refuse le contexte d'un autre user que
+  celui de la requête (`AMBIENT_STATE`, 500) : une lecture ne passe plus, sans le dire, à une partition non revalidée.
+  Hors requête (scripts, tests), `socle.state` reste la vue complète.
+- Tests de l'API : 317/317 avec SQLite et avec PostgreSQL.
+
 ## Points restants du rapport v6 — 27 novembre 2026
 
 - **Mise en ligne** : la CSP du site n'accepte plus de balise `<style>` en ligne sans le nonce de la page

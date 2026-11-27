@@ -42,7 +42,7 @@ export function recurrenceCommands(socle, kit) {
 
     async createRecurrence(ctx, input = {}) {
       const r = await om.command('createRecurrence', ctx, input, (tx) => ({ recurrenceId: this.buildRecurrence(tx, input).id }), { creation: true });
-      return { replayed: r.replayed, recurrence: recurrenceView(socle.state, socle.state.recurrences[r.recurrenceId]) };
+      return { replayed: r.replayed, recurrence: recurrenceView(socle.stateOf(ctx), socle.stateOf(ctx).recurrences[r.recurrenceId]) };
     },
 
     patchRecurrence(tx, id, input = {}, { budgetId } = {}) {
@@ -90,7 +90,7 @@ export function recurrenceCommands(socle, kit) {
         scope = this.patchRecurrence(tx, id, input).scope;
         return { recurrenceId: id };
       });
-      return { recurrence: recurrenceView(socle.state, socle.state.recurrences[id]), scope };
+      return { recurrence: recurrenceView(socle.stateOf(ctx), socle.stateOf(ctx).recurrences[id]), scope };
     },
 
     /**
@@ -150,7 +150,7 @@ export function recurrenceCommands(socle, kit) {
         },
         { creation: true },
       );
-      return { replayed: r.replayed, operation: operationView(socle.state, socle.state.operations[r.operationId]) };
+      return { replayed: r.replayed, operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[r.operationId]) };
     },
 
     /**
@@ -201,7 +201,7 @@ export function recurrenceCommands(socle, kit) {
         },
         { creation: true },
       );
-      return { replayed: r.replayed, operation: operationView(socle.state, socle.state.operations[r.operationId]) };
+      return { replayed: r.replayed, operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[r.operationId]) };
     },
 
     /** Rétablit une échéance écartée : elle redevient attendue, à sa date et à son montant prévus. */
@@ -218,7 +218,7 @@ export function recurrenceCommands(socle, kit) {
         id = skipped.id;
         return { operationId: id };
       });
-      return { operation: operationView(socle.state, socle.state.operations[id]) };
+      return { operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[id]) };
     },
 
     /**
@@ -240,7 +240,7 @@ export function recurrenceCommands(socle, kit) {
         om.update(tx, rec, { cancelledAt: today(), cancelReason: 'reason' in input ? note(input.reason) : null });
         return { recurrenceId: id };
       });
-      return { recurrence: recurrenceView(socle.state, socle.state.recurrences[id]) };
+      return { recurrence: recurrenceView(socle.stateOf(ctx), socle.stateOf(ctx).recurrences[id]) };
     },
 
     /**

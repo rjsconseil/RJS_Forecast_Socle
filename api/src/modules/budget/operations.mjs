@@ -54,7 +54,7 @@ export function operationCommands(socle, kit) {
 
     async createOperation(ctx, input = {}) {
       const r = await om.command('createOperation', ctx, input, (tx) => ({ operationId: this.buildOperation(tx, input).id }), { creation: true });
-      return { replayed: r.replayed, operation: operationView(socle.state, socle.state.operations[r.operationId]) };
+      return { replayed: r.replayed, operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[r.operationId]) };
     },
 
     async updateOperation(ctx, id, input = {}) {
@@ -90,7 +90,7 @@ export function operationCommands(socle, kit) {
         om.update(tx, o, patch);
         return { operationId: id };
       });
-      return { operation: operationView(socle.state, socle.state.operations[id]) };
+      return { operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[id]) };
     },
 
     /** Réalisation manuelle [P] (C06 : la réalisation automatique reste ouverte). */
@@ -115,7 +115,7 @@ export function operationCommands(socle, kit) {
         om.update(tx, o, patch);
         return { operationId: id };
       });
-      return { operation: operationView(socle.state, socle.state.operations[id]) };
+      return { operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[id]) };
     },
 
     /**
@@ -131,7 +131,7 @@ export function operationCommands(socle, kit) {
         om.update(tx, o, { status: 'planned', realizedAmountCents: null, realizedDate: null, closedAt: null, closedOn: null, accountingDate: null, fundingSource: null, ...(o.independentIncome ? { independentIncome: false } : {}) });
         return { operationId: id };
       });
-      return { operation: operationView(socle.state, socle.state.operations[id]) };
+      return { operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[id]) };
     },
 
     /**
@@ -149,7 +149,7 @@ export function operationCommands(socle, kit) {
         om.update(tx, o, { status: 'cancelled', cancelledFrom: o.status, cancelReason: 'reason' in input ? note(input.reason) : null, closedAt: tx.now, closedOn: today() });
         return { operationId: id };
       });
-      return { operation: operationView(socle.state, socle.state.operations[id]) };
+      return { operation: operationView(socle.stateOf(ctx), socle.stateOf(ctx).operations[id]) };
     },
 
     /** Saisie unique (éditeur partagé) : ponctuelle → opération ; cadence → définition récurrente, jamais ignorée. */

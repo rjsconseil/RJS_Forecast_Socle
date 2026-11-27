@@ -17,7 +17,7 @@ test('navigation settings persist globally and reject concurrent lost updates', 
   assert.equal(result.parameter.revision, 1);
   await rejects(socle.modules.navigation.write({ expectedRevision: 0, value }), 'STALE_VERSION');
   const next = await reload();
-  try { assert.deepEqual(next.modules.navigation.read().value, value); }
+  try { assert.deepEqual(next.modules.navigation.read(null).value, value); }
   finally { await next.close(); }
 });
 test('navigation order lists child keys per parent and nothing else', () => {
@@ -56,6 +56,6 @@ test('navigation relation configurations persist and reject malformed relationsh
   const {socle,reload}=await makeSocle();
   await socle.modules.navigation.write({expectedRevision:0,value});
   const next=await reload();
-  try { assert.deepEqual(next.modules.navigation.read().value,value); }
+  try { assert.deepEqual(next.modules.navigation.read(null).value,value); }
   finally { await next.close(); }
 });

@@ -217,7 +217,7 @@ export default {
         return out;
       },
 
-      types: () => userTypesOf(socle, socle.state),
+      types: (ctx) => userTypesOf(socle, socle.stateOf(ctx)),
     };
   },
 
@@ -232,7 +232,7 @@ export default {
         const total = (await socle.store.directory()).length;
         return { users: await s.listUsers({ offset, limit }), total, offset, limit };
       }],
-      ['GET', '/api/users/types', () => s.types()],
+      ['GET', '/api/users/types', ({ ctx }) => s.types(ctx)],
       ['POST', '/api/users', ({ body }) => s.createUser(body)],
       ['PUT', '/api/users/:id', ({ ctx, params, body }) => s.updateUser(ctx, params.id, body)],
     ];

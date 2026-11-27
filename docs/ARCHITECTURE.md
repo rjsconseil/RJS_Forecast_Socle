@@ -399,8 +399,10 @@ le portail des zones est à `/modules`.
 
 Le parti pris du noyau : **chaque user est une partition** de données. Tout ce qui sert un grand nombre d'utilisateurs
 en découle : une requête ne coûte que la taille des données de son user, et deux users n'attendent jamais l'un
-l'autre. Les couches du dessus n'ont pas changé de contrat : elles lisent toujours « l'état » (`socle.state`,
-`scope.store.state`) et écrivent toujours par `om.command`.
+l'autre. Les couches du dessus lisent « l'état » de leur contexte, `socle.stateOf(ctx)` (vue de la partition de
+`ctx.userId` et de la partition système, sinon vue complète), et écrivent par `om.command`. Depuis le 27/11/2026, le
+contexte est toujours passé : `socle.state` n'est plus que la vue complète des scripts et des tests, refusée pendant
+une requête (`AMBIENT_STATE`), et `stateOf` refuse un contexte qui n'est pas celui de la requête en cours.
 
 ### 16.1 Partitions (`api/src/socle/data/data-manager.mjs`, `engines/tables.mjs`)
 

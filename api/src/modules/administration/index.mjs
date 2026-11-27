@@ -48,8 +48,8 @@ export default {
     return {
       metricContext,
       modules: () => socle.registry.describe(),
-      parameters: () => parameters.effectiveList(socle.state).filter((p) => p.type !== 'formula'),
-      parameter: (key) => parameters.effective(socle.state, key),
+      parameters: (ctx) => parameters.effectiveList(socle.stateOf(ctx)).filter((p) => p.type !== 'formula'),
+      parameter: (ctx, key) => parameters.effective(socle.stateOf(ctx), key),
 
       async setParameter(key, input) {
         parameters.definition(key);
@@ -67,8 +67,8 @@ export default {
         return om.command('resetParameter', null, input, (tx) => ({ parameter: parameters.reset(tx, key, { expectedRevision: parameterRevisionOf(input) }) }), { anonymous: true });
       },
 
-      metricCatalog() {
-        const state = socle.state;
+      metricCatalog(ctx) {
+        const state = socle.stateOf(ctx);
         return {
           metrics: [...metrics.metrics.keys()].map((k) => metricRow(state, k)),
           references: metrics.catalog(),
@@ -76,14 +76,14 @@ export default {
         };
       },
 
-      metric: (key) => {
+      metric: (ctx, key) => {
         if (!metrics.metrics.has(key)) fail('NOT_FOUND', 'Métrique inconnue.', { key });
-        return metricRow(socle.state, key);
+        return metricRow(socle.stateOf(ctx), key);
       },
 
       /** Aperçu sans enregistrement : la formule proposée est évaluée sur les données du user. */
       previewMetric(ctx, key, input) {
-        const state = socle.state;
+        const state = socle.stateOf(ctx);
         const userId = om.requireUser(state, ctx);
         const formula = input?.formula;
         metrics.validateFormula(key, formula, state);
@@ -94,8 +94,8 @@ export default {
         };
       },
 
-      journal(limit = 100) {
-        return socle.state.journal.slice(-limit).reverse();
+      journal(ctx, limit = 100) {
+        return socle.stateOf(ctx).journal.slice(-limit).reverse();
       },
 
       errors: () => om.recentErrors,
@@ -106,14 +106,14 @@ export default {
     const s = socle.modules.administration;
     return [
       ['GET', '/api/admin/modules', () => s.modules()],
-      ['GET', '/api/admin/parameters', () => s.parameters()],
-      ['GET', '/api/admin/parameters/:key', ({ params }) => s.parameter(params.key)],
+      ['GET', '/api/admin/parameters', ({ ctx }) => s.parameters(ctx)],
+      ['GET', '/api/admin/parameters/:key', ({ ctx, params }) => s.parameter(ctx, params.key)],
       ['PUT', '/api/admin/parameters/:key', ({ params, body }) => s.setParameter(params.key, body)],
       ['POST', '/api/admin/parameters/:key/reset', ({ params, body }) => s.resetParameter(params.key, body)],
-      ['GET', '/api/admin/metrics', () => s.metricCatalog()],
-      ['GET', '/api/admin/metrics/:key', ({ params }) => s.metric(params.key)],
+      ['GET', '/api/admin/metrics', ({ ctx }) => s.metricCatalog(ctx)],
+      ['GET', '/api/admin/metrics/:key', ({ ctx, params }) => s.metric(ctx, params.key)],
       ['POST', '/api/admin/metrics/:key/preview', ({ ctx, params, body }) => s.previewMetric(ctx, params.key, body)],
-      ['GET', '/api/admin/journal', ({ query }) => s.journal(Math.min(Number(query.get('limit')) || 100, 500))],
+      ['GET', '/api/admin/journal', ({ ctx, query }) => s.journal(ctx, Math.min(Number(query.get('limit')) || 100, 500))],
       ['GET', '/api/admin/errors', () => s.errors()],
     ];
   },

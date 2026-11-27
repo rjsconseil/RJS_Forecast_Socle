@@ -17,10 +17,10 @@ test('partitions · une requête ne voit que la partition de son user (et la par
   await operation(socle, b, { direction: 'charge', amount: 20, date: '2026-11-01' });
   await operation(socle, b, { direction: 'charge', amount: 30, date: '2026-11-01' });
   const seen = await socle.store.within(a.userId, () => ({
-    users: Object.keys(socle.state.users),
-    operations: count(socle.state, 'operations'),
-    parameters: Object.keys(socle.state.parameters),
-    journal: socle.state.journal.every((e) => e.userId === a.userId),
+    users: Object.keys(socle.stateOf(a).users),
+    operations: count(socle.stateOf(a), 'operations'),
+    parameters: Object.keys(socle.stateOf(a).parameters),
+    journal: socle.stateOf(a).journal.every((e) => e.userId === a.userId),
   }));
   assert.deepEqual(seen.users, [a.userId]);
   assert.equal(seen.operations, 1);
@@ -40,7 +40,7 @@ test('partitions · écritures en parallèle de plusieurs users, toutes gardées
   const users = await Promise.all(Array.from({ length: 6 }, (_, i) => makeUser(socle, { label: `U${i}` })));
   await Promise.all(users.flatMap(({ ctx }) => Array.from({ length: 5 }, (_, i) => operation(socle, ctx, { direction: 'charge', amount: i + 1, date: '2026-11-01' }))));
   for (const { ctx } of users) {
-    const view = await socle.store.within(ctx.userId, () => socle.state);
+    const view = await socle.store.within(ctx.userId, () => socle.stateOf(ctx));
     assert.equal(count(view, 'operations'), 5);
   }
   const again = await reload();
@@ -58,7 +58,7 @@ test('partitions · cache borné : les partitions les moins utilisées quittent 
   for (const { ctx } of users) {
     await small.store.within(ctx.userId, async () => {
       await operation(small, ctx, { direction: 'charge', amount: 5, date: '2026-11-02' });
-      assert.equal(count(small.state, 'operations'), 2);
+      assert.equal(count(small.stateOf(ctx), 'operations'), 2);
     });
     assert.ok(small.store.parts.size <= 3, `au plus 2 partitions de user en mémoire (+ la système) : ${small.store.parts.size}`);
   }
@@ -73,9 +73,9 @@ test('partitions · deux instances : chaque requête revalide sa partition et vo
   const { socle, dataFile } = await makeSocle();
   const { ctx } = await camille(socle);
   const other = await createSocle({ dataFile, modules: SOCLE_MODULES });
-  await other.store.within(ctx.userId, () => count(other.state, 'operations')); // partition en cache dans l'autre instance
+  await other.store.within(ctx.userId, () => count(other.stateOf(ctx), 'operations')); // partition en cache dans l'autre instance
   await operation(socle, ctx, { direction: 'charge', amount: 7, date: '2026-11-01' });
-  const seen = await other.store.within(ctx.userId, () => count(other.state, 'operations'));
+  const seen = await other.store.within(ctx.userId, () => count(other.stateOf(ctx), 'operations'));
   assert.equal(seen, 1, 'l’autre instance relit la partition dont la révision a changé');
   await other.close();
   await socle.close();

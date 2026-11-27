@@ -26,7 +26,7 @@ export function createReads(socle, h) {
   // ---------- contexte commun ----------
 
   function base(ctx, { periodKey } = {}) {
-    const state = socle.state;
+    const state = socle.stateOf(ctx);
     const { userId, comp, cycle } = h.requireComposition(state, ctx);
     const mctx = h.metricContext(state, userId, { periodKey });
     const cs = h.cycleState(state, cycle);

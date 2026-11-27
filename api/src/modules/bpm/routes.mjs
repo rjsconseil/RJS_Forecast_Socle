@@ -4,12 +4,12 @@ import { projectFundingSource } from '../budget/api.mjs';
 export function bpmRoutes(socle) {
   const s = socle.modules.bpm;
   const { budget, patrimoine } = socle.modules;
-  const lifeBudgetId = (ctx) => socle.modules.bpm.compositionOf(socle.state, socle.om.requireUser(socle.state, ctx))?.budgetId;
+  const lifeBudgetId = (ctx) => socle.modules.bpm.compositionOf(socle.stateOf(ctx), socle.om.requireUser(socle.stateOf(ctx), ctx))?.budgetId;
   /** Ajoute les plafonds dépassés touchés par la dépense écrite : information, jamais un refus. */
   const withCapAlerts = (ctx, r) => {
     const x = r?.operation ?? r?.recurrence;
     if (!x) return r;
-    const project = socle.state.budgets[x.budgetId];
+    const project = socle.stateOf(ctx).budgets[x.budgetId];
     if (project?.role === 'standard' && projectFundingSource(x, project) === 'patrimoine') return { ...r, capAlerts: [] };
     try {
       const alerts = s.reads.capAlertsFor(ctx, { date: x.accountingDate ?? x.realizedDate ?? x.date ?? x.firstDate, costCenterRef: x.costCenterRef, direction: x.direction });
@@ -103,6 +103,6 @@ export function bpmRoutes(socle) {
     // Éditeur partagé : ponctuelle ou récurrente ; Budget du projet de vie par défaut, ou une branche du user.
     ['POST', '/api/bpm/operations', async ({ ctx, body }) => withCapAlerts(ctx, await budget.createEntry(ctx, { ...body, budgetId: body?.budgetId || lifeBudgetId(ctx) }))],
     ['POST', '/api/bpm/operations/:id/realize', async ({ ctx, params, body }) => withCapAlerts(ctx, await budget.realizeOperation(ctx, params.id, body))],
-    ['PUT', '/api/bpm/patrimoine', ({ ctx, body }) => patrimoine.updatePatrimoine(ctx, socle.modules.bpm.compositionOf(socle.state, socle.om.requireUser(socle.state, ctx))?.patrimoineId, body)],
+    ['PUT', '/api/bpm/patrimoine', ({ ctx, body }) => patrimoine.updatePatrimoine(ctx, socle.modules.bpm.compositionOf(socle.stateOf(ctx), socle.om.requireUser(socle.stateOf(ctx), ctx))?.patrimoineId, body)],
   ];
 }

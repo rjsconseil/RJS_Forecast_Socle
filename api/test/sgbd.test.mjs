@@ -33,12 +33,12 @@ test('sgbd · inscription, écritures et lectures par partition, relecture aprè
     ...Array.from({ length: 5 }, (_, i) => op(socle, a, { direction: 'charge', amount: 10 + i, date: '2026-11-01' })),
     ...Array.from({ length: 3 }, (_, i) => op(socle, b, { direction: 'charge', amount: 20 + i, date: '2026-11-01' })),
   ]);
-  const seen = await socle.store.within(a.userId, () => ({ ops: count(socle.state, 'operations'), register: socle.modules.bpm.reads.register(a, { period: '2026-11' }).lines.length }));
+  const seen = await socle.store.within(a.userId, () => ({ ops: count(socle.stateOf(a), 'operations'), register: socle.modules.bpm.reads.register(a, { period: '2026-11' }).lines.length }));
   assert.deepEqual(seen, { ops: 5, register: 5 });
   assert.deepEqual((await socle.modules.users.listUsers()).map((u) => u.label), ['Camille', 'Bruno']);
   await socle.close();
   const again = await open();
-  assert.equal(await again.store.within(b.userId, () => count(again.state, 'operations')), 3);
+  assert.equal(await again.store.within(b.userId, () => count(again.stateOf(b), 'operations')), 3);
   // Idempotence : la même clé de demande rend le même résultat, sans seconde écriture.
   const requestKey = key('op');
   const input = { requestKey, direction: 'charge', label: 'Unique', amount: 5, date: '2026-11-02', status: 'realized', costCenterRef: 'std:divers' };
@@ -61,7 +61,7 @@ test('sgbd · deux serveurs sur la même base : écritures concurrentes sur la m
     ...Array.from({ length: 10 }, (_, i) => op(two, ctx, { direction: 'charge', amount: 100 + i, date: '2026-11-01' })),
   ]);
   assert.ok(one.store.stats.retries + two.store.stats.retries > 0, 'des écritures concurrentes ont été relues et rejouées');
-  const total = await one.store.within(ctx.userId, () => count(one.state, 'operations'));
+  const total = await one.store.within(ctx.userId, () => count(one.stateOf(ctx), 'operations'));
   assert.equal(total, 20);
   await one.close();
   await two.close();
@@ -104,7 +104,7 @@ test('sgbd · lecture d’une partition en un seul instantané : une écriture i
   assert.ok(seen, 'la lecture intercalée a été observée');
   // L'instantané est cohérent : sa révision est celle de ses objets (l'écriture intercalée n'y est pas).
   assert.equal(Object.keys(seen.collections.operations).length, 1);
-  const total = await two.store.within(ctx.userId, () => count(two.state, 'operations'));
+  const total = await two.store.within(ctx.userId, () => count(two.stateOf(ctx), 'operations'));
   assert.equal(total, 3, 'aucune écriture n’a été écrasée');
   await one.close();
   await two.close();
