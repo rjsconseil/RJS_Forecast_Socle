@@ -1,207 +1,153 @@
+// Parcours de navigation de BPM dans Astra, sur un site en marche et un profil de recette.
+// Ce que astra.e2e.mjs ne couvre pas : les anciennes adresses servies en redirection (lecture conservée), et les
+// brouillons qui survivent à l'historique du navigateur et au rechargement (saisie d'une entrée, tâche, demande de
+// part, replanification dans l'agenda), et le contrôle du compte avant la clôture. Rien n'est enregistré : chaque fenêtre est refermée
+// sans valider.
+//
+//   npm run e2e:bpm             (site sur http://localhost:4300, premier profil avec un projet doté d'une enveloppe)
+//   BPM_BASE_URL=… BPM_USER_ID=… CHROME_PATH=… npm run e2e:bpm
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { chromium } from 'playwright-core';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
-const userId = process.env.BPM_USER_ID;
-assert(userId, 'BPM_USER_ID doit désigner un profil de recette existant. Le site et ses données restent en place.');
-// Playwright du dépôt (playwright-core) et le navigateur du poste, de l'image cloud ou de la CI.
-const playwright = await import('playwright-core');
-const CHROME = process.env.CHROMIUM_PATH ?? process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/opt/google/chrome/chrome', '/usr/bin/chromium'].find(existsSync);
-const browser = await playwright.chromium.launch({
-  headless: true, args: ['--no-sandbox'],
-  executablePath: CHROME,
-});
+const chrome = process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/usr/bin/chromium'].find(existsSync)
+  ?? chromium.executablePath();
+const browser = await chromium.launch({ executablePath: chrome, headless: true });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-await context.addInitScript(id => localStorage.setItem('rjs.activeUserId', id), userId);
+if (process.env.BPM_SESSION_TOKEN) await context.addCookies([{ name: 'rjs_session', value: process.env.BPM_SESSION_TOKEN, url: base }]);
 const page = await context.newPage();
-page.setDefaultTimeout(8000);
-const errors = [], checks = [];
-page.on('pageerror', error => errors.push({ url: page.url(), message: error.message }));
-const open = path => page.goto(base + path, { waitUntil: 'networkidle' });
-const check = (name, details = {}) => { checks.push({ name, ...details }); console.log(`✓ ${name}`); };
-const api = async path => {
-  const response = await page.request.get(base + path, { headers: { 'x-user-id': userId } });
-  assert(response.ok(), await response.text()); return response.json();
-};
+page.setDefaultTimeout(10000);
+const errors = [];
+const checks = [];
+page.on('pageerror', e => errors.push(`${page.url()} : ${e.message}`));
+const astra = (slug = '') => '/bpm-astra' + (slug ? '/' + slug : '');
+const open = async (path) => { await page.goto(base + path, { waitUntil: 'networkidle' }); };
+const url = () => new URL(page.url());
+const check = (name) => { checks.push(name); console.log(`✓ ${name}`); };
 
 try {
-  const users = await api('/api/users');
-  const user = users.find(user => user.id === userId);
-  assert(user, 'Profil de recette introuvable');
-  const parents = ['/creer', '/tableau-de-bord', '/projet-de-vie', '/plafonds', '/vision', '/app/projets', '/app/gestion-projet', '/app/taches', '/app/reglages'];
-  const catalog = await readFile(join(root, 'web/src/app/plan/page-workspaces.ts'), 'utf8');
-  const children = [...catalog.matchAll(/view\(\s*'([^']+)'\s*,\s*'([^']+)'/g)]
-    .filter(match => parents.includes(match[2]) && !match[1].includes(':')).map(match => '/' + match[1]);
-  const paths = [...new Set([...parents, ...children, '/depenses', '/argent/entrees', '/argent/reste', '/argent/postes/std%3Aalimentation', '/calendrier-budget', '/calendrier-budget/agenda'])];
-  const mobile = ['/tableau-de-bord', '/projet-de-vie', '/projet-de-vie/budget-type', '/projet-de-vie/cloture', '/plafonds/reglages', '/vision', '/vision/projection', '/app/gestion-projet', '/app/taches/rattacher', '/app/reglages/postes', '/calendrier-budget', '/calendrier-budget/agenda'];
-  for (const width of [1440, 390]) {
-    await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
-    for (const path of width === 1440 ? paths : mobile) {
-      await open(path);
-      await page.locator('main h1').waitFor();
-      assert.equal(await page.locator('.section-pages a[aria-current="page"]').count(), 1, `Menu actif : ${path}`);
-      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Débordement horizontal : ${path}, ${width}`);
-      await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
-      await page.waitForTimeout(200);
-      const heights = await page.evaluate(async () => {
-        const values = [];
-        for (let i = 0; i < 8; i++) {
-          values.push(document.querySelector('[data-page-hero]')?.getBoundingClientRect().height ?? 0);
-          await new Promise(resolve => requestAnimationFrame(resolve));
-        }
-        return values;
-      });
-      assert(Math.max(...heights) - Math.min(...heights) < 2, `Le bandeau oscille pendant le défilement : ${path}`);
-      if (path === '/calendrier-budget/agenda') {
-        assert(await page.locator('.calendar-agenda-list').evaluate(element => element.getBoundingClientRect().height > 0), 'Agenda tronqué');
-      }
-      check(`${width} px · ${path}`);
-    }
+  const get = async (path, userId) => {
+    const r = await context.request.get(base + path, { headers: userId ? { 'x-user-id': userId } : {} });
+    assert(r.ok(), `${path} : ${await r.text()}`);
+    return r.json();
+  };
+  // Le profil : BPM_USER_ID, sinon le premier qui a un projet avec enveloppe (npm run seed:projets en crée un).
+  const funded = (overview) => overview.projects.find(p => p.budget?.role !== 'life' && p.budget?.regime);
+  const users = process.env.BPM_USER_ID ? [{ id: process.env.BPM_USER_ID }] : await get('/api/users');
+  let userId = null;
+  for (const u of users) if (funded(await get('/api/bpm/projects', u.id))) { userId = u.id; break; }
+  assert(userId, 'Aucun profil avec un projet doté d’une enveloppe : lancer npm run seed:projets (API arrêtée).');
+  await context.addInitScript(id => localStorage.setItem('rjs.activeUserId', id), userId);
+  const api = (path) => get(path, userId);
+
+  // 1. Anciennes adresses : servies par Astra, avec la période et le fragment.
+  const legacy = [
+    ['/tableau-de-bord?period=2026-10', astra(), { period: '2026-10' }],
+    ['/projet-de-vie/projets', astra('projets')],
+    ['/app/taches', astra('taches')],
+    ['/projet-de-vie/budget-type', astra('budget')],
+    ['/plafonds/reglages', astra('plafonds')],
+    ['/projet-de-vie/cloture?period=2026-10', astra('cloture'), { period: '2026-10' }],
+    ['/calendrier-budget/agenda', astra('calendrier/agenda')],
+    ['/tableau-de-bord/rapprochement', astra('cloture/compte')],
+  ];
+  for (const [from, to, query = {}] of legacy) {
+    await open(from);
+    await page.waitForURL(u => u.pathname === to);
+    for (const [k, v] of Object.entries(query)) assert.equal(url().searchParams.get(k), v, `${from} : ${k} perdu`);
   }
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await open('/projet-de-vie/cloture?period=2026-10');
-  await page.getByRole('link', { name: 'Vérifier le compte avant la clôture', exact: true }).click();
-  await page.waitForURL(url => url.pathname.endsWith('/rapprochement'));
-  const tools = page.locator('rjs-page-banner .bpm-toolbar-toggle');
-  if (await tools.getAttribute('aria-expanded') === 'false') await tools.click();
-  const balance = await api('/api/bpm/balance?period=2026-10');
-  await page.locator('input[name=initial]').fill('2000');
-  const current = String((200000 + balance.netCents) / 100);
-  await page.locator('input[name=current]').fill(current);
-  await page.getByRole('button', { name: 'Calculer l’écart', exact: true }).click();
-  await page.waitForURL(url => url.searchParams.get('current') === current);
-  await page.locator('main > rjs-journey .nav-back').click();
-  await page.waitForURL(url => url.pathname === '/projet-de-vie/cloture');
-  await page.locator('main > rjs-journey .nav-forward').click();
-  await page.waitForURL(url => url.pathname.endsWith('/rapprochement'));
-  assert.equal(await page.locator('input[name=current]').inputValue(), current);
-  check('Rapprochement : un seul retour vers la clôture et calcul conservé en avant');
+  check(`Anciennes adresses : ${legacy.length} redirections vers Astra, période conservée`);
 
-  const overview = await api('/api/bpm/projects');
-  const project = overview.projects.find(project => project.budget?.role !== 'life' && project.budget?.regime);
-  assert(project, 'La recette doit comporter un projet financé');
-  const id = project.project.id;
-  const projectPath = `/app/gestion-projet/${id}/taches`;
-  await open(projectPath);
-  await page.locator('rjs-page-banner').getByRole('button', { name: /Créer (?:la première|une) tâche/ }).click();
-  await page.waitForURL(url => url.searchParams.get('editTask') === 'new');
-  await page.locator('bpm-task-editor input[name=title]').fill('Brouillon de navigation · recette');
-  await page.locator('bpm-task-editor input[name=plannedHours]').fill('2.5');
-  await page.locator('bpm-task-editor .modal-journey .nav-back').click();
-  await page.waitForURL(url => !url.searchParams.has('editTask'));
-  await page.locator('main > rjs-journey .nav-forward').click();
-  await page.waitForURL(url => url.searchParams.get('editTask') === 'new');
-  assert.equal(await page.locator('bpm-task-editor input[name=title]').inputValue(), 'Brouillon de navigation · recette');
-  await page.reload({ waitUntil: 'networkidle' });
-  assert.equal(await page.locator('bpm-task-editor input[name=plannedHours]').inputValue(), '2.5');
+  // 2. Saisie d'une entrée : la fenêtre et son brouillon suivent l'historique et le rechargement.
+  await open(astra('mouvements'));
+  await open(astra('mouvements?entry=new&entryDirection=income'));
+  const editor = page.locator('bpm-operation-editor');
+  await editor.locator('input[name=label]').fill('Entrée en préparation · navigation');
+  await editor.locator('input[name=amount]').fill('50');
   await page.goBack({ waitUntil: 'networkidle' });
+  assert(!url().searchParams.has('entry'), 'Retour : la fenêtre de saisie reste ouverte');
   await page.goForward({ waitUntil: 'networkidle' });
-  assert.equal(await page.locator('bpm-task-editor input[name=title]').inputValue(), 'Brouillon de navigation · recette');
-  await page.locator('bpm-task-editor .modal-close').click();
-  await page.waitForURL(url => !url.searchParams.has('editTask'));
-  check('Formulaire de tâche : retour, suivant, rechargement et historique natif');
-
-  const detail = await api('/api/bpm/projects/' + id);
-  const task = detail.tasks.find(task => task.task.status !== 'done' && !task.budget?.request);
-  assert(task, 'Une tâche disponible est nécessaire pour la demande de part');
-  await open(projectPath + '?task=' + task.task.id);
-  await page.locator('dialog[open]').getByRole('button', { name: 'Demander un montant', exact: true }).click();
-  await page.waitForURL(url => url.searchParams.has('demande'));
-  await page.locator('form.task-funding-box input[name=amount]').fill('135');
-  await page.locator('form.task-funding-box input[name=note]').fill('Brouillon : aucun financement demandé par ce test');
-  await page.locator('dialog[open] .modal-journey .nav-back').click();
-  await page.waitForURL(url => !url.searchParams.has('demande'));
-  await page.locator('dialog[open] .modal-journey .nav-forward').click();
-  await page.waitForURL(url => url.searchParams.has('demande'));
-  assert.equal(await page.locator('form.task-funding-box input[name=amount]').inputValue(), '135');
+  assert.equal(url().searchParams.get('entry'), 'new');
   await page.reload({ waitUntil: 'networkidle' });
-  assert.equal(await page.locator('form.task-funding-box input[name=amount]').inputValue(), '135');
-  await page.locator('form.task-funding-box').getByRole('button', { name: 'Annuler', exact: true }).click();
-  await page.waitForURL(url => !url.searchParams.has('demande'));
+  assert(await editor.locator('input[name=direction][value=income]').isChecked(), 'Le sens « entrée » est perdu');
+  assert.equal(await editor.locator('input[name=amount]').inputValue(), '50');
+  await page.keyboard.press('Escape');
+  await page.waitForURL(u => !u.searchParams.has('entry'));
+  check('Saisie d’entrée : sens et brouillon conservés en arrière, en avant et au rechargement');
+
+  // 3. Nouvelle tâche : même chose pour l'éditeur de tâche.
+  await open(astra('taches'));
+  await open(astra('taches?editTask=new'));
+  const task = page.locator('bpm-task-editor');
+  await task.locator('input[name=title]').fill('Brouillon de navigation · recette');
+  await task.locator('input[name=plannedHours]').fill('2.5');
+  await page.goBack({ waitUntil: 'networkidle' });
+  assert(!url().searchParams.has('editTask'), 'Retour : l’éditeur de tâche reste ouvert');
+  await page.goForward({ waitUntil: 'networkidle' });
+  assert.equal(await task.locator('input[name=title]').inputValue(), 'Brouillon de navigation · recette');
+  await page.reload({ waitUntil: 'networkidle' });
+  assert.equal(await task.locator('input[name=plannedHours]').inputValue(), '2.5');
+  await page.keyboard.press('Escape');
+  await page.waitForURL(u => !u.searchParams.has('editTask'));
+  check('Nouvelle tâche : brouillon conservé en arrière, en avant et au rechargement');
+
+  // 4. Demande de part d'une tâche : montant et motif conservés.
+  // Une tâche pas encore terminée et sans demande en cours, dans un projet doté d'une enveloppe.
+  let project = null, free = null;
+  for (const p of (await api('/api/bpm/projects')).projects.filter(p => p.budget?.role !== 'life' && p.budget?.regime)) {
+    free = (await api('/api/bpm/projects/' + p.project.id)).tasks.find(t => t.task.status !== 'done' && !t.budget?.request);
+    if (free) { project = p; break; }
+  }
+  assert(free, 'Une tâche sans demande en cours est nécessaire, dans un projet avec enveloppe');
+  await open(astra(`projets/${project.project.id}/taches?task=${free.task.id}`));
+  await page.locator('.task-panel').getByRole('button', { name: 'Demander un montant', exact: true }).click();
+  await page.waitForURL(u => u.searchParams.has('demande'));
+  const funding = page.locator('form.task-funding-box');
+  await funding.locator('input[name=amount]').fill('135');
+  await funding.locator('input[name=note]').fill('Brouillon : aucun financement demandé par ce test');
+  await page.goBack({ waitUntil: 'networkidle' });
+  assert(!url().searchParams.has('demande'));
+  await page.goForward({ waitUntil: 'networkidle' });
+  assert.equal(await funding.locator('input[name=amount]').inputValue(), '135');
+  await page.reload({ waitUntil: 'networkidle' });
+  assert.equal(await funding.locator('input[name=amount]').inputValue(), '135');
+  await funding.getByRole('button', { name: 'Annuler', exact: true }).click();
+  await page.waitForURL(u => !u.searchParams.has('demande'));
   check('Demande de part : montant et motif conservés entre étapes et après rechargement');
 
-  await open('/calendrier-budget/agenda?jour=2026-11-07&vue=mois');
+  // 5. Vérifier le compte : des soldes bancaires qui suivent le net du cycle ne laissent aucun écart.
+  const period = (await api('/api/bpm/balance')).period?.key ?? new Date().toISOString().slice(0, 7);
+  const balance = await api(`/api/bpm/balance?period=${period}`);
+  await open(astra(`cloture/compte?period=${period}`));
+  await page.getByLabel('Ouverture (€)').first().fill('2000');
+  await page.getByLabel('Contrôle (€)').first().fill(String((200000 + balance.netCents) / 100).replace('.', ','));
+  await page.locator('.bank-confirm input[type=checkbox]').check();
+  await page.locator('.bank-verdict[data-tone=success]').waitFor();
+  check('Vérifier le compte : soldes bancaires qui concordent avec le net du cycle, aucun écart');
+
+  // 6. Agenda : replanifier garde la date choisie en arrière et en avant, sans rien enregistrer.
+  await open(astra('calendrier/agenda?vue=mois'));
+  // La liste de l'agenda prend sa hauteur (elle était écrasée à la hauteur de son titre).
+  assert(await page.locator('.calendar-agenda-list').evaluate(e => e.getBoundingClientRect().height > 100), 'Agenda tronqué');
   const plan = page.locator('.calendar-agenda-actions').getByRole('button', { name: 'Replanifier', exact: true }).first();
-  await plan.click();
-  await page.waitForURL(url => url.searchParams.has('calPlan'));
-  await page.locator('.calendar-plan input').fill('2026-11-10');
-  await page.waitForURL(url => url.searchParams.get('calDate') === '2026-11-10');
-  await page.locator('main > rjs-journey .nav-back').click();
-  await page.waitForURL(url => !url.searchParams.has('calPlan'));
-  await page.locator('main > rjs-journey .nav-forward').click();
-  await page.waitForURL(url => url.searchParams.has('calPlan'));
-  assert.equal(await page.locator('.calendar-plan input').inputValue(), '2026-11-10');
-  await page.getByRole('button', { name: 'Enregistrer la date', exact: true }).click({ trial: true });
-  await page.locator('.calendar-plan').getByRole('button', { name: 'Annuler', exact: true }).click();
-  check('Agenda : événements accessibles, reprise de la date et commande stable');
+  if (await plan.count()) {
+    await plan.click();
+    await page.waitForURL(u => u.searchParams.has('calPlan'));
+    const day = await page.locator('.calendar-plan input').inputValue();
+    await page.goBack({ waitUntil: 'networkidle' });
+    assert(!url().searchParams.has('calPlan'));
+    await page.goForward({ waitUntil: 'networkidle' });
+    assert.equal(await page.locator('.calendar-plan input').inputValue(), day);
+    await page.locator('.calendar-plan').getByRole('button', { name: 'Annuler', exact: true }).click();
+    check('Agenda : replanification reprise en arrière et en avant');
+  } else console.log('· Agenda : aucun événement à replanifier ce mois-ci');
 
-  await open('/tableau-de-bord');
-  await page.locator('rjs-page-banner').getByRole('link', { name: 'Entrées de la période', exact: true }).click();
-  await page.waitForURL(url => url.pathname.endsWith('/entrees'));
-  await page.locator('rjs-page-banner').getByRole('link', { name: 'Graphiques et chiffres', exact: true }).click();
-  await page.waitForURL(url => url.pathname === '/piloter');
-  await page.locator('main > rjs-journey .nav-back').click();
-  await page.waitForURL(url => url.pathname.endsWith('/entrees'));
-  await page.locator('main > rjs-journey .nav-back').click();
-  await page.waitForURL(url => url.pathname === '/tableau-de-bord');
-  await page.locator('main > rjs-journey .nav-last').click();
-  await page.waitForURL(url => url.pathname === '/piloter');
-  await open('/projects');
-  await page.goBack({ waitUntil: 'networkidle' });
-  assert.equal(new URL(page.url()).pathname, '/piloter');
-  assert(await page.locator('main > rjs-journey .nav-back').isEnabled());
-  check('Plusieurs retours, dernière étape et excursion hors de BPM');
-
-  for (const path of ['/tableau-de-bord', '/piloter/agir']) {
-    await open(path);
-    const toggle = page.locator('rjs-page-banner .bpm-toolbar-toggle');
-    if (await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
-    await page.locator('rjs-page-banner').getByRole('button', { name: '＋ Saisir une entrée', exact: true }).click();
-    await page.waitForURL(url => url.searchParams.get('entryDirection') === 'income');
-    await page.locator('bpm-operation-editor input[name=label]').fill('Entrée en préparation · navigation');
-    await page.locator('bpm-operation-editor input[name=amount]').fill('50');
-    await page.locator('dialog[open] .modal-journey .nav-back').click();
-    await page.waitForURL(url => !url.searchParams.has('entry'));
-    await page.locator('main > rjs-journey .nav-forward').click();
-    await page.waitForURL(url => url.searchParams.get('entry') === 'new');
-    await page.reload({ waitUntil: 'networkidle' });
-    assert(await page.locator('bpm-operation-editor input[name=direction][value=income]').isChecked());
-    assert.equal(await page.locator('bpm-operation-editor input[name=amount]').inputValue(), '50');
-    await page.locator('dialog[open] .modal-close').click();
-    await page.waitForURL(url => !url.searchParams.has('entry'));
-    assert(!new URL(page.url()).searchParams.has('entryDirection'));
-    check(`Saisie d’entrée : sens et brouillon conservés en arrière, en avant et au rechargement · ${path}`);
-  }
-
-  const legacy = [
-    ['?panneau=budget-type', '/projet-de-vie/budget-type', null],
-    ['#bp-dir-title', '/vision/reperes', '#bp-dir-title'],
-    ['?panneau=objectif', '/vision/reperes', '#bp-target-title'],
-    ['?panneau=simulation&effort=100', '/vision/projection', '#bp-sim-title'],
-    ['#saisie-des-flux', '/depenses/registre', null],
-  ];
-  for (const [suffix, path, hash] of legacy) {
-    await open('/piloter/agir' + suffix);
-    await page.waitForURL(url => url.pathname === path);
-    if (hash) {
-      assert.equal(new URL(page.url()).hash, hash);
-      await page.locator(hash).waitFor({ state: 'visible' });
-    }
-    if (suffix.includes('simulation')) assert.equal(new URL(page.url()).searchParams.get('effort'), '100');
-    if (suffix.includes('saisie')) await page.locator('bpm-operation-editor').waitFor({ state: 'visible' });
-    check(`Ancien accès conservé : ${suffix} → ${path}`);
-  }
-  assert.deepEqual(errors, []);
-  const directory = join(root, 'api/data/recettes');
-  await mkdir(directory, { recursive: true });
-  const report = { at: new Date().toISOString(), base, userId, user: user.label, checks, errors };
-  await writeFile(join(directory, `bpm-navigation-production-${report.at.slice(0, 10)}.json`), JSON.stringify(report, null, 2) + '\n');
-  console.log(`${checks.length} contrôles réussis · profil ${user.label}`);
+  assert.deepEqual(errors, [], `Erreurs dans la page :\n  ${errors.join('\n  ')}`);
+  console.log(`\n✓ BPM dans Astra : ${checks.length} parcours de navigation conformes.`);
 } catch (error) {
-  await page.screenshot({ path: '/tmp/bpm-navigation-failure.png', fullPage: true }).catch(() => {});
-  throw error;
-} finally { await browser.close(); }
+  console.error(`\n✖ ${error.message}\n  page : ${page.url()}`);
+  process.exitCode = 1;
+} finally {
+  await browser.close();
+}

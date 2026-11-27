@@ -5,9 +5,10 @@
  *   base             commandes, grille et agenda
  *   relief           ombres, fondus, survol, cases sans repère
  *   square           le carré commun au mois et à l'année
- *   responsive, variants, personalization   adaptations, variantes et personnalisation, en dernier
+ *   variants         les étapes Agenda et Sources : une seule surface de travail, la liste à sa hauteur
  */
 @use './styles/tokens';
 @use './styles/base';
 @use './styles/relief';
 @use './styles/square';
+@use './styles/variants';

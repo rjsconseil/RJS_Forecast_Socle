@@ -70,4 +70,10 @@ describe('écran Mouvements', () => {
     expect(dom().querySelector('bpm-line-detail')).not.toBeNull();
     expect(dom().textContent).toContain(f.line.line.label);
   });
+
+  it('un lien « Saisir une entrée d’argent » ouvre la saisie en entrée, même sur une page filtrée en dépenses', async () => {
+    await open('/mouvements?period=2026-11&direction=charge&entry=new&entryDirection=income');
+    const income = dom().querySelector<HTMLInputElement>('bpm-operation-editor input[name=direction][value=income]');
+    expect(income?.checked).toBe(true);
+  });
 });

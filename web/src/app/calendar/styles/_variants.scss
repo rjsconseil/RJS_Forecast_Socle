@@ -1,11 +1,3 @@
-/* Les commandes sont portées par le bandeau de la page ; les repères gardent le même cadre. */
-:host .calendar.is-canonical.has-external-tools .calendar-control-row {
-  grid-template-columns: minmax(0, 1fr);
-  padding: 0;
-  background: transparent;
-  border: 0;
-}
-
 /* Une seule surface de travail pour les étapes Agenda et Sources. */
 :host .calendar.is-360.is-specialized-calendar {
   .calendar-layout,
