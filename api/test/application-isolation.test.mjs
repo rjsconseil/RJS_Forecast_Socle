@@ -11,14 +11,17 @@ const app = fileURLToPath(new URL('../../web/src/app/', import.meta.url));
 const APPLICATIONS = ['bpm', 'astra'];
 const BUILT_ON = { astra: 'bpm' };
 const REGISTRY = 'platform/applications.ts';
+// Les écrans propres aux sections (`sections/<clé>/`) sont des pages de BPM-Astra : ils relèvent de cette application.
+const HOSTED = { sections: 'astra' };
 
 const files = async (dir) => (await Promise.all((await readdir(dir)).map(async (name) => {
   const path = join(dir, name);
   if ((await stat(path)).isDirectory()) return files(path);
   return /\.(ts|scss|html)$/.test(name) && !name.endsWith('.spec.ts') ? [path] : [];
 }))).flat();
-const inApplication = (rel) => APPLICATIONS.some((a) => rel.startsWith(a + '/'));
-const applicationOf = (rel) => APPLICATIONS.find((a) => rel === a || rel.startsWith(a + '/')) ?? null;
+const applicationOf = (rel) => APPLICATIONS.find((a) => rel === a || rel.startsWith(a + '/'))
+  ?? Object.entries(HOSTED).find(([dir]) => rel === dir || rel.startsWith(dir + '/'))?.[1] ?? null;
+const inApplication = (rel) => applicationOf(rel) !== null;
 
 test('isolation : le code commun du site n’importe aucune application', async () => {
   const found = [];
