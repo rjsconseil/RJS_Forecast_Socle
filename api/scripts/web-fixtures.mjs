@@ -9,7 +9,9 @@ import { dirname } from 'node:path';
 import { at, camille, key, makeSocle, operation } from '../test/helpers.mjs';
 
 const target = process.env.WEB_FIXTURES_OUT || new URL('../../web/src/app/bpm/testing/api-fixtures.json', import.meta.url).pathname;
-process.env.SOCLE_TODAY = '2026-11-20';
+const RECETTE_DAY = '2026-11-20';
+process.env.SOCLE_TODAY = RECETTE_DAY;
+const started = Date.now();
 
 const { socle } = await makeSocle();
 const { ctx } = await camille(socle);
@@ -57,7 +59,9 @@ const fixtures = {
 };
 await socle.close();
 
-// Normalisation : identifiants stables (préfixe conservé), horodatages ramenés au jour de recette.
+// Normalisation : identifiants stables (préfixe conservé), horodatages ramenés au jour de recette (les horodatages
+// d'écriture suivent l'horloge réelle : sans cela, les réponses changeaient chaque jour et le test échouait le lendemain).
+const realDays = new Set([new Date(started).toISOString().slice(0, 10), new Date().toISOString().slice(0, 10)]);
 const ids = new Map();
 const json = JSON.stringify(fixtures, null, 1)
   .replace(/\b([a-z]{2,3})_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/g, (id, prefix) => {
@@ -65,7 +69,7 @@ const json = JSON.stringify(fixtures, null, 1)
     return ids.get(id);
   })
   .replace(/\b(req|op|user|seed)-[0-9a-f-]{36}\b/g, '$1-recette')
-  .replace(/"(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}\.\d{3}Z"/g, '"$1T09:00:00.000Z"');
+  .replace(/"(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}\.\d{3}Z"/g, (_, day) => `"${realDays.has(day) ? RECETTE_DAY : day}T09:00:00.000Z"`);
 await mkdir(dirname(target), { recursive: true });
 await writeFile(target, json + '\n');
 console.log(`Réponses de recette écrites : ${target} (${Object.keys(fixtures).length} lectures, ${ids.size} identifiants normalisés)`);

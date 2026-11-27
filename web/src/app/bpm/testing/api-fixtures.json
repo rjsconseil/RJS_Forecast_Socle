@@ -427,12 +427,12 @@
     "kind": "task",
     "userId": "usr_001",
     "revision": 1,
-    "createdAt": "2026-11-26T09:00:00.000Z",
-    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "createdAt": "2026-11-20T09:00:00.000Z",
+    "updatedAt": "2026-11-20T09:00:00.000Z",
     "provenance": {
      "command": "createBpmTask",
      "requestKey": "req-recette",
-     "at": "2026-11-26T09:00:00.000Z"
+     "at": "2026-11-20T09:00:00.000Z"
     },
     "title": "Plan de travail",
     "description": "",
@@ -509,12 +509,12 @@
     "kind": "recurrence",
     "userId": "usr_001",
     "revision": 1,
-    "createdAt": "2026-11-26T09:00:00.000Z",
-    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "createdAt": "2026-11-20T09:00:00.000Z",
+    "updatedAt": "2026-11-20T09:00:00.000Z",
     "provenance": {
      "command": "createRecurrence",
      "requestKey": "req-recette",
-     "at": "2026-11-26T09:00:00.000Z"
+     "at": "2026-11-20T09:00:00.000Z"
     },
     "budgetId": "bud_002",
     "direction": "charge",
@@ -544,12 +544,12 @@
     "kind": "recurrence",
     "userId": "usr_001",
     "revision": 1,
-    "createdAt": "2026-11-26T09:00:00.000Z",
-    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "createdAt": "2026-11-20T09:00:00.000Z",
+    "updatedAt": "2026-11-20T09:00:00.000Z",
     "provenance": {
      "command": "createRecurrence",
      "requestKey": "req-recette",
-     "at": "2026-11-26T09:00:00.000Z"
+     "at": "2026-11-20T09:00:00.000Z"
     },
     "budgetId": "bud_002",
     "direction": "income",
@@ -1070,7 +1070,7 @@
      "periodStart": "2026-09-01",
      "periodEnd": "2026-09-30",
      "resultCents": -71000,
-     "closedAt": "2026-11-26T09:00:00.000Z",
+     "closedAt": "2026-11-20T09:00:00.000Z",
      "targetCents": null,
      "meetsTarget": null
     },
@@ -1081,7 +1081,7 @@
      "periodStart": "2026-08-01",
      "periodEnd": "2026-08-31",
      "resultCents": -22000,
-     "closedAt": "2026-11-26T09:00:00.000Z",
+     "closedAt": "2026-11-20T09:00:00.000Z",
      "targetCents": null,
      "meetsTarget": null
     }
@@ -1100,7 +1100,7 @@
     "periodStart": "2026-08-01",
     "periodEnd": "2026-08-31",
     "resultCents": -22000,
-    "closedAt": "2026-11-26T09:00:00.000Z",
+    "closedAt": "2026-11-20T09:00:00.000Z",
     "targetCents": null,
     "meetsTarget": null
    },
@@ -1111,7 +1111,7 @@
     "periodStart": "2026-09-01",
     "periodEnd": "2026-09-30",
     "resultCents": -71000,
-    "closedAt": "2026-11-26T09:00:00.000Z",
+    "closedAt": "2026-11-20T09:00:00.000Z",
     "targetCents": null,
     "meetsTarget": null
    },
@@ -1122,7 +1122,7 @@
     "periodStart": "2026-09-01",
     "periodEnd": "2026-09-30",
     "resultCents": -71000,
-    "closedAt": "2026-11-26T09:00:00.000Z",
+    "closedAt": "2026-11-20T09:00:00.000Z",
     "targetCents": null,
     "meetsTarget": null
    },
@@ -1419,7 +1419,7 @@
     },
     "status": "closed",
     "source": "enregistré",
-    "closedAt": "2026-11-26T09:00:00.000Z",
+    "closedAt": "2026-11-20T09:00:00.000Z",
     "receivedCents": 0,
     "spentCents": 71000,
     "resultCents": -71000,
@@ -1457,7 +1457,7 @@
     },
     "status": "closed",
     "source": "enregistré",
-    "closedAt": "2026-11-26T09:00:00.000Z",
+    "closedAt": "2026-11-20T09:00:00.000Z",
     "receivedCents": 0,
     "spentCents": 22000,
     "resultCents": -22000,
@@ -1693,7 +1693,7 @@
    "status": "closed",
    "source": "enregistré",
    "closureId": "clo_013",
-   "closedAt": "2026-11-26T09:00:00.000Z"
+   "closedAt": "2026-11-20T09:00:00.000Z"
   }
  },
  "projectDetail": {
@@ -1726,12 +1726,12 @@
     "kind": "coreProject",
     "userId": "usr_001",
     "revision": 1,
-    "createdAt": "2026-11-26T09:00:00.000Z",
-    "updatedAt": "2026-11-26T09:00:00.000Z",
+    "createdAt": "2026-11-20T09:00:00.000Z",
+    "updatedAt": "2026-11-20T09:00:00.000Z",
     "provenance": {
      "command": "createBpmProject",
      "requestKey": "req-recette",
-     "at": "2026-11-26T09:00:00.000Z"
+     "at": "2026-11-20T09:00:00.000Z"
     },
     "title": "Cuisine",
     "description": "Refaire la cuisine",
@@ -1844,12 +1844,12 @@
      "kind": "task",
      "userId": "usr_001",
      "revision": 1,
-     "createdAt": "2026-11-26T09:00:00.000Z",
-     "updatedAt": "2026-11-26T09:00:00.000Z",
+     "createdAt": "2026-11-20T09:00:00.000Z",
+     "updatedAt": "2026-11-20T09:00:00.000Z",
      "provenance": {
       "command": "createBpmTask",
       "requestKey": "req-recette",
-      "at": "2026-11-26T09:00:00.000Z"
+      "at": "2026-11-20T09:00:00.000Z"
      },
      "title": "Plan de travail",
      "description": "",
@@ -2068,12 +2068,12 @@
    "kind": "recurrence",
    "userId": "usr_001",
    "revision": 1,
-   "createdAt": "2026-11-26T09:00:00.000Z",
-   "updatedAt": "2026-11-26T09:00:00.000Z",
+   "createdAt": "2026-11-20T09:00:00.000Z",
+   "updatedAt": "2026-11-20T09:00:00.000Z",
    "provenance": {
     "command": "createRecurrence",
     "requestKey": "req-recette",
-    "at": "2026-11-26T09:00:00.000Z"
+    "at": "2026-11-20T09:00:00.000Z"
    },
    "budgetId": "bud_002",
    "direction": "charge",
@@ -2555,10 +2555,10 @@
   "actions": {
    "total": 3,
    "entries": 3,
-   "lastAt": "2026-11-26T09:00:00.000Z",
-   "firstAt": "2026-11-26T09:00:00.000Z",
+   "lastAt": "2026-11-20T09:00:00.000Z",
+   "firstAt": "2026-11-20T09:00:00.000Z",
    "source": {
-    "journalFrom": "2026-11-26T09:00:00.000Z",
+    "journalFrom": "2026-11-20T09:00:00.000Z",
     "complete": false
    },
    "categories": [
@@ -2570,13 +2570,13 @@
      "count": 1,
      "entries": 1,
      "realizedCents": -24000,
-     "lastAt": "2026-11-26T09:00:00.000Z",
+     "lastAt": "2026-11-20T09:00:00.000Z",
      "items": [
       {
        "category": "daily",
        "command": "createOperation",
        "verb": "Dépense payée saisie",
-       "at": "2026-11-26T09:00:00.000Z",
+       "at": "2026-11-20T09:00:00.000Z",
        "source": "journal",
        "objectId": "op_016",
        "label": "Courses",
@@ -2590,7 +2590,7 @@
         "coreProjectId": null
        },
        "count": 1,
-       "firstAt": "2026-11-26T09:00:00.000Z"
+       "firstAt": "2026-11-20T09:00:00.000Z"
       }
      ]
     },
@@ -2613,13 +2613,13 @@
      "count": 2,
      "entries": 2,
      "realizedCents": 0,
-     "lastAt": "2026-11-26T09:00:00.000Z",
+     "lastAt": "2026-11-20T09:00:00.000Z",
      "items": [
       {
        "category": "recurring",
        "command": "createRecurrence",
        "verb": "Échéance récurrente définie",
-       "at": "2026-11-26T09:00:00.000Z",
+       "at": "2026-11-20T09:00:00.000Z",
        "source": "journal",
        "objectId": "rec_009",
        "label": "Salaire",
@@ -2633,13 +2633,13 @@
         "coreProjectId": null
        },
        "count": 1,
-       "firstAt": "2026-11-26T09:00:00.000Z"
+       "firstAt": "2026-11-20T09:00:00.000Z"
       },
       {
        "category": "recurring",
        "command": "createRecurrence",
        "verb": "Échéance récurrente définie",
-       "at": "2026-11-26T09:00:00.000Z",
+       "at": "2026-11-20T09:00:00.000Z",
        "source": "journal",
        "objectId": "rec_006",
        "label": "Loyer",
@@ -2653,7 +2653,7 @@
         "coreProjectId": null
        },
        "count": 1,
-       "firstAt": "2026-11-26T09:00:00.000Z"
+       "firstAt": "2026-11-20T09:00:00.000Z"
       }
      ]
     },
@@ -2985,7 +2985,7 @@
    "periodKey": "2026-09",
    "periodLabel": "Septembre 2026",
    "resultCents": -71000,
-   "closedAt": "2026-11-26T09:00:00.000Z",
+   "closedAt": "2026-11-20T09:00:00.000Z",
    "deferredCount": 0
   }
  }
