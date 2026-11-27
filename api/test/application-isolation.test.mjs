@@ -11,14 +11,17 @@ const app = fileURLToPath(new URL('../../web/src/app/', import.meta.url));
 const APPLICATIONS = ['bpm', 'astra'];
 const BUILT_ON = { astra: 'bpm' };
 const REGISTRY = 'platform/applications.ts';
+// Fonctionnalités par section et applications autonomes (`sections/`, `hybrides/`) vivent dans BPM-Astra.
+const HOSTED = { sections: 'astra', hybrides: 'astra' };
 
 const files = async (dir) => (await Promise.all((await readdir(dir)).map(async (name) => {
   const path = join(dir, name);
   if ((await stat(path)).isDirectory()) return files(path);
   return /\.(ts|scss|html)$/.test(name) && !name.endsWith('.spec.ts') ? [path] : [];
 }))).flat();
-const inApplication = (rel) => APPLICATIONS.some((a) => rel.startsWith(a + '/'));
-const applicationOf = (rel) => APPLICATIONS.find((a) => rel === a || rel.startsWith(a + '/')) ?? null;
+const applicationOf = (rel) => APPLICATIONS.find((a) => rel === a || rel.startsWith(a + '/'))
+  ?? Object.entries(HOSTED).find(([dir]) => rel === dir || rel.startsWith(dir + '/'))?.[1] ?? null;
+const inApplication = (rel) => applicationOf(rel) !== null;
 
 test('isolation : le code commun du site n’importe aucune application', async () => {
   const found = [];
@@ -67,4 +70,51 @@ test('isolation : une application ne dépend que de l’application qu’elle d�
     }
   }
   assert.deepEqual(found, [], 'BPM ne dépend pas de BPM-Astra, et aucune autre dépendance entre applications');
+});
+
+// Trois étages : le grand noyau (socle), les fonctionnalités par section, les applications autonomes.
+const GRAND_NOYAU = 'platform/grand-noyau.ts';
+const CADRE = 'astra/cadre.ts';
+const FONCTIONNALITES = /^sections\/[^/]+\/fonctionnalites\//;
+const APP_ROOT = (rel) => rel.match(/^(sections\/[^/]+\/application|hybrides\/[^/]+)\//)?.[1] ?? null;
+// Toute forme d'import relatif : `from '…'`, `import '…'` (effet de bord) et `import('…')`.
+const relativeImports = (text) => [...text.matchAll(/(?:from\s+|import\s*\(?\s*)['"](\.[^'"]+)['"]/g)].map((m) => m[1]);
+const resolveTs = (file, spec) => { const t = relative(app, join(file, '..', spec)); return /\.(ts|json|scss|html)$/.test(t) ? t : t + '.ts'; };
+
+test('trois étages : chaque fichier de sections/ et hybrides/ est dans les fonctionnalités d’une section ou dans une application autonome', async () => {
+  const stray = (await files(app)).map((f) => relative(app, f))
+    .filter((rel) => /^(sections|hybrides)\//.test(rel) && !FONCTIONNALITES.test(rel) && !APP_ROOT(rel));
+  assert.deepEqual(stray, []);
+});
+
+test('fonctionnalités par section : sans écran, elles n’appellent que le grand noyau et d’autres fonctionnalités par section', async () => {
+  const found = [];
+  for (const file of await files(app)) {
+    const rel = relative(app, file);
+    if (!FONCTIONNALITES.test(rel)) continue;
+    if (!rel.endsWith('.ts')) { found.push(`${rel} : fichier d’écran`); continue; }
+    const text = await readFile(file, 'utf8');
+    if (/@Component\s*\(/.test(text)) found.push(`${rel} : composant d’écran`);
+    for (const spec of relativeImports(text)) {
+      const target = resolveTs(file, spec);
+      if (target !== GRAND_NOYAU && !FONCTIONNALITES.test(target)) found.push(`${rel} → ${spec}`);
+    }
+  }
+  assert.deepEqual(found, []);
+});
+
+test('applications autonomes : elles appellent le grand noyau, les fonctionnalités par section et le cadre BPM-Astra, jamais une autre application', async () => {
+  const found = [];
+  for (const file of await files(app)) {
+    const rel = relative(app, file);
+    const own = APP_ROOT(rel);
+    if (!own || !rel.endsWith('.ts')) continue;
+    const text = await readFile(file, 'utf8');
+    for (const spec of relativeImports(text)) {
+      const target = resolveTs(file, spec);
+      if (target === GRAND_NOYAU || target === CADRE || FONCTIONNALITES.test(target) || target.startsWith(own + '/')) continue;
+      found.push(`${rel} → ${spec}`);
+    }
+  }
+  assert.deepEqual(found, []);
 });

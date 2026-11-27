@@ -582,7 +582,32 @@ Règles de cohabitation : une responsabilité exclusive par section ; un fait, u
 montrent et renvoient à elle) ; chaque dépendance est visible ; chaque section tient debout seule quand ce qu'elle
 reçoit est vide. Une nouvelle collection se range dans `sections.json` (test `sections.test.mjs`).
 
-## 19. Journal des changements
+## 19. Trois étages : grand noyau, fonctionnalités par section, applications autonomes (27 novembre 2026)
+
+Le site s'organise en trois étages, pour accueillir des applications autonomes par section sans découper le code :
+
+1. **Le grand noyau (socle)** : noyau technique et middlewares communs (Budget, Patrimoine, Cycle, Calendrier, Navigation),
+   derrière une seule interface. Côté serveur, c'est l'API ; côté site, `web/src/app/platform/grand-noyau.ts`, qui
+   rassemble l'accès à l'API, les modèles, la mise en forme et les éléments communs des sections (catalogue, flux,
+   ouverture d'un fait à sa source, accueil de section).
+2. **Les fonctionnalités par section**, une par section : `web/src/app/sections/<clé>/fonctionnalites/`. Des fonctions sans écran,
+   qui n'appellent que le grand noyau et d'autres fonctionnalités par section.
+3. **Les applications autonomes** : de section (`web/src/app/sections/<clé>/application/`) ou hybrides
+   (`web/src/app/hybrides/<nom>/`). Elles appellent le grand noyau, les fonctionnalités d'une ou plusieurs sections, et le cadre d'accueil
+   BPM-Astra (`web/src/app/astra/cadre.ts` : contexte de page, rafraîchissement, adresses) ; jamais une autre application.
+
+C'est la même architecture que le grand noyau, un étage au-dessus : noyau ↔ grand noyau (socle), couche middleware ↔
+fonctionnalités par section, couche présentation BPM-Astra ↔ applications autonomes. Les fonctionnalités par section sont
+pour l'instant côté site ; une section qui aura ses propres données (tables `<préfixe>_`) aura besoin d'un emplacement
+côté serveur, à créer en mode socle.
+
+Les gardes sont dans `api/test/application-isolation.test.mjs`. Les fonctionnalités par section et les applications autonomes vivent dans
+BPM-Astra et relèvent de cette application pour les règles d'isolation. Les écrans existants restent en place ; ils
+rejoignent ces étages au fil du développement de chaque section. Deux modes de développement : **mode section** (fonctionnalités et
+application autonome d'une section, libres, sans toucher au grand noyau) et **mode socle** (le grand noyau seul, PR à part,
+non-régression complète). Plan de documentation : `docs/socle/` et `docs/sections/`.
+
+## 20. Journal des changements
 
 Le détail daté des PR (intégration continue, corrections des rapports successifs, retrait du centre de commande,
 mise en ligne) est tenu dans [`CHANGELOG.md`](../CHANGELOG.md) à la racine. Ce document ne garde que la référence.

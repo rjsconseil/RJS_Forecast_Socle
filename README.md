@@ -355,6 +355,8 @@ npm run import:rjs-forecast -- --remplacer
 `npm --prefix web test -- --watch=false` lance les tests unitaires du site (routes et redirections, lectures
 protégées contre les réponses périmées, graphes, éditeur d'opération rejouable, dates et modèle du calendrier).
 
+La documentation se range en deux étages : le socle ([`docs/socle/`](docs/socle/README.md)) et les sections ([`docs/sections/`](docs/sections/README.md)), dont le plan est posé.
+
 La matrice de recette « exigence → page/service → preuve → statut » est dans [`docs/RECETTE.md`](docs/RECETTE.md).
 
 ## Questions ouvertes
