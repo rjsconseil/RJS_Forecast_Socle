@@ -143,8 +143,6 @@ a.metric-tile:focus-visible {
   border: var(--trait-3) solid currentColor;
   border-radius: var(--rayon-8);
   background: color-mix(in srgb, currentColor var(--part-6), transparent);
-  font-size: scaled(var(--fs-4xl));
-  line-height: 1;
 }
 .metric-tile:is([data-symbol='income'], [data-symbol='expense']):not(
     [data-details-placement='between']
@@ -173,7 +171,6 @@ a.metric-tile:focus-visible {
   padding-inline-end: var(--ecart-16);
 }
 .metric-tile[data-details-placement='between'] > .metric-symbol {
-  position: static;
   grid-column: 2;
   grid-row: 1;
   transform: none;

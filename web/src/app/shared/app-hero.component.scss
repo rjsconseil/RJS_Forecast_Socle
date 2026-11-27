@@ -452,8 +452,6 @@ rjs-app-hero {
 
 @container (max-width: #{$rupture-640}) {
   .app-shell main .app-hero-toolbar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
     scrollbar-width: thin;
     padding-bottom: var(--ecart-4);
   }

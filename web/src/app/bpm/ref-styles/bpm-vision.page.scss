@@ -66,10 +66,8 @@
   grid-template-columns: auto minmax(0, var(--fr-1)) auto;
   align-items: center;
   gap: var(--ecart-16);
-  padding: var(--ecart-16);
   border: var(--trait-1) solid var(--line);
   border-radius: var(--card-radius);
-  background: var(--soft);
 }
 .bv-goal-icon {
   display: inline-grid;
@@ -94,7 +92,6 @@
 }
 .bv-goal-body strong {
   color: var(--ink);
-  font-size: scaled(var(--fs-lg));
 }
 .bv-goal-body > span {
   color: var(--muted);
