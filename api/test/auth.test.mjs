@@ -30,13 +30,23 @@ const signup = (call, email, label = 'Camille') => call('POST', '/api/auth/regis
   requestKey: key('inscription'), email, password: 'mot de passe solide', label, userType: 'individuel', anchorDay: 1, cycleStartDate: '2026-08-01',
 });
 
-test('auth · empreinte scrypt salée, jeton signé : falsifié, expiré ou d’une autre clé = refusé', () => {
-  const rec = hashPassword('mot de passe solide');
+test('auth · le hachage ne bloque pas le serveur : une autre tâche avance pendant la vérification', async () => {
+  const rec = await hashPassword('mot de passe solide');
+  let ticks = 0;
+  const timer = setInterval(() => { ticks += 1; }, 1);
+  const checks = await Promise.all(Array.from({ length: 4 }, () => verifyPassword('mot de passe solide', rec)));
+  clearInterval(timer);
+  assert.deepEqual(checks, [true, true, true, true]);
+  assert.ok(ticks > 0, 'la boucle d’événements a tourné pendant les quatre calculs');
+});
+
+test('auth · empreinte scrypt salée, jeton signé : falsifié, expiré ou d’une autre clé = refusé', async () => {
+  const rec = await hashPassword('mot de passe solide');
   assert.equal(rec.algo, 'scrypt');
   assert.ok(!JSON.stringify(rec).includes('solide'), 'le mot de passe n’est jamais enregistré');
-  assert.notEqual(hashPassword('mot de passe solide').salt, rec.salt, 'un sel par empreinte');
-  assert.equal(verifyPassword('mot de passe solide', rec), true);
-  assert.equal(verifyPassword('mot de passe faux!', rec), false);
+  assert.notEqual((await hashPassword('mot de passe solide')).salt, rec.salt, 'un sel par empreinte');
+  assert.equal(await verifyPassword('mot de passe solide', rec), true);
+  assert.equal(await verifyPassword('mot de passe faux!', rec), false);
   const sessions = createSessions({ secret: 'secret-a', ttlHours: 1 });
   const token = sessions.issue('usr_1', 1_000);
   assert.equal(sessions.verify(token, 2_000).userId, 'usr_1');
