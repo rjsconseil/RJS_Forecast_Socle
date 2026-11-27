@@ -1,16 +1,11 @@
 import { TopLayerDirective } from './top-layer.directive';
 import { MonthPeek, PeekHost, YearPeek } from './calendar-peeks';
-import {
-  type CalendarFormatDraft,
-  dayMostlyDone,
-  dayNeedsAttention,
-  dayNetAmount,
-  dominantElement,
-  formatDraftOf,
-  moveDraftField,
-  saveDraftInto,
-  toggleDraftField,
-} from './calendar-day-summary';
+import { dayMostlyDone, dayNeedsAttention, dayNetAmount, dominantElement } from './calendar-day-summary';
+import { CalendarFormatEditor } from './calendar-format-editor';
+import { CalendarPlanner } from './calendar-planner';
+import { CalendarHighlights } from './calendar-highlights';
+import { CalendarAppearance } from './calendar-appearance';
+import { ARROW_STEPS, arrowTarget, daySelector, fallbackDaySelector, peekDetailsPlacement } from './calendar-grid-keys';
 import {
   ChangeDetectionStrategy,
   afterNextRender,
@@ -42,7 +37,6 @@ import {
   periodBounds,
   monthTitle,
   periodLabel,
-  shiftDate,
   shiftPeriod,
   validDate,
   weekDays,
@@ -56,7 +50,6 @@ import {
   CalendarFormat,
   CalendarFormatField,
   CalendarIndicatorKey,
-  CalendarLayout,
   CalendarPeriod,
   CalendarSourceOffer,
 } from './calendar.models';
@@ -66,7 +59,6 @@ import {
   LAYOUT_LABELS,
   availableFormats,
   describeFormat,
-  newFormatId,
 } from './calendar-formats';
 import {
   DayStat,
@@ -79,14 +71,6 @@ import {
   toneColor,
 } from './calendar-model';
 import { RecetteContext } from '../core/api.service';
-import {
-  CalendarEffectParameter,
-  EFFECT_PARAMETERS,
-  designStyle,
-  effectStyle,
-  effectValues,
-  injectCalendarPresentation,
-} from './presentation/calendar-presentation';
 import {
   CalendarDisplayPreferences,
   displayDefaults,
@@ -175,10 +159,18 @@ export class CalendarComponent {
   protected readonly layouts = LAYOUTS;
   protected readonly layoutLabels = LAYOUT_LABELS;
   protected readonly describeFormat = describeFormat;
-  /** Formats créés par la personne (tous ses calendriers). */
-  private readonly ownFormats = signal<CalendarFormat[]>([]);
+  /** Formats créés par la personne et brouillon en cours : voir calendar-format-editor.ts. */
+  protected readonly formatEditor: CalendarFormatEditor = new CalendarFormatEditor({
+    formats: () => this.formats(),
+    current: () => this.format(),
+    allowed: () => this.controlAllowed('fields'),
+    chosen: () => this.preferences()?.format,
+    choose: (id) => this.chooseFormat(id),
+    resetChoice: () => this.savePreferences({ format: this.data()?.display.format ?? 'standard' }),
+    changed: (next) => this.formatsChange.emit(next),
+  });
   /** Formats proposés : livrés, de la configuration, puis ceux de la personne ; tous s'appellent par leur id. */
-  protected readonly formats = computed(() => availableFormats(this.data(), this.ownFormats()));
+  protected readonly formats = computed<CalendarFormat[]>(() => availableFormats(this.data(), this.formatEditor.own()));
   /** Format en cours : celui choisi, sinon celui d'ouverture de la configuration, sinon le premier. */
   protected readonly format = computed<CalendarFormat>(() => {
     const all = this.formats();
@@ -186,8 +178,6 @@ export class CalendarComponent {
   });
   /** Champs montrés sur chaque événement, dans l'ordre du format (le total est celui du jour, dans la case). */
   protected readonly eventFields = computed(() => this.format().fields.filter((f) => f !== 'total'));
-  /** Format en cours de création ou de modification. */
-  protected readonly formatDraft = signal<CalendarFormatDraft | null>(null);
   /** Sources proposées au branchement, rangées par provenance. */
   protected readonly library = computed(() => {
     const groups = new Map<string, { label: string; sources: CalendarSourceOffer[] }>();
@@ -208,54 +198,13 @@ export class CalendarComponent {
   /** Bornes de la période affichée (jour, semaine, mois ou année). */
   protected readonly periodRange = computed(() => periodBounds(this.selectedDay(), this.view()));
 
-  // ---------- couche de présentation : design (apparence) et effets d'affichage (mouvement) ----------
-  /** Designs et effets proposés : ceux du module, puis ceux que le site a fournis. */
-  private readonly presentationCatalog = injectCalendarPresentation();
-  protected readonly designs = this.presentationCatalog.designs;
-  protected readonly effects = this.presentationCatalog.effects;
-  /** Design en cours : celui choisi, sinon celui d'ouverture du calendrier, sinon le standard. */
-  protected readonly design = computed(() =>
-    this.designs.find((d) => d.id === this.preferences()?.design) ?? this.designs.find((d) => d.id === this.data()?.display.design) ?? this.designs[0]);
-  /** Effet en cours, avec ses réglages (ceux de la personne, sinon ceux de l'effet). */
-  protected readonly effect = computed(() =>
-    this.effects.find((e) => e.id === this.preferences()?.effect) ?? this.effects.find((e) => e.id === this.data()?.display.effect) ?? this.effects[0]);
-  protected readonly effectSettings = computed(() => effectValues(this.effect(), this.preferences()?.effectParams));
-  protected readonly effectParameters = computed(() =>
-    (Object.keys(this.effect().defaults) as CalendarEffectParameter[]).map((key) => ({ key, ...EFFECT_PARAMETERS[key], value: this.effectSettings()[key] })));
-  /** Variables posées sur le calendrier : jetons du design, puis réglages de l'effet. */
-  protected readonly presentationStyle = computed(() => ({ ...designStyle(this.design()), ...effectStyle(this.effect(), this.effectSettings()) }));
-  protected readonly presentationClass = computed(() => [this.design().className, this.effect().className].filter(Boolean).join(' '));
-  /** Classe de sortie (fondu) posée sur un élément retiré, le temps de sa disparition. */
-  protected readonly fxLeave = computed(() => (this.effect().motion.leave !== 'none' && this.effectSettings().leaveMs > 0 ? 'cal-fx-leaving' : ''));
-  /** Fondu enchaîné : la période affichée s'efface avant que la suivante n'apparaisse. */
-  protected readonly periodLeaving = signal(false);
-  private periodTimer: ReturnType<typeof setTimeout> | null = null;
-  private periodFadeMs() {
-    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    return this.effect().motion.period === 'crossfade' && !reduced ? this.effectSettings().leaveMs : 0;
-  }
-  private fadePeriod(change: () => void) {
-    const ms = this.periodFadeMs();
-    if (this.periodTimer) clearTimeout(this.periodTimer);
-    if (!ms) { this.periodLeaving.set(false); change(); return; }
-    this.periodLeaving.set(true);
-    this.periodTimer = setTimeout(() => { this.periodTimer = null; change(); this.periodLeaving.set(false); }, ms);
-  }
-  protected chooseDesign(id: string) {
-    if (!this.controlAllowed('appearance') || !this.designs.some((d) => d.id === id)) return;
-    this.savePreferences({ design: id });
-  }
-  protected chooseEffect(id: string) {
-    if (!this.controlAllowed('appearance') || !this.effects.some((e) => e.id === id)) return;
-    this.savePreferences({ effect: id, effectParams: {} });
-  }
-  protected setEffectParam(key: CalendarEffectParameter, value: number) {
-    if (!this.controlAllowed('appearance') || !Number.isFinite(value)) return;
-    this.savePreferences({ effectParams: { ...this.preferences()?.effectParams, [key]: value } });
-  }
-  protected resetEffectParams() {
-    if (this.controlAllowed('appearance')) this.savePreferences({ effectParams: {} });
-  }
+  // ---------- couche de présentation (design et effets) : voir calendar-appearance.ts ----------
+  protected readonly appearance = new CalendarAppearance({
+    data: () => this.data(),
+    preferences: () => this.preferences(),
+    allowed: () => this.controlAllowed('appearance'),
+    save: (change) => this.savePreferences(change),
+  });
 
   // ---------- volet « Sources et affichage » ----------
   /** Ancre du volet : un lien `#sources-et-affichage` l'ouvre et l'amène à l'écran. */
@@ -353,15 +302,8 @@ export class CalendarComponent {
       : 'Survolez un jour pour lire ses repères.',
   );
 
-  // ---------- mise en évidence ----------
-  protected readonly hoveredEventKey = signal<string | null>(null);
-  protected readonly pinnedEventKeys = signal<ReadonlySet<string>>(new Set());
-  private readonly highlightedKeys = computed(() => {
-    const keys = new Set(this.pinnedEventKeys());
-    const hovered = this.hoveredEventKey();
-    if (hovered) keys.add(hovered);
-    return keys;
-  });
+  // ---------- mise en évidence : voir calendar-highlights.ts ----------
+  protected readonly highlights = new CalendarHighlights((day) => this.byDay().get(day) ?? []);
 
   // ---------- aperçus (mois / semaine, année) ----------
   // ---------- aperçus (mois / semaine, année) : voir calendar-peeks.ts ----------
@@ -410,25 +352,21 @@ export class CalendarComponent {
   protected readonly activePeekStat = signal<CalendarIndicatorKey | null>(null);
   protected readonly peekDetailsPosition = signal({ left: 0, top: 0, maxHeight: 0 });
 
-  // ---------- replanification ----------
-  protected readonly planning = signal<CalendarEvent | null>(null);
-  protected plannedDate = '';
-  protected dragged: CalendarEvent | null = null;
+  // ---------- replanification (saisie et glisser-déposer) : voir calendar-planner.ts ----------
+  protected readonly planner = new CalendarPlanner({
+    router: this.router,
+    route: this.route,
+    injector: this.injector,
+    element: this.host.nativeElement,
+    params: this.params,
+    data: () => this.data(),
+    busy: () => this.busy(),
+    reschedule: (event, date) => this.reschedule.emit({ event, date }),
+  });
 
   constructor() {
-    effect(() => {
-      const params = this.params();
-      const data = this.data();
-      const key = params.get('calPlan');
-      untracked(() => {
-        if (!key) { this.planning.set(null); return; }
-        const event = data?.events.find(event => event.key === key);
-        if (event) this.planning.set(event);
-        if (params.has('calDate')) this.plannedDate = params.get('calDate')!;
-      });
-    });
     this.destroyRef.onDestroy(() => {
-      if (this.periodTimer) clearTimeout(this.periodTimer);
+      this.appearance.dispose();
       this.cancelYearPeekClose();
       this.cancelMonthPeekClose();
     });
@@ -474,7 +412,7 @@ export class CalendarComponent {
         if (previousIdentity !== undefined && data.display.view !== this.view()) this.setView(data.display.view, { chosen: false });
         const preferences = resolveDisplayPreferences(data);
         this.preferences.set(preferences);
-        this.ownFormats.set((data.formats ?? []).filter((x) => x.own));
+        this.formatEditor.own.set((data.formats ?? []).filter((x) => x.own));
         this.hidden.set(
           new Set(data.elements.filter((el) => !preferences.sources[el.id]).map((el) => el.id)),
         );
@@ -527,7 +465,7 @@ export class CalendarComponent {
   focusEvent(event: CalendarEvent) {
     if (!this.events().some((item) => item.key === event.key)) return;
     this.selectDay(event.date);
-    this.pinnedEventKeys.set(new Set([event.key]));
+    this.highlights.only(event.key);
     setTimeout(() => {
       const entry = Array.from(
         this.host.nativeElement.querySelectorAll<HTMLElement>('.calendar-agenda-item'),
@@ -595,9 +533,7 @@ export class CalendarComponent {
     return this.tone(top ? this.elementsById().get(top)?.tone : undefined);
   }
   protected yearDayLabel(day: string, count: number) {
-    const highlighted = (this.byDay().get(day) ?? []).filter((e) =>
-      this.isHighlighted(e.key),
-    ).length;
+    const highlighted = this.highlights.countIn(day);
     return `Voir les repères du ${this.date(day)} · ${count} ${count === 1 ? 'repère' : 'repères'}${highlighted ? ` · ${highlighted} mis en évidence` : ''}`;
   }
 
@@ -636,39 +572,6 @@ export class CalendarComponent {
     this.savePreferences({ format: id, perCell: null });
     this.releasePeek();
   }
-  /** Nouveau format, à partir de celui en cours ; ou modification d'un format créé par la personne. */
-  protected editFormat(format: CalendarFormat | null = null) {
-    if (!this.controlAllowed('fields')) return;
-    this.formatDraft.set(formatDraftOf(format, this.format()));
-  }
-  protected updateDraft(change: Partial<{ label: string; layout: CalendarLayout; perCell: number | null }>) {
-    this.formatDraft.update((d) => (d ? { ...d, ...change } : d));
-  }
-  protected toggleDraftField(field: CalendarFormatField) {
-    this.formatDraft.update((d) => d && toggleDraftField(d, field));
-  }
-  /** Change l'ordre d'un champ dans le format (−1 : plus tôt, +1 : plus tard). */
-  protected moveDraftField(field: CalendarFormatField, step: number) {
-    this.formatDraft.update((d) => d && moveDraftField(d, field, step));
-  }
-  protected saveFormat() {
-    const draft = this.formatDraft();
-    const label = draft?.label.trim();
-    if (!draft || !label) return;
-    const id = draft.id ?? newFormatId(label, this.formats());
-    const next = saveDraftInto(this.ownFormats(), draft, id);
-    this.ownFormats.set(next);
-    this.formatsChange.emit(next);
-    this.formatDraft.set(null);
-    this.chooseFormat(id);
-  }
-  protected deleteFormat(id: string) {
-    const next = this.ownFormats().filter((f) => f.id !== id);
-    this.ownFormats.set(next);
-    this.formatsChange.emit(next);
-    if (this.preferences()?.format === id) this.savePreferences({ format: this.data()?.display.format ?? 'standard' });
-  }
-
   // ---------- branchement des sources ----------
   protected plugSource(id: string) {
     if (!this.controlAllowed('sources')) return;
@@ -716,7 +619,7 @@ export class CalendarComponent {
     this.preferences.set(defaults);
     this.preferencesChange.emit(null);
     if (data.plugged) this.sourcesChange.emit(null);
-    this.formatDraft.set(null);
+    this.formatEditor.draft.set(null);
     this.releasePeek();
   }
   private savePreferences(change: Partial<CalendarDisplayPreferences>) {
@@ -729,34 +632,12 @@ export class CalendarComponent {
   }
 
   // ---------- mise en évidence ----------
-  protected isPinned(key: string) {
-    return this.pinnedEventKeys().has(key);
-  }
-  protected isHighlighted(key: string) {
-    return this.highlightedKeys().has(key);
-  }
-  protected isDayHighlighted(day: string) {
-    return (this.byDay().get(day) ?? []).some((e) => this.isHighlighted(e.key));
-  }
   protected isDayPinned(day: string, year: boolean) {
     return (year ? this.pinnedYearDay() : this.pinnedMonthDay()) === day;
   }
-  protected toggleHighlight(key: string) {
-    this.pinnedEventKeys.update((current) => {
-      const next = new Set(current);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-    this.hoveredEventKey.set(null);
-  }
-  protected clearHighlights() {
-    this.pinnedEventKeys.set(new Set());
-    this.hoveredEventKey.set(null);
-  }
   protected togglePeekHighlight(event: CalendarEvent, click: MouseEvent, year: boolean) {
-    const wasPinned = this.isPinned(event.key);
-    this.toggleHighlight(event.key);
+    const wasPinned = this.highlights.isPinned(event.key);
+    this.highlights.toggle(event.key);
     if (year) {
       this.pinnedYearDay.set(wasPinned && this.pinnedYearDay() === event.date ? null : event.date);
       return;
@@ -769,29 +650,17 @@ export class CalendarComponent {
       this.expandedDay.set(null);
     }
   }
-  /** Suit le repère survolé dans l'agenda : il est souligné, sans déplacer la liste en cours de lecture. */
-  protected hoverCalendarEvent(key: string) {
-    this.hoveredEventKey.set(key);
-  }
-
   // ---------- détail d'un indicateur ----------
   protected openPeekDetails(event: Event, day: string, stat: CalendarIndicatorKey) {
     const target = event.currentTarget;
     if (!(target instanceof HTMLElement)) return;
     const peek = target.closest('.calendar-day-peek');
     if (!(peek instanceof HTMLElement)) return;
-    const rect = peek.getBoundingClientRect();
-    const margin = 12;
-    const gap = 10;
     // La fenêtre suit l'échelle du texte : sa largeur réelle sert au placement, pour ne pas mordre sur l'aperçu.
     const scale = Number.parseFloat(getComputedStyle(peek).getPropertyValue('--text-scale')) || 1;
-    const width = Math.min(340 * scale, window.innerWidth - 2 * margin);
-    const left =
-      rect.right + gap + width + margin <= window.innerWidth
-        ? rect.right + gap
-        : Math.max(margin, rect.left - gap - width);
-    const top = Math.max(margin, Math.min(rect.top, window.innerHeight - 220));
-    this.peekDetailsPosition.set({ left, top, maxHeight: window.innerHeight - top - margin });
+    this.peekDetailsPosition.set(
+      peekDetailsPlacement(peek.getBoundingClientRect(), scale, { width: window.innerWidth, height: window.innerHeight }),
+    );
     this.activePeekDay.set(day);
     this.activePeekStat.set(stat);
   }
@@ -807,9 +676,6 @@ export class CalendarComponent {
       this.expandedYearPeekDay.update((current) => (current === day ? null : day));
     } else this.expandedDay.update((current) => (current === day ? null : day));
   }
-
-  // ---------- aperçus : année ----------
-
 
   @HostListener('window:scroll')
   @HostListener('window:resize')
@@ -855,16 +721,11 @@ export class CalendarComponent {
     return events === 0;
   }
   protected focusCalendarGrid() {
-    const day = this.selectedDay();
-    const year = this.view() === 'year';
-    const exact = year
-      ? `.calendar-year-day[data-day="${day}"]`
-      : `.calendar-day[data-day="${day}"] .calendar-day-number`;
-    const fallback = year ? '.calendar-year-day.has-events' : '.calendar-day-number';
+    const root = this.host.nativeElement;
     const target =
-      this.host.nativeElement.querySelector<HTMLElement>(exact) ??
-      this.host.nativeElement.querySelector<HTMLElement>(fallback);
-    (target ?? this.host.nativeElement.querySelector<HTMLElement>('.calendar-month-wrap'))?.focus();
+      root.querySelector<HTMLElement>(daySelector(this.view(), this.selectedDay())) ??
+      root.querySelector<HTMLElement>(fallbackDaySelector(this.view()));
+    (target ?? root.querySelector<HTMLElement>('.calendar-month-wrap'))?.focus();
   }
   protected onDayKeydown(event: KeyboardEvent, day: string) {
     if (event.key === 'Escape') {
@@ -872,34 +733,19 @@ export class CalendarComponent {
       event.preventDefault();
       return;
     }
-    const step = (
-      { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 } as Record<string, number>
-    )[event.key];
-    if (!step) return;
+    if (!ARROW_STEPS[event.key]) return;
     event.preventDefault();
-    let next: string | undefined;
-    if (this.view() === 'year') {
-      const dates = [...this.byDay().keys()].sort();
-      const threshold = shiftDate(day, step);
-      next =
-        step > 0 ? dates.find((d) => d >= threshold) : dates.reverse().find((d) => d <= threshold);
-    } else next = shiftDate(day, step);
-    if (!next || !validDate(next)) return;
+    const next = arrowTarget(event.key, day, this.view(), () => this.byDay().keys());
+    if (!next) return;
     this.selectDay(next);
-    requestAnimationFrame(() => {
-      const selector =
-        this.view() === 'year'
-          ? `.calendar-year-day[data-day="${next}"]`
-          : `.calendar-day[data-day="${next}"] .calendar-day-number`;
-      this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus();
-    });
+    requestAnimationFrame(() => this.host.nativeElement.querySelector<HTMLElement>(daySelector(this.view(), next))?.focus());
   }
   selectDay(day: string) {
     if (!validDate(day)) return;
     const now = gridWindow(this.selectedDay(), this.view());
     const next = gridWindow(day, this.view());
-    if ((now.start !== next.start || now.end !== next.end) && this.periodFadeMs()) {
-      this.fadePeriod(() => this.applyDay(day));
+    if ((now.start !== next.start || now.end !== next.end) && this.appearance.periodFadeMs()) {
+      this.appearance.fadePeriod(() => this.applyDay(day));
       return;
     }
     this.applyDay(day);
@@ -909,7 +755,7 @@ export class CalendarComponent {
     if (this.view() === 'month' && day.slice(0, 7) !== this.month()) this.pinnedMonthDay.set(null);
     if (this.view() === 'year' && day.slice(0, 4) !== this.selectedDay().slice(0, 4))
       this.pinnedYearDay.set(null);
-    this.hoveredEventKey.set(null);
+    this.highlights.hover(null);
     this.selectedDay.set(day);
     const after = gridWindow(day, this.view());
     if (after.start !== before.start || after.end !== before.end) this.emitPeriod();
@@ -932,8 +778,8 @@ export class CalendarComponent {
     }
   }
   setView(view: CalendarView, { chosen = true } = {}) {
-    if (chosen && view !== this.view() && this.periodFadeMs()) {
-      this.fadePeriod(() => this.applyView(view, chosen));
+    if (chosen && view !== this.view() && this.appearance.periodFadeMs()) {
+      this.appearance.fadePeriod(() => this.applyView(view, chosen));
       return;
     }
     this.applyView(view, chosen);
@@ -971,51 +817,9 @@ export class CalendarComponent {
     });
   }
 
-  // ---------- replanification ----------
-  protected plan(event: CalendarEvent) {
-    this.planning.set(event);
-    this.plannedDate = event.date;
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { calPlan: event.key, calDate: event.date }, queryParamsHandling: 'merge' });
-    afterNextRender(() => {
-      const field = this.host.nativeElement.querySelector<HTMLInputElement>('.calendar-plan input');
-      field?.closest('form')?.scrollIntoView?.({ block: 'center' });
-      field?.focus({ preventScroll: true });
-    }, { injector: this.injector });
-  }
-  protected changePlanDate(date: string) {
-    this.plannedDate = date;
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { calDate: date }, queryParamsHandling: 'merge', replaceUrl: true });
-  }
-  /** La saisie quitte le parcours après la réussite, ou sur annulation explicite. */
+  /** La saisie quitte le parcours après la réussite, ou sur annulation explicite (appelée par l'espace Calendrier). */
   finishPlan() {
-    this.planning.set(null);
-    void this.router.navigate([], { relativeTo: this.route, queryParams: { calPlan: null, calDate: null }, queryParamsHandling: 'merge', replaceUrl: true });
-  }
-  protected savePlan() {
-    const event = this.planning();
-    if (this.busy() || !event || !validDate(this.plannedDate) || this.plannedDate === event.date) return;
-    this.reschedule.emit({ event, date: this.plannedDate });
-  }
-  protected drag(event: DragEvent, entry: CalendarEvent) {
-    if (!entry.reschedule || this.busy()) {
-      event.preventDefault();
-      return;
-    }
-    this.dragged = entry;
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', entry.key);
-    }
-  }
-  protected allowDrop(event: DragEvent) {
-    if (this.dragged && !this.busy()) event.preventDefault();
-  }
-  protected drop(event: DragEvent, day: string) {
-    event.preventDefault();
-    const entry = this.dragged;
-    this.dragged = null;
-    if (entry && !this.busy() && entry.date !== day)
-      this.reschedule.emit({ event: entry, date: day });
+    this.planner.finish();
   }
 
   /** Libellé complet d'un jour, pour les lecteurs d'écran. */

@@ -31,8 +31,6 @@
 /* Mouvements communs des boutons de navigation ; supprimés si le système le demande. */
 .app-shell {
   --press-scale: scale(var(--facteur-0-98));
-}
-.app-shell {
   --touch-target: var(--dim-44);
   --zone-entry-height: var(--dim-64);
 }
@@ -50,31 +48,20 @@
 }
 
 /* Barre latérale : surface neutre des deux thèmes (jetons `--sidebar-*`), sans teinte de zone. */
-.sidebar .nav-label {
-  margin: var(--ecart-20) 0 var(--ecart-8);
-}
 
 /* Identité de la zone courante */
 .zone-identity {
-  display: grid;
-  gap: var(--ecart-8);
-  padding: var(--ecart-14) var(--ecart-4);
   border-block: var(--trait-1) solid var(--sidebar-line);
 }
 .zone-identity-head {
   display: flex;
   align-items: center;
-  gap: var(--ecart-12);
-  min-height: var(--touch-target);
-  color: var(--sidebar-ink);
   text-decoration: none;
 }
 .zone-identity-head small {
   display: block;
   color: var(--sidebar-faint);
-  font-size: scaled(var(--fs-2xs));
   font-weight: var(--fw-bold);
-  letter-spacing: var(--lettrage-0-06em);
   text-transform: uppercase;
 }
 .zone-identity-head > span:last-child {
@@ -83,9 +70,6 @@
 }
 .zone-identity-head strong {
   display: block;
-  font-size: scaled(var(--fs-md));
-  font-weight: var(--fw-semibold);
-  line-height: var(--lh-snug);
   overflow-wrap: break-word;
 }
 .zone-identity p {
@@ -99,13 +83,7 @@
   align-items: center;
   gap: var(--ecart-6);
   justify-self: start;
-  min-height: var(--touch-target);
-  padding: 0 var(--ecart-14);
   border: var(--trait-1) solid var(--sidebar-line);
-  border-radius: var(--rayon-999);
-  color: var(--sidebar-ink);
-  background: var(--raised-surface);
-  font-size: scaled(var(--fs-sm));
   font-weight: var(--fw-bold);
   text-decoration: none;
   transition:
@@ -128,15 +106,12 @@
   display: inline-grid;
   place-items: center;
   flex: none;
-  min-width: var(--dim-40);
-  height: var(--dim-40);
   padding: 0 var(--ecart-6);
   border: 0;
   border-radius: var(--rayon-10);
   color: color-mix(in srgb, var(--tone) var(--part-85), var(--slate-950));
   background: var(--tone-soft);
   font-family: var(--font-label);
-  font-size: scaled(var(--fs-sm));
   font-weight: var(--fw-semibold);
   letter-spacing: var(--lettrage-0-02em);
 }
@@ -144,10 +119,7 @@
   color: var(--tone);
 }
 .section-mark, .plan-entry-mark {
-  min-width: var(--dim-32);
-  height: var(--dim-32);
   border-radius: var(--rayon-8);
-  font-size: scaled(var(--fs-2xs));
   transition:
     background-color var(--ease-fast),
     color var(--ease-fast);
@@ -157,25 +129,15 @@
 .section-switch {
   display: flex;
   flex-direction: column;
-  gap: var(--ecart-2);
 }
 /* Navigation primaire : une ligne par section ; la sélection prend l'accent de marque
    et un filet de la couleur de section. */
 .section-switch-entry {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--ecart-10);
-  min-height: var(--touch-target);
-  padding: var(--ecart-6) var(--ecart-8);
   border: 0;
-  border-radius: var(--nav-item-radius);
-  color: var(--sidebar-ink);
   background: transparent;
   text-decoration: none;
-  transition:
-    background-color var(--ease-fast),
-    color var(--ease-fast);
 }
 .section-switch-entry::before {
   position: absolute;
@@ -189,7 +151,10 @@
 }
 .section-switch-entry:focus-visible,
 .plan-entry:focus-visible,
-.plan-destination:focus-visible {
+.plan-destination:focus-visible,
+.section-pages a:focus-visible,
+.zone-resets a:focus-visible,
+.zone-identity-switch:focus-visible {
   outline: var(--trait-2) solid var(--app-focus-ring);
   outline-offset: var(--decalage-2);
 }
@@ -199,15 +164,11 @@
   min-width: 0;
 }
 .section-switch-text strong {
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-snug);
   overflow-wrap: break-word;
   hyphens: auto;
 }
 .section-switch-text small {
   color: var(--sidebar-faint);
-  font-size: scaled(var(--fs-xs));
   line-height: var(--lh-snug);
 }
 .section-switch-entry:hover {
@@ -217,39 +178,20 @@
 .section-switch-entry:active {
   background: var(--nav-press-surface);
 }
-.section-switch-entry.active {
-  color: var(--nav-active-ink);
-  background: var(--app-accent-soft);
-}
 .section-switch-entry.active::before {
   opacity: var(--opacite-1);
-}
-.section-switch-entry.active strong {
-  font-weight: var(--fw-semibold);
 }
 
 /* Pages secondaires : uniquement celles de la section active, en retrait sous elle. */
 .section-pages {
-  display: flex;
   flex-direction: column;
-  gap: var(--ecart-1);
 }
 .section-pages a,
 .zone-resets a {
   --item-marker: var(--page-marker, var(--tone, var(--app-accent)));
   position: relative;
-  display: flex;
-  align-items: center;
   gap: var(--ecart-10);
-  min-height: max(var(--touch-target), var(--nav-item-height));
-  padding: var(--ecart-4) var(--ecart-10) var(--ecart-4) var(--ecart-8);
   border: 0;
-  border-radius: var(--nav-item-radius);
-  color: var(--sidebar-muted);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-snug);
-  text-decoration: none;
   transition:
     background-color var(--ease-fast),
     color var(--ease-fast);
@@ -261,11 +203,6 @@
 .section-pages a:active {
   background: var(--nav-press-surface);
 }
-.section-pages a.active {
-  color: var(--nav-active-ink);
-  background: var(--app-accent-soft);
-  font-weight: var(--fw-semibold);
-}
 .section-pages a.active::before {
   position: absolute;
   inset-block: var(--ecart-8);
@@ -275,23 +212,12 @@
   background: var(--item-marker);
   content: '';
 }
-.section-pages a:focus-visible,
-.zone-resets a:focus-visible,
-.zone-identity-switch:focus-visible {
-  outline: var(--trait-2) solid var(--app-focus-ring);
-  outline-offset: var(--decalage-2);
-}
 .section-pages .nav-icon,
 .zone-resets .nav-icon {
   display: inline-grid;
   place-items: center;
-  flex: none;
-  width: var(--dim-28);
-  height: var(--dim-28);
   border-radius: var(--rayon-8);
-  color: var(--sidebar-faint);
   background: transparent;
-  font-size: scaled(var(--fs-md));
   transition:
     background-color var(--ease-fast),
     color var(--ease-fast);
@@ -299,16 +225,10 @@
 .section-pages a:hover .nav-icon {
   color: var(--sidebar-ink);
 }
-.section-pages a.active .nav-icon {
-  color: var(--item-marker);
-}
 
 /* Outils communs : un bloc distinct au bas du flux, jamais superposé. */
 .sidebar-tools {
   display: grid;
-  gap: var(--ecart-4);
-  margin-top: auto;
-  padding-top: var(--ecart-16);
 }
 .sidebar-tools > .nav-label {
   margin-top: var(--ecart-12);
@@ -331,12 +251,6 @@
   height: var(--dim-36);
   font-size: scaled(var(--fs-2xs));
 }
-
-@media (max-width: $rupture-1250) {
-  .app-shell[data-module] {
-    --sidebar-width: var(--dim-260);
-  }
-}
 @media (max-width: $rupture-820) {
   .mobile-zone {
     display: inline-flex;
@@ -355,16 +269,11 @@
   .section-pages {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: var(--ecart-6);
   }
   .section-pages a {
     flex: var(--flex-1) var(--flex-1) var(--dim-200);
     border-color: var(--sidebar-line);
-    border-radius: var(--rayon-12);
     background: var(--raised-surface);
-  }
-  .sidebar-tools {
-    margin-top: var(--ecart-12);
   }
 }
 
@@ -373,25 +282,8 @@
   display: grid;
   gap: var(--ecart-28);
 }
-.plan-kicker {
-  margin: 0;
-  color: var(--muted);
-  font-family: var(--font-label);
-  font-size: scaled(var(--fs-xs));
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--lettrage-0-06em);
-  text-transform: uppercase;
-}
 .plan-heading {
   display: grid;
-  gap: var(--ecart-10);
-}
-.plan-heading h1 {
-  margin: 0;
-  color: var(--ink);
-  font-size: var(--fs-hero);
-  line-height: var(--lh-tight);
-  letter-spacing: calc(-1 * var(--lettrage-0-02em));
 }
 .plan-heading > p:not(.plan-kicker) {
   max-width: var(--dim-75ch);
@@ -411,13 +303,6 @@
   font-size: scaled(var(--fs-md));
 }
 /* Portail : un grand bloc par zone, sa taille dit son importance. */
-.plan-portal-title {
-  margin: 0;
-  color: var(--ink);
-  font-size: var(--fs-hero);
-  line-height: var(--lh-tight);
-  letter-spacing: calc(-1 * var(--lettrage-0-02em));
-}
 .portal-zone-labels {
   list-style: none;
   margin: 0;
@@ -431,9 +316,6 @@
 .plan-zone-title-link {
   align-items: center;
   min-height: var(--dim-44);
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-thickness: var(--trait-1);
   text-underline-offset: var(--decalage-4);
 }
 .plan-zone-title-link:hover {
@@ -593,7 +475,6 @@
 }
 .plan-zone-head {
   display: flex;
-  align-items: center;
   gap: var(--ecart-16);
   min-width: 0;
 }
@@ -644,10 +525,6 @@
 /* Entrées de section : une grosse cible par section, jamais tout le bloc cliquable. */
 .plan-entries {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fit,
-    minmax(min(var(--part-100), var(--dim-240)), var(--fr-1))
-  );
   gap: var(--ecart-12);
   margin-top: auto;
 }
@@ -659,22 +536,13 @@
 .plan-entry {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--ecart-12);
   min-width: 0;
-  min-height: var(--dim-72);
-  padding: var(--ecart-12) var(--ecart-40) var(--ecart-12) var(--ecart-14);
   border: var(--trait-1) solid var(--card-border);
   border-radius: var(--rayon-10);
   color: var(--ink);
   background: var(--raised-surface);
   box-shadow: none;
   text-decoration: none;
-  transition:
-    background-color var(--ease-fast),
-    border-color var(--ease-fast),
-    box-shadow var(--ease-fast),
-    transform var(--ease-fast);
 }
 .plan-entry::after {
   position: absolute;
@@ -697,11 +565,9 @@
   min-width: 0;
 }
 .plan-entry-text strong {
-  font-size: scaled(var(--fs-md));
   font-weight: var(--fw-semibold);
   line-height: var(--lh-snug);
   overflow-wrap: break-word;
-  hyphens: auto;
 }
 .plan-entry-text small {
   color: var(--muted);
@@ -861,9 +727,7 @@
   }
 }
 @media (max-width: $rupture-1000) {
-  .plan-heading {
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
+  .plan-heading,
   .plan-portal-grid {
     grid-template-columns: minmax(0, var(--fr-1));
   }
@@ -900,9 +764,7 @@
   .plan-entry:active,
   .section-switch-entry:hover,
   .section-switch-entry:active,
-  .zone-identity-switch:hover span {
-    transform: none;
-  }
+  .zone-identity-switch:hover span,
   :is(.plan-entry):hover::after, .plan-destination:hover .plan-action > span {
     transform: none;
   }
@@ -970,12 +832,8 @@ $page-headings: '[data-ui-pattern~="heading"], .page-head, .pilotage-intro, .fm-
   --btn-secondary-hover-surface: color-mix(in srgb, var(--slate-950) var(--part-35), transparent);
   --btn-secondary-hover-line: var(--heading-ink);
   --control-line: color-mix(in srgb, var(--heading-ink) var(--part-55), transparent);
-  position: relative;
-  overflow: hidden;
-  padding: var(--heading-padding) var(--heading-padding) var(--heading-padding) var(--heading-inset);
   border: 0;
   border-inline-start: var(--heading-accent) solid var(--space-bright);
-  border-radius: var(--heading-radius);
   color: var(--heading-ink);
   background: var(--heading-surface);
   box-shadow: var(--app-panel-shadow);
@@ -1107,8 +965,6 @@ rjs-plan-cards {
   line-height: var(--lh-normal);
 }
 .section-selected {
-  margin-inline-start: auto;
-  color: var(--tone);
   font-weight: var(--fw-bold);
 }
 .app-shell .appearance-picker select {
@@ -1118,9 +974,6 @@ rjs-plan-cards {
 .app-shell .btn {
   min-width: 0;
   max-width: var(--part-100);
-  min-height: max(var(--touch-target), var(--btn-height));
-  white-space: normal;
-  text-align: center;
 }
 .app-shell :is(.plan-entry, .plan-action) {
   overflow-wrap: break-word;
@@ -1218,12 +1071,7 @@ rjs-plan-cards {
   --tone-on: var(--slate-950);
 }
 /* À la sélection, le sigle de section se remplit de sa teinte ; la coche reste discrète. */
-.app-shell .section-switch-entry[data-tone].active .section-mark {
-  color: var(--tone-on);
-  background: var(--tone);
-}
 .app-shell .section-switch-entry[data-tone] .section-selected {
-  display: inline-grid;
   place-items: center;
   flex: none;
   margin-inline-start: auto;

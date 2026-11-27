@@ -3,6 +3,7 @@ import { stat } from 'node:fs/promises';
 import { createServer, request } from 'node:http';
 import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import preview from '../web/src/app/navigation/navigation-preview-csp.json' with { type: 'json' };
 
 const dist = resolve(dirname(fileURLToPath(import.meta.url)), '../web/dist/web/browser');
 const apiPort = Number(process.env.J1_API_PORT ?? 3410);
@@ -12,9 +13,11 @@ const host = process.env.SOCLE_SITE_HOST || '127.0.0.1';
 
 /**
  * En-têtes de sécurité des pages du site. Les scripts et feuilles viennent du site seul ; les appels à l'API aussi.
- * `'unsafe-inline'` reste nécessaire : Angular injecte les styles de ses composants, le build ajoute un petit script
- * de chargement des feuilles, et l'aperçu de la navigation (cadre isolé, `sandbox` sans `allow-same-origin`) porte son
- * propre script. Les scripts d'un autre site, les cadres d'un autre site et l'envoi de données ailleurs sont refusés.
+ * Aucun script en ligne n'est accepté (`script-src` sans `'unsafe-inline'`) : le build n'en ajoute pas (feuilles
+ * critiques non intégrées, angular.json), et le seul script en ligne, celui de l'aperçu de la navigation (cadre
+ * `srcdoc` isolé, qui hérite de cette CSP), est autorisé par son empreinte SHA-256 (navigation-preview-csp.json).
+ * `'unsafe-inline'` reste pour les styles : Angular injecte ceux de ses composants dans des balises `<style>`.
+ * Les scripts d'un autre site, les cadres d'un autre site et l'envoi de données ailleurs sont refusés.
  */
 export const SITE_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -22,7 +25,7 @@ export const SITE_HEADERS = {
   'referrer-policy': 'same-origin',
   'permissions-policy': 'camera=(), microphone=(), geolocation=()',
   'content-security-policy': [
-    "default-src 'self'", "script-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data:",
+    "default-src 'self'", `script-src 'self' '${preview.script}'`, "style-src 'self' 'unsafe-inline'", "img-src 'self' data:",
     "font-src 'self' data:", "connect-src 'self'", "frame-src 'self'", "object-src 'none'", "base-uri 'self'",
     "form-action 'self'", "frame-ancestors 'none'",
   ].join('; '),

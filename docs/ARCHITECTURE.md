@@ -653,3 +653,33 @@ sur toute déclaration toujours écrasée.
 - Styles : 42 déclarations toujours écrasées retirées des feuilles de composants, empreintes identiques (48 vues et
   12 vues du calendrier). `calendar/styles/_responsive.scss` et `_personalization.scss` ne sont chargées nulle part :
   les charger change le rendu du calendrier, elles sont gardées en attendant une décision.
+
+## 20. Points restants du rapport v2 — 27 novembre 2026
+
+- **CSP sans script en ligne** : `script-src 'self' 'sha256-…'`, sans `'unsafe-inline'`. Le build n'intègre plus la
+  feuille critique (`optimization.styles.inlineCritical: false`, plus de script de chargement dans `index.html`).
+  L'aperçu de la navigation (cadre `srcdoc` isolé, qui hérite de la CSP du site) porte un script fixe
+  (`navigation-preview-script.ts`) ; ses données sont dans un bloc `<script type="application/json">` non exécuté.
+  L'empreinte est dans `navigation-preview-csp.json`, lue par `site-server.mjs` et par la CSP du cadre ; un test
+  vérifie qu'elle correspond au script, et le e2e `navigation-system` lance la simulation sous la CSP du site.
+  Les styles gardent `'unsafe-inline'` (styles des composants Angular) : le retirer demande un nonce par page,
+  posé par le serveur d'hébergement.
+- **Calendrier découpé** : `calendar.component.ts` passe de 1 025 à 829 lignes. Modules : `calendar-format-editor`
+  (formats à soi et brouillon), `calendar-planner` (replanification, glisser-déposer, `calPlan`/`calDate` dans
+  l'adresse), `calendar-highlights` (repères en évidence), `calendar-appearance` (design, effets, fondu entre
+  périodes), `calendar-grid-keys` (règles pures : flèches, cible du focus, placement du détail). Le gabarit appelle
+  ces objets directement (`planner.drag(…)`, `formatEditor.save()`, `highlights.toggle(…)`, `appearance.design()`).
+- **Grosses feuilles** : dans `_grid.scss`, `_zones.scss` et Astra `_application.scss`, les règles de même sélecteur
+  ou de même bloc sont regroupées quand aucune règle intercalée ne pose une propriété de la même famille (−29 lignes).
+  Les 18 doublons de sélecteur restants sont séparés par des règles qui touchent aux mêmes propriétés : les regrouper
+  changerait la cascade. Empreintes identiques (48 vues et 12 vues du calendrier).
+- **Recouvrements retirés** (`e2e/styles-cascade.mjs`) : la cascade de la feuille globale est calculée dans la page sur
+  176 vues (Astra, fiches, fenêtres de saisie, 16 pages du site, vues du calendrier ; 1440, 1024, 768 et 375 px).
+  Les déclarations qui perdent sur chaque élément où elles s'appliquent sont retirées de `_zones.scss` (1 271 → 1 127),
+  Astra `_application.scss` (1 235 → 1 036) et `_grid.scss` (1 740 → 1 366) : 466 déclarations et 111 règles vidées.
+  Empreintes identiques (48 vues d'Astra, 12 du calendrier, 32 des pages du site). Limite : une déclaration écrasée
+  partout dans les vues mesurées mais utile dans un écran ou un état jamais visité disparaîtrait ; les règles qui ne
+  s'appliquent à rien (survol, menus ouverts) ne sont jamais touchées. Il reste 554 lignes perdantes dans les autres
+  feuilles (`_workspace`, `_shell`, `_components`, Astra `_presentation` et `_budget-cycle` en tête). Volume total :
+  27 884 lignes (28 818 dans le rapport v2).
+- `calendar/styles/_responsive.scss` et `_personalization.scss`, chargées nulle part, sont supprimées (décision de Roosevelt, 27/11) : le rendu ne change pas.

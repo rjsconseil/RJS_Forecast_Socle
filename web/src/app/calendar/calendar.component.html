@@ -2,15 +2,15 @@
       class="calendar is-360 calendar-module"
       [class.is-canonical]="true"
       [class.is-compact-host]="compact()"
-      [class]="presentationClass()"
-      [class.is-period-leaving]="periodLeaving()"
-      [style]="presentationStyle()"
-      [attr.data-cal-design]="design().id"
-      [attr.data-cal-effect]="effect().id"
-      [attr.data-fx-enter]="effect().motion.enter"
-      [attr.data-fx-leave]="effect().motion.leave"
-      [attr.data-fx-hover]="effect().motion.hover"
-      [attr.data-fx-period]="effect().motion.period"
+      [class]="appearance.className()"
+      [class.is-period-leaving]="appearance.periodLeaving()"
+      [style]="appearance.style()"
+      [attr.data-cal-design]="appearance.design().id"
+      [attr.data-cal-effect]="appearance.effect().id"
+      [attr.data-fx-enter]="appearance.effect().motion.enter"
+      [attr.data-fx-leave]="appearance.effect().motion.leave"
+      [attr.data-fx-hover]="appearance.effect().motion.hover"
+      [attr.data-fx-period]="appearance.effect().motion.period"
       [attr.data-format-layout]="format().layout"
       [class.has-external-tools]="externalTools()"
       [class.is-specialized-calendar]="presentation() !== 'calendar'"
@@ -215,10 +215,10 @@
             <button
               class="text-link calendar-clear-highlights"
               type="button"
-              [disabled]="!pinnedEventKeys().size"
-              (click)="clearHighlights()"
+              [disabled]="!highlights.pinned().size"
+              (click)="highlights.clear()"
             >
-              Effacer la sélection ({{ pinnedEventKeys().size }})
+              Effacer la sélection ({{ highlights.pinned().size }})
             </button>
             <div
               class="calendar-agenda-list"
@@ -235,30 +235,30 @@
                   @for (event of group.events; track event.key) {
                     <article
                       class="calendar-agenda-item"
-                      [animate.leave]="fxLeave()"
+                      [animate.leave]="appearance.fxLeave()"
                       [attr.data-event-key]="event.key"
                       [attr.data-kind]="marker(event)"
                       [style.--event-tone]="tone(element(event)?.tone)"
-                      [class.is-linked]="isHighlighted(event.key)"
-                      [class.is-pinned]="isPinned(event.key)"
-                      (mouseenter)="hoveredEventKey.set(event.key)"
-                      (mouseleave)="hoveredEventKey.set(null)"
-                      (focusin)="hoveredEventKey.set(event.key)"
-                      (focusout)="hoveredEventKey.set(null)"
+                      [class.is-linked]="highlights.isHighlighted(event.key)"
+                      [class.is-pinned]="highlights.isPinned(event.key)"
+                      (mouseenter)="highlights.hovered.set(event.key)"
+                      (mouseleave)="highlights.hovered.set(null)"
+                      (focusin)="highlights.hovered.set(event.key)"
+                      (focusout)="highlights.hovered.set(null)"
                     >
                       <button
                         class="calendar-agenda-select"
                         type="button"
-                        [attr.aria-pressed]="isPinned(event.key)"
+                        [attr.aria-pressed]="highlights.isPinned(event.key)"
                         [attr.aria-label]="
-                          (isPinned(event.key) ? 'Désélectionner ' : 'Mettre en évidence ') +
+                          (highlights.isPinned(event.key) ? 'Désélectionner ' : 'Mettre en évidence ') +
                           event.title +
                           (presentation() === 'agenda' ? ' dans l’agenda' : ' dans le calendrier')
                         "
-                        (click)="toggleHighlight(event.key)"
+                        (click)="highlights.toggle(event.key)"
                       >
                         <span class="calendar-agenda-select-mark" aria-hidden="true">{{
-                          isPinned(event.key) ? '●' : '○'
+                          highlights.isPinned(event.key) ? '●' : '○'
                         }}</span>
                         <span class="calendar-agenda-select-content">
                           <span class="calendar-agenda-title">{{ event.title }}</span>
@@ -274,7 +274,7 @@
                           </button>
                         }
                         @if (event.reschedule) {
-                          <button class="text-link" type="button" (click)="plan(event)">
+                          <button class="text-link" type="button" (click)="planner.plan(event)">
                             Replanifier
                           </button>
                         }
@@ -297,8 +297,8 @@
                 }
               }
             </div>
-            @if (planning(); as item) {
-              <form class="calendar-plan" (ngSubmit)="savePlan()">
+            @if (planner.planning(); as item) {
+              <form class="calendar-plan" (ngSubmit)="planner.save()">
                 <h4>{{ item.title }}</h4>
                 <p class="calendar-plan-note">
                   {{ element(item)?.label }} · actuellement le {{ date(item.date) }}
@@ -308,12 +308,12 @@
                     name="newDate"
                     type="date"
                     required
-                    [ngModel]="plannedDate" (ngModelChange)="changePlanDate($event)"
+                    [ngModel]="planner.plannedDate" (ngModelChange)="planner.changeDate($event)"
                 /></label>
                 <button
                   class="btn btn-primary"
                   type="submit"
-                  [disabled]="busy() || !valid(plannedDate)"
+                  [disabled]="busy() || !valid(planner.plannedDate)"
                 >
                   Enregistrer la date
                 </button>
@@ -423,21 +423,21 @@
                   [attr.data-kind]="marker(event)"
                   [style.--event-tone]="tone(element(event)?.tone)"
                   [class.completed]="event.done"
-                  [class.is-linked]="isHighlighted(event.key)"
-                  [class.is-pinned]="isPinned(event.key)"
+                  [class.is-linked]="highlights.isHighlighted(event.key)"
+                  [class.is-pinned]="highlights.isPinned(event.key)"
                   [attr.draggable]="!!event.reschedule && !busy()"
-                  (dragstart)="drag($event, event)"
-                  (dragend)="dragged = null"
-                  (pointerenter)="hoverCalendarEvent(event.key)"
-                  (pointerleave)="hoveredEventKey.set(null)"
+                  (dragstart)="planner.drag($event, event)"
+                  (dragend)="planner.dragged = null"
+                  (pointerenter)="highlights.hover(event.key)"
+                  (pointerleave)="highlights.hovered.set(null)"
                 >
                   <header class="calendar-peek-card-head">
                     <button
                       type="button"
                       class="calendar-peek-card-pin"
-                      [attr.aria-pressed]="isPinned(event.key)"
+                      [attr.aria-pressed]="highlights.isPinned(event.key)"
                       [attr.aria-label]="
-                        (isPinned(event.key)
+                        (highlights.isPinned(event.key)
                           ? 'Ne plus mettre en évidence '
                           : 'Mettre en évidence ') + event.title
                       "
@@ -535,7 +535,7 @@
                             [attr.data-day]="day"
                             [class.is-today]="day === today"
                             [class.is-selected]="day === pinnedYearDay()"
-                            [class.has-highlighted-events]="isDayHighlighted(day)"
+                            [class.has-highlighted-events]="highlights.isDayHighlighted(day)"
                             [class.is-busy]="dayEvents.length >= 4"
                             [class.is-heavy]="dayEvents.length >= 8"
                             [class.has-attention]="hasAttention(dayEvents)"
@@ -553,8 +553,8 @@
                             "
                             (click)="toggleYearDay(day, $event)"
                             (keydown)="onDayKeydown($event, day)"
-                            (dragover)="allowDrop($event)"
-                            (drop)="drop($event, day)"
+                            (dragover)="planner.allowDrop($event)"
+                            (drop)="planner.drop($event, day)"
                           >
                             <span class="calendar-year-number">
                               {{ day.slice(-2) }}
@@ -567,8 +567,8 @@
                           <span
                             class="calendar-year-empty-day"
                             [class.is-today]="day === today"
-                            (dragover)="allowDrop($event)"
-                            (drop)="drop($event, day)"
+                            (dragover)="planner.allowDrop($event)"
+                            (drop)="planner.drop($event, day)"
                             ><span class="calendar-year-number">{{ day.slice(-2) }}</span></span
                           >
                         } @else {
@@ -583,7 +583,7 @@
                         @let openEvents = byDay().get(openDay) ?? [];
                         <div
                           rjsTopLayer
-                          class="calendar-day-peek calendar-year-peek" [animate.leave]="fxLeave()"
+                          class="calendar-day-peek calendar-year-peek" [animate.leave]="appearance.fxLeave()"
                           [class.is-expanded]="expandedYearPeekDay() === openDay"
                           role="region"
                           [attr.aria-label]="'Repères du ' + date(openDay)"
@@ -653,7 +653,7 @@
                         [class.has-events]="dayEvents.length > 0"
                         [class.has-attention]="hasAttention(dayEvents)"
                         [class.has-progress]="hasProgress(dayEvents)"
-                        [class.is-lit]="isDayHighlighted(day)"
+                        [class.is-lit]="highlights.isDayHighlighted(day)"
                         [class.outside-month]="view() === 'month' && day.slice(0, 7) !== month()"
                         [class.selected-day]="day === selectedDay()"
                         [class.is-peek-pinned]="pinnedMonthDay() === day"
@@ -664,8 +664,8 @@
                         (pointerleave)="leaveMonthDay(day)"
                         (focusin)="focusMonthDay(day, $event)"
                         (focusout)="clearMonthDayFocus($event)"
-                        (dragover)="allowDrop($event)"
-                        (drop)="drop($event, day)"
+                        (dragover)="planner.allowDrop($event)"
+                        (drop)="planner.drop($event, day)"
                       >
                         <div class="calendar-day-head">
                           <button
@@ -708,29 +708,29 @@
                           <button
                             type="button"
                             class="calendar-event"
-                            [animate.leave]="fxLeave()"
+                            [animate.leave]="appearance.fxLeave()"
                             [attr.data-kind]="marker(event)"
                             [attr.data-tone]="element(event)?.tone"
                             [style.--event-tone]="tone(element(event)?.tone)"
-                            [attr.aria-pressed]="isPinned(event.key)"
+                            [attr.aria-pressed]="highlights.isPinned(event.key)"
                             [class.completed]="event.done"
-                            [class.is-linked]="isHighlighted(event.key)"
-                            [class.is-pinned]="isPinned(event.key)"
+                            [class.is-linked]="highlights.isHighlighted(event.key)"
+                            [class.is-pinned]="highlights.isPinned(event.key)"
                             [class.is-movable]="!!event.reschedule"
                             [attr.draggable]="!!event.reschedule && !busy()"
-                            (dragstart)="drag($event, event)"
-                            (dragend)="dragged = null"
+                            (dragstart)="planner.drag($event, event)"
+                            (dragend)="planner.dragged = null"
                             [title]="
                               event.title +
                               ' · ' +
                               (element(event)?.label ?? '') +
                               ' — clic : garder en évidence, double-clic : ouvrir'
                             "
-                            (pointerenter)="hoverCalendarEvent(event.key)"
-                            (pointerleave)="hoveredEventKey.set(null)"
-                            (focus)="hoverCalendarEvent(event.key)"
-                            (blur)="hoveredEventKey.set(null)"
-                            (click)="toggleHighlight(event.key)"
+                            (pointerenter)="highlights.hover(event.key)"
+                            (pointerleave)="highlights.hovered.set(null)"
+                            (focus)="highlights.hover(event.key)"
+                            (blur)="highlights.hovered.set(null)"
+                            (click)="highlights.toggle(event.key)"
                             (dblclick)="open.emit(event)"
                           >
                             <span aria-hidden="true">{{ symbol(element(event)) }}</span>
@@ -750,7 +750,7 @@
                         @if (dayEvents.length && visibleMonthDay() === day) {
                           <div
                             rjsTopLayer
-                            class="calendar-day-peek" [animate.leave]="fxLeave()"
+                            class="calendar-day-peek" [animate.leave]="appearance.fxLeave()"
                             [class.is-expanded]="expandedDay() === day"
                             role="region"
                             [attr.aria-label]="'Repères du ' + date(day)"
@@ -890,47 +890,47 @@
                   >
                   @if (f.own) {
                     <span class="cal-format-actions">
-                      <button type="button" class="text-link" (click)="editFormat(f)" [attr.aria-label]="'Modifier le format ' + f.label">Modifier</button>
-                      <button type="button" class="text-link" (click)="deleteFormat(f.id)" [attr.aria-label]="'Supprimer le format ' + f.label">Supprimer</button>
+                      <button type="button" class="text-link" (click)="formatEditor.edit(f)" [attr.aria-label]="'Modifier le format ' + f.label">Modifier</button>
+                      <button type="button" class="text-link" (click)="formatEditor.remove(f.id)" [attr.aria-label]="'Supprimer le format ' + f.label">Supprimer</button>
                     </span>
                   }
                 </div>
               }
             </div>
-            @if (formatDraft(); as draft) {
-              <form class="cal-format-editor" (submit)="$event.preventDefault(); saveFormat()" aria-label="Créer ou modifier un format">
-                <label>Nom<input type="text" maxlength="40" required [ngModel]="draft.label" (ngModelChange)="updateDraft({ label: $event })" name="cal-format-label" /></label>
-                <label>Disposition<select [ngModel]="draft.layout" (ngModelChange)="updateDraft({ layout: $event })" name="cal-format-layout">
+            @if (formatEditor.draft(); as draft) {
+              <form class="cal-format-editor" (submit)="$event.preventDefault(); formatEditor.save()" aria-label="Créer ou modifier un format">
+                <label>Nom<input type="text" maxlength="40" required [ngModel]="draft.label" (ngModelChange)="formatEditor.update({ label: $event })" name="cal-format-label" /></label>
+                <label>Disposition<select [ngModel]="draft.layout" (ngModelChange)="formatEditor.update({ layout: $event })" name="cal-format-layout">
                   @for (layout of layouts; track layout) { <option [ngValue]="layout">{{ layoutLabels[layout] }}</option> }
                 </select></label>
                 <div class="cal-format-fields" role="group" aria-label="Informations montrées, dans l’ordre">
                   <span>Informations, dans l’ordre</span>
                   @for (field of draft.fields; track field; let i = $index, last = $last) {
                     <div class="cal-format-field is-on">
-                      <label class="cal-choice"><input type="checkbox" checked (change)="toggleDraftField(field)" /><span>{{ i + 1 }}. {{ fieldLabel(field) }}</span></label>
-                      <button type="button" class="cal-format-move" [disabled]="i === 0" (click)="moveDraftField(field, -1)" [attr.aria-label]="'Monter ' + fieldLabel(field)">↑</button>
-                      <button type="button" class="cal-format-move" [disabled]="last" (click)="moveDraftField(field, 1)" [attr.aria-label]="'Descendre ' + fieldLabel(field)">↓</button>
+                      <label class="cal-choice"><input type="checkbox" checked (change)="formatEditor.toggleField(field)" /><span>{{ i + 1 }}. {{ fieldLabel(field) }}</span></label>
+                      <button type="button" class="cal-format-move" [disabled]="i === 0" (click)="formatEditor.moveField(field, -1)" [attr.aria-label]="'Monter ' + fieldLabel(field)">↑</button>
+                      <button type="button" class="cal-format-move" [disabled]="last" (click)="formatEditor.moveField(field, 1)" [attr.aria-label]="'Descendre ' + fieldLabel(field)">↓</button>
                     </div>
                   }
                   @for (field of formatFields; track field.key) {
                     @if (!draft.fields.includes(field.key)) {
                       <div class="cal-format-field">
-                        <label class="cal-choice"><input type="checkbox" (change)="toggleDraftField(field.key)" /><span>{{ field.label }}</span></label>
+                        <label class="cal-choice"><input type="checkbox" (change)="formatEditor.toggleField(field.key)" /><span>{{ field.label }}</span></label>
                       </div>
                     }
                   }
                 </div>
-                <label>Événements par case<select [ngModel]="draft.perCell" (ngModelChange)="updateDraft({ perCell: $event })" name="cal-format-density">
+                <label>Événements par case<select [ngModel]="draft.perCell" (ngModelChange)="formatEditor.update({ perCell: $event })" name="cal-format-density">
                   <option [ngValue]="null">Selon le calendrier</option>
                   @for (n of [0, 1, 2, 3, 4, 5, 6, 7, 8]; track n) { <option [ngValue]="n">{{ n }}</option> }
                 </select></label>
                 <div class="cal-format-editor-actions">
                   <button type="submit" class="btn btn-primary btn-sm" [disabled]="!draft.label.trim()">{{ draft.id ? 'Enregistrer' : 'Créer ce format' }}</button>
-                  <button type="button" class="btn btn-secondary btn-sm" (click)="formatDraft.set(null)">Annuler</button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="formatEditor.draft.set(null)">Annuler</button>
                 </div>
               </form>
             } @else {
-              <button type="button" class="text-link" (click)="editFormat()">+ Créer un format à partir de « {{ format().label }} »</button>
+              <button type="button" class="text-link" (click)="formatEditor.edit()">+ Créer un format à partir de « {{ format().label }} »</button>
             }
             <label class="cal-density"
               >Événements par case<select
@@ -950,9 +950,9 @@
             <p>Le design règle l’apparence, l’effet règle le mouvement : ils se choisissent séparément.</p>
             <div class="cal-look-group" role="radiogroup" aria-label="Design du calendrier">
               <span class="cal-look-title">Design</span>
-              @for (d of designs; track d.id) {
-                <label class="cal-look-option" [class.is-active]="d.id === design().id">
-                  <input type="radio" name="cal-design" [checked]="d.id === design().id" (change)="chooseDesign(d.id)" />
+              @for (d of appearance.designs; track d.id) {
+                <label class="cal-look-option" [class.is-active]="d.id === appearance.design().id">
+                  <input type="radio" name="cal-design" [checked]="d.id === appearance.design().id" (change)="appearance.chooseDesign(d.id)" />
                   <span class="cal-look-swatch" aria-hidden="true">@for (c of d.swatch; track $index) {<i [style.background]="c"></i>}</span>
                   <span class="cal-look-text"><strong>{{ d.label }}</strong><small>{{ d.description }}</small></span>
                 </label>
@@ -960,22 +960,22 @@
             </div>
             <div class="cal-look-group" role="radiogroup" aria-label="Effets d’affichage">
               <span class="cal-look-title">Effets d’affichage</span>
-              @for (e of effects; track e.id) {
-                <label class="cal-look-option" [class.is-active]="e.id === effect().id">
-                  <input type="radio" name="cal-effect" [checked]="e.id === effect().id" (change)="chooseEffect(e.id)" />
+              @for (e of appearance.effects; track e.id) {
+                <label class="cal-look-option" [class.is-active]="e.id === appearance.effect().id">
+                  <input type="radio" name="cal-effect" [checked]="e.id === appearance.effect().id" (change)="appearance.chooseEffect(e.id)" />
                   <span class="cal-look-text"><strong>{{ e.label }}</strong><small>{{ e.description }}</small></span>
                 </label>
               }
             </div>
-            @if (effectParameters().length) {
-              <div class="cal-look-params" role="group" [attr.aria-label]="'Réglages de l’effet ' + effect().label">
-                @for (p of effectParameters(); track p.key) {
+            @if (appearance.parameters().length) {
+              <div class="cal-look-params" role="group" [attr.aria-label]="'Réglages de l’effet ' + appearance.effect().label">
+                @for (p of appearance.parameters(); track p.key) {
                   <label class="cal-look-param">
                     <span>{{ p.label }} <output>{{ p.value }} {{ p.unit }}</output></span>
-                    <input type="range" [min]="p.min" [max]="p.max" [step]="p.step" [value]="p.value" [attr.aria-label]="p.label" (input)="setEffectParam(p.key, +$any($event.target).value)" />
+                    <input type="range" [min]="p.min" [max]="p.max" [step]="p.step" [value]="p.value" [attr.aria-label]="p.label" (input)="appearance.setParam(p.key, +$any($event.target).value)" />
                   </label>
                 }
-                <button type="button" class="text-link" (click)="resetEffectParams()">Rétablir les réglages de l’effet</button>
+                <button type="button" class="text-link" (click)="appearance.resetParams()">Rétablir les réglages de l’effet</button>
               </div>
             }
           </fieldset>
