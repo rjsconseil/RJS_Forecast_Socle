@@ -124,6 +124,22 @@ export class UserDirectory {
 /** Clé de demande stable, à conserver pour toute nouvelle tentative de la même création. */
 export const newRequestKey = () => `web-${crypto.randomUUID()}`;
 
+/** Une ligne de données d'application autonome : champs communs posés par le socle, puis les champs déclarés. */
+export interface LigneApplication {
+  id: string;
+  kind: string;
+  userId: string | null;
+  application: string;
+  revision: number;
+  createdAt: string;
+  updatedAt: string;
+  projectId?: string | null;
+  refCode?: string | null;
+  catalogue?: string | null;
+  code?: string;
+  [champ: string]: unknown;
+}
+
 @Injectable({ providedIn: 'root' })
 export class Api {
   private http = inject(HttpClient);
@@ -173,6 +189,23 @@ export class Api {
 
   projects() {
     return this.get<ProjectSummary[]>('/api/projects');
+  }
+
+  // ---------- données des applications autonomes (base commune, /api/aa) ----------
+  /** Les lignes d'une collection d'application autonome (catalogue commun, ou lignes du user), filtrées par champ. */
+  aaList<T = LigneApplication>(app: string, collection: string, filters: Record<string, string> = {}) {
+    const q = new URLSearchParams(filters).toString();
+    return this.get<{ collection: string; items: T[] }>(`/api/aa/${encodeURIComponent(app)}/${encodeURIComponent(collection)}${q ? `?${q}` : ''}`);
+  }
+  aaCreate<T = LigneApplication>(app: string, collection: string, body: Record<string, unknown>) {
+    return this.post<{ replayed: boolean; item: T }>(`/api/aa/${encodeURIComponent(app)}/${encodeURIComponent(collection)}`, { requestKey: newRequestKey(), ...body });
+  }
+  aaUpdate<T = LigneApplication>(app: string, collection: string, id: string, body: Record<string, unknown>) {
+    return this.put<{ item: T }>(`/api/aa/${encodeURIComponent(app)}/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`, body);
+  }
+  /** Instanciation : applique les règles du catalogue de ce déclencheur (sans doublon). */
+  aaInstancier(app: string, body: { declencheur: string; projectId?: string; etapeId?: string }) {
+    return this.post<{ declencheur: string; created: { collection: string; id: string; regle: string }[] }>(`/api/aa/${encodeURIComponent(app)}/instanciation`, body);
   }
   project(id: string) {
     return this.get<ProjectDetail>(`/api/projects/${encodeURIComponent(id)}`);

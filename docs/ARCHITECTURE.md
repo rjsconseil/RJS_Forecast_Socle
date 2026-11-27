@@ -648,6 +648,7 @@ Le développement se fait désormais en **mode application autonome**. Six prote
   par une règle n'est jamais recréée. Catalogue et instances ne sont pas un pour un.
 - **Routes, réutilisables par les applications hybrides** : `GET /api/aa`, `GET|POST /api/aa/<app>/<collection>`
   (filtres par paramètres, ex. `?projectId=`), `GET|PUT /api/aa/<app>/<collection>/<id>` (`expectedRevision`).
+- Côté site : `Api.aaList`, `aaCreate`, `aaUpdate`, `aaInstancier` et le type `LigneApplication`, par `platform/grand-noyau.ts`.
 - Tests : `api/test/applications-donnees.test.mjs` (application d'essai, sans fichier d'application réel).
 
 ## 21. Journal des changements
