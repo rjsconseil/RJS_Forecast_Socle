@@ -1,6 +1,7 @@
 // Tests d'interface en intégration continue (et dans le cloud) : le site construit, servi comme en production
 // (scripts/site-server.mjs, avec ses en-têtes de sécurité et sa CSP), une API de recette et une base temporaires,
-// les jeux d'essai, puis les tests d'interface de BPM-Astra dans Chromium.
+// les jeux d'essai, puis les tests d'interface dans Chromium : Astra, parcours de navigation de BPM, réglages de la
+// navigation, et le scénario des projets de la vie de bout en bout.
 //   npm run build && npm run e2e:ci
 // Navigateur : CHROME_PATH, sinon celui de playwright-core (`npx playwright-core install chromium`).
 // Aucune donnée réelle n'est lue ni écrite.
@@ -43,19 +44,30 @@ async function waitFor(url, ms = 20000) {
 try {
   const apiPort = await freePort();
   const sitePort = await freePort();
-  start(['api/src/server.mjs'], { J1_API_PORT: String(apiPort), J1_DATA_FILE: join(dir, 'e2e.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' });
+  const apiEnv = { J1_API_PORT: String(apiPort), J1_DATA_FILE: join(dir, 'e2e.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' };
+  let api = start(['api/src/server.mjs'], apiEnv);
   start(['scripts/site-server.mjs'], { J1_API_PORT: String(apiPort), SOCLE_SITE_PORT: String(sitePort), SOCLE_SITE_HOST: '127.0.0.1' });
   // Adresses en IPv4 explicite : sur les machines de CI, « localhost » peut désigner ::1, où rien n'écoute.
   const site = `http://127.0.0.1:${sitePort}`;
   await waitFor(`${site}/api/health`);
   await run('Jeux d’essai', ['api/scripts/seed.mjs'], { J1_API_URL: `http://127.0.0.1:${apiPort}` });
+  // Puis le foyer des projets de la vie (dix projets financés), écrit API arrêtée (un seul écrivain).
+  await new Promise((r) => { api.once('exit', r); api.kill('SIGTERM'); });
+  await run('Jeu d’essai des projets', ['api/scripts/seed-projets.mjs', '--data', join(dir, 'e2e.sqlite')]);
+  api = start(['api/src/server.mjs'], apiEnv);
+  await waitFor(`${site}/api/health`);
   // Le site envoie ses en-têtes de sécurité, et l'API refuse une écriture venue d'un autre site à travers le proxy.
   const page = await fetch(site + '/');
   assert.match(page.headers.get('content-security-policy') ?? '', /frame-ancestors 'none'/, 'CSP du site absente');
   const evil = await fetch(site + '/api/_recette/reset', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'text/plain' } });
   assert.equal(evil.status, 403, 'une écriture d’un autre site doit être refusée');
   console.log('✓ En-têtes du site et refus des écritures d’un autre site');
-  await run('Tests d’interface Astra', ['e2e/astra.e2e.mjs'], { BPM_BASE_URL: site, CHROME_PATH: chrome });
+  const browserEnv = { BPM_BASE_URL: site, CHROME_PATH: chrome };
+  await run('Tests d’interface Astra', ['e2e/astra.e2e.mjs'], browserEnv);
+  await run('Parcours de navigation de BPM', ['e2e/bpm-navigation.e2e.mjs'], browserEnv);
+  await run('Réglages de la navigation', ['e2e/navigation-system.e2e.mjs'], browserEnv);
+  // Scénario des projets de mai à novembre : sa propre API et son propre site, sur d'autres ports.
+  await run('Projets de la vie, de bout en bout', ['e2e/projets.e2e.mjs'], { CHROME_PATH: chrome, E2E_API_PORT: String(await freePort()), E2E_WEB_PORT: String(await freePort()) });
 } catch (err) {
   console.error(`✖ ${err.message}`);
   process.exitCode = 1;
