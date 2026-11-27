@@ -41,11 +41,7 @@ test('applications autonomes : leurs tables prennent « AA_ » devant le préfix
   assert.equal(tableName('MP', 'projects'), 'MP_projects');
   assert.equal(sectionPrefixOfTable('AA_MP_plan_items'), 'MP');
   assert.equal(sectionPrefixOfTable('MP_projects'), 'MP');
-  // Le catalogue range les collections d'application à part ; aucune ne recoupe une collection du socle.
-  for (const s of SECTION_LIST) {
-    assert.ok(Array.isArray(s.applicationCollections), s.key);
-    for (const c of s.applicationCollections) assert.equal(tableOf(c), `AA_${s.prefix}_${c.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase()}`);
-  }
+  assert.equal(sectionPrefixOfTable('AA_SY_autonomous_jobs'), 'SY');
 });
 
 test('un fait, une section propriétaire : chaque nature du site est rangée dans une section du catalogue', async () => {

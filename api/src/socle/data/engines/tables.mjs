@@ -1,10 +1,10 @@
-import { SECTION_LIST } from '../../sections.mjs';
+import { applicationSectionOf, SECTION_LIST, sectionByKey } from '../../sections.mjs';
 
 // P5 · Données gérées — rangement des collections en tables, commun aux moteurs SQL (SQLite, PostgreSQL).
 // Les tables sont rangées à l'image des cinq sections du site, par préfixe :
 //   MQ_ Mon quotidien · MP_ Mes projets · MB_ Mon budget · PT_ Patrimoine · CL_ Cycles · SY_ système (socle).
 // Les tables propres à une application autonome prennent en plus « AA_ » devant le préfixe de sa section
-// (AA_MP_ pour l'application Mes projets, AA_SY_ pour un système autonome) : catalogue `applicationCollections`.
+// (AA_MP_ pour l'application Mes projets, AA_SY_ pour un système autonome), déclarées par l'application (applications.mjs).
 
 /**
  * Sections du site et collections qu'elles portent, par préfixe ; une collection hors de ces sections va dans le système (SY_).
@@ -14,7 +14,6 @@ export const SECTIONS = Object.fromEntries(SECTION_LIST.map((s) => [s.prefix, { 
 const SECTION_OF = new Map(Object.entries(SECTIONS).flatMap(([prefix, s]) => s.collections.map((c) => [c, prefix])));
 /** Préfixe des tables propres aux applications autonomes, placé devant celui de la section. */
 export const APPLICATION_PREFIX = 'AA';
-const APPLICATION_OF = new Map(SECTION_LIST.flatMap((s) => s.applicationCollections.map((c) => [c, s.prefix])));
 const snake = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 /**
  * Nom de table : préfixe de la section, puis le nom de la collection (« taskBudgetRequests » → « MP_task_budget_requests ») ;
@@ -22,9 +21,10 @@ const snake = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase(
  */
 export const tableName = (prefix, collection, { application = false } = {}) => `${application ? `${APPLICATION_PREFIX}_` : ''}${prefix}_${snake(collection)}`;
 /** Table d'une collection, selon le catalogue des sections ; hors catalogue, le système (SY_). */
-export const tableOf = (collection) => APPLICATION_OF.has(collection)
-  ? tableName(APPLICATION_OF.get(collection), collection, { application: true })
-  : tableName(SECTION_OF.get(collection) ?? 'SY', collection);
+export const tableOf = (collection) => {
+  const app = applicationSectionOf(collection);
+  return app ? tableName(sectionByKey(app).prefix, collection, { application: true }) : tableName(SECTION_OF.get(collection) ?? 'SY', collection);
+};
 /** Préfixe de section d'une table (« AA_MP_plan_items » → « MP »), tel que l'enregistre SY_tables. */
 export const sectionPrefixOfTable = (table) => (table.startsWith(`${APPLICATION_PREFIX}_`) ? table.slice(APPLICATION_PREFIX.length + 1) : table).slice(0, 2);
 /** Nom SQL entre guillemets. */

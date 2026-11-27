@@ -627,10 +627,28 @@ Le développement se fait désormais en **mode application autonome**. Six prote
   habituelle (`platform/applications-autonomes.ts`, routes ajoutées par `app.routes.ts`), **hors de BPM-Astra** qui reste
   intact. La zone **Noyau transverse** reçoit la section **« Applications autonomes »** (N0 · 05) : un lien par application
   qui repose sur le noyau. Sans application inscrite, la section n'apparaît pas.
-- **Tables des applications autonomes.** Une collection propre à une application autonome se déclare dans
-  `applicationCollections` de sa section (`api/src/socle/sections.json`). Sa table prend **« AA_ »** devant le préfixe de
-  la section : `AA_MP_…` pour Mes projets, `AA_MQ_…`, `AA_MB_…`, `AA_PT_…`, `AA_CL_…`, et `AA_SY_…` pour un système
-  autonome (`tableName`, `tableOf` dans `engines/tables.mjs`). Les tables du grand noyau gardent leurs noms (`MP_projects`…).
+- **Tables des applications autonomes.** Une collection propre à une application autonome prend **« AA_ »** devant le
+  préfixe de sa section : `AA_MP_…` pour Mes projets, `AA_MQ_…`, `AA_MB_…`, `AA_PT_…`, `AA_CL_…`, et `AA_SY_…` pour un
+  système autonome (`tableName`, `tableOf` dans `engines/tables.mjs`). Les tables du grand noyau gardent leurs noms.
+
+### 20.2 La base commune des données des applications autonomes (27 novembre 2026)
+
+- **Déclaration dans le dossier de l'application** : `sections/<clé>/application/donnees.json` (ou
+  `hybrides/<nom>/donnees.json`). Elle liste les collections (nature, préfixe d'identifiant `aa…`, champs typés : texte,
+  nombre, entier, date, booleen, choix, liste, json ; liens vers le noyau, champs uniques), le **catalogue** de référence
+  (version et lignes, chacune avec un `code`) et la collection qui porte les **règles d'instanciation**. Lue et vérifiée
+  au démarrage par `api/src/socle/applications.mjs` ; ajouter ou modifier ce fichier est une PR d'application.
+- **Module « Données des applications autonomes »** (`api/src/modules/applications/`, middleware transverse) : chaque
+  collection devient une nature d'objet, avec identifiants, révisions, journal et cloisonnement par user du grand
+  noyau. Champs communs : `application`, `refCode`, `catalogue`, plus ceux posés par l'Object Management.
+- **Catalogue** : partition système, commun à tous, en lecture seule ; resynchronisé depuis la déclaration à chaque
+  démarrage (rien n'est écrit s'il n'a pas changé).
+- **Instanciation** : `POST /api/aa/<app>/instanciation` `{declencheur, projectId, etapeId?}` applique les règles du
+  catalogue de ce déclencheur (`cible`, `refCode`, `multiplicite` projet ou étape, `valeurs`) ; une ligne déjà créée
+  par une règle n'est jamais recréée. Catalogue et instances ne sont pas un pour un.
+- **Routes, réutilisables par les applications hybrides** : `GET /api/aa`, `GET|POST /api/aa/<app>/<collection>`
+  (filtres par paramètres, ex. `?projectId=`), `GET|PUT /api/aa/<app>/<collection>/<id>` (`expectedRevision`).
+- Tests : `api/test/applications-donnees.test.mjs` (application d'essai, sans fichier d'application réel).
 
 ## 21. Journal des changements
 

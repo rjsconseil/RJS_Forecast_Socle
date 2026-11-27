@@ -10,9 +10,10 @@ Les PR du socle, de la plus récente à la plus ancienne. La référence de l'ar
   écran). Le site sert l'application à cette adresse dans son interface habituelle (`platform/applications-autonomes.ts`).
 - **Section « Applications autonomes »** (zone Noyau transverse, N0 · 05) : un lien par application qui repose sur le
   noyau, cachée tant qu'aucune n'est inscrite.
-- **Tables des applications autonomes** : `applicationCollections` par section dans `sections.json`, tables nommées
-  `AA_` + préfixe de la section (`AA_MP_…`, `AA_SY_…` pour un système autonome).
-- Contrat mis à jour : 98 exports côté site (+ `EspaceInscrit`, `InscriptionApplication` étendue), 154 routes inchangées.
+- **Base commune des données des applications autonomes** (§20.2) : modèle déclaré dans `donnees.json` du dossier de
+  l'application, module transverse « applications », tables `AA_` + préfixe de la section (`AA_MP_…`, `AA_SY_…`),
+  catalogue de référence commun en lecture seule, instanciation par règles, routes `/api/aa/…`.
+- Contrat mis à jour : 98 exports côté site (+ `EspaceInscrit`, `InscriptionApplication` étendue), 160 routes (+ 6 `/api/aa`).
 
 ## Grand noyau (socle) : le socle à l'abri pour les applications autonomes — 27 novembre 2026
 

@@ -202,7 +202,7 @@ test('P5 · Données gérées : un stockage JSON d’un seul bloc est repris dan
 test('P6 · Middlewares typés : métier, technique et transverse, chacun à sa place', async () => {
   const { socle } = await makeSocle();
   const roles = Object.fromEntries(socle.registry.describe().filter((m) => m.level === 2).map((m) => [m.id, m.role]));
-  assert.deepEqual(roles, { cycle: 'technique', calendar: 'transverse', navigation: 'metier', budget: 'metier', patrimoine: 'metier' });
+  assert.deepEqual(roles, { cycle: 'technique', calendar: 'transverse', navigation: 'metier', budget: 'metier', patrimoine: 'metier', applications: 'transverse' });
   // Les middlewares métier sont indépendants : aucun ne dépend d'un autre, ni ne lit ses données.
   const metier = SOCLE_MODULES.filter((m) => m.level === 2 && (m.role ?? 'metier') === 'metier');
   for (const a of metier) for (const b of metier) if (a !== b) {

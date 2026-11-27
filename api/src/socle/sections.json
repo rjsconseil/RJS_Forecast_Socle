@@ -6,43 +6,37 @@
       "key": "quotidien", "prefix": "MQ", "order": 1, "label": "Mon quotidien", "verb": "vivre le cycle", "tone": "astra-quotidien",
       "promise": "Savoir ce qui se passe aujourd'hui et agir dessus : régler, saisir, reporter, replanifier.",
       "decides": "Ce qui s'est réellement passé : règlements, montants et dates réels, mouvements imprévus, évènements.",
-      "collections": ["operations", "imports", "calendarPreferences"],
-      "applicationCollections": []
+      "collections": ["operations", "imports", "calendarPreferences"]
     },
     {
       "key": "projets", "prefix": "MP", "order": 2, "label": "Mes projets", "verb": "réaliser", "tone": "astra-projets",
       "promise": "Mener ses projets de bout en bout : les organiser, suivre leurs tâches et, si on le souhaite, les financer.",
       "decides": "Les projets, leurs tâches, la répartition de l'enveloppe entre les tâches, les demandes de part et de dépassement.",
-      "collections": ["coreProjects", "tasks", "projectOverruns", "taskBudgetRequests"],
-      "applicationCollections": []
+      "collections": ["coreProjects", "tasks", "projectOverruns", "taskBudgetRequests"]
     },
     {
       "key": "budget", "prefix": "MB", "order": 3, "label": "Mon budget", "verb": "prévoir", "tone": "astra-budget",
       "promise": "Poser le budget de chaque cycle avant de le vivre : échéances récurrentes, postes et plafonds.",
       "decides": "Les échéances récurrentes, les postes et revenus, les plafonds, l'épargne visée du cycle.",
-      "collections": ["budgets", "recurrences", "costCenters", "chargeCategories"],
-      "applicationCollections": []
+      "collections": ["budgets", "recurrences", "costCenters", "chargeCategories"]
     },
     {
       "key": "patrimoine", "prefix": "PT", "order": 4, "label": "Patrimoine", "verb": "accumuler et fixer le cap", "tone": "astra-patrimoine",
       "promise": "Projeter son patrimoine à long terme et se fixer des objectifs d'accumulation.",
       "decides": "Le point de départ, les hypothèses de projection, les objectifs datés.",
-      "collections": ["patrimoines", "capitalizations", "lifeGoals"],
-      "applicationCollections": []
+      "collections": ["patrimoines", "capitalizations", "lifeGoals"]
     },
     {
       "key": "cycles", "prefix": "CL", "order": 5, "label": "Cycles", "verb": "valider et clôturer", "tone": "astra-cycles",
       "promise": "Valider tout le cycle avant d'ouvrir le suivant, puis relire ses bilans.",
       "decides": "L'ancrage du cycle, la clôture, les reports vers un cycle suivant, le verrou.",
-      "collections": ["cycleLinks", "closures", "bpmCompositions"],
-      "applicationCollections": []
+      "collections": ["cycleLinks", "closures", "bpmCompositions"]
     },
     {
       "key": "systeme", "prefix": "SY", "order": 99, "label": "Système", "verb": null, "tone": null,
       "promise": "Le socle commun : utilisateurs, comptes, paramètres.",
       "decides": "Les utilisateurs, leurs comptes et les paramètres du site.",
-      "collections": ["users", "credentials", "parameters", "creationRequests"],
-      "applicationCollections": []
+      "collections": ["users", "credentials", "parameters", "creationRequests"]
     }
   ],
   "flows": [
