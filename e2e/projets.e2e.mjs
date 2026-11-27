@@ -6,23 +6,20 @@
 // clôtures) passe par l'API. L'horloge de recette de l'API et celle du navigateur avancent ensemble. Les chiffres
 // affichés à la fin sont comparés aux attendus recalculés à part.
 //
-// Prérequis : `npm run build` (site construit) et Playwright avec Chromium (`npm i -D playwright && npx playwright
-// install chromium`, déjà présents dans l'environnement de recette). Usage : `npm run e2e:projets [-- --jusqu-au 2026-11-30]`.
+// Prérequis : `npm run build` (site construit) ; Chromium du poste ou de `npx playwright-core install chromium`
+// (CHROME_PATH pour un autre). Usage : `npm run e2e:projets [-- --jusqu-au 2026-11-30]`. Les écrans BPM sont ceux d'Astra.
 // Tout tourne sur des ports et un stockage temporaires : les données du poste ne sont jamais touchées.
 import { spawn } from 'node:child_process';
-import { createReadStream, existsSync } from 'node:fs';
-import { mkdir, mkdtemp, stat } from 'node:fs/promises';
-import { createServer, request } from 'node:http';
-import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, normalize } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { httpDriver, runScenario } from '../api/scripts/project-scenarios.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DIST = join(ROOT, 'web/dist/web/browser');
-const API_PORT = 3491;
-const WEB_PORT = 4391;
+const API_PORT = Number(process.env.E2E_API_PORT ?? 3491);
+const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 4391);
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);
   return i > 0 ? process.argv[i + 1] : fallback;
@@ -31,62 +28,41 @@ const UNTIL = arg('jusqu-au', '2026-11-30');
 const SHOTS = arg('captures', null);
 if (SHOTS) await mkdir(SHOTS, { recursive: true });
 
-let playwright;
-try {
-  playwright = await import('playwright');
-} catch {
-  // Installation globale (NODE_PATH) : seul `require` la trouve.
-  try {
-    playwright = createRequire(import.meta.url)('playwright');
-  } catch {
-    playwright = null;
-  }
-}
-if (!playwright) {
-  console.error('\n✖ Playwright est absent : npm i -D playwright && npx playwright install chromium\n');
-  process.exit(1);
-}
-if (!existsSync(join(DIST, 'index.html'))) {
+// Playwright du dépôt (playwright-core) et le navigateur du poste, de l'image cloud ou de la CI.
+const playwright = await import('playwright-core');
+const CHROME = process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/usr/bin/chromium'].find(existsSync)
+  ?? playwright.chromium.executablePath();
+if (!existsSync(join(ROOT, 'web/dist/web/browser/index.html'))) {
   console.error('\n✖ Site non construit : lancez d’abord npm run build\n');
   process.exit(1);
 }
 
-// ---------- API de recette et site construit, sur des ports temporaires ----------
+// ---------- API de recette et site construit (servi comme en production), sur des ports temporaires ----------
 const dir = await mkdtemp(join(tmpdir(), 'rjs-e2e-'));
+const env = { ...process.env, J1_API_PORT: String(API_PORT) };
+delete env.SOCLE_TODAY;
 const api = spawn(process.execPath, [join(ROOT, 'api/src/server.mjs')], {
-  env: { ...process.env, J1_API_PORT: String(API_PORT), J1_DATA_FILE: join(dir, 'store.json'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_TODAY: '' },
-  stdio: ['ignore', 'pipe', 'pipe'],
+  env: { ...env, J1_DATA_FILE: join(dir, 'store.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' },
+  stdio: ['ignore', 'ignore', 'pipe'],
 });
-api.stderr.on('data', (c) => process.stderr.write(`[api] ${c}`));
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.woff': 'font/woff', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json' };
-const web = createServer(async (req, res) => {
-  if (req.url.startsWith('/api/')) {
-    const p = request({ host: '127.0.0.1', port: API_PORT, path: req.url, method: req.method, headers: req.headers }, (r) => {
-      res.writeHead(r.statusCode, r.headers);
-      r.pipe(res);
-    });
-    req.pipe(p);
-    return;
-  }
-  const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^(\.\.[/\\])+/, '');
-  let file = join(DIST, path);
-  const isFile = await stat(file).then((s) => s.isFile(), () => false);
-  if (!isFile) file = join(DIST, 'index.html');
-  res.writeHead(200, { 'content-type': TYPES[extname(file)] ?? 'application/octet-stream' });
-  createReadStream(file).pipe(res);
+api.stderr.on('data', (c) => { if (!/ExperimentalWarning|trace-warnings/.test(String(c))) process.stderr.write(`[api] ${c}`); });
+const web = spawn(process.execPath, [join(ROOT, 'scripts/site-server.mjs')], {
+  env: { ...env, SOCLE_SITE_PORT: String(WEB_PORT), SOCLE_SITE_HOST: '127.0.0.1' }, stdio: 'ignore',
 });
-await new Promise((r) => web.listen(WEB_PORT, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${WEB_PORT}`;
 const API = `http://127.0.0.1:${API_PORT}`;
 for (let i = 0; i < 100; i++) {
-  if (await fetch(`${API}/api/users`).then((r) => r.ok, () => false)) break;
+  if (await fetch(`${BASE}/api/health`).then((r) => r.ok, () => false)) break;
   await new Promise((r) => setTimeout(r, 100));
 }
+/** Les écrans de BPM, présentés par Astra. */
+const astra = (slug = '') => '/bpm-astra' + (slug ? '/' + slug : '');
 
 // ---------- navigateur ----------
-const browser = await playwright.chromium.launch();
+const browser = await playwright.chromium.launch({ executablePath: CHROME, headless: true });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
 const page = await context.newPage();
+page.setDefaultTimeout(10000);
 const consoleErrors = [];
 page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && consoleErrors.push(`${page.url()} : ${m.text().slice(0, 200)}`));
 page.on('pageerror', (e) => consoleErrors.push(`${page.url()} : ${e.message.slice(0, 200)}`));
@@ -106,16 +82,23 @@ async function settled() {
 async function overrunFlow(prj, decision) {
   const flow = page.locator('section.bpm-overrun', { hasText: 'Budget du projet dépassé' });
   if (!(await flow.isVisible().catch(() => false))) return 0;
-  await flow.getByRole('button', { name: /Demander l’autorisation/ }).click();
+  await flow.getByRole('button', { name: 'Demander sans décider maintenant' }).click();
   await page.locator('bpm-overrun-request').first().waitFor();
   const d = await http.projectDetail(prj);
   const pending = d.overruns.find((o) => o.status === 'pending');
-  await page.locator('bpm-overrun-request').first().getByRole('button', { name: decision === 'approve' ? 'Autoriser le dépassement' : 'Refuser' }).click();
+  await page.locator('bpm-overrun-request').first().locator(decision === 'approve' ? 'button.btn-primary' : 'button.btn-secondary').click();
   await settled();
   gestures.ui += 2;
   return pending?.amountCents ?? 0;
 }
-const row = (title) => page.locator('section[aria-labelledby=shares-title] .bpm-table tbody tr', { hasText: title }).first();
+/** Fenêtre d'une tâche, ouverte depuis sa carte sur l'onglet « Tâches du projet ». */
+async function taskPanel(prj, title) {
+  await open(astra(`projets/${prj.projectId}/taches`));
+  await page.locator('article.project-task-card', { hasText: title }).first().getByRole('button', { name: /^Dépenses · / }).click();
+  const panel = page.locator('.task-panel').first();
+  await panel.waitFor();
+  return panel;
+}
 
 /** Pilote navigateur : les gestes des projets par les pages, le reste par l'API. */
 const ui = {
@@ -151,27 +134,30 @@ const ui = {
     return { projectId, tasks: ids };
   },
   async adopt(prj) {
-    await open('/app/projets');
-    await page.locator('.bpm-adopt select').selectOption(prj.projectId);
-    await page.locator('.bpm-adopt button[type=submit]').click();
+    await open(astra('projets'));
+    await page.locator('.life-budget-project select').selectOption(prj.projectId);
+    await page.locator('.life-budget-project button[type=submit]').click();
     await settled();
-    if (!(await notice()).includes('projet standard du budget de vie')) throw new Error(`Financement de « ${prj.title} » : ${await notice()}`);
+    if (!(await notice()).includes('rattaché au budget du projet de vie')) throw new Error(`Financement de « ${prj.title} » : ${await notice()}`);
     gestures.ui += 1;
     return (await http.projectDetail(prj)).budget.budgetId;
   },
   async allocate(prj, amount) {
-    await open(`/app/projets/${prj.projectId}`);
-    const form = page.locator('form.bpm-inline-form', { has: page.locator('input.bpm-amount-input') }).first();
-    await form.locator('input.bpm-amount-input').fill(String(amount));
+    await open(astra(`projets/${prj.projectId}/budget`));
+    await page.locator('button[aria-controls=project-envelope-form]').first().click();
+    const form = page.locator('#project-envelope-form');
+    if (await form.locator('#project-envelope-mode').count()) await form.locator('#project-envelope-mode').selectOption('total');
+    await form.locator('#project-envelope').fill(String(amount).replace('.', ','));
     await form.locator('button[type=submit]').click();
     await settled();
-    if (!(await notice()).includes('Montant attribué')) throw new Error(`Attribution « ${prj.title} » : ${await notice()}`);
+    if (!/Enveloppe budgétaire enregistrée|L’enveloppe atteint/.test(await notice())) throw new Error(`Enveloppe « ${prj.title} » : ${await notice()}`);
     gestures.ui += 1;
   },
   async share(prj, task, amount, decision = 'approve') {
-    await open(`/app/projets/${prj.projectId}`);
-    await row(task).locator('input[name=share]').fill(String(amount).replace('.', ','));
-    await row(task).getByRole('button', { name: 'OK' }).click();
+    const panel = await taskPanel(prj, task);
+    await panel.locator('details.task-panel-adjust summary').click();
+    await panel.locator('input[name=share]').fill(String(amount).replace('.', ','));
+    await panel.getByRole('button', { name: 'Enregistrer la part' }).click();
     await settled();
     gestures.ui += 1;
     const overrunCents = await overrunFlow(prj, decision);
@@ -179,33 +165,48 @@ const ui = {
     return { saved: d.budget.shares[prj.tasks[task]] === Math.round(amount * 100), overrunCents };
   },
   async setReturn(prj, task, { label, amount, cadence }) {
-    await open(`/app/projets/${prj.projectId}`);
-    await row(task).getByRole('button', { name: 'Prévoir un retour' }).click();
-    await row(task).locator('input[name=label]').fill(label);
-    await row(task).locator('input[name=amount]').fill(String(amount));
-    await row(task).locator('select[name=cadence]').selectOption(cadence);
-    await row(task).getByRole('button', { name: 'Enregistrer' }).click();
+    const panel = await taskPanel(prj, task);
+    await panel.getByRole('button', { name: 'Prévoir un retour' }).click();
+    const form = panel.locator('form', { has: page.locator('select[name=cadence]') });
+    await form.locator('input[name=label]').fill(label);
+    await form.locator('input[name=amount]').fill(String(amount).replace('.', ','));
+    await form.locator('select[name=cadence]').selectOption(cadence);
+    await form.getByRole('button', { name: 'Enregistrer' }).click();
     await settled();
     if (!(await notice()).includes('Retour')) throw new Error(`Retour « ${task} » : ${await notice()}`);
     gestures.ui += 1;
   },
   async pay(prj, opId, amount, date, decision = 'approve') {
-    const label = (await http.call('GET', `/api/bpm/lines/${opId}`)).line.label;
-    await open(`/app/projets/${prj.projectId}`);
-    const r = page.locator('section[aria-labelledby=charges-title] .bpm-table tbody tr', { hasText: label }).first();
-    await r.getByRole('button', { name: 'Valider le règlement' }).click();
-    await r.locator('input[name=date]').fill(date);
-    await r.locator('input[name=amount]').fill(String(amount).replace('.', ','));
-    await r.getByRole('button', { name: 'Valider', exact: true }).click();
+    // Un refus ne laisse rien à l'écran (« Garder la dépense prévue ») : la demande refusée passe par l'API.
+    if (decision !== 'approve') return http.pay(prj, opId, amount, date, decision);
+    const approved = (d) => d.overruns.filter((o) => o.status === 'approved').reduce((sum, o) => sum + o.amountCents, 0);
+    const before = approved(await http.projectDetail(prj));
+    const { line } = await http.call('GET', `/api/bpm/lines/${opId}`);
+    // Une dépense de tâche se règle depuis la fenêtre de sa tâche ; les autres, depuis « Dépenses sans tâche ».
+    const task = Object.entries(prj.tasks).find(([, id]) => id === line.taskId)?.[0];
+    const scope = task ? await taskPanel(prj, task) : (await open(astra(`projets/${prj.projectId}/budget`)), page.locator('#charges-title'));
+    await scope.locator('article.task-charge', { hasText: line.label }).first().getByRole('button', { name: 'Valider le règlement' }).click();
+    const detail = page.locator('bpm-line-detail');
+    await detail.locator('input[name=realDate]').fill(date);
+    await detail.locator('input[name=realAmount]').fill(String(amount).replace('.', ','));
+    if (await detail.locator('input[name=accountingDate]').count()) await detail.locator('input[name=accountingDate]').fill(date);
+    await detail.getByRole('button', { name: /^(Payé|Reçu|Confirmer le règlement)/ }).click();
     await settled();
+    // Dépassement : la fenêtre propose d'autoriser et de régler dans la même écriture.
+    const overrun = detail.locator('.bld-overrun .btn-primary').first();
+    if (await overrun.isVisible().catch(() => false)) {
+      await overrun.click();
+      await settled();
+      gestures.ui += 1;
+    }
     gestures.ui += 1;
-    const overrunCents = await overrunFlow(prj, decision);
-    const line = (await http.call('GET', `/api/bpm/lines/${opId}`)).line;
-    return { saved: line.settled, overrunCents };
+    const after = await http.projectDetail(prj);
+    const settledLine = (await http.call('GET', `/api/bpm/lines/${opId}`)).line;
+    return { saved: settledLine.settled, overrunCents: approved(after) - before };
   },
   async status(prj, task, status) {
-    await open(`/app/taches?project=${prj.projectId}`);
-    const card = page.locator('.task-card', { hasText: task }).first();
+    await open(astra(`taches?project=${prj.projectId}`));
+    const card = page.locator('article.task-card', { hasText: task }).first();
     const before = await notice();
     const grip = await card.locator('.grip').boundingBox();
     const target = await page.locator(`.board-column[data-column=${status}] .board-column-content`).boundingBox();
@@ -238,10 +239,17 @@ const ui = {
   },
   async bill() {
     const before = await http.call('GET', '/api/bpm/projects');
-    await open('/app/projets');
-    await page.getByRole('button', { name: 'Facturer au budget de vie' }).click();
-    await settled();
-    gestures.ui += 1;
+    // La fiche du projet de vie propose de facturer les dépassements autorisés, quand il y en a.
+    const any = before.lifeProject?.project?.id;
+    if (any) {
+      await open(astra(`projets/${any}`));
+      const button = page.getByRole('button', { name: /^Facturer les dépassements autorisés/ });
+      if (await button.isVisible().catch(() => false)) {
+        await button.click();
+        await settled();
+        gestures.ui += 1;
+      }
+    }
     const after = await http.call('GET', '/api/bpm/projects');
     return after.projects
       .map((p) => ({ p, b: before.projects.find((x) => x.project.id === p.project.id) }))
@@ -259,35 +267,41 @@ try {
 
   // ---------- ce que les pages affichent ----------
   const fmt = (c) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(c / 100).replace(/\s/g, ' ');
+  // Les montants ronds s'affichent aussi sans centimes (« 4 290 € ») dans les tuiles d'Astra.
+  const has = (t, c) => t.includes(fmt(c)) || (c % 100 === 0 && t.includes(fmt(c).replace(',00', '')));
   const text = async () => (await page.locator('main, body').first().innerText()).replace(/\s/g, ' ');
   const shows = [];
   const show = (name, ok, detail) => shows.push({ name, ok, detail });
   const cur = UNTIL.slice(0, 7);
   const l = r.ledger[cur];
-  await open('/tableau-de-bord');
+  await open(astra());
   await page.waitForTimeout(500);
   const dash = await text();
-  show(`Tableau de bord ${cur} : reçu ${fmt(l.income)}`, dash.includes(fmt(l.income)), '');
-  show(`Tableau de bord ${cur} : dépensé ${fmt(l.lifeCharges + l.projectCharges)} (budget de vie + projets validés)`, dash.includes(fmt(l.lifeCharges + l.projectCharges)), '');
+  show(`Accueil ${cur} : reçu ${fmt(l.income)}`, has(dash, l.income), '');
+  show(`Accueil ${cur} : dépensé ${fmt(l.lifeCharges + l.projectCharges)} (budget de vie + projets validés)`, has(dash, l.lifeCharges + l.projectCharges), '');
   if (SHOTS) await page.screenshot({ path: join(SHOTS, 'e2e-tableau-de-bord.png'), fullPage: true });
-  await open('/app/projets');
+  await open(astra('projets'));
   const red = (await page.locator('.task-card[data-budget-state=deficit] h4').allInnerTexts()).map((s) => s.trim()).sort();
   const expectRed = UNTIL >= '2026-11-26' ? ['Noël en famille', 'Week-end à Lyon'] : null;
   if (expectRed) show('Projets de la vie : en rouge, les projets en dépassement à facturer en fin de cycle', JSON.stringify(red) === JSON.stringify(expectRed), red.join(', '));
-  const panel = (await page.locator('.bpm-life-panel').innerText()).replace(/\s/g, ' ');
-  if (expectRed) show(`Panneau du budget de vie : dépassements autorisés ${fmt(11000)}`, panel.includes(fmt(11000)), '');
+  // Dépassements autorisés : fenêtre « Autorisations et cycle » de la page Projets de la vie.
+  await page.getByRole('button', { name: /Autorisations et cycle|Ouvrir les autorisations et le cycle/ }).first().click();
+  const panel = (await page.locator('bpm-modal').first().innerText()).replace(/\s/g, ' ');
+  if (expectRed) show(`Autorisations et cycle : dépassements autorisés ${fmt(11000)}`, has(panel, 11000), '');
   if (SHOTS) await page.screenshot({ path: join(SHOTS, 'e2e-projets.png'), fullPage: true });
-  await open(`/depenses?period=${cur}`);
+  // Mouvements : depuis Astra, une enveloppe réserve des moyens sans créer de charge ; seuls les règlements validés
+  // des projets comptent, avec ceux du quotidien.
+  await open(astra(`mouvements?period=${cur}`));
   await page.waitForTimeout(500);
-  const specials = (await page.locator('.expense-row').allInnerTexts()).flatMap((t) => t.split('\n').map((x) => x.trim()).filter((x) => /^(Budget attribué|Dépassement) · /.test(x))).sort();
-  if (expectRed) show('Dépenses de novembre : charges spéciales des projets présentées hors totaux', JSON.stringify(specials) === JSON.stringify(['Budget attribué · Noël en famille', 'Dépassement · Noël en famille · Décoration', 'Dépassement · Week-end à Lyon · Restaurants']), specials.join(' | '));
+  const moves = await text();
+  show(`Mouvements ${cur} : entrées reçues ${fmt(l.income)}, dépenses payées ${fmt(l.lifeCharges + l.projectCharges)}`, has(moves, l.income) && has(moves, l.lifeCharges + l.projectCharges), '');
   if (SHOTS) await page.screenshot({ path: join(SHOTS, 'e2e-depenses.png'), fullPage: true });
   const p10 = r.projects.P10;
   if (p10?.projectId) {
     await open(`/app/projets/${p10.projectId}`);
     if (SHOTS) await page.screenshot({ path: join(SHOTS, 'e2e-noel.png'), fullPage: true });
   }
-  for (const path of ['/app/taches', '/calendrier-budget', '/piloter', '/app/reglages']) await open(path);
+  for (const slug of ['taches', 'calendrier', 'cloture', 'plafonds']) await open(astra(slug));
   show('Aucune erreur dans la console du navigateur', consoleErrors.length === 0, consoleErrors.slice(0, 3).join(' | '));
 
   // ---------- rapport ----------
@@ -307,6 +321,8 @@ try {
   process.exitCode = 1;
 } finally {
   await browser.close();
-  web.close();
+  web.kill('SIGTERM');
   api.kill('SIGTERM');
+  await new Promise((r) => setTimeout(r, 300));
+  await rm(dir, { recursive: true, force: true });
 }
