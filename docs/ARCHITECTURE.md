@@ -586,13 +586,13 @@ reçoit est vide. Une nouvelle collection se range dans `sections.json` (test `s
 
 Le site s'organise en trois étages, pour accueillir des applications autonomes par section sans découper le code :
 
-1. **Le grand noyau (socle)** : noyau technique et middlewares communs (Budget, Patrimoine, Cycle, Calendrier, Navigation),
+1. **Le grand noyau (socle)**, légende « les fonctionnalités communes à tout le site » : noyau technique et middlewares communs (Budget, Patrimoine, Cycle, Calendrier, Navigation),
    derrière une seule interface. Côté serveur, c'est l'API ; côté site, `web/src/app/platform/grand-noyau.ts`, qui
    rassemble l'accès à l'API, les modèles, la mise en forme et les éléments communs des sections (catalogue, flux,
    ouverture d'un fait à sa source, accueil de section).
-2. **Les fonctionnalités par section**, une par section : `web/src/app/sections/<clé>/fonctionnalites/`. Des fonctions sans écran,
+2. **Les fonctionnalités par section** (couche middleware), légende « zones de fonctionnalités par section » : `web/src/app/sections/<clé>/fonctionnalites/`. Des fonctions sans écran,
    qui n'appellent que le grand noyau et d'autres fonctionnalités par section.
-3. **Les applications autonomes** : de section (`web/src/app/sections/<clé>/application/`) ou hybrides
+3. **Les applications autonomes** (couche présentation), légende « les applications autonomes ou hybrides » : de section (`web/src/app/sections/<clé>/application/`) ou hybrides
    (`web/src/app/hybrides/<nom>/`). Elles appellent le grand noyau, les fonctionnalités d'une ou plusieurs sections, et le cadre d'accueil
    BPM-Astra (`web/src/app/astra/cadre.ts` : contexte de page, rafraîchissement, adresses) ; jamais une autre application.
 
