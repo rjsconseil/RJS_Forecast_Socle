@@ -3,6 +3,19 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : le socle à l'abri pour les applications autonomes — 27 novembre 2026
+
+Évolution en **mode socle**, sans aucune fonctionnalité nouvelle ni écran modifié. Référence : `docs/ARCHITECTURE.md` §20.
+- **Mode de chaque PR** (`scripts/mode-pr.mjs`, tâche « Mode de la PR » sur GitHub, `npm run mode`) : grand noyau ou
+  application autonome, jamais les deux. Exception visible : l'étiquette `transition-socle` (utilisée par cette PR, qui
+  déplace la déclaration de la page Pilotage du menu du socle vers Mes projets).
+- **Point d'inscription des applications** : `sections/<clé>/application/inscription.ts` (pages, gestes, jeux d'essai),
+  registre `sections/inscriptions.ts`, types dans `astra/cadre.ts`. Le menu, les onglets, la palette et les tests
+  d'interface reprennent les pages inscrites. Mes projets y inscrit Pilotage (même place, mêmes gestes qu'avant).
+- **Contrat figé du grand noyau** (`npm run contrat`, photo `api/test/contrat/`, test `contrat-socle.test.mjs`) :
+  97 exports de l'interface côté site et 154 routes de l'API.
+- **Poste de travail d'une application** : `npm run app -- <clé>`, `npm run test:app -- <clé>`, `npm run e2e:app -- <clé>`.
+
 ## Mes projets · mode section, étape 1 : page « Pilotage » — 27 novembre 2026
 
 Première évolution de Mes projets en **mode section** (aucun impact sur le grand noyau : ni API, ni base, ni autre

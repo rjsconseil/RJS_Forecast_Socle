@@ -6,12 +6,30 @@ on:
   push:
     branches: [main]
   pull_request:
+    # labeled / unlabeled : l'étiquette « transition-socle » change le verdict du mode de la PR.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # Une PR est en mode socle OU en mode application, jamais les deux (docs/sections/README.md, scripts/mode-pr.mjs).
+  mode:
+    name: Mode de la PR (socle ou application)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fichiers modifiés et mode
+        run: node scripts/mode-pr.mjs --base "origin/$BASE_REF"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          MODE_TRANSITION: ${{ contains(github.event.pull_request.labels.*.name, 'transition-socle') && '1' || '' }}
+
   api:
     name: API (tests, contrôle statique)
     runs-on: ubuntu-latest
@@ -46,6 +64,9 @@ jobs:
         run: npm test
       - name: Contrôle statique de l'API
         run: npm run api:check
+      # Photo de l'interface du grand noyau et des routes de l'API (aussi vérifiée par npm test) : message lisible.
+      - name: Contrat du grand noyau
+        run: npm run contrat
       - name: Audit des styles
         run: npm run styles:audit
       - name: Feuilles tirées des hôtes à jour

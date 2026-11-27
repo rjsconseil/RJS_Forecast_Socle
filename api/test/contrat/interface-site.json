@@ -1,0 +1,836 @@
+{
+  "Grand noyau (platform/grand-noyau.ts)": {
+    "Api": {
+      "classe": [
+        "adminModules: () => Promise<ModuleDescription[]>",
+        "adminParameter: (key: string) => Promise<EffectiveParameter>",
+        "adminParameters: () => Promise<EffectiveParameter[]>",
+        "attachTask: (id: string, projectId: string, expectedRevision: number) => Promise<TaskMutationResult>",
+        "budget: (id: string) => Promise<{ budget: BudgetObject; operations: Operation[]; }>",
+        "budgetCostCenters: () => Promise<CostCenter[]>",
+        "budgets: () => Promise<BudgetObject[]>",
+        "changeTaskStatus: (id: string, status: TaskStatus, expectedRevision: number) => Promise<TaskMutationResult>",
+        "createBudgetOperation: (body: { requestKey: string; budgetId: string; direction: \"income\" | \"charge\"; label: string; amount: number; date: string; status: \"planned\" | \"realized\"; costCenterRef: string; realizedAmount?: number; realizedDate?: string; }) => Promise<{ replayed: boolean; operation: Operation; }>",
+        "createProject: (body: object) => Promise<ProjectDetail>",
+        "createTask: (body: object) => Promise<TaskMutationResult>",
+        "createUser: (body: { requestKey: string; label: string; userType: string; openingStock?: number | null; openingDate?: string | null; objective?: number | null; anchorDay?: number | null; cycleStartDate?: string | null; }) => Promise<UserBundleResult>",
+        "detachTask: (id: string, expectedRevision: number) => Promise<TaskMutationResult>",
+        "journal: (limit?: number) => Promise<JournalEntry[]>",
+        "metric: (key: string) => Promise<MetricDefinitionRow>",
+        "metricCatalog: () => Promise<MetricCatalog>",
+        "metricPeriods: () => Promise<{ periods: Period[]; }>",
+        "omChecks: () => Promise<OmCheck[]>",
+        "omCsvFiles: () => Promise<string[]>",
+        "omCsvHref: (file: string, scope: string) => string",
+        "omDebug: (scope: string) => Promise<OmDebug>",
+        "omKinds: () => Promise<OmKind[]>",
+        "omObject: (id: string) => Promise<Record<string, unknown>>",
+        "omObjects: (params: { q?: string; kind?: string; scope?: string; }) => Promise<OmInventoryRow[]>",
+        "patrimoine: () => Promise<PatrimoineRead>",
+        "previewMetric: (key: string, body: { formula: string; periodKey?: string; }) => Promise<{ current: FigureEvaluation; preview: FigureEvaluation; }>",
+        "project: (id: string) => Promise<ProjectDetail>",
+        "projects: () => Promise<ProjectSummary[]>",
+        "realizeBudgetOperation: (id: string, body: { expectedRevision: number; realizedAmount?: number; realizedDate?: string; }) => Promise<{ operation: Operation; }>",
+        "recentErrors: () => Promise<RecentError[]>",
+        "resetParameter: (key: string, expectedRevision: number) => Promise<{ written: boolean; parameter: EffectiveParameter; }>",
+        "setParameter: (key: string, body: { value: unknown; expectedRevision: number; note?: string; }) => Promise<{ written: boolean; parameter: EffectiveParameter; }>",
+        "task: (id: string) => Promise<TaskView>",
+        "tasks: () => Promise<TaskView[]>",
+        "updateBudgetOperation: (id: string, body: object) => Promise<{ operation: Operation; }>",
+        "updatePatrimoine: (id: string, body: { expectedRevision: number; openingStock?: number | null; openingDate?: string | null; objective?: number | null; }) => Promise<PatrimoineRead>",
+        "updateProject: (id: string, body: object) => Promise<ProjectDetail>",
+        "updateTask: (id: string, body: object) => Promise<TaskMutationResult>",
+        "userTypes: () => Promise<UserType[]>",
+        "users: () => Promise<TestUser[]>"
+      ],
+      "statique": []
+    },
+    "ApiError": {
+      "classe": [
+        "body: ApiErrorBody",
+        "cause?: unknown",
+        "isConflict: boolean",
+        "isNetwork: boolean",
+        "message: string",
+        "name: string",
+        "stack?: string | undefined",
+        "status: number"
+      ],
+      "statique": []
+    },
+    "ApiErrorBody": {
+      "type": [
+        "action: string | null",
+        "code: string",
+        "details?: (Record<string, unknown> & { current?: unknown; field?: string; }) | undefined",
+        "message: string"
+      ]
+    },
+    "BpmDashboard": {
+      "type": [
+        "closing: { possible: boolean; reason: string | null; preview: ClosingPreview | null; }",
+        "closure: Closure | null",
+        "comparison: FigureComparison[]",
+        "composition: { id: string; budgetId: string; patrimoineId: string; coreProjectId: string; }",
+        "cycle: CycleLink | null",
+        "figures: Record<string, FigureEvaluation>",
+        "lifeProjects: LifeProject[]",
+        "operations: Operation[]",
+        "patrimoine: { id: string; revision: number; openingStock: number | null; openingDate: string | null; objective: number | null; }",
+        "period: Period | null",
+        "sections: DashboardSection[]",
+        "user: { id: string; label: string; userType: string; userTypeLabel: string; }"
+      ]
+    },
+    "BudgetObject": {
+      "type": [
+        "coreProjectId: string",
+        "createdAt: string",
+        "id: string",
+        "kind: string",
+        "name: string",
+        "operationCount: number",
+        "parentBudgetId: string | null",
+        "parentBudgetName: string | null",
+        "projectTitle: string | null",
+        "provenance: { command: string; requestKey: string | null; at: string; }",
+        "realizedCount: number",
+        "revision: number",
+        "role: \"life\" | \"standard\"",
+        "updatedAt: string",
+        "userId: string"
+      ]
+    },
+    "Capitalization": {
+      "type": [
+        "amount: number",
+        "amountCents: number",
+        "createdAt: string",
+        "date: string",
+        "id: string",
+        "kind: string",
+        "label: string",
+        "patrimoineId: string",
+        "provenance: { command: string; requestKey: string | null; at: string; }",
+        "revision: number",
+        "source: { kind: string; id: string; } | null",
+        "updatedAt: string",
+        "userId: string"
+      ]
+    },
+    "cents": {
+      "valeur": "(value: number | null | undefined, decimals?: number) => string"
+    },
+    "CentsPipe": {
+      "classe": [
+        "transform: (value: number | null | undefined, decimals?: number) => string"
+      ],
+      "statique": []
+    },
+    "ClosingPreview": {
+      "type": [
+        "capitalizationDate: string",
+        "conditions: string[]",
+        "explanation: string",
+        "formula: string",
+        "parameter: MetricParameterRef",
+        "periodKey: string",
+        "periodLabel: string",
+        "result: number",
+        "resultCents: number",
+        "stockAfter: number | null",
+        "stockBefore: number | null"
+      ]
+    },
+    "Closure": {
+      "type": [
+        "budgetBalanceAfterCents: number",
+        "budgetId: string",
+        "calculation: { metric: string; formula: string; parameter: MetricParameterRef; explanation: string; inputs: { name: string; label: string; value: number | null; }[]; }",
+        "capitalizationId: string",
+        "createdAt: string",
+        "cycleLinkId: string",
+        "id: string",
+        "kind: string",
+        "patrimoineId: string",
+        "periodEnd: string",
+        "periodKey: string",
+        "periodLabel: string",
+        "periodStart: string",
+        "provenance: { command: string; requestKey: string | null; at: string; }",
+        "result: number",
+        "resultCents: number",
+        "revision: number",
+        "sourceOperationIds: string[]",
+        "updatedAt: string",
+        "userId: string"
+      ]
+    },
+    "COLUMNS": {
+      "valeur": "{ id: TaskStatus; label: string; }[]"
+    },
+    "CoreProject": {
+      "type": [
+        "createdAt: string",
+        "description: string",
+        "dueDate: string | null",
+        "id: string",
+        "kind: string",
+        "priority: Priority",
+        "provenance: { command: string; requestKey: string | null; at: string; }",
+        "revision: number",
+        "startDate: string | null",
+        "title: string",
+        "updatedAt: string",
+        "userId: string"
+      ]
+    },
+    "CostCenter": {
+      "type": [
+        "direction: Direction",
+        "directionLabel: string",
+        "id?: string | undefined",
+        "key?: string | undefined",
+        "label: string",
+        "ref: string",
+        "standard: boolean"
+      ]
+    },
+    "CycleLink": {
+      "type": [
+        "anchorDay: number | null",
+        "bpmCompositionId: string",
+        "createdAt: string",
+        "currentKey: string | null",
+        "firstOpenKey: string | null",
+        "frequency: \"monthly\"",
+        "id: string",
+        "kind: string",
+        "nextBefore: number | null",
+        "periods: Period[]",
+        "periodsTotal: number",
+        "provenance: { command: string; requestKey: string | null; at: string; }",
+        "revision: number",
+        "startDate: string | null",
+        "state: \"active\" | \"to_configure\"",
+        "updatedAt: string",
+        "userId: string"
+      ]
+    },
+    "DashboardSection": {
+      "type": [
+        "id?: string | undefined",
+        "metrics: string[]",
+        "title: string"
+      ]
+    },
+    "Direction": {
+      "type": "Direction"
+    },
+    "EffectiveParameter": {
+      "type": [
+        "defaultValue: unknown",
+        "description: string | null",
+        "group: string",
+        "history: ParameterHistoryEntry[]",
+        "key: string",
+        "label: string",
+        "module: string",
+        "origin: \"administration\" | \"défaut du code\"",
+        "revision: number",
+        "scope: string",
+        "type: \"number\" | \"boolean\" | \"object\" | \"formula\" | \"integer\" | \"text\" | \"list\"",
+        "unit: string | null",
+        "updatedAt: string | null",
+        "value: unknown"
+      ]
+    },
+    "Enrichment": {
+      "type": [
+        "bpmCompositionId?: string | null | undefined",
+        "branches?: { budgetId: string; budgetName: string; coreProjectId: string; projectTitle: string | null; }[] | undefined",
+        "budgetId: string",
+        "budgetName: string",
+        "kind: \"life\" | \"standard\"",
+        "label: string",
+        "parentBudgetId: string | null",
+        "parentBudgetName?: string | null | undefined",
+        "patrimoineId?: string | null | undefined"
+      ]
+    },
+    "euros": {
+      "valeur": "(value: number | null | undefined, decimals?: number) => string"
+    },
+    "EurosPipe": {
+      "classe": [
+        "transform: (value: number | null | undefined, decimals?: number) => string"
+      ],
+      "statique": []
+    },
+    "FigureComparison": {
+      "type": [
+        "currentFormula: string",
+        "key: string",
+        "label: string",
+        "recomputed: number | null",
+        "recorded: number | null",
+        "recordedFormula: string | null"
+      ]
+    },
+    "FigureEvaluation": {
+      "type": [
+        "closureId?: string | undefined",
+        "decimals: number",
+        "description: string | null",
+        "explanation: string",
+        "formula: string",
+        "inputs: FigureInput[]",
+        "key: string",
+        "label: string",
+        "module: string",
+        "note?: string | undefined",
+        "parameter: MetricParameterRef",
+        "period: Period | null",
+        "recorded?: boolean | undefined",
+        "recordedAt?: string | undefined",
+        "status: \"ok\" | \"unavailable\"",
+        "unavailableReason: string | null",
+        "unit: MetricUnit",
+        "value: number | null"
+      ]
+    },
+    "FigureInput": {
+      "type": [
+        "description?: string | null | undefined",
+        "explanation?: string | undefined",
+        "formula?: string | undefined",
+        "inputs?: FigureInput[] | undefined",
+        "label: string",
+        "module?: string | undefined",
+        "name: string",
+        "note?: string | null | undefined",
+        "parameter?: MetricParameterRef | undefined",
+        "sources: FigureSource[]",
+        "status: \"ok\" | \"unavailable\"",
+        "type: \"variable\" | \"metric\" | \"unknown\"",
+        "unit?: MetricUnit | undefined",
+        "value: number | null"
+      ]
+    },
+    "FigureSource": {
+      "type": [
+        "amount: number | null",
+        "date: string | null",
+        "id: string",
+        "kind: string",
+        "label: string",
+        "status?: string | undefined"
+      ]
+    },
+    "figureValue": {
+      "valeur": "(value: number | null | undefined, unit: string, decimals?: number) => string"
+    },
+    "FigureValuePipe": {
+      "classe": [
+        "transform: (value: number | null | undefined, unit: string, decimals?: number) => string"
+      ],
+      "statique": []
+    },
+    "flowsFrom": {
+      "valeur": "(key: SectionKey) => SectionFlow[]"
+    },
+    "flowsInto": {
+      "valeur": "(key: SectionKey) => SectionFlow[]"
+    },
+    "FormulaReference": {
+      "type": [
+        "description: string | null",
+        "label: string",
+        "module: string",
+        "name: string",
+        "type: \"variable\" | \"metric\"",
+        "unit: string"
+      ]
+    },
+    "hours": {
+      "valeur": "(value: number | null | undefined) => string"
+    },
+    "HoursPipe": {
+      "classe": [
+        "transform: (value: number | null | undefined) => string"
+      ],
+      "statique": []
+    },
+    "JournalEntry": {
+      "type": [
+        "at: string",
+        "command: string",
+        "created: string[]",
+        "outcome: string",
+        "requestKey: string | null",
+        "updated: string[]",
+        "userId: string | null"
+      ]
+    },
+    "kindOfId": {
+      "valeur": "(id: string | null | undefined) => string | null"
+    },
+    "LifeProject": {
+      "type": [
+        "budgetId: string",
+        "coreProjectId: string",
+        "name: string",
+        "project: CoreProject",
+        "view: ProjectView"
+      ]
+    },
+    "MetricCatalog": {
+      "type": [
+        "functions: string[]",
+        "metrics: MetricDefinitionRow[]",
+        "references: FormulaReference[]"
+      ]
+    },
+    "MetricDefinitionRow": {
+      "type": [
+        "decimals: number",
+        "defaultFormula: string",
+        "description: string | null",
+        "formula: string",
+        "group: string | null",
+        "key: string",
+        "label: string",
+        "module: string",
+        "parameter: { key: string; revision: number; origin: string; updatedAt: string | null; history: ParameterHistoryEntry[]; }",
+        "references: string[]",
+        "unit: MetricUnit"
+      ]
+    },
+    "MetricParameterRef": {
+      "type": [
+        "isDefault?: boolean | undefined",
+        "key: string",
+        "origin: string",
+        "revision: number | null",
+        "updatedAt?: string | null | undefined"
+      ]
+    },
+    "MetricUnit": {
+      "type": "MetricUnit"
+    },
+    "ModuleDescription": {
+      "type": [
+        "dependsOn: string[]",
+        "id: string",
+        "kinds: string[]",
+        "label: string",
+        "level: 0 | 1 | 2 | 3",
+        "levelLabel: string",
+        "metrics: number",
+        "parameters: number",
+        "variables: number"
+      ]
+    },
+    "newRequestKey": {
+      "valeur": "() => string"
+    },
+    "Operation": {
+      "type": [
+        "amount: number",
+        "amountCents: number",
+        "budgetId: string",
+        "budgetName: string | null",
+        "costCenterId: string | null",
+        "costCenterLabel: string | null",
+        "costCenterRef: string",
+        "createdAt: string",
+        "date: string",
+        "direction: Direction",
+        "directionLabel: string",
+        "id: string",
+        "kind: string",
+        "label: string",
+        "provenance: { command: string; requestKey: string | null; at: string; }",
+        "realizedAmount: number | null",
+        "realizedAmountCents: number | null",
+        "realizedDate: string | null",
+        "revision: number",
+        "standardCostCenter: string | null",
+        "status: \"planned\" | \"realized\"",
+        "updatedAt: string",
+        "userId: string"
+      ]
+    },
+    "ParameterHistoryEntry": {
+      "type": [
+        "at: string",
+        "note: string | null",
+        "previous: unknown",
+        "revision: number",
+        "value: unknown"
+      ]
+    },
+    "parseAmount": {
+      "valeur": "(raw: string | number | null | undefined) => number | null | \"invalid\""
+    },
+    "parseHours": {
+      "valeur": "(raw: string | number | null | undefined) => number | null | \"invalid\""
+    },
+    "PatrimoineRead": {
+      "type": [
+        "capitalizations: Capitalization[]",
+        "patrimoine: ObjectMeta & { label: string; coreProjectId: string; principalBudgetId: string; openingStockCents: number | null; openingStock: number | null; openingDate: string | null; objectiveCents: number | null; objective: number | null; }",
+        "raw: { openingStock: number | null; capitalized: number; }"
+      ]
+    },
+    "PercentPipe": {
+      "classe": [
+        "transform: (value: number | null | undefined, decimals?: number) => string"
+      ],
+      "statique": []
+    },
+    "percentText": {
+      "valeur": "(value: number | null | undefined, decimals?: number) => string"
+    },
+    "Period": {
+      "type": [
+        "closureId?: string | null | undefined",
+        "end: string",
+        "key: string",
+        "label: string",
+        "start: string",
+        "status?: \"closed\" | \"ended\" | \"current\" | \"future\" | undefined"
+      ]
+    },
+    "plannedTotal": {
+      "valeur": "(t: TimeAggregates) => string"
+    },
+    "PlannedTotalPipe": {
+      "classe": [
+        "transform: (t: TimeAggregates) => string"
+      ],
+      "statique": []
+    },
+    "Priority": {
+      "type": "Priority"
+    },
+    "PRIORITY_LABEL": {
+      "valeur": "Record<Priority, string>"
+    },
+    "ProjectDetail": {
+      "type": [
+        "branches: { budgetId: string; budgetName: string; coreProjectId: string; projectTitle: string | null; }[]",
+        "enrichment: Enrichment | null",
+        "financial: { status: string; note: string; }",
+        "pathways: ProjectPathways",
+        "project: CoreProject",
+        "replayed?: boolean | undefined",
+        "tasks: TaskView[]",
+        "view: ProjectView"
+      ]
+    },
+    "ProjectPathways": {
+      "type": [
+        "canAddTask: boolean",
+        "isTaskDestination: boolean",
+        "note: string | null",
+        "tasksCanChangeProject: boolean"
+      ]
+    },
+    "ProjectStatus": {
+      "type": "ProjectStatus"
+    },
+    "ProjectSummary": {
+      "type": [
+        "enrichment: Enrichment | null",
+        "pathways: ProjectPathways",
+        "project: CoreProject",
+        "view: ProjectView"
+      ]
+    },
+    "ProjectView": {
+      "type": [
+        "column: TaskStatus",
+        "columnLabel: string",
+        "completionPercent: number",
+        "countsByStatus: Record<TaskStatus, number>",
+        "doneCount: number",
+        "explanation: string",
+        "projectId: string",
+        "status: ProjectStatus",
+        "statusLabel: string",
+        "taskIds: string[]",
+        "time: TimeAggregates"
+      ]
+    },
+    "RecentError": {
+      "type": [
+        "at: string",
+        "code: string",
+        "command: string",
+        "message: string",
+        "userId: string | null"
+      ]
+    },
+    "RecetteContext": {
+      "classe": [
+        "connected: Signal<boolean>",
+        "select: (id: string | null, { remember }?: { remember?: boolean | undefined; }) => void",
+        "userId: WritableSignal<string | null>"
+      ],
+      "statique": []
+    },
+    "SECTION_FLOWS": {
+      "valeur": "readonly SectionFlow[]"
+    },
+    "SectionAlone": {
+      "type": [
+        "action?: { label: string; link: string; query?: Record<string, string>; } | undefined",
+        "detail: string",
+        "title: string"
+      ]
+    },
+    "SectionFlow": {
+      "type": [
+        "detail: string",
+        "from: SectionKey",
+        "label: string",
+        "n: number",
+        "to: SectionKey"
+      ]
+    },
+    "SectionHome": {
+      "classe": [
+        "alone: InputSignal<SectionAlone | null>",
+        "indicators: InputSignal<SectionIndicator[]>",
+        "key: InputSignal<SectionKey>",
+        "linkOf: InputSignal<(key: SectionKey) => string>",
+        "showFlows: InputSignal<boolean>",
+        "title: InputSignal<string | null>"
+      ],
+      "statique": []
+    },
+    "SectionIndicator": {
+      "type": [
+        "label: string",
+        "note?: string | undefined",
+        "tone?: \"neutral\" | \"success\" | \"warning\" | \"danger\" | undefined",
+        "value: string"
+      ]
+    },
+    "SectionKey": {
+      "type": "SectionKey"
+    },
+    "sectionOf": {
+      "valeur": "(key: SectionKey) => SiteSection"
+    },
+    "shortDate": {
+      "valeur": "(value: string | null | undefined) => string"
+    },
+    "ShortDatePipe": {
+      "classe": [
+        "transform: (value: string | null | undefined) => string"
+      ],
+      "statique": []
+    },
+    "shortId": {
+      "valeur": "(id: string | null | undefined) => string"
+    },
+    "ShortIdPipe": {
+      "classe": [
+        "transform: (id: string | null | undefined) => string"
+      ],
+      "statique": []
+    },
+    "signedCents": {
+      "valeur": "(value: number | null | undefined, decimals?: number) => string"
+    },
+    "SignedCentsPipe": {
+      "classe": [
+        "transform: (value: number | null | undefined, decimals?: number) => string"
+      ],
+      "statique": []
+    },
+    "SITE_SECTIONS": {
+      "valeur": "readonly SiteSection[]"
+    },
+    "SiteSection": {
+      "type": [
+        "decides: string",
+        "key: SectionKey",
+        "label: string",
+        "order: number",
+        "prefix: string",
+        "promise: string",
+        "tone: \"astra-quotidien\" | \"astra-projets\" | \"astra-budget\" | \"astra-patrimoine\" | \"astra-cycles\"",
+        "verb: string"
+      ]
+    },
+    "sourceLink": {
+      "valeur": "(kind: string, ref: SourceRef | string, applicationId?: string) => SourceLink | null"
+    },
+    "SourceLink": {
+      "type": [
+        "link: string",
+        "query?: Record<string, string> | undefined"
+      ]
+    },
+    "sourceLinkOfId": {
+      "valeur": "(ref: SourceRef | string) => SourceLink | null"
+    },
+    "SourceRef": {
+      "type": [
+        "id: string",
+        "projectId?: string | null | undefined"
+      ]
+    },
+    "Task": {
+      "type": [
+        "createdAt: string",
+        "description: string",
+        "dueDate: string | null",
+        "id: string",
+        "kind: string",
+        "plannedHours: number | null",
+        "projectId: string | null",
+        "provenance: { command: string; requestKey: string | null; at: string; }",
+        "revision: number",
+        "spentHours: number",
+        "startDate: string | null",
+        "status: TaskStatus",
+        "title: string",
+        "updatedAt: string",
+        "userId: string"
+      ]
+    },
+    "TASK_STATUS_LABEL": {
+      "valeur": "Record<TaskStatus, string>"
+    },
+    "TaskMutationResult": {
+      "type": [
+        "affectedProjects?: ProjectSummary[] | undefined",
+        "effects?: { module: string; kind: string; message: string; ids: string[]; }[] | undefined",
+        "pathways: { canChangeProject: boolean; }",
+        "projectTitle: string | null",
+        "qualification: { code: string; label: string; budgetIdDerived: string | null; }",
+        "replayed?: boolean | undefined",
+        "task: Task",
+        "written?: boolean | undefined"
+      ]
+    },
+    "TaskStatus": {
+      "type": "TaskStatus"
+    },
+    "TaskView": {
+      "type": [
+        "pathways: { canChangeProject: boolean; }",
+        "projectTitle: string | null",
+        "qualification: { code: string; label: string; budgetIdDerived: string | null; }",
+        "task: Task"
+      ]
+    },
+    "TestUser": {
+      "type": [
+        "bpmCompositionId: string | null",
+        "cycleState: \"active\" | \"to_configure\" | null",
+        "entryCount?: number | undefined",
+        "id: string",
+        "label: string",
+        "principalBudgetId: string | null",
+        "userType: string",
+        "userTypeLabel: string"
+      ]
+    },
+    "TimeAggregates": {
+      "type": [
+        "estimatedTaskCount: number",
+        "missingEstimateCount: number",
+        "plannedHoursKnown: number",
+        "plannedIsPartial: boolean",
+        "spentHoursTotal: number",
+        "spentToPlannedPercent: number | null",
+        "taskCount: number"
+      ]
+    },
+    "toApiError": {
+      "valeur": "(err: unknown) => ApiError"
+    },
+    "tone": {
+      "valeur": "(value: number | null | undefined) => \"pos\" | \"neg\" | \"zero\" | \"unknown\""
+    },
+    "UserBundleResult": {
+      "type": [
+        "bpmCompositionId: string",
+        "budgetId: string",
+        "coreProjectId: string",
+        "cycleLinkId: string",
+        "patrimoineId: string",
+        "replayed: boolean",
+        "userId: string"
+      ]
+    },
+    "UserType": {
+      "type": [
+        "key: string",
+        "label: string"
+      ]
+    }
+  },
+  "Cadre BPM-Astra (astra/cadre.ts)": {
+    "ActionInscrite": {
+      "type": [
+        "label: string",
+        "page: string",
+        "query: Record<string, string>",
+        "vers?: string | undefined"
+      ]
+    },
+    "astraSectionHome": {
+      "valeur": "(key: AstraPartKey) => string"
+    },
+    "astraUrl": {
+      "valeur": "(slug: string) => string"
+    },
+    "bpmLoader": {
+      "valeur": "<K, T>(key: () => K, fetch: (key: K) => Promise<T>) => Loader<T>"
+    },
+    "BpmPageContext": {
+      "classe": [
+        "carry: Signal<Params>",
+        "fragment: Signal<string | null>",
+        "params: Signal<ParamMap>",
+        "period: Signal<string | undefined>",
+        "q: (name: string) => Signal<string>",
+        "query: Signal<ParamMap>",
+        "refresh: BpmRefresh",
+        "setQuery: (patch: Params, opts?: { replace?: boolean; }) => Promise<boolean>",
+        "userId: WritableSignal<string | null>"
+      ],
+      "statique": []
+    },
+    "BpmRefresh": {
+      "classe": [
+        "bump: () => void",
+        "version: WritableSignal<number>"
+      ],
+      "statique": []
+    },
+    "InscriptionApplication": {
+      "type": [
+        "actions?: ActionInscrite[] | undefined",
+        "cle: string",
+        "essais?: string[] | undefined",
+        "pages: PageInscrite[]",
+        "section: SectionKey"
+      ]
+    },
+    "PageInscrite": {
+      "type": [
+        "ecran: () => Promise<Type<unknown>>",
+        "label: string",
+        "mobile?: boolean | undefined",
+        "slug: string"
+      ]
+    }
+  }
+}

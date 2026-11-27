@@ -17,4 +17,8 @@ par `application/`. Les gardes sont dans `api/test/application-isolation.test.mj
 | Fichier | Rôle |
 |---|---|
 | `fonctionnalites/portfolio.ts` | Portefeuille des projets, santé, tableau des tâches, planning (calculs purs) |
+| `application/inscription.ts` | Inscription dans BPM-Astra : pages (Pilotage), gestes, jeu d'essai (`seed-projets`) |
 | `application/pilotage.page.ts` | Page « Pilotage » : vues Portefeuille, Tableau, Planning |
+
+Poste de travail : `npm run app -- projets` (site et jeux d'essai sur une base temporaire), `npm run test:app -- projets`,
+`npm run e2e:app -- projets`.

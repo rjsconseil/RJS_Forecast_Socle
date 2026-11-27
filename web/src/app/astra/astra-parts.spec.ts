@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ASTRA_APPLICATION } from './astra.application';
 import { astraLinkDoublesTab } from './astra-actions';
 import { ASTRA_LINKS, ASTRA_ORDER, ASTRA_PARTS, ASTRA_TAB_LABELS, astraPartOf, astraTabsOf } from './astra-parts';
+import { APPLICATIONS_INSCRITES } from '../sections/inscriptions';
 
 const routes = ASTRA_APPLICATION.routes.filter(r => !r.redirectTo);
 const routed = new Set(routes.map(r => (r.path ?? '').replace(/^bpm-astra\/?/, '')));
@@ -77,5 +78,30 @@ describe('liens des commandes d’un écran dans le cadre Astra', () => {
     expect(astraLinkDoublesTab('/bpm-astra/budget', here, tabs)).toBe(false);
     expect(astraLinkDoublesTab('https://ailleurs.example/bpm-astra/calendrier', here, tabs)).toBe(false);
     expect(astraLinkDoublesTab('/bpm-astra/calendrier', here, tabs, true)).toBe(false);
+  });
+});
+
+describe('point d’inscription des applications autonomes', () => {
+  const inscrites = APPLICATIONS_INSCRITES.flatMap(app => app.pages.map(page => ({ app, page })));
+  it('chaque page inscrite a une adresse à elle, qui ne reprend aucune page du socle ni d’une autre application', () => {
+    const all = ASTRA_PARTS.flatMap(part => part.pages.map(page => page.slug));
+    expect(new Set(all).size).toBe(all.length);
+    for (const { page } of inscrites) expect(page.slug.includes(':') || page.slug === '', page.slug).toBe(false);
+    expect(new Set(APPLICATIONS_INSCRITES.map(app => app.cle)).size).toBe(APPLICATIONS_INSCRITES.length);
+  });
+  it('les pages inscrites suivent les pages du socle dans le menu de leur partie, et ont un écran', () => {
+    for (const { app, page } of inscrites) {
+      const part = ASTRA_PARTS.find(p => p.key === app.section)!;
+      const index = part.pages.findIndex(p => p.slug === page.slug);
+      expect(index, page.slug).toBeGreaterThan(0);
+      expect(part.pages.slice(index).every(p => !!p.own), page.slug).toBe(true);
+      expect(routed.has(page.slug), page.slug).toBe(true);
+    }
+  });
+  it('chaque geste inscrit est montré sur une page de son application et mène à une page d’Astra', () => {
+    for (const app of APPLICATIONS_INSCRITES) for (const action of app.actions ?? []) {
+      expect(app.pages.some(p => p.slug === action.page), `${app.cle} : ${action.label}`).toBe(true);
+      if (action.vers) expect(routed.has(action.vers), action.vers).toBe(true);
+    }
   });
 });
