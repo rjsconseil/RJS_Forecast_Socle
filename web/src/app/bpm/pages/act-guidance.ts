@@ -27,7 +27,7 @@ import { bpmLoader, BpmProgress, BpmRefresh, BpmState } from '../ui';
         }
         <ol class="bp-dir-list">
           @for (i of d.items; track i.key; let n = $index) {
-            <li [class.is-over]="i.valueCents !== null && (i.key === 'available' || i.key === 'weekly') && (i.valueCents ?? 0) < 0">
+            <li [class.is-over]="i.valueCents !== null && (i.key === 'available' || i.key === 'weekly') && i.valueCents < 0">
               <span aria-hidden="true">{{ marks[n] ?? n + 1 }}</span>{{ i.label }} :
               @if (i.valueCents !== null) {
                 <strong [bpmAmount]="i.valueCents" [bpmTone]="i.key === 'available' || i.key === 'weekly' ? (i.valueCents < 0 ? 'danger' : i.valueCents > 0 ? 'success' : 'info') : 'info'">{{ value(i.key, i.valueCents) }}</strong>

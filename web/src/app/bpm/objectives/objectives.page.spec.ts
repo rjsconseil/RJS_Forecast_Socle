@@ -73,7 +73,8 @@ describe('page dédiée Objectifs et avenir', () => {
       summary: vi.fn().mockResolvedValue({ context: { user: { label: 'Profil test' }, calculationDate: '2026-11-06', scope: 'principal', period: { key: '2026-11', label: 'Novembre 2026', start: '2026-11-01', endExclusive: '2026-12-01' } }, figures: {} }),
       directives: vi.fn().mockResolvedValue({ context: { period: { key: '2026-11' } }, items: [], surplus: null }),
       goals: vi.fn().mockResolvedValue([goal]),
-      projection: vi.fn().mockResolvedValue({ status: 'unknown', rows: [], goals: [] }),
+      // Comme l'API : les hypothèses sont toujours rendues, même sans calcul possible.
+      projection: vi.fn().mockResolvedValue({ status: 'unknown', hypotheses: { contributionCents: null, extraCents: 0, cadence: 'monthly', startCents: null, horizonYears: 20, inflationPct: 2, ratePct: null }, rows: [], goals: [] }),
       updateVision: vi.fn().mockResolvedValue({ revision: 10 }),
       removeGoal: vi.fn().mockResolvedValue({}),
       createGoal: vi.fn().mockResolvedValue({ replayed: false, goal: { label: 'Voyage' } }),
@@ -260,7 +261,7 @@ describe('page dédiée Objectifs et avenir', () => {
 
   it('respecte les objectifs filtrés pour choisir la commande principale', async () => {
     bpm['goals'].mockResolvedValue([{ ...goal, id: 'past', label: 'Ancien achat', type: 'achat', typeLabel: 'Achat', date: '2026-09-01' }, goal]);
-    bpm['projection'].mockResolvedValue({ status: 'estimate', rows: [], goals: [{ goalId: goal.id, status: 'partial', nominalTargetCents: 1800000, coveredCents: 500000, coveragePct: 28 }] });
+    bpm['projection'].mockResolvedValue({ status: 'estimate', hypotheses: { contributionCents: null, extraCents: 0, cadence: 'monthly', startCents: null, horizonYears: 20, inflationPct: 2, ratePct: null }, rows: [], goals: [{ goalId: goal.id, status: 'partial', nominalTargetCents: 1800000, coveredCents: 500000, coveragePct: 28 }] });
     await click('Actualiser');
     await harness.navigateByUrl('/vision?q=etudes');
     await settle();

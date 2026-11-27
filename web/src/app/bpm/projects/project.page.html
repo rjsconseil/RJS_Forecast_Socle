@@ -530,7 +530,7 @@
               {{ visibleTasks().length }} résultat(s) dans ce projet.
             </p>
           }
-          @if (!d.tasks.length && !d.budget?.abandoned) {
+          @if (!d.tasks.length && !b.abandoned) {
             <div class="project-first-task">
               <h3>La première étape de votre projet</h3>
               <p>Créez une tâche, estimez son temps puis demandez sa part de l’enveloppe.</p>

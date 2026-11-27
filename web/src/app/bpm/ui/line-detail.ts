@@ -175,7 +175,7 @@ interface PendingOverrun {
                 <a class="btn btn-primary" [routerLink]="['/app/gestion-projet', p.coreProjectId]" fragment="enveloppe" (click)="followLink()">Attribuer une enveloppe au projet</a>
               }
               @if (p.inclusion === 'included') {
-                <a class="btn btn-secondary" [routerLink]="v.project?.fundingSource === 'patrimoine' ? '/vision' : '/projet-de-vie/cloture'" [queryParams]="{ period: v.timing?.accountingPeriod?.key ?? period() }" [fragment]="v.project?.fundingSource === 'patrimoine' ? 'wealth-project-flows' : 'cycle-project-flows'" (click)="followLink()">Ouvrir la prise en charge du projet de vie</a>
+                <a class="btn btn-secondary" [routerLink]="p.fundingSource === 'patrimoine' ? '/vision' : '/projet-de-vie/cloture'" [queryParams]="{ period: v.timing?.accountingPeriod?.key ?? period() }" [fragment]="p.fundingSource === 'patrimoine' ? 'wealth-project-flows' : 'cycle-project-flows'" (click)="followLink()">Ouvrir la prise en charge du projet de vie</a>
               }
             </section>
           }

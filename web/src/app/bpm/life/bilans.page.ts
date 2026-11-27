@@ -218,7 +218,7 @@ const pct = (part: number | null | undefined, whole: number | null | undefined) 
             <div><dt>Moyenne par cycle</dt><dd [bpmAmount]="all().averageCents">{{ all().averageCents | signedCents }}</dd></div>
             <div><dt>Épargne visée atteinte</dt><dd>{{ all().met }} / {{ all().judged }}<small>cycle(s) avec objectif</small></dd></div>
             <div><dt>Coût des projets</dt><dd [bpmAmount]="l.totals.projectsClosedCents" bpmFlow="expense">{{ l.totals.projectsClosedCents | cents }}<small>sur les cycles clos</small></dd></div>
-            <div><dt>Prélevé hors cycle</dt><dd [bpmAmount]="(l.totals.withdrawnCents ?? 0)" bpmFlow="expense">{{ (l.totals.withdrawnCents ?? 0) | cents }}<small>sur le patrimoine</small></dd></div>
+            <div><dt>Prélevé hors cycle</dt><dd [bpmAmount]="l.totals.withdrawnCents" bpmFlow="expense">{{ l.totals.withdrawnCents | cents }}<small>sur le patrimoine</small></dd></div>
           </dl>
           @if (all().spending.length) {
             <div class="bl-table-wrap">

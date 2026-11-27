@@ -81,7 +81,7 @@ export class Journey {
   readonly cursor = computed(() => this.trail().cursor);
   readonly previous = computed(() => this.trail().visits[this.trail().cursor - 1] ?? null);
   readonly next = computed(() => this.trail().visits[this.trail().cursor + 1] ?? null);
-  readonly current = computed(() => this.trail().visits[this.trail().cursor] ?? null);
+  readonly current = computed<JourneyVisit | null>(() => this.trail().visits[this.trail().cursor] ?? null);
   readonly first = computed(() => this.trail().visits[0] ?? null);
   /** Le point d'arrêt : la dernière étape du parcours, jamais effacée par un retour en arrière. */
   readonly last = computed(() => this.trail().visits.at(-1) ?? null);

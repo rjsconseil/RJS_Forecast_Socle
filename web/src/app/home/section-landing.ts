@@ -16,7 +16,7 @@ import { PlanCardsComponent } from './plan-cards';
   template: `
     @if (zone(); as zone) {
       @if (section(); as section) {
-        <div class="page plan-page plan-section-home" [attr.data-tone]="section.tone ?? zone.tone">
+        <div class="page plan-page plan-section-home" [attr.data-tone]="section.tone">
           <header class="plan-heading" data-ui-pattern="heading">
             <a class="plan-return" [routerLink]="zoneHome(zone)"> <span aria-hidden="true">←</span> {{ zone.label }} </a>
             <div class="page-hero-title">

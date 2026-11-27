@@ -91,7 +91,7 @@ import { PlanTabLink } from './tab-links';
                 }
               </div>
             }
-            @if (!first && sections.of(tab.link)?.length) {
+            @if (!first && sections.of(tab.link).length) {
               <button
                 type="button"
                 class="page-tab-more"

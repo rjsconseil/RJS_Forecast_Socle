@@ -103,7 +103,7 @@
                 @let current = location().section?.id === section.id;
                 <a
                   data-navigation-level="section" class="section-switch-entry"
-                  [attr.data-tone]="section.tone ?? zone.tone"
+                  [attr.data-tone]="section.tone"
                   [routerLink]="entry.link"
                   [queryParams]="entry.query"
                   [class.active]="current"

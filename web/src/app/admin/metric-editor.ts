@@ -94,7 +94,7 @@ import { functionDoc } from './metrics';
                   <div class="cfg-error" role="alert">
                     <strong>{{ e.body.code === 'FORMULA_INVALID' ? 'Formule invalide' : e.body.code }}</strong> — {{ e.message }}
                     @if (e.body.details?.['reference']) {
-                      <p>Référence en cause : <code>{{ e.body.details?.['reference'] }}</code>. Utiliser une référence de la palette.</p>
+                      <p>Référence en cause : <code>{{ e.body.details['reference'] }}</code>. Utiliser une référence de la palette.</p>
                     }
                     @if (e.isConflict) {
                       <p>La formule a été modifiée entre-temps (révision actuelle différente). Votre saisie est conservée.</p>

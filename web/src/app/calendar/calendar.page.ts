@@ -223,7 +223,7 @@ export class CalendarPage {
   protected readonly priority = computed(
     () =>
       this.priorities().find((event) => event.key === this.priorityKey()) ??
-      this.priorities()[0] ??
+      this.priorities().at(0) ??
       null,
   );
   protected readonly focus = computed<PageFocus | null>(() => {

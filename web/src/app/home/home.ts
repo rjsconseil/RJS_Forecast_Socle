@@ -79,7 +79,7 @@ type PortalRow = ReturnType<typeof portalBands>[number];
                       @let sectionList = visibleSections(zone);
                       @for (section of sectionList; track section.id) {
                         @let entry = entryOf(zone, section);
-                        <a data-navigation-level="page" class="plan-entry" [attr.data-tone]="section.tone ?? zone.tone" [routerLink]="entry.link" [queryParams]="entry.query"
+                        <a data-navigation-level="page" class="plan-entry" [attr.data-tone]="section.tone" [routerLink]="entry.link" [queryParams]="entry.query"
                           ><span class="plan-entry-mark" aria-hidden="true">{{ markOf(zone, section, sectionList) }}</span
                           ><span class="plan-entry-text"><strong>{{ section.label | navigationLabel:("section:" + zone.id + ":" + section.id) }}</strong><small>{{ section.intention }}</small></span></a
                         >
