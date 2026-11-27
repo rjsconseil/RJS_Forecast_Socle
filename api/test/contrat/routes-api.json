@@ -164,6 +164,14 @@
     "PUT /api/bpm/recurrences/:id",
     "PUT /api/bpm/vision"
   ],
+  "applications": [
+    "GET /api/aa",
+    "GET /api/aa/:app/:collection",
+    "GET /api/aa/:app/:collection/:id",
+    "POST /api/aa/:app/:collection",
+    "POST /api/aa/:app/instanciation",
+    "PUT /api/aa/:app/:collection/:id"
+  ],
   "couche HTTP": [
     "GET /api/auth/status",
     "GET /api/changes",

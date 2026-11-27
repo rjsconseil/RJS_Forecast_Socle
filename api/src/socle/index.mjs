@@ -9,6 +9,7 @@ import { Parameters } from './parameters.mjs';
 import { MetricEngine } from './calc/metrics.mjs';
 import { moduleScope } from './scope.mjs';
 import { PRINCIPLES } from './principles.mjs';
+import { syncCatalogues } from './applications.mjs';
 
 export async function createSocle({ dataFile, modules, faultInjection = false, dataEngine = process.env.SOCLE_DATA_ENGINE || undefined, partitionCache }) {
   const registry = new Registry();
@@ -48,6 +49,7 @@ export async function createSocle({ dataFile, modules, faultInjection = false, d
   socle.routesOf = (m) => m.routes?.(registry.scopes.get(m.id)) ?? [];
   try {
     await migrate(socle);
+    await syncCatalogues(socle);
   } catch (err) {
     await socle.close();
     throw err;

@@ -9,7 +9,7 @@
 // - une partition se lit en un seul aller-retour (UNION ALL de ses tables).
 // Connexion : `SOCLE_PG_URL` (ex. postgres://user@host:5432/base) ; pilote `pg`, chargé seulement si ce moteur est choisi.
 import { DomainError } from '../../errors.mjs';
-import { JOURNAL_WINDOW, q, SECTIONS, SYSTEM_PARTITION, tableOf } from './tables.mjs';
+import { JOURNAL_WINDOW, q, SECTIONS, SYSTEM_PARTITION, sectionPrefixOfTable, tableOf } from './tables.mjs';
 
 const PARTITION_SCALARS = new Set(['revision', 'updatedAt']);
 const conflict = (message, details) => new DomainError('PERSISTENCE_CONFLICT', message, details);
@@ -86,7 +86,7 @@ export class SgbdEngine {
     await this.pool.query(`CREATE TABLE IF NOT EXISTS ${q(table)} (id TEXT PRIMARY KEY, user_id TEXT, revision BIGINT NOT NULL, data TEXT NOT NULL, ord BIGSERIAL);
       CREATE INDEX IF NOT EXISTS ${q(table + '_user')} ON ${q(table)} (user_id, ord);`);
     await this.pool.query('INSERT INTO "SY_tables" (collection, table_name, section, space) VALUES ($1, $2, $3, $4) ON CONFLICT (collection) DO NOTHING',
-      [collection, table, table.slice(0, 2), space ?? null]);
+      [collection, table, sectionPrefixOfTable(table), space ?? null]);
     await this.#loadTables();
     return this.tables.get(collection);
   }

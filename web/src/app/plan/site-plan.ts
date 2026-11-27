@@ -11,7 +11,8 @@ import { navigationNumber } from '../navigation/navigation-engine';
 import { bandKey, objectKey, planOrder, PORTAL_KEY, sectionKey, zoneKey } from './plan-order';
 import { PlanTabLink, tabLinksKey, tabLinksOf } from './tab-links';
 import { ApplicationDetail, ApplicationObject, overviewSection, PLAN_ROOT } from '../platform/application';
-import { APPLICATIONS } from '../platform/applications';
+import { APPLICATIONS, ESPACES_AUTONOMES } from '../platform/applications';
+import { sectionApplicationsAutonomes } from '../platform/applications-autonomes';
 
 export interface PlanPage {
   id: string;
@@ -321,6 +322,8 @@ export const PLAN_ZONES: PlanZone[] = [
         space: 'projects',
         pages: [{ id: 'object-management', label: 'Object Management', link: '/object-management', symbol: '⌘', tone: 'nav-teal', step: 'Tracer', description: 'Diagnostic en lecture seule des objets persistés des trois niveaux.', result: 'L’identité, les références et le rejeu de chaque objet.' }],
       },
+      // Les applications autonomes qui reposent sur le noyau, chacune dans son propre espace (platform/applications-autonomes.ts).
+      sectionApplicationsAutonomes(ESPACES_AUTONOMES, '05'),
     ],
   },
   {

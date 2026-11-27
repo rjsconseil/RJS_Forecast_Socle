@@ -10,6 +10,7 @@ import cycleModule from './cycle/index.mjs';
 import budgetModule from './budget/index.mjs';
 import patrimoineModule from './patrimoine/index.mjs';
 import bpmModule from './bpm/index.mjs';
+import applicationsModule from './applications/index.mjs';
 
 // Niveau 2 : middleware technique (sert les middlewares métier), transverse (sert métier et applications), métier.
-export const SOCLE_MODULES = [usersModule, administrationModule, objectManagementModule, coreModule, cycleModule, calendarModule, navigationModule, budgetModule, patrimoineModule, bpmModule];
+export const SOCLE_MODULES = [usersModule, administrationModule, objectManagementModule, coreModule, cycleModule, calendarModule, navigationModule, budgetModule, patrimoineModule, bpmModule, applicationsModule];

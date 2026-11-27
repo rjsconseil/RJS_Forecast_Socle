@@ -4,7 +4,8 @@ import { ResolveFn, Router, Routes } from '@angular/router';
 import { loadCalendarPage } from './calendar/calendar.route';
 import { planTitle } from './plan/site-plan';
 import { PAGE_WORKSPACES } from './plan/page-workspaces';
-import { APPLICATIONS, defaultApplicationHome, loadUserCreation } from './platform/applications';
+import { APPLICATIONS, defaultApplicationHome, ESPACES_AUTONOMES, loadUserCreation } from './platform/applications';
+import { routesAutonomes } from './platform/applications-autonomes';
 
 /** Titre des accueils génériques du plan : « Section · Zone · RJS Forecast ». */
 const planRouteTitle: ResolveFn<string> = (route) => planTitle(route.paramMap.get('zone'), route.paramMap.get('section'));
@@ -27,6 +28,8 @@ const mainRoutes: Routes = [
   { path: 'projects/new', title: 'Nouveau projet — Noyau', loadComponent: () => import('./projects/project-form').then((m) => m.ProjectForm) },
   { path: 'projects/:id', title: 'Détail projet — Noyau', loadComponent: () => import('./projects/project-detail').then((m) => m.ProjectDetailPage) },
   { path: 'projects/:id/edit', title: 'Modifier le projet — Noyau', loadComponent: () => import('./projects/project-form').then((m) => m.ProjectForm) },
+  // ---------- Applications autonomes qui reposent sur le noyau, chacune dans son espace ----------
+  ...routesAutonomes(ESPACES_AUTONOMES),
   { path: 'tasks', title: 'Tâches — Noyau', loadComponent: () => import('./tasks/tasks-board').then((m) => m.TasksBoard) },
   { path: 'tasks/new', title: 'Nouvelle tâche — Noyau', loadComponent: () => import('./tasks/task-form').then((m) => m.TaskForm) },
   { path: 'tasks/:id/edit', title: 'Modifier la tâche — Noyau', loadComponent: () => import('./tasks/task-form').then((m) => m.TaskForm) },
