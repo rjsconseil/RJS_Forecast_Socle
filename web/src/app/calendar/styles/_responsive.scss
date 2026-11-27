@@ -1,3 +1,9 @@
+/*
+ * Feuille NON CHARGÉE (aucun @use ne la cite), gardée telle quelle à la demande de Roosevelt : le format du
+ * calendrier ne change pas. Mesuré le 27/11/2026 avec l'empreinte des styles : la charger change le calendrier à
+ * 375 px (barre de commandes sur une colonne, marges 16 → 12 px, agenda de 460 px de haut au lieu de sa hauteur).
+ * La charger (dans calendar-skin.scss) est une décision de rendu, pas un nettoyage.
+ */
 @media (max-width: 1100px) {
   :host .calendar.is-360.is-canonical {
     .calendar-layout {

@@ -53,6 +53,10 @@ Le site : `SOCLE_SITE_HOST` (adresse d'écoute, `127.0.0.1` par défaut), `SOCLE
 - **Journaux** : sortie standard et erreur, à collecter par le superviseur.
 - **Sécurité des pages** : le site envoie une CSP (scripts, styles, appels et cadres du site seul), `X-Frame-Options`,
   `Referrer-Policy`, `Permissions-Policy`. L'API envoie ses propres en-têtes (voir `api/src/http.mjs`).
+  Aucun script en ligne n'est accepté : le seul, celui de l'aperçu de la navigation, est autorisé par son empreinte
+  SHA-256 (`web/src/app/navigation/navigation-preview-csp.json`, lu par `scripts/site-server.mjs`). Si le proxy
+  d'hébergement pose sa propre CSP, il doit reprendre celle de `site-server.mjs` telle quelle (empreinte comprise),
+  sans rajouter `'unsafe-inline'` aux scripts. Les styles gardent `'unsafe-inline'` (styles des composants Angular).
 - **Connexion** : 8 échecs par identifiant ou par adresse en 15 minutes bloquent les essais suivants ; avec PostgreSQL,
   les compteurs sont dans la base (`SY_throttle`), communs à tous les serveurs. « Se déconnecter » révoque le jeton de
   l'appareil ; « se déconnecter partout » révoque tous les jetons du compte.

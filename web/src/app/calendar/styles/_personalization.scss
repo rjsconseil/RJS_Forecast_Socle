@@ -1,4 +1,10 @@
 /*
+ * Feuille NON CHARGÉE (aucun @use ne la cite), gardée telle quelle à la demande de Roosevelt : le format du
+ * calendrier ne change pas. Mesuré le 27/11/2026 avec l'empreinte des styles : la charger encadre et met en page
+ * l'encart « Votre calendrier, vos repères » (fond, bordure, marges, en-tête en ligne), aujourd'hui sans habillage.
+ * La charger (dans calendar-skin.scss) est une décision de rendu, pas un nettoyage.
+ */
+/*
  * Encadré « Votre calendrier, vos repères ». Déclaré par ce composant (ses styles s'y appliquent), il est
  * affiché par la page hôte dans son dépliant « Sources et affichage », hors de la grille du calendrier :
  * ses règles ne dépendent donc pas de l'ancêtre `.calendar`.
