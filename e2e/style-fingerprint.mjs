@@ -34,13 +34,19 @@ try {
     // FP_PATHS=/calendrier,/modules : mesure ces adresses du site (hors Astra) au lieu des pages d'Astra.
     const extra = process.env.FP_PATHS?.split(',').filter(Boolean);
     const views = extra ? extra.map(p => ({ path: p, name: p })) : [...SLUGS.map(slug => ({ slug })), ...fiches.map(slug => ({ slug, name: slug.replace(project, ':id') })),
-      { slug: '', name: '(fenêtre Dépense)', keys: ['+', 'D'] }, { slug: 'projets', name: '(fenêtre Projet)', keys: ['+', 'P'] }];
-    for (const { slug, name, keys, path } of views) {
+      { slug: '', name: '(fenêtre Dépense)', keys: ['+', 'D'] }, { slug: 'projets', name: '(fenêtre Projet)', keys: ['+', 'P'] },
+      // Fenêtre d'une tâche de la fiche projet (ouverte par le titre de la première carte).
+      ...(project ? [{ slug: 'projets/' + project + '/taches', name: 'projets/:id/taches (fenêtre Tâche)', click: '.task-title-link' }] : [])];
+    for (const { slug, name, keys, path, click } of views) {
       await page.goto(base + (path ?? '/bpm-astra' + (slug ? '/' + slug : '')), { waitUntil: 'networkidle' });
       await page.locator(path ? 'main h1' : 'astra-part .astra-tabs a.is-current').first().waitFor();
       if (keys) {
         await page.evaluate(() => document.activeElement?.blur?.());
         for (const key of keys) { await page.keyboard.press(key); await page.waitForTimeout(150); }
+        await page.locator('dialog[open]').first().waitFor();
+      }
+      if (click) {
+        await page.locator(click).first().click();
         await page.locator('dialog[open]').first().waitFor();
       }
       await page.waitForTimeout(400);

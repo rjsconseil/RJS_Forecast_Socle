@@ -175,7 +175,7 @@ export class BpmSeriesChart {
   readonly height = input(240);
   readonly emptyText = input('Aucune valeur connue à représenter.');
   readonly formatChange = output<SeriesFormat>();
-  readonly select = output<number>();
+  readonly pointSelected = output<number>();
 
   readonly format = linkedSignal(() => this.initialFormat());
   protected sel = signal<number | null>(null);
@@ -270,7 +270,7 @@ export class BpmSeriesChart {
   }
   protected pick(i: number) {
     this.sel.set(i);
-    this.select.emit(i);
+    this.pointSelected.emit(i);
   }
   protected key(e: KeyboardEvent, i: number) {
     const n = this.categories().length;

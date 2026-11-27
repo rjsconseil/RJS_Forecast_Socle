@@ -419,7 +419,7 @@ export class BpmLineDetail {
   }
 
   /** Une écriture : la part de la tâche est portée au nécessaire (dépassement compris) et l'échéance réglée. */
-  grantShareAndSettle(g: ShareGap) {
+  grantShareAndSettle(_gap: ShareGap) {
     const v = this.d();
     return v && this.settle(v, { notice: 'Paiement autorisé. La part existante reste inchangée ; son dépassement éventuel reste visible.' });
   }

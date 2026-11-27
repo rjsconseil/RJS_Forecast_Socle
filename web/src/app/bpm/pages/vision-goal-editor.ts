@@ -68,7 +68,7 @@ export interface GoalTypeOption {
             }
           </div>
         }
-        <bpm-form-actions [busy]="busy()" [label]="goal() ? 'Enregistrer les modifications' : 'Ajouter l’objectif'" (cancel)="cancel()" />
+        <bpm-form-actions [busy]="busy()" [label]="goal() ? 'Enregistrer les modifications' : 'Ajouter l’objectif'" (cancelled)="cancel()" />
       </form>
     </bpm-modal>
   `,

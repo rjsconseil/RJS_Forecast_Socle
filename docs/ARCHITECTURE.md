@@ -683,3 +683,32 @@ sur toute déclaration toujours écrasée.
   feuilles (`_workspace`, `_shell`, `_components`, Astra `_presentation` et `_budget-cycle` en tête). Volume total :
   27 884 lignes (28 818 dans le rapport v2).
 - `calendar/styles/_responsive.scss` et `_personalization.scss`, chargées nulle part, sont supprimées (décision de Roosevelt, 27/11) : le rendu ne change pas.
+
+## 21. Points du rapport v4 — 27 novembre 2026
+
+- **Typage strict imposé** : `web/tsconfig.json` active `strict` et `strictTemplates` (0 erreur au build). Le site a un
+  lint (`npm --prefix web run lint`, ESLint avec les règles recommandées de typescript-eslint et d'angular-eslint, code
+  et gabarits), lancé en CI. `== null` reste permis (test voulu de « null ou undefined »), `any` reste admis dans les
+  tests. Les 91 remarques du premier passage sont corrigées (importations et code morts, deux sorties nommées comme des
+  événements du navigateur : `cancel` → `cancelled` sur `bpm-form-actions`, `select` → `pointSelected` sur le
+  graphique). Restent 28 avertissements d'Angular (`?.` ou `??` jugés inutiles d'après les types) : gardés, car les
+  données viennent de l'API et le repli ne coûte rien.
+- **Mots de passe** : scrypt asynchrone (`hashPassword` et `verifyPassword` rendent une promesse) ; le calcul tourne dans
+  le pool de libuv et ne bloque plus les autres requêtes (test). Le changement d'identifiants vérifie le mot de passe
+  actuel avant l'écriture, puis l'écriture refuse (`STALE_VERSION`) si l'empreinte a changé entre-temps.
+- **Gros écrans** : la fiche projet passe de 1 341 à 967 lignes de gabarit. La fenêtre de la tâche
+  (`project-task-panel`) et le centre de commande (`project-command-center`) sont des composants à part qui lisent la
+  page par `PROJECT_PAGE` (`project-page-host.ts`) : la page se fournit elle-même, et seuls ses membres publics leur
+  sont accessibles (vérifié par `strictTemplates`). Les gabarits partagés avec les cartes (statut, argent, temps,
+  parcours de financement) restent dans la page et arrivent par l'entrée `views` : rendus dans la page, ils gardent ses
+  styles. Le calendrier passe de 1 002 à 828 lignes : l'encadré « Votre calendrier, vos repères »
+  (`calendar-personalization`) lit le calendrier par `CALENDAR`. Les nouveaux composants reprennent les feuilles de
+  leur hôte, sans boîte propre (`display: contents`). Empreintes identiques ; `style-fingerprint` mesure en plus la
+  fenêtre d'une tâche, et `calendar-views-fingerprint` accepte `FP_IGNORE`.
+- **Recouvrements retirés des autres feuilles** : même passe que §20 sur les 32 autres feuilles globales (554 lignes,
+  790 lignes retirées avec les règles vidées). `styles-cascade.mjs retire` lit maintenant le SCSS avec `postcss-scss`
+  (commentaires `//`, variables). Volume : 27 132 lignes ; feuille globale 549 ko (571 avant). Empreintes identiques
+  (50 vues d'Astra, 12 du calendrier, 32 des pages du site).
+- **Couverture du site** : tests des aperçus du calendrier (`calendar-peeks.spec.ts`) ; plancher de la CI remonté à
+  68 % des lignes, 64 % des instructions, 61 % des fonctions et 58 % des branches.
+

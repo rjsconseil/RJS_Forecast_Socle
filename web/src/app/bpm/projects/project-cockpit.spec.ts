@@ -167,6 +167,25 @@ describe('cockpit du projet', () => {
     expect(api.changeTaskStatus).toHaveBeenCalledExactlyOnceWith('tsk_1', 'doing', 3);
   });
 
+  it('fenêtre de la tâche (composant à part) : gabarits partagés de la page, sections et gestes de la page', async () => {
+    const { fixture, page } = await setup(true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    page.openTaskId.set('tsk_1');
+    fixture.detectChanges();
+    const dialog: HTMLElement = fixture.nativeElement.querySelector('bpm-project-task-panel dialog[aria-label="Choisir le plan"]');
+    expect(dialog).toBeTruthy();
+    // Gabarits de la page (statut, argent, temps) rendus dans la fenêtre.
+    expect(dialog.querySelector('.task-status-buttons')).toBeTruthy();
+    expect(dialog.querySelector('.task-money')).toBeTruthy();
+    expect(dialog.querySelector('#task-panel-funding')).toBeTruthy();
+    expect(dialog.querySelector('#task-panel-charges h3')?.textContent).toContain('Dépenses et gains de la tâche · 0');
+    const button = [...dialog.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Dates et temps') as HTMLButtonElement;
+    button.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('dialog[aria-label="Modifier la tâche"]')).toBeTruthy();
+  });
+
   it('suspend le détail pendant la planification et retrouve ensuite la même tâche', async () => {
     const { fixture, page, state } = await setup(true);
     fixture.detectChanges();

@@ -3,12 +3,6 @@
 
 /* Commandes communes aux deux calendriers, indépendantes de leurs données. */
 .calendar.is-360 .calendar-control-row {
-  display: grid;
-  gap: var(--ecart-12);
-  padding: var(--ecart-14);
-  border: var(--trait-1) solid var(--outline);
-  border-radius: var(--radius-lg);
-  background: var(--raised-surface);
   box-shadow: var(--app-panel-shadow);
 }
 
@@ -136,9 +130,6 @@
 }
 
 @media (max-width: $rupture-600) {
-  .calendar.is-360 .calendar-control-row {
-    padding: var(--ecart-10);
-  }
   .calendar.is-360 .calendar-view-switch button {
     min-height: var(--dim-44);
   }

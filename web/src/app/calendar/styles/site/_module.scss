@@ -150,7 +150,6 @@
 
     .calendar-frame .calendar-year-month h3 {
       margin: 0 0 var(--ecart-4);
-      font-size: scaled(var(--texte-14));
     }
 
     .calendar-frame .calendar-year-weekdays {
@@ -197,10 +196,6 @@
 
     .calendar-frame .calendar-year-month {
       padding: var(--ecart-6);
-    }
-
-    .calendar-frame .calendar-year-month h3 {
-      font-size: scaled(var(--texte-12));
     }
 
     .calendar-frame :is(.calendar-year-weekdays, .calendar-year-days) {
@@ -304,12 +299,10 @@
 
   .calendar-day-total[data-sign='positive'] {
     background: color-mix(in srgb, var(--amount-in) 12%, transparent);
-    color: var(--amount-in);
   }
 
   .calendar-day-total[data-sign='negative'] {
     background: color-mix(in srgb, var(--amount-out) 12%, transparent);
-    color: var(--amount-out);
   }
 
   .calendar-day-total[data-sign='zero'] {
@@ -331,14 +324,6 @@
     font-variant-numeric: tabular-nums;
     font-weight: var(--graisse-700);
     white-space: nowrap;
-  }
-
-  .calendar-amount[data-direction='entree'] {
-    color: var(--amount-in);
-  }
-
-  .calendar-amount[data-direction='sortie'] {
-    color: var(--amount-out);
   }
 
   /* ---------- aperçu au survol : une carte par repère, avec ses entrées paramétrées ---------- */
@@ -575,10 +560,6 @@
     color: var(--red-700);
   }
 
-  .calendar-stat-amount strong {
-    font-variant-numeric: tabular-nums;
-  }
-
   .calendar-module-task.is-done {
     opacity: 0.75;
   }
@@ -587,20 +568,6 @@
     margin: var(--ecart-4) 0 0;
     color: var(--muted);
     font-size: scaled(var(--texte-13));
-  }
-
-  .calendar-amount {
-    font-variant-numeric: tabular-nums;
-    font-weight: var(--graisse-700);
-    white-space: nowrap;
-  }
-
-  .calendar-amount[data-direction='entree'] {
-    color: var(--green-700);
-  }
-
-  .calendar-amount[data-direction='sortie'] {
-    color: var(--red-700);
   }
 }
 

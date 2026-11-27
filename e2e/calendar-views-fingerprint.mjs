@@ -21,11 +21,12 @@ for (const width of [1440, 375]) {
       if (!(await choice.count())) continue;
       await choice.click({ force: true }).catch(() => {});
       await page.waitForTimeout(700);
-      out[`${width}:${path}:${view}`] = await page.evaluate(() => [...document.querySelectorAll('.app-shell *')].filter(e => !e.closest('svg')).map(e => {
+      // FP_IGNORE=rjs-x,bpm-y : éléments hôtes sans boîte (display: contents) ajoutés en découpant un gabarit, ignorés.
+      out[`${width}:${path}:${view}`] = await page.evaluate((ignore) => [...document.querySelectorAll('.app-shell *')].filter(e => !e.closest('svg') && !ignore.includes(e.tagName.toLowerCase())).map(e => {
         const cs = getComputedStyle(e);
         return e.tagName + '.' + (typeof e.className === 'string' ? e.className.split(' ').slice(0, 2).join('.') : '') + '|' +
           ['display', 'grid-template-columns', 'grid-row', 'width', 'height', 'padding-top', 'padding-left', 'min-width', 'overflow-x', 'flex-grow', 'animation-name'].map(p => cs.getPropertyValue(p)).join(';');
-      }));
+      }), (process.env.FP_IGNORE ?? '').split(',').filter(Boolean));
     }
   }
   await ctx.close();

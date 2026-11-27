@@ -244,6 +244,6 @@
         }
         <bpm-form-actions [busy]="busy()"
           [label]="capConfirmation() ? (capPreviewError() ? 'Enregistrer sans vérification' : 'Enregistrer malgré le dépassement') : editing() ? 'Enregistrer les modifications' : realized() ? 'Valider ' + (direction() === 'income' ? 'l’entrée' : 'la dépense') : 'Enregistrer la prévision'"
-          (cancel)="close()" />
+          (cancelled)="close()" />
       </form>
     </bpm-modal>

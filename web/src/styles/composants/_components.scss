@@ -14,11 +14,8 @@
   max-width: var(--page-wide-max-width);
 }
 .page-head {
-  display: flex;
   flex-direction: var(--page-head-direction);
-  align-items: var(--page-head-align);
   justify-content: space-between;
-  gap: var(--page-head-gap);
   margin-bottom: var(--page-head-margin);
 }
 .page-head > div {
@@ -44,13 +41,6 @@
 }
 .display {
   max-width: var(--display-max-width);
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--font-serif);
-  font-size: scaled(var(--display-size));
-  font-weight: var(--fw-regular);
-  line-height: var(--display-line-height);
-  letter-spacing: var(--display-spacing);
 }
 .display em {
   color: var(--display-accent);
@@ -58,9 +48,6 @@
 }
 .lead {
   max-width: var(--lead-max-width);
-  margin: var(--lead-margin) 0 0;
-  color: var(--lead-ink);
-  font-size: scaled(var(--lead-size));
   line-height: var(--lead-line-height);
 }
 .muted {
@@ -88,7 +75,6 @@
 }
 .status-heading {
   font-family: var(--font-serif);
-  font-size: scaled(var(--fs-2xl));
   font-weight: var(--fw-semibold);
   letter-spacing: var(--lettrage-0-02em);
 }
@@ -98,19 +84,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ecart-10);
-  min-height: max(var(--dim-40), var(--btn-height));
   padding: 0 var(--btn-padding-x);
   border: var(--trait-1) solid transparent;
-  border-radius: var(--btn-radius);
-  font-size: scaled(var(--btn-font-size));
-  font-weight: var(--fw-semibold);
-  line-height: var(--lh-normal);
-  transition:
-    transform var(--ease-fast),
-    background var(--ease-fast),
-    border var(--ease-fast),
-    box-shadow var(--ease-fast);
 }
 /* Trois états nets : au survol le bouton se soulève et fonce, à l’appui il s’enfonce. */
 .btn:active:not(:disabled) {
@@ -120,7 +95,6 @@
   flex: none;
   color: var(--btn-primary-ink);
   background: var(--btn-primary-surface);
-  border-color: var(--btn-primary-surface);
   box-shadow: var(--btn-primary-shadow);
 }
 .btn-primary:hover:not(:disabled) {
@@ -130,12 +104,6 @@
 .btn-primary:active:not(:disabled) {
   background: var(--btn-primary-active);
   border-color: var(--btn-primary-active);
-}
-.btn-secondary {
-  color: var(--btn-secondary-ink);
-  background: var(--btn-secondary-surface);
-  border-color: var(--btn-secondary-line);
-  box-shadow: var(--btn-secondary-shadow);
 }
 .btn-secondary:hover:not(:disabled) {
   border-color: var(--btn-secondary-hover-line);
@@ -225,7 +193,6 @@
   width: var(--dim-8);
   height: var(--dim-8);
   border-radius: var(--part-50);
-  background: var(--status-neutral);
 }
 .status-dot[data-status='active'],
 .status-dot[data-status='doing'] {
@@ -331,7 +298,6 @@
 .card {
   min-width: 0;
   border: var(--card-border-width) solid var(--card-border);
-  border-radius: var(--card-radius);
   color: var(--board-card-ink);
   background: var(--board-card-surface);
   box-shadow: var(--card-shadow);
@@ -432,24 +398,17 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  border-bottom: var(--trait-1) solid var(--line);
-  background: var(--app-accent-soft);
 }
 .modal-head .eyebrow {
   margin-bottom: var(--modal-eyebrow-margin);
 }
 .modal-head h2 {
   margin: 0;
-  color: var(--ink);
 }
 .modal-close {
   flex: none;
-  width: var(--dim-36);
-  height: var(--dim-36);
   border: var(--trait-1) solid var(--outline);
   border-radius: var(--radius-md);
-  background: var(--raised-surface);
-  color: var(--modal-close-ink);
   font-size: scaled(var(--fs-3xl));
   transition: background-color var(--ease-fast);
 }
@@ -489,22 +448,9 @@
 .field select,
 .field textarea {
   width: var(--part-100);
-  min-height: var(--dim-40);
-  padding: var(--ecart-10) var(--ecart-12);
-  border: var(--trait-1) solid var(--app-accent-line);
-  border-radius: var(--field-radius);
   outline: 0;
-  color: var(--field-ink);
-  background: var(--field-surface);
-  font-size: scaled(var(--fs-lg));
   font-weight: var(--fw-regular);
   letter-spacing: 0;
-  transition:
-    border-color var(--ease-fast),
-    box-shadow var(--ease-fast);
-}
-.field textarea {
-  resize: vertical;
 }
 .field input:hover,
 .field select:hover,
@@ -517,29 +463,14 @@
   border-color: var(--app-accent);
   box-shadow: 0 0 0 var(--ombre-4) var(--app-accent-soft);
 }
-.field input::placeholder,
-.field textarea::placeholder {
-  color: var(--field-placeholder);
-}
 .form-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--ecart-10);
   margin-top: var(--ecart-8);
-  padding-top: var(--ecart-20);
-  border-top: var(--trait-1) solid var(--line);
 }
 .form-spacer {
   flex: var(--flex-1);
 }
 rjs-data-tools {
   display: block;
-}
-
-@media (max-width: $rupture-600) {
-  .form-actions {
-    flex-wrap: wrap;
-  }
 }
 @media (max-width: $rupture-560) {
   .editor-fields {
@@ -551,7 +482,3 @@ rjs-data-tools {
 }
 
 /* Sélecteurs de date : leur palette suit le thème. */
-input[type='date'],
-input[type='month'] {
-  color-scheme: var(--control-color-scheme);
-}

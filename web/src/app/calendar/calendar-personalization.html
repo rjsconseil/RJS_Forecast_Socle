@@ -1,0 +1,177 @@
+<!-- Encadré « Votre calendrier, vos repères » (sorti de calendar.component.html) : sources, format, lecture et
+     indicateurs. L'état et les gestes restent ceux du calendrier (CALENDAR). -->
+<section
+  id="cal-personalization"
+  class="cal-personalization"
+  aria-label="Personnaliser le calendrier"
+>
+  <div class="cal-preference-head">
+    <div>
+      <h3>Votre calendrier, vos repères</h3>
+      <p>
+        Enregistré pour votre profil : vos choix vous suivent sur tous vos appareils. Les données
+        financières restent inchangées.
+      </p>
+    </div>
+    <button class="text-link" type="button" (click)="cal.resetDisplay()">
+      Réinitialiser
+    </button>
+  </div>
+  <div class="cal-preference-grid">
+    <fieldset class="cal-sources" [disabled]="!cal.controlAllowed('sources')">
+      <legend>Sources branchées</legend>
+      <p>Cochez pour afficher, débranchez pour ne plus lire une source.</p>
+      @for (el of cal.elements(); track el.id) {
+        <div class="cal-source-row">
+          <label class="cal-choice" [style.--event-tone]="cal.tone(el.tone)"
+            ><input
+              type="checkbox"
+              [checked]="!cal.hidden().has(el.id)"
+              (change)="cal.toggleElement(el.id)"
+            /><i aria-hidden="true"></i><span>{{ el.label }}@if (el.origin) { <em class="cal-source-origin">· {{ el.origin.label }}</em> }</span
+            ><small>{{ cal.countInPeriod(el.id) }}</small></label
+          >
+          <button type="button" class="cal-source-unplug" (click)="cal.unplugSource(el.id)" [attr.aria-label]="'Débrancher la source ' + el.label" title="Débrancher">×</button>
+        </div>
+      }
+      <button type="button" class="text-link" (click)="cal.showAllSources()">
+        Tout afficher
+      </button>
+      @if (cal.library().length) {
+        <details class="cal-library">
+          <summary>Brancher une source <small>{{ cal.data()?.library?.length }} proposée(s)</small></summary>
+          @for (group of cal.library(); track group.label) {
+            <section>
+              <h4>{{ group.label }}</h4>
+              @for (offer of group.sources; track offer.id) {
+                <div class="cal-library-row" [style.--event-tone]="cal.tone(offer.tone)">
+                  <i aria-hidden="true"></i><span>{{ offer.label }}</span>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="cal.plugSource(offer.id)" [attr.aria-label]="'Brancher la source ' + offer.label">Brancher</button>
+                </div>
+              }
+            </section>
+          }
+        </details>
+      }
+    </fieldset>
+    <fieldset class="cal-formats" [disabled]="!cal.controlAllowed('fields')">
+      <legend>Format d’affichage</legend>
+      <p>Dans les cases et la liste des événements.</p>
+      <div class="cal-format-list" role="radiogroup" aria-label="Format d’affichage">
+        @for (f of cal.formats(); track f.id) {
+          <div class="cal-format-row" [class.is-active]="f.id === cal.format().id">
+            <label class="cal-choice"
+              ><input type="radio" name="cal-format" [checked]="f.id === cal.format().id" (change)="cal.chooseFormat(f.id)" /><span
+                >{{ f.label }}@if (f.own) { <em class="cal-format-own">· à moi</em> }<small>{{ cal.describeFormat(f) }}</small></span
+              ></label
+            >
+            @if (f.own) {
+              <span class="cal-format-actions">
+                <button type="button" class="text-link" (click)="cal.formatEditor.edit(f)" [attr.aria-label]="'Modifier le format ' + f.label">Modifier</button>
+                <button type="button" class="text-link" (click)="cal.formatEditor.remove(f.id)" [attr.aria-label]="'Supprimer le format ' + f.label">Supprimer</button>
+              </span>
+            }
+          </div>
+        }
+      </div>
+      @if (cal.formatEditor.draft(); as draft) {
+        <form class="cal-format-editor" (submit)="$event.preventDefault(); cal.formatEditor.save()" aria-label="Créer ou modifier un format">
+          <label>Nom<input type="text" maxlength="40" required [ngModel]="draft.label" (ngModelChange)="cal.formatEditor.update({ label: $event })" name="cal-format-label" /></label>
+          <label>Disposition<select [ngModel]="draft.layout" (ngModelChange)="cal.formatEditor.update({ layout: $event })" name="cal-format-layout">
+            @for (layout of cal.layouts; track layout) { <option [ngValue]="layout">{{ cal.layoutLabels[layout] }}</option> }
+          </select></label>
+          <div class="cal-format-fields" role="group" aria-label="Informations montrées, dans l’ordre">
+            <span>Informations, dans l’ordre</span>
+            @for (field of draft.fields; track field; let i = $index, last = $last) {
+              <div class="cal-format-field is-on">
+                <label class="cal-choice"><input type="checkbox" checked (change)="cal.formatEditor.toggleField(field)" /><span>{{ i + 1 }}. {{ cal.fieldLabel(field) }}</span></label>
+                <button type="button" class="cal-format-move" [disabled]="i === 0" (click)="cal.formatEditor.moveField(field, -1)" [attr.aria-label]="'Monter ' + cal.fieldLabel(field)">↑</button>
+                <button type="button" class="cal-format-move" [disabled]="last" (click)="cal.formatEditor.moveField(field, 1)" [attr.aria-label]="'Descendre ' + cal.fieldLabel(field)">↓</button>
+              </div>
+            }
+            @for (field of cal.formatFields; track field.key) {
+              @if (!draft.fields.includes(field.key)) {
+                <div class="cal-format-field">
+                  <label class="cal-choice"><input type="checkbox" (change)="cal.formatEditor.toggleField(field.key)" /><span>{{ field.label }}</span></label>
+                </div>
+              }
+            }
+          </div>
+          <label>Événements par case<select [ngModel]="draft.perCell" (ngModelChange)="cal.formatEditor.update({ perCell: $event })" name="cal-format-density">
+            <option [ngValue]="null">Selon le calendrier</option>
+            @for (n of [0, 1, 2, 3, 4, 5, 6, 7, 8]; track n) { <option [ngValue]="n">{{ n }}</option> }
+          </select></label>
+          <div class="cal-format-editor-actions">
+            <button type="submit" class="btn btn-primary btn-sm" [disabled]="!draft.label.trim()">{{ draft.id ? 'Enregistrer' : 'Créer ce format' }}</button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="cal.formatEditor.draft.set(null)">Annuler</button>
+          </div>
+        </form>
+      } @else {
+        <button type="button" class="text-link" (click)="cal.formatEditor.edit()">+ Créer un format à partir de « {{ cal.format().label }} »</button>
+      }
+      <label class="cal-density"
+        >Événements par case<select
+          [disabled]="!cal.controlAllowed('density')"
+          aria-label="Événements par case"
+          [ngModel]="cal.perCell()"
+          (ngModelChange)="cal.setDensity($event)"
+        >
+          @for (n of [0, 1, 2, 3, 4, 5, 6, 7, 8]; track n) {
+            <option [ngValue]="n">{{ n }}</option>
+          }
+        </select></label
+      >
+    </fieldset>
+    <fieldset class="cal-look" [disabled]="!cal.controlAllowed('appearance')">
+      <legend>Apparence</legend>
+      <p>Le design règle l’apparence, l’effet règle le mouvement : ils se choisissent séparément.</p>
+      <div class="cal-look-group" role="radiogroup" aria-label="Design du calendrier">
+        <span class="cal-look-title">Design</span>
+        @for (d of cal.appearance.designs; track d.id) {
+          <label class="cal-look-option" [class.is-active]="d.id === cal.appearance.design().id">
+            <input type="radio" name="cal-design" [checked]="d.id === cal.appearance.design().id" (change)="cal.appearance.chooseDesign(d.id)" />
+            <span class="cal-look-swatch" aria-hidden="true">@for (c of d.swatch; track $index) {<i [style.background]="c"></i>}</span>
+            <span class="cal-look-text"><strong>{{ d.label }}</strong><small>{{ d.description }}</small></span>
+          </label>
+        }
+      </div>
+      <div class="cal-look-group" role="radiogroup" aria-label="Effets d’affichage">
+        <span class="cal-look-title">Effets d’affichage</span>
+        @for (e of cal.appearance.effects; track e.id) {
+          <label class="cal-look-option" [class.is-active]="e.id === cal.appearance.effect().id">
+            <input type="radio" name="cal-effect" [checked]="e.id === cal.appearance.effect().id" (change)="cal.appearance.chooseEffect(e.id)" />
+            <span class="cal-look-text"><strong>{{ e.label }}</strong><small>{{ e.description }}</small></span>
+          </label>
+        }
+      </div>
+      @if (cal.appearance.parameters().length) {
+        <div class="cal-look-params" role="group" [attr.aria-label]="'Réglages de l’effet ' + cal.appearance.effect().label">
+          @for (p of cal.appearance.parameters(); track p.key) {
+            <label class="cal-look-param">
+              <span>{{ p.label }} <output>{{ p.value }} {{ p.unit }}</output></span>
+              <input type="range" [min]="p.min" [max]="p.max" [step]="p.step" [value]="p.value" [attr.aria-label]="p.label" (input)="cal.appearance.setParam(p.key, +$any($event.target).value)" />
+            </label>
+          }
+          <button type="button" class="text-link" (click)="cal.appearance.resetParams()">Rétablir les réglages de l’effet</button>
+        </div>
+      }
+    </fieldset>
+    <fieldset class="cal-reading" [disabled]="!cal.controlAllowed('completed')">
+      <legend>Lecture</legend>
+      <label class="cal-choice"><input type="checkbox" [checked]="cal.includeDone()" (change)="cal.setIncludeDone($any($event.target).checked)" /><span>Inclure les éléments terminés ou réglés</span></label>
+    </fieldset>
+    <fieldset [disabled]="!cal.controlAllowed('indicators')">
+      <legend>Bilan au survol d’un jour</legend>
+      <p>Choisissez les indicateurs de l’aperçu.</p>
+      @for (indicator of cal.data()?.indicators ?? []; track indicator.key) {
+        <label class="cal-choice"
+          ><input
+            type="checkbox"
+            [checked]="cal.indicatorShown(indicator.key)"
+            (change)="cal.toggleIndicator(indicator.key)"
+          /><span>{{ indicator.label }}</span></label
+        >
+      }
+    </fieldset>
+  </div>
+</section>

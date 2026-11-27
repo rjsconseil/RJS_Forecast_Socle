@@ -1,4 +1,5 @@
 import { TopLayerDirective } from './top-layer.directive';
+import { CALENDAR, CalendarPersonalization } from './calendar-personalization';
 import { MonthPeek, PeekHost, YearPeek } from './calendar-peeks';
 import { dayMostlyDone, dayNeedsAttention, dayNetAmount, dominantElement } from './calendar-day-summary';
 import { CalendarFormatEditor } from './calendar-format-editor';
@@ -15,6 +16,7 @@ import {
   HostListener,
   computed,
   effect,
+  forwardRef,
   inject,
   Injector,
   input,
@@ -96,7 +98,8 @@ const FULL_DATE = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeZone
  */
 @Component({
   selector: 'rjs-calendar',
-  imports: [FormsModule, NgTemplateOutlet, TopLayerDirective],
+  imports: [FormsModule, NgTemplateOutlet, TopLayerDirective, CalendarPersonalization],
+  providers: [{ provide: CALENDAR, useExisting: forwardRef(() => CalendarComponent) }],
   styleUrls: ['./calendar-skin.scss', './calendar-skin-views.scss', './calendar-skin-compact.scss', './calendar-skin-design.scss', './calendar-skin-effects.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './calendar.component.html',
@@ -152,15 +155,15 @@ export class CalendarComponent {
   private viewChosen = this.requestedView !== null;
   private initialized = false;
 
-  protected readonly hidden = signal<ReadonlySet<string>>(new Set());
-  protected readonly includeDone = signal(true);
+  readonly hidden = signal<ReadonlySet<string>>(new Set());
+  readonly includeDone = signal(true);
   protected readonly group = signal(this.route.snapshot.queryParamMap.get('calGroup') || 'all');
-  protected readonly formatFields = FORMAT_FIELDS;
-  protected readonly layouts = LAYOUTS;
-  protected readonly layoutLabels = LAYOUT_LABELS;
-  protected readonly describeFormat = describeFormat;
+  readonly formatFields = FORMAT_FIELDS;
+  readonly layouts = LAYOUTS;
+  readonly layoutLabels = LAYOUT_LABELS;
+  readonly describeFormat = describeFormat;
   /** Formats créés par la personne et brouillon en cours : voir calendar-format-editor.ts. */
-  protected readonly formatEditor: CalendarFormatEditor = new CalendarFormatEditor({
+  readonly formatEditor: CalendarFormatEditor = new CalendarFormatEditor({
     formats: () => this.formats(),
     current: () => this.format(),
     allowed: () => this.controlAllowed('fields'),
@@ -170,16 +173,16 @@ export class CalendarComponent {
     changed: (next) => this.formatsChange.emit(next),
   });
   /** Formats proposés : livrés, de la configuration, puis ceux de la personne ; tous s'appellent par leur id. */
-  protected readonly formats = computed<CalendarFormat[]>(() => availableFormats(this.data(), this.formatEditor.own()));
+  readonly formats = computed<CalendarFormat[]>(() => availableFormats(this.data(), this.formatEditor.own()));
   /** Format en cours : celui choisi, sinon celui d'ouverture de la configuration, sinon le premier. */
-  protected readonly format = computed<CalendarFormat>(() => {
+  readonly format = computed<CalendarFormat>(() => {
     const all = this.formats();
     return all.find((f) => f.id === this.preferences()?.format) ?? all.find((f) => f.id === this.data()?.display.format) ?? all[0];
   });
   /** Champs montrés sur chaque événement, dans l'ordre du format (le total est celui du jour, dans la case). */
   protected readonly eventFields = computed(() => this.format().fields.filter((f) => f !== 'total'));
   /** Sources proposées au branchement, rangées par provenance. */
-  protected readonly library = computed(() => {
+  readonly library = computed(() => {
     const groups = new Map<string, { label: string; sources: CalendarSourceOffer[] }>();
     for (const offer of this.data()?.library ?? []) {
       const key = offer.origin?.calendar ?? '';
@@ -199,7 +202,7 @@ export class CalendarComponent {
   protected readonly periodRange = computed(() => periodBounds(this.selectedDay(), this.view()));
 
   // ---------- couche de présentation (design et effets) : voir calendar-appearance.ts ----------
-  protected readonly appearance = new CalendarAppearance({
+  readonly appearance = new CalendarAppearance({
     data: () => this.data(),
     preferences: () => this.preferences(),
     allowed: () => this.controlAllowed('appearance'),
@@ -245,14 +248,14 @@ export class CalendarComponent {
   );
   protected readonly months = computed(() => yearMonths(this.selectedDay()));
 
-  protected readonly elements = computed(() => this.data()?.elements ?? []);
+  readonly elements = computed(() => this.data()?.elements ?? []);
   protected readonly indicators = computed(() =>
     (this.data()?.indicators ?? []).filter(
       (indicator) => this.indicatorShown(indicator.key),
     ),
   );
   private readonly elementsById = computed(() => new Map(this.elements().map((el) => [el.id, el])));
-  protected readonly perCell = computed(
+  readonly perCell = computed(
     () => this.preferences()?.perCell ?? this.format()?.perCell ?? this.data()?.display.perCell ?? 2,
   );
   protected readonly perPeek = computed(() => this.data()?.display.perPeek ?? 4);
@@ -497,7 +500,7 @@ export class CalendarComponent {
   protected markerLabel(el: CalendarElement) {
     return MARKER_LABEL[el.marker];
   }
-  protected tone(name: string | undefined) {
+  tone(name: string | undefined) {
     return toneColor(name);
   }
   protected amount(event: CalendarEvent) {
@@ -509,7 +512,7 @@ export class CalendarComponent {
   protected monthName(month: string) {
     return monthTitle(month);
   }
-  protected countInPeriod(elementId: string) {
+  countInPeriod(elementId: string) {
     return this.periodCounts().get(elementId) ?? 0;
   }
   protected statsOf(events: CalendarEvent[]): DayStat[] {
@@ -537,12 +540,12 @@ export class CalendarComponent {
     return `Voir les repères du ${this.date(day)} · ${count} ${count === 1 ? 'repère' : 'repères'}${highlighted ? ` · ${highlighted} mis en évidence` : ''}`;
   }
 
-  protected controlAllowed(key: keyof NonNullable<CalendarData['interaction']>['controls']) {
+  controlAllowed(key: keyof NonNullable<CalendarData['interaction']>['controls']) {
     return this.data()?.interaction?.access !== 'hidden' && this.data()?.interaction?.controls[key] !== false;
   }
 
   // ---------- éléments et filtres ----------
-  protected toggleElement(id: string) {
+  toggleElement(id: string) {
     if (!this.controlAllowed('sources')) return;
     this.hidden.update((current) => {
       const next = new Set(current);
@@ -559,30 +562,30 @@ export class CalendarComponent {
   protected showField(field: CalendarFormatField) {
     return this.format().fields.includes(field);
   }
-  protected indicatorShown(key: CalendarIndicatorKey) {
+  indicatorShown(key: CalendarIndicatorKey) {
     return this.preferences()?.indicators.includes(key) ?? true;
   }
   // ---------- formats d'affichage ----------
-  protected fieldLabel(field: CalendarFormatField) {
+  fieldLabel(field: CalendarFormatField) {
     return FORMAT_FIELDS.find((f) => f.key === field)?.label ?? field;
   }
-  protected chooseFormat(id: string) {
+  chooseFormat(id: string) {
     if (!this.controlAllowed('fields') || !this.formats().some((f) => f.id === id)) return;
     // Le format apporte sa densité : un choix de densité antérieur ne la masque plus.
     this.savePreferences({ format: id, perCell: null });
     this.releasePeek();
   }
   // ---------- branchement des sources ----------
-  protected plugSource(id: string) {
+  plugSource(id: string) {
     if (!this.controlAllowed('sources')) return;
     this.sourcesChange.emit([...this.elements().map((el) => el.id), id]);
   }
-  protected unplugSource(id: string) {
+  unplugSource(id: string) {
     if (!this.controlAllowed('sources')) return;
     this.sourcesChange.emit(this.elements().map((el) => el.id).filter((x) => x !== id));
   }
 
-  protected toggleIndicator(key: CalendarIndicatorKey) {
+  toggleIndicator(key: CalendarIndicatorKey) {
     if (!this.controlAllowed('indicators')) return;
     const current = this.preferences();
     if (!current) return;
@@ -592,7 +595,7 @@ export class CalendarComponent {
     this.savePreferences({ indicators: keys });
     this.releasePeek();
   }
-  protected setDensity(perCell: number) {
+  setDensity(perCell: number) {
     if (!this.controlAllowed('density')) return;
     if (Number.isInteger(perCell) && perCell >= 0 && perCell <= 8)
       this.savePreferences({ perCell });
@@ -602,14 +605,14 @@ export class CalendarComponent {
     this.includeDone.set(includeDone);
     this.savePreferences({ includeDone });
   }
-  protected showAllSources() {
+  showAllSources() {
     if (!this.controlAllowed('sources')) return;
     this.hidden.set(new Set());
     this.savePreferences({
       sources: Object.fromEntries(this.elements().map((el) => [el.id, true])),
     });
   }
-  protected resetDisplay() {
+  resetDisplay() {
     const data = this.data();
     if (!data) return;
     const defaults = displayDefaults(data);

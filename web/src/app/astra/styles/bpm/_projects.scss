@@ -162,9 +162,6 @@
   font-size: scaled(var(--fs-2xs));
   font-variant-numeric: tabular-nums;
 }
-.bpm-task-budget strong {
-  color: var(--ink);
-}
 .bpm-task-budget .is-over {
   color: var(--bpm-danger);
   font-weight: var(--fw-bold);
@@ -197,26 +194,12 @@
 }
 
 /* ---------- fiche d'un projet ---------- */
-.bpm-project-page {
-  display: grid;
-  gap: var(--ecart-28);
-  padding-bottom: var(--ecart-56);
-}
 .bpm-section {
   display: grid;
   gap: var(--ecart-14);
 }
-.bpm-section > header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--ecart-8);
-}
 .bpm-section > header h2 {
   margin: 0;
-  font-family: var(--font-sans);
-  font-size: scaled(var(--fs-xl));
 }
 .bpm-section > header p {
   margin: 0;
@@ -271,15 +254,12 @@
 
 /* Tableau de ventilation : une ligne par tâche. */
 .bpm-table-wrap {
-  overflow-x: auto;
   border: var(--trait-1) solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--board-column-surface);
 }
 .bpm-table {
-  width: 100%;
   border-collapse: collapse;
-  font-size: scaled(var(--fs-xs));
   font-variant-numeric: tabular-nums;
 }
 .bpm-table th,
@@ -288,16 +268,9 @@
   text-align: left;
   vertical-align: middle;
 }
-.bpm-table th {
-  color: var(--muted);
-  font-size: scaled(var(--fs-2xs));
-  font-weight: var(--fw-semibold);
-  white-space: nowrap;
-}
 .bpm-table td.num,
 .bpm-table th.num {
   text-align: right;
-  white-space: nowrap;
 }
 .bpm-table tr:last-child td {
   border-bottom: 0;
@@ -397,18 +370,11 @@
 .bpm-card-move select {
   width: 100%;
 }
-.bpm-table th,
-.bpm-table td {
-  padding: var(--ecart-8) var(--ecart-10);
-}
 .bpm-table select {
   max-width: 8.5rem;
 }
 
 /* Gestion de projet : une synthèse aérée, prolongée par le détail de ses tâches. */
-.bpm-management {
-  gap: var(--ecart-24);
-}
 /* Projet abandonné : sobre, il ne réclame plus rien. */
 /* Le noyau nomme « onHold » le statut affiché « En pause ». */
 .pm-finance-summary {
@@ -457,9 +423,7 @@
   grid-column: 1 / -1;
   margin: 0;
   padding: var(--ecart-10) var(--ecart-12);
-  background: var(--bpm-warn-soft);
   border-radius: var(--radius-md);
-  color: var(--bpm-warn);
   font-size: scaled(var(--fs-sm));
 }
 .bpm-management details > summary {
@@ -472,7 +436,6 @@
 .bpm-management-form {
   display: grid;
   gap: var(--ecart-16);
-  padding: var(--ecart-20);
 }
 .bpm-management-form label {
   display: grid;
@@ -482,7 +445,6 @@
 }
 .bpm-management-form :is(input, select, textarea) {
   width: 100%;
-  min-width: 0;
 }
 .bpm-form-grid {
   display: grid;
@@ -800,9 +762,6 @@
 @media (max-width: 600px) {
   .bpm-form-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .bpm-management-form {
-    padding: var(--ecart-12);
   }
   .bpm-management .pm-money {
     grid-template-columns: minmax(0, 1fr);

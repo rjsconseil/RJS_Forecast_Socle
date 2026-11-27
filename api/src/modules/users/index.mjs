@@ -132,7 +132,7 @@ export default {
        */
       async register(input = {}) {
         const login = normalizeLogin(input.email);
-        const auth = hashPassword(input.password);
+        const auth = await hashPassword(input.password);
         if ((await socle.store.findBy('credentials', 'login', login, { unique: true })).length) fail('UNIQUENESS_VIOLATION', 'Un compte existe déjà avec cette adresse e-mail.', { field: 'email' });
         const { email, password, ...rest } = input;
         return om.command('register', null, { ...rest, email: login }, (tx) => {
@@ -146,13 +146,17 @@ export default {
       /** Donne (ou change) l'adresse et le mot de passe d'un user existant ; le mot de passe actuel est exigé s'il y en a un. */
       async setCredentials(ctx, input = {}) {
         const login = normalizeLogin(input.email);
-        const auth = hashPassword(input.password);
+        const auth = await hashPassword(input.password);
         const taken = await socle.store.findBy('credentials', 'login', login, { unique: true });
         if (taken.some((c) => c.userId !== ctx?.userId)) fail('UNIQUENESS_VIOLATION', 'Un compte existe déjà avec cette adresse e-mail.', { field: 'email' });
+        // Le mot de passe actuel est vérifié avant l'écriture (calcul asynchrone) ; l'écriture refuse ensuite si les
+        // identifiants ont changé entre-temps, pour ne jamais valider un changement sur une empreinte périmée.
+        const [before] = ctx?.userId ? await socle.store.findBy('credentials', 'userId', ctx.userId) : [];
+        if (before && !(await verifyPassword(input.currentPassword, before.auth))) fail('AUTH_INVALID', 'Mot de passe actuel incorrect.', { field: 'currentPassword' });
         return om.command('setCredentials', ctx, { email: login }, (tx) => {
           const current = om.list(tx.draft, 'credential', (c) => c.userId === tx.userId)[0];
           if (current) {
-            if (!verifyPassword(input.currentPassword, current.auth)) fail('AUTH_INVALID', 'Mot de passe actuel incorrect.', { field: 'currentPassword' });
+            if (current.auth?.hash !== before?.auth?.hash) fail('STALE_VERSION', 'Les identifiants ont changé entre-temps. Réessayez.');
             om.update(tx, current, { login, auth, sessionsFrom: Date.now() });
           } else om.create(tx, 'credential', { login, auth, role: 'member', sessionsFrom: 0 }, { userId: tx.userId });
           return { userId: tx.userId, email: login };
@@ -162,10 +166,10 @@ export default {
       /** Vérifie une adresse et un mot de passe ; rend le user, ou un refus identique quelle que soit l'erreur. */
       async authenticate(email, password) {
         let login;
-        try { login = normalizeLogin(email); } catch { verifyDecoy(password); fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.'); }
+        try { login = normalizeLogin(email); } catch { await verifyDecoy(password); fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.'); }
         const [c] = await socle.store.findBy('credentials', 'login', login, { unique: true });
-        if (!c) { verifyDecoy(password); fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.'); }
-        if (!verifyPassword(String(password ?? ''), c.auth)) fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.');
+        if (!c) { await verifyDecoy(password); fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.'); }
+        if (!(await verifyPassword(String(password ?? ''), c.auth))) fail('AUTH_INVALID', 'Adresse e-mail ou mot de passe incorrect.');
         return { userId: c.userId, role: c.role ?? 'member' };
       },
 

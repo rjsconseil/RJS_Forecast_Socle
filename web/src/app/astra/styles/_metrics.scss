@@ -31,7 +31,6 @@
 
       > article > p {
         margin: 6px 0 0;
-        padding-top: 6px;
         border-top: 1px solid var(--bpm-line);
         line-height: 1.35;
       }
@@ -59,7 +58,6 @@
     border-radius: var(--a-radius-sm);
     background: var(--astra-wash);
     color: var(--astra-link);
-    font-size: 12px;
     font-weight: 600;
 
     strong { font-weight: 750; font-variant-numeric: tabular-nums; }

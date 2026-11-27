@@ -545,11 +545,13 @@
   line-height: 1.6;
   white-space: pre-line;
 }
-.task-panel .task-money {
+/* Gabarits de la page rendus dans la fenêtre de la tâche (project-task-panel.ts) : ils portent la marque de la page,
+   seul l'hôte de la fenêtre la porte aussi ; il les situe donc à la place de .task-panel. */
+bpm-project-task-panel .task-money {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0;
 }
-.task-panel .task-time {
+bpm-project-task-panel .task-time {
   margin: 0;
 }
 .task-panel-section {
@@ -596,7 +598,7 @@
   .task-panel {
     padding: 16px;
   }
-  .task-panel .task-money {
+  bpm-project-task-panel .task-money {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

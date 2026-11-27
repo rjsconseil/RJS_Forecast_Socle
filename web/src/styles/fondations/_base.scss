@@ -18,9 +18,6 @@ select,
 textarea {
   font: inherit;
 }
-button {
-  cursor: pointer;
-}
 button,
 a,
 input,
@@ -32,17 +29,9 @@ button,
 a {
   touch-action: manipulation;
 }
-button:disabled {
-  opacity: var(--opacite-0-55);
-  cursor: not-allowed;
-}
 a {
   color: inherit;
   text-decoration: none;
-}
-:focus-visible {
-  outline: var(--trait-3) solid var(--app-accent, var(--focus-ring));
-  outline-offset: var(--decalage-4);
 }
 
 // Un texte masqué (position absolue) placé dans un tableau qui défile se repérait par rapport à un

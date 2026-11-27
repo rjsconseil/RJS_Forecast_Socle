@@ -1,12 +1,8 @@
 @use 'contrat-ruptures' as *;
 
 .management-panel {
-  min-width: 0;
   padding: var(--card-padding, var(--ecart-20));
   margin-bottom: var(--ecart-20);
-  border: var(--card-border-width, var(--trait-2)) solid var(--card-border, var(--outline));
-  border-radius: var(--card-radius, var(--radius-sm));
-  background: var(--card-surface, var(--raised-surface));
   color: var(--card-ink, var(--ink));
 }
 .management-totals {
@@ -32,7 +28,6 @@
 .management-form select,
 .management-form textarea {
   max-width: var(--part-100);
-  min-width: 0;
 }
 .management-records {
   list-style: none;

@@ -10,14 +10,10 @@
   width: calc(var(--part-100) + max(0, var(--column-gap) - var(--intro-panel-gap)));
 }
 .landing-manifesto {
-  display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: var(--dim-440);
-  padding: clamp(var(--ecart-32), var(--ecart-3vw), var(--ecart-48));
   border: var(--trait-1) solid var(--outline);
   border-radius: var(--card-radius);
-  background: var(--manifesto-surface);
 }
 .landing-manifesto p {
   max-width: none;
@@ -40,13 +36,5 @@
 @media (max-width: $rupture-760) {
   .section-home-hero .page-intro {
     width: var(--part-100);
-  }
-  .landing-manifesto {
-    min-height: var(--dim-300);
-  }
-}
-@media (max-width: $rupture-560) {
-  .landing-manifesto {
-    min-height: var(--dim-280);
   }
 }

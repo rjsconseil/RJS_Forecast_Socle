@@ -19,6 +19,7 @@ const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(join(repo, 'web/package.json'));
 const { chromium } = createRequire(join(repo, 'package.json'))('playwright-core');
 const postcss = req('postcss');
+const scss = req('postcss-scss');
 const [mode, out, ...files] = process.argv.slice(2);
 if (mode === 'retire') { prune(out, files); process.exit(0); }
 if (mode !== 'mesure' || !out) { console.error('Usage : node e2e/styles-cascade.mjs mesure <perdantes.json> | retire <perdantes.json> <feuille.scss>…'); process.exit(2); }
@@ -102,13 +103,14 @@ function prune(list, sheets) {
     const rel = file.replace(/^.*?\bsrc\//, 'src/');
     const lines = new Map(dead.filter(d => d.key.startsWith(rel + ':')).map(d => [Number(d.key.split(':').pop()), d.prop]));
     const src = fs.readFileSync(file, 'utf8');
-    const root = postcss.parse(src);
+    // Syntaxe SCSS (commentaires `//`, variables, interpolations) : postcss-scss la lit et la réécrit telle quelle.
+    const root = scss.parse(src);
     let removed = 0;
     root.walkDecls(d => { if (lines.get(d.source.start.line) === d.prop) { d.remove(); removed++; } });
     let again = true;
     while (again) { again = false; root.walk(n => { if ((n.type === 'rule' || (n.type === 'atrule' && n.nodes)) && !n.nodes.some(c => c.type !== 'comment')) { n.remove(); again = true; } }); }
     root.walkRules(r => { r.raws.semicolon = true; });
-    const text = root.toString();
+    const text = root.toString(scss.stringify);
     fs.writeFileSync(file, text);
     console.log(`${rel} : ${removed} déclarations retirées, ${src.split('\n').length} → ${text.split('\n').length} lignes`);
   }

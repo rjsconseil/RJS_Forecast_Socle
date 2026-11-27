@@ -27,10 +27,6 @@ $level-surfaces: '.sidebar, .topbar-context, .journey-navigation, .page-tabs, .q
     color var(--ease-fast),
     box-shadow var(--ease-fast);
 }
-.app-shell[data-density] :is(#{$level-surfaces}) [data-navigation-level]:focus-visible {
-  outline: 2px solid var(--level-focus);
-  outline-offset: 2px;
-}
 
 /* Touches de clavier : même pastille dans le menu, la barre du haut et la recherche. */
 .app-shell[data-density] kbd {

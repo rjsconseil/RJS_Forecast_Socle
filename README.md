@@ -23,6 +23,7 @@ npm run import:rjs-forecast -- --remplacer   # données du site de référence v
 npm run web        # site Angular http://localhost:4300 (proxy /api → 3410)
 npm test           # tests node:test (api/test/*.test.mjs) sur persistance réelle
 npm --prefix web test -- --watch=false   # tests unitaires du site (Vitest)
+npm --prefix web run lint   # lint du site : TypeScript et gabarits Angular (en CI ; typage strict imposé au build)
 npm run build      # build de production du site
 ```
 

@@ -5,21 +5,11 @@
 
 /* L'identité d'Astra reste attachée au module, y compris sur les écrans métier partagés.*/
 #{$app-dense} {
-  --astra-iris: #5947b8;
-  --astra-link: #5141a5;
-  --astra-iris-hover: #443492;
-  --astra-wash: #efedf9;
-  --astra-keyline: #d7d2ed;
   --astra-night: #19192d;
   --astra-nav-ink: #d9d8e9;
   --astra-subtle: #66667a;
   --astra-panel-pad: clamp(18px, 2vw, 28px);
   --astra-gap: 20px;
-  --bpm-section-accent: var(--astra-iris);
-  --bpm-section-deep: var(--astra-link);
-  --bpm-section-soft: var(--astra-wash);
-  --bpm-section-line: var(--astra-keyline);
-  --bpm-link: var(--astra-link);
   --bpm-text: #222237;
   --bpm-canvas: #f6f6f9;
   --bpm-surface: #fff;
@@ -30,13 +20,9 @@
   --control-line: #c9c8d7;
   --sober-radius: 13px;
   --sober-radius-small: 6px;
-  --app-focus-ring: #8873dc;
   --page-gutter: clamp(18px, 2.6vw, 44px);
   --page-padding-top: 16px;
   --sidebar-width: 230px;
-  --btn-primary-surface: var(--astra-iris);
-  --btn-primary-hover: var(--astra-iris-hover);
-  --app-accent: var(--astra-link);
   --app-accent-line: var(--astra-keyline);
   --topbar-surface: var(--bpm-surface);
   --sidebar-surface: var(--astra-night);

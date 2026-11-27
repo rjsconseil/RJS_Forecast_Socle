@@ -8,13 +8,6 @@
   gap: var(--ecart-10);
 }
 
-.calendar-360-overview,
-.calendar-360-overview-body {
-  display: grid;
-  grid-template-columns: minmax(0, var(--fr-1));
-  gap: var(--ecart-10);
-}
-
 .calendar-360-overview {
   grid-column: 1;
   grid-row: 2;
@@ -31,7 +24,6 @@
 }
 
 .calendar-360-heading {
-  grid-column: 1;
   grid-row: 2;
   display: grid;
   gap: var(--ecart-4);
@@ -50,9 +42,7 @@
 }
 
 .calendar-360-heading h2 {
-  font-family: var(--font-sans);
   font-size: scaled(var(--fs-md));
-  font-weight: var(--fw-bold);
 }
 
 .calendar-360-heading small {
@@ -97,9 +87,6 @@
 }
 
 .calendar.is-360 {
-  .calendar-layout {
-    gap: var(--ecart-14);
-  }
 
   .calendar-right-rail {
     gap: var(--ecart-10);
@@ -130,7 +117,6 @@
     padding: var(--ecart-12);
     border: var(--trait-1) solid var(--outline);
     border-radius: var(--radius-lg);
-    background: var(--raised-surface);
   }
 
   .calendar-month-wrap {
@@ -176,8 +162,6 @@
 
   .calendar-grid-head h3 {
     margin: 0;
-    font-family: var(--font-sans);
-    font-weight: var(--fw-medium);
   }
 
   .calendar-grid-head span {
@@ -267,13 +251,8 @@
     min-height: var(--dim-48);
     margin-top: var(--ecart-6);
     padding: var(--ecart-8);
-    border-left-color: var(--green-700);
     font-size: scaled(var(--fs-xs));
     line-height: var(--lh-normal);
-  }
-
-  .calendar-grid > .calendar-day > .calendar-event[data-kind='due'] {
-    border-left-color: var(--blue-700);
   }
 
   .calendar-grid > .calendar-day > .calendar-event[data-urgency='overdue'] {
@@ -282,10 +261,6 @@
 
   .calendar-grid > .calendar-day > .calendar-event[data-urgency='soon'] {
     border-left-color: var(--amber-700);
-  }
-
-  .calendar-grid > .calendar-day > .calendar-event.completed {
-    border-left-color: var(--slate-700);
   }
 
   .calendar-grid > .calendar-day > .calendar-event .calendar-event-title,
@@ -364,15 +339,6 @@
     width: var(--dim-10);
     height: var(--dim-10);
     border-radius: var(--part-50);
-    background: var(--green-700);
-  }
-
-  .calendar-legend-inset i[data-kind='due'] {
-    background: var(--blue-700);
-  }
-
-  .calendar-legend-inset i[data-kind='done'] {
-    background: var(--slate-700);
   }
 
   .calendar-year-grid {
@@ -398,7 +364,6 @@
 
   .calendar-year-month h3 {
     margin: 0 0 var(--ecart-6);
-    font-size: scaled(var(--fs-sm));
   }
 
   .calendar-year-weekdays,
@@ -537,10 +502,6 @@
     color: var(--ink);
   }
 
-  .calendar-agenda {
-    background: var(--raised-surface);
-  }
-
   .calendar-agenda-heading {
     align-items: center;
     justify-content: space-between;
@@ -559,8 +520,6 @@
   .calendar-agenda h3 {
     margin: var(--ecart-2) 0 0;
     font-size: scaled(var(--fs-lg));
-    font-family: var(--font-sans);
-    font-weight: var(--fw-bold);
   }
 
   .calendar-clear-highlights {
@@ -589,14 +548,9 @@
     margin-top: var(--ecart-8);
     padding: var(--ecart-8);
     border: 0;
-    border-left: var(--trait-3) solid var(--green-700);
     border-radius: 0;
     background: var(--soft);
     font-size: scaled(var(--fs-xs));
-  }
-
-  .calendar-agenda-item[data-kind='due'] {
-    border-left-color: var(--blue-700);
   }
 
   .calendar-agenda-item.is-linked {
@@ -797,13 +751,8 @@
 }
 
 @media (max-width: $rupture-1700) {
-  .calendar.is-360 .calendar-layout {
-    gap: var(--ecart-14);
-  }
   .calendar.is-360 .calendar-control-row {
-    display: grid;
     grid-template-columns: minmax(0, var(--fr-1)) auto;
-    align-items: end;
   }
   .calendar.is-360 .calendar-options {
     grid-template-columns: repeat(var(--colonnes-3), minmax(0, var(--fr-1)));
@@ -814,9 +763,6 @@
   }
   .calendar.is-360 .calendar-toolbar {
     width: auto;
-  }
-  .calendar.is-360 .calendar-agenda {
-    margin-top: 0;
   }
 }
 

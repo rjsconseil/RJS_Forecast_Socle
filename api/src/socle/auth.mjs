@@ -6,9 +6,10 @@
 // - `local` (défaut, poste de travail) : le user vient du jeton s'il y en a un, sinon de l'en-tête `x-user-id`
 //   (choix du profil sur le poste, comme avant) ;
 // - `required` (site en ligne) : seul un jeton valide donne un user ; l'en-tête est ignoré.
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { promisify } from 'node:util';
 import { fail } from './errors.mjs';
 
 export const AUTH_MODES = ['local', 'required'];
@@ -32,24 +33,31 @@ export function checkPassword(password) {
   return password;
 }
 
+// scrypt asynchrone : le calcul (environ 50 ms) tourne dans le pool de libuv, sans bloquer les autres requêtes.
+const scryptAsync = promisify(scrypt);
+
 /** Empreinte d'un mot de passe : scrypt salé ; seul ce résultat est enregistré. */
-export function hashPassword(password) {
+export async function hashPassword(password) {
   const salt = randomBytes(16);
-  const hash = scryptSync(checkPassword(password), salt, SCRYPT.keylen, { N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p });
+  const hash = await scryptAsync(checkPassword(password), salt, SCRYPT.keylen, { N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p });
   return { algo: 'scrypt', N: SCRYPT.N, r: SCRYPT.r, p: SCRYPT.p, salt: b64(salt), hash: b64(hash) };
 }
 
 /** Vrai si le mot de passe correspond à l'empreinte (comparaison en temps constant). */
-export function verifyPassword(password, record) {
+export async function verifyPassword(password, record) {
   if (typeof password !== 'string' || !record?.hash) return false;
   const expected = Buffer.from(record.hash, 'base64url');
-  const actual = scryptSync(password, Buffer.from(record.salt, 'base64url'), expected.length, { N: record.N, r: record.r, p: record.p });
+  const actual = await scryptAsync(password, Buffer.from(record.salt, 'base64url'), expected.length, { N: record.N, r: record.r, p: record.p });
   return actual.length === expected.length && timingSafeEqual(actual, expected);
 }
 
-/** Empreinte factice : un identifiant inconnu coûte le même temps qu'un mot de passe faux. */
-const DECOY = hashPassword('leurre-de-comparaison');
-export const verifyDecoy = (password) => { verifyPassword(String(password ?? ''), DECOY); return false; };
+/** Empreinte factice : un identifiant inconnu coûte le même temps qu'un mot de passe faux (calculée une fois). */
+let decoy;
+export const verifyDecoy = async (password) => {
+  decoy ??= hashPassword('leurre-de-comparaison');
+  await verifyPassword(String(password ?? ''), await decoy);
+  return false;
+};
 
 /**
  * Secret de signature des jetons : `SOCLE_AUTH_SECRET` (obligatoire dès que plusieurs serveurs tournent), sinon un

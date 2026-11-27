@@ -13,7 +13,6 @@
 }
 .app-shell main .bpm-reading {
   --bpm-frame-line: color-mix(in srgb, var(--app-accent) 24%, var(--line));
-  --bpm-frame-radius: var(--rayon-12);
 
   rjs-app-hero .app-hero {
     gap: var(--ecart-10) var(--ecart-16);
@@ -148,9 +147,6 @@
   .metric-label {
     font-weight: var(--fw-bold);
   }
-  .metric-value {
-    letter-spacing: -0.035em;
-  }
   .expense-filters:not(:has(> .bpm-link)) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
   }
@@ -232,69 +228,34 @@
   font-variant-numeric: tabular-nums;
 
   :is(.rjs-page-banner, .life-projects-banner) {
-    --heading-surface: var(--bpm-banner-bg);
-    --heading-ink: #fff;
-    --heading-muted: #c2d8f1;
     --period-nav-accent: color-mix(in srgb, var(--bpm-banner-bg) 80%, white);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    align-content: start;
-    gap: 14px 24px;
-    min-height: 0;
-    padding: 22px 24px 18px;
-    border: 1px solid var(--bpm-banner-border);
-    border-radius: 16px;
-    color: #fff; /* fond et ombre : _hero-glow.scss*/
+    align-content: start; /* fond et ombre : _hero-glow.scss*/
   }
   .bpm-banner-copy, .life-banner-copy {
-    grid-column: 1;
-    grid-row: 1;
     min-width: 0;
   }
   :is(.rjs-page-banner, .life-projects-banner) :is(h1, h1.display) {
     max-width: none;
-    margin: 4px 0 8px;
-    font-family: var(--font-ui, 'Inter', sans-serif);
-    font-size: clamp(25px, 2.4vw, 34px);
-    font-weight: 650;
-    line-height: 1.15;
-    letter-spacing: -.025em;
-    color: #fff;
     overflow-wrap: anywhere;
   }
   :is(.rjs-page-banner, .life-projects-banner) .eyebrow {
     max-width: none;
     margin: 0;
-    color: #c2d8f1;
-    font-size: 11px;
-    letter-spacing: .08em;
-    font-weight: 650;
   }
   :is(.bpm-banner-intro, .life-banner-copy .page-intro) {
-    max-width: 74ch;
     margin: 0;
-    color: #e2ecf8;
-    font-size: 15px;
-    line-height: 1.5;
     text-wrap: pretty;
   }
   .bpm-banner-period {
-    display: grid;
-    align-self: center;
     gap: 4px;
-    min-width: 180px;
     font-size: 12px;
     strong { font-size: 20px; }
   }
   .bpm-banner-context {
-    grid-column: 1 / -1;
-    display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 6px 18px;
-    color: #c2d8f1;
-    font-size: 12px;
     line-height: 1.5;
     strong { color: #fff; font-weight: 600; }
   }
@@ -327,26 +288,22 @@
     box-shadow: none;
   }
   :is(.rjs-page-banner, .life-projects-banner) .btn-primary { background: #fff; color: var(--bpm-banner-bg); border-color: #fff; }
-  :is(.rjs-page-banner, .life-projects-banner) label { color: #e2ecf8; }
   :is(.rjs-page-banner, .life-projects-banner) :is(a, button, input, select):focus-visible { outline: 3px solid #8cd3ff; outline-offset: 3px; }
-  .bpm-banner-back { display: inline-block; margin-bottom: 10px; font-size: 13px; color: #e2ecf8; }
+  .bpm-banner-back { margin-bottom: 10px; font-size: 13px; color: #e2ecf8; }
   &.bpm-tasks-page .life-banner-tools { grid-template-columns: minmax(180px, 1fr) minmax(240px, 2fr); }
-  .life-summary { background: var(--raised-surface); border-color: var(--line); border-radius: 14px; }
-  :is(.bpm-section, [data-bpm-frame]) > header h2 { font-size: 21px; line-height: 1.3; }
+  .life-summary { border-color: var(--line); border-radius: 14px; }
+  :is(.bpm-section, [data-bpm-frame]) > header h2 { line-height: 1.3; }
   :is(.bpm-section) > header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; }
-  :is(.bpm-table) th { font-weight: 650; }
-  .num { font-variant-numeric: tabular-nums; }
 
-  &.bpm-reading { display: grid; gap: 24px; }
+  &.bpm-reading { gap: 24px; }
 
   @media (max-width: 900px) {
-    :is(.rjs-page-banner, .life-projects-banner) { gap: 12px 18px; padding: 18px; }
+    :is(.rjs-page-banner, .life-projects-banner) { padding: 18px; }
   }
   @media (max-width: 640px) {
-    :is(.rjs-page-banner, .life-projects-banner) { grid-template-columns: minmax(0, 1fr); padding: 16px; border-radius: 12px; }
+    :is(.rjs-page-banner, .life-projects-banner) { padding: 16px; border-radius: 12px; }
     :is(.bpm-banner-copy, .life-banner-copy, .bpm-banner-period) { grid-column: 1; grid-row: auto; max-width: none; }
     &.bpm-tasks-page .life-banner-tools { grid-template-columns: minmax(0, 1fr); }
-    :is(.bpm-banner-intro, .life-banner-copy .page-intro) { font-size: 14px; }
     .bpm-banner-actions > * { flex: 1 1 auto; }
   }
 }

@@ -1,6 +1,5 @@
 // Fiche projet : gestes de financement d'une tâche (part, part libérée, demande de montant, décision, retour au
 // budget de vie). Chaque geste passe par l'écriture avec relecture de la page (`ProjectWriteFlow.run`).
-import { WritableSignal } from '@angular/core';
 import { newRequestKey } from '../../core/api.service';
 import { parseAmount } from '../../core/format';
 import { BpmApi } from '../data/bpm-api.service';
