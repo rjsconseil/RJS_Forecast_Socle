@@ -5,3 +5,4 @@
  */
 export { BpmPageContext, BpmRefresh, bpmLoader } from '../bpm/ui';
 export { astraUrl, astraSectionHome } from './astra-parts';
+export type { InscriptionApplication, PageInscrite, ActionInscrite } from './inscription';

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { auditNavigation, navigationLoop, AppNavigation } from './navigation-engine';
 import { applicationModules, applicationNavigation } from '../plan/application-navigation';
 import { planZone } from '../plan/site-plan';
+import { APPLICATIONS_INSCRITES } from '../sections/inscriptions';
 
 describe('Navigation system · moteur des modules applicatifs', () => {
   it('BPM-Astra est d’équerre pour un utilisateur connecté comme pour un visiteur', () => {
@@ -19,7 +20,9 @@ describe('Navigation system · moteur des modules applicatifs', () => {
   it('chaque partie range ses pages dans l’ordre du menu, l’accueil en tête du quotidien', () => {
     const nav = applicationNavigation('bpm-astra')!;
     expect(nav.sections[0].pages.map((p) => p.link)).toEqual(['/bpm-astra', '/bpm-astra/mouvements', '/bpm-astra/calendrier']);
-    expect(nav.sections[1].pages.map((p) => p.link)).toEqual(['/bpm-astra/projets', '/bpm-astra/taches', '/bpm-astra/pilotage']);
+    // Pages du socle d'abord, puis celles des applications autonomes inscrites dans la section.
+    const inscrites = APPLICATIONS_INSCRITES.filter((a) => a.section === 'projets').flatMap((a) => a.pages.map((p) => '/bpm-astra/' + p.slug));
+    expect(nav.sections[1].pages.map((p) => p.link)).toEqual(['/bpm-astra/projets', '/bpm-astra/taches', ...inscrites]);
     expect(nav.sections[2].pages.map((p) => p.link)).toEqual(['/bpm-astra/budget', '/bpm-astra/plafonds']);
     expect(nav.sections[3].pages[0].link).toBe('/bpm-astra/objectif');
   });

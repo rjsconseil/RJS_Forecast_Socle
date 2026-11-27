@@ -1,5 +1,6 @@
 import type { Type } from '@angular/core';
 import { sectionOf, type SectionKey } from '../platform/sections';
+import { APPLICATIONS_INSCRITES } from '../sections/inscriptions';
 
 // Les cinq parties de BPM-Astra : une seule déclaration donne le menu, la couleur, le parcours et les ponts.
 // Mes projets et Mon budget apportent le contenu (projets et tâches ; échéances récurrentes et plafonds) ;
@@ -50,9 +51,6 @@ export const ASTRA_PARTS: AstraPart[] = [
     pages: [
       { slug: 'projets', label: 'Projets de la vie', source: 'projet-de-vie/projets' },
       { slug: 'taches', label: 'Tâches', source: 'app/taches' },
-      // Fonctionnalités propres à Mes projets (portefeuille, tableau, planning), bâties sur le socle sans le modifier.
-      // Placée après les pages existantes : l'entrée de la section reste « Projets de la vie ».
-      { slug: 'pilotage', label: 'Pilotage', own: () => import('../sections/projets/application/pilotage.page').then(m => m.ProjetsPilotagePage) },
     ],
   },
   {
@@ -90,6 +88,13 @@ export const ASTRA_PARTS: AstraPart[] = [
   },
 ];
 
+// Les pages des applications autonomes inscrites (sections/inscriptions.ts) viennent après les pages du socle de leur
+// partie : l'entrée de chaque section reste la page du socle.
+for (const app of APPLICATIONS_INSCRITES) {
+  const part = ASTRA_PARTS.find(p => p.key === app.section)!;
+  part.pages.push(...app.pages.map(({ slug, label, ecran }): AstraPage => ({ slug, label, own: ecran })));
+}
+
 /** Écrans ouverts depuis une page du menu : ils appartiennent à la partie de leur page et la suivent dans les onglets. */
 export const ASTRA_SECONDARY: [slug: string, parent: string, source: string][] = [
   ['mouvements/echeances', 'mouvements', 'projet-de-vie/echeances'],
@@ -116,11 +121,12 @@ export const ASTRA_DETAILS: [slug: string, label: string, source: string, parent
  */
 export const ASTRA_TAB_LABELS: Record<string, string> = {
   '': 'Mon projet de vie', mouvements: 'Mouvements', 'mouvements/echeances': 'Échéances', calendrier: 'Calendrier', 'calendrier/agenda': 'Agenda',
-  pilotage: 'Pilotage', projets: 'Projets de la vie', 'projets/:id': 'Fiche', 'projets/:id/budget': 'Budget du projet', 'projets/:id/taches': 'Tâches du projet',
+  projets: 'Projets de la vie', 'projets/:id': 'Fiche', 'projets/:id/budget': 'Budget du projet', 'projets/:id/taches': 'Tâches du projet',
   'financement/enveloppes': 'Règlements par cycle', taches: 'Tâches',
   budget: 'Budget récurrent', plafonds: 'Plafonds', 'plafonds/:poste': 'Poste', 'plafonds/postes': 'Postes et revenus',
   objectif: 'Objectif et projection', 'objectif/echeances': 'Objectifs datés', patrimoine: 'Patrimoine', 'patrimoine/reglages': 'Point de départ',
   cloture: 'Clôture du cycle', 'cloture/compte': 'Vérifier le compte', 'cloture/reglages': 'Ancrage du cycle', bilans: 'Bilans',
+  ...Object.fromEntries(APPLICATIONS_INSCRITES.flatMap(app => app.pages.map(page => [page.slug, page.label]))),
 };
 
 /**

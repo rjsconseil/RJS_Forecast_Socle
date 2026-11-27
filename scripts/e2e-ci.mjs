@@ -70,11 +70,16 @@ try {
   assert.equal(evil.status, 403, 'une écriture d’un autre site doit être refusée');
   console.log('✓ En-têtes du site (nonce des styles) et refus des écritures d’un autre site');
   const browserEnv = { BPM_BASE_URL: site, CHROME_PATH: chrome };
-  await run('Tests d’interface Astra', ['e2e/astra.e2e.mjs'], browserEnv);
-  await run('Parcours de navigation de BPM', ['e2e/bpm-navigation.e2e.mjs'], browserEnv);
-  await run('Réglages de la navigation', ['e2e/navigation-system.e2e.mjs'], browserEnv);
-  // Scénario des projets de mai à novembre : sa propre API et son propre site, sur d'autres ports.
-  await run('Projets de la vie, de bout en bout', ['e2e/projets.e2e.mjs'], { CHROME_PATH: chrome, E2E_API_PORT: String(await freePort()), E2E_WEB_PORT: String(await freePort()) });
+  // npm run e2e:app -- <clé> : la seule application autonome demandée (E2E_APP), sans les autres parcours du socle.
+  if (process.env.E2E_APP) {
+    await run(`Tests d’interface de l’application ${process.env.E2E_APP}`, ['e2e/astra.e2e.mjs'], browserEnv);
+  } else {
+    await run('Tests d’interface Astra', ['e2e/astra.e2e.mjs'], browserEnv);
+    await run('Parcours de navigation de BPM', ['e2e/bpm-navigation.e2e.mjs'], browserEnv);
+    await run('Réglages de la navigation', ['e2e/navigation-system.e2e.mjs'], browserEnv);
+    // Scénario des projets de mai à novembre : sa propre API et son propre site, sur d'autres ports.
+    await run('Projets de la vie, de bout en bout', ['e2e/projets.e2e.mjs'], { CHROME_PATH: chrome, E2E_API_PORT: String(await freePort()), E2E_WEB_PORT: String(await freePort()) });
+  }
 } catch (err) {
   console.error(`✖ ${err.message}`);
   process.exitCode = 1;

@@ -9,6 +9,7 @@ import type { PlanSection } from '../plan/site-plan';
 import { BPM_LEGACY_PATHS, BPM_SCREEN_ROUTES, BPM_SCREEN_SECTIONS, BPM_SCREEN_WORKSPACES, BPM_START_ROUTES, loadBpmOnboarding } from '../bpm/bpm.screens';
 import { BPM_CORE_LINKS, BPM_PAGE_PATH } from '../bpm/ui/bpm-page-path';
 import { ASTRA_DETAILS, ASTRA_PARTS, ASTRA_SECONDARY, astraUrl, type AstraPage } from './astra-parts';
+import { APPLICATIONS_INSCRITES } from '../sections/inscriptions';
 
 export const astraGroups = ASTRA_PARTS.map((part) => ({
   label: part.label,
@@ -176,13 +177,14 @@ const actions: TabLink[] = [
   { tab: astraUrl('projets'), label: 'Créer un projet de la vie', query: { editProject: 'new' } },
   { tab: astraUrl('projets'), label: 'Créer une tâche', query: { editTask: 'new' }, link: astraUrl('taches') },
   { tab: astraUrl('taches'), label: 'Créer une tâche', query: { editTask: 'new' } },
-  { tab: astraUrl('pilotage'), label: 'Créer un projet de la vie', query: { editProject: 'new' }, link: astraUrl('projets') },
-  { tab: astraUrl('pilotage'), label: 'Créer une tâche', query: { editTask: 'new' }, link: astraUrl('taches') },
   { tab: astraUrl('objectif'), label: 'Créer un objectif daté', query: { goal: 'new' } },
   openAction(astraUrl('patrimoine'), 'Corriger le point de départ', astraUrl('patrimoine/reglages')),
   openAction(astraUrl('cloture'), 'Vérifier le compte', astraUrl('cloture/compte')),
   openAction(astraUrl('cloture'), 'Fixer le cycle', astraUrl('cloture/reglages')),
   openAction(astraUrl('bilans'), 'Clôturer le cycle', astraUrl('cloture')),
+  // Les gestes déclarés par les applications autonomes inscrites (sections/inscriptions.ts).
+  ...APPLICATIONS_INSCRITES.flatMap(app => (app.actions ?? []).map(({ page, label, query, vers }): TabLink =>
+    ({ tab: astraUrl(page), label, query, ...(vers ? { link: astraUrl(vers) } : {}) }))),
 ];
 
 /** Les sections de contenu des écrans métier, servies à leurs adresses Astra (pages et sous-pages seulement). */

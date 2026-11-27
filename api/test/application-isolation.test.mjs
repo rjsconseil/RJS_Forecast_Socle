@@ -77,13 +77,16 @@ const GRAND_NOYAU = 'platform/grand-noyau.ts';
 const CADRE = 'astra/cadre.ts';
 const FONCTIONNALITES = /^sections\/[^/]+\/fonctionnalites\//;
 const APP_ROOT = (rel) => rel.match(/^(sections\/[^/]+\/application|hybrides\/[^/]+)\//)?.[1] ?? null;
+// Registre des applications autonomes inscrites dans BPM-Astra, et l'inscription de chacune (pages, actions, essais).
+const REGISTRE = 'sections/inscriptions.ts';
+const INSCRIPTION = (rel) => /^(sections\/[^/]+\/application|hybrides\/[^/]+)\/inscription\.ts$/.test(rel);
 // Toute forme d'import relatif : `from '…'`, `import '…'` (effet de bord) et `import('…')`.
 const relativeImports = (text) => [...text.matchAll(/(?:from\s+|import\s*\(?\s*)['"](\.[^'"]+)['"]/g)].map((m) => m[1]);
 const resolveTs = (file, spec) => { const t = relative(app, join(file, '..', spec)); return /\.(ts|json|scss|html)$/.test(t) ? t : t + '.ts'; };
 
 test('trois étages : chaque fichier de sections/ et hybrides/ est dans les fonctionnalités d’une section ou dans une application autonome', async () => {
   const stray = (await files(app)).map((f) => relative(app, f))
-    .filter((rel) => /^(sections|hybrides)\//.test(rel) && !FONCTIONNALITES.test(rel) && !APP_ROOT(rel));
+    .filter((rel) => /^(sections|hybrides)\//.test(rel) && rel !== REGISTRE && !FONCTIONNALITES.test(rel) && !APP_ROOT(rel));
   assert.deepEqual(stray, []);
 });
 
@@ -117,4 +120,17 @@ test('applications autonomes : elles appellent le grand noyau, les fonctionnalit
     }
   }
   assert.deepEqual(found, []);
+});
+
+test('point d’inscription : le registre n’importe que des inscriptions, et chaque inscription y figure', async () => {
+  const file = join(app, REGISTRE);
+  const imported = relativeImports(await readFile(file, 'utf8')).map((spec) => resolveTs(file, spec));
+  assert.deepEqual(imported.filter((t) => t !== CADRE && !INSCRIPTION(t)), [], 'le registre n’importe que le cadre (types) et des inscriptions');
+  const inscriptions = (await files(app)).map((f) => relative(app, f)).filter(INSCRIPTION).sort();
+  assert.deepEqual(imported.filter(INSCRIPTION).sort(), inscriptions, 'chaque application autonome a sa ligne dans le registre');
+  // Les scripts Node (npm run app, e2e:app, tests d'interface) lisent les inscriptions telles quelles : types seuls.
+  for (const rel of inscriptions) {
+    const text = await readFile(join(app, rel), 'utf8');
+    assert.doesNotMatch(text, /^import\s+(?!type\b)/m, `${rel} : seuls des imports de types`);
+  }
 });

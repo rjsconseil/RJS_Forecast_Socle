@@ -55,7 +55,23 @@ applications autonomes qui l'entourent.
 | Validation | Tests de la section | **Non-régression complète** de toutes les fonctionnalités du socle (tests de l'API, du site, de bout en bout, jeux d'essai) |
 | Livraison | PR de la section | PR du socle, distincte ; la section ne s'en sert qu'une fois cette PR fusionnée, dans une PR de section suivante |
 
-On ne mélange jamais les deux modes dans une même PR.
+On ne mélange jamais les deux modes dans une même PR : le contrôle « Mode de la PR » de GitHub (`npm run mode` en local)
+range chaque fichier modifié et passe au rouge si une PR touche à la fois le grand noyau et une application.
+
+## Poste de travail d'une application autonome
+
+| Étape | Commande | Ce qu'elle fait |
+|---|---|---|
+| Lancer | `npm run app -- projets` | Le site complet sur une base temporaire, avec le jeu d'essai commun et ceux de l'application ; tes vraies données ne sont jamais touchées. L'API redémarre et le site se recharge à chaque modification |
+| Tester | `npm run test:app -- projets` | Seulement les tests de l'application et de ses fonctionnalités, son inscription dans BPM-Astra, et les gardes (trois étages, contrat du grand noyau, mode des PR) |
+| Parcourir | `npm run e2e:app -- projets` | Seulement ses parcours dans Chromium (sa partie de BPM-Astra à 1440 px, ses pages à 375 px), sur le site construit |
+| Livrer | PR de l'application | GitHub rejoue toute la non-régression ; la PR passe au vert seulement si elle ne touche aucun fichier du socle |
+
+Une application se branche sur BPM-Astra par son **inscription** (`sections/<clé>/application/inscription.ts`, ou
+`hybrides/<nom>/inscription.ts`) : ses pages, rangées après celles du socle dans sa partie du menu, ses gestes (onglets
+et palette) et ses jeux d'essai. Une nouvelle application ajoute sa ligne au registre `sections/inscriptions.ts`, qui
+appartient aux applications. L'interface du grand noyau est figée par une photo (`api/test/contrat/`) : si une
+fonctionnalité a besoin de la changer, c'est une fondation à faire entrer au socle d'abord ([`../socle/`](../socle/README.md)).
 
 ## Applications autonomes hybrides
 

@@ -6,23 +6,38 @@
 //
 //   npm run e2e:astra                      (site sur http://localhost:4300, premier profil qui a des données)
 //   BPM_BASE_URL=… BPM_USER_ID=… BPM_SESSION_TOKEN=… CHROME_PATH=… npm run e2e:astra
+//   E2E_APP=projets …                       (une seule application autonome : sa partie, sans les gestes du socle)
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { chromium } from 'playwright-core';
+import { inscriptions } from '../scripts/inscriptions.mjs';
 
 const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
 const chrome = process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/usr/bin/chromium'].find(existsSync);
 assert(chrome, 'Navigateur introuvable : indiquez CHROME_PATH.');
 
-// Les pages d'Astra et leur section (même déclaration que le menu : web/src/app/astra/astra-parts.ts).
+// Les pages du socle dans Astra et leur section (même déclaration que le menu : web/src/app/astra/astra-parts.ts),
+// puis celles des applications autonomes inscrites (web/src/app/sections/inscriptions.ts), après les pages du socle.
 const PAGES = {
   quotidien: ['', 'mouvements', 'mouvements/echeances', 'calendrier', 'calendrier/agenda'],
-  projets: ['projets', 'financement/enveloppes', 'taches', 'pilotage'],
+  projets: ['projets', 'financement/enveloppes', 'taches'],
   budget: ['budget', 'plafonds', 'plafonds/postes'],
   patrimoine: ['objectif', 'objectif/echeances', 'patrimoine', 'patrimoine/reglages'],
   cycles: ['cloture/compte', 'cloture', 'cloture/reglages', 'bilans'],
 };
-const MOBILE = ['', 'mouvements', 'projets', 'pilotage', 'budget', 'objectif', 'cloture', 'bilans'];
+let MOBILE = ['', 'mouvements', 'projets', 'budget', 'objectif', 'cloture', 'bilans'];
+const apps = await inscriptions();
+for (const app of apps) {
+  PAGES[app.section].push(...app.pages.map(p => p.slug));
+  MOBILE.push(...app.pages.filter(p => p.mobile).map(p => p.slug));
+}
+// Une seule application (npm run e2e:app -- <clé>) : la partie qui l'accueille, à 1440 px, et ses pages à 375 px.
+const only = process.env.E2E_APP ? apps.find(a => a.cle === process.env.E2E_APP) : null;
+assert(!process.env.E2E_APP || only, `Application inconnue : ${process.env.E2E_APP} (inscrites : ${apps.map(a => a.cle).join(', ')})`);
+if (only) {
+  for (const part of Object.keys(PAGES)) if (part !== only.section) delete PAGES[part];
+  MOBILE = only.pages.map(p => p.slug);
+}
 
 const browser = await chromium.launch({ executablePath: chrome, headless: true });
 const failures = [];
@@ -98,32 +113,34 @@ try {
   }
   await page.setViewportSize({ width: 1440, height: 900 });
 
-  // 3. Gestes : créer en fenêtre sans quitter la page, puis fermer sans rien enregistrer.
-  await open('');
-  const home = page.url();
-  const primary = page.locator('.astra-bar-primary :is(a, button)').first();
-  if (/Saisir une dépense/.test(await primary.textContent())) {
-    await primary.click();
-    await page.locator('dialog[open], .modal, [role="dialog"]').first().waitFor();
-    check(page.url() === home, 'Accueil : « Saisir une dépense » a quitté la page au lieu d’ouvrir la fenêtre');
+  // 3. Gestes du socle : créer en fenêtre sans quitter la page, puis fermer sans rien enregistrer.
+  if (!only) {
+    await open('');
+    const home = page.url();
+    const primary = page.locator('.astra-bar-primary :is(a, button)').first();
+    if (/Saisir une dépense/.test(await primary.textContent())) {
+      await primary.click();
+      await page.locator('dialog[open], .modal, [role="dialog"]').first().waitFor();
+      check(page.url() === home, 'Accueil : « Saisir une dépense » a quitté la page au lieu d’ouvrir la fenêtre');
+      await page.keyboard.press('Escape');
+    }
+    // « + » ouvre le menu Nouveau ; Échap le referme.
+    await page.locator('dialog[open], [role="dialog"]').first().waitFor({ state: 'detached' }).catch(() => {});
+    await page.evaluate(() => (document.activeElement)?.blur?.());
+    await page.keyboard.press('+');
+    // Le menu se dessine au rendu suivant : on l'attend un court instant.
+    const menuOpened = await page.locator('.astra-new-menu').waitFor({ timeout: 3000 }).then(() => true, () => false);
+    check(menuOpened, 'Touche + : le menu « Nouveau » ne s’ouvre pas');
     await page.keyboard.press('Escape');
+    // Menu latéral : sous la page ouverte, ses seules pages secondaires (pas celles des autres sections).
+    await open('cloture/compte');
+    const subs = await page.evaluate(() => [...document.querySelectorAll('.astra-nav-sub a')].map(a => a.textContent.trim() + (a.getAttribute('aria-current') === 'page' ? '*' : '')));
+    check(JSON.stringify(subs) === JSON.stringify(['Vérifier le compte*', 'Ancrage du cycle']), `Menu latéral sous « Clôture du cycle » : ${subs.join(', ')}`);
+    // Flèche « suivant » des onglets : mène à l'onglet suivant.
+    await open('cloture/compte');
+    await page.locator('.astra-tabs .astra-tab-step').last().click();
+    await page.waitForURL(/\/bpm-astra\/cloture(\?|$)/);
   }
-  // « + » ouvre le menu Nouveau ; Échap le referme.
-  await page.locator('dialog[open], [role="dialog"]').first().waitFor({ state: 'detached' }).catch(() => {});
-  await page.evaluate(() => (document.activeElement)?.blur?.());
-  await page.keyboard.press('+');
-  // Le menu se dessine au rendu suivant : on l'attend un court instant.
-  const menuOpened = await page.locator('.astra-new-menu').waitFor({ timeout: 3000 }).then(() => true, () => false);
-  check(menuOpened, 'Touche + : le menu « Nouveau » ne s’ouvre pas');
-  await page.keyboard.press('Escape');
-  // Menu latéral : sous la page ouverte, ses seules pages secondaires (pas celles des autres sections).
-  await open('cloture/compte');
-  const subs = await page.evaluate(() => [...document.querySelectorAll('.astra-nav-sub a')].map(a => a.textContent.trim() + (a.getAttribute('aria-current') === 'page' ? '*' : '')));
-  check(JSON.stringify(subs) === JSON.stringify(['Vérifier le compte*', 'Ancrage du cycle']), `Menu latéral sous « Clôture du cycle » : ${subs.join(', ')}`);
-  // Flèche « suivant » des onglets : mène à l'onglet suivant.
-  await open('cloture/compte');
-  await page.locator('.astra-tabs .astra-tab-step').last().click();
-  await page.waitForURL(/\/bpm-astra\/cloture(\?|$)/);
 
   check(!errors.length, `Erreurs dans la page :\n  ${errors.join('\n  ')}`);
   console.log(report.join('\n'));
@@ -134,4 +151,4 @@ if (failures.length) {
   console.error(`\n✗ ${failures.length} écart(s) :\n- ${failures.join('\n- ')}`);
   process.exit(1);
 }
-console.log('\n✓ BPM-Astra : structure, écran étroit et gestes conformes.');
+console.log(only ? `\n✓ Application ${only.cle} dans BPM-Astra : structure et écran étroit conformes.` : '\n✓ BPM-Astra : structure, écran étroit et gestes conformes.');

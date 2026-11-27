@@ -44,3 +44,12 @@ Mes projets en sera la première source). Elle est alors documentée ici avec so
 ## Ajouts au socle
 | Date | Fonctionnalité | Origine (besoin transverse, ou fondation venue de telle section) | Effet sur les cinq sections | PR |
 |---|---|---|---|---|
+| 27/11/2026 | Point d'inscription des applications autonomes (pages, gestes, jeux d'essai déclarés dans le dossier de l'application ; registre `web/src/app/sections/inscriptions.ts`) | Besoin transverse : ajouter une page à Mes projets obligeait à modifier le menu du socle | Chaque section (et chaque application hybride) ajoute ses pages après celles du socle dans sa partie de BPM-Astra, sans toucher au socle. Mes projets y inscrit Pilotage ; les quatre autres n'ont encore rien inscrit | PR « Le socle à l'abri » |
+| 27/11/2026 | Contrat figé du grand noyau (photo de l'interface du site et des routes de l'API), mode de chaque PR, poste de travail par application | Mise à l'abri du socle avant le développement des applications autonomes | Aucun effet fonctionnel ; toute évolution du grand noyau passe par une PR en mode socle qui met la photo à jour | PR « Le socle à l'abri » |
+
+## Faire évoluer le grand noyau (mode socle)
+1. PR à part, sans aucun fichier d'application (le contrôle « Mode de la PR » le vérifie).
+2. Si l'interface `platform/grand-noyau.ts`, le cadre `astra/cadre.ts` ou les routes de l'API changent : `npm run contrat -- --maj`, et la photo `api/test/contrat/` modifiée fait partie de la PR.
+3. Non-régression complète : `npm test`, `npm run api:check`, `npm --prefix web run lint`, `npm --prefix web run test:coverage`, `npm run build`, `npm run seeds:check`, `npm run e2e:ci` (tout est rejoué sur GitHub).
+4. Une ligne dans « Ajouts au socle » ci-dessus, avec ses effets sur les cinq sections ; après la fusion, l'étiquette suivante (`socle-v1.1`…).
+

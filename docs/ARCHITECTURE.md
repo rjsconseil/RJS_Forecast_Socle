@@ -607,7 +607,20 @@ rejoignent ces étages au fil du développement de chaque section. Deux modes de
 application autonome d'une section, libres, sans toucher au grand noyau) et **mode socle** (le grand noyau seul, PR à part,
 non-régression complète). Plan de documentation : `docs/socle/` et `docs/sections/`.
 
-## 20. Journal des changements
+## 20. Le socle à l'abri : développer les applications autonomes (27 novembre 2026)
+
+Le développement se fait désormais en **mode application autonome**. Six protections gardent le grand noyau remanié :
+
+| # | Protection | Où | Ce qu'elle garantit |
+|---|---|---|---|
+| P1 | Mode de chaque PR | `scripts/mode-pr.mjs`, tâche « Mode de la PR » de la CI | Chaque fichier modifié est rangé : application (`web/src/app/sections/**`, `web/src/app/hybrides/**`, fiche `docs/sections/<clé>.md`), sans mode (`CHANGELOG.md`) ou socle (tout le reste). Une PR qui touche les deux passe au rouge. Exception rare et visible : l'étiquette `transition-socle` |
+| P2 | Point d'inscription des applications | `astra/inscription.ts` (types, par le cadre), `sections/<clé>/application/inscription.ts`, registre `sections/inscriptions.ts` | Une application déclare ses pages (après celles du socle dans sa partie), ses gestes et ses jeux d'essai ; le menu, les onglets, la palette et les tests d'interface la reprennent. Une PR d'application ne touche plus au menu du socle |
+| P3 | Contrat figé du grand noyau | `scripts/contrat-socle.mjs`, photo `api/test/contrat/`, test `api/test/contrat-socle.test.mjs` | Toute modification de l'interface côté site (`grand-noyau.ts`, `cadre.ts` : exports et leur forme) ou des routes de l'API fait échouer le test ; la photo ne se met à jour qu'en mode socle (`npm run contrat -- --maj`) |
+| P4 | Repère de version | étiquette Git `socle-v1`, puis `socle-v1.1`… | L'état validé du socle, pour y revenir ou s'y comparer |
+| P5 | Protection de `main` | réglages du dépôt sur GitHub | Fusion seulement par PR, vérifications au vert |
+| P6 | Poste de travail d'une application | `npm run app -- <clé>`, `npm run test:app -- <clé>`, `npm run e2e:app -- <clé>` | Le site sur une base temporaire avec les jeux d'essai de l'application ; seulement ses tests et les gardes ; seulement ses parcours |
+
+## 21. Journal des changements
 
 Le détail daté des PR (intégration continue, corrections des rapports successifs, retrait du centre de commande,
 mise en ligne) est tenu dans [`CHANGELOG.md`](../CHANGELOG.md) à la racine. Ce document ne garde que la référence.
