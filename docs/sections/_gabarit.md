@@ -15,9 +15,10 @@ Une entrée par fonctionnalité : but, écran(s), règles, données propres (tab
 ## 4. Liens avec les autres sections
 Les flux reçus et donnés (catalogue `api/src/socle/sections.json`). Ce qui se passe quand une section voisine est vide.
 
-## 5. Remontées vers le socle
-**Candidates à la remontée** : les fonctionnalités propres à la section qui pourraient servir d'autres sections, avec les sections intéressées et ce qu'il reste à rendre générique.
-**Remontées** : celles qui sont entrées au socle, avec leurs effets sur les cinq sections et le lien vers leur description dans le socle.
+## 5. Fondations pour le socle
+Les fonctionnalités avancées restent ici. Cette rubrique ne liste que leurs **fondations** : les briques de base génériques qui leur sont nécessaires et qui serviraient aux autres sections.
+**Repérées** : la fondation, la fonctionnalité avancée qui l'utilise, les sections intéressées.
+**Intégrées au socle** : la fondation, sa PR, ses effets sur les cinq sections, le lien vers sa description dans le socle.
 
 ## 6. Écrans
 Adresses, onglets, états vides, écran étroit.

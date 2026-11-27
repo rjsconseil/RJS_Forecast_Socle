@@ -19,22 +19,24 @@ Règles qui s'appliquent à toute la documentation :
 3. Une section ne réécrit pas le socle. Elle dit ce qu'elle en utilise, et le lien suffit.
 4. Le code reste rangé de la même façon : `web/src/app/sections/<clé>/` pour les écrans propres à une section, et les tables préfixées par section (`MQ_`, `MP_`, `MB_`, `PT_`, `CL_`).
 
-## Cycle de vie d'une fonctionnalité : de la section au socle
+## Cycle de vie d'une fonctionnalité : la section garde l'application, le socle reçoit les fondations
 
-Une fonctionnalité naît dans une section, mûrit dans sa première version autonome, puis peut **remonter au socle**
-quand elle sert d'autres sections. Mes projets ouvre la voie : le noyau porte déjà les deux briques d'un outil de
-gestion de projet (les projets, les tâches et leur lien), et beaucoup de ses fonctionnalités avancées ont vocation à
-devenir des fonctionnalités du socle, utiles aux autres sections (par exemple Mon budget, appelé à devenir une
-application de gestion des finances et des investissements).
+Les fonctionnalités avancées d'une section **restent dans la section** : elles forment son application autonome (pour
+Mes projets, l'application de gestion de projet). Ce qui fait évoluer le socle, ce sont **leurs fondations** : les
+briques de base dont ces fonctionnalités ont besoin et qui servent aussi aux autres sections. Mes projets ouvre la voie :
+le noyau porte déjà les deux briques d'un outil de gestion de projet (les projets, les tâches et leur lien), et ses
+nouveaux besoins donneront au socle des fonctionnalités de gestion de projet de base, utiles par exemple à Mon budget
+quand il gérera les investissements.
 
-| Étape | Où elle vit | Où elle se documente |
+Chaque fonctionnalité se lit donc en deux couches :
+
+| Couche | Où elle vit | Où elle se documente |
 |---|---|---|
-| 1. Née dans une section | `web/src/app/sections/<clé>/`, données `<préfixe>_` | Fiche de la section, §3 |
-| 2. Candidate à la remontée | Même endroit, écrite de façon générique (sans dépendre de la section) | Fiche de la section, §5 « Candidates à la remontée » |
-| 3. Remontée au socle | Socle, disponible aux cinq sections | [`../socle/`](../socle/README.md), avec son origine ; la fiche d'origine renvoie vers elle |
+| **Couche avancée** (l'outil, l'écran, les règles propres) | La section : `web/src/app/sections/<clé>/`, données `<préfixe>_` | Fiche de la section, §3 |
+| **Fondation** (la brique de base générique qu'elle utilise) | D'abord repérée dans la section, puis intégrée au socle et disponible aux cinq sections | Fiche de la section, §5 (fondation repérée), puis [`../socle/`](../socle/README.md) avec son origine et ses effets sur les cinq sections |
 
-Pour qu'une fonctionnalité puisse remonter sans être réécrite, elle est écrite dès le départ avec des calculs purs
-séparés de l'écran, sans nommer la section dans ses règles, et en ne lisant le socle que par ses lectures et commandes publiques.
+Pour que la fondation puisse entrer au socle sans réécrire la couche avancée, on les sépare dès le départ : calculs
+purs à part de l'écran, fondation sans nommer la section, lecture du socle par ses lectures et commandes publiques.
 
 ## Organisation des fichiers
 

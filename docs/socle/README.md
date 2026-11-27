@@ -6,9 +6,9 @@
 
 ## Principe
 Le socle est volontairement réduit à des fonctionnalités transverses et simples. Tout ce qui va au-delà vit dans une section
-(voir [`../sections/README.md`](../sections/README.md)). Une fonctionnalité entre au socle quand elle sert plusieurs sections : soit un besoin transverse simple, soit une
-fonctionnalité née dans une section, mûrie dans sa version autonome, puis **remontée** au socle (Mes projets en sera la
-première source). Elle est alors documentée ici avec son origine et ses effets sur chacune des cinq sections.
+(voir [`../sections/README.md`](../sections/README.md)). Une fonctionnalité entre au socle quand elle sert plusieurs sections : soit un besoin transverse simple, soit la
+**fondation** d'une fonctionnalité avancée née dans une section (la fonctionnalité avancée, elle, reste dans sa section ;
+Mes projets en sera la première source). Elle est alors documentée ici avec son origine et ses effets sur chacune des cinq sections.
 
 ## Format d'une entrée
 | Rubrique | Contenu |
@@ -33,6 +33,6 @@ première source). Elle est alors documentée ici avec son origine et ses effets
 11. Flux entre sections
 12. Authentification et stockage
 
-## Ajouts et remontées au socle
-| Date | Fonctionnalité | Origine (besoin transverse ou section d'origine) | Effet sur les cinq sections | PR |
+## Ajouts au socle
+| Date | Fonctionnalité | Origine (besoin transverse, ou fondation venue de telle section) | Effet sur les cinq sections | PR |
 |---|---|---|---|---|

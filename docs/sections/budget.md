@@ -6,7 +6,7 @@
 ## 2. Ce que la section prend au socle
 ## 3. Fonctionnalités propres à la section
 ## 4. Liens avec les autres sections
-## 5. Remontées vers le socle
+## 5. Fondations pour le socle
 ## 6. Écrans
 ## 7. Recette et tests
 ## 8. Journal de développement et de débogage
