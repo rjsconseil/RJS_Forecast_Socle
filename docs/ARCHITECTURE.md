@@ -673,4 +673,4 @@ sur toute déclaration toujours écrasée.
   ou de même bloc sont regroupées quand aucune règle intercalée ne pose une propriété de la même famille (−29 lignes).
   Les 18 doublons de sélecteur restants sont séparés par des règles qui touchent aux mêmes propriétés : les regrouper
   changerait la cascade. Empreintes identiques (48 vues et 12 vues du calendrier).
-- `_responsive.scss` et `_personalization.scss` restent non chargées ; leur en-tête dit ce que les charger changerait.
+- `calendar/styles/_responsive.scss` et `_personalization.scss`, chargées nulle part, sont supprimées (décision de Roosevelt, 27/11) : le rendu ne change pas.
