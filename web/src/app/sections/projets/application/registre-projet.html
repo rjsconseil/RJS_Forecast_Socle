@@ -59,9 +59,9 @@
                 @for (c of registre().champs; track c.id) {
                   <td>
                     @if (etat()?.id === c.id) {
-                      <select class="mp-etat" [attr.aria-label]="c.label" [value]="l[c.id] ?? ''" [disabled]="busy()" (change)="changerEtat(l, $any($event.target).value)">
-                        <option value="" disabled>—</option>
-                        @for (v of c.valeurs; track v) { <option [value]="v">{{ valeurs[v] ?? v }}</option> }
+                      <select class="mp-etat" [attr.aria-label]="c.label" [disabled]="busy()" (change)="changerEtat(l, $any($event.target).value)">
+                        <option value="" disabled [selected]="!l[c.id]">—</option>
+                        @for (v of c.valeurs; track v) { <option [value]="v" [selected]="l[c.id] === v">{{ valeurs[v] ?? v }}</option> }
                       </select>
                     } @else { {{ afficher(c, l) }} }
                   </td>

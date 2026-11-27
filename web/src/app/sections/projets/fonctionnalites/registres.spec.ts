@@ -19,7 +19,7 @@ describe('Mes projets · registres PRINCE2', () => {
   it('convertit la saisie selon le modèle et signale les manques', () => {
     const plans = registreDuTheme('plans')!;
     const s = saisieRegistre(plans, { numero: '2', nom: ' Livraison 1 ', type: 'livraison', debutPrevu: '' });
-    expect(s).toEqual({ numero: 2, nom: 'Livraison 1', type: 'livraison' });
+    expect(s).toEqual({ numero: 2, nom: 'Livraison 1', type: 'livraison', statut: 'a-venir' });
     expect(erreurRegistre(registreDuTheme('risque')!, {})).toBe('Intitulé : obligatoire.');
     expect(erreurRegistre(plans, { numero: Number.NaN })).toBe('N° : un nombre entier.');
   });

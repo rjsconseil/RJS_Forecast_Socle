@@ -85,6 +85,9 @@ export function saisieRegistre(registre: Registre, brut: Record<string, string>)
     if (!v) continue;
     out[c.id] = c.type === 'entier' ? Number.parseInt(v, 10) : c.type === 'nombre' ? Number(v) : v;
   }
+  // Une ligne nouvelle part du premier état du registre (ouvert, à faire, à venir…).
+  const etat = registre.champs.find((c) => c.id === registre.etat);
+  if (etat && out[etat.id] === undefined && etat.valeurs.length) out[etat.id] = etat.valeurs[0];
   return out;
 }
 

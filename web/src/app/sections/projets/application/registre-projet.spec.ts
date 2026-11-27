@@ -55,7 +55,7 @@ describe('Mes projets · registre PRINCE2 d’un thème', () => {
     (form.querySelector('[name=intitule]') as HTMLInputElement).value = 'Budget serré';
     form.dispatchEvent(new Event('submit'));
     await settle(f);
-    expect(api.aaCreate).toHaveBeenCalledWith('projets', 'risques', { intitule: 'Budget serré', projectId: 'prj_1' });
+    expect(api.aaCreate).toHaveBeenCalledWith('projets', 'risques', { intitule: 'Budget serré', statut: 'ouvert', projectId: 'prj_1' });
 
     const etat = el.querySelector('select.mp-etat') as HTMLSelectElement;
     etat.value = 'clos';
