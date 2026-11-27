@@ -7,7 +7,7 @@
 //   src/styles/coquille    coquille du site : barre du haut, menu et portail des zones, adaptations, niveaux ;
 //   src/styles/composants  briques partagées : composants, formulaires, interactions, surfaces, tableaux du noyau ;
 //   src/styles/pages       pages du site hors Astra : accueil, utilisateurs, accompagnement, vue d'ensemble, socle ;
-//   app/calendar/styles/site  le calendrier, middleware transverse ;
+//   app/calendar/styles/site  la grille du calendrier (le reste se charge avec la page : calendar-site*.scss) ;
 //   app/astra/styles          BPM-Astra : les écrans métier de BPM qu'elle présente, puis son propre cadre.
 // Outils Sass sans sortie (lus avec `@use … as *`) : src/styles/_functions.scss, _contrat-ruptures.scss.
 
@@ -22,7 +22,7 @@
 @use 'composants/workspace';
 @use 'pages/home';
 
-// 2. Calendrier : grille et vues, parité Budget, formats, commandes, pleine largeur, module branchable.
+// 2. Calendrier : grille et vues, partagées avec le mini-calendrier (le reste se charge avec CalendarSpace).
 @use './app/calendar/styles/site' as calendar;
 
 // 3. Habillages communs du site : adaptations, formulaires, utilisateurs, interactions, zones (menu et portail),
