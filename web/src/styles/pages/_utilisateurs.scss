@@ -13,11 +13,7 @@
   margin-block: var(--ecart-16);
 }
 .us-filters label {
-  display: grid;
-  gap: var(--ecart-6);
   flex: var(--flex-1) var(--flex-1) var(--dim-200);
-  font-size: scaled(var(--fs-sm));
-  font-weight: var(--fw-semibold);
 }
 .us-row.is-editing {
   border-color: var(--app-accent);
@@ -30,7 +26,6 @@
   font-weight: var(--fw-medium);
 }
 .us-page h2 {
-  margin: 0;
   font-size: scaled(var(--fs-lg));
 }
 .us-page h3 {
@@ -66,13 +61,10 @@
 }
 .us-section {
   --card-border: var(--line);
-  min-width: 0;
   margin-bottom: var(--ecart-24);
   padding: var(--ecart-24);
   border: var(--trait-1) solid var(--card-border);
-  border-radius: var(--radius-lg);
   background: var(--raised-surface);
-  box-shadow: var(--app-panel-shadow);
 }
 .us-section > p {
   margin: var(--ecart-8) 0 var(--ecart-16);
@@ -88,7 +80,6 @@
 }
 .us-section-head > div {
   flex: var(--flex-1);
-  min-width: 0;
 }
 .us-section-head p {
   margin: var(--ecart-4) 0 0;
@@ -210,9 +201,7 @@
   gap: var(--ecart-6);
 }
 .us-row-actions .btn {
-  min-height: var(--dim-36);
   padding: 0 var(--ecart-10);
-  font-size: scaled(var(--fs-xs));
 }
 .us-form {
   display: grid;
@@ -232,15 +221,7 @@
 }
 .us-page input:not([type='checkbox']):not([type='radio']),
 .us-page select {
-  min-width: 0;
-  min-height: var(--dim-40);
-  padding: var(--ecart-8) var(--ecart-10);
-  border: var(--trait-1) solid var(--control-line);
-  border-radius: var(--radius-sm);
-  background: var(--raised-surface);
-  color: var(--ink);
   font: inherit;
-  font-size: scaled(var(--fs-sm));
 }
 .us-page input:focus-visible,
 .us-page select:focus-visible {
@@ -299,10 +280,6 @@
   display: flex;
   align-items: center;
   gap: var(--ecart-10);
-  margin: var(--ecart-14) var(--sidebar-bottom-padding-x) 0;
-  padding: var(--ecart-10) var(--ecart-12);
-  border: var(--trait-1) solid var(--sidebar-line);
-  border-radius: var(--radius-md);
 }
 .profile-switcher > div {
   display: grid;

@@ -86,7 +86,6 @@
   }
   .astra-bridges { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .astra-bridge {
-    --to: var(--astra-iris);
     display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 10px; min-width: 0;
     padding: var(--a-tile-y) var(--a-tile-x); border: 1px solid var(--bpm-line); border-radius: 10px; background: var(--bpm-surface);
     color: var(--bpm-text); text-decoration: none; box-shadow: inset 3px 0 var(--to);

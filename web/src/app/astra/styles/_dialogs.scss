@@ -17,10 +17,9 @@
 
 // Objectif et projection · « Affiner » : une hypothèse par ligne, libellé à gauche, petit champ à droite.
 // (La règle générale des filtres du panneau étire les champs à 100 % ; ici le champ garde une largeur fixe.)
-#{$frame} .astra-rail .astra-cap-refine {
-  display: grid; gap: 10px;
+#{$frame} .astra-rail .astra-cap-refine { gap: 10px;
   > p { margin: 0; color: var(--bpm-text); font-size: 12.5px; font-weight: 640; }
-  .astra-cap-fields { display: grid; gap: 8px; margin: 0; }
+  .astra-cap-fields { gap: 8px; margin: 0; }
   .astra-cap-fields label {
     display: grid; grid-template-columns: minmax(0, 1fr) 104px; align-items: center; gap: 10px;
     color: var(--bpm-muted); font-size: 12.5px; font-weight: 600; line-height: 1.3; overflow-wrap: normal;

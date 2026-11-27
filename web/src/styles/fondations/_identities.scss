@@ -2,7 +2,6 @@
 @use 'sass:list';
 /* Résolution des jetons de couleur au niveau de la coque, après les deux thèmes. */
 .app-shell[data-module] {
-  --space-solid: var(--identity-core);
   --space-bright: var(--identity-core-light);
 }
 @each $module in core, budget, formation, formation-site, users, configuration, tests, docs, admin {
@@ -17,14 +16,6 @@
 }
 
 /* Les espaces gardent la famille de leur module avec une nuance propre. */
-.app-shell[data-space='tasks'] {
-  --space-solid: var(--cyan-800);
-  --space-bright: var(--cyan-200);
-}
-.app-shell[data-space='calendar'] {
-  --space-solid: var(--blue-700);
-  --space-bright: var(--blue-300);
-}
 .app-shell[data-space='time'] {
   --space-solid: var(--cyan-900);
   --space-bright: var(--cyan-300);
@@ -32,14 +23,6 @@
 .app-shell[data-space='budget-home'] {
   --space-solid: var(--indigo-700);
   --space-bright: var(--indigo-200);
-}
-.app-shell[data-space='budget-manage'] {
-  --space-solid: var(--indigo-800);
-  --space-bright: var(--indigo-200);
-}
-.app-shell[data-space='users-admin'] {
-  --space-solid: var(--violet-800);
-  --space-bright: var(--violet-200);
 }
 
 .app-shell[data-module] {
@@ -91,10 +74,6 @@
 }
 
 /* Même famille visuelle financière ; propriétaire de Configuration indépendant. */
-.app-shell[data-module='patrimoine'] {
-  --space-solid: var(--identity-budget);
-  --space-bright: var(--identity-budget-light);
-}
 
 /* Repères communs : valeurs héritées des primitives de Configuration, jamais des statuts.
    Le même rôle est consommé par le menu, les accueils et la page de travail.

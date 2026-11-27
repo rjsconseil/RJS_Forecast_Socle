@@ -12,12 +12,6 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 .app-shell main .page-heading {
   margin-block-end: var(--page-head-margin);
 }
-.app-shell main :is([data-ui-pattern~='heading'], .page-heading) > nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--ecart-10);
-}
 .app-shell main :is([data-ui-pattern~='heading'], .page-heading) > nav > .text-link {
   min-height: var(--touch-target);
   padding-inline: var(--ecart-16);
@@ -209,7 +203,6 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
   padding: 0 var(--ecart-8);
   border: var(--trait-1) solid var(--app-accent);
   border-radius: var(--rayon-6);
-  color: var(--app-accent);
   font-family: var(--font-label);
   font-weight: var(--fw-semibold);
 }
@@ -234,24 +227,9 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
   color: var(--muted);
   line-height: var(--lh-normal);
 }
-
-.cockpit-navigation {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ecart-8);
-}
 .cockpit-navigation a {
   display: inline-flex;
   align-items: center;
-  gap: var(--ecart-10);
-  min-height: var(--touch-target);
-  padding: var(--ecart-10) var(--ecart-16);
-  border: var(--trait-1) solid var(--app-accent-line);
-  border-radius: var(--btn-radius);
-  color: var(--ink);
-  background: var(--raised-surface);
-  font-weight: var(--fw-semibold);
-  text-decoration: none;
 }
 .cockpit-navigation a:hover {
   background: var(--app-accent-soft);
@@ -261,7 +239,6 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
   outline-offset: var(--decalage-2);
 }
 .cockpit-navigation span {
-  color: var(--app-accent);
   font-family: var(--font-label);
 }
 
@@ -295,7 +272,6 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 }
 .app-disclosure > summary {
   cursor: pointer;
-  min-height: var(--touch-target);
   list-style: none;
 }
 .app-disclosure > summary::-webkit-details-marker {
@@ -332,13 +308,7 @@ $section-headings: '[data-ui-pattern~="section-heading"], .section-heading, .bud
 /* Refonte du 27 octobre 2026 : des plans calmes. Ni trame, ni halo coloré, ni reflet ;
    un contour précis et une ombre de contact suffisent à séparer les blocs. */
 .app-shell .topbar {
-  border-bottom: var(--trait-1) solid var(--line);
   box-shadow: none;
-}
-.app-shell main :is([data-ui-pattern~='heading'], .page-head, .plan-heading) {
-  box-shadow:
-    inset 0 var(--trait-3) 0 var(--space-bright),
-    var(--app-panel-shadow);
 }
 .app-shell main :is(.plan-page-card, .plan-zone-card, .management-panel, .cfg-panel, .us-section, .bv-card) {
   box-shadow: var(--card-shadow, var(--app-panel-shadow));

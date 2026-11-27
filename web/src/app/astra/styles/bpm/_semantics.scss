@@ -63,7 +63,6 @@
       margin-inline-end: .3em;
       vertical-align: -.06em;
       background: var(--bpm-flow-ink);
-      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
       mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 19V5'/%3E%3Cpath d='M5.5 11.5 12 5l6.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
     }
     [data-bpm-amount][data-bpm-flow='expense'][data-bpm-arrow]::before { transform: rotate(180deg); }
@@ -80,7 +79,6 @@
 
     :is(.page-toolbar-focus, .page-toolbar-result)[data-state='info'] {
       color: var(--status-info); background: var(--status-info-surface);
-      .page-toolbar-mark { background: var(--status-info); }
     }
     @each $state in success, danger, warning {
       :is(.page-toolbar-focus, .page-toolbar-result)[data-state='#{$state}'] {
@@ -88,7 +86,6 @@
         .page-toolbar-mark { background: var(--status-#{$state}); }
       }
     }
-    :is(.page-toolbar-focus, .page-toolbar-result)[data-state] :is(strong, p) { color: inherit; }
 
     :is(.bpm-feedback, .form-feedback[data-state='success'], .alert.ok):not(.is-error):not(.is-warning) {
       color: var(--status-success); background: var(--status-success-surface);
@@ -140,8 +137,6 @@
     :is(.pm-budget, .pm-time)[data-tone='green'] { --pm-color: var(--status-success); --pm-ink: var(--status-success); }
     :is(.pm-budget, .pm-time):is([data-tone='yellow'], [data-tone='orange']) { --pm-color: var(--status-warning); --pm-ink: var(--status-warning); }
     :is(.pm-budget, .pm-time):is([data-tone='blue'], [data-tone='unknown']) { --pm-color: var(--status-info); --pm-ink: var(--status-info); }
-    .metric-tile[data-tone='success'] .metric-value { color: var(--status-success); }
-    .metric-tile[data-tone='danger'] .metric-value { color: var(--status-danger); }
     .metric-tile[data-tone='warning'] .metric-value { color: var(--status-warning); }
     .metric-tile:is([data-tone='accent'], [data-tone='neutral']) .metric-value { color: var(--status-info); }
     .metric-tile .metric-value[data-value-tone='success'] { color: var(--status-success); }

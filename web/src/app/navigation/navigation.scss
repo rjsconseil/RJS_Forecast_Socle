@@ -71,16 +71,10 @@
   }
 }
 .navigation-system .navigation-module-switcher {
-  margin: 12px 10px 0;
-  border-top: 1px solid var(--line, rgb(0 0 0 / 0.08));
-  padding-top: 8px;
   font-size: 0.82rem;
 }
 .navigation-system .navigation-module-switcher summary {
-  padding: 6px 4px;
   cursor: pointer;
-  font-weight: 650;
-  color: var(--muted, inherit);
 }
 .navigation-system .navigation-module-switcher nav {
   display: grid;
@@ -88,19 +82,7 @@
 }
 .navigation-system .navigation-module-switcher a,
 .navigation-system .navigation-settings-link {
-  display: block;
-  padding: 6px 10px;
-  border-radius: 6px;
   text-decoration: none;
-  color: inherit;
-  font-size: 0.82rem;
-}
-.navigation-system .navigation-module-switcher a[aria-current] {
-  font-weight: 650;
-}
-.navigation-system .navigation-settings-link {
-  margin: 4px 10px 8px;
-  color: var(--muted, inherit);
 }
 .navigation-system .navigation-module-switcher a:hover,
 .navigation-system .navigation-settings-link:hover {

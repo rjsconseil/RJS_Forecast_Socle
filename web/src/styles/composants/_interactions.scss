@@ -9,7 +9,6 @@
   border-top: var(--trait-3) solid var(--app-accent);
 }
 .app-shell .topbar-square {
-  display: block;
   border-radius: var(--part-50);
   background: var(--app-accent);
 }
@@ -30,7 +29,6 @@
   box-shadow: var(--app-panel-shadow);
   font-size: scaled(var(--fs-xs));
   font-weight: var(--fw-semibold);
-  cursor: pointer;
 }
 
 /* Une forme commune, une couleur d'action et des états sémantiques constants. */
@@ -52,10 +50,6 @@
 }
 .app-shell :where(button, summary, select, input[type='checkbox'], input[type='radio']) {
   cursor: pointer;
-}
-.app-shell :is(button, a, summary, input, select, textarea):focus-visible {
-  outline: var(--trait-3) solid var(--app-focus-ring);
-  outline-offset: var(--decalage-4);
 }
 .app-shell :is(button, input, select, textarea):disabled {
   opacity: var(--opacite-0-55);
@@ -95,7 +89,6 @@
 }
 .app-shell
   :is([data-ui-pattern~='heading'], .page-head, .audit-header, .cfg-hero) {
-  border-inline-start: var(--heading-accent) solid var(--app-accent);
   padding-inline-start: var(--heading-inset);
   gap: var(--page-head-gap);
 }
@@ -148,10 +141,8 @@
 }
 .app-shell :is(main, .modal) textarea {
   resize: vertical;
-  min-height: var(--dim-88);
 }
 .app-shell :is(main, .modal) :is(input, select, textarea):focus-visible {
-  border-color: var(--app-accent);
   box-shadow: 0 0 0 var(--ombre-4) var(--app-accent-soft);
 }
 .app-shell :is(main, .modal) :is(input, textarea)::placeholder {
@@ -217,16 +208,6 @@
   }
   .app-shell :is(.page-head, .audit-header) {
     padding-inline-start: var(--heading-inset-narrow);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .app-shell *,
-  .app-shell *::before,
-  .app-shell *::after {
-    scroll-behavior: auto;
-    transition-duration: var(--duree-0-01);
-    animation-duration: var(--duree-0-01);
-    animation-iteration-count: var(--iterations-1);
   }
 }
 

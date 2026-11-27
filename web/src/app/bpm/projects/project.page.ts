@@ -9,8 +9,7 @@ import { PageObjectLabels } from '../../plan/plan-context';
 import { projectLink } from '../bpm.screens';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
-import { BpmFormDraft } from '../ui/form-draft';
-import { BpmDial } from '../ui/dial';
+import type { BpmFormDraft } from '../ui/form-draft';
 import { BpmPageBanner, BpmPageFocus } from '../ui';
 import {
   afterNextRender,
@@ -99,8 +98,6 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
     ShortDatePipe,
     BpmOverrunRequestComponent,
     BpmEntryFlow,
-    BpmFormDraft,
-    BpmDial,
     BpmLineDetail,
     BpmTaskRequestsComponent,
     BpmLifeProjectCockpit,

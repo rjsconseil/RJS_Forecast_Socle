@@ -2,17 +2,6 @@
 /* Ajustements transversaux pour les colonnes étroites et le téléphone. */
 
 @media (max-width: $rupture-1100) {
-  .section-home-top-task, .budget-section-head {
-    grid-template-columns: minmax(0, var(--fr-1));
-  }
-
-  .section-home-top-task .section-home-hero {
-    padding-bottom: var(--ecart-12);
-  }
-
-  .section-home-task-intro {
-    padding-bottom: var(--ecart-20);
-  }
 
   .budget-section-head {
     align-items: start;
@@ -41,9 +30,6 @@
 }
 
 @media (max-width: $rupture-600) {
-  .topbar {
-    gap: var(--ecart-12);
-  }
 
   .topbar-home {
     white-space: normal;

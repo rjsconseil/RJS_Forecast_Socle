@@ -1032,5 +1032,4 @@ $bpm-section-identities: (
   .expense-direction { display: grid; gap: 5px; color: #e2ecf8; font-size: 12px; }
   .expense-direction .segmented { display: flex; padding: 3px; border-color: rgb(255 255 255 / 25%); background: rgb(0 0 0 / 10%); }
   .expense-direction .segmented button { flex: 1; min-height: 36px; color: #fff; font-size: 12px; }
-  .expense-direction .segmented button[aria-pressed='true'] { background: #fff; }
 }
