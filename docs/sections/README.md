@@ -17,7 +17,19 @@ Règles qui s'appliquent à toute la documentation :
 1. Une fonctionnalité **propre à une section** se documente dans la fiche de cette section, jamais dans le socle.
 2. Une fonctionnalité **ajoutée au socle** se documente dans [`../socle/`](../socle/README.md), avec ses effets sur les cinq sections. La fiche de la section qui l'a demandée renvoie vers elle.
 3. Une section ne réécrit pas le socle. Elle dit ce qu'elle en utilise, et le lien suffit.
-4. Le code reste rangé de la même façon : `web/src/app/sections/<clé>/` pour les écrans propres à une section, et les tables préfixées par section (`MQ_`, `MP_`, `MB_`, `PT_`, `CL_`).
+4. Le code reste rangé de la même façon : `web/src/app/sections/<clé>/fonctions/` pour la zone de fonctionnalités et `web/src/app/sections/<clé>/application/` pour les écrans de son application, et les tables préfixées par section (`MQ_`, `MP_`, `MB_`, `PT_`, `CL_`).
+
+## Trois couches
+
+| Couche | Ce qu'elle contient | Où dans le code |
+|---|---|---|
+| **Le socle** | Les fonctionnalités communes, son interface au service de tous | API, base, `core/`, `platform/`, `shared/` |
+| **Les zones de fonctionnalités** | Une par section : les fonctions propres à la section, séparées de tout écran | `web/src/app/sections/<clé>/fonctions/` |
+| **Les applications** | L'application autonome de chaque section, et les applications hybrides | `web/src/app/sections/<clé>/application/`, et un dossier par application hybride |
+
+Une application, autonome ou hybride, appelle les fonctions du socle et celles d'une ou plusieurs zones. Une zone ne
+connaît aucune application. C'est ce qui permet à une application hybride (un peu de Mes projets, un peu de Mon budget)
+d'utiliser les fonctions de deux sections sans dépendre de leurs écrans.
 
 ## Deux modes de développement
 
@@ -27,7 +39,7 @@ applications de section qui l'entourent.
 | | **Mode section** | **Mode socle** |
 |---|---|---|
 | Quand | La fonctionnalité ne demande rien que le socle n'offre déjà | La fonctionnalité a besoin d'une fondation que le socle n'a pas |
-| Où | `web/src/app/sections/<clé>/`, données `<préfixe>_` | Le socle seul (API, base, règles, composants communs), **sans aucun développement propre à une section** |
+| Où | `web/src/app/sections/<clé>/` (zone `fonctions/`, écrans `application/`), données `<préfixe>_` | Le socle seul (API, base, règles, composants communs), **sans aucun développement propre à une section** |
 | Règles | Libre : pas d'intégration au socle, pas limité par les règles communes ; seulement les règles de rangement et l'usage du socle par son interface | Toutes les règles communes ; effets décrits sur les cinq sections |
 | Validation | Tests de la section | **Non-régression complète** de toutes les fonctionnalités du socle (tests de l'API, du site, de bout en bout, jeux d'essai) |
 | Livraison | PR de la section | PR du socle, distincte ; la section ne s'en sert qu'une fois cette PR fusionnée, dans une PR de section suivante |
@@ -36,8 +48,8 @@ On ne mélange jamais les deux modes dans une même PR.
 
 ## Applications composées
 
-En plus des cinq applications de section, le site pourra offrir des **applications composées** qui regroupent des
-fonctionnalités de plusieurs sections (par exemple un peu de Mes projets et un peu de Mon budget). Elles reposent sur les
+En plus des cinq applications de section, le site pourra offrir des **applications composées** (hybrides) qui appellent
+les zones de fonctionnalités de plusieurs sections (par exemple un peu de Mes projets et un peu de Mon budget). Elles reposent sur les
 fondations communes du socle : c'est pourquoi une fondation est écrite de façon générique, sans nommer la section qui l'a
 fait naître. Une application composée assemble ; elle ne rend pas une section dépendante d'une autre. Chacune aura sa
 fiche, sur le même gabarit, avec en plus la liste des sections dont elle reprend des fonctionnalités.

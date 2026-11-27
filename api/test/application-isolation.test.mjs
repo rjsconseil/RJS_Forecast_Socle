@@ -71,3 +71,20 @@ test('isolation : une application ne dépend que de l’application qu’elle d�
   }
   assert.deepEqual(found, [], 'BPM ne dépend pas de BPM-Astra, et aucune autre dépendance entre applications');
 });
+
+test('zones de fonctionnalités : sections/<clé>/fonctions/ ne contient aucun écran et n’importe aucune application', async () => {
+  const found = [];
+  for (const file of await files(join(app, 'sections'))) {
+    const rel = relative(app, file);
+    if (!/^sections\/[^/]+\/fonctions\//.test(rel)) continue;
+    if (!rel.endsWith('.ts')) { found.push(`${rel} : fichier d’écran dans une zone de fonctionnalités`); continue; }
+    const text = await readFile(file, 'utf8');
+    if (/@Component\s*\(/.test(text)) found.push(`${rel} : composant d’écran`);
+    for (const m of text.matchAll(/(?:from\s+|import\(\s*)['"]([^'"]+)['"]/g)) {
+      const target = relative(app, join(file, '..', m[1]));
+      if (/^sections\/[^/]+\/application(\/|$)/.test(target) || APPLICATIONS.some((a) => target === a || target.startsWith(a + '/')))
+        found.push(`${rel} → ${m[1]}`);
+    }
+  }
+  assert.deepEqual(found, [], 'une zone de fonctionnalités ne dépend que du socle (core, platform, shared) et d’autres zones');
+});

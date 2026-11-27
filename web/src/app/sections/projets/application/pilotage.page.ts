@@ -1,14 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Api, toApiError } from '../../core/api.service';
-import { hours, shortDate } from '../../core/format';
-import type { TaskStatus, TaskView } from '../../core/models';
-import { BpmPageContext, BpmRefresh, bpmLoader } from '../../bpm/ui';
-import { astraSectionHome, astraUrl } from '../../astra/astra-parts';
-import { SectionHome, type SectionAlone, type SectionIndicator } from '../../platform/section-home';
-import type { SectionKey } from '../../platform/sections';
-import { sourceLink } from '../../platform/source-link';
-import { BOARD_COLUMNS, board, localToday, portfolio, PRIORITY_LABEL, timeline, totals, type Health } from './portfolio';
+import { Api, toApiError } from '../../../core/api.service';
+import { hours, shortDate } from '../../../core/format';
+import type { TaskStatus, TaskView } from '../../../core/models';
+import { BpmPageContext, BpmRefresh, bpmLoader } from '../../../bpm/ui';
+import { astraSectionHome, astraUrl } from '../../../astra/astra-parts';
+import { SectionHome, type SectionAlone, type SectionIndicator } from '../../../platform/section-home';
+import type { SectionKey } from '../../../platform/sections';
+import { sourceLink } from '../../../platform/source-link';
+import { BOARD_COLUMNS, board, localToday, portfolio, PRIORITY_LABEL, timeline, totals, type Health } from '../fonctions/portfolio';
 
 type View = 'portefeuille' | 'tableau' | 'planning';
 const VIEWS: { id: View; label: string }[] = [

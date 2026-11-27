@@ -52,7 +52,7 @@ export const ASTRA_PARTS: AstraPart[] = [
       { slug: 'taches', label: 'Tâches', source: 'app/taches' },
       // Fonctionnalités propres à Mes projets (portefeuille, tableau, planning), bâties sur le socle sans le modifier.
       // Placée après les pages existantes : l'entrée de la section reste « Projets de la vie ».
-      { slug: 'pilotage', label: 'Pilotage', own: () => import('../sections/projets/pilotage.page').then(m => m.ProjetsPilotagePage) },
+      { slug: 'pilotage', label: 'Pilotage', own: () => import('../sections/projets/application/pilotage.page').then(m => m.ProjetsPilotagePage) },
     ],
   },
   {

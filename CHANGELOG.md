@@ -8,7 +8,7 @@ Les PR du socle, de la plus récente à la plus ancienne. La référence de l'ar
 - **Documentation** : plan en deux étages posé (`docs/socle/` et `docs/sections/`, gabarit de fiche de section), sans contenu livré.
 
 Première évolution propre à la section Mes projets (fonctions internes, **aucun impact socle** : ni API, ni base, ni
-autre section). Dossier de la section : `web/src/app/sections/projets/` (règles de rangement dans son `README.md`).
+autre section). Dossier de la section : `web/src/app/sections/projets/` (`fonctions/` et `application/`) (règles de rangement dans son `README.md`).
 - **Pilotage** (`/bpm-astra/pilotage`, ajoutée après les pages existantes : l'entrée de Mes projets ne change pas) : l'accueil autonome de la section, bâti sur
   l'accueil de section commun (`<app-section-home>`) ; utilisable sans budget ni cycle. Indicateurs (projets en cours,
   en retard, tâches ouvertes et à échéance sous 7 jours, avancement moyen, temps passé / prévu).

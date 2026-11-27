@@ -8,10 +8,18 @@ commandes, financement inchangé. Les données propres à la section iront dans 
 Un ajout au socle ne se fait que pour un besoin vraiment transverse et simple ; il est alors disponible aux cinq
 sections et documenté dans `docs/socle/`. La fiche de la section est `docs/sections/projets.md`.
 
-Règle de rangement : ce dossier n'importe que `core/` (clients et modèles), `platform/` (éléments communs des
-sections), `shared/`, les gestes communs de `bpm/ui` et les adresses du cadre qui l'accueille (`astra/astra-parts`). Aucune autre section n'importe ce dossier.
+## Rangement : une zone de fonctionnalités, une application
+
+| Dossier | Couche | Contenu | Peut importer |
+|---|---|---|---|
+| `fonctions/` | **Zone de fonctionnalités Mes projets** | Calculs et règles propres à la section, sans écran | le socle (`core/`, `platform/`, `shared/`) et d'autres zones |
+| `application/` | **Application autonome Mes projets** | Écrans (page Pilotage…) | sa zone, le socle, les gestes communs de `bpm/ui`, les adresses de `astra/astra-parts` |
+
+Une application hybride (par exemple Mes projets et Mon budget réunis) appellera les fonctions de `fonctions/` sans
+passer par `application/`. Un test de l'API (`application-isolation.test.mjs`) vérifie qu'une zone ne contient aucun
+écran et n'importe aucune application. Aucune autre section n'importe ce dossier, hors zones de fonctionnalités.
 
 | Fichier | Rôle |
 |---|---|
-| `portfolio.ts` | Calculs purs : portefeuille des projets, santé, tableau des tâches, planning |
-| `pilotage.page.ts` | Page « Pilotage » : accueil autonome de la section, vues Portefeuille, Tableau, Planning |
+| `fonctions/portfolio.ts` | Portefeuille des projets, santé, tableau des tâches, planning (calculs purs) |
+| `application/pilotage.page.ts` | Page « Pilotage » : vues Portefeuille, Tableau, Planning |
