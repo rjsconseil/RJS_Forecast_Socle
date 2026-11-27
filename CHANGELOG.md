@@ -3,6 +3,20 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+
+## Grand noyau (socle) : trois étages pour les applications autonomes — 27 novembre 2026
+
+Évolution en **mode socle** : aucune fonctionnalité propre à une section, aucun écran modifié.
+- **Grand noyau (socle)** : interface unique du site `platform/grand-noyau.ts` (API, modèles, mise en forme, sections,
+  ouverture à la source, accueil de section), que les fonctionnalités par section et les applications autonomes appellent.
+- **Fonctionnalités par section** (`sections/<clé>/fonctionnalites/`) et **applications autonomes** (`sections/<clé>/application/`,
+  `hybrides/<nom>/`) ; cadre d'accueil BPM-Astra `astra/cadre.ts`.
+- **Gardes** (`api/test/application-isolation.test.mjs`) : les fonctionnalités d'une section n'ont pas d'écran et n'appellent que le grand noyau et
+  d'autres fonctionnalités par section ; une application autonome n'appelle que le grand noyau, les fonctionnalités par section et le cadre ; tout fichier de
+  `sections/` ou `hybrides/` appartient à l'une ou à l'autre.
+- **Documentation** : `docs/ARCHITECTURE.md` §19 ; plan en place (`docs/socle/`, `docs/sections/` : gabarit, fiches des
+  cinq sections, modes section et socle, fondations, applications hybrides).
+
 ## Sections du site, notion commune du socle (évolution 1) — 27 novembre 2026
 
 Vision « cinq sections autonomes, un seul site » : le code reste un seul site ; la section devient une notion commune
