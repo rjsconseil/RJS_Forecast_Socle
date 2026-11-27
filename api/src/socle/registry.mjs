@@ -126,7 +126,9 @@ export class Registry {
     return {
       sections: SECTION_LIST.map((s) => ({
         key: s.key, prefix: s.prefix, order: s.order, label: s.label, verb: s.verb, tone: s.tone, promise: s.promise, decides: s.decides,
-        kinds: kinds.filter((k) => k.section === s.key).map((k) => ({ kind: k.kind, label: k.label, module: k.module, prefix: k.prefix })),
+        // Les natures du grand noyau ; celles des applications autonomes de la section à part (base commune, §20.2).
+        kinds: kinds.filter((k) => k.section === s.key && k.module !== 'applications').map((k) => ({ kind: k.kind, label: k.label, module: k.module, prefix: k.prefix })),
+        applicationKinds: kinds.filter((k) => k.section === s.key && k.module === 'applications').map((k) => ({ kind: k.kind, label: k.label, prefix: k.prefix })),
       })),
       flows: SECTION_FLOWS.map((f) => ({ ...f })),
     };

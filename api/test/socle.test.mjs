@@ -199,7 +199,8 @@ test('composition atomique : un échec en cours de composition ne publie aucun o
   await rejects(socle.modules.users.createUser({ requestKey: key(), label: 'Y', objective: -5 }), 'VALIDATION');
   await rejects(socle.modules.users.createUser({ requestKey: key(), label: 'Z', anchorDay: 31 }), 'VALIDATION');
   assert.deepEqual(collectionSizes(socle.state, socle), empty);
-  assert.equal(socle.state.journal.length, 0);
+  // Seul le remplissage des catalogues des applications autonomes, au démarrage, peut figurer au journal.
+  assert.equal(socle.state.journal.filter((j) => j.command !== 'aa.catalogue.sync').length, 0);
   assert.equal(Object.keys(socle.state.creationRequests).length, 0);
   const s2 = await reload();
   assert.deepEqual(collectionSizes(s2.state, s2), empty);

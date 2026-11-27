@@ -6,14 +6,15 @@
 //   node api/scripts/web-fixtures.mjs     → web/src/app/bpm/testing/api-fixtures.json
 import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { at, camille, key, makeSocle, operation } from '../test/helpers.mjs';
+import { at, camille, key, makeSocle, operation, SOCLE_SANS_APPLICATIONS } from '../test/helpers.mjs';
 
 const target = process.env.WEB_FIXTURES_OUT || new URL('../../web/src/app/bpm/testing/api-fixtures.json', import.meta.url).pathname;
 const RECETTE_DAY = '2026-11-20';
 process.env.SOCLE_TODAY = RECETTE_DAY;
 const started = Date.now();
 
-const { socle } = await makeSocle();
+// Sans application autonome : les réponses de recette des écrans du socle ne dépendent d'aucune application.
+const { socle } = await makeSocle({ modules: SOCLE_SANS_APPLICATIONS });
 const { ctx } = await camille(socle);
 const { budget, bpm } = socle.modules;
 const P = bpm.projects;

@@ -25,11 +25,10 @@ export interface EspaceAutonome {
 export const espacesAutonomes = (inscriptions: readonly InscriptionAvecEspace[]): EspaceAutonome[] =>
   inscriptions.filter((app) => app.espace).map((app) => ({ cle: app.cle, symbole: '◫', ...app.espace!, chemin: app.espace!.chemin.replace(/^\/+|\/+$/g, '') }));
 
-/** Les routes des espaces : l'accueil de chaque application, et ses sous-adresses (gérées par l'application). */
-export const routesAutonomes = (espaces: readonly EspaceAutonome[]) => espaces.flatMap((e) => [
-  { path: e.chemin, title: `${e.titre} · Application autonome`, loadComponent: e.ecran },
-  { path: `${e.chemin}/**`, title: `${e.titre} · Application autonome`, loadComponent: e.ecran },
-]);
+/** La route de chaque espace : une adresse par application ; elle navigue en interne par ses paramètres (`?theme=`…). */
+export const routesAutonomes = (espaces: readonly EspaceAutonome[]) => espaces.map((e) => (
+  { path: e.chemin, title: `${e.titre} · Application autonome`, loadComponent: e.ecran }
+));
 
 /** La section « Applications autonomes » de la zone Noyau transverse : une page (un lien) par application. */
 export function sectionApplicationsAutonomes(espaces: readonly EspaceAutonome[], acronym: string): PlanSection {
