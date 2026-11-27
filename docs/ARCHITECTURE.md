@@ -637,3 +637,19 @@ sur toute déclaration toujours écrasée.
 - Astra : la règle des liens qui doublent un onglet est une fonction pure testée (`astraLinkDoublesTab`), avec un
   opt-out déclaré (`data-astra-keep`).
 - `.trash/` et `output/` ne sont plus suivis.
+
+### 19.4 Suite : points restés ouverts (27 novembre 2026)
+
+- e2e réécrits pour Astra et lancés par `npm run e2e:ci` (job `e2e`) : `projets` (scénario de mai à novembre dans les
+  écrans, 32/32), `bpm-navigation` (anciennes adresses, brouillons dans l'historique et au rechargement, contrôle du
+  compte, agenda), `navigation-system` (arborescence, brouillon, enregistrement repris par le menu d'Astra ; réglages
+  d'origine rétablis). `e2e-ci.mjs` enchaîne `seed` puis `seed:projets` (API arrêtée) sur la base temporaire.
+- Bugs trouvés et corrigés : « Saisir une entrée d'argent » depuis Mouvements s'ouvrait en dépense (`entryDirection`
+  ignoré) ; l'agenda était écrasé à la hauteur de son titre (`calendar/styles/_variants.scss` de nouveau chargé, sans
+  la règle de la vue mois) ; les réponses de recette des écrans gardaient la date réelle et le test qui les compare à
+  l'API échouait chaque lendemain (horodatages ramenés au jour de recette).
+- Navigation : règles de la page de réglages en fonctions pures testées (`navigation-settings-rules.ts`) ; la page
+  passe de 681 à 534 lignes.
+- Styles : 42 déclarations toujours écrasées retirées des feuilles de composants, empreintes identiques (48 vues et
+  12 vues du calendrier). `calendar/styles/_responsive.scss` et `_personalization.scss` ne sont chargées nulle part :
+  les charger change le rendu du calendrier, elles sont gardées en attendant une décision.

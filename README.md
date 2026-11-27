@@ -16,6 +16,9 @@ npm run api:recette # la même, avec la réinitialisation de recette (jeux d’e
 npm run seed       # jeux d'essai via les contrats HTTP réels (API lancée, voir plus bas)
 npm run seed:projets   # foyer d'essai : 10 projets de la vie sur 6 mois clos et le mois en cours (API arrêtée)
 npm run e2e:projets    # bout en bout dans un navigateur (après npm run build ; API et ports temporaires)
+npm run e2e:bpm        # parcours BPM dans Astra : anciennes adresses, brouillons dans l'historique (site lancé)
+npm run e2e:navigation # réglages de la navigation, réglages d'origine rétablis à la fin (site lancé)
+npm run e2e:ci         # tous les e2e sur une base temporaire, comme en CI (après npm run build)
 npm run import:rjs-forecast -- --remplacer   # données du site de référence voisin, ../RJS_Forecast (API arrêtée, voir plus bas)
 npm run web        # site Angular http://localhost:4300 (proxy /api → 3410)
 npm test           # tests node:test (api/test/*.test.mjs) sur persistance réelle
