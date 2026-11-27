@@ -284,12 +284,6 @@
     }
     @if (d.role === 'standard' && d.budget; as b) {
       <div class="project-layout">
-        @if (detailPanels) {
-        <p class="bpm-note project-reading-scope">
-          Enveloppe, parts et règlements cumulés sur toute la durée du projet. Le suivi du cycle
-          actuel correspond à {{ d.context.period?.label ?? 'un cycle à configurer' }}.
-        </p>
-        }
         @if (workspaceKey() !== 'project-tasks') {
         <section class="project-cockpit" aria-label="Chiffres clés et suivi du projet">
           <div class="cockpit-body">
@@ -403,48 +397,6 @@
             }
             @if (detailPanels) {
             <div class="cockpit-details">
-              <details [open]="workspaceKey() === 'project-budget'" class="cockpit-disclosure">
-                <summary>Ventilation et cycle actuel</summary>
-                <div class="cockpit-disclosure-body">
-                  <dl class="cockpit-facts">
-                    <div>
-                      <dt>{{ L.shared }}</dt>
-                      <dd [bpmAmount]="b.sharesCents" bpmTone="info">{{ b.sharesCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>{{ L.toShare }}</dt>
-                      <dd [bpmAmount]="b.availableCents">{{ b.availableCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Demandes en attente</dt>
-                      <dd [bpmAmount]="b.pendingRequestsCents" bpmTone="warning">{{ b.pendingRequestsCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Dépassement autorisé</dt>
-                      <dd [bpmAmount]="b.approvedOverrunCents" bpmTone="warning">{{ b.approvedOverrunCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Remonté au projet de vie ce cycle</dt>
-                      <dd [bpmAmount]="b.periodPaidCents" bpmFlow="expense">{{ b.periodPaidCents | cents }}</dd>
-                    </div>
-                    <div>
-                      <dt>Cycle actuel</dt>
-                      <dd>{{ d.context.period?.label ?? 'À configurer' }}</dd>
-                    </div>
-                  </dl>
-                  <p class="bpm-note">
-                    L’enveloppe et les parts portent sur toute la durée du projet. Le montant de ce
-                    cycle suit l’imputation choisie à la validation des flux. La date de paiement reste conservée dans l’historique. Attribuer une enveloppe ou une part ne crée aucun flux financier.
-                  </p>
-                  @if (b.paidBeforeAllocationCents) {
-                    <p class="bpm-note">
-                      {{ b.paidBeforeAllocationCents | cents }} réglés avant l’attribution du
-                      {{ date(b.allocationDate!) }} : ils restent dans l’historique du projet, hors
-                      enveloppe et hors projet de vie.
-                    </p>
-                  }
-                </div>
-              </details>
               <!-- Parcours de financement : sur la page, ou dans la fenêtre de la tâche quand elle est ouverte. -->
               @if (!openTask()) {
                 <ng-container *ngTemplateOutlet="fundingFlows" />
@@ -537,11 +489,11 @@
                   <bpm-project-charge-list
                     [charges]="unassignedCharges()"
                     [busy]="busy()"
-                    [settlingId]="settling()"
+                    [settlingId]="taskWindow.settling()"
                     [today]="today"
                     (open)="openCharge($event)"
                     (settle)="settle($event.charge, $event.fields, $event.draft)"
-                    (cancelSettle)="settling.set(null)"
+                    (cancelSettle)="taskWindow.settling.set(null)"
                   />
                 </div>
               </details>
@@ -690,7 +642,7 @@
                             }
                           </div>
                         }
-                        @for (o of taskOverruns(t.task.id); track o.id) {
+                        @for (o of taskWindow.overruns(t.task.id); track o.id) {
                           <div class="task-alert" data-tone="danger" role="status">
                             <span
                               >Dépassement de {{ o.amountCents | cents }} à décider par le projet de
@@ -743,7 +695,7 @@
                             [disabled]="busy()"
                             (click)="showTask(t, 'charges')"
                           >
-                            Dépenses · {{ taskCharges(t.task.id).length }}
+                            Dépenses · {{ taskWindow.charges(t.task.id).length }}
                           </button>
                         </div>
                       </footer>

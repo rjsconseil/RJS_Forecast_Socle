@@ -9,6 +9,7 @@ import { PageObjectLabels } from '../../plan/plan-context';
 import { projectLink } from '../bpm.screens';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
+import { ProjectTaskWindow } from './project-task-window';
 import type { BpmFormDraft } from '../ui/form-draft';
 import { BpmPageBanner, BpmPageFocus } from '../ui';
 import {
@@ -144,8 +145,8 @@ export class BpmProjectPage {
     bpm: this.bpm,
     funding: this.funding,
     budgetRevision: () => this.data()?.budget?.revision,
-    requestSent: () => this.fundingTask.set(null),
-    returnSaved: () => this.returnEditor.set(null),
+    requestSent: () => this.taskWindow.fundingTask.set(null),
+    returnSaved: () => this.taskWindow.returnEditor.set(null),
   });
   busy = this.writes.busy;
   notice = this.writes.notice;
@@ -184,8 +185,6 @@ export class BpmProjectPage {
     this.allocation.set(mode === 'add' ? '' : String(this.allocationBase() / 100).replace('.', ','));
     this.allocationError.set(null);
   }
-  returnEditor = bpmQueryState<string | null>('retour', null, { overlay: true });
-  settling = bpmQueryState<string | null>('reglement', null, { overlay: true });
   protected entryId = bpmQueryState('entry', '', { overlay: true });
   protected editorOpen = computed(() => !!this.entryId());
   protected lineId = bpmQueryState<string | null>('ligne', null, { overlay: true });
@@ -206,6 +205,8 @@ export class BpmProjectPage {
       (x) => x.status !== 'pending' && x.status !== 'awaiting-life',
     ),
   );
+  /** Fenêtre de la tâche ouverte : son état d'adresse et ses lectures (project-task-window.ts). */
+  readonly taskWindow = new ProjectTaskWindow({ data: this.data, history: this.requestHistory, handledRequestId: () => this.flow()?.request?.id });
   private projectId = '';
   protected decisionsOpen = bpmQueryState('decisions', false, { parse: value => value !== 'false', format: () => 'open', overlay: true });
   protected taskAttention = bpmQueryState('attention', 'all');
@@ -266,13 +267,8 @@ export class BpmProjectPage {
   protected allocationRevision = signal(0);
   protected allocationError = signal<string | null>(null);
   protected query = bpmQueryState('q', '', { replace: true });
-  fundingTask = bpmQueryState<string | null>('demande', null, { overlay: true });
   /** Tâche ouverte dans sa fenêtre : la carte du tableau garde une taille fixe. */
-  protected openTaskId = bpmQueryState<string | null>('task', null, { overlay: true });
-  openTask = computed(() => {
-    const id = this.openTaskId();
-    return id ? ((this.data()?.tasks ?? []).find((t) => t.task.id === id) ?? null) : null;
-  });
+  readonly openTask = this.taskWindow.task;
   protected expenseTaskId = bpmQueryState<string | null>('expenseTask', null, { overlay: true });
   /** Sens de la saisie ouverte : dépense, ou remboursement reçu (déduit du réglé de la tâche et du projet). */
   protected expenseDirection = bpmQueryState<'charge' | 'income'>('expenseDirection', 'charge', { overlay: true });
@@ -360,7 +356,7 @@ export class BpmProjectPage {
       const task = d.tasks.find((t) => t.task.id === charge.taskId);
       if (task) this.showTask(task, 'charges');
       else {
-        this.closeTaskPanel();
+        this.taskWindow.close();
         if (this.workspaceKey() === 'project-tasks') {
           this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'budget'], { queryParamsHandling: 'preserve', fragment: 'charges-title' });
           return;
@@ -407,34 +403,13 @@ export class BpmProjectPage {
       void this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'taches'], { queryParams: { task: t.task.id }, queryParamsHandling: 'merge' });
       return;
     }
-    this.fundingTask.set(section === 'funding' && !t.budget?.request ? t.task.id : null);
-    this.returnEditor.set(null);
-    this.settling.set(null);
-    this.openTaskId.set(t.task.id);
+    this.taskWindow.open(t, section === 'funding');
     if (section)
       afterNextRender(
         () =>
           this.document.getElementById(`task-panel-${section}`)?.scrollIntoView({ block: 'start' }),
         { injector: this.injector },
       );
-  }
-  closeTaskPanel() {
-    this.openTaskId.set(null);
-    this.fundingTask.set(null);
-    this.returnEditor.set(null);
-    this.settling.set(null);
-  }
-
-  taskCharges(id: string) {
-    return (this.data()?.charges ?? []).filter((c) => c.taskId === id);
-  }
-  taskHistory(id: string) {
-    return this.requestHistory().filter((r) => r.taskId === id);
-  }
-  taskOverruns(id: string) {
-    return (this.data()?.overruns ?? []).filter(
-      (o) => o.taskId === id && o.status === 'pending' && o.id !== this.flow()?.request?.id,
-    );
   }
   protected timeWidth(t: BpmTaskCard) {
     const p = t.budget?.timeConsumptionPercent;
@@ -570,10 +545,7 @@ export class BpmProjectPage {
       this.projectEditor.sync();
       this.entryId.sync();
       this.lineId.sync();
-      this.fundingTask.sync();
-      this.openTaskId.sync();
-      this.returnEditor.sync();
-      this.settling.sync();
+      this.taskWindow.sync();
       this.taskFunding.requestKeys.clear();
       this.load();
     });
@@ -618,7 +590,7 @@ export class BpmProjectPage {
     this.pendingSection = null;
     // Raccourci depuis le projet de vie : #enveloppe ouvre directement l'attribution du budget du projet.
     if (section === 'enveloppe') {
-      this.closeTaskPanel();
+      this.taskWindow.close();
       if (this.data()?.role === 'standard' && !this.allocationEditing()) this.editAllocation();
       return;
     }
@@ -865,7 +837,7 @@ export class BpmProjectPage {
       async (fund) => {
         await action(fund);
         draft?.clear();
-        this.settling.set(null);
+        this.taskWindow.settling.set(null);
       },
       () => this.settlementResult(c),
       `le règlement de « ${c.label} »`,
