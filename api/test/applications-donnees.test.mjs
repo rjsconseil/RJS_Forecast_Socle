@@ -95,4 +95,5 @@ test('applications autonomes : une déclaration invalide est refusée au démarr
   assert.throws(() => createApplicationsModule([{ ...ESSAI, section: 'inconnue' }]), /section inconnue/);
   assert.throws(() => createApplicationsModule([{ application: 'x', section: 'projets', collections: { tasks: { nature: 'xTask', prefixe: 'aaxt' } } }]), /appartient déjà au socle/);
   assert.throws(() => createApplicationsModule([{ application: 'x', section: 'projets', collections: { xRows: { nature: 'xRow', prefixe: 'bad' } } }]), /préfixe/);
+  assert.throws(() => createApplicationsModule([{ application: 'x', section: 'projets', collections: { journal: { nature: 'xJournal', prefixe: 'aaxj' } } }]), /réservé/);
 });
