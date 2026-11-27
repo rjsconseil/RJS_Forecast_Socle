@@ -3,6 +3,12 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Mes projets · registres PRINCE2 — 28 novembre 2026
+
+Évolution en **mode application** (Mes projets seulement). Chaque page de thème a maintenant son registre pour un projet qui a son dossier :
+produits de management, rôles, registre qualité, séquences, risques, incidences et journal. On y ajoute une ligne et
+on change son état sur place. « Ouvrir la séquence » crée son plan, son rapport de situation et son rapport de fin de séquence.
+
 ## Mes projets · application autonome PRINCE2 — 27 novembre 2026
 
 Évolution en **mode application** (Mes projets seulement). Référence : `docs/sections/projets.md`.

@@ -1,0 +1,79 @@
+<section class="mp-registre" [attr.aria-labelledby]="'mp-reg-' + registre().collection">
+  <header class="mp-registre-head">
+    <div>
+      <h3 [id]="'mp-reg-' + registre().collection">{{ registre().titre }} <span class="mp-count">{{ lignes().length }}</span></h3>
+      <p class="mp-muted">{{ registre().aide }}</p>
+    </div>
+    @if (projets().length) {
+      <div class="mp-registre-tools">
+        <label>Projet
+          <select [value]="projetId()" (change)="projetId.set($any($event.target).value)">
+            @for (p of projets(); track p.id) { <option [value]="p.id">{{ p.title }}</option> }
+          </select>
+        </label>
+        @if (!registre().sansSaisie) {
+          <button type="button" class="mp-btn primary" (click)="saisie.set(!saisie()); failure.set(null)">{{ saisie() ? 'Fermer' : 'Ajouter' }}</button>
+        }
+      </div>
+    }
+  </header>
+
+  @if (failure()) { <p class="mp-alert danger" role="alert">{{ failure() }}</p> }
+  @if (notice()) { <p class="mp-alert success" role="status">{{ notice() }}</p> }
+
+  @if (!projets().length) {
+    <p class="mp-registre-empty">Aucun projet n’a encore son dossier PRINCE2. Ouvrez-le depuis l’accueil (colonne « Dossier PRINCE2 ») : ses registres apparaîtront ici.</p>
+  } @else {
+    @if (saisie()) {
+      <form class="mp-registre-form" (submit)="$event.preventDefault(); ajouter($any($event.target))">
+        @for (c of champsSaisis(); track c.id) {
+          <label [class.wide]="c.id === 'contenu' || c.id === 'reponse' || c.id === 'decision'">{{ c.label }}@if (c.obligatoire) {<span aria-hidden="true"> *</span>}
+            @switch (c.type) {
+              @case ('choix') {
+                <select [name]="c.id"><option value="">—</option>@for (v of c.valeurs; track v) { <option [value]="v">{{ valeurs[v] ?? v }}</option> }</select>
+              }
+              @case ('date') { <input type="date" [name]="c.id"> }
+              @case ('entier') { <input type="number" step="1" [name]="c.id"> }
+              @default {
+                @if (c.id === 'contenu') { <textarea [name]="c.id" rows="3"></textarea> } @else { <input type="text" [name]="c.id"> }
+              }
+            }
+          </label>
+        }
+        <div class="mp-registre-actions"><button type="submit" class="mp-btn primary" [disabled]="busy()">Enregistrer</button></div>
+      </form>
+    }
+
+    @if (chargement()) {
+      <p class="mp-muted">Chargement…</p>
+    } @else if (!lignes().length) {
+      <p class="mp-registre-empty">Rien dans ce registre pour ce projet.</p>
+    } @else {
+      <div class="mp-table-wrap">
+        <table class="mp-table compact">
+          <caption class="sr-only">{{ registre().titre }}</caption>
+          <thead><tr>@for (c of registre().champs; track c.id) { <th scope="col">{{ c.label }}</th> }@if (registre().ouvreSequence) {<th scope="col"><span class="sr-only">Action</span></th>}</tr></thead>
+          <tbody>
+            @for (l of lignes(); track l.id) {
+              <tr>
+                @for (c of registre().champs; track c.id) {
+                  <td>
+                    @if (etat()?.id === c.id) {
+                      <select class="mp-etat" [attr.aria-label]="c.label" [disabled]="busy()" (change)="changerEtat(l, $any($event.target).value)">
+                        <option value="" disabled [selected]="!l[c.id]">—</option>
+                        @for (v of c.valeurs; track v) { <option [value]="v" [selected]="l[c.id] === v">{{ valeurs[v] ?? v }}</option> }
+                      </select>
+                    } @else { {{ afficher(c, l) }} }
+                  </td>
+                }
+                @if (registre().ouvreSequence) {
+                  <td><button type="button" class="mp-btn small" [disabled]="busy() || l['statut'] === 'close'" (click)="ouvrirSequence(l)">Ouvrir la séquence</button></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>

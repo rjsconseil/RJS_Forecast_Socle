@@ -20,6 +20,13 @@ Repère : les fonctionnalités avancées (Pilotage, puis jalons, dépendances, r
   - un accueil qui fait l'état des projets et de leurs tâches, avec la séquence PRINCE2 et le dossier PRINCE2 de chaque projet ;
   - une page pour chacun des 7 thèmes : son but, ses processus associés et leurs livrables.
   Écran : `application/gestion-projet.page.*`. Calculs : `fonctionnalites/gestion.ts`, `prince2.ts` et `dossiers.ts`.
+- **Registres PRINCE2**, un par thème, sur la page du thème, pour un projet qui a son dossier :
+  - Cas d'affaire : les produits de management du projet ;
+  - Organisation : les rôles ; Qualité : le registre qualité ;
+  - Plans : les séquences, avec le bouton « Ouvrir la séquence » qui instancie son plan et ses rapports ;
+  - Risque : le registre des risques ; Changement : le registre des incidences ; Progression : le journal.
+  On y ajoute une ligne et on change son état sur place. Écran : `application/registre-projet.*`. Les champs et les choix
+  viennent du modèle de données (`fonctionnalites/registres.ts`).
 - **Pilotage** (`/bpm-astra/pilotage`), inchangé.
 
 ### Modèle de données (`application/donnees.json`, tables AA_MP_…)
@@ -40,3 +47,4 @@ Repère : les fonctionnalités avancées (Pilotage, puis jalons, dépendances, r
 | Date | Version / PR | Changement ou correction | Effet pour l'utilisateur |
 |---|---|---|---|
 | 27/11/2026 | PR « Mes projets PRINCE2 » | Application autonome à `/mes-projets` ; modèle de données AA_MP_ (catalogue PRINCE2 standard, tables d'instanciation, règles) ; dossier PRINCE2 par projet | Un outil de gestion de projet PRINCE2 dans l'interface habituelle, ouvert depuis le noyau, BPM-Astra inchangé |
+| 28/11/2026 | PR « Registres PRINCE2 » | Un registre par thème (saisie, état modifiable, ouverture de séquence) | Les registres du projet se tiennent dans l'application, thème par thème |
