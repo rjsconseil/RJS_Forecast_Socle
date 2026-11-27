@@ -1,0 +1,22 @@
+// Barre de commande de la fenêtre d'une tâche (project-task-panel.html).
+// Reprise telle quelle de l'ancienne feuille du centre de commande, retiré le 27/11/2026 : le rendu ne change pas.
+.task-panel-command-bar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--app-accent-soft);
+  label {
+    display: grid;
+    gap: 4px;
+    font-size: 11px;
+    min-width: 130px;
+  }
+  :is(select, .btn) {
+    min-height: 38px;
+    font-size: 12px;
+  }
+}

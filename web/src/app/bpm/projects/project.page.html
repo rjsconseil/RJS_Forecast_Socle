@@ -284,9 +284,6 @@
     }
     @if (d.role === 'standard' && d.budget; as b) {
       <div class="project-layout">
-        @if (!b.abandoned && detailPanels) {
-          <bpm-project-command-center [views]="{ status: taskStatusButtons }" />
-        }
         @if (detailPanels) {
         <p class="bpm-note project-reading-scope">
           Enveloppe, parts et règlements cumulés sur toute la durée du projet. Le suivi du cycle

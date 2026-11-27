@@ -6,5 +6,5 @@ import type { BpmProjectPage } from './project.page';
 
 export const PROJECT_PAGE = new InjectionToken<BpmProjectPage>('Fiche projet');
 
-/** Une tâche telle que la fiche projet l'affiche (carte, fenêtre, centre de commande). */
+/** Une tâche telle que la fiche projet l'affiche (carte, fenêtre de la tâche). */
 export type ProjectTaskView = NonNullable<ReturnType<BpmProjectPage['openTask']>>;
