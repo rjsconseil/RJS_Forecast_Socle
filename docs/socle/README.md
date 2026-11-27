@@ -5,6 +5,10 @@
 > La description détaillée de l'architecture reste dans [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
 
 ## Principe
+Le socle est un grand noyau dont l'interface (lectures, commandes, composants communs) sert les cinq applications de section.
+Une fondation qui lui manque s'y ajoute en **mode socle** : seule, sans développement propre à une section, et validée par une
+non-régression complète de toutes ses fonctionnalités avant qu'une section ne l'utilise (voir [`../sections/README.md`](../sections/README.md)).
+
 Le socle est volontairement réduit à des fonctionnalités transverses et simples. Tout ce qui va au-delà vit dans une section
 (voir [`../sections/README.md`](../sections/README.md)). Une fonctionnalité entre au socle quand elle sert plusieurs sections : soit un besoin transverse simple, soit la
 **fondation** d'une fonctionnalité avancée née dans une section (la fonctionnalité avancée, elle, reste dans sa section ;

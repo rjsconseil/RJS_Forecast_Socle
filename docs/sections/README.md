@@ -19,6 +19,21 @@ Règles qui s'appliquent à toute la documentation :
 3. Une section ne réécrit pas le socle. Elle dit ce qu'elle en utilise, et le lien suffit.
 4. Le code reste rangé de la même façon : `web/src/app/sections/<clé>/` pour les écrans propres à une section, et les tables préfixées par section (`MQ_`, `MP_`, `MB_`, `PT_`, `CL_`).
 
+## Deux modes de développement
+
+Le socle est un **grand noyau** qui offre une interface (lectures, commandes, composants communs) au service des cinq
+applications de section qui l'entourent.
+
+| | **Mode section** | **Mode socle** |
+|---|---|---|
+| Quand | La fonctionnalité ne demande rien que le socle n'offre déjà | La fonctionnalité a besoin d'une fondation que le socle n'a pas |
+| Où | `web/src/app/sections/<clé>/`, données `<préfixe>_` | Le socle seul (API, base, règles, composants communs), **sans aucun développement propre à une section** |
+| Règles | Libre : pas d'intégration au socle, pas limité par les règles communes ; seulement les règles de rangement et l'usage du socle par son interface | Toutes les règles communes ; effets décrits sur les cinq sections |
+| Validation | Tests de la section | **Non-régression complète** de toutes les fonctionnalités du socle (tests de l'API, du site, de bout en bout, jeux d'essai) |
+| Livraison | PR de la section | PR du socle, distincte ; la section ne s'en sert qu'une fois cette PR fusionnée, dans une PR de section suivante |
+
+On ne mélange jamais les deux modes dans une même PR.
+
 ## Cycle de vie d'une fonctionnalité : la section garde l'application, le socle reçoit les fondations
 
 Les fonctionnalités avancées d'une section **restent dans la section** : elles forment son application autonome (pour
