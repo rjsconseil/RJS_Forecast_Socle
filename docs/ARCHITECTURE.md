@@ -673,4 +673,13 @@ sur toute déclaration toujours écrasée.
   ou de même bloc sont regroupées quand aucune règle intercalée ne pose une propriété de la même famille (−29 lignes).
   Les 18 doublons de sélecteur restants sont séparés par des règles qui touchent aux mêmes propriétés : les regrouper
   changerait la cascade. Empreintes identiques (48 vues et 12 vues du calendrier).
+- **Recouvrements retirés** (`e2e/styles-cascade.mjs`) : la cascade de la feuille globale est calculée dans la page sur
+  176 vues (Astra, fiches, fenêtres de saisie, 16 pages du site, vues du calendrier ; 1440, 1024, 768 et 375 px).
+  Les déclarations qui perdent sur chaque élément où elles s'appliquent sont retirées de `_zones.scss` (1 271 → 1 127),
+  Astra `_application.scss` (1 235 → 1 036) et `_grid.scss` (1 740 → 1 366) : 466 déclarations et 111 règles vidées.
+  Empreintes identiques (48 vues d'Astra, 12 du calendrier, 32 des pages du site). Limite : une déclaration écrasée
+  partout dans les vues mesurées mais utile dans un écran ou un état jamais visité disparaîtrait ; les règles qui ne
+  s'appliquent à rien (survol, menus ouverts) ne sont jamais touchées. Il reste 554 lignes perdantes dans les autres
+  feuilles (`_workspace`, `_shell`, `_components`, Astra `_presentation` et `_budget-cycle` en tête). Volume total :
+  27 884 lignes (28 818 dans le rapport v2).
 - `calendar/styles/_responsive.scss` et `_personalization.scss`, chargées nulle part, sont supprimées (décision de Roosevelt, 27/11) : le rendu ne change pas.
