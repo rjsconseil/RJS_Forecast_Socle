@@ -3,6 +3,20 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Habillage du calendrier hors de la feuille globale — 27 novembre 2026
+
+- **Feuille globale allégée** : la parité avec le budget, les formats d'affichage, les commandes, la pleine largeur et
+  le module branchable du calendrier (`calendar/styles/site/`) ne sont plus dans `styles.scss`. Ils se chargent avec
+  `CalendarSpace`, sans encapsulation, en trois feuilles (`calendar-site*.scss`, chacune sous le budget de 24 ko par
+  feuille de composant). Feuille globale : 549 → 505 ko (55,7 ko compressés). Seule la grille reste globale : le
+  mini-calendrier du tableau des projets s'en sert.
+- **Ordre de la cascade** : mêmes sélecteurs, donc même spécificité, mais une autre place. `e2e/styles-order-check.mjs`
+  cherche, dans les pages ouvertes et en tenant tous les états pour vrais (survol, focus, case cochée, désactivé), les
+  égalités de spécificité dont l'ordre s'est inversé. Une seule trouvée et corrigée : une option de format désactivée
+  garde l'aspect commun des contrôles désactivés (`_formats.scss`). 234 sélecteurs vérifiés sur des éléments
+  (vues, survol des jours, aperçu d'un jour, volet Sources, deux largeurs) ; les 57 autres relus un à un, sans égalité
+  possible. Empreintes identiques (50 vues Astra, 18 pages du site, 12 vues du calendrier).
+
 ## Points restants du rapport v6 — 27 novembre 2026
 
 - **Mise en ligne** : la CSP du site n'accepte plus de balise `<style>` en ligne sans le nonce de la page

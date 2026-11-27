@@ -10,6 +10,7 @@ import {
   signal,
   untracked,
   viewChild,
+  ViewEncapsulation,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { RecetteContext, toApiError } from '../core/api.service';
@@ -40,6 +41,10 @@ const DATE_FORMAT = new Intl.DateTimeFormat('fr-FR', {
   selector: 'rjs-calendar-space',
   imports: [CalendarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Habillage de la page du calendrier, chargé avec le calendrier plutôt que dans la feuille globale : sans
+  // encapsulation, ses sélecteurs restent ceux de la feuille globale (voir calendar-site.scss).
+  encapsulation: ViewEncapsulation.None,
+  styleUrls: ['./calendar-site.scss', './calendar-site-controls.scss', './calendar-site-module.scss'],
   template: `
     <rjs-calendar
       [data]="data()"

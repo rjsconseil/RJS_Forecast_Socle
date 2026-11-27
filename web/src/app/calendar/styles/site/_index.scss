@@ -1,9 +1,6 @@
-// Calendrier (middleware transverse) · feuilles globales du module, dans l'ordre de leur cascade :
-// grille et vues, parité avec le budget, formats d'affichage, commandes, pleine largeur, module branchable.
+// Calendrier (middleware transverse) · feuille globale du module : la grille et les vues, partagées avec le
+// mini-calendrier des pages du site (`rjs-mini-calendar`).
+// Le reste de l'habillage du calendrier (parité avec le budget, formats, commandes, pleine largeur, module
+// branchable) ne sert qu'à la page du calendrier : il est chargé avec elle (calendar-site.scss).
 // Les habillages propres au composant restent dans calendar-skin*.scss (styles du composant).
 @use 'grid';
-@use 'budget-parity';
-@use 'formats';
-@use 'controls';
-@use 'full-width';
-@use 'module';
