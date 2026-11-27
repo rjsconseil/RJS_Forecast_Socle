@@ -3,58 +3,69 @@
 > **Statut : squelette.** Ce dossier fixe la manière dont le site sera documenté.
 > Les fiches se rempliront au fil du développement de chaque section ; rien n'y est encore livré.
 
-## Le modèle documenté
+## Le modèle documenté : trois étages
 
-BPM-Astra est **un seul site** (une application, une API, une base). Il se lit en deux étages.
+BPM-Astra est **un seul site** (une application, une API, une base). Il se lit en trois étages.
 
-| Étage | Ce qu'il contient | Rythme | Public |
+| Étage | Ce qu'il contient | Où dans le code | Rythme |
 |---|---|---|---|
-| **Le socle** | Les fonctionnalités transverses et simples, volontairement réduites : objets, cycle, budget, mouvements, clôture, navigation, sections, liens entre sections. **Elles sont prêtes à l'emploi et disponibles pour les cinq sections.** | Stable. Il n'évolue que pour un besoin vraiment transverse et simple. | Tout utilisateur |
-| **Les sections** | Mon quotidien, Mes projets, Mon budget, Patrimoine, Cycles. Chacune construit sur le socle des applications plus avancées, semi-professionnelles ou professionnelles, qui vont au-delà du but du socle. | Développement et débogage au long cours, section par section. | Utilisateurs avisés, préparés à un outil plus riche |
+| **1. Le grand noyau (socle)** | Le noyau technique et les middlewares communs (Budget, Patrimoine, Cycle, Calendrier, Navigation), derrière **une seule interface**. Fonctionnalités transverses et simples, prêtes à l'emploi pour toutes les sections. | API et base ; côté site, l'interface unique [`platform/grand-noyau.ts`](../../web/src/app/platform/grand-noyau.ts) | Stable ; n'évolue qu'en mode socle |
+| **2. Les fonctionnalités par section** | Une par section : les fonctions propres à la section (calculs, règles), séparées de tout écran | `web/src/app/sections/<clé>/fonctionnalites/`, données `<préfixe>_` | Au long cours, section par section |
+| **3. Les applications autonomes** | L'application autonome de chaque section, et les applications autonomes hybrides qui reprennent des fonctionnalités de plusieurs sections | `web/src/app/sections/<clé>/application/` et `web/src/app/hybrides/<nom>/` | Au long cours, pour un public averti (semi-professionnel, professionnel) |
 
-Règles qui s'appliquent à toute la documentation :
+C'est la même architecture que celle du grand noyau, reprise un étage au-dessus :
 
-1. Une fonctionnalité **propre à une section** se documente dans la fiche de cette section, jamais dans le socle.
-2. Une fonctionnalité **ajoutée au socle** se documente dans [`../socle/`](../socle/README.md), avec ses effets sur les cinq sections. La fiche de la section qui l'a demandée renvoie vers elle.
-3. Une section ne réécrit pas le socle. Elle dit ce qu'elle en utilise, et le lien suffit.
-4. Le code reste rangé de la même façon : `web/src/app/sections/<clé>/fonctions/` pour la zone de fonctionnalités et `web/src/app/sections/<clé>/application/` pour les écrans de son application, et les tables préfixées par section (`MQ_`, `MP_`, `MB_`, `PT_`, `CL_`).
-
-## Trois couches
-
-| Couche | Ce qu'elle contient | Où dans le code |
+| Grand noyau (aujourd'hui) | Site par sections (trois étages) | Point commun |
 |---|---|---|
-| **Le socle** | Les fonctionnalités communes, son interface au service de tous | API, base, `core/`, `platform/`, `shared/` |
-| **Les zones de fonctionnalités** | Une par section : les fonctions propres à la section, séparées de tout écran | `web/src/app/sections/<clé>/fonctions/` |
-| **Les applications** | L'application autonome de chaque section, et les applications hybrides | `web/src/app/sections/<clé>/application/`, et un dossier par application hybride |
+| Noyau (objets, registre, partitions) | Grand noyau (socle) | La base stable, qui ne connaît pas ce qui est construit dessus |
+| Couche middleware (Budget, Patrimoine, Cycle, Calendrier, Navigation) | Fonctionnalités par section | Les règles et calculs métier, sans écran, qui n'appellent que l'étage du dessous |
+| Couche présentation BPM-Astra | Applications autonomes (de section ou hybrides) | Les écrans, qui assemblent les étages du dessous |
 
-Une application, autonome ou hybride, appelle les fonctions du socle et celles d'une ou plusieurs zones. Une zone ne
-connaît aucune application. C'est ce qui permet à une application hybride (un peu de Mes projets, un peu de Mon budget)
-d'utiliser les fonctions de deux sections sans dépendre de leurs écrans.
+Différence actuelle : les fonctionnalités par section sont pour l'instant des calculs côté site, sur les lectures du grand
+noyau. Le jour où une section aura ses propres données (tables `<préfixe>_`), ses fonctionnalités auront aussi une partie
+côté serveur, comme un middleware ; l'emplacement prévu pour elles dans l'API est une évolution du grand noyau (mode socle).
+
+Règles d'appel, vérifiées par les tests de garde (`api/test/application-isolation.test.mjs`) :
+
+- les **fonctionnalités d'une section** n'appellent que le grand noyau (par son interface unique) et les fonctionnalités d'autres sections ; elles ne contiennent aucun écran ;
+- une **application autonome** appelle le grand noyau, les fonctionnalités d'une ou plusieurs sections, et le cadre d'accueil BPM-Astra
+  ([`astra/cadre.ts`](../../web/src/app/astra/cadre.ts)) ; jamais une autre application ;
+- tout fichier de `sections/` ou `hybrides/` appartient aux fonctionnalités d'une section ou à une application autonome.
+
+Une application hybride (un peu de Mes projets, un peu de Mon budget) appelle ainsi les fonctionnalités de deux sections sans dépendre
+des écrans de leurs sections. Les écrans existants de BPM-Astra restent où ils sont ; ils rejoignent ces étages au fil du
+développement de chaque section.
+
+Règles de documentation :
+
+1. Une fonctionnalité **propre à une section** se documente dans la fiche de cette section, jamais dans le grand noyau.
+2. Une fonctionnalité **ajoutée au grand noyau** se documente dans [`../socle/`](../socle/README.md), avec ses effets sur les cinq sections. La fiche de la section qui l'a demandée renvoie vers elle.
+3. Une section ne réécrit pas le grand noyau. Elle dit ce qu'elle en utilise, et le lien suffit.
 
 ## Deux modes de développement
 
-Le socle est un **grand noyau** qui offre une interface (lectures, commandes, composants communs) au service des cinq
-applications de section qui l'entourent.
+Le grand noyau (socle) offre une interface unique (lectures, commandes, composants communs) au service des fonctionnalités par section et des
+applications autonomes qui l'entourent.
 
 | | **Mode section** | **Mode socle** |
 |---|---|---|
 | Quand | La fonctionnalité ne demande rien que le socle n'offre déjà | La fonctionnalité a besoin d'une fondation que le socle n'a pas |
-| Où | `web/src/app/sections/<clé>/` (zone `fonctions/`, écrans `application/`), données `<préfixe>_` | Le socle seul (API, base, règles, composants communs), **sans aucun développement propre à une section** |
+| Où | Fonctionnalités `sections/<clé>/fonctionnalites/` et application autonome `sections/<clé>/application/`, données `<préfixe>_` | Le grand noyau seul (API, base, règles, interface `platform/grand-noyau.ts`), **sans aucun développement propre à une section** |
 | Règles | Libre : pas d'intégration au socle, pas limité par les règles communes ; seulement les règles de rangement et l'usage du socle par son interface | Toutes les règles communes ; effets décrits sur les cinq sections |
 | Validation | Tests de la section | **Non-régression complète** de toutes les fonctionnalités du socle (tests de l'API, du site, de bout en bout, jeux d'essai) |
 | Livraison | PR de la section | PR du socle, distincte ; la section ne s'en sert qu'une fois cette PR fusionnée, dans une PR de section suivante |
 
 On ne mélange jamais les deux modes dans une même PR.
 
-## Applications composées
+## Applications autonomes hybrides
 
-En plus des cinq applications de section, le site pourra offrir des **applications composées** (hybrides) qui appellent
-les zones de fonctionnalités de plusieurs sections (par exemple un peu de Mes projets et un peu de Mon budget). Elles reposent sur les
+En plus des cinq applications autonomes de section, le site pourra offrir des **applications autonomes hybrides** qui
+appellent les fonctionnalités par section de plusieurs sections (par exemple un peu de Mes projets et un peu de Mon budget). Elles reposent sur les
 fondations communes du socle : c'est pourquoi une fondation est écrite de façon générique, sans nommer la section qui l'a
-fait naître. Une application composée assemble ; elle ne rend pas une section dépendante d'une autre. Chacune aura sa
+fait naître. Une application hybride assemble ; elle ne rend pas une section dépendante d'une autre. Chacune aura sa
 fiche, sur le même gabarit, avec en plus la liste des sections dont elle reprend des fonctionnalités.
 
-## Cycle de vie d'une fonctionnalité : la section garde l'application, le socle reçoit les fondations
+## Cycle de vie d'une fonctionnalité : la section garde l'application, le grand noyau reçoit les fondations
 
 Les fonctionnalités avancées d'une section **restent dans la section** : elles forment son application autonome (pour
 Mes projets, l'application de gestion de projet). Ce qui fait évoluer le socle, ce sont **leurs fondations** : les
@@ -84,7 +95,7 @@ purs à part de l'écran, fondation sans nommer la section, lecture du socle par
 
 ```
 docs/
-  socle/README.md          catalogue des fonctionnalités du socle (prêtes à l'emploi)
+  socle/README.md          catalogue du grand noyau (socle) : fonctionnalités prêtes à l'emploi
   sections/README.md       ce plan
   sections/_gabarit.md     modèle de fiche de section
   sections/quotidien.md    Mon quotidien

@@ -1,25 +1,20 @@
-# Section « Mes projets » — fonctions propres à la section
+# Mes projets : fonctionnalités et application autonome
 
-Le socle est volontairement réduit à des fonctionnalités transverses et simples, prêtes à l'emploi pour les cinq
-sections. Tout ce qui va au-delà (gestion de projet avancée, semi-professionnelle ou professionnelle) vit **dans ce
-dossier**, en s'appuyant sur le socle sans le modifier : lectures du noyau `/api/projects`, `/api/tasks` et ses
-commandes, financement inchangé. Les données propres à la section iront dans des tables `MP_`.
+Mes projets se développe en **mode section** sur le grand noyau (socle), sans le modifier : lectures du noyau
+`/api/projects`, `/api/tasks` et ses commandes, financement inchangé. Tout ce qui va au-delà du grand noyau (gestion de
+projet avancée, semi-professionnelle ou professionnelle) vit ici. Les données propres à la section iront dans des tables
+`MP_`. Si une fondation manque au grand noyau, elle s'y ajoute d'abord en **mode socle** (PR à part, non-régression
+complète). Plan et règles : `docs/sections/README.md` ; fiche de la section : `docs/sections/projets.md`.
 
-Un ajout au socle ne se fait que pour un besoin vraiment transverse et simple ; il est alors disponible aux cinq
-sections et documenté dans `docs/socle/`. La fiche de la section est `docs/sections/projets.md`.
-
-## Rangement : une zone de fonctionnalités, une application
-
-| Dossier | Couche | Contenu | Peut importer |
+| Dossier | Étage | Contenu | Appelle |
 |---|---|---|---|
-| `fonctions/` | **Zone de fonctionnalités Mes projets** | Calculs et règles propres à la section, sans écran | le socle (`core/`, `platform/`, `shared/`) et d'autres zones |
-| `application/` | **Application autonome Mes projets** | Écrans (page Pilotage…) | sa zone, le socle, les gestes communs de `bpm/ui`, les adresses de `astra/astra-parts` |
+| `fonctionnalites/` | **Fonctionnalités Mes projets** | Calculs et règles propres à la section, sans écran | le grand noyau (`platform/grand-noyau.ts`) et les fonctionnalités d'autres sections |
+| `application/` | **Application autonome Mes projets** | Écrans (page Pilotage…) | le grand noyau, les fonctionnalités par section, le cadre BPM-Astra (`astra/cadre.ts`) |
 
-Une application hybride (par exemple Mes projets et Mon budget réunis) appellera les fonctions de `fonctions/` sans
-passer par `application/`. Un test de l'API (`application-isolation.test.mjs`) vérifie qu'une zone ne contient aucun
-écran et n'importe aucune application. Aucune autre section n'importe ce dossier, hors zones de fonctionnalités.
+Une application autonome hybride (par exemple Mes projets et Mon budget réunis) appellera `fonctionnalites/` sans passer
+par `application/`. Les gardes sont dans `api/test/application-isolation.test.mjs`.
 
 | Fichier | Rôle |
 |---|---|
-| `fonctions/portfolio.ts` | Portefeuille des projets, santé, tableau des tâches, planning (calculs purs) |
+| `fonctionnalites/portfolio.ts` | Portefeuille des projets, santé, tableau des tâches, planning (calculs purs) |
 | `application/pilotage.page.ts` | Page « Pilotage » : vues Portefeuille, Tableau, Planning |

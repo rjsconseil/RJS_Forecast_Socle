@@ -11,8 +11,8 @@ const app = fileURLToPath(new URL('../../web/src/app/', import.meta.url));
 const APPLICATIONS = ['bpm', 'astra'];
 const BUILT_ON = { astra: 'bpm' };
 const REGISTRY = 'platform/applications.ts';
-// Les écrans propres aux sections (`sections/<clé>/`) sont des pages de BPM-Astra : ils relèvent de cette application.
-const HOSTED = { sections: 'astra' };
+// Fonctionnalités par section et applications autonomes (`sections/`, `hybrides/`) vivent dans BPM-Astra.
+const HOSTED = { sections: 'astra', hybrides: 'astra' };
 
 const files = async (dir) => (await Promise.all((await readdir(dir)).map(async (name) => {
   const path = join(dir, name);
@@ -72,19 +72,48 @@ test('isolation : une application ne dépend que de l’application qu’elle d�
   assert.deepEqual(found, [], 'BPM ne dépend pas de BPM-Astra, et aucune autre dépendance entre applications');
 });
 
-test('zones de fonctionnalités : sections/<clé>/fonctions/ ne contient aucun écran et n’importe aucune application', async () => {
+// Trois étages : le grand noyau (socle), les fonctionnalités par section, les applications autonomes.
+const GRAND_NOYAU = 'platform/grand-noyau.ts';
+const CADRE = 'astra/cadre.ts';
+const FONCTIONNALITES = /^sections\/[^/]+\/fonctionnalites\//;
+const APP_ROOT = (rel) => rel.match(/^(sections\/[^/]+\/application|hybrides\/[^/]+)\//)?.[1] ?? null;
+const relativeImports = (text) => [...text.matchAll(/(?:from\s+|import\(\s*)['"](\.[^'"]+)['"]/g)].map((m) => m[1]);
+const resolveTs = (file, spec) => { const t = relative(app, join(file, '..', spec)); return /\.(ts|json|scss|html)$/.test(t) ? t : t + '.ts'; };
+
+test('trois étages : chaque fichier de sections/ et hybrides/ est dans les fonctionnalités d’une section ou dans une application autonome', async () => {
+  const stray = (await files(app)).map((f) => relative(app, f))
+    .filter((rel) => /^(sections|hybrides)\//.test(rel) && !FONCTIONNALITES.test(rel) && !APP_ROOT(rel));
+  assert.deepEqual(stray, []);
+});
+
+test('fonctionnalités par section : sans écran, elles n’appellent que le grand noyau et d’autres fonctionnalités par section', async () => {
   const found = [];
-  for (const file of await files(join(app, 'sections'))) {
+  for (const file of await files(app)) {
     const rel = relative(app, file);
-    if (!/^sections\/[^/]+\/fonctions\//.test(rel)) continue;
-    if (!rel.endsWith('.ts')) { found.push(`${rel} : fichier d’écran dans une zone de fonctionnalités`); continue; }
+    if (!FONCTIONNALITES.test(rel)) continue;
+    if (!rel.endsWith('.ts')) { found.push(`${rel} : fichier d’écran`); continue; }
     const text = await readFile(file, 'utf8');
     if (/@Component\s*\(/.test(text)) found.push(`${rel} : composant d’écran`);
-    for (const m of text.matchAll(/(?:from\s+|import\(\s*)['"]([^'"]+)['"]/g)) {
-      const target = relative(app, join(file, '..', m[1]));
-      if (/^sections\/[^/]+\/application(\/|$)/.test(target) || APPLICATIONS.some((a) => target === a || target.startsWith(a + '/')))
-        found.push(`${rel} → ${m[1]}`);
+    for (const spec of relativeImports(text)) {
+      const target = resolveTs(file, spec);
+      if (target !== GRAND_NOYAU && !FONCTIONNALITES.test(target)) found.push(`${rel} → ${spec}`);
     }
   }
-  assert.deepEqual(found, [], 'une zone de fonctionnalités ne dépend que du socle (core, platform, shared) et d’autres zones');
+  assert.deepEqual(found, []);
+});
+
+test('applications autonomes : elles appellent le grand noyau, les fonctionnalités par section et le cadre BPM-Astra, jamais une autre application', async () => {
+  const found = [];
+  for (const file of await files(app)) {
+    const rel = relative(app, file);
+    const own = APP_ROOT(rel);
+    if (!own || !rel.endsWith('.ts')) continue;
+    const text = await readFile(file, 'utf8');
+    for (const spec of relativeImports(text)) {
+      const target = resolveTs(file, spec);
+      if (target === GRAND_NOYAU || target === CADRE || FONCTIONNALITES.test(target) || target.startsWith(own + '/')) continue;
+      found.push(`${rel} → ${spec}`);
+    }
+  }
+  assert.deepEqual(found, []);
 });

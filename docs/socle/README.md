@@ -1,11 +1,13 @@
-# Le socle : catalogue des fonctionnalités transverses
+# Le grand noyau (socle) : catalogue des fonctionnalités transverses
 
 > **Statut : squelette.** Les fonctionnalités du socle sont prêtes à l'emploi et disponibles pour les cinq sections ;
 > ce catalogue les décrira une par une, pour que chaque section puisse s'y appuyer sans les relire dans le code.
 > La description détaillée de l'architecture reste dans [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
 
 ## Principe
-Le socle est un grand noyau dont l'interface (lectures, commandes, composants communs) sert les cinq applications de section.
+Le grand noyau (socle) réunit le noyau technique et les middlewares communs (Budget, Patrimoine, Cycle, Calendrier,
+Navigation) derrière une seule interface : l'API côté serveur, et [`platform/grand-noyau.ts`](../../web/src/app/platform/grand-noyau.ts)
+côté site. Les fonctionnalités par section et les applications autonomes ne l'appellent que par là.
 Une fondation qui lui manque s'y ajoute en **mode socle** : seule, sans développement propre à une section, et validée par une
 non-régression complète de toutes ses fonctionnalités avant qu'une section ne l'utilise (voir [`../sections/README.md`](../sections/README.md)).
 

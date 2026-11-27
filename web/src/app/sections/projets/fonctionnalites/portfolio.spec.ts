@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ProjectSummary, TaskStatus, TaskView } from '../../../core/models';
+import type { ProjectSummary, TaskStatus, TaskView } from '../../../platform/grand-noyau';
 import { board, portfolio, timeline, totals } from './portfolio';
 
 const TODAY = '2026-11-27';

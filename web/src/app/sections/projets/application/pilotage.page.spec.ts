@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { describe, expect, it, vi } from 'vitest';
-import { Api, RecetteContext } from '../../../core/api.service';
-import type { ProjectSummary, TaskView } from '../../../core/models';
+import { Api, RecetteContext, type ProjectSummary, type TaskView } from '../../../platform/grand-noyau';
 import { ProjetsPilotagePage } from './pilotage.page';
 
 const at = '2026-11-01T00:00:00Z';

@@ -9,7 +9,7 @@ Repère : un vrai outil de gestion de projet, utilisable seul par une personne h
 Repère : projets et tâches (objets du noyau), changement d'état d'une tâche, enveloppes et parts (venues de Mon budget), décisions de financement (Cycles), accueil de section et ouverture d'un fait à sa source.
 
 ## 3. Fonctionnalités propres à la section
-Repère : page Pilotage (portefeuille, tableau des tâches, planning). À venir dans la section : jalons, dépendances entre tâches, responsable, étiquettes, modèles de projet, charge.
+Repère : page Pilotage, application autonome Mes projets, avec ses calculs dans les fonctionnalités Mes projets (portefeuille, tableau des tâches, planning). À venir dans la section : jalons, dépendances entre tâches, responsable, étiquettes, modèles de projet, charge.
 
 ## 4. Liens avec les autres sections
 ## 5. Fondations pour le socle

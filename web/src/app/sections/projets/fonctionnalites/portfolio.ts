@@ -2,7 +2,7 @@
  * Mes projets · fonctionnalités propres à la section — calculs purs du pilotage, sans toucher au socle : tout vient des lectures existantes du noyau
  * (`ProjectSummary`, `TaskView`). Aucun chiffre financier n'est recalculé ici ; un projet financé le dit seulement.
  */
-import type { Priority, ProjectSummary, TaskStatus, TaskView } from '../../../core/models';
+import type { Priority, ProjectSummary, TaskStatus, TaskView } from '../../../platform/grand-noyau';
 
 export type Health = 'done' | 'late' | 'watch' | 'ok' | 'idle';
 

@@ -3,12 +3,12 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Mes projets · fonctionnalités propres à la section, étape 1 : page « Pilotage » — 27 novembre 2026
+## Mes projets · mode section, étape 1 : page « Pilotage » — 27 novembre 2026
 
-- **Documentation** : plan en deux étages posé (`docs/socle/` et `docs/sections/`, gabarit de fiche de section), sans contenu livré.
-
-Première évolution propre à la section Mes projets (fonctions internes, **aucun impact socle** : ni API, ni base, ni
-autre section). Dossier de la section : `web/src/app/sections/projets/` (`fonctions/` et `application/`) (règles de rangement dans son `README.md`).
+Première évolution de Mes projets en **mode section** (aucun impact sur le grand noyau : ni API, ni base, ni autre
+section). Rangée dans les trois étages : calculs dans les **fonctionnalités Mes projets**
+(`sections/projets/fonctionnalites/`), écran dans l'**application autonome Mes projets** (`sections/projets/application/`),
+le grand noyau appelé par `platform/grand-noyau.ts` et BPM-Astra par `astra/cadre.ts`.
 - **Pilotage** (`/bpm-astra/pilotage`, ajoutée après les pages existantes : l'entrée de Mes projets ne change pas) : l'accueil autonome de la section, bâti sur
   l'accueil de section commun (`<app-section-home>`) ; utilisable sans budget ni cycle. Indicateurs (projets en cours,
   en retard, tâches ouvertes et à échéance sous 7 jours, avancement moyen, temps passé / prévu).
@@ -17,7 +17,20 @@ autre section). Dossier de la section : `web/src/app/sections/projets/` (`foncti
   par état, filtres projet / recherche / retard, changement d'état par la commande du noyau), **Planning** (projets et
   tâches dans le temps, repère du jour). Le projet de vie (racine du budget) n'est pas un projet à mener : il est écarté.
 - Un projet financé le dit seulement ; son financement reste dans sa fiche (liens par `sourceLink`).
-- Tests : `sections/projets/portfolio.spec.ts` ; la page est vérifiée par `e2e/astra.e2e.mjs`.
+- Tests : `sections/projets/fonctionnalites/portfolio.spec.ts`, `sections/projets/application/pilotage.page.spec.ts` ; la page est vérifiée par `e2e/astra.e2e.mjs`.
+
+## Grand noyau (socle) : trois étages pour les applications autonomes — 27 novembre 2026
+
+Évolution en **mode socle** : aucune fonctionnalité propre à une section, aucun écran modifié.
+- **Grand noyau (socle)** : interface unique du site `platform/grand-noyau.ts` (API, modèles, mise en forme, sections,
+  ouverture à la source, accueil de section), que les fonctionnalités par section et les applications autonomes appellent.
+- **Fonctionnalités par section** (`sections/<clé>/fonctionnalites/`) et **applications autonomes** (`sections/<clé>/application/`,
+  `hybrides/<nom>/`) ; cadre d'accueil BPM-Astra `astra/cadre.ts`.
+- **Gardes** (`api/test/application-isolation.test.mjs`) : les fonctionnalités d'une section n'ont pas d'écran et n'appellent que le grand noyau et
+  d'autres fonctionnalités par section ; une application autonome n'appelle que le grand noyau, les fonctionnalités par section et le cadre ; tout fichier de
+  `sections/` ou `hybrides/` appartient à l'une ou à l'autre.
+- **Documentation** : `docs/ARCHITECTURE.md` §19 ; plan en place (`docs/socle/`, `docs/sections/` : gabarit, fiches des
+  cinq sections, modes section et socle, fondations, applications hybrides).
 
 ## Sections du site, notion commune du socle (évolution 1) — 27 novembre 2026
 
