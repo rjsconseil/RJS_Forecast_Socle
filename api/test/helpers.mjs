@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { createSocle } from '../src/socle/index.mjs';
 import { SOCLE_MODULES } from '../src/modules/index.mjs';
+import { createApplicationsModule } from '../src/modules/applications/index.mjs';
 
 export const TODAY = '2026-11-03';
 process.env.SOCLE_TODAY = TODAY;
@@ -17,14 +18,17 @@ process.env.SOCLE_TODAY = TODAY;
  * `closingLock` : les tests historiques saisissent des cycles passés sans les clôturer ; le verrou du cycle suivant
  * (paramètre `bpm.verrouCycleSuivant`, actif par défaut dans l'application) n'y est donc actif que sur demande.
  */
-export async function makeSocle({ faultInjection = true, closingLock = false } = {}) {
+/** Les modules du socle sans aucune application autonome inscrite (réponses de recette indépendantes des applications). */
+export const SOCLE_SANS_APPLICATIONS = SOCLE_MODULES.map((m) => (m.id === 'applications' ? createApplicationsModule([]) : m));
+
+export async function makeSocle({ faultInjection = true, closingLock = false, modules = SOCLE_MODULES } = {}) {
   const dir = await mkdtemp(join(tmpdir(), 'socle-test-'));
   const dataFile = join(dir, 'store.json');
-  let current = await createSocle({ dataFile, modules: SOCLE_MODULES, faultInjection });
+  let current = await createSocle({ dataFile, modules, faultInjection });
   if (!closingLock) await current.modules.administration.setParameter('bpm.verrouCycleSuivant', { value: false, expectedRevision: 0, note: 'Tests historiques' });
   const reload = async (opts = {}) => {
     await current.close();
-    current = await createSocle({ dataFile, modules: SOCLE_MODULES, faultInjection, ...opts });
+    current = await createSocle({ dataFile, modules, faultInjection, ...opts });
     return current;
   };
   return { socle: current, dataFile, reload };

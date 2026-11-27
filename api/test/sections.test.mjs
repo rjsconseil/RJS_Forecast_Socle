@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Registry } from '../src/socle/registry.mjs';
-import { SECTION_FLOWS, SECTION_LIST, sectionOfCollection } from '../src/socle/sections.mjs';
+import { applicationSectionOf, SECTION_FLOWS, SECTION_LIST, sectionOfCollection } from '../src/socle/sections.mjs';
 import { sectionPrefixOfTable, tableName, tableOf } from '../src/socle/data/engines/tables.mjs';
 import { at, makeSocle, makeUser } from './helpers.mjs';
 
@@ -48,9 +48,12 @@ test('un fait, une section propriétaire : chaque nature du site est rangée dan
   const { socle } = await makeSocle();
   const catalogued = new Set(SECTION_LIST.flatMap((s) => s.collections));
   for (const def of socle.registry.kinds.values()) {
-    assert.ok(catalogued.has(def.collection), `${def.kind} (${def.collection}) doit être rangée dans sections.json`);
+    // Une nature du grand noyau est rangée dans sections.json ; celle d'une application autonome, par sa déclaration.
+    const application = applicationSectionOf(def.collection);
+    assert.ok(catalogued.has(def.collection) || application, `${def.kind} (${def.collection}) doit être rangée dans sections.json`);
     assert.equal(def.section, sectionOfCollection(def.collection));
-    assert.equal(tableOf(def.collection).split('_')[0], SECTION_LIST.find((s) => s.key === def.section).prefix, `${def.kind} : table et section concordent`);
+    assert.equal(sectionPrefixOfTable(tableOf(def.collection)), SECTION_LIST.find((s) => s.key === def.section).prefix, `${def.kind} : table et section concordent`);
+    if (application) assert.match(tableOf(def.collection), /^AA_/);
   }
   assert.equal(socle.registry.sectionOf('coreProject'), 'projets');
   assert.equal(socle.registry.sectionOf('task'), 'projets');
@@ -75,6 +78,7 @@ test('GET /api/navigation/sections : catalogue, natures de chaque section et flu
   const r = await route[2]({});
   const projets = r.sections.find((s) => s.key === 'projets');
   assert.deepEqual(projets.kinds.map((k) => k.kind).sort(), ['coreProject', 'projectOverrun', 'task', 'taskBudgetRequest']);
+  assert.ok(Array.isArray(projets.applicationKinds), 'les natures des applications autonomes sont listées à part');
   assert.equal(r.flows.length, 9);
   assert.equal(r.sections.at(-1).key, 'systeme');
 });
