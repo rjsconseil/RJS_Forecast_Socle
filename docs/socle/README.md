@@ -1,5 +1,7 @@
 # Le grand noyau (socle) : catalogue des fonctionnalités transverses
 
+*Légende : « les fonctionnalités communes à tout le site ».*
+
 > **Statut : squelette.** Les fonctionnalités du socle sont prêtes à l'emploi et disponibles pour les cinq sections ;
 > ce catalogue les décrira une par une, pour que chaque section puisse s'y appuyer sans les relire dans le code.
 > La description détaillée de l'architecture reste dans [`../ARCHITECTURE.md`](../ARCHITECTURE.md).

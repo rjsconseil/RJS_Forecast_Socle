@@ -9,17 +9,17 @@ BPM-Astra est **un seul site** (une application, une API, une base). Il se lit e
 
 | Étage | Ce qu'il contient | Où dans le code | Rythme |
 |---|---|---|---|
-| **1. Le grand noyau (socle)** | Le noyau technique et les middlewares communs (Budget, Patrimoine, Cycle, Calendrier, Navigation), derrière **une seule interface**. Fonctionnalités transverses et simples, prêtes à l'emploi pour toutes les sections. | API et base ; côté site, l'interface unique [`platform/grand-noyau.ts`](../../web/src/app/platform/grand-noyau.ts) | Stable ; n'évolue qu'en mode socle |
-| **2. Les fonctionnalités par section** | Une par section : les fonctions propres à la section (calculs, règles), séparées de tout écran | `web/src/app/sections/<clé>/fonctionnalites/`, données `<préfixe>_` | Au long cours, section par section |
-| **3. Les applications autonomes** | L'application autonome de chaque section, et les applications autonomes hybrides qui reprennent des fonctionnalités de plusieurs sections | `web/src/app/sections/<clé>/application/` et `web/src/app/hybrides/<nom>/` | Au long cours, pour un public averti (semi-professionnel, professionnel) |
+| **1. Le grand noyau (socle)**<br>*« les fonctionnalités communes à tout le site »* | Le noyau technique et les middlewares communs (Budget, Patrimoine, Cycle, Calendrier, Navigation), derrière **une seule interface**. Fonctionnalités transverses et simples, prêtes à l'emploi pour toutes les sections. | API et base ; côté site, l'interface unique [`platform/grand-noyau.ts`](../../web/src/app/platform/grand-noyau.ts) | Stable ; n'évolue qu'en mode socle |
+| **2. Les fonctionnalités par section**<br>*« zones de fonctionnalités par section »* | Une par section : les fonctions propres à la section (calculs, règles), séparées de tout écran | `web/src/app/sections/<clé>/fonctionnalites/`, données `<préfixe>_` | Au long cours, section par section |
+| **3. Les applications autonomes**<br>*« les applications autonomes ou hybrides »* | L'application autonome de chaque section, et les applications autonomes hybrides qui reprennent des fonctionnalités de plusieurs sections | `web/src/app/sections/<clé>/application/` et `web/src/app/hybrides/<nom>/` | Au long cours, pour un public averti (semi-professionnel, professionnel) |
 
 C'est la même architecture que celle du grand noyau, reprise un étage au-dessus :
 
 | Grand noyau (aujourd'hui) | Site par sections (trois étages) | Point commun |
 |---|---|---|
-| Noyau (objets, registre, partitions) | Grand noyau (socle) | La base stable, qui ne connaît pas ce qui est construit dessus |
-| Couche middleware (Budget, Patrimoine, Cycle, Calendrier, Navigation) | Fonctionnalités par section | Les règles et calculs métier, sans écran, qui n'appellent que l'étage du dessous |
-| Couche présentation BPM-Astra | Applications autonomes (de section ou hybrides) | Les écrans, qui assemblent les étages du dessous |
+| Noyau (objets, registre, partitions) | Grand noyau (socle) : *les fonctionnalités communes à tout le site* | La base stable, qui ne connaît pas ce qui est construit dessus |
+| Couche middleware (Budget, Patrimoine, Cycle, Calendrier, Navigation) | Couche middleware : *zones de fonctionnalités par section* | Les règles et calculs métier, sans écran, qui n'appellent que l'étage du dessous |
+| Couche présentation BPM-Astra | Couche présentation : *les applications autonomes ou hybrides* | Les écrans, qui assemblent les étages du dessous |
 
 Différence actuelle : les fonctionnalités par section sont pour l'instant des calculs côté site, sur les lectures du grand
 noyau. Le jour où une section aura ses propres données (tables `<préfixe>_`), ses fonctionnalités auront aussi une partie
