@@ -51,6 +51,7 @@ import { BpmLifeProjectCockpit } from './life-project-cockpit';
 import { BpmProjectChargeList } from './project-charge-list';
 import { PROJECT_PAGE } from './project-page-host';
 import { BpmProjectTaskPanel } from './project-task-panel';
+import { BpmProjectCommandCenter } from './project-command-center';
 import { BpmOverrunRequestComponent, BpmTaskRequestsComponent } from './project-parts';
 import {
   CdkDrag,
@@ -109,6 +110,7 @@ const RETURN_CADENCES: { id: ReturnCadence; label: string }[] = [
     BpmOverflowDirective,
     BpmModal,
     BpmProjectTaskPanel,
+    BpmProjectCommandCenter,
   ],
   templateUrl: './project.page.html',
   styleUrls: ['./projects.page.scss', './project.page.scss', './project-command-center.scss'],
@@ -140,7 +142,7 @@ export class BpmProjectPage {
   protected availableTasks = computed(() =>
     (this.data()?.attachable ?? []).filter((t) => !t.task.projectId && t.pathways.canChangeProject),
   );
-  protected error = signal<string | null>(null);
+  error = signal<string | null>(null);
   private writes = new ProjectWriteFlow({ load: () => this.load(), reveal: (id) => this.revealControl(id), funding: this.funding });
   private taskFunding = new ProjectTaskFunding({
     run: (action, success, label) => this.writes.run(action, success, label),
@@ -193,7 +195,7 @@ export class BpmProjectPage {
   protected entryId = bpmQueryState('entry', '', { overlay: true });
   protected editorOpen = computed(() => !!this.entryId());
   protected lineId = bpmQueryState<string | null>('ligne', null, { overlay: true });
-  protected projectEditor = bpmQueryState('editProject', false, {
+  projectEditor = bpmQueryState('editProject', false, {
     parse: value => value !== 'false', format: () => this.projectId || 'current', overlay: true,
   });
   protected taskEditorId = bpmQueryState('editTask', '', { overlay: true });
@@ -211,8 +213,8 @@ export class BpmProjectPage {
     ),
   );
   private projectId = '';
-  protected decisionsOpen = bpmQueryState('decisions', false, { parse: value => value !== 'false', format: () => 'open', overlay: true });
-  protected taskAttention = bpmQueryState('attention', 'all');
+  decisionsOpen = bpmQueryState('decisions', false, { parse: value => value !== 'false', format: () => 'open', overlay: true });
+  taskAttention = bpmQueryState('attention', 'all');
   protected projectLead = computed(() => {
     const d = this.data();
     const description = d?.project.project.description?.trim();
@@ -220,12 +222,12 @@ export class BpmProjectPage {
       return 'Précisez le but de ce projet, préparez ses tâches puis suivez leur financement et leurs règlements.';
     return description.length > 240 ? `${description.slice(0, 237).trimEnd()}…` : description;
   });
-  protected pendingTaskRequests = computed(() =>
+  pendingTaskRequests = computed(() =>
     (this.data()?.role === 'life' ? [] : (this.data()?.requests ?? [])).filter(
       (r) => (r.status === 'pending' || r.status === 'awaiting-life') && this.matchesTaskSelection(r.taskId),
     ),
   );
-  protected pendingDecisions = computed(() =>
+  pendingDecisions = computed(() =>
     (this.data()?.role === 'life'
       ? (this.data()?.life?.pendingRequests ?? [])
       : (this.data()?.overruns ?? [])
@@ -269,7 +271,7 @@ export class BpmProjectPage {
   protected allocationEditing = signal(false);
   protected allocationRevision = signal(0);
   protected allocationError = signal<string | null>(null);
-  protected query = bpmQueryState('q', '', { replace: true });
+  query = bpmQueryState('q', '', { replace: true });
   fundingTask = bpmQueryState<string | null>('demande', null, { overlay: true });
   /** Tâche ouverte dans sa fenêtre : la carte du tableau garde une taille fixe. */
   protected openTaskId = bpmQueryState<string | null>('task', null, { overlay: true });
@@ -286,7 +288,7 @@ export class BpmProjectPage {
   readonly date = displayDate;
   protected readonly urgency = dueUrgency;
   protected readonly dueTitle = dueTitle;
-  protected doneCount = computed(
+  doneCount = computed(
     () => (this.data()?.tasks ?? []).filter((t) => t.task.status === 'done').length,
   );
   protected progress = computed(() =>
@@ -294,7 +296,7 @@ export class BpmProjectPage {
       ? Math.round((100 * this.doneCount()) / this.data()!.tasks.length)
       : 0,
   );
-  protected visibleTasks = computed(() => {
+  visibleTasks = computed(() => {
     const q = normalizeSearch(this.query().trim());
     return (this.data()?.tasks ?? []).filter(
       (t) =>
@@ -308,37 +310,37 @@ export class BpmProjectPage {
         COLUMNS.map((c) => [c.id, this.visibleTasks().filter((t) => t.task.status === c.id)]),
       ) as Record<TaskStatus, BpmTaskCard[]>,
   );
-  protected commandTaskId = signal('');
-  protected commandTask = computed(() => {
+  commandTaskId = signal('');
+  commandTask = computed(() => {
     const tasks = this.visibleTasks();
     return tasks.find(t => t.task.id === this.commandTaskId()) ?? this.nextTask() ?? tasks[0] ?? null;
   });
   /** Brouillons des cadrans (temps, part d'enveloppe) de la tâche ouverte : logique à part, testée seule. */
   private readonly drafts = new TaskCommandDrafts(() => this.commandTask(), () => this.data()?.budget);
-  protected commandTimeRange = this.drafts.timeRange;
-  protected commandTimeDraft = this.drafts.timeDraft;
-  protected commandShareDraft = this.drafts.shareDraft;
-  protected commandTimeValues = this.drafts.timeValues;
-  protected commandTimeMax = this.drafts.timeMax;
-  protected commandTimeStale = this.drafts.timeStale;
-  protected commandShareStale = this.drafts.shareStale;
-  protected commandSharePercent = this.drafts.sharePercent;
-  protected commandShareAmount = this.drafts.shareAmount;
-  protected commandShareMax = this.drafts.shareMax;
-  protected readonly money = cents;
-  protected changeCommandTime(field: 'plannedHours' | 'spentHours', value: number) {
+  commandTimeRange = this.drafts.timeRange;
+  commandTimeDraft = this.drafts.timeDraft;
+  commandShareDraft = this.drafts.shareDraft;
+  commandTimeValues = this.drafts.timeValues;
+  commandTimeMax = this.drafts.timeMax;
+  commandTimeStale = this.drafts.timeStale;
+  commandShareStale = this.drafts.shareStale;
+  commandSharePercent = this.drafts.sharePercent;
+  commandShareAmount = this.drafts.shareAmount;
+  commandShareMax = this.drafts.shareMax;
+  readonly money = cents;
+  changeCommandTime(field: 'plannedHours' | 'spentHours', value: number) {
     if (!this.busy() && !this.error()) this.drafts.changeTime(field, value);
   }
-  protected changeCommandShare(percent: number) {
+  changeCommandShare(percent: number) {
     if (!this.busy() && !this.error()) this.drafts.changeShare(percent);
   }
-  protected resetCommandTime(taskId?: string) {
+  resetCommandTime(taskId?: string) {
     this.drafts.resetTime(taskId);
   }
-  protected resetCommandShare(taskId?: string) {
+  resetCommandShare(taskId?: string) {
     this.drafts.resetShare(taskId);
   }
-  protected async applyCommandTime() {
+  async applyCommandTime() {
     const t = this.commandTask(), draft = this.commandTimeDraft();
     if (!t || !draft || this.busy() || this.error() || this.data()?.budget?.abandoned || this.commandTimeStale()) return;
     await this.run(async () => {
@@ -347,12 +349,12 @@ export class BpmProjectPage {
       return result;
     }, `Temps de « ${t.task.title} » enregistrés.`);
   }
-  protected async applyCommandShare() {
+  async applyCommandShare() {
     const t = this.commandTask(), b = this.data()?.budget, draft = this.commandShareDraft();
     if (!t || !b?.regime || b.abandoned || !draft || this.busy() || this.error() || this.commandShareStale()) return;
     await this.saveShare(b.budgetId, t, (draft.amountCents / 100).toFixed(2), draft.revision, () => this.resetCommandShare(t.task.id));
   }
-  protected commandStats = computed(() => {
+  commandStats = computed(() => {
     const tasks = this.data()?.tasks ?? [];
     return {
       blocked: tasks.filter(t => t.task.status === 'blocked').length,
@@ -360,15 +362,15 @@ export class BpmProjectPage {
       release: tasks.filter(t => t.task.status === 'done' && (t.budget?.unusedCents ?? 0) > 0).length,
     };
   });
-  protected commandCharges = computed(() =>
+  commandCharges = computed(() =>
     (this.data()?.charges ?? [])
       .filter(c => !!c.taskId && !c.settled && this.matchesTaskSelection(c.taskId))
       .sort((a, b) => a.plannedDate.localeCompare(b.plannedDate)),
   );
-  protected commandChargeTask(c: ProjectChargeLine) {
+  commandChargeTask(c: ProjectChargeLine) {
     return this.data()?.tasks.find(t => t.task.id === c.taskId)?.task.title ?? 'Tâche du projet';
   }
-  protected focusTasks(attention: string) {
+  focusTasks(attention: string) {
     this.query.set('');
     this.taskAttention.set(attention);
     this.commandTaskId.set('');
@@ -471,7 +473,7 @@ export class BpmProjectPage {
     return TASK_STATUS_LABEL[s];
   }
   /** Ouvre la fenêtre de la tâche, au besoin sur sa part (demande) ou ses dépenses. */
-  protected showTask(t: BpmTaskCard, section: 'funding' | 'charges' | null = null) {
+  showTask(t: BpmTaskCard, section: 'funding' | 'charges' | null = null) {
     // La vue Budget ne monte pas la fenêtre de tâche : la tâche s'ouvre dans la sous-page Tâches (audit A05).
     if (this.workspaceKey() === 'project-budget') {
       void this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'taches'], { queryParams: { task: t.task.id }, queryParamsHandling: 'merge' });
@@ -510,7 +512,7 @@ export class BpmProjectPage {
     const p = t.budget?.timeConsumptionPercent;
     return p === null || p === undefined ? null : Math.min(100, Math.max(0, p));
   }
-  protected createTask() {
+  createTask() {
     this.taskEditorId.set('new');
   }
   editTask(t: BpmTaskCard) {
