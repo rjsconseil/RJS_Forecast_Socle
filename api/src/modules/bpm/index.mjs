@@ -3,6 +3,7 @@
 // clôtures, parcours métier. Chaque chiffre présenté est une métrique dont la formule est
 // administrée (`metric.<clé>`) et dont l'explication remonte jusqu'aux objets sources.
 import { fail } from '../../socle/errors.mjs';
+import { today } from '../budget/api.mjs';
 import { createReads } from './reads.mjs';
 import { createLife } from './life.mjs';
 import { createBilans } from './bilans.mjs';
@@ -14,7 +15,7 @@ import { BPM_MIGRATIONS } from './migrations.mjs';
 import { bpmRoutes } from './routes.mjs';
 import { essentialsParameter } from './natures.mjs';
 import { createProjects } from './projects.mjs';
-import { createClosing, LOCK_PARAMETER } from './closing.mjs';
+import { awaitingClosure, createClosing, LOCK_PARAMETER } from './closing.mjs';
 import { preparationOf, cycleState, metricContext, closingContract, legacyResultFigure, collectSources } from './cycle-state.mjs';
 import { bpmCompositions, bpmExtensions } from './extensions.mjs';
 import { principalCommands } from './principal.mjs';
@@ -242,9 +243,37 @@ export default {
       om.update(tx, comp, {});
     }
 
+    /**
+     * Horloge commune des sections : une seule lecture de l'état du cycle (période, phase, jours restants, verrou),
+     * la même pour toutes les sections. Le verrou reste une garde sur les écritures (operationGuard) : cette lecture
+     * ne fait que le dire. Phases : `to_configure` (pas de cycle), `running` (en cours), `to_close` (un cycle terminé
+     * attend sa clôture : il est en clôture et le suivant attend).
+     */
+    function cycleClock(ctx) {
+      const state = socle.stateOf(ctx);
+      const userId = om.requireUser(state, ctx);
+      const comp = compositionOf(state, userId);
+      const cycle = comp ? cycleOf(state, comp.id) : null;
+      const cs = cycle?.state === 'active' ? cycleState(state, cycle) : null;
+      if (!cs) return { phase: 'to_configure', period: null, current: null, daysLeft: null, lock: { enabled: parameters.value(state, LOCK_PARAMETER) !== false, active: false, from: null, periodKey: null } };
+      const pending = awaitingClosure(cs);
+      const lockEnabled = parameters.value(state, LOCK_PARAMETER) !== false;
+      const view = (p) => ({ key: p.key, label: p.label, start: p.start, end: p.end, status: p.status });
+      const current = view(cs.current);
+      const daysLeft = Math.max(0, Math.round((Date.parse(cs.current.end) - Date.parse(today())) / 86400000) + 1);
+      return {
+        phase: pending ? 'to_close' : 'running',
+        period: pending ? view(cs.firstOpen) : current,
+        current,
+        daysLeft,
+        lock: { enabled: lockEnabled, active: !!pending && lockEnabled, from: pending && lockEnabled ? pending.from : null, periodKey: pending?.periodKey ?? null },
+      };
+    }
+
     const kit = { om, metrics, parameters, requireComposition, lifeProjects, closureView, figuresFor, evaluateFigure, closingOf, reads, projects, life, bilans, recordClosure, closing, calendarReads, meteo, applyVision };
     return {
       compositionOf,
+      cycleClock,
       metricContext: (state, userId, options) => metricContext(state, userId, socle, options),
       reads,
       projects,

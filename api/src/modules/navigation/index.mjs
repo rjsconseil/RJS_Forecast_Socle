@@ -91,6 +91,8 @@ export default {
   },
   routes(socle) {
     return [
+      // Catalogue des sections du site (un fait, une section propriétaire ; flux entre sections). Sans donnée d'utilisateur.
+      ['GET', '/api/navigation/sections', () => socle.registry.sections()],
       ['GET', '/api/navigation/settings', ({ ctx }) => socle.modules.navigation.read(ctx)],
       ['PUT', '/api/navigation/settings', ({ body }) => socle.modules.navigation.write(body)],
     ];

@@ -1,16 +1,14 @@
+import { SECTION_LIST } from '../../sections.mjs';
+
 // P5 · Données gérées — rangement des collections en tables, commun aux moteurs SQL (SQLite, PostgreSQL).
 // Les tables sont rangées à l'image des cinq sections du site, par préfixe :
 //   MQ_ Mon quotidien · MP_ Mes projets · MB_ Mon budget · PT_ Patrimoine · CL_ Cycles · SY_ système (socle).
 
-/** Sections du site et collections qu'elles portent ; une collection hors de ces sections va dans le système (SY_). */
-export const SECTIONS = {
-  MQ: { label: 'Mon quotidien', collections: ['operations', 'imports', 'calendarPreferences'] },
-  MP: { label: 'Mes projets', collections: ['coreProjects', 'tasks', 'projectOverruns', 'taskBudgetRequests'] },
-  MB: { label: 'Mon budget', collections: ['budgets', 'recurrences', 'costCenters', 'chargeCategories'] },
-  PT: { label: 'Patrimoine', collections: ['patrimoines', 'capitalizations', 'lifeGoals'] },
-  CL: { label: 'Cycles', collections: ['cycleLinks', 'closures', 'bpmCompositions'] },
-  SY: { label: 'Système', collections: ['users', 'credentials', 'parameters', 'creationRequests'] },
-};
+/**
+ * Sections du site et collections qu'elles portent, par préfixe ; une collection hors de ces sections va dans le système (SY_).
+ * Dérivé du catalogue unique des sections (`socle/sections.json`).
+ */
+export const SECTIONS = Object.fromEntries(SECTION_LIST.map((s) => [s.prefix, { label: s.label, key: s.key, collections: [...s.collections] }]));
 const SECTION_OF = new Map(Object.entries(SECTIONS).flatMap(([prefix, s]) => s.collections.map((c) => [c, prefix])));
 const snake = (name) => name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
 /** Table d'une collection : préfixe de sa section, puis son nom (« taskBudgetRequests » → « MP_task_budget_requests »). */

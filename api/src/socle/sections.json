@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "description": "Catalogue unique des sections du site (vision « cinq sections autonomes, un seul site », 27/11/2026). Lu par la base (préfixes des tables), l'API (section propriétaire de chaque nature) et le site (menu, couleurs, promesses). Le site en garde une copie typée, vérifiée identique par web/src/app/platform/sections.spec.ts.",
+  "sections": [
+    {
+      "key": "quotidien", "prefix": "MQ", "order": 1, "label": "Mon quotidien", "verb": "vivre le cycle", "tone": "astra-quotidien",
+      "promise": "Savoir ce qui se passe aujourd'hui et agir dessus : régler, saisir, reporter, replanifier.",
+      "decides": "Ce qui s'est réellement passé : règlements, montants et dates réels, mouvements imprévus, évènements.",
+      "collections": ["operations", "imports", "calendarPreferences"]
+    },
+    {
+      "key": "projets", "prefix": "MP", "order": 2, "label": "Mes projets", "verb": "réaliser", "tone": "astra-projets",
+      "promise": "Mener ses projets de bout en bout : les organiser, suivre leurs tâches et, si on le souhaite, les financer.",
+      "decides": "Les projets, leurs tâches, la répartition de l'enveloppe entre les tâches, les demandes de part et de dépassement.",
+      "collections": ["coreProjects", "tasks", "projectOverruns", "taskBudgetRequests"]
+    },
+    {
+      "key": "budget", "prefix": "MB", "order": 3, "label": "Mon budget", "verb": "prévoir", "tone": "astra-budget",
+      "promise": "Poser le budget de chaque cycle avant de le vivre : échéances récurrentes, postes et plafonds.",
+      "decides": "Les échéances récurrentes, les postes et revenus, les plafonds, l'épargne visée du cycle.",
+      "collections": ["budgets", "recurrences", "costCenters", "chargeCategories"]
+    },
+    {
+      "key": "patrimoine", "prefix": "PT", "order": 4, "label": "Patrimoine", "verb": "accumuler et fixer le cap", "tone": "astra-patrimoine",
+      "promise": "Projeter son patrimoine à long terme et se fixer des objectifs d'accumulation.",
+      "decides": "Le point de départ, les hypothèses de projection, les objectifs datés.",
+      "collections": ["patrimoines", "capitalizations", "lifeGoals"]
+    },
+    {
+      "key": "cycles", "prefix": "CL", "order": 5, "label": "Cycles", "verb": "valider et clôturer", "tone": "astra-cycles",
+      "promise": "Valider tout le cycle avant d'ouvrir le suivant, puis relire ses bilans.",
+      "decides": "L'ancrage du cycle, la clôture, les reports vers un cycle suivant, le verrou.",
+      "collections": ["cycleLinks", "closures", "bpmCompositions"]
+    },
+    {
+      "key": "systeme", "prefix": "SY", "order": 99, "label": "Système", "verb": null, "tone": null,
+      "promise": "Le socle commun : utilisateurs, comptes, paramètres.",
+      "decides": "Les utilisateurs, leurs comptes et les paramètres du site.",
+      "collections": ["users", "credentials", "parameters", "creationRequests"]
+    }
+  ],
+  "flows": [
+    { "n": 1, "from": "budget", "to": "quotidien", "label": "Échéances prévues", "detail": "Les échéances récurrentes deviennent les mouvements à régler du cycle." },
+    { "n": 2, "from": "budget", "to": "projets", "label": "Enveloppes", "detail": "Le budget de vie attribue une enveloppe à chaque projet, accorde les parts et les dépassements." },
+    { "n": 3, "from": "projets", "to": "quotidien", "label": "Flux des projets", "detail": "Les flux prévus des projets financés entrent dans les mouvements du cycle." },
+    { "n": 4, "from": "quotidien", "to": "cycles", "label": "Réel du cycle", "detail": "Les mouvements réglés, les écarts au prévu, la vérification du compte." },
+    { "n": 5, "from": "budget", "to": "cycles", "label": "Prévisions et plafonds", "detail": "Les prévisions du cycle à revoir, l'état des plafonds." },
+    { "n": 6, "from": "projets", "to": "cycles", "label": "Décisions de financement", "detail": "Les décisions en attente, les dépassements facturés en fin de période." },
+    { "n": 7, "from": "cycles", "to": "patrimoine", "label": "Résultat capitalisé", "detail": "Le résultat du cycle clos, capitalisé dans le stock." },
+    { "n": 8, "from": "patrimoine", "to": "budget", "label": "Épargne visée", "detail": "L'épargne à viser à chaque cycle, tirée des objectifs d'accumulation." },
+    { "n": 9, "from": "patrimoine", "to": "projets", "label": "Financement hors cycle", "detail": "Les projets financés par le patrimoine, « En faire un projet » depuis un objectif." }
+  ]
+}

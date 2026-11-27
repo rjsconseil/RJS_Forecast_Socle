@@ -1,11 +1,13 @@
 import type { Type } from '@angular/core';
+import { sectionOf, type SectionKey } from '../platform/sections';
 
 // Les cinq parties de BPM-Astra : une seule déclaration donne le menu, la couleur, le parcours et les ponts.
 // Mes projets et Mon budget apportent le contenu (projets et tâches ; échéances récurrentes et plafonds) ;
 // Mon quotidien le gère au jour le jour ; Cycles valide tout le cycle avant d'ouvrir le suivant ;
 // Patrimoine est la finalité : les objectifs que tout le reste fait grandir.
 
-export type AstraPartKey = 'quotidien' | 'projets' | 'budget' | 'patrimoine' | 'cycles';
+/** Les parties d'Astra sont les sections du site (catalogue commun `platform/sections.ts`). */
+export type AstraPartKey = SectionKey;
 
 export interface AstraPage {
   /** Adresse sous /bpm-astra ('' : accueil). */
@@ -29,8 +31,8 @@ export interface AstraPart {
 export const ASTRA_PARTS: AstraPart[] = [
   {
     key: 'quotidien',
-    label: 'Mon quotidien',
-    tone: 'astra-quotidien',
+    label: sectionOf('quotidien').label,
+    tone: sectionOf('quotidien').tone,
     icon: 'quotidien',
     role: 'Gérer le cycle au jour le jour : ce qui entre, ce qui sort et ce qui est prévu, projets compris.',
     pages: [
@@ -41,8 +43,8 @@ export const ASTRA_PARTS: AstraPart[] = [
   },
   {
     key: 'projets',
-    label: 'Mes projets',
-    tone: 'astra-projets',
+    label: sectionOf('projets').label,
+    tone: sectionOf('projets').tone,
     icon: 'projets',
     role: 'Sortir de la routine : créer vos projets de la vie, les financer depuis leur fiche, les réaliser.',
     pages: [
@@ -52,8 +54,8 @@ export const ASTRA_PARTS: AstraPart[] = [
   },
   {
     key: 'budget',
-    label: 'Mon budget',
-    tone: 'astra-budget',
+    label: sectionOf('budget').label,
+    tone: sectionOf('budget').tone,
     icon: 'budget',
     role: 'Poser le budget de chaque cycle : les échéances récurrentes et les plafonds des postes.',
     pages: [
@@ -63,8 +65,8 @@ export const ASTRA_PARTS: AstraPart[] = [
   },
   {
     key: 'patrimoine',
-    label: 'Patrimoine',
-    tone: 'astra-patrimoine',
+    label: sectionOf('patrimoine').label,
+    tone: sectionOf('patrimoine').tone,
     icon: 'patrimoine',
     role: 'La finalité : se fixer des objectifs et faire grandir son patrimoine.',
     pages: [
@@ -74,8 +76,8 @@ export const ASTRA_PARTS: AstraPart[] = [
   },
   {
     key: 'cycles',
-    label: 'Cycles',
-    tone: 'astra-cycles',
+    label: sectionOf('cycles').label,
+    tone: sectionOf('cycles').tone,
     icon: 'cycle',
     role: 'Valider tout le cycle avant de passer au suivant, puis relire ses bilans.',
     pages: [
@@ -198,3 +200,6 @@ export function astraMenuSlug(slug: string): string {
 }
 
 
+
+/** L'accueil d'une section dans Astra : la première page de sa partie. */
+export const astraSectionHome = (key: AstraPartKey): string => astraUrl(ASTRA_PARTS.find((p) => p.key === key)?.pages[0]?.slug ?? '');

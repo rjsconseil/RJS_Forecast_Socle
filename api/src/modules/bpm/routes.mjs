@@ -19,6 +19,8 @@ export function bpmRoutes(socle) {
     }
   };
   return [
+    // Horloge commune des sections : période, phase et verrou du cycle.
+    ['GET', '/api/bpm/cycle/clock', ({ ctx }) => s.cycleClock(ctx)],
     ['GET', '/api/bpm/dashboard', ({ ctx, query }) => s.dashboard(ctx, { periodKey: query.get('period') || undefined })],
     ['GET', '/api/bpm/figures/:key', ({ ctx, params, query }) => s.figure(ctx, params.key, { periodKey: query.get('period') || undefined })],
     ['GET', '/api/bpm/summary', ({ ctx, query }) => s.reads.summary(ctx, { periodKey: query.get('period') || undefined })],
