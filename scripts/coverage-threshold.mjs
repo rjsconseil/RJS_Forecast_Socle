@@ -3,7 +3,7 @@
 //   node scripts/coverage-threshold.mjs web/coverage/web/coverage-summary.json
 import { readFileSync } from 'node:fs';
 
-const FLOORS = { lines: 65, statements: 60, functions: 58, branches: 55 };
+const FLOORS = { lines: 68, statements: 64, functions: 61, branches: 58 };
 const file = process.argv[2] ?? 'web/coverage/web/coverage-summary.json';
 const total = JSON.parse(readFileSync(file, 'utf8')).total;
 const misses = Object.entries(FLOORS).filter(([k, floor]) => total[k].pct < floor);
