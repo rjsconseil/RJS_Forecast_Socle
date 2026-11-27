@@ -1,0 +1,258 @@
+<div class="mp">
+  <!-- En-tête de l'application : le nom de la section, la méthode, les créations. -->
+  <header class="mp-head">
+    <div class="mp-brand">
+      <span class="mp-logo" aria-hidden="true">MP</span>
+      <div>
+        <h1>Mes projets</h1>
+        <p>Gestion de projet · méthode PRINCE2</p>
+      </div>
+    </div>
+    <div class="mp-head-actions">
+      <button type="button" class="mp-btn primary" [attr.aria-expanded]="panneau() === 'projet'" (click)="toggle('projet')">Nouveau projet</button>
+      <button type="button" class="mp-btn" [attr.aria-expanded]="panneau() === 'tache'" (click)="toggle('tache')">Nouvelle tâche</button>
+    </div>
+  </header>
+
+  <div class="mp-layout">
+    <!-- Navigation de l'application : l'accueil, puis les 7 thèmes dans leur ordre. -->
+    <nav class="mp-nav" aria-label="Navigation de Mes projets">
+      <a class="mp-nav-home" [class.is-current]="!theme()" [attr.aria-current]="!theme() ? 'page' : null" [routerLink]="[]" [queryParams]="{ theme: null }" queryParamsHandling="merge">
+        <span class="mp-nav-mark" aria-hidden="true">⌂</span><span>Accueil<small>État des lieux</small></span>
+      </a>
+      <p class="mp-nav-group">Les 7 thèmes</p>
+      @for (t of themes; track t.id) {
+        <a [class.is-current]="theme()?.id === t.id" [attr.aria-current]="theme()?.id === t.id ? 'page' : null" [routerLink]="[]" [queryParams]="{ theme: t.id }" queryParamsHandling="merge">
+          <span class="mp-nav-mark" aria-hidden="true">{{ t.numero }}</span><span>{{ t.nom }}<small>{{ t.question }}</small></span>
+        </a>
+      }
+    </nav>
+
+    <div class="mp-main">
+      @if (failure(); as f) { <p class="mp-alert danger" role="alert">{{ f }}</p> }
+      @if (notice(); as n) { <p class="mp-alert success" role="status">{{ n }}</p> }
+
+      <!-- Créations : un projet seul, une tâche seule ou déjà rattachée. -->
+      @if (panneau() === 'projet') {
+        <form class="mp-panel mp-form" (submit)="$event.preventDefault(); createProject($any($event.target))" aria-label="Nouveau projet">
+          <h2>Nouveau projet</h2>
+          <label class="wide">Titre <input name="title" required maxlength="200" placeholder="Ex. Refonte du site" /></label>
+          <label class="wide">Description <textarea name="description" rows="2" placeholder="Le résultat attendu, en une ou deux phrases"></textarea></label>
+          <label>Priorité <select name="priority">@for (p of priorities; track p.id) { <option [value]="p.id" [selected]="p.id === 'medium'">{{ p.label }}</option> }</select></label>
+          <label>Début <input type="date" name="startDate" /></label>
+          <label>Échéance <input type="date" name="dueDate" /></label>
+          <div class="mp-form-actions wide">
+            <button type="submit" class="mp-btn primary" [disabled]="busy()">Créer le projet</button>
+            <button type="button" class="mp-btn" (click)="toggle('projet')">Annuler</button>
+          </div>
+        </form>
+      }
+      @if (panneau() === 'tache') {
+        <form class="mp-panel mp-form" (submit)="$event.preventDefault(); createTask($any($event.target))" aria-label="Nouvelle tâche">
+          <h2>Nouvelle tâche</h2>
+          <label class="wide">Titre <input name="title" required maxlength="200" placeholder="Ex. Rédiger l’exposé du projet" /></label>
+          <label>Projet <select name="projectId"><option value="">Sans projet (à rattacher plus tard)</option>@for (r of rows(); track r.id) { <option [value]="r.id">{{ r.title }}</option> }</select></label>
+          <label>Heures prévues <input name="plannedHours" inputmode="decimal" placeholder="Ex. 4" /></label>
+          <label>Échéance <input type="date" name="dueDate" /></label>
+          <div class="mp-form-actions wide">
+            <button type="submit" class="mp-btn primary" [disabled]="busy()">Créer la tâche</button>
+            <button type="button" class="mp-btn" (click)="toggle('tache')">Annuler</button>
+          </div>
+        </form>
+      }
+
+      @if (data.error(); as e) {
+        <p class="mp-alert danger" role="alert">{{ e.message }}</p>
+      } @else if (!data.data()) {
+        <p class="mp-muted" role="status">Chargement des projets…</p>
+      } @else if (theme(); as t) {
+        <!-- ================= Un thème PRINCE2 ================= -->
+        <article class="mp-theme" [attr.data-theme]="t.id">
+          <header class="mp-theme-hero">
+            <p class="mp-eyebrow">Thème {{ t.numero }} sur 7 · {{ t.anglais }}</p>
+            <h2>{{ t.nom }}</h2>
+            <p class="mp-question">{{ t.question }}</p>
+            <p class="mp-lead"><strong>But du thème.</strong> {{ t.but }}</p>
+          </header>
+
+          <section class="mp-section" aria-labelledby="mp-seq-theme">
+            <h3 id="mp-seq-theme">Où le thème intervient dans la séquence</h3>
+            <ol class="mp-ribbon">
+              <li class="mp-ribbon-dp" [class.on]="themeProcessusIds().has('DP')"><b>DP</b> {{ diriger.nom }} <small>tout le projet</small></li>
+              @for (p of sequence; track p.id) {
+                <li [class.on]="themeProcessusIds().has(p.id)"><b>{{ p.id }}</b> {{ p.nom }}</li>
+              }
+            </ol>
+          </section>
+
+          <section class="mp-section" aria-labelledby="mp-liv-theme">
+            <h3 id="mp-liv-theme">Livrables du thème <span class="mp-count">{{ themeLivrables().length }}</span></h3>
+            <ul class="mp-chips">
+              @for (l of themeLivrables(); track l.id) { <li><span>{{ l.nom }}</span><small>{{ l.anglais }}</small></li> }
+            </ul>
+          </section>
+
+          <section class="mp-section" aria-labelledby="mp-proc-theme">
+            <h3 id="mp-proc-theme">Processus associés <span class="mp-count">{{ themeProcessus().length }}</span></h3>
+            <p class="mp-muted">Dans l’ordre de la séquence : ce que le thème demande à chaque processus, puis les livrables du processus (ceux du thème sont marqués).</p>
+            <ol class="mp-steps">
+              @for (u of themeProcessus(); track u.processus.id) {
+                <li class="mp-step">
+                  <span class="mp-step-num" aria-hidden="true">{{ u.etape }}</span>
+                  <div class="mp-step-body">
+                    <p class="mp-eyebrow">{{ u.processus.id }} · {{ u.processus.anglais }} · {{ u.processus.moment }}</p>
+                    <h4>{{ u.processus.nom }}</h4>
+                    <p class="mp-step-action">{{ u.action }}</p>
+                    <p class="mp-muted">{{ u.processus.resume }}</p>
+                    <ul class="mp-chips small" [attr.aria-label]="'Livrables de ' + u.processus.nom">
+                      @for (l of u.processus.livrables; track l) {
+                        <li [class.mark]="isThemeLivrable(u.livrables, l)">{{ livrableNom(l) }}</li>
+                      }
+                    </ul>
+                  </div>
+                </li>
+              }
+            </ol>
+          </section>
+
+          <nav class="mp-pager" aria-label="Thème précédent ou suivant">
+            @if (previous(); as p) { <a [routerLink]="[]" [queryParams]="{ theme: p.id }" queryParamsHandling="merge">← {{ p.numero }}. {{ p.nom }}</a> } @else { <a [routerLink]="[]" [queryParams]="{ theme: null }" queryParamsHandling="merge">← Accueil</a> }
+            @if (next(); as n) { <a [routerLink]="[]" [queryParams]="{ theme: n.id }" queryParamsHandling="merge">{{ n.numero }}. {{ n.nom }} →</a> }
+          </nav>
+        </article>
+      } @else {
+        <!-- ================= Accueil : état des lieux ================= -->
+        <section class="mp-kpis" aria-label="Indicateurs">
+          <div class="mp-kpi"><span>Projets en cours</span><strong>{{ totals().activeCount }}</strong><small>{{ totals().projectCount }} au total · {{ totals().doneCount }} terminé{{ totals().doneCount > 1 ? 's' : '' }}</small></div>
+          <div class="mp-kpi" [attr.data-tone]="totals().lateCount ? 'danger' : 'success'"><span>En retard</span><strong>{{ totals().lateCount }}</strong><small>{{ totals().watchCount }} à surveiller</small></div>
+          <div class="mp-kpi"><span>Tâches ouvertes</span><strong>{{ totals().openTaskCount }}</strong><small>{{ totals().dueThisWeek }} à échéance sous 7 jours</small></div>
+          <div class="mp-kpi" [attr.data-tone]="orphans().length ? 'warning' : 'neutral'"><span>Tâches sans projet</span><strong>{{ orphans().length }}</strong><small>à rattacher</small></div>
+          <div class="mp-kpi"><span>Avancement moyen</span><strong>{{ totals().averageCompletion === null ? '—' : totals().averageCompletion + ' %' }}</strong><small>{{ hours(totals().spentHours) }} passées sur {{ hours(totals().plannedHours) }}</small></div>
+        </section>
+
+        <section class="mp-panel" aria-labelledby="mp-seq">
+          <div class="mp-panel-head">
+            <h2 id="mp-seq">La séquence PRINCE2</h2>
+            <p class="mp-muted">Les choses à faire dans l’ordre. Le repère de chaque projet est indicatif : il se lit dans l’état de ses tâches.</p>
+          </div>
+          <p class="mp-dp"><b>DP</b> {{ diriger.nom }} : {{ diriger.resume }}</p>
+          <ol class="mp-sequence">
+            @for (p of sequence; track p.id; let i = $index) {
+              <li>
+                <span class="mp-seq-num">{{ i + 1 }}</span>
+                <strong>{{ p.nom }}</strong>
+                <small>{{ p.moment }}</small>
+                <span class="mp-seq-count" [class.empty]="!atStep().get(p.id)">{{ atStep().get(p.id) ?? 0 }} projet{{ (atStep().get(p.id) ?? 0) > 1 ? 's' : '' }}</span>
+              </li>
+            }
+          </ol>
+          @if (closedCount()) { <p class="mp-muted">{{ closedCount() }} projet{{ closedCount() > 1 ? 's clos' : ' clos' }}.</p> }
+        </section>
+
+        @if (!rows().length) {
+          <section class="mp-panel mp-empty">
+            <h2>Aucun projet pour l’instant</h2>
+            <p>Commencez par élaborer votre premier projet : un titre, une échéance, puis ses tâches. Tout fonctionne sans budget ni cycle.</p>
+            <button type="button" class="mp-btn primary" (click)="toggle('projet')">Créer un projet</button>
+          </section>
+        } @else {
+          <section class="mp-panel" aria-labelledby="mp-projets">
+            <div class="mp-panel-head"><h2 id="mp-projets">Projets <span class="mp-count">{{ rows().length }}</span></h2></div>
+            <div class="mp-table-wrap">
+              <table class="mp-table">
+                <caption class="sr-only">Projets, leur état et leur repère PRINCE2</caption>
+                <thead><tr><th scope="col">Projet</th><th scope="col">État</th><th scope="col">Repère PRINCE2</th><th scope="col">Avancement</th><th scope="col">Tâches</th><th scope="col">Échéance</th></tr></thead>
+                <tbody>
+                  @for (r of rows(); track r.id) {
+                    <tr>
+                      <th scope="row"><a [routerLink]="projectLink(r.id)">{{ r.title }}</a><small>{{ r.priorityLabel }}</small></th>
+                      <td><span class="mp-pill" [attr.data-tone]="healthTone(r.health)">{{ r.statusLabel }}</span><small>{{ r.healthLabel }}</small></td>
+                      <td>@if (r.repere.processus) {<span class="mp-code">{{ r.repere.processus }}</span>}{{ r.repere.label }}</td>
+                      <td><span class="mp-bar" role="img" [attr.aria-label]="r.completion + ' % fait'"><i [style.width.%]="r.completion"></i></span><small>{{ r.completion }} %</small></td>
+                      <td>{{ r.openTaskCount }} ouverte{{ r.openTaskCount > 1 ? 's' : '' }} / {{ r.taskCount }}@if (r.lateTaskCount) {<small class="late">{{ r.lateTaskCount }} en retard</small>}</td>
+                      <td>{{ r.dueDate ? shortDate(r.dueDate) : '—' }}@if (r.daysLeft !== null && r.health !== 'done') {<small>{{ r.daysLeft < 0 ? 'dépassée de ' + (-r.daysLeft) + ' j' : 'dans ' + r.daysLeft + ' j' }}</small>}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="mp-panel" aria-labelledby="mp-par-etat">
+            <div class="mp-panel-head"><h2 id="mp-par-etat">Projets par état</h2><p class="mp-muted">L’état d’un projet suit celui de ses tâches.</p></div>
+            <div class="mp-lanes">
+              @for (g of byStatus(); track g.status) {
+                <section class="mp-lane" [attr.aria-label]="g.label">
+                  <h3>{{ g.label }} <span>{{ g.projets.length }}</span></h3>
+                  @for (p of g.projets; track p.project.id) {
+                    <a class="mp-card" [routerLink]="projectStatusLink(p)"><strong>{{ p.project.title }}</strong><small>{{ p.view.doneCount }} / {{ p.view.taskIds.length }} tâches terminées · {{ p.view.completionPercent }} %</small></a>
+                  }
+                </section>
+              }
+            </div>
+          </section>
+        }
+
+        <section class="mp-panel" aria-labelledby="mp-taches">
+          <div class="mp-panel-head"><h2 id="mp-taches">Tâches par état</h2><p class="mp-muted">Changer l’état d’une tâche met à jour celui de son projet.</p></div>
+          <div class="mp-board">
+            @for (col of board(); track col.id) {
+              <section class="mp-lane" [attr.data-status]="col.id" [attr.aria-label]="col.label">
+                <h3>{{ col.label }} <span>{{ col.cards.length }}</span></h3>
+                @for (c of col.cards; track c.view.task.id) {
+                  <article class="mp-card" [class.late]="c.late">
+                    <a [routerLink]="taskLink(c.view)"><strong>{{ c.view.task.title }}</strong></a>
+                    <small>{{ c.view.projectTitle ?? 'Sans projet' }} · @if (c.view.task.dueDate) {{{ shortDate(c.view.task.dueDate) }}@if (c.late) { · en retard}} @else {sans échéance}</small>
+                    <div class="mp-moves" role="group" aria-label="Changer l’état">
+                      @for (n of neighbours(c.view.task.status); track n.id) { <button type="button" [disabled]="busy()" (click)="move(c.view, n.id)">{{ n.label }}</button> }
+                    </div>
+                  </article>
+                } @empty { <p class="mp-muted">Aucune tâche.</p> }
+              </section>
+            }
+          </div>
+        </section>
+
+        <section class="mp-panel" aria-labelledby="mp-rattacher">
+          <div class="mp-panel-head"><h2 id="mp-rattacher">Rattacher des tâches à un projet</h2><p class="mp-muted">Une tâche peut naître seule ; on la rattache ensuite à un projet, une ou plusieurs à la fois.</p></div>
+          <div class="mp-attach">
+            <label>Projet
+              <select [value]="target()" (change)="target.set($any($event.target).value)">
+                <option value="">Choisir un projet</option>
+                @for (r of rows(); track r.id) { <option [value]="r.id">{{ r.title }}</option> }
+              </select>
+            </label>
+            <div class="mp-attach-cols">
+              <fieldset>
+                <legend>Tâches sans projet ({{ orphans().length }})</legend>
+                @for (t of orphans(); track t.task.id) {
+                  <label class="mp-check"><input type="checkbox" [checked]="picked().has(t.task.id)" (change)="pick(t.task.id, $any($event.target).checked)" /> {{ t.task.title }}</label>
+                } @empty { <p class="mp-muted">Toutes les tâches ont un projet.</p> }
+                <button type="button" class="mp-btn primary" [disabled]="busy() || !target() || !picked().size" (click)="attachPicked()">Rattacher{{ picked().size ? ' (' + picked().size + ')' : '' }}</button>
+              </fieldset>
+              <fieldset>
+                <legend>@if (target()) {Tâches de « {{ targetTitle() }} » ({{ targetTasks().length }})} @else {Tâches du projet}</legend>
+                @for (t of targetTasks(); track t.task.id) {
+                  <div class="mp-attached"><span>{{ t.task.title }}</span>@if (t.pathways.canChangeProject) {<button type="button" class="mp-link" [disabled]="busy()" (click)="detach(t)">Détacher</button>}</div>
+                } @empty { <p class="mp-muted">{{ target() ? 'Aucune tâche rattachée.' : 'Choisissez un projet pour voir ses tâches.' }}</p> }
+              </fieldset>
+            </div>
+          </div>
+        </section>
+
+        <section class="mp-panel" aria-labelledby="mp-themes">
+          <div class="mp-panel-head"><h2 id="mp-themes">Les 7 thèmes PRINCE2</h2><p class="mp-muted">Ce qu’il faut traiter tout au long du projet.</p></div>
+          <div class="mp-theme-grid">
+            @for (t of themes; track t.id) {
+              <a class="mp-theme-card" [routerLink]="[]" [queryParams]="{ theme: t.id }" queryParamsHandling="merge">
+                <span class="mp-step-num">{{ t.numero }}</span>
+                <strong>{{ t.nom }}</strong>
+                <small>{{ t.question }}</small>
+              </a>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  </div>
+</div>

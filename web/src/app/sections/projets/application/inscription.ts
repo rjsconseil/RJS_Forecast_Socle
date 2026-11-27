@@ -9,9 +9,13 @@ export const INSCRIPTION: InscriptionApplication = {
   cle: 'projets',
   section: 'projets',
   pages: [
+    // L'application autonome Mes projets : gestion de projet selon PRINCE2 (accueil, puis les 7 thèmes).
+    { slug: 'mes-projets', label: 'Mes projets', ecran: () => import('./gestion-projet.page').then(m => m.ProjetsGestionProjetPage), mobile: true },
     { slug: 'pilotage', label: 'Pilotage', ecran: () => import('./pilotage.page').then(m => m.ProjetsPilotagePage), mobile: true },
   ],
   actions: [
+    { page: 'mes-projets', label: 'Créer un projet', query: { saisie: 'projet' } },
+    { page: 'mes-projets', label: 'Créer une tâche', query: { saisie: 'tache' } },
     { page: 'pilotage', label: 'Créer un projet de la vie', query: { editProject: 'new' }, vers: 'projets' },
     { page: 'pilotage', label: 'Créer une tâche', query: { editTask: 'new' }, vers: 'taches' },
   ],
