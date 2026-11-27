@@ -697,14 +697,14 @@ sur toute déclaration toujours écrasée.
   le pool de libuv et ne bloque plus les autres requêtes (test). Le changement d'identifiants vérifie le mot de passe
   actuel avant l'écriture, puis l'écriture refuse (`STALE_VERSION`) si l'empreinte a changé entre-temps.
 - **Gros écrans** : la fiche projet passe de 1 341 à 967 lignes de gabarit. La fenêtre de la tâche
-  (`project-task-panel`) et le centre de commande (`project-command-center`) sont des composants à part qui lisent la
-  page par `PROJECT_PAGE` (`project-page-host.ts`) : la page se fournit elle-même, et seuls ses membres publics leur
-  sont accessibles (vérifié par `strictTemplates`). Les gabarits partagés avec les cartes (statut, argent, temps,
-  parcours de financement) restent dans la page et arrivent par l'entrée `views` : rendus dans la page, ils gardent ses
-  styles. Le calendrier passe de 1 002 à 828 lignes : l'encadré « Votre calendrier, vos repères »
-  (`calendar-personalization`) lit le calendrier par `CALENDAR`. Les nouveaux composants reprennent les feuilles de
-  leur hôte, sans boîte propre (`display: contents`). Empreintes identiques ; `style-fingerprint` mesure en plus la
-  fenêtre d'une tâche, et `calendar-views-fingerprint` accepte `FP_IGNORE`.
+  (`project-task-panel`) et le centre de commande (`project-command-center`, retiré depuis : voir §22) sont des
+  composants à part qui lisent la page par `PROJECT_PAGE` (`project-page-host.ts`) : la page se fournit elle-même, et
+  seuls ses membres publics leur sont accessibles (vérifié par `strictTemplates`). Les gabarits partagés avec les cartes
+  (statut, argent, temps, parcours de financement) restent dans la page et arrivent par l'entrée `views` : rendus dans
+  la page, ils gardent ses styles. Le calendrier passe de 1 002 à 828 lignes : l'encadré « Votre calendrier, vos
+  repères » (`calendar-personalization`) lit le calendrier par `CALENDAR`. Les nouveaux composants reprennent les
+  feuilles de leur hôte, sans boîte propre (`display: contents`). Empreintes identiques ; `style-fingerprint` mesure en
+  plus la fenêtre d'une tâche, et `calendar-views-fingerprint` accepte `FP_IGNORE`.
 - **Recouvrements retirés des autres feuilles** : même passe que §20 sur les 32 autres feuilles globales (554 lignes,
   790 lignes retirées avec les règles vidées). `styles-cascade.mjs retire` lit maintenant le SCSS avec `postcss-scss`
   (commentaires `//`, variables). Volume : 27 132 lignes ; feuille globale 549 ko (571 avant). Empreintes identiques
@@ -712,3 +712,20 @@ sur toute déclaration toujours écrasée.
 - **Couverture du site** : tests des aperçus du calendrier (`calendar-peeks.spec.ts`) ; plancher de la CI remonté à
   68 % des lignes, 64 % des instructions, 61 % des fonctions et 58 % des branches.
 
+## 22. Retrait du centre de commande de la fiche projet — 27 novembre 2026
+
+Le centre de commande de la fiche projet (« Du suivi à l'action » : tâche à piloter, prochains flux, cadrans de la part
+d'enveloppe et des temps) ne s'affichait nulle part : les écrans BPM ne sont montés que dans Astra, qui fournit
+`BPM_PROJECT_DETAIL_PANELS = false`. Il est retiré, sur décision du 27/11/2026, avec tout ce qui ne servait qu'à lui :
+
+- le composant `project-command-center` (gabarit, feuille de 489 lignes) ;
+- 24 membres de la page (`commandTask`, `commandCharges`, `commandStats`, `focusTasks`, `applyCommandShare`,
+  `applyCommandTime`, etc.) et les brouillons des cadrans (`task-command-drafts.ts`) ;
+- le cadran `bpm-dial` (`bpm/ui/dial.ts`), qui n'avait pas d'autre utilisateur.
+
+Les deux règles encore utiles de l'ancienne feuille sont gardées telles quelles : les boutons de statut d'une tâche
+(`project-task-status.scss`, pour le gabarit `#taskStatusButtons` de la page) et la barre de commande de la fenêtre
+d'une tâche (`project-task-panel.scss`). Les 11 membres de la page rendus publics pour le seul centre de commande
+redeviennent protégés. Les mêmes gestes restent testés depuis la fenêtre de la tâche (statut, dates et temps,
+dépense, gain). Le drapeau `BPM_PROJECT_DETAIL_PANELS` cache encore, dans Astra, la note de portée et le détail
+« Ventilation et cycle actuel » de la fiche. Rendu identique sur les 50 vues d'Astra, fenêtre d'une tâche comprise.

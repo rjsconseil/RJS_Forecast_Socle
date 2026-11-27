@@ -113,25 +113,25 @@ async function setup(render = false, workspaceKey?: string, initialQuery: Record
 }
 
 describe('cockpit du projet', () => {
-  it('expose les commandes de la tâche choisie et conserve son contexte pour une dépense ou un gain', async () => {
+  it('fenêtre de la tâche : ses commandes gardent la tâche pour la planification, une dépense ou un gain', async () => {
     const { fixture, page, api, bpm } = await setup(true);
     fixture.detectChanges();
-    const root = fixture.nativeElement as HTMLElement;
-    const cockpit = root.querySelector('.project-command-center')!;
-    const select = cockpit.querySelector<HTMLSelectElement>('#project-command-task')!;
-    select.value = 'tsk_2';
-    select.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-    expect(page.commandTask().task.title).toBe('Commander les matériaux');
-    const button = (label: string) => [...cockpit.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent?.trim() === label)!;
-    button('Planifier / saisir le temps').click();
+    await fixture.whenStable();
+    const command = (label: string) => {
+      page.openTaskId.set('tsk_2');
+      fixture.detectChanges();
+      const bar = fixture.nativeElement.querySelector('bpm-project-task-panel .task-panel-command-bar') as HTMLElement;
+      [...bar.querySelectorAll<HTMLButtonElement>('button')].find((b) => b.textContent?.trim() === label)!.click();
+      fixture.detectChanges();
+    };
+    command('Dates et temps');
     expect(page.taskEditorId()).toBe('tsk_2');
     page.taskEditorId.set('');
-    button('＋ Dépense').click();
+    command('＋ Dépense');
     expect(page.expenseTaskId()).toBe('tsk_2');
     expect(page.expenseDirection()).toBe('charge');
     page.closeExpense();
-    button('＋ Gain / remboursement').click();
+    command('＋ Gain');
     expect(page.expenseTaskId()).toBe('tsk_2');
     expect(page.expenseDirection()).toBe('income');
     expect(page.entryId()).toBe('new');
@@ -139,29 +139,13 @@ describe('cockpit du projet', () => {
     expect(bpm.allocate).not.toHaveBeenCalled();
   });
 
-  it('recalcule la tâche du cockpit et les flux quand la sélection change, sans conserver une cible masquée', async () => {
-    const { page, state } = await setup();
-    state.tasks[0].task.status = 'blocked';
-    page.data.set({ ...state, charges: [
-      { id: 'one', taskId: 'tsk_1', plannedDate: '2026-11-01', settled: false },
-      { id: 'two', taskId: 'tsk_2', plannedDate: '2026-11-02', settled: false },
-      { id: 'legacy', taskId: null, plannedDate: '2026-10-01', settled: false },
-      { id: 'paid', taskId: 'tsk_1', plannedDate: '2026-10-02', settled: true },
-    ] });
-    page.commandTaskId.set('tsk_2');
-    page.focusTasks('blocked');
-    expect(page.commandStats().blocked).toBe(1);
-    expect(page.commandTask().task.id).toBe('tsk_1');
-    expect(page.commandCharges().map((c: any) => c.id)).toEqual(['one']);
-    page.query.set('introuvable');
-    expect(page.commandTask()).toBeNull();
-    expect(page.commandCharges()).toEqual([]);
-  });
-
-  it('change réellement le statut depuis le cockpit avec la révision de la tâche choisie', async () => {
-    const { fixture, api } = await setup(true);
+  it('change réellement le statut depuis la fenêtre de la tâche, avec la révision de cette tâche', async () => {
+    const { fixture, page, api } = await setup(true);
     fixture.detectChanges();
-    const status = fixture.nativeElement.querySelector('.project-command-center button[data-status="doing"]') as HTMLButtonElement;
+    await fixture.whenStable();
+    page.openTaskId.set('tsk_1');
+    fixture.detectChanges();
+    const status = fixture.nativeElement.querySelector('bpm-project-task-panel .task-status-buttons button[data-status="doing"]') as HTMLButtonElement;
     status.click();
     await fixture.whenStable();
     expect(api.changeTaskStatus).toHaveBeenCalledExactlyOnceWith('tsk_1', 'doing', 3);
