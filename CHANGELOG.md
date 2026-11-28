@@ -3,6 +3,17 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : dossiers de travail séparés, poste de travail à côté du site réel — 28 novembre 2026
+
+Évolution en **mode socle** (outillage et documentation), sans effet sur le site.
+- Un dossier par niveau, chacun un `git worktree` du dépôt : le site réel (`~/Developer/RJS_Forecast_Socle`, `main`,
+  aucun développement ni test), le grand noyau (`~/Developer/RJS_Forecast_Travail/socle`), et une application par
+  dossier (`~/Developer/RJS_Forecast_Travail/app-projets`). Voir `docs/sections/README.md`, « Dossiers de travail ».
+- `npm run app -- <clé>` prend ses propres ports (API 3510, site 4500, puis les suivants libres ; `APP_API_PORT` et
+  `APP_WEB_PORT` les imposent). Son site parle à son API par un relais propre au lancement. Il tourne donc à côté du
+  site réel (3410 / 4300).
+- `docs/socle/README.md` : la ligne du 28/11 « Zone Applications autonomes » est remise dans le tableau « Ajouts au socle ».
+
 ## Grand noyau (socle) : à la clôture, un dépassement de plafond est un fait marquant, pas une incohérence — 28 novembre 2026
 
 Évolution en **mode socle** (contrôles de clôture BPM, page « Clôture du cycle »).

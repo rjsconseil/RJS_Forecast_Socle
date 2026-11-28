@@ -2,28 +2,39 @@
 // (le jeu commun, puis ceux que l'application déclare dans son inscription). Tes vraies données ne sont jamais lues
 // ni écrites ; la base temporaire disparaît à l'arrêt (Ctrl+C).
 //
-//   npm run app -- projets            API sur http://localhost:3410, site sur http://localhost:4300
+//   npm run app -- projets            API sur http://localhost:3510, site sur http://localhost:4500
+//
+// Ports à part de ceux du site réel (3410 / 4300) : le poste de travail tourne à côté du site en production. S'ils sont
+// pris (un autre dossier de travail lance déjà son poste), les suivants libres sont choisis. APP_API_PORT et
+// APP_WEB_PORT les imposent.
 //
 // L'API redémarre seule quand api/src change, le site se recharge seul : on code et on débogue l'application,
 // puis on rejoue ses tests (npm run test:app -- projets) et ses parcours (npm run e2e:app -- projets).
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { inscriptionOf, root } from './inscriptions.mjs';
 
 const app = await inscriptionOf(process.argv[2]);
-const apiPort = Number(process.env.J1_API_PORT ?? 3410);
-const webPort = 4300;
 const ng = join(root, 'web/node_modules/@angular/cli/bin/ng.js');
 const stop = (message) => { console.error(`\n✖ ${message}\n`); process.exit(1); };
 if (!existsSync(ng)) stop('Les dépendances du site manquent. Depuis ce dossier, lancez d’abord :\n\n    npm install --prefix web');
 const listens = (port, host) => new Promise((res) => { const s = createServer().once('error', () => res(false)).once('listening', () => s.close(() => res(true))).listen(port, host); });
-for (const port of [apiPort, webPort]) {
-  if (!(await listens(port)) || !(await listens(port, '127.0.0.1'))) stop(`Le port ${port} est déjà utilisé : arrêtez le lancement précédent (npm start ou npm run app) puis relancez.`);
+const free = async (port) => (await listens(port)) && (await listens(port, '127.0.0.1'));
+/** Premier port libre à partir de `from` (jamais ceux du site réel, 3410 et 4300). */
+async function portFrom(from, fixed) {
+  if (fixed) {
+    if (!(await free(Number(fixed)))) stop(`Le port ${fixed} est déjà utilisé.`);
+    return Number(fixed);
+  }
+  for (let p = from; p < from + 50; p++) if (p !== 3410 && p !== 4300 && (await free(p))) return p;
+  return stop(`Aucun port libre entre ${from} et ${from + 49}.`);
 }
+const apiPort = await portFrom(3510, process.env.APP_API_PORT);
+const webPort = await portFrom(4500, process.env.APP_WEB_PORT);
 
 const dir = await mkdtemp(join(tmpdir(), `socle-app-${app.cle}-`));
 const dataFile = join(dir, 'essai.sqlite');
@@ -68,8 +79,8 @@ try {
   console.log(`Application « ${app.cle} » (${app.dossier}) sur une base temporaire : ${dataFile}`);
   // 1. Jeu commun, par les contrats HTTP (API de recette), puis les jeux de l'application, API arrêtée (un seul écrivain).
   let api = start('api', ['api/src/server.mjs']);
-  await waitFor(`http://127.0.0.1:${apiPort}/api/health`);
-  await run('Jeu d’essai commun', ['api/scripts/seed.mjs'], { ...apiEnv, J1_API_URL: `http://127.0.0.1:${apiPort}` });
+  await waitFor(`http://localhost:${apiPort}/api/health`);
+  await run('Jeu d’essai commun', ['api/scripts/seed.mjs'], { ...apiEnv, J1_API_URL: `http://localhost:${apiPort}` });
   if (app.essais?.length) {
     await new Promise((r) => { api.once('exit', r); api.kill('SIGTERM'); });
     for (const essai of app.essais) await run(`Jeu d’essai ${essai}`, [essai, '--data', dataFile]);
@@ -77,8 +88,11 @@ try {
   // 2. Le poste de travail : l'API qui redémarre quand api/src change, le site qui se recharge seul.
   api = start('api', ['--watch-path=' + join(root, 'api/src'), '--watch-preserve-output', 'api/src/server.mjs']);
   api.keep = true;
-  await waitFor(`http://127.0.0.1:${apiPort}/api/health`);
-  const site = start('site', [ng, 'serve'], { cwd: join(root, 'web'), env: { ...process.env, NG_CLI_ANALYTICS: 'false' } });
+  await waitFor(`http://localhost:${apiPort}/api/health`);
+  // Le site de travail parle à l'API de travail : un relais propre à ce lancement (jamais celui du site réel).
+  const proxy = join(dir, 'proxy.conf.json');
+  await writeFile(proxy, JSON.stringify({ '/api': { target: `http://localhost:${apiPort}`, secure: false } }));
+  const site = start('site', [ng, 'serve', '--port', String(webPort), '--proxy-config', proxy], { cwd: join(root, 'web'), env: { ...process.env, NG_CLI_ANALYTICS: 'false' } });
   site.keep = true;
   const first = app.pages[0]?.slug;
   console.log(`\n✓ Prêt dans un instant : http://localhost:${webPort}/bpm-astra${first ? '/' + first : ''}`
