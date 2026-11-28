@@ -7,7 +7,7 @@ import { sum } from './format.mjs';
 
 /** `h` : outils du module BPM ; `kit` : contexte commun des lectures (reads.mjs). */
 export function createCenterReads(socle, h, kit) {
-  const { budget, base, contextOf, statusOf, decorate, validatedProjectLines, capsRead, summary } = kit;
+  const { budget, base, contextOf, statusOf, decorate, validatedProjectLines, capsRead } = kit;
 
   // ---------- centres et entrées ----------
 

@@ -14,7 +14,7 @@ import { AlertTone, BpmClosingBoxes, BpmClosingTable, worst } from './closing-ki
 import { BpmClosingJournal, whenOf } from './closing-journal';
 import { BpmClosingResolution, ChecksBaseline, checkTone, ClosingFix } from './closing-resolution';
 import { BpmClosingCap, BpmClosingDecision } from './closing-dialogs';
-import { BlockingPoint, checkBoxes, checkColumns, closeBoxes, closeConditions, closeTone, isUrgent, nextBoxes, pathBoxes, pathColumns, pct, plural, resultBoxes, resultTone, shortDay } from './closing-boxes';
+import { BlockingPoint, checkBoxes, checkColumns, closeBoxes, closeConditions, closeTone, isUrgent, nextBoxes, pathBoxes, pathColumns, pct, plural, resultBoxes, resultTone } from './closing-boxes';
 
 const STEP_TEXT: Record<ClosingGroup, string> = {
   income: 'Chaque entrée prévue du cycle est reçue, écartée parce qu’elle n’aura pas lieu, ou revue dans un cycle à venir.',

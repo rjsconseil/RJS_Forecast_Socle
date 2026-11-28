@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { BpmApi } from '../data/bpm-api.service';
 import { ClosingActions, ClosingChecks, ClosingJourney, ClosingPoint } from '../data/bpm-closing.models';
