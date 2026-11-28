@@ -168,7 +168,11 @@ export interface Recurrence {
   settlementIds: string[];
   revision: number;
   monthlyAverageCents?: number;
+  /** Budget type : échéances déjà réglées qui comptent dans le cycle en cours (à corriger avec la ligne, sur demande). */
+  settledInCycle?: SettledInCycle[];
 }
+
+export interface SettledInCycle { operationId: string; label: string; occurrenceDate: string; realizedDate: string; realizedCents: number }
 
 export interface LineDetail {
   context: BpmContextInfo;

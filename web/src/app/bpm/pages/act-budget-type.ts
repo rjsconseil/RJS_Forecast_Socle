@@ -2,7 +2,7 @@ import { BpmAmount } from '../ui/amount';
 import { Component, computed, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toApiError } from '../../core/api.service';
 import { BpmApi } from '../data/bpm-api.service';
-import { Cadence, Direction, Recurrence } from '../data/bpm-models';
+import { Cadence, Direction, Recurrence, SettledInCycle } from '../data/bpm-models';
 import { cents, CentsPipe, parseAmount, ShortDatePipe, signedCents } from '../../core/format';
 import { MetricTile, MetricTilesComponent } from '../../shared/metric-tiles.component';
 import { bpmLoader, BpmRefresh, BpmState, newRequestKey } from '../ui';
@@ -28,6 +28,10 @@ interface RowDraft {
   error: string | null;
   /** Brouillon conservé après un échec : n'est pas écrasé par la relecture. */
   kept: boolean;
+  /** Échéances déjà réglées dans le cycle en cours. */
+  settled: SettledInCycle[];
+  /** Réponse à « corriger aussi le montant déjà reçu / payé ce cycle ? » (non par défaut). */
+  alsoSettled: boolean;
 }
 interface NewDraft {
   key: string;
@@ -40,6 +44,7 @@ interface NewDraft {
   error: string | null;
 }
 
+const shortDay = (ymd: string) => ymd.split('-').reverse().join('/');
 const euroText = (c: number) => String(c / 100).replace('.', ',');
 const toCents = (raw: string) => {
   const a = parseAmount(raw);
@@ -169,6 +174,13 @@ const toCents = (raw: string) => {
                           <button type="button" class="btn btn-secondary small" (click)="resetRow(r.id)">Reprendre la version enregistrée</button>
                         } @else if (isDirty(r)) {
                           <span class="chip warn">modifiée</span>
+                        }
+                        @if (isDirty(r) && settledToFix(r).length) {
+                          <span class="bt-settled" role="group" [attr.aria-label]="'Échéance déjà réglée de ' + r.orig.label">
+                            <span>{{ settledNotice(r) }}</span>
+                            <label><input type="checkbox" [checked]="r.alsoSettled" (change)="patch(r.id, { alsoSettled: $any($event.target).checked })" />
+                              Corriger aussi le montant {{ r.direction === 'income' ? 'reçu' : 'payé' }} ce cycle</label>
+                          </span>
                         }
                         @if (isDirty(r)) {
                           <span class="bt-row-actions">
@@ -319,6 +331,8 @@ export class BpmActBudgetType {
       revision: l.revision,
       error: null,
       kept: false,
+      settled: l.settledInCycle ?? [],
+      alsoSettled: false,
     };
   }
 
@@ -328,6 +342,23 @@ export class BpmActBudgetType {
 
   protected isDirty(r: RowDraft) {
     return r.label.trim() !== r.orig.label || toCents(r.amount) !== r.orig.amountCents || r.cadence !== r.orig.cadence;
+  }
+  /**
+   * Échéances réglées du cycle que la modification rendrait différentes de la ligne : la page propose alors de les
+   * corriger aussi (libellé et montant), sans le faire d'office.
+   */
+  protected settledToFix(r: RowDraft): SettledInCycle[] {
+    const amountCents = toCents(r.amount);
+    const label = r.label.trim();
+    return (r.settled ?? []).filter((s) =>
+      (amountCents !== null && amountCents > 0 && amountCents !== r.orig.amountCents && s.realizedCents !== amountCents) ||
+      (label && label !== r.orig.label && s.label !== label));
+  }
+  protected settledNotice(r: RowDraft) {
+    const list = this.settledToFix(r);
+    const verb = r.direction === 'income' ? 'reçue' : 'payée';
+    const dates = list.map((s) => `du ${shortDay(s.occurrenceDate)} (${cents(s.realizedCents)})`).join(', ');
+    return list.length === 1 ? `L'échéance ${dates} est déjà ${verb} dans ce cycle.` : `Les échéances ${dates} sont déjà ${verb}s dans ce cycle.`;
   }
   protected pendingCount = computed(() => this.rows().filter((r) => this.isDirty(r)).length + this.news().length);
 
@@ -429,9 +460,11 @@ export class BpmActBudgetType {
     if (r.label.trim() !== r.orig.label) body['label'] = r.label.trim();
     if (amountCents !== r.orig.amountCents) body['amount'] = amountCents / 100;
     if (r.cadence !== r.orig.cadence) body['cadence'] = r.cadence;
+    const period = this.bt.data()?.context.period;
+    if (r.alsoSettled && period && this.settledToFix(r).length) body['alsoSettled'] = { from: period.start, to: period.end };
     try {
       const { recurrence } = await this.bpm.updateRecurrence(r.id, body);
-      this.patch(r.id, { error: null, kept: false, revision: recurrence?.revision ?? r.revision, orig: { label: r.label.trim(), amountCents, cadence: r.cadence } });
+      this.patch(r.id, { error: null, kept: false, alsoSettled: false, revision: recurrence?.revision ?? r.revision, orig: { label: r.label.trim(), amountCents, cadence: r.cadence } });
       return true;
     } catch (e) {
       const err = toApiError(e);
@@ -462,11 +495,12 @@ export class BpmActBudgetType {
     if (this.busy() || this.savingRow()) return;
     this.savingRow.set(r.id);
     this.message.set(null);
+    const fixed = r.alsoSettled && this.settledToFix(r).length > 0;
     const ok = await this.persistRow(r);
     this.savingRow.set(null);
     if (ok) {
       this.refresh.bump();
-      this.message.set(`« ${r.label.trim()} » enregistrée.`);
+      this.message.set(`« ${r.label.trim()} » enregistrée` + (fixed ? `, avec le montant ${r.direction === 'income' ? 'reçu' : 'payé'} ce cycle.` : '.'));
     }
   }
 

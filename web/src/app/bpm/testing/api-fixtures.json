@@ -537,7 +537,8 @@
     "categoryLabel": null,
     "budgetName": "Projet de vie",
     "settlementIds": [],
-    "monthlyAverageCents": 90000
+    "monthlyAverageCents": 90000,
+    "settledInCycle": []
    },
    {
     "id": "rec_009",
@@ -572,7 +573,8 @@
     "categoryLabel": null,
     "budgetName": "Projet de vie",
     "settlementIds": [],
-    "monthlyAverageCents": 260000
+    "monthlyAverageCents": 260000,
+    "settledInCycle": []
    }
   ],
   "averageIncomeCents": 260000,

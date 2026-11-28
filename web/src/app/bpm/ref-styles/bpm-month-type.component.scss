@@ -249,6 +249,22 @@ rjs-metric-tiles { display: block; min-width: 0; }
   line-height: 1.5;
 }
 
+// Échéance déjà réglée du cycle : la page propose de la corriger avec la ligne (case à cocher, non par défaut).
+.bm-row-note .bt-settled {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 8px 12px;
+  border-inline-start: 3px solid var(--status-warning);
+  border-radius: 0 8px 8px 0;
+  color: var(--ink);
+  background: var(--status-warning-surface);
+  line-height: 1.5;
+}
+.bm-row-note .bt-settled label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; }
+
 // Suppression : un bouton discret à droite de la ligne, rouge au survol.
 .bm-row-del { display: flex; justify-content: flex-end; }
 .bm-del {
