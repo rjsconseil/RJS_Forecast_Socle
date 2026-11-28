@@ -3,6 +3,15 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Mes projets · présentation simple — 28 novembre 2026
+
+Évolution en **mode application** (Mes projets seulement).
+- On garde le **bandeau mauve** (titre, « Why? » et but du thème, New project / New task, onglets 00 à 07).
+- **Overview** : plus aucune donnée de projet (chiffres clés, tableau, tableaux par état et rattachement retirés). La
+  page liste la séquence des processus PRINCE2.
+- **Pages de thème** : « Where the theme applies », puis la liste simple des processus du thème (ce que le thème demande
+  à chacun). Registres, produits et pagination retirés de l'écran ; le composant de registre reste dans l'application.
+
 ## Grand noyau (socle) : les applications autonomes sans barre de parcours — 28 novembre 2026
 
 Évolution en **mode socle**, BPM-Astra inchangé.
