@@ -49,7 +49,7 @@ describe('Mes projets · application de gestion de projet (PRINCE2)', () => {
   it('accueil : le nom de la section, la navigation des 7 thèmes, l’état des lieux et la séquence', async () => {
     const { el } = await render([project('prj_1', 'Lancement', 'active')], [task('tsk_1', 'prj_1', 'doing'), task('tsk_2', null, 'todo')]);
     expect(el.querySelector('h1')?.textContent).toBe('Project management');
-    expect(el.querySelector('.mp-eyebrow')?.textContent).toContain('My Projects');
+    expect(el.querySelector('.mp-app-name')?.textContent).toContain('My Projects');
     expect(el.querySelectorAll('.mp-tabs a')).toHaveLength(8);
     expect(el.querySelector('.mp-tabs a.is-current')?.textContent).toContain('Overview');
     expect([...el.querySelectorAll('.mp-facts dd')].map((s) => s.textContent)).toEqual(['1', '0', '2', '1', '0 %']);
@@ -117,7 +117,7 @@ describe('Mes projets · application de gestion de projet (PRINCE2)', () => {
 
   it('un thème : son but, ses processus associés dans l’ordre, ses livrables, et le thème suivant', async () => {
     const { f, el } = await render([], [], '/?theme=risque');
-    expect(el.querySelector('h1')?.textContent).toBe('Risk');
+    expect(el.querySelector('h1')?.firstChild?.textContent?.trim()).toBe('Risk');
     expect(el.querySelector('.mp-question')?.textContent).toBe('What if?');
     expect(el.querySelector('.mp-intro')?.textContent).toContain('Identify, assess and control uncertainty');
     expect([...el.querySelectorAll('.mp-step h3')].map((h) => h.firstChild?.textContent?.trim())).toEqual(['Starting up a Project', 'Directing a Project', 'Initiating a Project', 'Controlling a Stage', 'Managing a Stage Boundary']);
@@ -127,6 +127,6 @@ describe('Mes projets · application de gestion de projet (PRINCE2)', () => {
     expect(el.querySelector('.mp-pager')?.textContent).toContain('Change →');
     await TestBed.inject(Router).navigateByUrl('/?theme=progression');
     await settle(f);
-    expect(el.querySelector('h1')?.textContent).toBe('Progress');
+    expect(el.querySelector('h1')?.firstChild?.textContent?.trim()).toBe('Progress');
   });
 });

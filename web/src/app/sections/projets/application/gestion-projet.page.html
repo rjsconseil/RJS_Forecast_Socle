@@ -1,30 +1,44 @@
 <div class="mp">
-  <!-- Bandeau de l'application, au style des pages du socle : titre, gestes de création, puis les onglets (accueil et 7 thèmes). -->
-  <header class="mp-hero">
-    <div class="mp-hero-top">
-      <div class="mp-hero-text">
-        @if (theme(); as t) {
-          <p class="mp-eyebrow">My Projects · Theme {{ t.numero }} of 7</p>
-          <h1>{{ t.nom }}</h1>
-          <p class="mp-intro"><span class="mp-question">{{ t.question }}</span> {{ t.but }}</p>
-        } @else {
-          <p class="mp-eyebrow">My Projects · PRINCE2</p>
-          <h1>Project management</h1>
-          <p class="mp-intro">Follow your projects and their tasks, then run each project through the seven PRINCE2 themes.</p>
-        }
+  <!-- Barre de l'application My Projects : son identité (marque, nom, méthode), ses gestes de création et ses onglets. -->
+  <header class="mp-app">
+    <div class="mp-app-bar">
+      <div class="mp-brand">
+        <span class="mp-logo" aria-hidden="true">MP</span>
+        <div>
+          <p class="mp-app-name">My Projects</p>
+          <p class="mp-app-sub">PRINCE2 project management</p>
+        </div>
       </div>
       <div class="mp-hero-actions">
-        <button type="button" class="mp-hero-btn" [attr.aria-expanded]="panneau() === 'projet'" (click)="toggle('projet')">New project</button>
-        <button type="button" class="mp-hero-btn" [attr.aria-expanded]="panneau() === 'tache'" (click)="toggle('tache')">New task</button>
+        <button type="button" class="mp-hero-btn primary" [attr.aria-expanded]="panneau() === 'projet'" (click)="toggle('projet')">+ New project</button>
+        <button type="button" class="mp-hero-btn" [attr.aria-expanded]="panneau() === 'tache'" (click)="toggle('tache')">+ New task</button>
       </div>
     </div>
     <nav class="mp-tabs" aria-label="My Projects navigation">
-      <a [class.is-current]="!theme()" [attr.aria-current]="!theme() ? 'page' : null" [routerLink]="[]" [queryParams]="{ theme: null }" queryParamsHandling="merge"><b>00</b> Overview</a>
+      <a [class.is-current]="!theme()" [attr.aria-current]="!theme() ? 'page' : null" [routerLink]="[]" [queryParams]="{ theme: null }" queryParamsHandling="merge"><b>◎</b><span>Overview</span></a>
       @for (t of themes; track t.id) {
-        <a [class.is-current]="theme()?.id === t.id" [attr.aria-current]="theme()?.id === t.id ? 'page' : null" [routerLink]="[]" [queryParams]="{ theme: t.id }" queryParamsHandling="merge"><b>0{{ t.numero }}</b> {{ t.nom }}</a>
+        <a [class.is-current]="theme()?.id === t.id" [attr.aria-current]="theme()?.id === t.id ? 'page' : null" [routerLink]="[]" [queryParams]="{ theme: t.id }" queryParamsHandling="merge"><b>{{ t.numero }}</b><span>{{ t.nom }}</span></a>
       }
     </nav>
   </header>
+
+  <!-- Titre de la vue : l'état des lieux, ou le thème ouvert. -->
+  <section class="mp-hero" [class.is-theme]="!!theme()">
+    @if (theme(); as t) {
+      <span class="mp-hero-num" aria-hidden="true">0{{ t.numero }}</span>
+      <div class="mp-hero-text">
+        <p class="mp-eyebrow">Theme {{ t.numero }} of 7</p>
+        <h1>{{ t.nom }} <span class="mp-question">{{ t.question }}</span></h1>
+        <p class="mp-intro">{{ t.but }}</p>
+      </div>
+    } @else {
+      <div class="mp-hero-text">
+        <p class="mp-eyebrow">Overview</p>
+        <h1>Project management</h1>
+        <p class="mp-intro">Follow your projects and their tasks, then run each project through the seven PRINCE2 themes.</p>
+      </div>
+    }
+  </section>
 
   <div class="mp-body">
     @if (failure(); as f) { <p class="mp-alert danger" role="alert">{{ f }}</p> }
@@ -94,7 +108,7 @@
         </div>
         <ol class="mp-steps">
           @for (u of themeProcessus(); track u.processus.id) {
-            <li class="mp-panel mp-step">
+            <li class="mp-step">
               <span class="mp-code">{{ u.processus.id }}</span>
               <div class="mp-step-body">
                 <h3>{{ u.processus.nom }} <small>{{ u.processus.moment }}</small></h3>

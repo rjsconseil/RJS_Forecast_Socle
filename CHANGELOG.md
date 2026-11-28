@@ -3,6 +3,14 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Mes projets · design propre à l'application — 28 novembre 2026
+
+Évolution en **mode application** (Mes projets seulement).
+- **Identité propre**, inspirée du socle sans le copier : bandeau d'application sarcelle avec logo « MP », gestes de
+  création à droite, onglets soulignés (Overview puis les 7 thèmes), en-tête de thème avec grand numéro et question.
+- **Blocs en cartes blanches**, chiffres clés à liseré de couleur, séquence PRINCE2 en frise horizontale, processus d'un
+  thème en frise verticale, produits en pastilles.
+
 ## Mes projets · style du socle, anglais et mise en page — 28 novembre 2026
 
 Évolution en **mode application** (Mes projets seulement).

@@ -2,20 +2,20 @@
 // chaque composant reprend donc ce fichier. Les jetons (--mp-*) sont posés par la page et hérités.
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .mp-muted { margin: 0; color: var(--mp-muted); font-size: 13px; }
-.mp-section { display: grid; gap: 12px; min-width: 0; }
-.mp-section-head { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--mp-line); }
-.mp-kicker { margin: 0; color: var(--mp-muted); font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.mp-section-head h2, .mp-panel h2 { margin: 0; font: 700 20px/1.3 var(--font-sans); letter-spacing: -.01em; }
-.mp-panel { display: grid; gap: 10px; padding: 16px 18px; border-radius: 10px; background: var(--mp-wash); min-width: 0; }
+.mp-section { display: grid; gap: 14px; min-width: 0; padding: 18px 20px 20px; border-radius: 14px; background: var(--mp-surface); box-shadow: var(--mp-shadow, 0 1px 2px rgb(15 23 42 / 6%)); }
+.mp-section-head { display: grid; gap: 2px; }
+.mp-kicker { margin: 0; color: var(--mp-brand, var(--mp-muted)); font-size: 11.5px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.mp-section-head h2, .mp-panel h2 { margin: 0; font: 750 19px/1.3 var(--font-sans); letter-spacing: -.015em; }
+.mp-panel { display: grid; gap: 10px; padding: 16px 18px; border-radius: 12px; background: var(--mp-wash); min-width: 0; }
 .mp-alert { margin: 0; padding: 10px 14px; border-radius: 8px; font-size: 13px; }
 .mp-alert.danger { color: var(--mp-danger); background: var(--status-danger-surface, #fef2f2); }
 .mp-alert.success { color: var(--mp-success); background: var(--status-success-surface, #f0fdf4); }
-.mp-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; padding: 0 14px; border: 1px solid var(--mp-line); border-radius: 8px; background: var(--mp-surface); color: var(--mp-ink); font: 600 13px/1.2 var(--font-sans); white-space: nowrap; cursor: pointer; }
+.mp-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; padding: 0 14px; border: 1px solid var(--mp-line); border-radius: 9px; background: var(--mp-surface); color: var(--mp-ink); font: 600 13px/1.2 var(--font-sans); white-space: nowrap; cursor: pointer; }
 .mp-btn.primary { border-color: var(--mp-accent); background: var(--mp-accent); color: #fff; }
 .mp-btn.small { min-height: 28px; padding: 0 10px; font-size: 12px; }
 .mp-btn:disabled { opacity: .55; cursor: default; }
 .mp-link { padding: 0; border: 0; background: none; color: var(--mp-accent); font: 600 12px/1.3 var(--font-sans); cursor: pointer; }
-.mp-code { display: inline-grid; place-items: center; min-width: 28px; height: 20px; padding: 0 5px; border-radius: 5px; background: var(--mp-accent); color: #fff; font: 700 11px/1 var(--font-mono, monospace); }
+.mp-code { display: inline-grid; place-items: center; min-width: 28px; height: 20px; padding: 0 6px; border-radius: 6px; background: var(--mp-accent); color: #fff; font: 700 11px/1 var(--font-mono, monospace); }
 .mp-inline { display: inline-flex; gap: 8px; align-items: flex-start; }
 .mp-inline .mp-code { flex: none; margin-top: 1px; }
 .mp-table-wrap { overflow-x: auto; }
