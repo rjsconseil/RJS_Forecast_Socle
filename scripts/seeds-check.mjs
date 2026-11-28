@@ -42,7 +42,7 @@ async function waitFor(url, ms = 15000) {
 let api;
 try {
   const port = await freePort();
-  const env = { J1_API_PORT: String(port), J1_DATA_FILE: join(dir, 'recette.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local' };
+  const env = { J1_API_PORT: String(port), J1_DATA_FILE: join(dir, 'recette.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_DATA_ENGINE: 'sqlite', SOCLE_PG_URL: '', SOCLE_AUTH: 'local' };
   api = spawn(process.execPath, ['api/src/server.mjs'], { cwd: root, env: { ...process.env, ...env }, stdio: 'ignore' });
   await waitFor(`http://localhost:${port}/api/health`);
   const seed = await run('npm run seed (API de recette)', ['api/scripts/seed.mjs'], { J1_API_PORT: String(port) });

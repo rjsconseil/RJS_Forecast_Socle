@@ -42,7 +42,7 @@ const dir = await mkdtemp(join(tmpdir(), 'rjs-e2e-'));
 const env = { ...process.env, J1_API_PORT: String(API_PORT) };
 delete env.SOCLE_TODAY;
 const api = spawn(process.execPath, [join(ROOT, 'api/src/server.mjs')], {
-  env: { ...env, J1_DATA_FILE: join(dir, 'store.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' },
+  env: { ...env, J1_DATA_FILE: join(dir, 'store.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_DATA_ENGINE: 'sqlite', SOCLE_PG_URL: '', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' },
   stdio: ['ignore', 'ignore', 'pipe'],
 });
 api.stderr.on('data', (c) => { if (!/ExperimentalWarning|trace-warnings/.test(String(c))) process.stderr.write(`[api] ${c}`); });
