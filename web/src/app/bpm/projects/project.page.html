@@ -407,7 +407,8 @@
                   (decide)="decide(b.pendingOverrun, $event)"
                 />
               }
-              <!-- ---------- dépassements et fin de cycle ---------- -->
+              <!-- Dépassements, fin de cycle et dépenses sans tâche : sur « Budget du projet » seulement (la fiche reste allégée). -->
+              @if (workspaceKey() === 'project-budget') {
               <details [open]="workspaceKey() === 'project-budget'" class="cockpit-disclosure" id="cycle-title">
                 <summary>Contrôles et fin de cycle</summary>
                 <div class="cockpit-disclosure-body">
@@ -496,6 +497,7 @@
                   />
                 </div>
               </details>
+              }
             </div>
           </div>
         </section>
@@ -518,7 +520,6 @@
                 Ses tâches <span class="count-badge">{{ d.tasks.length }}</span>
               </h2>
             </div>
-            <span class="task-completion">{{ doneCount() }} terminée(s) · {{ progress() }} %</span>
           </header>
           <p class="board-move-help" id="project-move-help">
             Glissez par la poignée ⠿ ou choisissez « Déplacer vers ». Échap annule le glissement.

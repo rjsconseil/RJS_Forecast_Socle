@@ -185,11 +185,6 @@
   align-items: center;
   gap: 12px;
 }
-.task-completion {
-  color: var(--status-success);
-  font-size: 13px;
-  font-weight: 600;
-}
 .project-task-board {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;

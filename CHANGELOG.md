@@ -3,6 +3,17 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : fiche projet allégée, avancement des tâches dans la barre d'onglets — 28 novembre 2026
+
+Évolution en **mode socle** (cadre BPM-Astra et fiche projet).
+- Fiche d'un projet (`/bpm-astra/projets/<id>`) : les volets « Contrôles et fin de cycle » et « Dépenses sans tâche »
+  n'y sont plus. Ils restent sur « Budget du projet », où l'action principale mène quand il y a une dépense ou un
+  contrôle à traiter.
+- Le libellé d'avancement « N terminée(s) · N % » quitte l'en-tête des tâches et s'affiche au bout droit de la barre
+  d'onglets du cadre, sur la fiche et sur « Tâches du projet ».
+- Cadre : nouvelle indication de page `PageTabsNote` (`plan/plan-context.ts`). Une page la publie, et la barre
+  d'onglets d'Astra l'affiche à droite.
+
 ## Applications autonomes : squelettes de Mon quotidien, Mon budget, Patrimoine et Cycles — 28 novembre 2026
 
 Évolution en **mode application** (quotidien, budget, patrimoine, cycles et registre). Le socle n'est pas touché.

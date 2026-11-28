@@ -63,3 +63,12 @@ export function publishObjectLabel(link: () => string | null, label: () => strin
     if (at) labels.set(at, label());
   });
 }
+
+/**
+ * Une indication courte de la page ouverte, montrée au bout droit de la barre d'onglets du cadre (par exemple
+ * « 3 terminée(s) · 60 % » sur une fiche projet). La page la publie tant qu'elle est ouverte, puis l'efface.
+ */
+@Injectable({ providedIn: 'root' })
+export class PageTabsNote {
+  readonly note = signal<string | null>(null);
+}
