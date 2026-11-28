@@ -32,6 +32,8 @@ interface RowDraft {
   settled: SettledInCycle[];
   /** Réponse à « corriger aussi le montant déjà reçu / payé ce cycle ? » (non par défaut). */
   alsoSettled: boolean;
+  /** Suppression : retirer aussi la ligne du cycle en cours, règlements compris (oui par défaut). */
+  removeFromCycle: boolean;
 }
 interface NewDraft {
   key: string;
@@ -166,6 +168,10 @@ const toCents = (raw: string) => {
                         }
                         @if (confirmRemove() === r.id) {
                           <span class="bm-confirm" role="status">{{ removalNotice(r) }}</span>
+                          @if (countsInCycle(r) && !(notStartedRow(r) && !r.settled.length)) {
+                            <label class="bt-remove-cycle"><input type="checkbox" [checked]="r.removeFromCycle" (change)="patch(r.id, { removeFromCycle: $any($event.target).checked })" />
+                              Retirer aussi la ligne du cycle en cours, y compris ce qui est déjà {{ r.direction === 'income' ? 'reçu' : 'payé' }}</label>
+                          }
                           <button type="button" class="btn btn-danger small" (click)="removeLine(r)" [disabled]="removing() === r.id">{{ removing() === r.id ? 'Suppression…' : 'Confirmer la suppression' }}</button>
                           <button type="button" class="btn btn-secondary small" (click)="confirmRemove.set(null)" [disabled]="removing() === r.id">Garder la ligne</button>
                         }
@@ -333,6 +339,7 @@ export class BpmActBudgetType {
       kept: false,
       settled: l.settledInCycle ?? [],
       alsoSettled: false,
+      removeFromCycle: true,
     };
   }
 
@@ -385,12 +392,23 @@ export class BpmActBudgetType {
     return !!r.endDate;
   }
   /** La ligne n'a encore eu aucune échéance (première date aujourd'hui ou plus tard) : elle peut être retirée entièrement. */
+  protected notStartedRow = (r: RowDraft) => this.notStarted(r);
   private notStarted(r: RowDraft) {
     return r.firstDate >= localToday();
   }
   protected removalNotice(r: RowDraft) {
-    if (this.notStarted(r)) return `« ${r.orig.label} » n'a encore aucune échéance : elle sera retirée du budget récurrent dès maintenant.`;
+    if (this.notStarted(r) && !r.settled.length) return `« ${r.orig.label} » n'a encore aucune échéance : elle sera retirée du budget récurrent dès maintenant.`;
+    if (r.removeFromCycle) return `« ${r.orig.label} » sera retirée dès maintenant du cycle en cours et des suivants, y compris ce qui a déjà été ${r.direction === 'income' ? 'reçu' : 'payé'} dans ce cycle. Les cycles précédents ne changent pas.`;
     return `« ${r.orig.label} » sera retirée dès maintenant : ses prochaines échéances disparaissent du cycle en cours et des suivants. Ce qui a déjà été réglé reste enregistré.`;
+  }
+  /** La case « retirer aussi du cycle » n'a de sens que si la ligne a déjà compté dans le cycle en cours. */
+  protected countsInCycle(r: RowDraft) {
+    const period = this.bt.data()?.context.period;
+    return !!period && (r.settled.length > 0 || (r.firstDate <= localToday() && r.firstDate <= period.end && (!r.endDate || r.endDate >= period.start)));
+  }
+  private removeWindow(r: RowDraft) {
+    const period = this.bt.data()?.context.period;
+    return period && r.removeFromCycle && this.countsInCycle(r) ? { from: period.start, to: period.end } : undefined;
   }
   protected askRemove(id: string) {
     this.message.set(null);
@@ -405,13 +423,14 @@ export class BpmActBudgetType {
   async removeLine(r: RowDraft) {
     if (this.removing()) return;
     this.removing.set(r.id);
+    const removeIn = this.removeWindow(r);
     const end = async (endDate: string) => {
-      const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: r.revision, endDate });
+      const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: r.revision, endDate, ...(removeIn ? { removeIn } : {}) });
       this.patch(r.id, { endDate: recurrence.endDate, revision: recurrence.revision, error: null });
     };
     try {
       if (this.notStarted(r)) {
-        await this.bpm.cancelRecurrence(r.id, r.revision, 'Supprimée depuis le budget récurrent');
+        await (removeIn ? this.bpm.cancelRecurrence(r.id, r.revision, 'Supprimée depuis le budget récurrent', removeIn) : this.bpm.cancelRecurrence(r.id, r.revision, 'Supprimée depuis le budget récurrent'));
       } else {
         try {
           await end(shiftDate(localToday(), -1));

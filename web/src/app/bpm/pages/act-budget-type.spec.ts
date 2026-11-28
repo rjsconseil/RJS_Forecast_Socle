@@ -64,12 +64,13 @@ describe('budget récurrent · suppression d’une ligne', () => {
 
     row('Loyer').querySelector<HTMLButtonElement>('.bm-del')!.click();
     await settle();
-    expect(row('Loyer').querySelector('.bm-confirm')!.textContent).toContain('dès maintenant');
+    expect(row('Loyer').querySelector('.bm-confirm')!.textContent).toContain('y compris ce qui a déjà été payé');
+    expect(row('Loyer').querySelector<HTMLInputElement>('.bt-remove-cycle input')!.checked).toBe(true);
     expect(bpm.updateRecurrence).not.toHaveBeenCalled();
 
     button(row('Loyer'), 'Confirmer la suppression').click();
     await settle();
-    expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_loyer', { expectedRevision: 4, endDate: shiftDate(localToday(), -1) });
+    expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_loyer', { expectedRevision: 4, endDate: shiftDate(localToday(), -1), removeIn: { from: '2026-11-01', to: '2026-11-30' } });
     expect(dom.querySelector('.bm-saved')!.textContent).toContain('ses prochaines échéances ne sont plus prévues');
     expect(row('Loyer').textContent).toContain('Retirée · dernière échéance');
     expect(row('Loyer').querySelector('.bm-del')).toBeNull();
@@ -91,8 +92,23 @@ describe('budget récurrent · suppression d’une ligne', () => {
     button(row('Loyer'), 'Confirmer la suppression').click();
     // Deux écritures s'enchaînent (refus, puis fin sur l'échéance réglée) : on laisse tout se poser.
     for (let i = 0; i < 3; i++) await settle();
-    expect(bpm.updateRecurrence).toHaveBeenLastCalledWith('rec_loyer', { expectedRevision: 4, endDate: '2099-01-05' });
+    expect(bpm.updateRecurrence).toHaveBeenLastCalledWith('rec_loyer', { expectedRevision: 4, endDate: '2099-01-05', removeIn: { from: '2026-11-01', to: '2026-11-30' } });
     expect(row('Loyer').textContent).toContain('Retirée · dernière échéance');
+  });
+
+  it('case décochée : ce qui est réglé dans le cycle reste (fin la veille, sans retrait du cycle)', async () => {
+    const { row, button, settle, edit } = await create();
+    await edit();
+    row('Loyer').querySelector<HTMLButtonElement>('.bm-del')!.click();
+    await settle();
+    const box = row('Loyer').querySelector<HTMLInputElement>('.bt-remove-cycle input')!;
+    box.checked = false;
+    box.dispatchEvent(new Event('change'));
+    await settle();
+    expect(row('Loyer').querySelector('.bm-confirm')!.textContent).toContain('Ce qui a déjà été réglé reste enregistré');
+    button(row('Loyer'), 'Confirmer la suppression').click();
+    await settle();
+    expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_loyer', { expectedRevision: 4, endDate: shiftDate(localToday(), -1) });
   });
 
   it('une ligne qui n’a encore eu aucune échéance est retirée entièrement', async () => {
