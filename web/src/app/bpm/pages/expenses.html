@@ -320,8 +320,14 @@
                     } @else {
                       {{ groupBy() === 'date' ? (g.label | shortDate) : g.label }}
                     }
+                    @if (groupCap(g.key)?.paidOverCents; as over) {
+                      <small class="expense-cap-over">en dépassement de {{ over | cents }}</small>
+                    }
                   </h2>
                   <p>{{ g.lineIds.length }} {{ g.lineIds.length === 1 ? 'échéance' : 'échéances' }}</p>
+                </div>
+                <!-- Plafond du poste : à droite, entre les montants et le total, pour garder la même hauteur de bande. -->
+                <div class="expense-center-cap">
                   @if (groupCap(g.key); as m) {
                     <bpm-cap-gauge [measure]="m" label="Plafond du poste" />
                   }

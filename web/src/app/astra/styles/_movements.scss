@@ -92,10 +92,10 @@
 
     > summary.expense-center-heading {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 2fr) minmax(132px, 1fr) 24px;
-      grid-template-areas: 'name figures balance toggle';
+      grid-template-columns: minmax(120px, 1fr) minmax(320px, 1.5fr) minmax(170px, 260px) minmax(110px, max-content) 24px;
+      grid-template-areas: 'name figures cap balance toggle';
       align-items: center;
-      gap: 10px 18px;
+      gap: 10px 14px;
       padding: var(--a-tile-y) var(--a-pad-x);
 
       &::after {
@@ -122,6 +122,40 @@
         color: var(--bpm-muted);
         font-size: 12px;
       }
+
+      // Poste en dépassement de son plafond (dépenses payées du cycle), à côté de son libellé.
+      .expense-cap-over {
+        display: inline-block;
+        margin-inline-start: 8px;
+        color: var(--status-danger);
+        font-size: 12px;
+        font-weight: 600;
+      }
+    }
+
+    // Plafond du poste dans sa colonne : la bande garde la même hauteur, avec ou sans plafond ni dépassement.
+    .expense-center-cap {
+      grid-area: cap;
+      min-width: 0;
+
+      > bpm-cap-gauge { display: block; max-inline-size: 100%; }
+
+      // Jauge compacte dans la colonne : la barre, puis le texte ; jamais plus haute que les montants. Le libellé
+      // « Plafond du poste » reste dans l'infobulle de la jauge.
+      .cap-gauge {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 4px;
+        padding: 5px 10px;
+        border-radius: var(--a-radius-sm);
+        font-size: 12px;
+        line-height: 1.3;
+      }
+
+      .cap-gauge-label { display: none; }
+      .cap-gauge-bar { inline-size: 100%; }
+      // Une ligne de texte au plus : le texte complet reste dans l'infobulle.
+      .cap-gauge-text { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
     }
 
     .expense-center-total {
@@ -197,12 +231,23 @@
       }
     }
 
+    // Largeur moyenne : le plafond passe sous les montants, la bande reste lisible.
+    @container astra-movement-group (max-width: 820px) {
+      > summary.expense-center-heading {
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 1.6fr) max-content 24px;
+        grid-template-areas:
+          'name figures balance toggle'
+          'name cap balance toggle';
+      }
+    }
+
     @container astra-movement-group (max-width: 650px) {
       > summary.expense-center-heading {
         grid-template-columns: minmax(0, 1fr) max-content 24px;
         grid-template-areas:
           'name balance toggle'
-          'figures figures figures';
+          'figures figures figures'
+          'cap cap cap';
         column-gap: 12px;
       }
 

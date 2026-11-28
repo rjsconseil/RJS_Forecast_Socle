@@ -169,8 +169,9 @@ export function createRegisterReads(socle, h, kit) {
     }
     const open = (l) => ['late', 'due', 'pending'].includes(l.status);
     const counted = lines.filter((l) => !l.special);
-    // Plafonds de la période (budget du projet de vie seulement) : état de chaque poste.
-    const caps = principal && win.kind === 'period' ? capsBrief(capsRead(b)) : null;
+    // Plafonds de la période : état de chaque poste. Même périmètre que les plafonds (budget de vie et charges validées
+    // des projets), donc lu aussi dans la vue « avec les projets » de Mouvements (BPM-Astra).
+    const caps = (principal || scope === WITH_PROJECTS) && win.kind === 'period' ? capsBrief(capsRead(b)) : null;
     const context = contextOf(b, scope);
     if (scope === 'budget') context.scopeLabel = b.budgets.find(x => x.id === q.budgetId).name;
     if (scope === WITH_PROJECTS) context.budgets = b.budgets.filter(x => ids.includes(x.id));

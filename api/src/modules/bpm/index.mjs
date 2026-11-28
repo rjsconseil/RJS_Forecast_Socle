@@ -204,6 +204,8 @@ export default {
         figures: metrics.evaluateMany(mctx, [...metrics.metrics.keys()]),
         stockBeforeCents: preview.stockBefore === null ? null : Math.round(preview.stockBefore * 100),
         sourceOperationIds,
+        // Plafonds des postes figés à la clôture : les dépassements du cycle ne bougent plus si un plafond change ensuite.
+        capsCents: { ...(tx.draft.budgets[comp.budgetId].capsCents ?? {}) },
         // Bilan du cycle (faits et faits marquants), figé à la clôture.
         bilan: bilan && bilan.period.key === period.key && bilan.patrimoine.capitalizedCents === resultCents ? bilan : null,
         ...extra,

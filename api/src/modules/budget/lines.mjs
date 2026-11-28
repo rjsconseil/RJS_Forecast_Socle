@@ -147,6 +147,8 @@ export function capReport({ centers, caps = {}, categories = [], realized, plann
       marginCents: cap === null ? null : cap - engagedCents,
       usedPct: cap ? Math.round((engagedCents / cap) * 1000) / 10 : null,
       over: cap !== null && engagedCents > cap,
+      // Dépassement constaté : la part des charges déjà payées au-delà du plafond (fait du cycle, jamais bloquant).
+      paidOverCents: cap === null ? 0 : Math.max(0, paidCents - cap),
       near: isNearCap(cap, engagedCents),
       level: capLevelOf(cap, engagedCents),
       lineCount: charges(realized).filter(match).length + charges(planned).filter((l) => !l.settled && match(l)).length,

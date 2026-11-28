@@ -24,6 +24,8 @@ export interface CapMeasure {
   marginCents: number | null;
   usedPct: number | null;
   over: boolean;
+  /** Dépassement constaté : charges payées au-delà du plafond du cycle (0 sans plafond ni dépassement). */
+  paidOverCents?: number;
   /** Proche du plafond : règle du middleware Budget, seule source du seuil (audit ARCH-10). */
   near: boolean;
   level: CapLevel;
@@ -48,7 +50,7 @@ export interface CapAlert {
 }
 
 /** Résumé d'un plafond joint au registre : plafond, engagé, marge, consommation, dépassement. */
-export type CapBrief = Pick<CapMeasure, 'capCents' | 'engagedCents' | 'marginCents' | 'usedPct' | 'over' | 'near' | 'level'>;
+export type CapBrief = Pick<CapMeasure, 'capCents' | 'engagedCents' | 'marginCents' | 'usedPct' | 'over' | 'near' | 'level'> & { paidCents?: number; paidOverCents?: number };
 
 export interface RegisterCaps {
   centers: Record<string, CapBrief>;

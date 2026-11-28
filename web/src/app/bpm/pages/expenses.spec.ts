@@ -16,8 +16,7 @@ describe('écran Mouvements', () => {
     for (let i = 0; i < 3; i++) { harness.detectChanges(); await harness.fixture.whenStable(); }
     harness.detectChanges();
   }
-  async function open(url = '/mouvements?period=2026-11') {
-    const f = apiFixtures();
+  async function open(url = '/mouvements?period=2026-11', data: Record<string, string> = {}, f = apiFixtures()) {
     bpm = {
       register: vi.fn().mockResolvedValue(f.register),
       costCenters: vi.fn().mockResolvedValue(f.costCenters),
@@ -25,7 +24,7 @@ describe('écran Mouvements', () => {
     };
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'mouvements', component: BpmExpensesPage }]),
+        provideRouter([{ path: 'mouvements', component: BpmExpensesPage, data }]),
         { provide: BpmApi, useValue: bpm },
         { provide: Api, useValue: { tasks: vi.fn().mockResolvedValue(f.tasks) } },
       ],
@@ -45,6 +44,32 @@ describe('écran Mouvements', () => {
     // Chaque ligne du registre a sa rangée, avec son libellé.
     expect(dom().querySelectorAll('.expense-row').length).toBe(f.register.lines.length);
     for (const l of f.register.lines) expect(texts('.expense-row').some((t) => t.includes(l.label))).toBe(true);
+  });
+
+  it('un poste en dépassement de son plafond (dépenses payées) porte une note rouge à côté de son libellé', async () => {
+    const f = apiFixtures();
+    const g = f.register.groups.find((x) => x.key.startsWith('std:') && x.key !== 'std:salaires')!;
+    const caps = { ...f.register.caps!, centers: { ...f.register.caps!.centers, [g.key]: { capCents: 10000, engagedCents: 15500, paidCents: 15500, paidOverCents: 5500, marginCents: -5500, usedPct: 155, over: true, near: false, level: 'over' as const } } };
+    await open();
+    bpm['register'].mockResolvedValue({ ...f.register, caps });
+    // Relecture avec le plafond dépassé : la note suit le libellé du poste, les autres postes n'en ont pas.
+    await harness.navigateByUrl('/mouvements?period=2026-11&q=', BpmExpensesPage);
+    await settle();
+    const notes = [...dom().querySelectorAll('.expense-center-name h2 .expense-cap-over')];
+    expect(notes.length).toBe(1);
+    expect(notes[0].textContent!.replace(/\s+/g, ' ').trim()).toMatch(/^en dépassement de 55,00\s€$/);
+    expect(notes[0].closest('h2')!.textContent).toContain(g.label);
+  });
+
+  it('vue de BPM-Astra (budget de vie avec les projets) : la note de dépassement suit aussi le libellé du poste', async () => {
+    const f = apiFixtures();
+    const g = f.register.groups.find((x) => x.key.startsWith('std:') && x.key !== 'std:salaires')!;
+    f.register = { ...f.register, context: { ...f.register.context, scope: 'life-with-projects' }, caps: { ...f.register.caps!, centers: { ...f.register.caps!.centers, [g.key]: { capCents: 10000, engagedCents: 25000, paidCents: 25000, paidOverCents: 15000, marginCents: -15000, usedPct: 250, over: true, near: false, level: 'over' as const } } } } as typeof f.register;
+    await open('/mouvements?period=2026-11', { registerScope: 'life-with-projects' }, f);
+    expect(bpm['register']).toHaveBeenCalledWith(expect.objectContaining({ scope: 'life-with-projects', groupBy: 'center' }));
+    const notes = [...dom().querySelectorAll('.expense-center-name h2 .expense-cap-over')];
+    expect(notes.map((n) => n.textContent!.replace(/\s+/g, ' ').trim())).toEqual([expect.stringMatching(/^en dépassement de 150,00\s€$/)]);
+    expect(notes[0].closest('h2')!.textContent).toContain(g.label);
   });
 
   it('les filtres passent par l’adresse et relisent le registre : sens, recherche, regroupement', async () => {
