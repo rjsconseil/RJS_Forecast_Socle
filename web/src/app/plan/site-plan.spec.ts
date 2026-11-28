@@ -4,7 +4,7 @@ import { PAGE_WORKSPACES } from './page-workspaces';
 
 describe('plan du site', () => {
   it('range les zones : BPM-Astra d’abord, puis le socle et l’administration', () => {
-    expect(PLAN_ZONES.map((z) => z.label)).toEqual(['BPM-Astra', 'Budget management', 'Patrimoine Management', 'Cycle et temps', 'Noyau transverse', 'Administration du site', 'Navigation system']);
+    expect(PLAN_ZONES.map((z) => z.label)).toEqual(['BPM-Astra', 'Budget management', 'Patrimoine Management', 'Cycle et temps', 'Noyau transverse', 'Applications autonomes', 'Administration du site', 'Navigation system']);
     expect(planZone('bpm'), 'l’ancienne application BPM n’existe plus').toBeNull();
   });
 

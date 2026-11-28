@@ -1,4 +1,5 @@
-import { espacesAutonomes, type InscriptionAvecEspace, routesAutonomes, sectionApplicationsAutonomes } from './applications-autonomes';
+import { BANDE_APPLICATIONS_AUTONOMES, espacesAutonomes, type InscriptionAvecEspace, routesAutonomes, zoneApplicationsAutonomes } from './applications-autonomes';
+import { PLAN_BANDS, PLAN_ZONES, sectionEntry } from '../plan/site-plan';
 
 const ecran = () => Promise.resolve(class Ecran {});
 const sansEspace: InscriptionAvecEspace = { cle: 'budget' };
@@ -23,11 +24,21 @@ describe('Applications autonomes (espaces hors de BPM-Astra)', () => {
     expect(routes[0].loadComponent).toBe(ecran);
   });
 
-  it('présente un lien par application dans la section du noyau, cachée sans application', () => {
-    const section = sectionApplicationsAutonomes(espacesAutonomes([avecEspace]), '05');
-    expect(section.label).toBe('Applications autonomes');
-    expect(section.hidden).toBeUndefined();
-    expect(section.pages.map((p) => [p.id, p.link])).toEqual([['autonome-projets', '/mes-projets']]);
-    expect(sectionApplicationsAutonomes([], '05').hidden).toBe(true);
+  it('donne aux applications leur propre zone, une section par application, absente sans application', () => {
+    const zone = zoneApplicationsAutonomes(espacesAutonomes([avecEspace]))!;
+    expect(zone.label).toBe('Applications autonomes');
+    expect(zone.band).toBe(BANDE_APPLICATIONS_AUTONOMES.id);
+    expect(zone.sections.map((s) => [s.id, s.acronym, s.label])).toEqual([['projets', '01', 'Mes projets']]);
+    expect(sectionEntry(zone, zone.sections[0]).link).toBe('/mes-projets');
+    expect(zoneApplicationsAutonomes([])).toBeNull();
+  });
+
+  it('le plan du site range la zone dans sa bande de l’accueil des modules, entre le socle et les modules techniques', () => {
+    const ids = PLAN_BANDS.map((b) => b.id);
+    expect(ids.indexOf('autonomes')).toBe(ids.indexOf('technical') - 1);
+    const zone = PLAN_ZONES.find((z) => z.id === 'applications-autonomes')!;
+    expect(zone.sections.some((s) => s.pages.some((p) => p.link === '/mes-projets'))).toBe(true);
+    // La section du noyau a laissé sa place à la zone.
+    expect(PLAN_ZONES.find((z) => z.id === 'noyau')!.sections.some((s) => s.id === 'applications')).toBe(false);
   });
 });
