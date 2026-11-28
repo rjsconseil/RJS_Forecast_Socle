@@ -305,7 +305,7 @@
               </div>
             } @else {
               <!-- Le parcours (Retour / Mon parcours / Suivant) structure toutes les zones du plan, pas seulement BPM. -->
-              @if (location().zone && !isAstra()) { <rjs-journey /> }
+              @if (showJourney()) { <rjs-journey /> }
               <router-outlet />
               @if (isAstra() && ctx.connected()) { <rjs-journey /> }
             }
