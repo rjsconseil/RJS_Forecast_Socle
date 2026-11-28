@@ -165,7 +165,7 @@ export class BpmApi {
     return this.post<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}/cancel`, { expectedRevision, reason });
   }
   updateRecurrence(id: string, body: Record<string, unknown> & { expectedRevision: number }) {
-    return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number; settledUpdated?: string[] }; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
+    return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number; settledUpdated?: string[]; settledRemoved?: string[] }; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
   }
   settleOccurrence(recurrenceId: string, body: { requestKey: string; occurrenceDate: string; realizedAmount?: number; realizedDate?: string; accountingDate?: string; fundingSource?: 'cycle' | 'patrimoine'; note?: string; fund?: boolean }) {
     return this.post<{ replayed: boolean; operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/settle`, body);
@@ -179,8 +179,9 @@ export class BpmApi {
     return this.post<{ operation: Operation }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/restore`, body);
   }
   /** Supprime une définition saisie par erreur, tant qu'aucune échéance n'est réglée. */
-  cancelRecurrence(id: string, expectedRevision: number, reason?: string) {
-    return this.post<{ recurrence: Recurrence }>(`/api/bpm/recurrences/${encodeURIComponent(id)}/cancel`, { expectedRevision, reason });
+  /** `removeIn` : les règlements de la définition qui comptent dans la fenêtre sont annulés avec elle. */
+  cancelRecurrence(id: string, expectedRevision: number, reason?: string, removeIn?: { from: string; to: string }) {
+    return this.post<{ recurrence: Recurrence }>(`/api/bpm/recurrences/${encodeURIComponent(id)}/cancel`, { expectedRevision, reason, ...(removeIn ? { removeIn } : {}) });
   }
   addCostCenter(body: { requestKey: string; label: string; direction: 'income' | 'charge' }) {
     return this.post<{ replayed: boolean; costCenterId: string; costCenters: CostCenter[] }>('/api/bpm/cost-centers', body);

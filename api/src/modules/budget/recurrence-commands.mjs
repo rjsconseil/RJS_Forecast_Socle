@@ -3,7 +3,7 @@
 import { fail } from '../../socle/errors.mjs';
 import { today } from '../../socle/clock.mjs';
 import { date, expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
-import { CADENCES, isOccurrence, parseOccurrenceKey } from './recurrence.mjs';
+import { CADENCES, isOccurrence, occurrenceDates, parseOccurrenceKey } from './recurrence.mjs';
 import { abandonedRefusal, isAbandoned } from './funding.mjs';
 import { DIRECTIONS, toEuros } from './views.mjs';
 import { realizedDateOf } from './guards.mjs';
@@ -18,16 +18,55 @@ export function recurrenceCommands(socle, kit) {
    * change : les règlements gardent leurs valeurs. Les gardes des niveaux supérieurs (période close, financement
    * d'une tâche) s'appliquent comme à un règlement.
    */
+  /** Fenêtre de dates `{ from, to }` (bornes incluses) d'une option, validée. */
+  function windowOption(input, name) {
+    const from = date(`${name}.from`, input[name]?.from, { required: true });
+    const to = date(`${name}.to`, input[name]?.to, { required: true });
+    if (to < from) fail('VALIDATION', 'La fin de la fenêtre ne peut pas précéder son début.', { field: `${name}.to` });
+    return { from, to };
+  }
+  /** Règlements de la définition qui comptent dans la fenêtre (date comptable, à défaut date de règlement). */
+  const settledIn = (settlements, { from, to }) => settlements.filter((o) => {
+    const counted = o.status === 'realized' ? o.accountingDate ?? o.realizedDate : null;
+    return counted && counted >= from && counted <= to;
+  });
+
+  /**
+   * Retrait de la ligne d'une fenêtre, sur demande (`removeIn: { from, to }`, en général le cycle en cours), quand
+   * elle est supprimée : un règlement qui compte dans la fenêtre est annulé (il sort de toutes les sommes, comme une
+   * saisie annulée, et garde sa trace) et les échéances non réglées de la fenêtre sont écartées. Sans demande, les
+   * règlements restent. Les gardes des niveaux supérieurs s'appliquent (période close).
+   */
+  function settledToRemove(tx, settlements, input) {
+    if (input.removeIn == null) return [];
+    const list = settledIn(settlements, windowOption(input, 'removeIn'));
+    for (const o of list) guard(tx.draft, o, settlementDates(tx.draft, o.budgetId, o));
+    return list;
+  }
+  /** Écarte les échéances non réglées de la définition dans la fenêtre (matérialisées ou non). */
+  function dropOccurrencesIn(tx, rec, { from, to }) {
+    for (const d of occurrenceDates(rec, from, to)) {
+      const existing = om.list(tx.draft, 'operation', (o) => o.recurrenceId === rec.id && o.occurrenceDate === d)[0];
+      if (existing) {
+        if (existing.status === 'planned') om.update(tx, existing, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: REMOVED, closedAt: tx.now, closedOn: today() });
+        continue;
+      }
+      om.create(tx, 'operation', {
+        budgetId: rec.budgetId, direction: rec.direction, label: rec.label, amountCents: rec.amountCents, date: d,
+        status: 'cancelled', cancelledFrom: 'planned', cancelReason: REMOVED, closedAt: tx.now, closedOn: today(),
+        realizedAmountCents: null, realizedDate: null, recurrenceId: rec.id, occurrenceDate: d, note: rec.note ?? null,
+        taskId: rec.taskId ?? null, standardCostCenter: rec.standardCostCenter, costCenterId: rec.costCenterId, categoryId: rec.categoryId ?? null,
+      });
+    }
+  }
+  const REMOVED = 'Ligne supprimée du budget récurrent';
+  const removeSettlement = (tx, o) => om.update(tx, o, { status: 'cancelled', cancelledFrom: 'realized', cancelReason: REMOVED, closedAt: tx.now, closedOn: today() });
+
   function settledToFix(tx, r, settlements, input, patch) {
     if (input.alsoSettled == null) return [];
-    const from = date('alsoSettled.from', input.alsoSettled?.from, { required: true });
-    const to = date('alsoSettled.to', input.alsoSettled?.to, { required: true });
-    if (to < from) fail('VALIDATION', 'La fin de la fenêtre ne peut pas précéder son début.', { field: 'alsoSettled.to' });
+    const window = windowOption(input, 'alsoSettled');
     const out = [];
-    for (const o of settlements) {
-      if (o.status !== 'realized') continue;
-      const counted = o.accountingDate ?? o.realizedDate;
-      if (!counted || counted < from || counted > to) continue;
+    for (const o of settledIn(settlements, window)) {
       const p = {};
       if ('label' in patch && patch.label !== o.label) p.label = patch.label;
       if ('amountCents' in patch && (patch.amountCents !== o.realizedAmountCents || patch.amountCents !== o.amountCents)) {
@@ -98,7 +137,8 @@ export function recurrenceCommands(socle, kit) {
         if (endDate && endDate < firstDate) fail('VALIDATION', 'La fin ne peut pas précéder la première date.', { field: 'endDate' });
         // Une fin posée garde tout ce qui a eu lieu : aucune échéance réglée après la dernière échéance prévue.
         // Les échéances encore attendues au-delà (prévisions modifiées, matérialisées) tombent avec la définition.
-        const beyond = patch.endDate ? settlements.filter((o) => o.occurrenceDate && o.occurrenceDate > patch.endDate) : [];
+        const removed = settledToRemove(tx, settlements, input);
+        const beyond = patch.endDate ? settlements.filter((o) => o.occurrenceDate && o.occurrenceDate > patch.endDate && !removed.includes(o)) : [];
         const settledBeyond = beyond.filter((o) => o.status === 'realized').map((o) => o.occurrenceDate).sort();
         if (settledBeyond.length)
           fail('VALIDATION', `Une échéance du ${settledBeyond.at(-1)} est déjà réglée : la dernière échéance ne peut pas la précéder.`, { field: 'endDate', lastSettled: settledBeyond.at(-1) });
@@ -112,12 +152,15 @@ export function recurrenceCommands(socle, kit) {
         om.update(tx, r, patch);
         for (const o of beyond) if (o.status === 'planned') om.update(tx, o, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: 'Après la dernière échéance de la définition', closedAt: tx.now, closedOn: today() });
         for (const [o, p] of settledFix) om.update(tx, o, p);
+        for (const o of removed) removeSettlement(tx, o);
+        if (input.removeIn != null) dropOccurrencesIn(tx, tx.draft.recurrences[r.id], windowOption(input, 'removeIn'));
         return {
           recurrence: r,
           scope: {
             appliesTo: settledFix.length ? 'occurrences encore attendues et échéances réglées de la fenêtre demandée' : 'occurrences encore attendues',
-            settledUntouched: settlements.length - settledFix.length,
+            settledUntouched: settlements.length - settledFix.length - removed.length,
             ...(settledFix.length ? { settledUpdated: settledFix.map(([o]) => o.id) } : {}),
+            ...(removed.length ? { settledRemoved: removed.map((o) => o.id) } : {}),
           },
         };
     },
@@ -275,10 +318,12 @@ export function recurrenceCommands(socle, kit) {
         om.checkRevision(rec, expectedRevisionOf(input));
         if (rec.cancelledAt) fail('FORBIDDEN_BY_RULE', 'Cette définition est déjà supprimée.', { recurrenceId: id });
         const materialized = om.list(tx.draft, 'operation', (o) => o.recurrenceId === id);
-        const settled = materialized.filter((o) => o.status === 'realized');
+        const removed = settledToRemove(tx, materialized, input);
+        const settled = materialized.filter((o) => o.status === 'realized' && !removed.includes(o));
         if (settled.length)
           fail('FORBIDDEN_BY_RULE', 'Des échéances sont déjà réglées : annulez leurs règlements, ou terminez la définition par une dernière échéance.', { recurrenceId: id, settled: settled.length });
         definitionGuard(tx.draft, rec, rec.firstDate, rec.endDate);
+        for (const o of removed) removeSettlement(tx, o);
         for (const o of materialized) if (o.status === 'planned') om.update(tx, o, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: 'Définition supprimée', closedAt: tx.now, closedOn: today() });
         om.update(tx, rec, { cancelledAt: today(), cancelReason: 'reason' in input ? note(input.reason) : null });
         return { recurrenceId: id };
