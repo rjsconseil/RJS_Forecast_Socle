@@ -15,7 +15,10 @@ Les PR du socle, de la plus récente à la plus ancienne. La référence de l'ar
   XX » (payé et plafond) ; un test vérifie qu'un poste en dépassement n'empêche pas la clôture.
 - Bilan du cycle : tous les postes en dépassement de la période, avec leur montant (plus de limite à cinq), et un fait
   marquant qui les nomme.
-- Mouvements : à côté du libellé du poste, une note rouge « en dépassement de XX € » (dépenses payées du cycle au-delà du plafond).
+- Mouvements : à côté du libellé du poste, une note rouge « en dépassement de XX € » (dépenses payées du cycle au-delà du
+  plafond), y compris dans la vue de BPM-Astra (budget de vie avec les projets), dont le registre porte désormais les plafonds.
+  L'encadré « Plafond du poste » passe dans sa propre colonne, à droite entre les montants et le total : la bande garde
+  la même hauteur, avec ou sans plafond ni dépassement.
 
 ## Grand noyau (socle) : l'étape « Vérifier le compte » de la clôture est retirée — 28 novembre 2026
 

@@ -27,6 +27,10 @@ test('mouvements : le poste porte son dépassement payé du cycle', async () => 
   assert.equal(reg.caps.centers['std:divers'].paidOverCents, 5500);
   assert.equal(reg.caps.centers['std:divers'].paidCents, 15500);
   assert.equal(reg.caps.centers['std:divers'].capCents, 10000);
+  // Vue par défaut de Mouvements dans BPM-Astra : le budget de vie avec les projets. Les plafonds y sont aussi.
+  const withProjects = t.bpm.reads.register(t.ctx, { groupBy: 'center', scope: 'life-with-projects' });
+  assert.equal(withProjects.caps.centers['std:divers'].paidOverCents, 5500);
+  assert.ok(withProjects.groups.some((g) => g.key === 'std:divers'));
 });
 
 test('clôture : le dépassement est signalé, jamais bloquant, puis gardé au bilan et figé', async () => {

@@ -92,8 +92,8 @@
 
     > summary.expense-center-heading {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 2fr) minmax(132px, 1fr) 24px;
-      grid-template-areas: 'name figures balance toggle';
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 2fr) minmax(150px, 1.1fr) minmax(132px, 1fr) 24px;
+      grid-template-areas: 'name figures cap balance toggle';
       align-items: center;
       gap: 10px 18px;
       padding: var(--a-tile-y) var(--a-pad-x);
@@ -131,6 +131,14 @@
         font-weight: 600;
         white-space: nowrap;
       }
+    }
+
+    // Plafond du poste dans sa colonne : la bande garde la même hauteur, avec ou sans plafond ni dépassement.
+    .expense-center-cap {
+      grid-area: cap;
+      min-width: 0;
+
+      > bpm-cap-gauge { display: block; max-inline-size: 100%; }
     }
 
     .expense-center-total {
@@ -211,7 +219,8 @@
         grid-template-columns: minmax(0, 1fr) max-content 24px;
         grid-template-areas:
           'name balance toggle'
-          'figures figures figures';
+          'figures figures figures'
+          'cap cap cap';
         column-gap: 12px;
       }
 
