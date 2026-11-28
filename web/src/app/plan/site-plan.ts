@@ -12,7 +12,7 @@ import { bandKey, objectKey, planOrder, PORTAL_KEY, sectionKey, zoneKey } from '
 import { PlanTabLink, tabLinksKey, tabLinksOf } from './tab-links';
 import { ApplicationDetail, ApplicationObject, overviewSection, PLAN_ROOT } from '../platform/application';
 import { APPLICATIONS, ESPACES_AUTONOMES } from '../platform/applications';
-import { sectionApplicationsAutonomes } from '../platform/applications-autonomes';
+import { BANDE_APPLICATIONS_AUTONOMES, zoneApplicationsAutonomes } from '../platform/applications-autonomes';
 
 export interface PlanPage {
   id: string;
@@ -122,6 +122,8 @@ export const PLAN_BANDS: PlanBand[] = [
   { id: 'flagship', label: 'Module phare', description: 'Votre vision budgétaire, qui ouvre sur vos projets de la vie ; le calendrier en reflète les événements.' },
   { id: 'assembled', label: 'Les deux modules qu’il réunit', description: 'Budget et Patrimoine restent deux modules frères, construits en miroir. Budget/Patrimoine Management les ouvre sur un même projet.' },
   { id: 'core', label: 'Le socle commun', description: 'Projets, tâches et identités des objets : la base sur laquelle reposent tous les modules.' },
+  // Les applications autonomes (platform/applications-autonomes.ts) : leur bande, entre le socle et les modules techniques.
+  BANDE_APPLICATIONS_AUTONOMES,
   { id: 'technical', label: 'Modules techniques', description: 'Utilisateurs, administration et paramètres du site.' },
 ];
 // Une application peut apporter sa propre bande d'accueil.
@@ -322,10 +324,10 @@ export const PLAN_ZONES: PlanZone[] = [
         space: 'projects',
         pages: [{ id: 'object-management', label: 'Object Management', link: '/object-management', symbol: '⌘', tone: 'nav-teal', step: 'Tracer', description: 'Diagnostic en lecture seule des objets persistés des trois niveaux.', result: 'L’identité, les références et le rejeu de chaque objet.' }],
       },
-      // Les applications autonomes qui reposent sur le noyau, chacune dans son propre espace (platform/applications-autonomes.ts).
-      sectionApplicationsAutonomes(ESPACES_AUTONOMES, '05'),
     ],
   },
+  // La zone des applications autonomes, présente dès qu'une application déclare son espace.
+  ...[zoneApplicationsAutonomes(ESPACES_AUTONOMES)].filter((zone): zone is PlanZone => zone !== null),
   {
     id: 'administration',
     kind: 'zone',

@@ -32,3 +32,7 @@
   margin: 0 auto;
   padding: var(--page-padding-top) var(--page-gutter) var(--page-padding-bottom);
 }
+/* La barre de parcours n'est pas une page : sans la marge basse de page, l'écran suit la barre sans vide. */
+.app-shell .main-shell main > rjs-journey {
+  padding-bottom: 0;
+}

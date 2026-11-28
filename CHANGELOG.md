@@ -3,6 +3,17 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : zone « Applications autonomes » sur l'accueil des modules — 28 novembre 2026
+
+Évolution en **mode socle**, BPM-Astra inchangé. Référence : `docs/ARCHITECTURE.md` §20.1.
+- **Barre de parcours sans vide** : elle recevait la marge basse d'une page (80 px), d'où un vide inexpliqué sous la
+  barre sur toutes les pages qui l'affichent (Calendrier, Object Management, applications autonomes). Corrigé dans
+  `styles/coquille/_app-shell.scss`.
+- Les applications autonomes ont **leur propre zone** (AA), au même niveau que les autres : une bande « Applications
+  autonomes » sur l'accueil des modules (`/modules`), une entrée des zones principales du menu, une section par
+  application qui ouvre directement son espace (`/mes-projets`).
+- La section « Applications autonomes » de la zone Noyau transverse est retirée : la zone la remplace.
+
 ## Mes projets · style du socle, anglais et mise en page — 28 novembre 2026
 
 Évolution en **mode application** (Mes projets seulement).
