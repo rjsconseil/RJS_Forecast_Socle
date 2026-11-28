@@ -27,8 +27,8 @@ describe('Mes projets · gestion de base', () => {
   });
 
   it('prépare les commandes du grand noyau et refuse une saisie incomplète', () => {
-    expect(erreurSaisie({ title: '  ' })).toBe('Donnez un titre.');
-    expect(erreurSaisie({ title: 'X', startDate: '2026-12-01', dueDate: '2026-11-01' })).toContain('après le début');
+    expect(erreurSaisie({ title: '  ' })).toBe('Enter a title.');
+    expect(erreurSaisie({ title: 'X', startDate: '2026-12-01', dueDate: '2026-11-01' })).toContain('after the start date');
     expect(erreurSaisie({ title: 'X', startDate: '2026-11-01', dueDate: '' })).toBeNull();
     expect(commandeProjet({ title: ' Site ', startDate: '', dueDate: '2026-12-31' }, 'k1')).toEqual({ requestKey: 'k1', title: 'Site', description: '', priority: 'medium', startDate: null, dueDate: '2026-12-31' });
     expect(commandeTache({ title: 'T', projectId: '', plannedHours: '2,5' }, 'k2')).toEqual({ requestKey: 'k2', title: 'T', projectId: null, plannedHours: 2.5, dueDate: null });

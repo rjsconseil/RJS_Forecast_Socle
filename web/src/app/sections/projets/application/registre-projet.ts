@@ -79,20 +79,20 @@ export class ProjetsRegistre {
     const saisie = saisieRegistre(this.registre(), brut);
     const error = erreurRegistre(this.registre(), saisie);
     if (error) { this.failure.set(error); return; }
-    const ok = await this.run(() => this.api.aaCreate(APPLICATION, this.registre().collection, { ...saisie, projectId: this.projetId() }), 'Ligne ajoutée au registre.');
+    const ok = await this.run(() => this.api.aaCreate(APPLICATION, this.registre().collection, { ...saisie, projectId: this.projetId() }), 'Entry added to the register.');
     if (ok) { form.reset(); this.saisie.set(false); }
   }
 
   protected changerEtat(l: LigneApplication, valeur: string) {
     const champ = this.registre().etat;
     if (!champ || l[champ] === valeur) return Promise.resolve(false);
-    return this.run(() => this.api.aaUpdate(APPLICATION, this.registre().collection, l.id, { [champ]: valeur, expectedRevision: l.revision }), `État mis à jour : ${VALEURS[valeur] ?? valeur}.`);
+    return this.run(() => this.api.aaUpdate(APPLICATION, this.registre().collection, l.id, { [champ]: valeur, expectedRevision: l.revision }), `Status updated: ${VALEURS[valeur] ?? valeur}.`);
   }
 
   protected ouvrirSequence(l: LigneApplication) {
     return this.run(async () => {
       await this.api.aaInstancier(APPLICATION, { declencheur: 'ouverture-etape', projectId: this.projetId(), etapeId: l.id });
       if (l['statut'] !== 'en-cours') await this.api.aaUpdate(APPLICATION, 'etapes', l.id, { statut: 'en-cours', expectedRevision: l.revision });
-    }, `Séquence « ${String(l['nom'] ?? '')} » ouverte : son plan et ses rapports sont prévus.`);
+    }, `Stage “${String(l['nom'] ?? '')}” opened: its plan and reports are set up.`);
   }
 }

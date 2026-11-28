@@ -38,7 +38,7 @@ describe('Mes projets · référentiel PRINCE2', () => {
   it('livrables d’un thème sans doublon, livrables d’un processus, thèmes d’un processus', () => {
     const progression = livrablesDuTheme('progression').map((l) => l.id);
     expect(new Set(progression).size).toBe(progression.length);
-    expect(livrablesDuTheme('cas-affaire').map((l) => l.nom)).toContain('Cas d’affaire');
+    expect(livrablesDuTheme('cas-affaire').map((l) => l.nom)).toContain('Business Case');
     expect(livrablesDuProcessus('SU').map((l) => l.anglais)).toContain('Project Brief');
     expect(themesDuProcessus('IP').length).toBe(6);
     expect(themePrince2('inconnu')).toBeNull();
@@ -51,6 +51,6 @@ describe('Mes projets · référentiel PRINCE2', () => {
     expect(reperePrince2({ status: 'active', taskCount: 2 }).processus).toBe('CS');
     expect(reperePrince2({ status: 'paused', taskCount: 2 }).processus).toBe('SB');
     expect(reperePrince2({ status: 'toFinish', taskCount: 2 }).processus).toBe('CP');
-    expect(reperePrince2({ status: 'done', taskCount: 2 })).toEqual({ processus: null, label: 'Projet clos' });
+    expect(reperePrince2({ status: 'done', taskCount: 2 })).toEqual({ processus: null, label: 'Project closed' });
   });
 });

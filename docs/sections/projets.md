@@ -48,3 +48,4 @@ Repère : les fonctionnalités avancées (Pilotage, puis jalons, dépendances, r
 |---|---|---|---|
 | 27/11/2026 | PR « Mes projets PRINCE2 » | Application autonome à `/mes-projets` ; modèle de données AA_MP_ (catalogue PRINCE2 standard, tables d'instanciation, règles) ; dossier PRINCE2 par projet | Un outil de gestion de projet PRINCE2 dans l'interface habituelle, ouvert depuis le noyau, BPM-Astra inchangé |
 | 28/11/2026 | PR « Registres PRINCE2 » | Un registre par thème (saisie, état modifiable, ouverture de séquence) | Les registres du projet se tiennent dans l'application, thème par thème |
+| 28/11/2026 | PR « Style du socle et anglais » | Bandeau et onglets au style du socle, écrans, référentiel et catalogue PRINCE2 en anglais, mise en page sans vides | L'application ressemble au reste du site et parle la langue de PRINCE2 |

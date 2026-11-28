@@ -20,16 +20,16 @@ describe('Mes projets · registres PRINCE2', () => {
     const plans = registreDuTheme('plans')!;
     const s = saisieRegistre(plans, { numero: '2', nom: ' Livraison 1 ', type: 'livraison', debutPrevu: '' });
     expect(s).toEqual({ numero: 2, nom: 'Livraison 1', type: 'livraison', statut: 'a-venir' });
-    expect(erreurRegistre(registreDuTheme('risque')!, {})).toBe('Intitulé : obligatoire.');
-    expect(erreurRegistre(plans, { numero: Number.NaN })).toBe('N° : un nombre entier.');
+    expect(erreurRegistre(registreDuTheme('risque')!, {})).toBe('Title is required.');
+    expect(erreurRegistre(plans, { numero: Number.NaN })).toBe('No. must be a whole number.');
   });
 
   it('affiche les valeurs lisibles (choix, livrable, vide)', () => {
     const r = registreDuTheme('cas-affaire')!;
     const ligne = { refCode: 'casAffaire', statut: 'approuve', version: '' } as unknown as LigneApplication;
     const [refCode, , statut, version] = r.champs;
-    expect(valeurLisible(refCode, ligne, () => 'Cas d’affaire')).toBe('Cas d’affaire');
-    expect(valeurLisible(statut, ligne)).toBe('Approuvé');
+    expect(valeurLisible(refCode, ligne, () => 'Business Case')).toBe('Business Case');
+    expect(valeurLisible(statut, ligne)).toBe('Approved');
     expect(valeurLisible(version, ligne)).toBe('—');
   });
 });

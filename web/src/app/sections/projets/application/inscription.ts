@@ -19,9 +19,9 @@ export const INSCRIPTION: InscriptionApplication = {
   // dans la section « Applications autonomes » de la zone Noyau transverse. Son modèle de données : donnees.json.
   espace: {
     chemin: 'mes-projets',
-    titre: 'Mes projets',
-    description: 'Gestion de projet selon PRINCE2 : l’état des projets et de leurs tâches, puis les 7 thèmes de la méthode.',
-    resultat: 'Un dossier PRINCE2 par projet, ses rôles, ses séquences et ses produits de management.',
+    titre: 'My Projects',
+    description: 'Project management with PRINCE2: the status of your projects and their tasks, then the seven themes of the method.',
+    resultat: 'A PRINCE2 project file per project, with its roles, stages and management products.',
     symbole: '◫',
     ecran: () => import('./gestion-projet.page').then(m => m.ProjetsGestionProjetPage),
   },

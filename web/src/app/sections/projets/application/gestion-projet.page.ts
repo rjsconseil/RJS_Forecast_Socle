@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  Api, toApiError, hours, shortDate, sourceLink,
+  Api, toApiError, sourceLink,
   type Priority, type ProjectSummary, type TaskStatus, type TaskView,
 } from '../../../platform/grand-noyau';
 import { BpmPageContext, BpmRefresh, bpmLoader, astraUrl } from '../../../astra/cadre';
@@ -13,6 +13,7 @@ import donnees from './donnees.json';
 /** Les registres PRINCE2, un par thème, d'après le modèle de données de l'application. */
 const REGISTRES = registresDepuis(donnees.collections as unknown as ModeleCollections);
 import { ProjetsRegistre } from './registre-projet';
+import { HEALTH, PRIORITY, PROJECT_STATUS, TASK_STATUS, dateEn, hoursEn, plural } from './libelles';
 import { commandeProjet, commandeTache, erreurSaisie, projetsParStatut, tachesDuProjet, tachesSansProjet } from '../fonctionnalites/gestion';
 import {
   PRINCE2_THEMES, SEQUENCE, livrable, livrablesDuTheme, processusDuTheme, processusPrince2, reperePrince2, themePrince2,
@@ -42,13 +43,18 @@ export class ProjetsGestionProjetPage {
   private readonly refresh = inject(BpmRefresh);
 
   protected readonly today = localToday();
-  protected readonly hours = hours;
-  protected readonly shortDate = shortDate;
+  protected readonly hours = hoursEn;
+  protected readonly date = dateEn;
+  protected readonly plural = plural;
+  protected readonly projectStatus = PROJECT_STATUS;
+  protected readonly taskStatus = TASK_STATUS;
+  protected readonly healthLabel = HEALTH;
+  protected readonly priorityLabel = PRIORITY;
   protected readonly themes = PRINCE2_THEMES;
   protected readonly sequence = SEQUENCE.filter((id) => id !== 'DP').map(processusPrince2);
   protected readonly diriger = processusPrince2('DP');
-  protected readonly columns = BOARD_COLUMNS;
-  protected readonly priorities: { id: Priority; label: string }[] = [{ id: 'high', label: 'Haute' }, { id: 'medium', label: 'Moyenne' }, { id: 'low', label: 'Basse' }];
+  protected readonly columns = BOARD_COLUMNS.map((c) => ({ id: c.id, label: TASK_STATUS[c.id] }));
+  protected readonly priorities: { id: Priority; label: string }[] = (['high', 'medium', 'low'] as const).map((id) => ({ id, label: PRIORITY[id] }));
 
   protected readonly data = bpmLoader(() => 0, async () => {
     const [projects, tasks, dossiers, livrables] = await Promise.all([
@@ -81,7 +87,7 @@ export class ProjetsGestionProjetPage {
     const byId = new Map(this.work().map((p) => [p.project.id, p]));
     return portfolio(d.projects, d.tasks, this.today).map((r) => {
       const p = byId.get(r.id)!;
-      return { ...r, repere: reperePrince2({ status: p.view.status, taskCount: r.taskCount }), dossier: d.dossiers.get(r.id) ?? null };
+      return { ...r, status: p.view.status, repere: reperePrince2({ status: p.view.status, taskCount: r.taskCount }), dossier: d.dossiers.get(r.id) ?? null };
     });
   });
   protected readonly totals = computed(() => totals(this.rows(), this.data.data()?.tasks ?? [], this.today));
@@ -143,7 +149,7 @@ export class ProjetsGestionProjetPage {
     const saisie = { title: String(f.get('title') ?? ''), description: String(f.get('description') ?? ''), priority: (f.get('priority') || 'medium') as Priority, startDate: String(f.get('startDate') ?? ''), dueDate: String(f.get('dueDate') ?? '') };
     const error = erreurSaisie(saisie);
     if (error) { this.failure.set(error); return; }
-    if (await this.run(() => this.api.createProject(commandeProjet(saisie)), `Projet « ${saisie.title.trim()} » créé.`)) { form.reset(); this.panneau.set(null); }
+    if (await this.run(() => this.api.createProject(commandeProjet(saisie)), `Project “${saisie.title.trim()}” created.`)) { form.reset(); this.panneau.set(null); }
   }
 
   protected async createTask(form: HTMLFormElement) {
@@ -151,7 +157,7 @@ export class ProjetsGestionProjetPage {
     const saisie = { title: String(f.get('title') ?? ''), projectId: String(f.get('projectId') ?? ''), plannedHours: String(f.get('plannedHours') ?? ''), dueDate: String(f.get('dueDate') ?? '') };
     const error = erreurSaisie(saisie);
     if (error) { this.failure.set(error); return; }
-    if (await this.run(() => this.api.createTask(commandeTache(saisie)), `Tâche « ${saisie.title.trim()} » créée${saisie.projectId ? ' et rattachée' : ', sans projet'}.`)) { form.reset(); this.panneau.set(null); }
+    if (await this.run(() => this.api.createTask(commandeTache(saisie)), `Task “${saisie.title.trim()}” created${saisie.projectId ? ' and linked to its project' : ' without a project'}.`)) { form.reset(); this.panneau.set(null); }
   }
 
   /** Rattacher les tâches cochées au projet choisi : une commande du grand noyau par tâche. */
@@ -161,7 +167,7 @@ export class ProjetsGestionProjetPage {
     if (!projectId || !chosen.length) return;
     const ok = await this.run(async () => {
       for (const t of chosen) await this.api.attachTask(t.task.id, projectId, t.task.revision);
-    }, `${chosen.length} tâche${chosen.length > 1 ? 's rattachées' : ' rattachée'} à « ${this.targetTitle()} ».`);
+    }, `${plural(chosen.length, 'task')} linked to “${this.targetTitle()}”.`);
     if (ok) this.picked.set(new Set());
   }
 
@@ -173,15 +179,15 @@ export class ProjetsGestionProjetPage {
     return this.run(async () => {
       await this.api.aaCreate(APPLICATION, COLLECTIONS.dossiers, { projectId, processusCourant: processus ?? 'SU' });
       await this.api.aaInstancier(APPLICATION, { declencheur: 'creation-dossier', projectId });
-    }, `Dossier PRINCE2 ouvert pour « ${title} » : rôles, séquence d’initialisation et produits de management prévus.`);
+    }, `PRINCE2 project file opened for “${title}”: roles, initiation stage and management products are set up.`);
   }
 
   protected detach(t: TaskView) {
-    return this.run(() => this.api.detachTask(t.task.id, t.task.revision), `« ${t.task.title} » n’est plus rattachée à un projet.`);
+    return this.run(() => this.api.detachTask(t.task.id, t.task.revision), `“${t.task.title}” is no longer linked to a project.`);
   }
 
   protected move(t: TaskView, status: TaskStatus) {
-    return this.run(() => this.api.changeTaskStatus(t.task.id, status, t.task.revision), `« ${t.task.title} » : ${BOARD_COLUMNS.find((c) => c.id === status)?.label.toLowerCase()}.`);
+    return this.run(() => this.api.changeTaskStatus(t.task.id, status, t.task.revision), `“${t.task.title}” moved to ${TASK_STATUS[status].toLowerCase()}.`);
   }
 
   // ---------- liens vers les fiches du grand noyau ----------
@@ -189,5 +195,6 @@ export class ProjetsGestionProjetPage {
   protected taskLink(t: TaskView) { return sourceLink('task', { id: t.task.id, projectId: t.task.projectId })?.link ?? astraUrl('taches'); }
   protected projectStatusLink(p: ProjectSummary) { return this.projectLink(p.project.id); }
   protected healthTone(h: Health) { return h === 'late' ? 'danger' : h === 'watch' ? 'warning' : h === 'done' || h === 'ok' ? 'success' : 'neutral'; }
-  protected neighbours(status: TaskStatus) { return BOARD_COLUMNS.filter((c) => c.id !== status); }
+  protected neighbours(status: TaskStatus) { return BOARD_COLUMNS.filter((c) => c.id !== status).map((c) => ({ id: c.id, label: TASK_STATUS[c.id] })); }
+  protected daysLabel(days: number) { return days < 0 ? `${plural(-days, 'day')} overdue` : days === 0 ? 'due today' : `in ${plural(days, 'day')}`; }
 }

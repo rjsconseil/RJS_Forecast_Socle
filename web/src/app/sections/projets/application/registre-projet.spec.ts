@@ -36,7 +36,7 @@ async function render(theme: string, items: LigneApplication[], projets = [{ id:
 describe('Mes projets · registre PRINCE2 d’un thème', () => {
   it('sans dossier ouvert, invite à l’ouvrir depuis l’accueil', async () => {
     const { el, api } = await render('risque', [], []);
-    expect(el.querySelector('.mp-registre-empty')?.textContent).toContain('dossier PRINCE2');
+    expect(el.querySelector('.mp-registre-empty')?.textContent).toContain('PRINCE2 project file');
     expect(api.aaList).not.toHaveBeenCalled();
   });
 
@@ -44,14 +44,14 @@ describe('Mes projets · registre PRINCE2 d’un thème', () => {
     const { f, api, el } = await render('risque', [ligne({ intitule: 'Retard fournisseur', probabilite: 'forte', statut: 'ouvert' })]);
     expect(api.aaList).toHaveBeenCalledWith('projets', 'risques', { projectId: 'prj_1' });
     expect(el.querySelector('tbody td')?.textContent?.trim()).toBe('Retard fournisseur');
-    expect(el.querySelectorAll('tbody td')[1].textContent?.trim()).toBe('Forte');
+    expect(el.querySelectorAll('tbody td')[1].textContent?.trim()).toBe('High');
 
     (el.querySelector('.mp-registre-tools .mp-btn.primary') as HTMLButtonElement).click();
     await settle(f);
     const form = el.querySelector('form') as HTMLFormElement;
     form.dispatchEvent(new Event('submit'));
     await settle(f);
-    expect(el.querySelector('.mp-alert.danger')?.textContent).toBe('Intitulé : obligatoire.');
+    expect(el.querySelector('.mp-alert.danger')?.textContent).toBe('Title is required.');
     (form.querySelector('[name=intitule]') as HTMLInputElement).value = 'Budget serré';
     form.dispatchEvent(new Event('submit'));
     await settle(f);

@@ -26,22 +26,24 @@ export interface Registre {
 export type ModeleCollections = Record<string, { champs?: Record<string, { type: string; valeurs?: string[]; obligatoire?: boolean }> }>;
 
 const LIBELLES: Record<string, string> = {
-  role: 'Rôle', personne: 'Personne', contact: 'Contact', numero: 'N°', nom: 'Nom', type: 'Type', statut: 'Statut',
-  debutPrevu: 'Début prévu', finPrevue: 'Fin prévue', intitule: 'Intitulé', probabilite: 'Probabilité', impact: 'Impact',
-  proprietaire: 'Propriétaire', reponse: 'Réponse', gravite: 'Gravité', priorite: 'Priorité', decision: 'Décision',
-  methode: 'Méthode', responsable: 'Responsable', prevuLe: 'Prévu le', faitLe: 'Fait le', resultat: 'Résultat',
-  date: 'Date', contenu: 'Contenu', processus: 'Processus', version: 'Version', approuvePar: 'Approuvé par',
-  approuveLe: 'Approuvé le', refCode: 'Livrable',
+  role: 'Role', personne: 'Person', contact: 'Contact', numero: 'No.', nom: 'Name', type: 'Type', statut: 'Status',
+  debutPrevu: 'Planned start', finPrevue: 'Planned end', intitule: 'Title', probabilite: 'Probability', impact: 'Impact',
+  proprietaire: 'Owner', reponse: 'Response', gravite: 'Severity', priorite: 'Priority', decision: 'Decision',
+  methode: 'Method', responsable: 'Responsible', prevuLe: 'Planned on', faitLe: 'Done on', resultat: 'Result',
+  date: 'Date', contenu: 'Content', processus: 'Process', version: 'Version', approuvePar: 'Approved by',
+  approuveLe: 'Approved on', refCode: 'Product',
 };
 /** Libellés des valeurs de choix (le code reste stocké). */
 export const VALEURS: Record<string, string> = {
-  'a-faire': 'À faire', brouillon: 'Brouillon', approuve: 'Approuvé', 'a-venir': 'À venir', 'en-cours': 'En cours', close: 'Close',
-  initiation: 'Initialisation', livraison: 'Livraison', cloture: 'Clôture', faible: 'Faible', moyenne: 'Moyenne', moyen: 'Moyen',
-  forte: 'Forte', fort: 'Fort', ouvert: 'Ouvert', clos: 'Clos', decide: 'Décidé', 'demande-changement': 'Demande de changement',
-  'hors-specification': 'Hors spécification', probleme: 'Problème ou préoccupation', basse: 'Basse', normale: 'Normale', haute: 'Haute',
-  conforme: 'Conforme', 'non-conforme': 'Non conforme', note: 'Note', lecon: 'Leçon', 'rapport-situation': 'Rapport de situation',
-  'rapport-point-controle': 'Rapport de point de contrôle', 'rapport-fin-sequence': 'Rapport de fin de séquence',
-  'rapport-exception': "Rapport d'exception", 'rapport-fin-projet': 'Rapport de fin de projet',
+  'a-faire': 'To do', brouillon: 'Draft', approuve: 'Approved', 'a-venir': 'Upcoming', 'en-cours': 'In progress', close: 'Closed',
+  initiation: 'Initiation', livraison: 'Delivery', cloture: 'Closure', faible: 'Low', moyenne: 'Medium', moyen: 'Medium',
+  forte: 'High', fort: 'High', ouvert: 'Open', clos: 'Closed', decide: 'Decided', 'demande-changement': 'Request for change',
+  'hors-specification': 'Off-specification', probleme: 'Problem or concern', basse: 'Low', normale: 'Normal', haute: 'High',
+  conforme: 'Pass', 'non-conforme': 'Fail', note: 'Note', lecon: 'Lesson', 'rapport-situation': 'Highlight Report',
+  'rapport-point-controle': 'Checkpoint Report', 'rapport-fin-sequence': 'End Stage Report',
+  'rapport-exception': 'Exception Report', 'rapport-fin-projet': 'End Project Report',
+  executif: 'Executive', 'utilisateur-principal': 'Senior User', 'fournisseur-principal': 'Senior Supplier', 'assurance-projet': 'Project Assurance',
+  'autorite-changement': 'Change Authority', 'chef-projet': 'Project Manager', 'support-projet': 'Project Support', 'chef-equipe': 'Team Manager',
 };
 
 /** Les registres de l'application, un par thème, d'après son modèle de données. */
@@ -54,13 +56,13 @@ export function registresDepuis(modele: ModeleCollections): Registre[] {
     });
   };
   return [
-    { theme: 'cas-affaire', collection: 'livrables', titre: 'Produits de management du projet', aide: 'Créés à l’ouverture du dossier et de chaque séquence : faites-les avancer jusqu’à leur approbation.', champs: champs('livrables', ['refCode', 'processus', 'statut', 'version', 'approuvePar', 'approuveLe']), etat: 'statut', sansSaisie: true },
-    { theme: 'organisation', collection: 'roles', titre: 'Rôles du projet', aide: 'Qui tient chaque rôle. Un rôle peut avoir plusieurs personnes, une personne plusieurs rôles.', champs: champs('roles', ['role', 'personne', 'contact']), etat: null },
-    { theme: 'qualite', collection: 'qualite', titre: 'Registre qualité', aide: 'Les contrôles qualité prévus et leur résultat.', champs: champs('qualite', ['methode', 'responsable', 'prevuLe', 'faitLe', 'resultat']), etat: 'resultat' },
-    { theme: 'plans', collection: 'etapes', titre: 'Séquences de management', aide: 'Ouvrir une séquence crée son plan, son rapport de situation et son rapport de fin de séquence.', champs: champs('etapes', ['numero', 'nom', 'type', 'statut', 'debutPrevu', 'finPrevue']), etat: 'statut', ouvreSequence: true },
-    { theme: 'risque', collection: 'risques', titre: 'Registre des risques', aide: 'Chaque risque : sa probabilité, son impact, sa réponse et son propriétaire.', champs: champs('risques', ['intitule', 'probabilite', 'impact', 'reponse', 'proprietaire', 'statut']), etat: 'statut' },
-    { theme: 'changement', collection: 'problemes', titre: 'Registre des incidences', aide: 'Demandes de changement, hors spécifications, problèmes : leur gravité et la décision prise.', champs: champs('problemes', ['intitule', 'type', 'gravite', 'priorite', 'decision', 'statut']), etat: 'statut' },
-    { theme: 'progression', collection: 'journalProjet', titre: 'Journal du projet', aide: 'Notes, leçons et rapports, datés.', champs: champs('journalProjet', ['date', 'type', 'contenu']), etat: null },
+    { theme: 'cas-affaire', collection: 'livrables', titre: 'Management products', aide: 'Created when the project file and each stage are opened: move them forward until they are approved.', champs: champs('livrables', ['refCode', 'processus', 'statut', 'version', 'approuvePar', 'approuveLe']), etat: 'statut', sansSaisie: true },
+    { theme: 'organisation', collection: 'roles', titre: 'Project roles', aide: 'Who holds each role. A role can be shared by several people, and one person can hold several roles.', champs: champs('roles', ['role', 'personne', 'contact']), etat: null },
+    { theme: 'qualite', collection: 'qualite', titre: 'Quality Register', aide: 'Planned quality activities and their results.', champs: champs('qualite', ['methode', 'responsable', 'prevuLe', 'faitLe', 'resultat']), etat: 'resultat' },
+    { theme: 'plans', collection: 'etapes', titre: 'Management stages', aide: 'Opening a stage creates its Stage Plan, Highlight Report and End Stage Report.', champs: champs('etapes', ['numero', 'nom', 'type', 'statut', 'debutPrevu', 'finPrevue']), etat: 'statut', ouvreSequence: true },
+    { theme: 'risque', collection: 'risques', titre: 'Risk Register', aide: 'Each risk with its probability, impact, response and owner.', champs: champs('risques', ['intitule', 'probabilite', 'impact', 'reponse', 'proprietaire', 'statut']), etat: 'statut' },
+    { theme: 'changement', collection: 'problemes', titre: 'Issue Register', aide: 'Requests for change, off-specifications and problems, with their severity and the decision taken.', champs: champs('problemes', ['intitule', 'type', 'gravite', 'priorite', 'decision', 'statut']), etat: 'statut' },
+    { theme: 'progression', collection: 'journalProjet', titre: 'Project log', aide: 'Dated notes, lessons and reports.', champs: champs('journalProjet', ['date', 'type', 'contenu']), etat: null },
   ];
 }
 
@@ -71,8 +73,8 @@ export function valeurLisible(champ: ChampRegistre, ligne: LigneApplication, nom
   const v = ligne[champ.id];
   if (v === null || v === undefined || v === '') return '—';
   if (champ.id === 'refCode') return nomLivrable(String(v));
-  if (champ.type === 'choix') return VALEURS[String(v)] ?? String(v);
-  if (champ.type === 'booleen') return v ? 'Oui' : 'Non';
+  if (champ.type === 'choix' || champ.id === 'role') return VALEURS[String(v)] ?? String(v);
+  if (champ.type === 'booleen') return v ? 'Yes' : 'No';
   return String(v);
 }
 
@@ -94,7 +96,7 @@ export function saisieRegistre(registre: Registre, brut: Record<string, string>)
 /** Message d'erreur de saisie, ou null. */
 export function erreurRegistre(registre: Registre, saisie: Record<string, unknown>): string | null {
   const manquant = registre.champs.find((c) => c.obligatoire && (saisie[c.id] === undefined || saisie[c.id] === ''));
-  if (manquant) return `${manquant.label} : obligatoire.`;
+  if (manquant) return `${manquant.label} is required.`;
   const entier = registre.champs.find((c) => c.type === 'entier' && saisie[c.id] !== undefined && !Number.isInteger(saisie[c.id]));
-  return entier ? `${entier.label} : un nombre entier.` : null;
+  return entier ? `${entier.label} must be a whole number.` : null;
 }
