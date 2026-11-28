@@ -49,7 +49,7 @@
       <form class="mp-panel mp-form" (submit)="$event.preventDefault(); createTask($any($event.target))" aria-label="New task">
         <h2>New task</h2>
         <label class="wide">Title <input name="title" required maxlength="200" placeholder="e.g. Write the Project Brief" /></label>
-        <label>Project <select name="projectId"><option value="">No project (link it later)</option>@for (r of rows(); track r.id) { <option [value]="r.id">{{ r.title }}</option> }</select></label>
+        <label>Project <select name="projectId"><option value="">No project (link it later)</option>@for (r of projets(); track r.id) { <option [value]="r.id">{{ r.title }}</option> }</select></label>
         <label>Planned hours <input name="plannedHours" inputmode="decimal" placeholder="e.g. 4" /></label>
         <label>Due <input type="date" name="dueDate" /></label>
         <div class="mp-form-actions wide">
@@ -59,12 +59,8 @@
       </form>
     }
 
-    @if (data.error(); as e) {
-      <p class="mp-alert danger" role="alert">{{ e.message }}</p>
-    } @else if (!data.data()) {
-      <p class="mp-muted" role="status">Loading projects…</p>
-    } @else if (theme(); as t) {
-      <!-- ================= Un thème PRINCE2 ================= -->
+    @if (theme(); as t) {
+      <!-- Un thème : où il s'applique, puis ses processus, sans aucune donnée de projet. -->
       <section class="mp-section" aria-labelledby="mp-seq-theme">
         <div class="mp-section-head"><p class="mp-kicker">Sequence</p><h2 id="mp-seq-theme">Where the theme applies</h2></div>
         <ol class="mp-ribbon">
@@ -75,172 +71,24 @@
         </ol>
       </section>
 
-      @if (registre(); as reg) {
-        <projets-registre [registre]="reg" [projets]="projetsAvecDossier()" />
-      }
-
-      <section class="mp-section" aria-labelledby="mp-liv-theme">
-        <div class="mp-section-head"><p class="mp-kicker">Management products</p><h2 id="mp-liv-theme">Products of the theme · {{ themeLivrables().length }}</h2></div>
-        <ul class="mp-chips">
-          @for (l of themeLivrables(); track l.id) { <li>{{ l.nom }}</li> }
-        </ul>
-      </section>
-
       <section class="mp-section" aria-labelledby="mp-proc-theme">
-        <div class="mp-section-head">
-          <p class="mp-kicker">Processes</p>
-          <h2 id="mp-proc-theme">What the theme asks of each process · {{ themeProcessus().length }}</h2>
-          <p class="mp-muted">In sequence order. The products of the theme are highlighted.</p>
-        </div>
-        <ol class="mp-steps">
+        <div class="mp-section-head"><p class="mp-kicker">Processes</p><h2 id="mp-proc-theme">Processes of the theme · {{ themeProcessus().length }}</h2></div>
+        <ol class="mp-list">
           @for (u of themeProcessus(); track u.processus.id) {
-            <li class="mp-panel mp-step">
-              <span class="mp-code">{{ u.processus.id }}</span>
-              <div class="mp-step-body">
-                <h3>{{ u.processus.nom }} <small>{{ u.processus.moment }}</small></h3>
-                <p class="mp-step-action">{{ u.action }}</p>
-                <p class="mp-muted">{{ u.processus.resume }}</p>
-                <ul class="mp-chips small" [attr.aria-label]="'Products of ' + u.processus.nom">
-                  @for (l of u.processus.livrables; track l) {
-                    <li [class.mark]="isThemeLivrable(u.livrables, l)">{{ livrableNom(l) }}</li>
-                  }
-                </ul>
-              </div>
-            </li>
+            <li><span class="mp-code">{{ u.processus.id }}</span><div><strong>{{ u.processus.nom }}</strong> <small>{{ u.processus.moment }}</small><p>{{ u.action }}</p></div></li>
           }
         </ol>
       </section>
-
-      <nav class="mp-pager" aria-label="Previous or next theme">
-        @if (previous(); as p) { <a [routerLink]="[]" [queryParams]="{ theme: p.id }" queryParamsHandling="merge">← {{ p.nom }}</a> } @else { <a [routerLink]="[]" [queryParams]="{ theme: null }" queryParamsHandling="merge">← Overview</a> }
-        @if (next(); as n) { <a [routerLink]="[]" [queryParams]="{ theme: n.id }" queryParamsHandling="merge">{{ n.nom }} →</a> }
-      </nav>
     } @else {
-      <!-- ================= Accueil : état des lieux ================= -->
-      <dl class="mp-facts" aria-label="Key figures">
-        <div><dt>Active projects</dt><dd>{{ totals().activeCount }}</dd><small>{{ totals().projectCount }} in total · {{ totals().doneCount }} done</small></div>
-        <div [attr.data-tone]="totals().lateCount ? 'danger' : 'success'"><dt>Late</dt><dd>{{ totals().lateCount }}</dd><small>{{ totals().watchCount }} to watch</small></div>
-        <div><dt>Open tasks</dt><dd>{{ totals().openTaskCount }}</dd><small>{{ totals().dueThisWeek }} due within 7 days</small></div>
-        <div [attr.data-tone]="orphans().length ? 'warning' : 'neutral'"><dt>Tasks without a project</dt><dd>{{ orphans().length }}</dd><small>to link</small></div>
-        <div><dt>Average progress</dt><dd>{{ totals().averageCompletion === null ? '—' : totals().averageCompletion + ' %' }}</dd><small>{{ hours(totals().spentHours) }} spent of {{ hours(totals().plannedHours) }}</small></div>
-      </dl>
-
+      <!-- Accueil : la séquence des processus PRINCE2, sans aucune donnée de projet. -->
       <section class="mp-section" aria-labelledby="mp-seq">
-        <div class="mp-section-head">
-          <p class="mp-kicker">Method</p>
-          <h2 id="mp-seq">The PRINCE2 sequence</h2>
-          <p class="mp-muted">What to do, in order. Each project’s position is indicative: it is read from the state of its tasks.</p>
-        </div>
-        <p class="mp-dp"><span class="mp-code">DP</span><span><strong>{{ diriger.nom }}</strong> · {{ diriger.resume }}</span></p>
-        <ol class="mp-sequence">
-          @for (p of sequence; track p.id; let i = $index) {
-            <li>
-              <span class="mp-code">{{ p.id }}</span>
-              <strong>{{ p.nom }}</strong>
-              <small>{{ p.moment }}</small>
-              <span class="mp-seq-count" [class.empty]="!atStep().get(p.id)">{{ plural(atStep().get(p.id) ?? 0, 'project') }}</span>
-            </li>
+        <div class="mp-section-head"><p class="mp-kicker">Sequence</p><h2 id="mp-seq">The PRINCE2 processes</h2></div>
+        <ol class="mp-list">
+          <li><span class="mp-code">DP</span><div><strong>{{ diriger.nom }}</strong> <small>{{ diriger.moment }}</small><p>{{ diriger.resume }}</p></div></li>
+          @for (p of sequence; track p.id) {
+            <li><span class="mp-code">{{ p.id }}</span><div><strong>{{ p.nom }}</strong> <small>{{ p.moment }}</small><p>{{ p.resume }}</p></div></li>
           }
         </ol>
-        @if (closedCount()) { <p class="mp-muted">{{ plural(closedCount(), 'project') }} closed.</p> }
-      </section>
-
-      @if (!rows().length) {
-        <section class="mp-panel mp-empty">
-          <h2>No projects yet</h2>
-          <p>Start with your first project: a title, a due date, then its tasks. Everything works without a budget or a cycle.</p>
-          <button type="button" class="mp-btn primary" (click)="toggle('projet')">Create a project</button>
-        </section>
-      } @else {
-        <section class="mp-section" aria-labelledby="mp-projets">
-          <div class="mp-section-head"><p class="mp-kicker">Portfolio</p><h2 id="mp-projets">Projects · {{ rows().length }}</h2></div>
-          <div class="mp-table-wrap">
-            <table class="mp-table">
-              <caption class="sr-only">Projects, their status and their PRINCE2 position</caption>
-              <thead><tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">PRINCE2 position</th><th scope="col">PRINCE2 project file</th><th scope="col">Progress</th><th scope="col">Tasks</th><th scope="col">Due</th></tr></thead>
-              <tbody>
-                @for (r of rows(); track r.id) {
-                  <tr>
-                    <th scope="row"><a [routerLink]="projectLink(r.id)">{{ r.title }}</a><small>{{ priorityLabel[r.priority] }} priority</small></th>
-                    <td><span class="mp-pill" [attr.data-tone]="healthTone(r.health)">{{ projectStatus[r.status] }}</span><small>{{ healthLabel[r.health] }}</small></td>
-                    <td><span class="mp-inline">@if (r.repere.processus) {<span class="mp-code">{{ r.repere.processus }}</span>}<span>{{ r.repere.label }}</span></span></td>
-                    <td>
-                      @if (r.dossier; as d) {
-                        <span class="mp-inline"><span class="mp-code">{{ d.processus ?? '—' }}</span><span>{{ d.approuves }} / {{ d.livrables }} approved</span></span><small>{{ d.avancement }} %</small>
-                      } @else {
-                        <button type="button" class="mp-btn small" [disabled]="busy()" (click)="openDossier(r.id, r.title, r.repere.processus)">Open project file</button>
-                      }
-                    </td>
-                    <td><span class="mp-bar" role="img" [attr.aria-label]="r.completion + ' % done'"><i [style.width.%]="r.completion"></i></span><small>{{ r.completion }} %</small></td>
-                    <td>{{ r.openTaskCount }} open / {{ r.taskCount }}@if (r.lateTaskCount) {<small class="late">{{ r.lateTaskCount }} late</small>}</td>
-                    <td>{{ date(r.dueDate) }}@if (r.daysLeft !== null && r.health !== 'done') {<small>{{ daysLabel(r.daysLeft) }}</small>}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="mp-section" aria-labelledby="mp-par-etat">
-          <div class="mp-section-head"><p class="mp-kicker">Board</p><h2 id="mp-par-etat">Projects by status</h2><p class="mp-muted">A project’s status follows the status of its tasks.</p></div>
-          <div class="mp-board">
-            @for (g of byStatus(); track g.status) {
-              <section class="mp-column" [attr.data-status]="g.status" [attr.aria-label]="projectStatus[g.status]">
-                <h3><span>{{ projectStatus[g.status] }}</span><span class="mp-badge">{{ g.projets.length }}</span></h3>
-                @for (p of g.projets; track p.project.id) {
-                  <a class="mp-card" [routerLink]="projectStatusLink(p)"><strong>{{ p.project.title }}</strong><small>{{ p.view.doneCount }} / {{ p.view.taskIds.length }} tasks done · {{ p.view.completionPercent }} %</small></a>
-                }
-              </section>
-            }
-          </div>
-        </section>
-      }
-
-      <section class="mp-section" aria-labelledby="mp-taches">
-        <div class="mp-section-head"><p class="mp-kicker">Board</p><h2 id="mp-taches">Tasks by status</h2><p class="mp-muted">Changing a task’s status updates its project.</p></div>
-        <div class="mp-board">
-          @for (col of board(); track col.id) {
-            <section class="mp-column" [attr.data-status]="col.id" [attr.aria-label]="taskStatus[col.id]">
-              <h3><span>{{ taskStatus[col.id] }}</span><span class="mp-badge">{{ col.cards.length }}</span></h3>
-              @for (c of col.cards; track c.view.task.id) {
-                <article class="mp-card" [class.late]="c.late">
-                  <a [routerLink]="taskLink(c.view)"><strong>{{ c.view.task.title }}</strong></a>
-                  <small>{{ c.view.projectTitle ?? 'No project' }} · @if (c.view.task.dueDate) {{{ date(c.view.task.dueDate) }}@if (c.late) { · late}} @else {no due date}</small>
-                  <div class="mp-moves" role="group" aria-label="Change status">
-                    @for (n of neighbours(c.view.task.status); track n.id) { <button type="button" [disabled]="busy()" (click)="move(c.view, n.id)">{{ n.label }}</button> }
-                  </div>
-                </article>
-              } @empty { <p class="mp-muted">No tasks.</p> }
-            </section>
-          }
-        </div>
-      </section>
-
-      <section class="mp-section" aria-labelledby="mp-rattacher">
-        <div class="mp-section-head"><p class="mp-kicker">Organize</p><h2 id="mp-rattacher">Link tasks to a project</h2><p class="mp-muted">A task can start on its own; link it to a project later, one or several at a time.</p></div>
-        <div class="mp-attach">
-          <label>Project
-            <select [value]="target()" (change)="target.set($any($event.target).value)">
-              <option value="">Choose a project</option>
-              @for (r of rows(); track r.id) { <option [value]="r.id">{{ r.title }}</option> }
-            </select>
-          </label>
-          <div class="mp-attach-cols">
-            <fieldset class="mp-panel">
-              <legend>Tasks without a project ({{ orphans().length }})</legend>
-              @for (t of orphans(); track t.task.id) {
-                <label class="mp-check"><input type="checkbox" [checked]="picked().has(t.task.id)" (change)="pick(t.task.id, $any($event.target).checked)" /> {{ t.task.title }}</label>
-              } @empty { <p class="mp-muted">Every task has a project.</p> }
-              <button type="button" class="mp-btn primary" [disabled]="busy() || !target() || !picked().size" (click)="attachPicked()">Link{{ picked().size ? ' (' + picked().size + ')' : '' }}</button>
-            </fieldset>
-            <fieldset class="mp-panel">
-              <legend>@if (target()) {Tasks of “{{ targetTitle() }}” ({{ targetTasks().length }})} @else {Project tasks}</legend>
-              @for (t of targetTasks(); track t.task.id) {
-                <div class="mp-attached"><span>{{ t.task.title }}</span>@if (t.pathways.canChangeProject) {<button type="button" class="mp-link" [disabled]="busy()" (click)="detach(t)">Unlink</button>}</div>
-              } @empty { <p class="mp-muted">{{ target() ? 'No linked tasks.' : 'Choose a project to see its tasks.' }}</p> }
-            </fieldset>
-          </div>
-        </div>
       </section>
     }
   </div>
