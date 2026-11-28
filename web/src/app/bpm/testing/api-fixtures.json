@@ -2829,43 +2829,6 @@
     {
      "items": [],
      "target": null,
-     "key": "caps",
-     "level": "warning",
-     "label": "Plafonds respectés",
-     "state": "ok",
-     "value": "Tous tenus",
-     "text": "Aucun poste au-delà de son plafond.",
-     "resolution": {
-      "problem": null,
-      "why": "Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans jamais bloquer.",
-      "steps": [
-       {
-        "text": "Si la dépense était prévue, relevez le plafond du poste.",
-        "target": {
-         "kind": "page",
-         "path": "plafonds"
-        }
-       },
-       {
-        "text": "Sinon, écartez ou reportez une échéance de ce poste qui n’a pas encore eu lieu.",
-        "target": {
-         "kind": "page",
-         "path": "echeances"
-        }
-       },
-       {
-        "text": "Ou gardez le dépassement : il est noté au bilan du cycle et ne bloque pas la clôture."
-       }
-      ],
-      "progress": {
-       "done": 0,
-       "total": 0
-      }
-     }
-    },
-    {
-     "items": [],
-     "target": null,
      "key": "variances",
      "level": "info",
      "label": "Règlements conformes au prévu",
@@ -2916,11 +2879,11 @@
      "more": 0
     }
    ],
-   "ok": 6,
+   "ok": 5,
    "warn": 0,
    "fail": 1,
    "later": 0,
-   "total": 7,
+   "total": 6,
    "blocking": [
     "Points du cycle traités"
    ]

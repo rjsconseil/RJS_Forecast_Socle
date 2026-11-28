@@ -33,17 +33,14 @@ test('mouvements : le poste porte son dépassement payé du cycle', async () => 
   assert.ok(withProjects.groups.some((g) => g.key === 'std:divers'));
 });
 
-test('clôture : le dépassement est signalé, jamais bloquant, puis gardé au bilan et figé', async () => {
+test('clôture : le dépassement est un fait marquant (bilan), ni contrôle ni frein, puis figé', async () => {
   const t = await setup();
   await at('2026-12-02', async () => {
     let j = t.bpm.closingJourney(t.ctx);
-    const caps = j.checks.items.find((c) => c.key === 'caps');
-    assert.equal(caps.level, 'warning');
-    assert.equal(caps.state, 'warn');
-    assert.equal(caps.value, '1 poste en dépassement');
-    assert.match(caps.items[0].detail, /^en dépassement de 55,00/);
-    assert.equal(caps.items[0].amountCents, -5500);
+    assert.equal(j.checks.items.find((c) => c.key === 'caps'), undefined, 'un dépassement n’est pas une incohérence');
     assert.deepEqual(j.checks.blocking, []);
+    const provisional = t.bpm.bilans.build(t.ctx, { key: '2026-11', start: '2026-11-01', end: '2026-11-30', closureId: null });
+    assert.deepEqual(provisional.caps.over.map((o) => [o.label, o.overCents]), [['Divers', 5500]]);
     assert.equal(j.canClose, true, 'un poste en dépassement ne bloque pas la clôture');
 
     const r = await t.bpm.finalizeClosing(t.ctx, { requestKey: key('fin'), periodKey: '2026-11', expectedResultCents: j.closing.preview.resultCents });

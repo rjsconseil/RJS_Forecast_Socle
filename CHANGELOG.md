@@ -3,6 +3,14 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : à la clôture, un dépassement de plafond est un fait marquant, pas une incohérence — 28 novembre 2026
+
+Évolution en **mode socle** (contrôles de clôture BPM, page « Clôture du cycle »).
+- Le contrôle « Plafonds respectés » sort de la cohérence du cycle : un poste au-delà de son plafond n'est ni une
+  incohérence ni un élément à corriger, et ne freine jamais la clôture.
+- Page de clôture, section 3 « Résultat et cycle suivant » : un bloc « Faits marquants du cycle » liste chaque poste
+  en dépassement, avec son montant et son plafond (lus dans le bilan du cycle, figés à la clôture).
+
 ## Grand noyau (socle) : un dépassement de plafond est un fait du cycle, signalé sans jamais bloquer — 28 novembre 2026
 
 Évolution en **mode socle** (middleware Budget, plafonds, clôture et bilans BPM, écran Mouvements). Aucun fichier d'application autonome.

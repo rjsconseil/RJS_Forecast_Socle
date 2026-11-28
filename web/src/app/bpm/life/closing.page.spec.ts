@@ -376,6 +376,21 @@ describe('page Clôture du cycle', () => {
     expect(api['closingDecision']).toHaveBeenCalledWith({ periodKey: '2026-11', defer: { pointId: 'alim', toPeriodKey: null } });
   });
 
+  it('un poste au-delà de son plafond est un fait marquant du cycle, pas une incohérence', async () => {
+    const b = bilan.bilan as Record<string, unknown>;
+    b['caps'] = { overCount: 1, overCents: 500, over: [{ level: 'Poste', ref: 'std:loisirs', label: 'Loisirs', capCents: 10000, paidCents: 10500, overCents: 500 }] };
+    try {
+      await open(journey({ checks: { ...checks, items: checks.items.filter((c) => c.key !== 'caps'), ok: 1, warn: 0, total: 2 } }));
+      const facts = section('closing-result').querySelector('.closing-facts')!;
+      expect(texts('h4', facts)).toEqual(['Faits marquants du cycle']);
+      expect(texts('li', facts)).toEqual([expect.stringMatching(/^Poste « Loisirs » en dépassement de 5,00\s€ · plafond 100,00\s€$/)]);
+      // Rien côté cohérence : aucune carte ni colonne de contrôle pour les plafonds.
+      expect(texts('.closing-checks .kt-head')).not.toContain('Plafonds respectés');
+    } finally {
+      delete b['caps'];
+    }
+  });
+
   it('à 100 % : la clôture fige le bilan et lance le cycle suivant', async () => {
     await open(journey({
       percent: 100, done: 6, canClose: true, remaining: [],
