@@ -3,6 +3,22 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Applications autonomes : squelettes de Mon quotidien, Mon budget, Patrimoine et Cycles — 28 novembre 2026
+
+Évolution en **mode application** (quotidien, budget, patrimoine, cycles et registre). Le socle n'est pas touché.
+- Chaque application a son dossier `web/src/app/sections/<clé>/` :
+  - `fonctionnalites/entree.ts` : l'entrée de l'application, calculée sans écran à partir des lectures du grand noyau ;
+  - `application/inscription.ts` : un espace propre, avec un lien dans la zone « Applications autonomes » ;
+  - `application/accueil.page.ts` : la vision, l'entrée lue par le grand noyau et une sortie à définir ;
+  - un `README.md`.
+- Les espaces : Mon quotidien `/mon-quotidien`, Mon budget `/mon-budget`, Mon patrimoine `/mon-patrimoine`, Mes cycles `/mes-cycles`.
+- Les entrées :
+  - Mon quotidien : le budget de vie du cycle en cours (l'emploi du temps attend la lecture du calendrier par le grand noyau) ;
+  - Mon budget : le patrimoine disponible (constitué − engagements futurs, ces derniers étant à brancher) ;
+  - Patrimoine : le patrimoine, son objectif et les projets de la vie ;
+  - Cycles : le reçu, le dépensé, l'épargne et le taux d'épargne de chaque cycle.
+- Fiches `docs/sections/<clé>.md` remplies (pour qui, entrée, fondations repérées, écrans). Pas encore de page dans BPM-Astra.
+
 ## Grand noyau (socle) : dossiers de travail séparés, poste de travail à côté du site réel — 28 novembre 2026
 
 Évolution en **mode socle** (outillage et documentation), sans effet sur le site.
