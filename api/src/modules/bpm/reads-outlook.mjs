@@ -66,6 +66,16 @@ export function createOutlookReads(socle, h, kit) {
 
   // ---------- budget type, échéances, événements, directives ----------
 
+  function settledInCycle(b, r) {
+    if (!b.period) return [];
+    const { start, end } = b.period;
+    return (r.settlementIds ?? [])
+      .map((id) => b.state.operations[id])
+      .filter((o) => o?.status === 'realized' && (o.accountingDate ?? o.realizedDate) >= start && (o.accountingDate ?? o.realizedDate) <= end)
+      .map((o) => ({ operationId: o.id, label: o.label, occurrenceDate: o.occurrenceDate, realizedDate: o.realizedDate, realizedCents: o.realizedAmountCents }))
+      .sort((x, y) => x.occurrenceDate.localeCompare(y.occurrenceDate));
+  }
+
   function budgetType(ctx) {
     const b = base(ctx);
     const now = today();
@@ -78,7 +88,9 @@ export function createOutlookReads(socle, h, kit) {
     return {
       context: contextOf(b),
       label: 'Moyennes mensuelles des opérations récurrentes actives (une moyenne ne remplace pas les échéances réelles)',
-      lines: recs.map((r) => ({ ...r, monthlyAverageCents: monthlyAverageCents(r.amountCents, r.cadence) })),
+      // Échéances déjà réglées qui comptent dans le cycle en cours (date comptable, à défaut date de règlement) :
+      // la page peut proposer de les corriger avec la ligne (`alsoSettled` de la modification).
+      lines: recs.map((r) => ({ ...r, monthlyAverageCents: monthlyAverageCents(r.amountCents, r.cadence), settledInCycle: settledInCycle(b, r) })),
       averageIncomeCents: income,
       averageChargeCents: charge,
       averageNetCents: income - charge,

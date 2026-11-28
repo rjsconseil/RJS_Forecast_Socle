@@ -200,3 +200,60 @@ describe('budget récurrent · lecture figée, « Modifier », enregistrement pa
     expect(dom.querySelector('.bt-table')!.textContent).toContain('800,00');
   });
 });
+
+// Une ligne dont l'échéance du cycle est déjà réglée : la page propose de corriger aussi le montant réglé (non par défaut).
+describe('budget récurrent · échéance déjà réglée dans le cycle', () => {
+  let lines: Recurrence[];
+  let bpm: Record<string, ReturnType<typeof vi.fn>>;
+
+  async function create() {
+    const fixture = TestBed.createComponent(BpmActBudgetType);
+    const settle = async () => { for (let i = 0; i < 2; i++) { fixture.detectChanges(); await fixture.whenStable(); } fixture.detectChanges(); };
+    await settle();
+    const dom = fixture.nativeElement as HTMLElement;
+    const button = (scope: HTMLElement, text: string) => [...scope.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent?.trim() === text)!;
+    const row = (label: string) => [...dom.querySelectorAll<HTMLElement>('.bm-row:not(.bm-row-head)')].find(r => r.querySelector<HTMLInputElement>('input')?.value === label)!;
+    const type = async (input: HTMLInputElement, value: string) => { input.value = value; input.dispatchEvent(new Event('input')); await settle(); };
+    button(dom, 'Modifier').click();
+    await settle();
+    return { dom, button, row, type, settle };
+  }
+
+  beforeEach(() => {
+    sessionStorage.clear();
+    lines = [{ ...line('rec_sal', 'Salaire', '2026-11-01'), direction: 'income', amountCents: 350000, amount: 3500,
+      settledInCycle: [{ operationId: 'op_nov', label: 'Salaire', occurrenceDate: '2026-11-01', realizedDate: '2026-11-03', realizedCents: 350000 }] }];
+    bpm = {
+      budgetType: vi.fn(async () => ({ context, label: 'Moyennes', lines, averageIncomeCents: 350000, averageChargeCents: 0, averageNetCents: 350000 })),
+      costCenters: vi.fn().mockResolvedValue([]),
+      updateRecurrence: vi.fn(async (id: string) => ({ recurrence: { ...lines.find(l => l.id === id)!, revision: 5 }, scope: { appliesTo: '', settledUntouched: 0 } })),
+      cancelRecurrence: vi.fn(),
+      createEntry: vi.fn(),
+    };
+    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: BpmApi, useValue: bpm }] });
+  });
+
+  it('la question n’apparaît qu’au changement du montant ; sans réponse, seules les prochaines échéances changent', async () => {
+    const { row, type, button, settle } = await create();
+    expect(row('Salaire').querySelector('.bt-settled')).toBeNull();
+    await type(row('Salaire').querySelectorAll<HTMLInputElement>('input')[1], '980');
+    expect(row('Salaire').querySelector('.bt-settled')!.textContent).toContain('est déjà reçue');
+    button(row('Salaire'), 'Enregistrer').click();
+    await settle();
+    expect(bpm['updateRecurrence']).toHaveBeenCalledWith('rec_sal', { expectedRevision: 4, amount: 980 });
+  });
+
+  it('case cochée : la modification corrige aussi le règlement du cycle', async () => {
+    const { dom, row, type, button, settle } = await create();
+    await type(row('Salaire').querySelectorAll<HTMLInputElement>('input')[1], '980');
+    const box = row('Salaire').querySelector<HTMLInputElement>('.bt-settled input[type=checkbox]')!;
+    expect(box.checked).toBe(false);
+    box.checked = true;
+    box.dispatchEvent(new Event('change'));
+    await settle();
+    button(row('Salaire'), 'Enregistrer').click();
+    await settle();
+    expect(bpm['updateRecurrence']).toHaveBeenCalledWith('rec_sal', { expectedRevision: 4, amount: 980, alsoSettled: { from: '2026-11-01', to: '2026-11-30' } });
+    expect(dom.querySelector('.bm-saved')!.textContent).toContain('avec le montant reçu ce cycle');
+  });
+});

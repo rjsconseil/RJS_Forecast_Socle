@@ -165,7 +165,7 @@ export class BpmApi {
     return this.post<{ operation: Operation }>(`/api/bpm/operations/${encodeURIComponent(id)}/cancel`, { expectedRevision, reason });
   }
   updateRecurrence(id: string, body: Record<string, unknown> & { expectedRevision: number }) {
-    return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number }; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
+    return this.put<{ recurrence: Recurrence; scope: { appliesTo: string; settledUntouched: number; settledUpdated?: string[] }; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(id)}`, body);
   }
   settleOccurrence(recurrenceId: string, body: { requestKey: string; occurrenceDate: string; realizedAmount?: number; realizedDate?: string; accountingDate?: string; fundingSource?: 'cycle' | 'patrimoine'; note?: string; fund?: boolean }) {
     return this.post<{ replayed: boolean; operation: Operation; capAlerts?: CapAlert[] }>(`/api/bpm/recurrences/${encodeURIComponent(recurrenceId)}/settle`, body);

@@ -11,6 +11,39 @@ import { realizedDateOf } from './guards.mjs';
 /** Commandes du middleware Budget ; `kit` : sa portée, ses vues et ses gardes (assemblés dans index.mjs). */
 export function recurrenceCommands(socle, kit) {
   const { om, lifeBudgetOf, costCenterFields, categoryFor, categoryPatch, operationView, taskFor, note, recurrenceView, guard, definitionGuard, postsProjectIncome, plannedFunding, projectAccounting, settlementDates, settlementGuard } = kit;
+  /**
+   * Correction des échéances déjà réglées, sur demande (`alsoSettled: { from, to }`, bornes incluses) : un règlement
+   * dont la date comptable (à défaut, la date de règlement) tombe dans la fenêtre reprend le libellé et le montant
+   * modifiés de la définition. Montant prévu et montant réglé deviennent le nouveau montant. Sans demande, rien ne
+   * change : les règlements gardent leurs valeurs. Les gardes des niveaux supérieurs (période close, financement
+   * d'une tâche) s'appliquent comme à un règlement.
+   */
+  function settledToFix(tx, r, settlements, input, patch) {
+    if (input.alsoSettled == null) return [];
+    const from = date('alsoSettled.from', input.alsoSettled?.from, { required: true });
+    const to = date('alsoSettled.to', input.alsoSettled?.to, { required: true });
+    if (to < from) fail('VALIDATION', 'La fin de la fenêtre ne peut pas précéder son début.', { field: 'alsoSettled.to' });
+    const out = [];
+    for (const o of settlements) {
+      if (o.status !== 'realized') continue;
+      const counted = o.accountingDate ?? o.realizedDate;
+      if (!counted || counted < from || counted > to) continue;
+      const p = {};
+      if ('label' in patch && patch.label !== o.label) p.label = patch.label;
+      if ('amountCents' in patch && (patch.amountCents !== o.realizedAmountCents || patch.amountCents !== o.amountCents)) {
+        p.amountCents = patch.amountCents;
+        p.realizedAmountCents = patch.amountCents;
+      }
+      if (!Object.keys(p).length) continue;
+      guard(tx.draft, o, settlementDates(tx.draft, o.budgetId, o));
+      if ('realizedAmountCents' in p) {
+        settlementGuard(tx, { userId: o.userId, budgetId: o.budgetId, direction: o.direction, amountCents: p.realizedAmountCents, realizedDate: o.realizedDate, accountingDate: o.accountingDate, fundingSource: o.fundingSource, taskId: o.taskId ?? null, operationId: o.id, recurrenceId: r.id, occurrenceDate: o.occurrenceDate }, input.fund);
+      }
+      out.push([o, p]);
+    }
+    return out;
+  }
+
   return {
     buildRecurrence(tx, input) {
       const budgetId = input.budgetId ?? lifeBudgetOf(tx.draft, tx.userId)?.id;
@@ -74,9 +107,19 @@ export function recurrenceCommands(socle, kit) {
         if ('taskId' in input) patch.taskId = taskFor(tx.draft, tx.userId, tx.draft.budgets[r.budgetId], input.taskId);
         // Occurrences touchées : celles de la définition avant et après la modification.
         definitionGuard(tx.draft, r, firstDate < r.firstDate ? firstDate : r.firstDate, endDate == null || r.endDate == null ? null : endDate > r.endDate ? endDate : r.endDate, true);
+        // Échéances déjà réglées à corriger aussi (sur demande) : celles dont le règlement compte dans la fenêtre.
+        const settledFix = settledToFix(tx, r, settlements, input, patch);
         om.update(tx, r, patch);
         for (const o of beyond) if (o.status === 'planned') om.update(tx, o, { status: 'cancelled', cancelledFrom: 'planned', cancelReason: 'Après la dernière échéance de la définition', closedAt: tx.now, closedOn: today() });
-        return { recurrence: r, scope: { appliesTo: 'occurrences encore attendues', settledUntouched: settlements.length } };
+        for (const [o, p] of settledFix) om.update(tx, o, p);
+        return {
+          recurrence: r,
+          scope: {
+            appliesTo: settledFix.length ? 'occurrences encore attendues et échéances réglées de la fenêtre demandée' : 'occurrences encore attendues',
+            settledUntouched: settlements.length - settledFix.length,
+            ...(settledFix.length ? { settledUpdated: settledFix.map(([o]) => o.id) } : {}),
+          },
+        };
     },
 
     /**
