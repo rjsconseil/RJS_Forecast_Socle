@@ -89,6 +89,7 @@ export function bpmRoutes(socle) {
     ['POST', '/api/bpm/project-budgets/:id/requests/:taskId', ({ ctx, params, body }) => s.projects.requestTaskBudget(ctx, params.id, params.taskId, body)],
     ['POST', '/api/bpm/task-budget-requests/:id/decision', ({ ctx, params, body }) => s.projects.decideTaskBudget(ctx, params.id, body)],
     ['PUT', '/api/bpm/project-budgets/:id/allocation', ({ ctx, params, body }) => s.projects.allocate(ctx, params.id, body)],
+    ['PUT', '/api/bpm/project-budgets/:id/task-cost', ({ ctx, params, body }) => s.projects.setTaskCost(ctx, params.id, body)],
     ['PUT', '/api/bpm/project-budgets/:id/shares/:taskId', ({ ctx, params, body }) => s.projects.setTaskShare(ctx, params.id, params.taskId, body)],
     ['POST', '/api/bpm/project-budgets/:id/shares/:taskId/release', ({ ctx, params, body }) => s.projects.releaseTaskShare(ctx, params.id, params.taskId, body)],
     ['PUT', '/api/bpm/project-budgets/:id/returns/:taskId', ({ ctx, params, body }) => s.projects.setTaskReturn(ctx, params.id, params.taskId, body)],

@@ -160,6 +160,7 @@
     "PUT /api/bpm/project-budgets/:id/allocation",
     "PUT /api/bpm/project-budgets/:id/returns/:taskId",
     "PUT /api/bpm/project-budgets/:id/shares/:taskId",
+    "PUT /api/bpm/project-budgets/:id/task-cost",
     "PUT /api/bpm/recurrences/:id",
     "PUT /api/bpm/vision"
   ],

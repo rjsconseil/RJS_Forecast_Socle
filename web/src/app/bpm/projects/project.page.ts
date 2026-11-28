@@ -642,6 +642,30 @@ export class BpmProjectPage {
 
 
   /** Écritures de la page : voir `ProjectWriteFlow`. */
+  // ---------- calcul du budget restant des tâches (réglage du projet) ----------
+  protected readonly taskCostMode = computed(() => this.data()?.budget?.taskCost?.mode ?? 'time-left');
+  protected readonly hourlyRateText = computed(() => {
+    const c = this.data()?.budget?.taskCost?.hourlyRateCents;
+    return c === null || c === undefined ? '' : (c / 100).toFixed(2).replace('.', ',');
+  });
+  protected setTaskCostMode(mode: 'time-left' | 'time-spent') {
+    const b = this.data()?.budget;
+    if (!b || mode === this.taskCostMode()) return;
+    return this.run(() => this.bpm.setTaskCost(b.budgetId, { expectedRevision: b.revision, mode }),
+      mode === 'time-spent' ? 'Budget restant des tâches calculé selon le temps consommé (taux horaire × heures passées).' : 'Budget restant des tâches calculé selon le temps restant.');
+  }
+  protected saveHourlyRate(value: string) {
+    const b = this.data()?.budget;
+    if (!b) return;
+    const rate = value.trim() === '' ? null : parseAmount(value);
+    if (rate === 'invalid' || (rate !== null && rate <= 0)) {
+      this.notice.set({ text: 'Taux horaire : un montant positif en euros, avec deux décimales au plus.', error: true });
+      return;
+    }
+    return this.run(() => this.bpm.setTaskCost(b.budgetId, { expectedRevision: b.revision, hourlyRate: rate }),
+      rate === null ? 'Taux horaire retiré.' : `Taux horaire du projet : ${cents(Math.round(rate * 100))} de l’heure, appliqué à toutes les tâches.`);
+  }
+
   private run<T>(action: Write<T>, success: string | ((result: T) => string), label = '') {
     return this.writes.run(action, success, label);
   }

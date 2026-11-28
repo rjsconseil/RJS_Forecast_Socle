@@ -83,6 +83,7 @@ const CATALOG = {
   setTaskShare: { kind: 'budget', category: 'projects', verb: () => 'Part de budget d’une tâche fixée' },
   releaseTaskShare: { kind: 'budget', category: 'projects', verb: () => 'Part de budget d’une tâche libérée' },
   setTaskReturn: { kind: 'budget', category: 'projects', verb: () => 'Retour attendu d’une tâche fixé' },
+  setTaskCost: { kind: 'budget', category: 'projects', verb: () => 'Calcul du budget restant des tâches réglé' },
   abandonProject: { kind: 'budget', category: 'projects', verb: () => 'Projet abandonné' },
   resumeProject: { kind: 'budget', category: 'projects', verb: () => 'Projet repris' },
   requestTaskBudget: { kind: 'taskBudgetRequest', category: 'projects', verb: () => 'Part de budget demandée' },

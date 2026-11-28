@@ -260,6 +260,10 @@ export class BpmApi {
   }
   /** Montant en euros attribué par le budget de vie. */
   /** `fundingSource` : source de financement ; modifiable tant qu'aucune dépense n'est comptabilisée. */
+  /** Calcul du budget restant des tâches du projet : mode et taux horaire (euros par heure, null l'efface). */
+  setTaskCost(budgetId: string, body: { expectedRevision: number; mode?: 'time-left' | 'time-spent'; hourlyRate?: number | null }) {
+    return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/task-cost`, body);
+  }
   allocate(budgetId: string, amount: number, expectedRevision: number, fundingSource?: 'cycle' | 'patrimoine') {
     return this.put<BpmProjectDetail>(`/api/bpm/project-budgets/${encodeURIComponent(budgetId)}/allocation`, { amount, expectedRevision, ...(fundingSource ? { fundingSource } : {}) });
   }
