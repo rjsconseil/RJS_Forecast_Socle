@@ -1,0 +1,31 @@
+<section class="aa-accueil" aria-labelledby="cycles-titre">
+  <header class="aa-tete">
+    <span class="aa-symbole" aria-hidden="true">↻</span>
+    <div>
+      <h1 id="cycles-titre">Mes cycles</h1>
+      <p>{{ vision }}</p>
+    </div>
+  </header>
+  <div class="aa-blocs">
+    <article class="aa-bloc" aria-labelledby="cycles-entree">
+      <h2 id="cycles-entree">Entrée</h2>
+      <p class="aa-intro">{{ entree }}</p>
+      @if (data.loading()) { <p class="aa-note">Lecture…</p> }
+      @if (data.error(); as err) { <p class="aa-erreur" role="alert">{{ err }}</p> }
+    @if (data.data(); as d) {
+      <table class="aa-table">
+        <thead><tr><th>Cycle</th><th>Reçu</th><th>Dépensé</th><th>Épargne</th><th>Taux d’épargne</th></tr></thead>
+        <tbody>
+          @for (c of d.cycles; track c.cle) {
+            <tr><td>{{ c.libelle }}</td><td>{{ c.recuCents | cents }}</td><td>{{ c.depenseCents | cents }}</td><td>{{ c.epargneCents | cents }}</td><td>{{ c.tauxEpargnePct === null ? '—' : c.tauxEpargnePct + ' %' }}</td></tr>
+          } @empty { <tr><td colspan="5" class="aa-note">Aucun cycle pour l’instant.</td></tr> }
+        </tbody>
+      </table>
+    }
+    </article>
+    <article class="aa-bloc" aria-labelledby="cycles-sortie">
+      <h2 id="cycles-sortie">Sortie</h2>
+      <p class="aa-note">À définir selon les finalités des fonctions qui seront demandées.</p>
+    </article>
+  </div>
+</section>

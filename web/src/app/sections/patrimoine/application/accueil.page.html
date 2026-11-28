@@ -1,0 +1,33 @@
+<section class="aa-accueil" aria-labelledby="patrimoine-titre">
+  <header class="aa-tete">
+    <span class="aa-symbole" aria-hidden="true">◆</span>
+    <div>
+      <h1 id="patrimoine-titre">Mon patrimoine</h1>
+      <p>{{ vision }}</p>
+    </div>
+  </header>
+  <div class="aa-blocs">
+    <article class="aa-bloc" aria-labelledby="patrimoine-entree">
+      <h2 id="patrimoine-entree">Entrée</h2>
+      <p class="aa-intro">{{ entree }}</p>
+      @if (data.loading()) { <p class="aa-note">Lecture…</p> }
+      @if (data.error(); as err) { <p class="aa-erreur" role="alert">{{ err }}</p> }
+    @if (data.data(); as d) {
+      <dl class="aa-chiffres">
+        <div><dt>Patrimoine constitué</dt><dd>{{ d.entree.constitueCents === null ? '—' : (d.entree.constitueCents | cents) }}</dd></div>
+        <div><dt>Objectif</dt><dd>{{ d.entree.objectifCents === null ? '—' : (d.entree.objectifCents | cents) }}</dd></div>
+        <div><dt>Reste à constituer</dt><dd>{{ d.entree.resteCents === null ? '—' : (d.entree.resteCents | cents) }}</dd></div>
+      </dl>
+      <h3>Projets de la vie à planifier</h3>
+      <ul class="aa-liste">
+        @for (p of d.entree.projets; track p.id) { <li>{{ p.titre }}@if (p.echeance) { · échéance {{ p.echeance | shortDate }}}</li> }
+        @empty { <li class="aa-note">Aucun projet de la vie pour l’instant.</li> }
+      </ul>
+    }
+    </article>
+    <article class="aa-bloc" aria-labelledby="patrimoine-sortie">
+      <h2 id="patrimoine-sortie">Sortie</h2>
+      <p class="aa-note">À définir selon les finalités des fonctions qui seront demandées.</p>
+    </article>
+  </div>
+</section>

@@ -1,0 +1,29 @@
+<section class="aa-accueil" aria-labelledby="budget-titre">
+  <header class="aa-tete">
+    <span class="aa-symbole" aria-hidden="true">◈</span>
+    <div>
+      <h1 id="budget-titre">Mon budget</h1>
+      <p>{{ vision }}</p>
+    </div>
+  </header>
+  <div class="aa-blocs">
+    <article class="aa-bloc" aria-labelledby="budget-entree">
+      <h2 id="budget-entree">Entrée</h2>
+      <p class="aa-intro">{{ entree }}</p>
+      @if (data.loading()) { <p class="aa-note">Lecture…</p> }
+      @if (data.error(); as err) { <p class="aa-erreur" role="alert">{{ err }}</p> }
+    @if (data.data(); as d) {
+      <dl class="aa-chiffres">
+        <div><dt>Patrimoine constitué</dt><dd>{{ d.entree.constitueCents === null ? '—' : (d.entree.constitueCents | cents) }}</dd></div>
+        <div><dt>Engagé pour l’avenir</dt><dd>{{ d.entree.engagesCents === null ? 'à brancher' : (d.entree.engagesCents | cents) }}</dd></div>
+        <div><dt>Disponible</dt><dd>{{ d.entree.disponibleCents === null ? 'à brancher' : (d.entree.disponibleCents | cents) }}</dd></div>
+      </dl>
+      <p class="aa-note">Le disponible attend la lecture des engagements futurs par le grand noyau (fondation repérée).</p>
+    }
+    </article>
+    <article class="aa-bloc" aria-labelledby="budget-sortie">
+      <h2 id="budget-sortie">Sortie</h2>
+      <p class="aa-note">À définir selon les finalités des fonctions qui seront demandées.</p>
+    </article>
+  </div>
+</section>

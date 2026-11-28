@@ -1,0 +1,35 @@
+<section class="aa-accueil" aria-labelledby="quotidien-titre">
+  <header class="aa-tete">
+    <span class="aa-symbole" aria-hidden="true">◷</span>
+    <div>
+      <h1 id="quotidien-titre">Mon quotidien</h1>
+      <p>{{ vision }}</p>
+    </div>
+  </header>
+  <div class="aa-blocs">
+    <article class="aa-bloc" aria-labelledby="quotidien-entree">
+      <h2 id="quotidien-entree">Entrée</h2>
+      <p class="aa-intro">{{ entree }}</p>
+      @if (data.loading()) { <p class="aa-note">Lecture…</p> }
+      @if (data.error(); as err) { <p class="aa-erreur" role="alert">{{ err }}</p> }
+    @if (data.data(); as d) {
+      @if (d.entree; as e) {
+        <p class="aa-intro">{{ d.cycle.label }} · {{ e.mouvements.length }} mouvement(s) du budget de vie.</p>
+        <dl class="aa-chiffres">
+          <div><dt>Reçu</dt><dd>{{ e.recuCents | cents }}</dd></div>
+          <div><dt>Payé</dt><dd>{{ e.payeCents | cents }}</dd></div>
+          <div><dt>À recevoir</dt><dd>{{ e.aRecevoirCents | cents }}</dd></div>
+          <div><dt>À payer</dt><dd>{{ e.aPayerCents | cents }}</dd></div>
+        </dl>
+        <p class="aa-note">Emploi du temps : à brancher (lecture du calendrier par le grand noyau).</p>
+      } @else {
+        <p class="aa-note">Aucun cycle configuré : l’entrée apparaîtra avec le premier cycle.</p>
+      }
+    }
+    </article>
+    <article class="aa-bloc" aria-labelledby="quotidien-sortie">
+      <h2 id="quotidien-sortie">Sortie</h2>
+      <p class="aa-note">À définir selon les finalités des fonctions qui seront demandées.</p>
+    </article>
+  </div>
+</section>
