@@ -58,11 +58,36 @@ applications autonomes qui l'entourent.
 On ne mélange jamais les deux modes dans une même PR : le contrôle « Mode de la PR » de GitHub (`npm run mode` en local)
 range chaque fichier modifié et passe au rouge si une PR touche à la fois le grand noyau et une application.
 
+## Dossiers de travail : un par niveau
+
+Un dossier ne sert qu'à un niveau et ne change jamais de branche sous une autre session. Chaque dossier est un
+`git worktree` du même dépôt : mêmes commits, branches et dossiers séparés.
+
+| Dossier | Rôle | Branche de départ |
+|---|---|---|
+| `~/Developer/RJS_Forecast_Socle` | **Site réel** (`npm start`, base PostgreSQL de `api/data/site.env`). On n'y développe pas et on n'y lance aucun test : seulement `git pull` de `main`, puis la relance | `main` |
+| `~/Developer/RJS_Forecast_Travail/socle` | Développement du **grand noyau** (mode socle) | `socle/travail`, puis une branche par PR |
+| `~/Developer/RJS_Forecast_Travail/app-projets` | Développement de l'application **Mes projets** (mode application) | `app/projets/travail`, puis une branche par PR |
+
+- Une nouvelle application a son dossier, créé depuis le dossier du site :
+  `git worktree add -b app/<clé>/travail ~/Developer/RJS_Forecast_Travail/app-<clé> main`, puis `npm ci` et
+  `npm ci --prefix web` dans le nouveau dossier.
+- Les dossiers de travail n'ont pas de `api/data/site.env` : ils n'atteignent jamais la base du site réel. Les tests,
+  les jeux d'essai et `npm run app` y tournent sur une base temporaire.
+- Le poste de travail (`npm run app -- <clé>`) prend ses propres ports, l'API sur 3510 et le site sur 4500 (puis les
+  suivants libres) : il tourne à côté du site réel (3410 / 4300) et des autres dossiers. `APP_API_PORT` et
+  `APP_WEB_PORT` les imposent.
+- Pour démarrer une PR : `git fetch origin && git switch -c <branche> origin/main` dans le dossier du niveau, puis le
+  contrôle « Mode de la PR » vérifie que la PR reste dans son niveau.
+- Après la fusion d'une PR du socle qui change le contrat (`api/test/contrat/`), chaque branche d'application ouverte
+  se met à jour (`git merge origin/main`) avant sa propre fusion. GitHub l'exige : une branche doit être à jour avec
+  `main` pour être fusionnée.
+
 ## Poste de travail d'une application autonome
 
 | Étape | Commande | Ce qu'elle fait |
 |---|---|---|
-| Lancer | `npm run app -- projets` | Le site complet sur une base temporaire, avec le jeu d'essai commun et ceux de l'application ; tes vraies données ne sont jamais touchées. L'API redémarre et le site se recharge à chaque modification |
+| Lancer | `npm run app -- projets` | Le site complet sur http://localhost:4500 (API 3510), sur une base temporaire, avec le jeu d'essai commun et ceux de l'application ; tes vraies données ne sont jamais touchées. L'API redémarre et le site se recharge à chaque modification |
 | Tester | `npm run test:app -- projets` | Seulement les tests de l'application et de ses fonctionnalités, son inscription dans BPM-Astra, et les gardes (trois étages, contrat du grand noyau, mode des PR) |
 | Parcourir | `npm run e2e:app -- projets` | Seulement ses parcours dans Chromium (sa partie de BPM-Astra à 1440 px, ses pages à 375 px), sur le site construit |
 | Livrer | PR de l'application | GitHub rejoue toute la non-régression ; la PR passe au vert seulement si elle ne touche aucun fichier du socle |
