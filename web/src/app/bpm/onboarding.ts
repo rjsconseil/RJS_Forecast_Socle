@@ -2,13 +2,14 @@ import { afterNextRender, Component, computed, ElementRef, inject, Injector, OnI
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthSession } from '../core/auth-session';
 import { Api, newRequestKey, RecetteContext, toApiError, UserDirectory } from '../core/api.service';
 import { UserType } from '../core/models';
 import { euros, parseAmount, shortDate } from '../core/format';
 import { AppHeroComponent, HeroChip } from '../shared/app-hero.component';
 import { injectPageWorkspace } from '../plan/page-workspace';
 
-type Field = 'label' | 'userType' | 'openingStock' | 'openingDate' | 'objective' | 'anchorDay' | 'cycleStartDate';
+type Field = 'email' | 'password' | 'label' | 'userType' | 'openingStock' | 'openingDate' | 'objective' | 'anchorDay' | 'cycleStartDate';
 
 /** Ce qui naît en une seule écriture avec le user : son projet de vie et tout ce qui le relie. */
 export const LIFE_PROJECT_CHAIN: { title: string; detail: string }[] = [
@@ -47,6 +48,13 @@ export class BpmOnboarding implements OnInit {
   private route = inject(ActivatedRoute);
   private ctx = inject(RecetteContext);
   private directory = inject(UserDirectory);
+  private auth = inject(AuthSession);
+  /**
+   * Connexion exigée (site en ligne) : un profil n'existe qu'avec son compte. Le formulaire demande alors l'adresse et le
+   * mot de passe du nouvel utilisateur et passe par l'inscription (`/api/auth/register`), qui crée le profil, sa
+   * composition et ses identifiants en une seule écriture, puis connecte ce nouvel utilisateur.
+   */
+  protected accountNeeded = this.auth.required;
   protected workspace = injectPageWorkspace();
   private profileLabel = viewChild<ElementRef<HTMLInputElement>>('profileLabel');
   private profileSearch = viewChild<ElementRef<HTMLInputElement>>('profileSearch');
@@ -93,6 +101,8 @@ export class BpmOnboarding implements OnInit {
   ]);
 
   protected form = new FormGroup({
+    email: new FormControl('', { nonNullable: true }),
+    password: new FormControl('', { nonNullable: true }),
     label: new FormControl('', { nonNullable: true }),
     userType: new FormControl('', { nonNullable: true }),
     openingStock: new FormControl('', { nonNullable: true }),
@@ -197,6 +207,11 @@ export class BpmOnboarding implements OnInit {
   async submit() {
     const v = this.form.getRawValue();
     const errors: Partial<Record<Field, string>> = {};
+    const email = v.email.trim();
+    if (this.accountNeeded()) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = 'Une adresse e-mail valide, pour se connecter.';
+      if (v.password.length < 10) errors.password = 'Au moins 10 caractères.';
+    }
     const label = v.label.trim();
     if (!label) errors.label = 'Donnez un libellé à l’utilisateur.';
     if (!v.userType) errors.userType = "Choisissez un type d'utilisateur.";
@@ -224,7 +239,7 @@ export class BpmOnboarding implements OnInit {
     try {
       // Le créateur n'est pas transmis : un futur user « parent » (audience `sponsor` du plan) passera ici
       // son identité pour devenir le maître du user créé. Aujourd'hui, seul un visiteur crée son propre user.
-      const r = await this.api.createUser({
+      const profile = {
         requestKey: this.requestKey,
         label,
         userType: v.userType,
@@ -233,10 +248,17 @@ export class BpmOnboarding implements OnInit {
         objective: objective as number | null,
         anchorDay,
         cycleStartDate: v.cycleStartDate || null,
-      });
+      };
+      if (this.accountNeeded()) {
+        // L'inscription connecte le nouvel utilisateur : la session (et donc le profil actif) devient la sienne.
+        await this.auth.register({ ...profile, email, password: v.password });
+      } else {
+        const r = await this.api.createUser(profile);
+        this.ctx.select(r.userId);
+      }
       this.requestKey = newRequestKey();
+      this.form.controls.password.setValue('');
       await this.directory.refresh().catch(() => undefined);
-      this.ctx.select(r.userId);
       // Le tableau de bord propose ensuite l'étape suivante ; la confirmation dit ce qui reste à faire.
       // Le cycle est actif dès que le jour d'ancrage est donné (début aujourd'hui par défaut, règle du middleware).
       const cycleReady = anchorDay !== null;

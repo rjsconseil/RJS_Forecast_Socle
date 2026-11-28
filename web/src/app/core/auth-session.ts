@@ -15,7 +15,22 @@ export interface AuthStatus {
   user: { id: string; label: string } | null;
   account: { email: string; role: string } | null;
 }
-export interface RegisterInput { email: string; password: string; label: string; userType?: string; requestKey: string }
+/**
+ * Inscription : les identifiants, puis la composition initiale du profil (mêmes champs que la création d'un utilisateur
+ * en mode local : stock d'ouverture, objectif, cycle). Le serveur crée tout en une seule écriture.
+ */
+export interface RegisterInput {
+  email: string;
+  password: string;
+  label: string;
+  userType?: string;
+  requestKey: string;
+  openingStock?: number | null;
+  openingDate?: string | null;
+  objective?: number | null;
+  anchorDay?: number | null;
+  cycleStartDate?: string | null;
+}
 
 export const LOGIN_PATH = '/connexion';
 

@@ -92,6 +92,31 @@ test('auth · connexion exigée : inscription, profil à soi seul, déconnexion,
   assert.equal((await camille('GET', '/api/bpm/summary')).status, 401);
 });
 
+test('auth · connexion exigée : le formulaire « Nouvel utilisateur » passe par l’inscription, avec toute sa composition', async (t) => {
+  const app = await serve('required');
+  t.after(app.close);
+  const roosevelt = app.browser();
+  await signup(roosevelt, 'roosevelt@example.org', 'Roosevelt');
+  // La création directe reste refusée, même connecté : un profil n'existe qu'avec son compte.
+  const direct = await roosevelt('POST', '/api/users', { requestKey: key(), label: 'Autre', userType: 'individuel' });
+  assert.deepEqual([direct.status, direct.body.error.code], [403, 'FORBIDDEN']);
+
+  // Ce que le site envoie en connexion exigée : les identifiants et les mêmes champs que la création en mode local.
+  const form = app.browser();
+  const created = await form('POST', '/api/auth/register', {
+    requestKey: key('nouvel-utilisateur'), email: 'nouveau@example.org', password: 'mot de passe solide',
+    label: 'Nouveau', userType: 'individuel', openingStock: 10000, openingDate: '2026-11-01', objective: 50000, anchorDay: 1, cycleStartDate: '2026-11-01',
+  });
+  assert.equal(created.status, 201);
+  const userId = created.body.userId;
+  const state = await app.socle.store.within(userId, () => app.socle.stateOf({ userId }));
+  const pat = Object.values(state.patrimoines).find((p) => p.userId === userId);
+  assert.deepEqual([pat.openingStockCents, pat.openingDate, pat.objectiveCents], [1000000, '2026-11-01', 5000000]);
+  const cycle = Object.values(state.cycleLinks).find((c) => c.userId === userId);
+  assert.equal(cycle.anchorDay, 1);
+  assert.equal((await form('GET', '/api/auth/status')).body.user.label, 'Nouveau', 'le nouvel utilisateur est connecté');
+});
+
 test('auth · connexion, mauvais mot de passe sans indice, limitation des essais, « se déconnecter partout »', async (t) => {
   const app = await serve('required');
   t.after(app.close);
