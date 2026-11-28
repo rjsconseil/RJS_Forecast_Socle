@@ -3,6 +3,17 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : une ligne supprimée du budget récurrent ne compte plus dans le cycle en cours — 28 novembre 2026
+
+Évolution en **mode socle** (page « Budget récurrent » de BPM-Astra et sa lecture), sans changement de règle de calcul.
+- Avant : supprimer une ligne posait sa dernière échéance la veille. L'échéance du début du cycle restait donc sur
+  l'accueil, « à recevoir » (entrée de 5 €) ou « reçue » (entrée de 980 € réglée).
+- Maintenant : une ligne sans règlement est retirée entièrement (`cancelRecurrence`). Ce qui a été reçu ou payé ce cycle
+  est annulé aussi (`cancelRealization`), case cochée par défaut dans la confirmation. Si un règlement est gardé, ou
+  vient d'un cycle précédent, la ligne se termine la veille du cycle en cours, ou sur ce règlement. Les cycles
+  précédents et leurs clôtures ne changent pas.
+- Lecture `GET /api/bpm/budget-type` : `settledInCycle[]` porte la `revision` de chaque règlement.
+
 ## Grand noyau (socle) : créer un utilisateur quand la connexion est exigée — 28 novembre 2026
 
 Évolution en **mode socle**, BPM-Astra inchangé.

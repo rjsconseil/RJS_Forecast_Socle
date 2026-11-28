@@ -18,11 +18,14 @@ const context = {
   calculationDate: '2026-11-22', revision: 1, unit: 'centimes (EUR)',
 };
 
-// Chaque ligne du budget récurrent se supprime par le bouton à sa droite ; la suppression vaut tout de suite
-// (dernière échéance la veille) : ce qui est réglé reste, les échéances à venir disparaissent.
+// Chaque ligne du budget récurrent se supprime par le bouton à sa droite, tout de suite et cycle en cours compris :
+// elle ne compte plus sur l'accueil. Sans règlement, elle est retirée entièrement ; ce qui a été réglé ce cycle est
+// annulé aussi (case cochée par défaut) ; un règlement gardé termine la ligne au lieu de la retirer.
 describe('budget récurrent · suppression d’une ligne', () => {
   let lines: Recurrence[];
-  let bpm: { budgetType: ReturnType<typeof vi.fn>; costCenters: ReturnType<typeof vi.fn>; updateRecurrence: ReturnType<typeof vi.fn>; cancelRecurrence: ReturnType<typeof vi.fn> };
+  let bpm: { budgetType: ReturnType<typeof vi.fn>; costCenters: ReturnType<typeof vi.fn>; updateRecurrence: ReturnType<typeof vi.fn>; cancelRecurrence: ReturnType<typeof vi.fn>; cancelRealization: ReturnType<typeof vi.fn> };
+  /** Règlements restants par ligne : le serveur refuse alors de retirer la ligne entièrement. */
+  let settledLeft: Record<string, number>;
 
   async function create() {
     const fixture = TestBed.createComponent(BpmActBudgetType);
@@ -34,11 +37,21 @@ describe('budget récurrent · suppression d’une ligne', () => {
     const button = (scope: HTMLElement, text: string) => [...scope.querySelectorAll<HTMLButtonElement>('button')].find(b => b.textContent?.trim() === text)!;
     /** Le budget est figé à l'arrivée : « Modifier » ouvre l'édition. */
     const edit = async () => { button(dom, 'Modifier').click(); await settle(); };
-    return { dom, row, button, settle, edit, fixture };
+    /** Bouton de suppression, puis confirmation ; plusieurs écritures peuvent s'enchaîner. */
+    const remove = async (label: string, before?: () => void) => {
+      row(label).querySelector<HTMLButtonElement>('.bm-del')!.click();
+      await settle();
+      before?.();
+      await settle();
+      button(row(label), 'Confirmer la suppression').click();
+      for (let i = 0; i < 3; i++) await settle();
+    };
+    return { dom, row, button, settle, edit, remove, fixture };
   }
 
   beforeEach(() => {
     sessionStorage.clear();
+    settledLeft = {};
     lines = [line('rec_loyer', 'Loyer', '2026-01-05'), line('rec_salle', 'Salle de sport', '2027-01-10')];
     bpm = {
       budgetType: vi.fn(async () => ({ context, label: 'Moyennes', lines, averageIncomeCents: 0, averageChargeCents: 160000, averageNetCents: -160000 })),
@@ -48,31 +61,47 @@ describe('budget récurrent · suppression d’une ligne', () => {
         return { recurrence: lines.find(l => l.id === id)!, scope: { appliesTo: '', settledUntouched: 0 } };
       }),
       cancelRecurrence: vi.fn(async (id: string) => {
+        if (settledLeft[id]) throw new ApiError(422, { code: 'FORBIDDEN_BY_RULE', action: null, message: 'Des échéances sont déjà réglées', details: { recurrenceId: id, settled: settledLeft[id] } });
         const gone = lines.find(l => l.id === id)!;
         lines = lines.filter(l => l.id !== id);
         return { recurrence: gone };
+      }),
+      cancelRealization: vi.fn(async (id: string) => {
+        lines = lines.map(l => ({ ...l, settledInCycle: (l.settledInCycle ?? []).filter(s => s.operationId !== id) }));
+        for (const l of lines) if (l.id === 'rec_sal') settledLeft[l.id] = Math.max(0, (settledLeft[l.id] ?? 0) - 1);
+        return { operation: {} };
       }),
     };
     TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: BpmApi, useValue: bpm }] });
   });
 
-  it('chaque ligne a son bouton de suppression à droite ; la suppression vaut tout de suite (fin la veille)', async () => {
-    const { dom, row, button, settle, edit } = await create();
+  it('une ligne commencée, sans règlement, est retirée entièrement : elle ne compte plus dans le cycle', async () => {
+    const { dom, row, edit, remove, button, settle } = await create();
     await edit();
     expect(dom.querySelectorAll('.bm-row:not(.bm-row-head) .bm-row-del .bm-del')).toHaveLength(2);
     expect(row('Loyer').lastElementChild!.previousElementSibling!.classList.contains('bm-row-del')).toBe(true);
 
     row('Loyer').querySelector<HTMLButtonElement>('.bm-del')!.click();
     await settle();
-    expect(row('Loyer').querySelector('.bm-confirm')!.textContent).toContain('dès maintenant');
-    expect(bpm.updateRecurrence).not.toHaveBeenCalled();
-
-    button(row('Loyer'), 'Confirmer la suppression').click();
+    expect(row('Loyer').querySelector('.bm-confirm')!.textContent).toContain('cycle en cours');
+    expect(bpm.cancelRecurrence).not.toHaveBeenCalled();
+    button(row('Loyer'), 'Garder la ligne').click();
     await settle();
-    expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_loyer', { expectedRevision: 4, endDate: shiftDate(localToday(), -1) });
-    expect(dom.querySelector('.bm-saved')!.textContent).toContain('ses prochaines échéances ne sont plus prévues');
+
+    await remove('Loyer');
+    expect(bpm.cancelRecurrence).toHaveBeenCalledWith('rec_loyer', 4, 'Supprimée depuis le budget récurrent');
+    expect(bpm.updateRecurrence).not.toHaveBeenCalled();
+    expect(row('Loyer')).toBeUndefined();
+    expect(dom.querySelector('.bm-saved')!.textContent).toContain('ne compte plus dans le cycle en cours');
+  });
+
+  it('un règlement d’un cycle précédent : la ligne se termine la veille du cycle en cours', async () => {
+    settledLeft['rec_loyer'] = 1;
+    const { row, button, settle, edit, remove } = await create();
+    await edit();
+    await remove('Loyer');
+    expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_loyer', { expectedRevision: 4, endDate: shiftDate(context.period.start, -1) });
     expect(row('Loyer').textContent).toContain('Retirée · dernière échéance');
-    expect(row('Loyer').querySelector('.bm-del')).toBeNull();
 
     button(row('Loyer'), 'Annuler la suppression').click();
     await settle();
@@ -80,33 +109,61 @@ describe('budget récurrent · suppression d’une ligne', () => {
     expect(row('Loyer').querySelector('.bm-del')).not.toBeNull();
   });
 
-  it('une échéance déjà réglée en avance : la dernière échéance se pose sur elle', async () => {
-    const { row, button, settle, edit } = await create();
+  it('une échéance gardée réglée plus tard : la dernière échéance se pose sur elle', async () => {
+    settledLeft['rec_loyer'] = 1;
+    const { row, edit, remove } = await create();
     await edit();
     const inner = bpm.updateRecurrence.getMockImplementation()!;
     bpm.updateRecurrence.mockImplementationOnce(async () => { throw new ApiError(422, { code: 'VALIDATION', action: null, message: 'réglée', details: { lastSettled: '2099-01-05' } }); });
     bpm.updateRecurrence.mockImplementationOnce(inner);
-    row('Loyer').querySelector<HTMLButtonElement>('.bm-del')!.click();
-    await settle();
-    button(row('Loyer'), 'Confirmer la suppression').click();
-    // Deux écritures s'enchaînent (refus, puis fin sur l'échéance réglée) : on laisse tout se poser.
-    for (let i = 0; i < 3; i++) await settle();
+    await remove('Loyer');
     expect(bpm.updateRecurrence).toHaveBeenLastCalledWith('rec_loyer', { expectedRevision: 4, endDate: '2099-01-05' });
     expect(row('Loyer').textContent).toContain('Retirée · dernière échéance');
   });
 
   it('une ligne qui n’a encore eu aucune échéance est retirée entièrement', async () => {
-    const { row, button, settle, dom, edit } = await create();
+    const { row, dom, edit, remove } = await create();
     await edit();
-    row('Salle de sport').querySelector<HTMLButtonElement>('.bm-del')!.click();
-    await settle();
-    expect(row('Salle de sport').querySelector('.bm-confirm')!.textContent).toContain('dès maintenant');
-    button(row('Salle de sport'), 'Confirmer la suppression').click();
-    await settle();
+    await remove('Salle de sport');
     expect(bpm.cancelRecurrence).toHaveBeenCalledWith('rec_salle', 4, 'Supprimée depuis le budget récurrent');
     expect(bpm.updateRecurrence).not.toHaveBeenCalled();
     expect(row('Salle de sport')).toBeUndefined();
     expect(dom.querySelectorAll('.bm-row:not(.bm-row-head)')).toHaveLength(1);
+  });
+
+  describe('avec une échéance réglée dans le cycle', () => {
+    beforeEach(() => {
+      settledLeft = { rec_sal: 1 };
+      lines = [{ ...line('rec_sal', 'Salaire', '2026-11-01'), direction: 'income', amountCents: 98000, amount: 980,
+        settledInCycle: [{ operationId: 'op_nov', label: 'Salaire', occurrenceDate: '2026-11-01', realizedDate: '2026-11-03', realizedCents: 98000, revision: 2 }] }];
+    });
+
+    it('par défaut, le règlement du cycle est annulé aussi, puis la ligne est retirée entièrement', async () => {
+      const { row, edit, remove } = await create();
+      await edit();
+      await remove('Salaire', () => {
+        const box = row('Salaire').querySelector<HTMLInputElement>('.bt-settled input')!;
+        expect(box.checked).toBe(true);
+        expect(row('Salaire').querySelector('.bt-settled')!.textContent).toContain('déjà été reçu ce cycle (980');
+      });
+      expect(bpm.cancelRealization).toHaveBeenCalledWith('op_nov', 2);
+      expect(bpm.cancelRecurrence).toHaveBeenCalledWith('rec_sal', 4, 'Supprimée depuis le budget récurrent');
+      expect(bpm.updateRecurrence).not.toHaveBeenCalled();
+      expect(row('Salaire')).toBeUndefined();
+    });
+
+    it('case décochée : le reçu reste, la ligne se termine sur sa première échéance', async () => {
+      const { row, edit, remove, settle } = await create();
+      await edit();
+      await remove('Salaire', () => {
+        const box = row('Salaire').querySelector<HTMLInputElement>('.bt-settled input')!;
+        box.checked = false;
+        box.dispatchEvent(new Event('change'));
+      });
+      await settle();
+      expect(bpm.cancelRealization).not.toHaveBeenCalled();
+      expect(bpm.updateRecurrence).toHaveBeenCalledWith('rec_sal', { expectedRevision: 4, endDate: '2026-11-01' });
+    });
   });
 });
 
@@ -222,7 +279,7 @@ describe('budget récurrent · échéance déjà réglée dans le cycle', () => 
   beforeEach(() => {
     sessionStorage.clear();
     lines = [{ ...line('rec_sal', 'Salaire', '2026-11-01'), direction: 'income', amountCents: 350000, amount: 3500,
-      settledInCycle: [{ operationId: 'op_nov', label: 'Salaire', occurrenceDate: '2026-11-01', realizedDate: '2026-11-03', realizedCents: 350000 }] }];
+      settledInCycle: [{ operationId: 'op_nov', label: 'Salaire', occurrenceDate: '2026-11-01', realizedDate: '2026-11-03', realizedCents: 350000, revision: 1 }] }];
     bpm = {
       budgetType: vi.fn(async () => ({ context, label: 'Moyennes', lines, averageIncomeCents: 350000, averageChargeCents: 0, averageNetCents: 350000 })),
       costCenters: vi.fn().mockResolvedValue([]),

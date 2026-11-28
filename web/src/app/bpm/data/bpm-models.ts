@@ -172,7 +172,7 @@ export interface Recurrence {
   settledInCycle?: SettledInCycle[];
 }
 
-export interface SettledInCycle { operationId: string; label: string; occurrenceDate: string; realizedDate: string; realizedCents: number }
+export interface SettledInCycle { operationId: string; label: string; occurrenceDate: string; realizedDate: string; realizedCents: number; revision: number }
 
 export interface LineDetail {
   context: BpmContextInfo;

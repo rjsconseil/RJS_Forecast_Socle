@@ -32,6 +32,8 @@ interface RowDraft {
   settled: SettledInCycle[];
   /** Réponse à « corriger aussi le montant déjà reçu / payé ce cycle ? » (non par défaut). */
   alsoSettled: boolean;
+  /** Réponse à « annuler aussi ce qui a été reçu / payé ce cycle ? » lors d'une suppression (oui par défaut). */
+  cancelSettled: boolean;
 }
 interface NewDraft {
   key: string;
@@ -166,6 +168,10 @@ const toCents = (raw: string) => {
                         }
                         @if (confirmRemove() === r.id) {
                           <span class="bm-confirm" role="status">{{ removalNotice(r) }}</span>
+                          @if (r.settled.length) {
+                            <label class="bt-settled"><input type="checkbox" [checked]="r.cancelSettled" (change)="patch(r.id, { cancelSettled: $any($event.target).checked })" />
+                              {{ settledRemovalLabel(r) }}</label>
+                          }
                           <button type="button" class="btn btn-danger small" (click)="removeLine(r)" [disabled]="removing() === r.id">{{ removing() === r.id ? 'Suppression…' : 'Confirmer la suppression' }}</button>
                           <button type="button" class="btn btn-secondary small" (click)="confirmRemove.set(null)" [disabled]="removing() === r.id">Garder la ligne</button>
                         }
@@ -333,6 +339,7 @@ export class BpmActBudgetType {
       kept: false,
       settled: l.settledInCycle ?? [],
       alsoSettled: false,
+      cancelSettled: true,
     };
   }
 
@@ -390,7 +397,13 @@ export class BpmActBudgetType {
   }
   protected removalNotice(r: RowDraft) {
     if (this.notStarted(r)) return `« ${r.orig.label} » n'a encore aucune échéance : elle sera retirée du budget récurrent dès maintenant.`;
-    return `« ${r.orig.label} » sera retirée dès maintenant : ses prochaines échéances disparaissent du cycle en cours et des suivants. Ce qui a déjà été réglé reste enregistré.`;
+    return `« ${r.orig.label} » sera retirée dès maintenant : ses échéances du cycle en cours et des suivants disparaissent. Les cycles précédents ne changent pas.`;
+  }
+  /** Case de la confirmation : ce qui a déjà été reçu / payé ce cycle part aussi, sauf si on la décoche. */
+  protected settledRemovalLabel(r: RowDraft) {
+    const verb = r.direction === 'income' ? 'reçu' : 'payé';
+    const list = r.settled.map((s) => `${cents(s.realizedCents)} le ${shortDay(s.realizedDate)}`).join(', ');
+    return `Annuler aussi ce qui a déjà été ${verb} ce cycle (${list}). Décochez pour le garder.`;
   }
   protected askRemove(id: string) {
     this.message.set(null);
@@ -398,36 +411,47 @@ export class BpmActBudgetType {
   }
 
   /**
-   * Supprime une ligne du budget récurrent, tout de suite : sa dernière échéance devient la veille (aucune échéance
-   * à venir, ni dans le cycle en cours ni après). Ce qui est réglé reste : si une échéance a été réglée en avance,
-   * la fin se pose sur elle. Une ligne qui n'a encore eu aucune échéance est retirée entièrement.
+   * Supprime une ligne du budget récurrent, tout de suite, cycle en cours compris : ses échéances du cycle disparaissent
+   * de l'accueil et des mouvements. Ce qui a été réglé ce cycle est annulé aussi, sauf si la case est décochée.
+   * Sans aucun règlement, la ligne est retirée entièrement ; sinon sa dernière échéance se pose avant le cycle en cours,
+   * ou sur le dernier règlement gardé. Les cycles précédents (et leurs clôtures) ne changent pas.
    */
   async removeLine(r: RowDraft) {
     if (this.removing()) return;
     this.removing.set(r.id);
+    let revision = r.revision;
     const end = async (endDate: string) => {
-      const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: r.revision, endDate });
+      const { recurrence } = await this.bpm.updateRecurrence(r.id, { expectedRevision: revision, endDate });
+      revision = recurrence.revision;
       this.patch(r.id, { endDate: recurrence.endDate, revision: recurrence.revision, error: null });
     };
     try {
-      if (this.notStarted(r)) {
-        await this.bpm.cancelRecurrence(r.id, r.revision, 'Supprimée depuis le budget récurrent');
-      } else {
+      if (r.cancelSettled) {
+        for (const s of r.settled) await this.bpm.cancelRealization(s.operationId, s.revision);
+        if (r.settled.length) this.patch(r.id, { settled: [] });
+      }
+      try {
+        await this.bpm.cancelRecurrence(r.id, revision, 'Supprimée depuis le budget récurrent');
+      } catch (e) {
+        // Des règlements restent (gardés ce cycle, ou d'un cycle précédent) : la ligne se termine au lieu de disparaître.
+        if (toApiError(e).body.details?.['settled'] === undefined) throw e;
+        const periodStart = this.bt.data()?.context.period?.start;
+        const beforeCycle = periodStart ? shiftDate(periodStart, -1) : shiftDate(localToday(), -1);
         try {
-          await end(shiftDate(localToday(), -1));
-        } catch (e) {
-          // Une échéance déjà réglée après la veille : la dernière échéance devient celle-là.
-          const lastSettled = toApiError(e).body.details?.['lastSettled'];
-          if (typeof lastSettled !== 'string') throw e;
+          await end(beforeCycle > r.firstDate ? beforeCycle : r.firstDate);
+        } catch (e2) {
+          // Une échéance gardée est réglée plus tard : la dernière échéance devient celle-là.
+          const lastSettled = toApiError(e2).body.details?.['lastSettled'];
+          if (typeof lastSettled !== 'string') throw e2;
           await end(lastSettled);
         }
       }
-      this.message.set(`« ${r.orig.label} » est retirée du budget récurrent : ses prochaines échéances ne sont plus prévues.`);
+      this.message.set(`« ${r.orig.label} » est retirée du budget récurrent : elle ne compte plus dans le cycle en cours ni dans les suivants.`);
       this.confirmRemove.set(null);
       this.refresh.bump();
     } catch (e) {
       const err = toApiError(e);
-      this.patch(r.id, { error: err.isConflict ? 'Modifiée ailleurs entre-temps : reprenez la version enregistrée.' : err.message });
+      this.patch(r.id, { error: err.isConflict ? 'Modifiée ailleurs entre-temps : reprenez la version enregistrée.' : err.message, kept: true });
     } finally {
       this.removing.set(null);
     }

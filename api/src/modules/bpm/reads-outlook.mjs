@@ -72,7 +72,7 @@ export function createOutlookReads(socle, h, kit) {
     return (r.settlementIds ?? [])
       .map((id) => b.state.operations[id])
       .filter((o) => o?.status === 'realized' && (o.accountingDate ?? o.realizedDate) >= start && (o.accountingDate ?? o.realizedDate) <= end)
-      .map((o) => ({ operationId: o.id, label: o.label, occurrenceDate: o.occurrenceDate, realizedDate: o.realizedDate, realizedCents: o.realizedAmountCents }))
+      .map((o) => ({ operationId: o.id, label: o.label, occurrenceDate: o.occurrenceDate, realizedDate: o.realizedDate, realizedCents: o.realizedAmountCents, revision: o.revision }))
       .sort((x, y) => x.occurrenceDate.localeCompare(y.occurrenceDate));
   }
 
