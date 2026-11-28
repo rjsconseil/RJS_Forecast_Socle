@@ -11,7 +11,7 @@ import { cents } from './format.mjs';
 /** @param tools les lectures communes de reads.mjs dont les plafonds ont besoin. */
 export function createCapsReads(socle, h, { budget, base, contextOf, statusOf, decorate, validatedProjectLines }) {
   const { om } = socle;
-  const capBrief = (r) => ({ capCents: r.capCents, engagedCents: r.engagedCents, marginCents: r.marginCents, usedPct: r.usedPct, over: r.over, near: r.near, level: r.level });
+  const capBrief = (r) => ({ capCents: r.capCents, engagedCents: r.engagedCents, paidCents: r.paidCents, paidOverCents: r.paidOverCents, marginCents: r.marginCents, usedPct: r.usedPct, over: r.over, near: r.near, level: r.level });
   const capsBrief = (report) => ({
     centers: Object.fromEntries(report.centers.map((c) => [c.ref, capBrief(c)])),
     overCount: report.overCount,
@@ -22,15 +22,23 @@ export function createCapsReads(socle, h, { budget, base, contextOf, statusOf, d
   // plus un engagement à payer. Même sélection que les postes et les flux de période.
   const capPlannedLines = (b, lines) => lines.filter((l) => statusOf(b.state, b.cycle, l) !== 'unrealized');
 
+  /**
+   * Plafonds qui valent pour la période lue : ceux figés par sa clôture (`closure.capsCents`), sinon ceux du budget de
+   * vie. Un dépassement constaté dans un cycle clos ne change donc plus quand le plafond change ensuite.
+   */
+  function capsOfPeriod(b) {
+    const closure = b.period ? h.closuresOf(b.state, b.cycle?.id).find((c) => c.periodKey === b.period.key) : null;
+    return closure?.capsCents ?? b.state.budgets[b.comp.budgetId].capsCents ?? {};
+  }
+
   /** Plafonds de la période lue, poste par poste : même périmètre que les centres (budget de vie + charges de projet validées). */
   function capsRead(b, { withLines = false } = {}) {
     const { start, end } = b.period;
     const realized = [...budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'realized' }), ...validatedProjectLines(b, { from: start, to: end, by: 'realized' })];
     const planned = capPlannedLines(b, budget().budgetLines(b.state, [b.comp.budgetId], { from: start, to: end, by: 'planned' }));
-    const life = b.state.budgets[b.comp.budgetId];
     return budget().capReport({
       centers: budget().costCentersOf(b.state, b.userId),
-      caps: life.capsCents ?? {},
+      caps: capsOfPeriod(b),
       realized,
       planned,
       withLines,

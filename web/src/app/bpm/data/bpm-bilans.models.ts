@@ -44,7 +44,8 @@ export interface Bilan {
   centers: { ref: string; label: string; paidCents: number }[];
   /** Dépenses des projets par poste (absent des bilans enregistrés avant le 17 nov. 2026). */
   projectCenters?: { ref: string; label: string; paidCents: number; projects: string[] }[];
-  caps: { overCount: number; over: { level: string; label: string; capCents: number; overCents: number }[] };
+  /** Postes en dépassement : dépenses payées au-delà du plafond du cycle (figé à la clôture). */
+  caps: { overCount: number; overCents?: number; over: { level: string; ref?: string; label: string; capCents: number; paidCents?: number; overCents: number }[] };
   deadlines: { unrealizedCount: number; unrealizedCents: number; openCount: number; openCents: number };
   biggest: { label: string; cents: number; date: string; project: string | null } | null;
   decisions: { sharesGranted: number; sharesGrantedCents: number; sharesRefused: number; overrunsApproved: number; overrunsApprovedCents: number; overrunsBilledCents: number };

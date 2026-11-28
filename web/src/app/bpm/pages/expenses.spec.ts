@@ -47,6 +47,21 @@ describe('écran Mouvements', () => {
     for (const l of f.register.lines) expect(texts('.expense-row').some((t) => t.includes(l.label))).toBe(true);
   });
 
+  it('un poste en dépassement de son plafond (dépenses payées) porte une note rouge à côté de son libellé', async () => {
+    const f = apiFixtures();
+    const g = f.register.groups.find((x) => x.key.startsWith('std:') && x.key !== 'std:salaires')!;
+    const caps = { ...f.register.caps!, centers: { ...f.register.caps!.centers, [g.key]: { capCents: 10000, engagedCents: 15500, paidCents: 15500, paidOverCents: 5500, marginCents: -5500, usedPct: 155, over: true, near: false, level: 'over' as const } } };
+    await open();
+    bpm['register'].mockResolvedValue({ ...f.register, caps });
+    // Relecture avec le plafond dépassé : la note suit le libellé du poste, les autres postes n'en ont pas.
+    await harness.navigateByUrl('/mouvements?period=2026-11&q=', BpmExpensesPage);
+    await settle();
+    const notes = [...dom().querySelectorAll('.expense-center-name h2 .expense-cap-over')];
+    expect(notes.length).toBe(1);
+    expect(notes[0].textContent!.replace(/\s+/g, ' ').trim()).toMatch(/^en dépassement de 55,00\s€$/);
+    expect(notes[0].closest('h2')!.textContent).toContain(g.label);
+  });
+
   it('les filtres passent par l’adresse et relisent le registre : sens, recherche, regroupement', async () => {
     await open();
     const buttonOf = (label: string) => [...dom().querySelectorAll<HTMLButtonElement>('.segmented button')].find((b) => b.textContent!.trim() === label)!;

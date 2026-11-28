@@ -3,6 +3,20 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : un dépassement de plafond est un fait du cycle, signalé sans jamais bloquer — 28 novembre 2026
+
+Évolution en **mode socle** (middleware Budget, plafonds, clôture et bilans BPM, écran Mouvements). Aucun fichier d'application autonome.
+- Mesure d'un plafond (`capReport`) : nouveau `paidOverCents`, la part des dépenses **payées** du cycle au-delà du
+  plafond du poste. Elle est jointe au registre (`caps.centers[ref].paidCents` / `paidOverCents`).
+- Plafonds figés à la clôture (`closure.capsCents`) : un cycle clos se relit avec ses plafonds. Son dépassement ne
+  change plus si le plafond change ensuite. Le cycle en cours suit le plafond du moment. Les clôtures déjà faites
+  n'ont pas cet instantané et se relisent comme avant.
+- Clôture : le contrôle « Plafonds respectés » reste à voir, jamais bloquant. Il nomme chaque poste « en dépassement de
+  XX » (payé et plafond) ; un test vérifie qu'un poste en dépassement n'empêche pas la clôture.
+- Bilan du cycle : tous les postes en dépassement de la période, avec leur montant (plus de limite à cinq), et un fait
+  marquant qui les nomme.
+- Mouvements : à côté du libellé du poste, une note rouge « en dépassement de XX € » (dépenses payées du cycle au-delà du plafond).
+
 ## Grand noyau (socle) : l'étape « Vérifier le compte » de la clôture est retirée — 28 novembre 2026
 
 Évolution en **mode socle** (clôture du cycle, cadre BPM-Astra, API BPM). Aucun fichier d'application autonome.

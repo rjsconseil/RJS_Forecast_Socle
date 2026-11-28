@@ -101,9 +101,10 @@ export function createBilans(socle, h, reads) {
     }
     const projectCenters = [...byProjectCenter.values()].sort((x, y) => y.paidCents - x.paidCents);
     const caps = reads.capsReview(ctx, { period: key });
+    // Postes en dépassement : dépenses payées au-delà du plafond du cycle (plafonds figés à la clôture pour un cycle clos).
     const over = caps.centers
-      .filter((r) => r.over)
-      .map((r) => ({ level: 'Poste', label: r.label, capCents: r.capCents, overCents: -r.marginCents }))
+      .filter((r) => r.paidOverCents > 0)
+      .map((r) => ({ level: 'Poste', ref: r.ref, label: r.label, capCents: r.capCents, paidCents: r.paidCents, overCents: r.paidOverCents }))
       .sort((x, y) => y.overCents - x.overCents);
 
     // Échéances : ce qui n'a jamais été réglé (période close) ou reste ouvert (période en cours).
@@ -165,7 +166,7 @@ export function createBilans(socle, h, reads) {
       announcementTrace: register.announcementTrace ?? [],
       centers,
       projectCenters,
-      caps: { overCount: over.length, over: over.slice(0, 5) },
+      caps: { overCount: over.length, overCents: sum(over, (o) => o.overCents), over },
       deadlines: {
         unrealizedCount: unrealized.length,
         unrealizedCents: sum(unrealized, (l) => (l.direction === 'income' ? l.plannedCents : -l.plannedCents)),
@@ -213,8 +214,8 @@ export function createBilans(socle, h, reads) {
     }
     for (const x of f.projects.filter((x) => x.allocatedInPeriod)) add('allocation', 'neutral', 'Enveloppe attribuée', `${x.allocationCents !== null ? eur(x.allocationCents) : 'Une enveloppe'} réservés pour « ${x.name} »${x.allocationDate ? ` le ${x.allocationDate.split('-').reverse().join('/')}` : ''}.`);
     if (f.caps.overCount) {
-      const o = f.caps.over[0];
-      add('caps', 'negative', `${f.caps.overCount} plafond${f.caps.overCount > 1 ? 's' : ''} dépassé${f.caps.overCount > 1 ? 's' : ''}`, `Le plus fort : ${o.level.toLowerCase()} « ${o.label} », ${eur(o.overCents)} au-delà de ${eur(o.capCents)}.`);
+      const n = f.caps.overCount;
+      add('caps', 'negative', `${n} poste${n > 1 ? 's' : ''} en dépassement de plafond`, f.caps.over.map((o) => `« ${o.label} » en dépassement de ${eur(o.overCents)} (plafond ${eur(o.capCents)})`).join(' ; ') + '.');
     }
     if (p.objectiveCents && p.progressBeforePct !== null && p.progressAfterPct !== null) {
       const step = [25, 50, 75, 100].find((s) => p.progressBeforePct < s && p.progressAfterPct >= s);

@@ -15,8 +15,7 @@ describe('écran Bilans', () => {
     for (let i = 0; i < 3; i++) { harness.detectChanges(); await harness.fixture.whenStable(); }
     harness.detectChanges();
   }
-  async function open(url = '/bilans') {
-    const f = apiFixtures();
+  async function open(url = '/bilans', f = apiFixtures()) {
     bpm = {
       lifeManagement: vi.fn().mockResolvedValue(f.lifeManagement),
       bilans: vi.fn().mockResolvedValue(f.bilans),
@@ -49,6 +48,17 @@ describe('écran Bilans', () => {
     expect(equation[1]).toContain(`${b.flows.paidCount} règlement(s)`);
     expect(b.flows.receivedCents - b.flows.spentCents).toBe(b.flows.resultCents);
     expect(equation[2]).toContain(b.status === 'closed' ? 'Résultat versé au patrimoine' : 'Résultat à ce jour');
+  });
+
+  it('le bilan liste les postes en dépassement de leur plafond sur la période, avec le montant', async () => {
+    const f = apiFixtures();
+    const b = f.bilan.bilan;
+    const center = b.centers[0];
+    const other = { level: 'Poste', ref: 'std:autre', label: 'Poste sans dépense ici', capCents: 5000, paidCents: 8000, overCents: 3000 };
+    f.bilan = { ...f.bilan, bilan: { ...b, caps: { overCount: 2, overCents: 8500, over: [{ level: 'Poste', ref: center.ref, label: center.label, capCents: 10000, paidCents: 15500, overCents: 5500 }, other] } as never } };
+    await open('/bilans', f);
+    expect(texts('.bl-rows .is-over .bl-over')[0]).toMatch(/^En dépassement de 55,00\s€ · plafond 100,00\s€$/);
+    expect(texts('p.bl-over')).toEqual([expect.stringMatching(/^Poste « Poste sans dépense ici » en dépassement de 30,00\s€ · plafond 50,00\s€\.$/)]);
   });
 
   it('un cycle demandé par l’adresse est celui qui s’ouvre', async () => {

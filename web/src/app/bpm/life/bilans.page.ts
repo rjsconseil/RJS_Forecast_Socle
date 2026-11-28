@@ -152,12 +152,12 @@ const pct = (part: number | null | undefined, whole: number | null | undefined) 
                       @for (c of v.centers; track c.ref) {
                         <li [class.is-over]="c.over">
                           <span>{{ c.label }}</span><strong [bpmAmount]="c.paidCents" bpmFlow="expense">{{ c.paidCents | cents }}</strong>
-                          @if (c.over; as o) { <small class="bl-over">Plafond {{ o.capCents | cents }} dépassé de {{ o.overCents | cents }}</small> }
+                          @if (c.over; as o) { <small class="bl-over">En dépassement de {{ o.overCents | cents }} · plafond {{ o.capCents | cents }}</small> }
                         </li>
                       } @empty { <li class="bl-muted">Aucune dépense réglée.</li> }
                     </ul>
-                    @for (o of v.otherCaps; track o.label) { <p class="bl-over">{{ o.level }} « {{ o.label }} » : {{ o.overCents | cents }} au-delà de {{ o.capCents | cents }}.</p> }
-                    @if (!b.caps.overCount) { <p class="bl-muted">Aucun plafond dépassé.</p> }
+                    @for (o of v.otherCaps; track o.label) { <p class="bl-over">{{ o.level }} « {{ o.label }} » en dépassement de {{ o.overCents | cents }} · plafond {{ o.capCents | cents }}.</p> }
+                    @if (!b.caps.overCount) { <p class="bl-muted">Aucun poste en dépassement de son plafond.</p> }
                   </div>
                 </div>
               </section>

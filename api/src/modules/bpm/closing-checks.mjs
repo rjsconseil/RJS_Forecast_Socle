@@ -166,23 +166,36 @@ export function closingChecks(s, t) {
     centers = [];
   }
   const capped = centers.filter((c) => Number.isInteger(c.capCents));
-  const over = capped.filter((c) => c.over);
+  // Dépassement constaté (dépenses payées au-delà du plafond du cycle) : un fait du cycle, gardé au bilan, qui ne bloque
+  // jamais la clôture. Dépassement menacé : des échéances encore à payer feraient franchir le plafond.
+  const paidOver = capped.filter((c) => c.paidOverCents > 0);
+  const threatened = capped.filter((c) => c.over && !(c.paidOverCents > 0));
+  const over = [...paidOver, ...threatened];
   add({
     key: 'caps', level: 'warning', label: 'Plafonds respectés',
     state: over.length ? 'warn' : 'ok',
-    value: over.length ? `${plural(over.length, 'poste')} au-delà` : 'Tous tenus',
-    text: over.length ? 'Dépassement constaté : la clôture le garde dans le bilan du cycle.' : 'Aucun poste au-delà de son plafond.',
+    value: paidOver.length ? `${plural(paidOver.length, 'poste')} en dépassement` : threatened.length ? `${plural(threatened.length, 'poste')} au-delà` : 'Tous tenus',
+    text: paidOver.length
+      ? 'Dépassement constaté par des dépenses payées : il est gardé au bilan du cycle et ne bloque jamais la clôture.'
+      : threatened.length ? 'Des échéances encore à payer feraient dépasser un plafond : la clôture le garde dans le bilan, sans bloquer.' : 'Aucun poste au-delà de son plafond.',
     resolution: {
       problem: over.length ? `${plural(over.length, 'poste dépasse', 'postes dépassent')} son plafond.` : null,
-      why: 'Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans bloquer.',
+      why: 'Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans jamais bloquer.',
       steps: [
         { text: 'Si la dépense était prévue, relevez le plafond du poste.', target: { kind: 'page', path: 'plafonds' } },
         { text: 'Sinon, écartez ou reportez une échéance de ce poste qui n’a pas encore eu lieu.', target: { kind: 'page', path: 'echeances' } },
-        { text: 'Ou gardez le dépassement : il sera noté dans la clôture.' },
+        { text: 'Ou gardez le dépassement : il est noté au bilan du cycle et ne bloque pas la clôture.' },
       ],
       progress: { done: capped.length - over.length, total: capped.length },
     },
-    items: over.map((c) => ({ id: c.ref, label: c.label, detail: `${fmt(c.engagedCents)} engagés pour un plafond de ${fmt(c.capCents)}`, amountCents: -c.marginCents, target: { kind: 'center', ref: c.ref } })),
+    items: over.map((c) => ({
+      id: c.ref, label: c.label,
+      detail: c.paidOverCents > 0
+        ? `en dépassement de ${fmt(c.paidOverCents)} : ${fmt(c.paidCents)} payés pour un plafond de ${fmt(c.capCents)}`
+        : `${fmt(c.engagedCents)} engagés pour un plafond de ${fmt(c.capCents)}`,
+      amountCents: c.paidOverCents > 0 ? -c.paidOverCents : -c.marginCents,
+      target: { kind: 'center', ref: c.ref },
+    })),
   });
 
   // 6. Règlements différents du prévu, et règlements faits après le dernier jour (pour information).

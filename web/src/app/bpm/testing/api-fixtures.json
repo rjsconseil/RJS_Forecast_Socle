@@ -134,6 +134,8 @@
     "std:logement": {
      "capCents": null,
      "engagedCents": 106000,
+     "paidCents": 0,
+     "paidOverCents": 0,
      "marginCents": null,
      "usedPct": null,
      "over": false,
@@ -143,6 +145,8 @@
     "std:alimentation": {
      "capCents": null,
      "engagedCents": 18000,
+     "paidCents": 18000,
+     "paidOverCents": 0,
      "marginCents": null,
      "usedPct": null,
      "over": false,
@@ -152,6 +156,8 @@
     "std:transport": {
      "capCents": null,
      "engagedCents": 0,
+     "paidCents": 0,
+     "paidOverCents": 0,
      "marginCents": null,
      "usedPct": null,
      "over": false,
@@ -161,6 +167,8 @@
     "std:sante": {
      "capCents": null,
      "engagedCents": 0,
+     "paidCents": 0,
+     "paidOverCents": 0,
      "marginCents": null,
      "usedPct": null,
      "over": false,
@@ -170,6 +178,8 @@
     "std:loisirs": {
      "capCents": null,
      "engagedCents": 0,
+     "paidCents": 0,
+     "paidOverCents": 0,
      "marginCents": null,
      "usedPct": null,
      "over": false,
@@ -179,6 +189,8 @@
     "std:divers": {
      "capCents": null,
      "engagedCents": 0,
+     "paidCents": 0,
+     "paidOverCents": 0,
      "marginCents": null,
      "usedPct": null,
      "over": false,
@@ -1633,6 +1645,7 @@
    ],
    "caps": {
     "overCount": 0,
+    "overCents": 0,
     "over": []
    },
    "deadlines": {
@@ -2824,7 +2837,7 @@
      "text": "Aucun poste au-delà de son plafond.",
      "resolution": {
       "problem": null,
-      "why": "Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans bloquer.",
+      "why": "Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans jamais bloquer.",
       "steps": [
        {
         "text": "Si la dépense était prévue, relevez le plafond du poste.",
@@ -2841,7 +2854,7 @@
         }
        },
        {
-        "text": "Ou gardez le dépassement : il sera noté dans la clôture."
+        "text": "Ou gardez le dépassement : il est noté au bilan du cycle et ne bloque pas la clôture."
        }
       ],
       "progress": {

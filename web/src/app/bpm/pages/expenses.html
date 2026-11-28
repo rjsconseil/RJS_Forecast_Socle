@@ -320,6 +320,9 @@
                     } @else {
                       {{ groupBy() === 'date' ? (g.label | shortDate) : g.label }}
                     }
+                    @if (groupCap(g.key)?.paidOverCents; as over) {
+                      <small class="expense-cap-over">en dépassement de {{ over | cents }}</small>
+                    }
                   </h2>
                   <p>{{ g.lineIds.length }} {{ g.lineIds.length === 1 ? 'échéance' : 'échéances' }}</p>
                   @if (groupCap(g.key); as m) {

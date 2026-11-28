@@ -122,6 +122,15 @@
         color: var(--bpm-muted);
         font-size: 12px;
       }
+
+      // Poste en dépassement de son plafond (dépenses payées du cycle), à côté de son libellé.
+      .expense-cap-over {
+        margin-inline-start: 8px;
+        color: var(--status-danger);
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
     }
 
     .expense-center-total {
