@@ -3,8 +3,7 @@
 // Un point à suivre est un évènement du cycle qui demande une revue :
 // - une échéance prévue du budget du projet de vie (entrée ou charge, récurrente ou saisie comme prévision) ;
 // - un flux prévu d'un projet de la vie financé par le cycle (enveloppe attribuée) ;
-// - une décision de financement en attente (part de budget demandée, dépassement à autoriser) ;
-// - la vérification du compte, une fois le cycle terminé (point bloquant).
+// - une décision de financement en attente (part de budget demandée, dépassement à autoriser).
 // Il s'ouvre quand l'évènement existe dans le cycle et se clôt dès qu'il est traité là où il vit sur le site
 // (règlement, écart, décision) : la page le montre clos à l'instant, avec son heure. Une saisie déjà réglée
 // n'ouvre aucun point.
@@ -70,7 +69,6 @@ const GROUPS = [
   { key: 'charges', label: 'Charges réglées', todo: (n) => `${plural(n, 'charge')} à régler ou décider` },
   { key: 'projects', label: 'Flux des projets imputés au cycle', todo: (n) => `${plural(n, 'flux de projet', 'flux de projets')} à valider ou décider` },
   { key: 'decisions', label: 'Décisions de financement', todo: (n) => `${plural(n, 'décision')} à prendre ou reporter` },
-  { key: 'account', label: 'Compte vérifié', todo: (_n, p) => (p?.stale ? 'compte à vérifier de nouveau' : 'compte à vérifier') },
 ];
 const DECIDED = {
   overrun: { approved: 'Autorisé', refused: 'Refusé', cancelled: 'Annulé', billed: 'Autorisé et consolidé' },
@@ -99,13 +97,13 @@ export function createClosing(socle, h, reads, bilans) {
   const { om } = socle;
   const budget = () => socle.modules.budget;
 
-  /** Décisions de clôture du cycle : points reportés (cycle cible) et compte vérifié. */
+  /** Décisions de clôture du cycle : points reportés (cycle cible). */
   const planOf = (cycle, periodKey, nextKey) => {
     const p = cycle?.closingPlan;
-    if (p?.periodKey !== periodKey) return { defer: {}, account: null };
+    if (p?.periodKey !== periodKey) return { defer: {} };
     const defer = { ...(p.defer ?? {}) };
     for (const id of p.carry ?? []) defer[id] ??= nextKey; // ancienne forme : report au cycle suivant
-    return { defer, account: p.account ?? null };
+    return { defer };
   };
 
   const fundedBudgets = (state, lifeBudgetId) =>
@@ -116,7 +114,7 @@ export function createClosing(socle, h, reads, bilans) {
   };
 
   /** Points du cycle : échéances prévues (vie, projets financés par le cycle), écartées, décisions, compte. */
-  function pointsOf(b, { phase, period, next, plan, account, targets }) {
+  function pointsOf(b, { phase, period, next, plan, targets }) {
     const { state, comp, cycle } = b;
     const window = { from: period.start, to: period.end, by: 'planned' };
     const labelOf = (key) => (key ? periodByKey(key, cycle.anchorDay)?.label ?? key : null);
@@ -264,28 +262,6 @@ export function createClosing(socle, h, reads, bilans) {
     for (const x of Object.values(state.projectOverruns ?? {})) decision(x, 'overrun');
     for (const x of Object.values(state.taskBudgetRequests ?? {})) if (!x.overrunId) decision(x, 'request');
 
-    // Le compte se vérifie une fois le cycle terminé : point bloquant, à refaire si le solde réalisé change.
-    const accountDone = !!account && !account.stale;
-    points.push({
-      id: 'account',
-      lineId: null,
-      kind: 'account',
-      group: 'account',
-      blocking: true,
-      label: 'Vérification du compte',
-      detail: 'Sa variation vaut les entrées reçues moins les sorties payées du cycle.',
-      status: phase === 'running' ? 'later' : accountDone ? 'settled' : 'late',
-      statusLabel: phase === 'running' ? `À la fin du cycle, le ${frDate(addDays(period.end, 1))}` : accountDone ? 'Vérifié' : account?.stale ? 'À vérifier de nouveau' : 'À vérifier',
-      state: phase === 'running' ? 'later' : accountDone ? 'closed' : 'open',
-      stale: !!account?.stale,
-      openedOn: phase === 'running' ? null : addDays(period.end, 1),
-      closedAt: accountDone ? account.at ?? null : null,
-      closedOn: accountDone ? account.confirmedAt : null,
-      outcome: accountDone ? 'confirmed' : null,
-      outcomeLabel: accountDone ? `Vérifié le ${frDate(account.confirmedAt)}` : null,
-      inheritedFrom: null,
-      deferTo: null,
-    });
     const rank = { open: 0, deferred: 1, later: 2, closed: 3 };
     return points.sort((a, z) => rank[a.state] - rank[z.state] || (a.plannedDate ?? '9').localeCompare(z.plannedDate ?? '9') || a.label.localeCompare(z.label, 'fr'));
   }
@@ -305,16 +281,15 @@ export function createClosing(socle, h, reads, bilans) {
     const first = Math.max(period.index + 1, cs.current.index);
     const targets = Array.from({ length: DEFER_HORIZON }, (_, i) => periodByIndex(first + i, cycle.anchorDay)).map((p) => ({ key: p.key, label: p.label, start: p.start }));
     const b = { state, userId, comp, cycle, cs };
-    // Les décisions de clôture (reports, compte vérifié) ne valent qu'une fois le cycle terminé.
-    const plan = phase === 'to_close' ? planOf(cycle, period.key, next.key) : { defer: {}, account: null };
+    // Les décisions de clôture (reports) ne valent qu'une fois le cycle terminé.
+    const plan = phase === 'to_close' ? planOf(cycle, period.key, next.key) : { defer: {} };
     const netCents = cents(h.figuresFor(state, userId, [RESULT], { periodKey: period.key }).figures[RESULT]?.value);
-    const account = plan.account ? { ...plan.account, stale: plan.account.netCents !== netCents } : null;
-    const points = pointsOf(b, { phase, period, next, plan, account, targets });
+    const points = pointsOf(b, { phase, period, next, plan, targets });
     const count = (s) => points.filter((p) => p.state === s).length;
     const counts = { total: points.length, open: count('open'), closed: count('closed'), deferred: count('deferred'), later: count('later'), inherited: points.filter((p) => p.inheritedFrom).length };
     const done = counts.closed + counts.deferred;
     const percent = counts.total ? Math.floor((done * 100) / counts.total) : 100;
-    return { comp, cycle, cs, b, lockEnabled, phase, period, next, targets, plan, netCents, account, points, counts, done, percent };
+    return { comp, cycle, cs, b, lockEnabled, phase, period, next, targets, plan, netCents, points, counts, done, percent };
   }
 
   /** Ce que le cycle qui se clôture laisse au cycle suivant (et au-delà, pour les points reportés plus loin). */
@@ -388,7 +363,7 @@ export function createClosing(socle, h, reads, bilans) {
       ? cycleActions(state, userId, period, { lifeBudgetId: s.comp.budgetId, projectBudgetIds: linkedProjectBudgets(state, s.comp.budgetId).map((x) => x.id), lineView: budget().lineView, anchorDay: cycle.anchorDay })
       : null;
     const checks = full ? closingChecks({ ...s, closing }, { budget: budget(), reads, inspector: socle.inspector }) : null;
-    const blocking = (checks?.items ?? []).filter((c) => c.level === 'blocking' && c.state === 'fail' && c.key !== 'points' && c.key !== 'account');
+    const blocking = (checks?.items ?? []).filter((c) => c.level === 'blocking' && c.state === 'fail' && c.key !== 'points');
     return {
       phase,
       period: { key: period.key, label: period.label, start: period.start, end: period.end, status: period.status },
@@ -406,7 +381,6 @@ export function createClosing(socle, h, reads, bilans) {
       points,
       targets: s.targets,
       netCents: s.netCents,
-      account: s.account,
       closing,
       canClose: phase === 'to_close' && s.percent === 100 && !!closing?.possible && !blocking.length,
       remaining: [...criteria.map((c) => c.remaining), ...blocking.map((c) => `${c.label.toLowerCase()} à rétablir`)].filter(Boolean),
@@ -461,8 +435,8 @@ export function createClosing(socle, h, reads, bilans) {
 
     /**
      * Décisions de clôture, une fois le cycle terminé : ne pas valider un point non bloquant dans ce cycle (il se
-     * revoit dans le cycle choisi : `defer: { pointId, toPeriodKey }`, `toPeriodKey: null` retire le report), confirmer
-     * (ou retirer) la vérification du compte. Elles restent sur la liaison de cycle jusqu'à la clôture.
+     * revoit dans le cycle choisi : `defer: { pointId, toPeriodKey }`, `toPeriodKey: null` retire le report). Elles
+     * restent sur la liaison de cycle jusqu'à la clôture. L'étape « Vérifier le compte » est retirée (28 nov. 2026).
      * Ancienne forme acceptée : `carry: { lineId, value }` (report au cycle suivant).
      */
     async decide(ctx, input = {}) {
@@ -473,7 +447,6 @@ export function createClosing(socle, h, reads, bilans) {
         const cycle = h.cycleOf(tx.draft, h.compositionOf(tx.draft, tx.userId).id);
         const plan = planOf(cycle, j.period.key, j.next.key);
         const defer = { ...plan.defer };
-        let { account } = plan;
         const request = input.defer ?? (input.carry !== undefined ? { pointId: input.carry?.lineId, toPeriodKey: input.carry?.value === false ? null : j.targets[0].key } : undefined);
         if (request !== undefined) {
           const pointId = text('defer.pointId', request?.pointId, { required: true, max: 200 });
@@ -489,12 +462,7 @@ export function createClosing(socle, h, reads, bilans) {
             defer[p.id] = target.key;
           }
         }
-        if (input.account !== undefined) {
-          account = input.account?.confirmed === false
-            ? null
-            : { confirmedAt: today(), at: tx.now, netCents: j.netCents, note: input.account?.note ? text('account.note', input.account.note, { max: 500 }) : null };
-        }
-        om.update(tx, cycle, { closingPlan: { periodKey: j.period.key, defer, account } });
+        om.update(tx, cycle, { closingPlan: { periodKey: j.period.key, defer } });
         return { periodKey: j.period.key };
       });
       return this.journey(ctx);
@@ -535,7 +503,6 @@ export function createClosing(socle, h, reads, bilans) {
               pointId: p.id, kind: p.kind, group: p.group, label: p.label, direction: p.direction ?? null, plannedCents: p.plannedCents ?? null,
               fromDate: p.plannedDate ?? null, toPeriodKey: p.deferTo.key, toPeriodLabel: p.deferTo.label, toDate: p.deferTo.start, project: p.project?.name ?? null,
             })),
-            account: j.account ? { confirmedAt: j.account.confirmedAt, netCents: j.account.netCents, note: j.account.note ?? null } : null,
             // Historisation : les actions du cycle et les contrôles, tels qu'au moment de figer le cycle.
             actions: actionsSnapshot(j.actions),
             checks: j.checks.items.map((c) => ({ key: c.key, label: c.label, level: c.level, state: c.state, value: c.value })),

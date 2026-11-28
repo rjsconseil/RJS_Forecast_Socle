@@ -54,7 +54,7 @@ postcss.parse(css).walkRules((rule) => {
 console.log(`${rules.length} règles, ${decls.length} déclarations dans la feuille globale`);
 
 const SLUGS = ['', 'mouvements', 'mouvements/echeances', 'calendrier', 'calendrier/agenda', 'projets', 'financement/enveloppes', 'taches', 'budget', 'plafonds',
-  'plafonds/postes', 'objectif', 'objectif/echeances', 'patrimoine', 'patrimoine/reglages', 'cloture/compte', 'cloture', 'cloture/reglages', 'bilans'];
+  'plafonds/postes', 'objectif', 'objectif/echeances', 'patrimoine', 'patrimoine/reglages', 'cloture', 'cloture/reglages', 'bilans'];
 const SITE = ['/', '/admin', '/admin/calculs', '/calendrier', '/compte', '/modules', '/navigation', '/object-management', '/projects', '/projects/new',
   '/socle/budget', '/socle/cycle', '/socle/patrimoine', '/tasks', '/tasks/new', '/utilisateurs'];
 const browser = await chromium.launch({ executablePath: chrome, headless: true });

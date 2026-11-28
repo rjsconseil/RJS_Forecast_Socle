@@ -31,7 +31,6 @@ export function bpmRoutes(socle) {
     ['GET', '/api/bpm/centers', ({ ctx, query }) => s.reads.centers(ctx, Object.fromEntries(query))],
     ['GET', '/api/bpm/centers/:ref', ({ ctx, params, query }) => s.reads.centerDetail(ctx, params.ref, Object.fromEntries(query))],
     ['GET', '/api/bpm/incomes', ({ ctx, query }) => s.reads.incomes(ctx, Object.fromEntries(query))],
-    ['GET', '/api/bpm/balance', ({ ctx, query }) => s.reads.balance(ctx, Object.fromEntries(query))],
     ['GET', '/api/bpm/history', ({ ctx, query }) => s.reads.history(ctx, { before: query.get('before') ?? undefined, limit: query.get('limit') ?? undefined })],
     ['GET', '/api/bpm/impact', ({ ctx, query }) => s.reads.impact(ctx, { period: query.get('period') || undefined })],
     ['GET', '/api/bpm/budget-type', ({ ctx }) => s.reads.budgetType(ctx)],

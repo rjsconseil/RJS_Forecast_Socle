@@ -15,11 +15,11 @@ describe('accès rapides dérivés du plan', () => {
   });
 
   it('propose le niveau supérieur, les autres vues et les pages voisines en gardant la lecture', () => {
-    const links = contextLinks('/bpm-astra/cloture/compte?period=2026-10&entry=new');
+    const links = contextLinks('/bpm-astra/cloture/reglages?period=2026-10&entry=new');
     expect(links.map((link) => `${link.kind}:${link.link}`).slice(0, 3)).toEqual([
       'up:/bpm-astra/cloture',
       'view:/bpm-astra/cloture',
-      'view:/bpm-astra/cloture/reglages',
+      'sibling:/bpm-astra/bilans',
     ]);
     // La période suit le lien, jamais la saisie ouverte.
     expect(links.every((link) => link.query?.['period'] === '2026-10' && !link.query?.['entry'])).toBe(true);

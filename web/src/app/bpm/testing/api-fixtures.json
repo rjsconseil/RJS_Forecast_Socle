@@ -2212,10 +2212,10 @@
   },
   "percent": 0,
   "done": 0,
-  "total": 3,
+  "total": 2,
   "counts": {
-   "total": 3,
-   "open": 3,
+   "total": 2,
+   "open": 2,
    "closed": 0,
    "deferred": 0,
    "later": 0,
@@ -2253,14 +2253,6 @@
     "total": 0,
     "state": "none",
     "remaining": null
-   },
-   {
-    "key": "account",
-    "label": "Compte vérifié",
-    "done": 0,
-    "total": 1,
-    "state": "todo",
-    "remaining": "compte à vérifier"
    }
   ],
   "points": [
@@ -2321,26 +2313,6 @@
     "statusLabel": "En retard",
     "state": "open",
     "openedOn": "2026-11-20",
-    "closedAt": null,
-    "closedOn": null,
-    "outcome": null,
-    "outcomeLabel": null,
-    "inheritedFrom": null,
-    "deferTo": null
-   },
-   {
-    "id": "account",
-    "lineId": null,
-    "kind": "account",
-    "group": "account",
-    "blocking": true,
-    "label": "Vérification du compte",
-    "detail": "Sa variation vaut les entrées reçues moins les sorties payées du cycle.",
-    "status": "late",
-    "statusLabel": "À vérifier",
-    "state": "open",
-    "stale": false,
-    "openedOn": "2026-11-01",
     "closedAt": null,
     "closedOn": null,
     "outcome": null,
@@ -2472,7 +2444,6 @@
    }
   ],
   "netCents": -24000,
-  "account": null,
   "closing": {
    "possible": true,
    "reason": null,
@@ -2504,8 +2475,7 @@
   "canClose": false,
   "remaining": [
    "1 entrée à recevoir ou décider",
-   "1 charge à régler ou décider",
-   "compte à vérifier"
+   "1 charge à régler ou décider"
   ],
   "impacts": {
    "next": {
@@ -2761,46 +2731,6 @@
     },
     {
      "items": [],
-     "target": "closing-step-account",
-     "key": "account",
-     "level": "blocking",
-     "label": "Compte vérifié",
-     "state": "fail",
-     "value": "À faire",
-     "text": "Comparez le relevé et les règlements du cycle.",
-     "resolution": {
-      "problem": "Le compte n’est pas encore vérifié.",
-      "why": "La vérification garantit que le résultat versé au patrimoine correspond à ce qui s’est réellement passé sur le compte.",
-      "steps": [
-       {
-        "text": "Ouvrez « Vérifier le compte » et comparez le relevé bancaire du cycle aux règlements enregistrés.",
-        "target": {
-         "kind": "reconciliation"
-        }
-       },
-       {
-        "text": "S’il manque un mouvement, saisissez-le comme déjà réglé : il compte dans le cycle sans ouvrir de point.",
-        "target": {
-         "kind": "page",
-         "path": "mouvements"
-        }
-       },
-       {
-        "text": "Revenez ici et confirmez « Le compte correspond ».",
-        "target": {
-         "kind": "section",
-         "id": "closing-step-account"
-        }
-       }
-      ],
-      "progress": {
-       "done": 0,
-       "total": 1
-      }
-     }
-    },
-    {
-     "items": [],
      "target": null,
      "key": "integrity",
      "level": "blocking",
@@ -2975,12 +2905,11 @@
    ],
    "ok": 6,
    "warn": 0,
-   "fail": 2,
+   "fail": 1,
    "later": 0,
-   "total": 8,
+   "total": 7,
    "blocking": [
-    "Points du cycle traités",
-    "Compte vérifié"
+    "Points du cycle traités"
    ]
   },
   "lastClosure": {

@@ -12,10 +12,6 @@
   } @else {
     <a primary class="btn btn-primary" routerLink="/app/reglages/cycle">Régler le cycle</a>
   }
-  @if (j()?.period) {
-    <button actions class="btn btn-secondary" type="button" [disabled]="!!busy()" (click)="accountOpen.set(true)">Vérifier le compte</button>
-  }
-  <a actions class="bpm-link" routerLink="/tableau-de-bord/rapprochement" [queryParams]="{ period: j()?.period?.key ?? null }">Rapprochement bancaire →</a>
   <a actions class="bpm-link" routerLink="/projet-de-vie/echeances">Échéances du cycle →</a>
   <a actions class="bpm-link" routerLink="/projet-de-vie/projets-finances">Décisions des projets →</a>
   <a actions class="bpm-link" routerLink="/projet-de-vie/budget-type">Budget récurrent du cycle suivant →</a>
@@ -62,34 +58,13 @@
                     <span class="closing-step-count">
                       @switch (c.state) {
                         @case ('none') { Sans objet ce cycle }
-                        @case ('done') { {{ c.key === 'account' ? 'Vérifié' : c.done + ' / ' + c.total }} }
-                        @default { {{ c.key === 'account' ? (c.state === 'later' ? 'Après le ' + (v.period.end | shortDate) : 'À faire') : c.done + ' / ' + c.total }} }
+                        @case ('done') { {{ c.done + ' / ' + c.total }} }
+                        @default { {{ c.done + ' / ' + c.total }} }
                       }
                     </span>
                   </div>
 
-                  @if (c.key === 'account') {
-                    <div class="closing-account">
-                      @if (v.account; as a) {
-                        <p [class.is-stale]="a.stale">{{ a.stale ? 'Des règlements du cycle ont changé depuis la vérification du ' + (a.confirmedAt | shortDate) + ' : vérifiez de nouveau.' : 'Vérifié le ' + (a.confirmedAt | shortDate) + ', pour un solde réalisé de ' + (a.netCents | signedCents) + '.' }}</p>
-                      } @else if (c.state === 'later') {
-                        <p>À faire après le {{ v.period.end | shortDate }}, quand tous les mouvements du cycle sont passés en banque.</p>
-                      }
-                      <div class="closing-actions">
-                        @if (c.state !== 'done') {
-                          <button class="closing-fix" type="button" [disabled]="!!busy()" aria-label="Régler le problème : vérifier le compte" (click)="accountOpen.set(true)">Régler le problème</button>
-                        }
-                        <a class="btn btn-secondary small" routerLink="/tableau-de-bord/rapprochement" [queryParams]="{ period: v.period.key }">Comparer avec la banque</a>
-                        @if (v.phase === 'to_close') {
-                          @if (c.state !== 'done') {
-                            <button class="btn btn-primary small" type="button" [disabled]="!!busy()" (click)="confirmAccount(true)">Le compte correspond</button>
-                          } @else {
-                            <button class="btn btn-secondary small" type="button" [disabled]="!!busy()" (click)="confirmAccount(false)">Retirer la vérification</button>
-                          }
-                        }
-                      </div>
-                    </div>
-                  } @else if (pending(c.key).length) {
+                  @if (pending(c.key).length) {
                     <ul class="closing-items" [attr.aria-label]="c.label + ' : points ouverts'">
                       @for (p of pending(c.key); track p.id) {
                         <li class="closing-item" [attr.data-status]="p.status" [attr.data-state]="p.state">
@@ -147,7 +122,7 @@
                     <li class="closing-item" data-state="closed" [class.is-fresh]="isFresh(p)">
                       <div class="closing-item-main">
                         <strong>{{ p.label }}</strong>
-                        <small>{{ p.outcomeLabel }}@if (p.detail && p.kind !== 'account') { · {{ p.detail }}}</small>
+                        <small>{{ p.outcomeLabel }}@if (p.detail) { · {{ p.detail }}}</small>
                         <span class="closing-marks">
                           @if (isFresh(p)) {
                             <span class="closing-mark" data-mark="fresh">Clos à l’instant</span>
@@ -158,7 +133,7 @@
                           @if (p.inheritedFrom?.label) { <span class="closing-mark" data-mark="inherited">Reporté de {{ p.inheritedFrom!.label }}</span> }
                         </span>
                       </div>
-                      @if (p.plannedCents !== undefined && p.kind !== 'account') {
+                      @if (p.plannedCents !== undefined) {
                         <span class="closing-item-amount" [bpmAmount]="p.realizedCents ?? p.plannedCents" [bpmFlow]="p.direction ?? 'charge'">{{ (p.realizedCents ?? p.plannedCents) | cents }}</span>
                       }
                     </li>
@@ -301,8 +276,5 @@
   }
   @if (capRefs(); as refs) {
     @if (j()?.period; as per) { <bpm-closing-cap [refs]="refs" [periodKey]="per.key" (closed)="capRefs.set(null)" (saved)="capSaved($event)" /> }
-  }
-  @if (accountOpen() && j()?.period; as per) {
-    <bpm-closing-account [period]="per" [today]="today()" [canConfirm]="closing()" [busy]="!!busy()" (closed)="accountOpen.set(false)" (confirm)="confirmAccountInDialog()" />
   }
 </bpm-page>

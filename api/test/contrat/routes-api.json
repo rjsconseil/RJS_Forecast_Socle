@@ -84,7 +84,6 @@
     "PUT /api/patrimoine/:id"
   ],
   "bpm": [
-    "GET /api/bpm/balance",
     "GET /api/bpm/bilans",
     "GET /api/bpm/bilans/:periodKey",
     "GET /api/bpm/budget-type",

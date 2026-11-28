@@ -1,7 +1,7 @@
 import { frDate, plural, fmt } from './format.mjs';
 // Contrôles de cohérence d'un cycle (page « Clôture du cycle ») : avant de figer le cycle, la clôture vérifie que
 // tout ce qui a été fait se tient. Trois niveaux, du plus important au moins crucial :
-// - bloquant (`blocking`) : la clôture est refusée tant qu'il n'est pas bon (points traités, compte vérifié,
+// - bloquant (`blocking`) : la clôture est refusée tant qu'il n'est pas bon (points traités,
 //   données intègres, résultat qui se recalcule à l'identique) ;
 // - à voir (`warning`) : la clôture reste possible, le contrôle est gardé dans la clôture (mouvements sans poste,
 //   plafonds dépassés) ;
@@ -20,11 +20,11 @@ const LEVEL = { blocking: 0, warning: 1, info: 2 };
 const ITEMS = 12;
 
 /**
- * @param s état du parcours : phase, period, points, counts, account, netCents, closing (aperçu), b (lecture)
+ * @param s état du parcours : phase, period, points, counts, netCents, closing (aperçu), b (lecture)
  * @param t outils : budget (module), reads (decorate, capsRead), inspector (contrôles du socle)
  */
 export function closingChecks(s, t) {
-  const { phase, period, points, counts, account } = s;
+  const { phase, period, points, counts } = s;
   const { state, userId, comp } = s.b;
   const closingNow = phase === 'to_close';
   const checks = [];
@@ -33,9 +33,9 @@ export function closingChecks(s, t) {
   const lineTarget = (id, coreProjectId, page = 'mouvements') => ({ kind: 'line', id, coreProjectId: coreProjectId ?? null, page });
 
   // 1. Points du cycle : chacun clos, ou reporté par décision.
-  const open = points.filter((p) => p.state === 'open' && p.kind !== 'account');
-  const pointsTotal = counts.total - 1;
-  const pointsDone = counts.closed + counts.deferred - (account && !account.stale ? 1 : 0);
+  const open = points.filter((p) => p.state === 'open');
+  const pointsTotal = counts.total;
+  const pointsDone = counts.closed + counts.deferred;
   add({
     key: 'points', level: 'blocking', label: 'Points du cycle traités',
     state: open.length ? (closingNow ? 'fail' : 'warn') : 'ok',
@@ -67,29 +67,7 @@ export function closingChecks(s, t) {
     target: 'closing-path-title',
   });
 
-  // 2. Compte vérifié (bloquant, après le dernier jour).
-  const accountOk = !!account && !account.stale;
-  add({
-    key: 'account', level: 'blocking', label: 'Compte vérifié',
-    state: !closingNow ? 'later' : accountOk ? 'ok' : 'fail',
-    value: accountOk ? 'Vérifié' : closingNow ? 'À faire' : `Après le ${frDate(period.end)}`,
-    text: !closingNow
-      ? 'Se vérifie une fois le cycle terminé, quand tous ses mouvements sont passés en banque.'
-      : account?.stale ? 'Des règlements ont changé depuis la vérification : à refaire.' : account ? `Vérifié le ${frDate(account.confirmedAt)}.` : 'Comparez le relevé et les règlements du cycle.',
-    resolution: {
-      problem: !closingNow ? null : account?.stale ? 'Des règlements du cycle ont changé depuis la vérification : elle est à refaire.' : account ? null : 'Le compte n’est pas encore vérifié.',
-      why: 'La vérification garantit que le résultat versé au patrimoine correspond à ce qui s’est réellement passé sur le compte.',
-      steps: [
-        { text: 'Ouvrez « Vérifier le compte » et comparez le relevé bancaire du cycle aux règlements enregistrés.', target: { kind: 'reconciliation' } },
-        { text: 'S’il manque un mouvement, saisissez-le comme déjà réglé : il compte dans le cycle sans ouvrir de point.', target: { kind: 'page', path: 'mouvements' } },
-        { text: closingNow ? 'Revenez ici et confirmez « Le compte correspond ».' : `À faire après le ${frDate(period.end)} : la confirmation se fait sur cette page.`, target: { kind: 'section', id: 'closing-step-account' } },
-      ],
-      progress: { done: accountOk ? 1 : 0, total: 1 },
-    },
-    target: 'closing-step-account',
-  });
-
-  // 3. Données intègres : aucun contrôle du socle en échec sur un objet de ce user.
+  // 2. Données intègres : aucun contrôle du socle en échec sur un objet de ce user.
   let broken = [];
   const objectOf = (id) => {
     for (const col of ['operations', 'recurrences', 'budgets', 'projectOverruns', 'taskBudgetRequests', 'lifeGoals', 'patrimoines', 'cycleLinks', 'closures', 'capitalizations', 'bpmCompositions', 'coreProjects', 'tasks']) {
@@ -134,7 +112,7 @@ export function closingChecks(s, t) {
     more: Math.max(0, broken.length - ITEMS),
   });
 
-  // 4. Résultat : il se recalcule à l'identique (aperçu de la clôture = solde réalisé du cycle).
+  // 3. Résultat : il se recalcule à l'identique (aperçu de la clôture = solde réalisé du cycle).
   const preview = s.closing?.preview ?? null;
   const same = !preview || preview.resultCents === s.netCents;
   add({
@@ -155,7 +133,7 @@ export function closingChecks(s, t) {
     target: 'closing-bilan-title',
   });
 
-  // 5. Mouvements rattachés à un poste (à voir).
+  // 4. Mouvements rattachés à un poste (à voir).
   const window = { from: period.start, to: period.end };
   const lines = [
     ...t.budget.budgetLines(state, [comp.budgetId], { ...window, by: 'realized' }),
@@ -180,7 +158,7 @@ export function closingChecks(s, t) {
     more: Math.max(0, unknown.length - ITEMS),
   });
 
-  // 6. Plafonds des postes (à voir).
+  // 5. Plafonds des postes (à voir).
   let centers = [];
   try {
     centers = t.reads.capsRead({ ...s.b, period }).centers;
@@ -207,7 +185,7 @@ export function closingChecks(s, t) {
     items: over.map((c) => ({ id: c.ref, label: c.label, detail: `${fmt(c.engagedCents)} engagés pour un plafond de ${fmt(c.capCents)}`, amountCents: -c.marginCents, target: { kind: 'center', ref: c.ref } })),
   });
 
-  // 7. Règlements différents du prévu, et règlements faits après le dernier jour (pour information).
+  // 6. Règlements différents du prévu, et règlements faits après le dernier jour (pour information).
   const settled = points.filter((p) => p.kind === 'line' && p.state === 'closed' && p.outcome === 'settled');
   const differ = settled.filter((p) => p.realizedCents !== null && p.realizedCents !== undefined && p.realizedCents !== p.plannedCents);
   const gap = differ.reduce((g, p) => g + (p.direction === 'income' ? p.realizedCents - p.plannedCents : p.plannedCents - p.realizedCents), 0);

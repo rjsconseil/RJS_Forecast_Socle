@@ -254,7 +254,6 @@ export class BpmDashboardCap {
           @if (formula()) {
             <p>Formule : <code>{{ formula() }}</code></p>
           }
-          <a routerLink="/tableau-de-bord/rapprochement" [queryParams]="carry()">Effet de la période →</a>
         </div>
       </details>
     </section>

@@ -10,7 +10,7 @@ import { checkTone } from './closing-resolution';
  */
 
 /** Libellés courts des étapes, pour le tableau. */
-export const STEP_LABEL: Record<ClosingGroup, string> = { income: 'Entrées reçues', charges: 'Charges réglées', projects: 'Flux des projets', decisions: 'Décisions de financement', account: 'Compte vérifié' };
+export const STEP_LABEL: Record<ClosingGroup, string> = { income: 'Entrées reçues', charges: 'Charges réglées', projects: 'Flux des projets', decisions: 'Décisions de financement' };
 const CHECK_STATE: Record<string, string> = { ok: 'bon', warn: 'à voir', fail: 'bloque', later: 'après le cycle' };
 
 export const isUrgent = (p: ClosingPoint) => p.status === 'late' || p.status === 'due';
@@ -73,16 +73,14 @@ export function pathBoxes(x: PathInput): KeyBox[] {
 /** Une colonne par étape : son libellé, puis ce qui est fait sur ce qu'il fallait faire. */
 export function pathColumns(j: ClosingJourney | null, open: ClosingPoint[], closing: boolean): KeyColumn[] {
   if (!j?.period) return [];
-  const end = shortDay(j.period.end);
   return j.criteria.map((c) => {
     const urgentHere = open.filter((p) => p.group === c.key && isUrgent(p)).length;
     const tone: AlertTone = c.state === 'done' ? 'ok' : c.state === 'none' ? 'neutral' : c.state === 'later' ? 'n1' : closing ? 'n4' : !urgentHere ? 'n1' : urgentHere > 2 ? 'n3' : 'n2';
-    const later = c.key === 'account' && c.state === 'later';
     return {
       label: STEP_LABEL[c.key],
       value: c.state === 'none' ? '—' : `${c.done} / ${c.total}`,
       tone,
-      sub: c.state === 'none' ? 'sans objet' : later ? `après le ${end}` : urgentHere ? `${urgentHere} en retard` : c.state === 'done' ? 'fait' : c.state === 'later' ? 'à venir' : 'en cours',
+      sub: c.state === 'none' ? 'sans objet' : urgentHere ? `${urgentHere} en retard` : c.state === 'done' ? 'fait' : c.state === 'later' ? 'à venir' : 'en cours',
     };
   });
 }

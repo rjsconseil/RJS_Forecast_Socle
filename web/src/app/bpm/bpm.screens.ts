@@ -74,7 +74,6 @@ export const BPM_SCREEN_WORKSPACES: WorkspaceDestination[] = [
     ['meteo/lecture', 'meteo-reading', 'Lire la météo', 'La règle unique de la météo, l’état de chaque signal et ce qui les calcule.']] as const)
     .map(([path, id, title, lead]) => subpage(path, '/meteo', id, title, lead, meteoPage)),
   subpage('tableau-de-bord/entrees', '/tableau-de-bord', 'register', 'Registre de flux', 'Toutes les entrées et les dépenses : ce qui est réglé, ce qui reste à venir et les opérations à vérifier.', () => import('./pages/expenses').then(m => m.BpmExpensesPage)),
-  subpage('tableau-de-bord/rapprochement', '/tableau-de-bord', 'reconciliation', 'Rapprochement bancaire', 'Reliez vos cycles budgétaires aux soldes de vos comptes. Comparez le même périmètre, aux mêmes dates, puis expliquez l’écart.', () => import('./pages/balance').then(m => m.BpmBalancePage)),
   { ...subpage('projet-de-vie/projets', '/projet-de-vie', 'life-projects', 'Projets de la vie', 'Vos projets de la vie par statut : attribuez les enveloppes et faites avancer les tâches.', () => import('./projects/projects.page').then(m => m.BpmProjectsPage)), page: true as const },
   subpage('projet-de-vie/projets-finances', PROJECT_LIST, 'life-projets', 'Projets financés', 'Retrouvez, projet par projet, le budget attribué, les montants réglés et le reste disponible.', lifePage),
   subpage('projet-de-vie/echeances', '/projet-de-vie', 'life-due', 'Échéances à traiter', 'Les règlements à vérifier : d’abord les retards, puis les sept prochains jours.', lifePage),
@@ -99,6 +98,8 @@ export const BPM_LEGACY_PATHS: string[] = [
   'projet-de-vie/financement', 'projet-de-vie/patrimoine', 'projet-de-vie/pilotage', 'vision/projection', 'vision/reperes',
   'zones/bpm', 'zones/bpm/ensemble', 'zones/bpm/vision', 'zones/bpm/projets-vie', 'zones/bpm/calendrier', 'zones/bpm/gestion', 'zones/bpm/patrimoine',
   'depenses', 'depenses/registre', 'piloter', 'piloter/agir', 'argent/entrees', 'argent/reste', 'argent/postes',
+  // Rapprochement bancaire, étape « Vérifier le compte » retirée le 28 nov. 2026.
+  'tableau-de-bord/rapprochement',
   'app', 'app/operations', 'app/bienvenue', 'app/projets', 'app/projets/suivi', 'app/projets/:id', 'projet-de-la-vie',
   'app/gestion-projet', 'app/gestion-projet/nouveau', 'app/gestion-projet/decisions', 'app/gestion-projet/financement',
   'app/gestion-projet/cycle', 'app/gestion-projet/cycle/echeances', 'app/gestion-projet/cycle/cloture',
@@ -122,7 +123,6 @@ export const BPM_SCREEN_SECTIONS: Record<string, ReturnType<typeof contentSectio
   '/app/gestion-projet/:id/taches': contentSections(['shares-title', 'Tâches et avancement']),
   '/calendrier-budget/agenda': contentSections(['calendar-agenda-title', 'Événements de la période']),
   '/tableau-de-bord/entrees': contentSections(['flows-title', 'Synthèse des flux'], ['expense-overview-title', 'État des échéances'], ['register-details', 'Registre détaillé']),
-  '/tableau-de-bord/rapprochement': contentSections(['bank-title', 'Comptes et périmètre'], ['bank-result', 'Comparer les variations'], ['bank-checks', 'Expliquer les écarts']),
   '/vision': contentSections(['wealth-project-flows-title', 'Mouvements des projets'], ['bpm-outlook-title', 'Prévision du stock'], ['dated-goals-title', 'Objectifs datés']),
   '/app/reglages/cycle': contentSections(['bc-cycle-title', 'Ancrage du cycle'], ['bc-history-title', 'Historique des clôtures']),
   '/app/reglages/patrimoine': contentSections(['bc-wealth-title', 'Stock d’ouverture']),

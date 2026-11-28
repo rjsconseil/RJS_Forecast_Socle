@@ -39,13 +39,13 @@ describe('écran Clôture, sur la réponse de l’API', () => {
     expect(dom().querySelector<HTMLButtonElement>('.closing-open-close')!.disabled).toBe(true);
   });
 
-  it('« À valider » compte les points ouverts du serveur, hors compte, et une colonne par étape', async () => {
+  it('« À valider » compte les points ouverts du serveur, et une colonne par étape', async () => {
     const { j } = await open();
     const path = dom().querySelector('.closing-path')!;
-    const openPoints = j.points.filter((p) => p.state === 'open' && p.kind !== 'account');
+    const openPoints = j.points.filter((p) => p.state === 'open');
     expect(texts('.kb-label', path)).toEqual(['Points à valider', 'Points clos', 'Points bloquants']);
     expect(texts('.kb-value', path).slice(0, 2)).toEqual([String(openPoints.length), String(j.counts!.closed)]);
-    expect(texts('.kb-box:last-child small', path)).toContain('Vérification du compte : à faire');
+    expect(texts('.kb-box:last-child small', path)).not.toContain('Vérification du compte : à faire');
     expect(texts('.kt-head', path)).toEqual(j.criteria.map((c) => STEP_LABEL[c.key]));
     expect(texts('.kt-cell b', path)).toEqual(j.criteria.map((c) => (c.state === 'none' ? '—' : `${c.done} / ${c.total}`)));
     // En clôture, chaque étape encore à faire est au rouge.

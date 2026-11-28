@@ -13,7 +13,7 @@ import { EntryInput, RegisterLine } from '../data/bpm-models';
 import { AlertTone, BpmClosingBoxes, BpmClosingTable, worst } from './closing-kit';
 import { BpmClosingJournal, whenOf } from './closing-journal';
 import { BpmClosingResolution, ChecksBaseline, checkTone, ClosingFix } from './closing-resolution';
-import { BpmClosingAccount, BpmClosingCap, BpmClosingDecision } from './closing-dialogs';
+import { BpmClosingCap, BpmClosingDecision } from './closing-dialogs';
 import { BlockingPoint, checkBoxes, checkColumns, closeBoxes, closeConditions, closeTone, isUrgent, nextBoxes, pathBoxes, pathColumns, pct, plural, resultBoxes, resultTone, shortDay } from './closing-boxes';
 
 const STEP_TEXT: Record<ClosingGroup, string> = {
@@ -21,7 +21,6 @@ const STEP_TEXT: Record<ClosingGroup, string> = {
   charges: 'Chaque charge prévue du cycle est payée, écartée parce qu’elle n’aura pas lieu, ou revue dans un cycle à venir.',
   projects: 'Les dépenses et les gains prévus des projets financés par le cycle sont validés dans leur projet, écartés ou revus plus tard, selon l’avancement du projet.',
   decisions: 'Les parts de budget demandées et les dépassements à autoriser reçoivent leur décision, ou se revoient au cycle suivant.',
-  account: 'Votre compte raconte la même chose que le cycle : sa variation vaut les entrées reçues moins les sorties payées. Point bloquant.',
 };
 /** Un point clos depuis moins de deux minutes est signalé « à l'instant ». */
 const FRESH_MS = 120_000;
@@ -39,7 +38,7 @@ const FRESH_MS = 120_000;
 @Component({
   selector: 'app-bpm-closing-page',
   providers: [BpmPageContext],
-  imports: [BpmPageFrame, BpmState, BpmRouterLink, BpmAmount, BpmLineDetail, BpmEntryFlow, BpmClosingBoxes, BpmClosingTable, BpmClosingResolution, BpmClosingJournal, BpmClosingDecision, BpmClosingAccount, BpmClosingCap, CentsPipe, SignedCentsPipe, ShortDatePipe],
+  imports: [BpmPageFrame, BpmState, BpmRouterLink, BpmAmount, BpmLineDetail, BpmEntryFlow, BpmClosingBoxes, BpmClosingTable, BpmClosingResolution, BpmClosingJournal, BpmClosingDecision, BpmClosingCap, CentsPipe, SignedCentsPipe, ShortDatePipe],
   templateUrl: './closing.page.html',
   styleUrls: ['./closing.page.scss'],
 })
@@ -76,7 +75,7 @@ export class BpmClosingPage {
     return (this.j()?.points ?? []).filter((p) => p.group === group && p.state !== 'closed');
   }
   /** Points à valider (hors vérification du compte, qui est un point bloquant). */
-  protected readonly openPoints = computed(() => (this.j()?.points ?? []).filter((p) => p.state === 'open' && p.kind !== 'account'));
+  protected readonly openPoints = computed(() => (this.j()?.points ?? []).filter((p) => p.state === 'open'));
   /** Points urgents : en retard ou du jour. */
   protected readonly urgentCount = computed(() => this.openPoints().filter(isUrgent).length);
   /** Points clos du cycle, les plus récents d'abord. */
@@ -107,17 +106,13 @@ export class BpmClosingPage {
     const late = this.plural(urgent, 'en retard ou du jour', 'en retard ou du jour');
     return t === 'n2' ? `à surveiller : ${late}` : t === 'n3' ? `à traiter : ${late}` : `inquiétant : ${late}`;
   });
-  /** Points bloquants : la vérification du compte tant qu'elle n'est pas faite, et les contrôles bloquants en échec. */
+  /** Points bloquants : les contrôles bloquants en échec. */
   protected readonly blockingPoints = computed(() => {
     const j = this.j();
     if (!j?.period) return [];
     const list: BlockingPoint[] = [];
-    const account = j.points.find((p) => p.kind === 'account');
-    if (account && account.state !== 'closed') {
-      list.push({ label: 'Vérification du compte', detail: account.state === 'later' ? `à faire après le ${shortDay(j.period.end)}` : account.stale ? 'à refaire' : 'à faire', tone: account.state === 'later' ? 'n1' : 'n4' });
-    }
     for (const c of j.checks?.items ?? []) {
-      if (c.level === 'blocking' && c.state === 'fail' && c.key !== 'points' && c.key !== 'account') list.push({ label: c.label, detail: c.value, tone: 'n4' });
+      if (c.level === 'blocking' && c.state === 'fail' && c.key !== 'points') list.push({ label: c.label, detail: c.value, tone: 'n4' });
     }
     return list;
   });
@@ -137,7 +132,6 @@ export class BpmClosingPage {
   /** La page où le point se traite sur le site (pour qui préfère y faire ses mises à jour). */
   protected whereTo(p: ClosingPoint): { path: string; query: Record<string, string | null>; label: string } | null {
     if (p.kind === 'decision') return { path: '/projet-de-vie/projets-finances', query: {}, label: 'Accorder ou refuser dans les règlements des projets' };
-    if (p.kind === 'account') return null;
     if (p.group === 'projects' && p.project) return { path: `/app/gestion-projet/${p.project.coreProjectId}`, query: { ligne: p.lineId }, label: 'Valider dans le projet' };
     return { path: '/projet-de-vie/echeances', query: { ligne: p.lineId }, label: p.direction === 'income' ? 'Recevoir dans les échéances' : 'Régler dans les échéances' };
   }
@@ -294,11 +288,6 @@ export class BpmClosingPage {
     return this.act(p.id, () => this.bpm.closingDecision({ periodKey: j.period!.key, defer: { pointId: p.id, toPeriodKey } }),
       target ? `« ${p.label} » n’est pas validé dans ${j.period!.label} : il se reverra en ${target.label}.` : `« ${p.label} » reste à traiter dans ${j.period!.label}.`);
   }
-  protected confirmAccount(confirmed: boolean) {
-    const j = this.j()!;
-    return this.act('account', () => this.bpm.closingDecision({ periodKey: j.period!.key, account: { confirmed } }),
-      confirmed ? 'Compte vérifié : la clôture en garde la trace.' : 'Vérification du compte retirée.');
-  }
   protected finalize() {
     const j = this.j();
     const pv = this.preview();
@@ -325,9 +314,8 @@ export class BpmClosingPage {
   protected openLine(id: string | null) { if (id) this.lineId.set(id); }
 
   // ---------- « Régler le problème » : le formulaire du site, en fenêtre ----------
-  /** La décision ou le compte ouverts en fenêtre (l'échéance, elle, passe par `lineId`, comme sur ses pages). */
+  /** La décision ouverte en fenêtre (l'échéance, elle, passe par `lineId`, comme sur ses pages). */
   protected readonly decisionPoint = signal<ClosingPoint | null>(null);
-  protected readonly accountOpen = signal(false);
   /** Un point se règle en fenêtre quand le site a son formulaire : la fiche de l'échéance, la carte de décision du projet. */
   protected fixable(p: ClosingPoint) {
     return p.kind === 'line' ? !!p.lineId : p.kind === 'decision' && !!p.project?.coreProjectId && !!p.decisionId;
@@ -342,10 +330,6 @@ export class BpmClosingPage {
     this.decisionPoint.set(null);
     this.notice.set({ text, tone: 'success' });
     this.refresh.bump();
-  }
-  protected confirmAccountInDialog() {
-    this.accountOpen.set(false);
-    return this.confirmAccount(true);
   }
   /** Postes au-delà de leur plafond ouverts dans la fenêtre du plafond. */
   protected readonly capRefs = signal<string[] | null>(null);
@@ -378,7 +362,7 @@ export class BpmClosingPage {
   }
   /**
    * Section 3 : une étape ou un élément d'un contrôle se règle en fenêtre, sur cette page, quand le site a le formulaire :
-   * fiche de l'échéance, carte de décision, plafond du poste, comparaison du compte, saisie d'un mouvement manquant.
+   * fiche de l'échéance, carte de décision, plafond du poste.
    */
   protected readonly canFixCheck = (f: ClosingFix): boolean => {
     const t = f.target;
@@ -386,9 +370,8 @@ export class BpmClosingPage {
       case 'line': return !!t.id;
       case 'decisions': { const p = this.pointFor(f); return !!p && this.fixable(p); }
       case 'center': return !!t.ref;
-      case 'reconciliation': return true;
       case 'page':
-        return (t.path === 'plafonds' && this.capRefsOf(f).length > 0) || (t.path === 'mouvements' && f.check.key === 'account') || !!this.pointFor(f);
+        return (t.path === 'plafonds' && this.capRefsOf(f).length > 0) || !!this.pointFor(f);
       default: return false;
     }
   };
@@ -398,9 +381,7 @@ export class BpmClosingPage {
     const p = this.pointFor(f);
     if (p) this.fix(p);
     else if (t.kind === 'line') this.openLine(t.id);
-    else if (t.kind === 'reconciliation') this.accountOpen.set(true);
     else if (t.kind === 'center' || (t.kind === 'page' && t.path === 'plafonds')) this.capRefs.set(this.capRefsOf(f));
-    else if (t.kind === 'page' && t.path === 'mouvements') this.newEntry('charge', true);
   }
   protected closeLine() { this.lineId.set(null); this.refresh.bump(); }
   protected editLine(line: RegisterLine) { this.lineId.set(null); void this.ctx.setQuery({ entry: line.id }); }

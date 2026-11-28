@@ -27,7 +27,6 @@ export const astraGuidance: Record<string, PageGuidance> = {
   objectif: guide('Votre cap d’épargne par cycle et ce qu’il construit, à partir de votre patrimoine d’aujourd’hui.', 'Organiser mes objectifs datés', 'objectif/echeances'),
   patrimoine: guide('Ce que vos cycles ont construit, constaté à date.', 'Régler mon objectif', 'objectif'),
   'objectif/echeances': guide('Une date et un montant pour chaque objectif de vie. La projection dit s’il sera couvert à temps.', 'Revenir à l’objectif et à la projection', 'objectif'),
-  'cloture/compte': { title: 'Vérifier le compte', ...guide('Comparez votre relevé et les règlements enregistrés aux mêmes dates, sur le même compte. Expliquez l’écart avant de clôturer.', 'Passer à la clôture du cycle', 'cloture') },
   cloture: guide('Le suivi et l’historique de tout ce qui a été fait pour le cycle : ce qui reste à valider, ce qui se tient, ce qui a été enregistré. La synthèse dit où regarder ; à la fin du dernier jour, la clôture fige le cycle et lance le suivant.', 'Relire le bilan des cycles', 'bilans'),
   'cloture/reglages': guide('Le jour d’ancrage fixe les bornes de chaque cycle et donc le résultat calculé.', 'Revenir à la clôture du cycle', 'cloture'),
   bilans: { periodParam: 'cycle', ...guide('Choisissez un cycle : ses entrées, ses dépenses et le coût de ses projets. Un cycle clôturé garde le résultat versé au patrimoine.', 'Relire et clôturer le cycle en cours', 'cloture') },

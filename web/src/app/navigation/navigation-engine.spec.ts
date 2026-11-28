@@ -30,7 +30,8 @@ describe('Navigation system · moteur des modules applicatifs', () => {
     const loop = navigationLoop(applicationNavigation('bpm-astra')!);
     expect(new Set(loop.map((entry) => entry.subpage.link)).size).toBe(loop.length);
     expect(loop[0].subpage.link).toBe('/bpm-astra');
-    expect(loop.some((entry) => entry.subpage.link === '/bpm-astra/cloture/compte')).toBe(true);
+    expect(loop.some((entry) => entry.subpage.link === '/bpm-astra/cloture/reglages')).toBe(true);
+    expect(loop.some((entry) => entry.subpage.link === '/bpm-astra/cloture/compte')).toBe(false);
   });
   it('signale ce qui manque à une navigation incomplète', () => {
     const broken: AppNavigation = { module: 'demo', label: 'Démo', sections: [

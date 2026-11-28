@@ -13,7 +13,7 @@ if (!['save', 'compare'].includes(mode) || !file) {
 const base = process.env.BPM_BASE_URL ?? 'http://localhost:4300';
 const chrome = process.env.CHROME_PATH ?? ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/opt/pw-browsers/chromium', '/usr/bin/chromium'].find(existsSync);
 const SLUGS = ['', 'mouvements', 'mouvements/echeances', 'calendrier', 'calendrier/agenda', 'projets', 'financement/enveloppes', 'taches', 'budget', 'plafonds',
-  'plafonds/postes', 'objectif', 'objectif/echeances', 'patrimoine', 'patrimoine/reglages', 'cloture/compte', 'cloture', 'cloture/reglages', 'bilans'];
+  'plafonds/postes', 'objectif', 'objectif/echeances', 'patrimoine', 'patrimoine/reglages', 'cloture', 'cloture/reglages', 'bilans'];
 const PROPS = ['display', 'position', 'color', 'background-color', 'font-size', 'font-weight', 'line-height', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
   'margin-top', 'margin-left', 'border-top-width', 'border-top-style', 'border-top-color', 'border-left-width', 'border-radius', 'gap', 'grid-template-columns', 'flex-direction',
   'justify-content', 'align-items', 'box-shadow', 'opacity', 'text-transform', 'white-space', 'overflow-x', 'width', 'height'];

@@ -50,7 +50,7 @@ describe('routes du site · BPM-Astra par défaut', () => {
     for (const [from, to] of [
       ['/tableau-de-bord/entrees?period=2026-10&direction=income', '/bpm-astra/mouvements?period=2026-10&direction=income'],
       ['/depenses?period=2026-10', '/bpm-astra/mouvements?period=2026-10'],
-      ['/argent/reste?period=2026-09#ecart', '/bpm-astra/cloture/compte?period=2026-09#ecart'],
+      ['/argent/reste?period=2026-09#ecart', '/bpm-astra/cloture?period=2026-09#ecart'],
       ['/projet-de-vie?period=2026-09', '/bpm-astra?period=2026-09'],
       ['/projet-de-vie/projets', '/bpm-astra/projets'],
       ['/projet-de-vie/financement', '/bpm-astra/projets'],

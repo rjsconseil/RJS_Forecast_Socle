@@ -50,7 +50,7 @@ describe('ordre des liens de navigation', () => {
     planOrder.set({
       'zone:bpm-astra': [...sections].reverse().map(id => `section:bpm-astra:${id}`),
       [`section:bpm-astra:${section.id}`]: [...pages].reverse(),
-      '/bpm-astra/cloture': ['/bpm-astra/cloture/reglages', '/bpm-astra/cloture/compte'],
+      '/bpm-astra/cloture': ['/bpm-astra/cloture/reglages'],
       '/bpm-astra/projets/:id': ['/bpm-astra/projets/:id/taches', '/bpm-astra/projets/:id/budget'],
       '/': ['anchor:portal:technical'],
     });
@@ -58,8 +58,8 @@ describe('ordre des liens de navigation', () => {
     expect(menuPages(section).map(page => page.link)).toEqual([...pages].reverse());
     expect(sectionEntry(astra, section).link).toBe(menuPages(section)[0].link);
     const closing = menuPages(astra.sections[4]).find(page => page.link === '/bpm-astra/cloture')!;
-    expect(pageChildren(closing).map(child => child.link)).toEqual(['/bpm-astra/cloture/reglages', '/bpm-astra/cloture/compte']);
-    expect(planContext('/bpm-astra/cloture').tabs.map(tab => tab.link)).toEqual(['/bpm-astra/cloture', '/bpm-astra/cloture/reglages', '/bpm-astra/cloture/compte']);
+    expect(pageChildren(closing).map(child => child.link)).toEqual(['/bpm-astra/cloture/reglages']);
+    expect(planContext('/bpm-astra/cloture').tabs.map(tab => tab.link)).toEqual(['/bpm-astra/cloture', '/bpm-astra/cloture/reglages']);
     expect(planContext('/bpm-astra/projets/prj_1').tabs.map(tab => tab.id)).toEqual(['object', 'project-tasks', 'project-budget']);
     expect(orderedZones()[0].band).toBe('technical');
     expect(orderedZones()).toHaveLength(PLAN_ZONES.length);
@@ -67,7 +67,7 @@ describe('ordre des liens de navigation', () => {
   it('donne à chaque onglet ses gestes, rangés dans l’ordre réglé, et les déclare dans l’arbre', () => {
     // N4 : l'accueil porte les actions de la page ; les autres sous-pages n'en ont pas.
     const closing = planContext('/bpm-astra/cloture').tabs;
-    expect(closing[0].links.map(link => link.link)).toEqual(['/bpm-astra/cloture/compte', '/bpm-astra/cloture/reglages']);
+    expect(closing[0].links.map(link => link.link)).toEqual(['/bpm-astra/cloture/reglages']);
     expect(closing.slice(1).every(tab => tab.links.length === 0)).toBe(true);
     // Plafonds : une seule page pour fixer les plafonds, son seul geste mène aux postes.
     expect(planContext('/bpm-astra/plafonds').tabs[0].links.map(link => link.link)).toEqual(['/bpm-astra/plafonds/postes']);

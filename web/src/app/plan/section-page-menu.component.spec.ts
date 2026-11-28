@@ -14,11 +14,11 @@ describe('navigation hiérarchique commune', () => {
   }
 
   it('ouvre les enfants du parent actif et distingue le parent du détail consulté', () => {
-    const fixture = setup('/bpm-astra/cloture/compte?period=2026-10&q=loyer&entry=new');
+    const fixture = setup('/bpm-astra/cloture/reglages?period=2026-10&q=loyer&entry=new');
     const dom = fixture.nativeElement as HTMLElement;
     expect(dom.querySelectorAll('.section-subpages')).toHaveLength(1);
     const active = dom.querySelector('.section-subpages [aria-current="page"]') as HTMLAnchorElement;
-    expect(active.textContent).toContain('Vérifier le compte');
+    expect(active.textContent).toContain('Ancrage du cycle');
     expect(active.getAttribute('href')).toContain('period=2026-10');
     expect(active.getAttribute('href')).not.toContain('entry=');
     expect(dom.querySelector('.section-page-link.is-ancestor')?.getAttribute('aria-current')).toBeNull();

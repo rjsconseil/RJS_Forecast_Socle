@@ -1,8 +1,7 @@
 // Parcours de navigation de BPM dans Astra, sur un site en marche et un profil de recette.
 // Ce que astra.e2e.mjs ne couvre pas : les anciennes adresses servies en redirection (lecture conservée), et les
 // brouillons qui survivent à l'historique du navigateur et au rechargement (saisie d'une entrée, tâche, demande de
-// part, replanification dans l'agenda), et le contrôle du compte avant la clôture. Rien n'est enregistré : chaque fenêtre est refermée
-// sans valider.
+// part, replanification dans l'agenda). Rien n'est enregistré : chaque fenêtre est refermée sans valider.
 //
 //   npm run e2e:bpm             (site sur http://localhost:4300, premier profil avec un projet doté d'une enveloppe)
 //   BPM_BASE_URL=… BPM_USER_ID=… CHROME_PATH=… npm run e2e:bpm
@@ -50,7 +49,7 @@ try {
     ['/plafonds/reglages', astra('plafonds')],
     ['/projet-de-vie/cloture?period=2026-10', astra('cloture'), { period: '2026-10' }],
     ['/calendrier-budget/agenda', astra('calendrier/agenda')],
-    ['/tableau-de-bord/rapprochement', astra('cloture/compte')],
+    ['/tableau-de-bord/rapprochement', astra('cloture')],
   ];
   for (const [from, to, query = {}] of legacy) {
     await open(from);
@@ -116,17 +115,7 @@ try {
   await page.waitForURL(u => !u.searchParams.has('demande'));
   check('Demande de part : montant et motif conservés entre étapes et après rechargement');
 
-  // 5. Vérifier le compte : des soldes bancaires qui suivent le net du cycle ne laissent aucun écart.
-  const period = (await api('/api/bpm/balance')).period?.key ?? new Date().toISOString().slice(0, 7);
-  const balance = await api(`/api/bpm/balance?period=${period}`);
-  await open(astra(`cloture/compte?period=${period}`));
-  await page.getByLabel('Ouverture (€)').first().fill('2000');
-  await page.getByLabel('Contrôle (€)').first().fill(String((200000 + balance.netCents) / 100).replace('.', ','));
-  await page.locator('.bank-confirm input[type=checkbox]').check();
-  await page.locator('.bank-verdict[data-tone=success]').waitFor();
-  check('Vérifier le compte : soldes bancaires qui concordent avec le net du cycle, aucun écart');
-
-  // 6. Agenda : replanifier garde la date choisie en arrière et en avant, sans rien enregistrer.
+  // 5. Agenda : replanifier garde la date choisie en arrière et en avant, sans rien enregistrer.
   await open(astra('calendrier/agenda?vue=mois'));
   // La liste de l'agenda prend sa hauteur (elle était écrasée à la hauteur de son titre).
   assert(await page.locator('.calendar-agenda-list').evaluate(e => e.getBoundingClientRect().height > 100), 'Agenda tronqué');

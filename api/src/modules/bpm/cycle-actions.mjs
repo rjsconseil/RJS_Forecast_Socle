@@ -96,7 +96,7 @@ const CATALOG = {
   updateVision: { kind: 'bpmComposition', category: 'wealth', verb: () => 'Vision et cap modifiés' },
   updatePatrimoine: { kind: 'patrimoine', category: 'wealth', verb: () => 'Point de départ du patrimoine modifié' },
   configureCycle: { kind: 'cycleLink', category: 'cycle', verb: () => 'Ancrage du cycle fixé' },
-  closingDecision: { kind: 'cycleLink', category: 'cycle', verb: () => 'Décision de clôture (report ou compte vérifié)' },
+  closingDecision: { kind: 'cycleLink', category: 'cycle', verb: () => 'Décision de clôture (report)' },
   closePeriod: { kind: 'closure', category: 'cycle', verb: () => 'Cycle précédent clôturé' },
   finalizeClosing: { kind: 'closure', category: 'cycle', verb: () => 'Cycle précédent clôturé' },
 };
