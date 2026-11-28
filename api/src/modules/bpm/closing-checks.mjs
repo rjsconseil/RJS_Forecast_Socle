@@ -3,8 +3,7 @@ import { frDate, plural, fmt } from './format.mjs';
 // tout ce qui a été fait se tient. Trois niveaux, du plus important au moins crucial :
 // - bloquant (`blocking`) : la clôture est refusée tant qu'il n'est pas bon (points traités,
 //   données intègres, résultat qui se recalcule à l'identique) ;
-// - à voir (`warning`) : la clôture reste possible, le contrôle est gardé dans la clôture (mouvements sans poste,
-//   plafonds dépassés) ;
+// - à voir (`warning`) : la clôture reste possible, le contrôle est gardé dans la clôture (mouvements sans poste) ;
 // - pour information (`info`) : règlements différents du prévu, règlements faits après le dernier jour.
 // États : ok, warn (à voir), fail (bloquant), later (pas encore vérifiable).
 //
@@ -21,7 +20,7 @@ const ITEMS = 12;
 
 /**
  * @param s état du parcours : phase, period, points, counts, netCents, closing (aperçu), b (lecture)
- * @param t outils : budget (module), reads (decorate, capsRead), inspector (contrôles du socle)
+ * @param t outils : budget (module), reads (decorate), inspector (contrôles du socle)
  */
 export function closingChecks(s, t) {
   const { phase, period, points, counts } = s;
@@ -158,47 +157,10 @@ export function closingChecks(s, t) {
     more: Math.max(0, unknown.length - ITEMS),
   });
 
-  // 5. Plafonds des postes (à voir).
-  let centers = [];
-  try {
-    centers = t.reads.capsRead({ ...s.b, period }).centers;
-  } catch {
-    centers = [];
-  }
-  const capped = centers.filter((c) => Number.isInteger(c.capCents));
-  // Dépassement constaté (dépenses payées au-delà du plafond du cycle) : un fait du cycle, gardé au bilan, qui ne bloque
-  // jamais la clôture. Dépassement menacé : des échéances encore à payer feraient franchir le plafond.
-  const paidOver = capped.filter((c) => c.paidOverCents > 0);
-  const threatened = capped.filter((c) => c.over && !(c.paidOverCents > 0));
-  const over = [...paidOver, ...threatened];
-  add({
-    key: 'caps', level: 'warning', label: 'Plafonds respectés',
-    state: over.length ? 'warn' : 'ok',
-    value: paidOver.length ? `${plural(paidOver.length, 'poste')} en dépassement` : threatened.length ? `${plural(threatened.length, 'poste')} au-delà` : 'Tous tenus',
-    text: paidOver.length
-      ? 'Dépassement constaté par des dépenses payées : il est gardé au bilan du cycle et ne bloque jamais la clôture.'
-      : threatened.length ? 'Des échéances encore à payer feraient dépasser un plafond : la clôture le garde dans le bilan, sans bloquer.' : 'Aucun poste au-delà de son plafond.',
-    resolution: {
-      problem: over.length ? `${plural(over.length, 'poste dépasse', 'postes dépassent')} son plafond.` : null,
-      why: 'Un dépassement entame l’épargne du cycle ; la clôture le garde dans le bilan, sans jamais bloquer.',
-      steps: [
-        { text: 'Si la dépense était prévue, relevez le plafond du poste.', target: { kind: 'page', path: 'plafonds' } },
-        { text: 'Sinon, écartez ou reportez une échéance de ce poste qui n’a pas encore eu lieu.', target: { kind: 'page', path: 'echeances' } },
-        { text: 'Ou gardez le dépassement : il est noté au bilan du cycle et ne bloque pas la clôture.' },
-      ],
-      progress: { done: capped.length - over.length, total: capped.length },
-    },
-    items: over.map((c) => ({
-      id: c.ref, label: c.label,
-      detail: c.paidOverCents > 0
-        ? `en dépassement de ${fmt(c.paidOverCents)} : ${fmt(c.paidCents)} payés pour un plafond de ${fmt(c.capCents)}`
-        : `${fmt(c.engagedCents)} engagés pour un plafond de ${fmt(c.capCents)}`,
-      amountCents: c.paidOverCents > 0 ? -c.paidOverCents : -c.marginCents,
-      target: { kind: 'center', ref: c.ref },
-    })),
-  });
+  // Les dépassements de plafond ne sont pas des contrôles : ce sont des faits marquants du cycle (bilan, page de
+  // clôture « Faits marquants »), jamais une incohérence à corriger ni un frein à la clôture (28 nov. 2026).
 
-  // 6. Règlements différents du prévu, et règlements faits après le dernier jour (pour information).
+  // 5. Règlements différents du prévu, et règlements faits après le dernier jour (pour information).
   const settled = points.filter((p) => p.kind === 'line' && p.state === 'closed' && p.outcome === 'settled');
   const differ = settled.filter((p) => p.realizedCents !== null && p.realizedCents !== undefined && p.realizedCents !== p.plannedCents);
   const gap = differ.reduce((g, p) => g + (p.direction === 'income' ? p.realizedCents - p.plannedCents : p.plannedCents - p.realizedCents), 0);

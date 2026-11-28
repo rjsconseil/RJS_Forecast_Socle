@@ -194,6 +194,17 @@
                   </div>
                 }
               }
+              <!-- Faits marquants du cycle : un poste au-delà de son plafond est un fait du cycle, ni incohérence ni frein. -->
+              @if (bilan()?.caps?.over?.length) {
+                <div class="closing-facts">
+                  <h4>Faits marquants du cycle</h4>
+                  <ul>
+                    @for (o of bilan()!.caps.over; track o.label) {
+                      <li>Poste « {{ o.label }} » en dépassement de <strong>{{ o.overCents | cents }}</strong> · plafond {{ o.capCents | cents }}</li>
+                    }
+                  </ul>
+                </div>
+              }
             </div>
             @if (v.impacts; as im) {
               <div class="closing-synthesis-part">

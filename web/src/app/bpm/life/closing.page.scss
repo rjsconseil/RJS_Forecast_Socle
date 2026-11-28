@@ -136,6 +136,10 @@
 .closing-synthesis-part + .closing-synthesis-part { padding-left: 20px; border-left: 1px solid var(--cl-line); }
 // Répartition des dépenses en une barre : indispensables, courantes, projets.
 .closing-mix { display: grid; gap: 6px; }
+.closing-facts { display: grid; gap: 4px; margin-top: 12px; }
+.closing-facts h4 { margin: 0; color: var(--cl-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.closing-facts ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.closing-facts strong { color: var(--al-n4); }
 .closing-mix-bar { display: flex; height: 8px; overflow: hidden; border-radius: 999px; background: var(--cl-soft); }
 .closing-mix-bar i { display: block; height: 100%; background: var(--cl-accent); }
 .closing-mix-legend { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--cl-muted); font-size: 12px; font-variant-numeric: tabular-nums; }

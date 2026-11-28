@@ -101,18 +101,15 @@ test('actions du cycle (classées, avec leur contexte) et contrôles de cohéren
   assert.equal(caps.count, 2, 'les réglages répétés du même jour se comptent');
   assert.equal(caps.detail, '1 poste plafonné · 110,00 € au total');
 
-  // Contrôles : les points ouverts sont à voir pendant le cycle ; le plafond de « Divers » est dépassé (120 + 3 > 110).
+  // Contrôles : les points ouverts sont à voir pendant le cycle. Le plafond de « Divers » dépassé (120 + 3 > 110) n'est pas un
+  // contrôle : c'est un fait marquant du cycle (bilan), jamais une incohérence.
   const check = (k) => j.checks.items.find((c) => c.key === k);
   assert.equal(check('points').state, 'warn');
   assert.equal(check('integrity').state, 'ok');
   assert.equal(check('result').state, 'ok');
-  assert.equal(check('caps').state, 'warn');
-  assert.equal(check('caps').items.length, 1);
+  assert.equal(check('caps'), undefined);
   assert.deepEqual(j.checks.blocking, []);
   // Chaque contrôle dit comment se résoudre, où agir, et où il en est.
-  assert.deepEqual(check('caps').resolution.progress, { done: 0, total: 1 });
-  assert.deepEqual(check('caps').items[0].target, { kind: 'center', ref: 'std:divers' });
-  assert.match(check('caps').resolution.problem, /1 poste dépasse son plafond/);
   assert.equal(check('points').resolution.steps.length, 3);
   assert.deepEqual(check('points').items.find((i) => i.label === 'Plombier').target, { kind: 'line', id: t.plumber.id, coreProjectId: null, page: 'echeances' });
   assert.equal(check('integrity').resolution.problem, null);
