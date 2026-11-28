@@ -53,4 +53,4 @@ Mes projets en sera la première source). Elle est alors documentée ici avec so
 2. Si l'interface `platform/grand-noyau.ts`, le cadre `astra/cadre.ts` ou les routes de l'API changent : `npm run contrat -- --maj`, et la photo `api/test/contrat/` modifiée fait partie de la PR.
 3. Non-régression complète : `npm test`, `npm run api:check`, `npm --prefix web run lint`, `npm --prefix web run test:coverage`, `npm run build`, `npm run seeds:check`, `npm run e2e:ci` (tout est rejoué sur GitHub).
 4. Une ligne dans « Ajouts au socle » ci-dessus, avec ses effets sur les cinq sections ; après la fusion, l'étiquette suivante (`socle-v1.1`…).
-
+| 28/11/2026 | Zone « Applications autonomes » : une bande de l'accueil des modules (/modules), une entrée des zones principales et une section par application ; la section du Noyau transverse est retirée | Demande de Roosevelt : lancer Mes projets depuis l'accueil des modules, dans une section dédiée | Les applications autonomes sont au niveau des autres zones, pas sous le noyau | PR « Zone des applications autonomes » |
