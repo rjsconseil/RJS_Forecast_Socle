@@ -520,6 +520,20 @@
                 Ses tâches <span class="count-badge">{{ d.tasks.length }}</span>
               </h2>
             </div>
+            <!-- Choix du calcul du budget restant des tâches, réglé pour tout le projet (projets de la vie financés). -->
+            @if (d.budget.kind === 'standard' && !d.budget.abandoned) {
+              <fieldset class="task-cost-choice" [disabled]="busy()">
+                <legend>Choix du calcul du budget restant</legend>
+                <label><input type="radio" name="task-cost-mode" value="time-left" [checked]="taskCostMode() === 'time-left'" (change)="setTaskCostMode('time-left')" /> selon temps restant</label>
+                <label><input type="radio" name="task-cost-mode" value="time-spent" [checked]="taskCostMode() === 'time-spent'" (change)="setTaskCostMode('time-spent')" /> selon temps consommé</label>
+                @if (taskCostMode() === 'time-spent') {
+                  <label class="task-cost-rate">Taux horaire (€/h)
+                    <input type="text" inputmode="decimal" [value]="hourlyRateText()" (change)="saveHourlyRate($any($event.target).value)" aria-describedby="task-cost-help" />
+                  </label>
+                  <span id="task-cost-help" class="task-cost-help">appliqué à toutes les tâches : taux × heures passées</span>
+                }
+              </fieldset>
+            }
           </header>
           <p class="board-move-help" id="project-move-help">
             Glissez par la poignée ⠿ ou choisissez « Déplacer vers ». Échap annule le glissement.
@@ -832,9 +846,11 @@
         }
       </dd>
     </div>
-    <div class="money-rest" [class.is-danger]="(tb?.remainingCents ?? 0) < 0">
-      <dt>Budget restant selon le temps</dt>
-      <dd [bpmAmount]="tb?.remainingCents">{{ tb?.shareCents == null ? 'Non attribué' : tb?.remainingCents == null ? 'Temps à renseigner' : (tb!.remainingCents | cents) }}</dd>
+    @let spent = taskCostMode() === 'time-spent';
+    @let rest = spent ? (tb?.spentCostCents ?? null) : (tb?.remainingCents ?? null);
+    <div class="money-rest" [class.is-danger]="!spent && (tb?.remainingCents ?? 0) < 0">
+      <dt>{{ L.shareRest }} <small class="money-rest-mode">{{ spent ? L.shareRestSpent : L.shareRestLeft }}</small></dt>
+      <dd [bpmAmount]="rest">{{ spent ? (rest === null ? 'Taux horaire à fixer' : (rest | cents)) : tb?.shareCents == null ? 'Non attribué' : rest === null ? 'Temps à renseigner' : (rest | cents) }}</dd>
     </div>
     <div>
       <dt>{{ L.engaged }}</dt>

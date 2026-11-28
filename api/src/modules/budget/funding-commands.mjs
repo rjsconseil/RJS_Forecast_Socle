@@ -3,7 +3,7 @@
 import { fail } from '../../socle/errors.mjs';
 import { today } from '../../socle/clock.mjs';
 import { expectedRevisionOf, money, oneOf, text } from '../../socle/validation.mjs';
-import { fmt, sum, RETURN_CADENCES, inRegime, FUNDING_SOURCES, fundingSourceOf, sharesOf, returnsOf, overrunsOf, requestsOf, openRequest, isAbandoned, abandonedRefusal, requestView, isValidatedCharge, fundingFigures } from './funding-rules.mjs';
+import { fmt, sum, RETURN_CADENCES, TASK_COST_MODES, inRegime, FUNDING_SOURCES, fundingSourceOf, sharesOf, returnsOf, overrunsOf, requestsOf, openRequest, isAbandoned, abandonedRefusal, requestView, isValidatedCharge, fundingFigures } from './funding-rules.mjs';
 import { taskFunding, pendingOf } from './funding.mjs';
 import { createProjectCommands } from './funding-project.mjs';
 import { triggerReturn } from './funding-extensions.mjs';
@@ -230,6 +230,25 @@ export function createFunding(socle, { lifeBudgetOf }) {
   }
 
   /** Retour d'une tâche vers le budget de vie (revenu ponctuel ou récurrent), créé quand la tâche est terminée. */
+  /**
+   * Calcul du budget restant des tâches d'un projet [P] : `mode` (`time-left` : part × temps restant / temps prévu ;
+   * `time-spent` : taux horaire × heures passées) et `hourlyRate` (euros par heure, le même pour toutes les tâches du
+   * projet ; null l'efface). Aucun flux financier : un réglage d'affichage du projet.
+   */
+  async function setTaskCost(ctx, budgetId, input = {}) {
+    await om.command('setTaskCost', ctx, input, (tx) => {
+      const b = standardOf(tx.draft, tx.userId, budgetId);
+      om.checkRevision(b, expectedRevisionOf(input));
+      const patch = {};
+      if ('mode' in input) patch.taskCostMode = oneOf('mode', input.mode, TASK_COST_MODES);
+      if ('hourlyRate' in input) patch.hourlyRateCents = money('hourlyRate', input.hourlyRate, { nullable: true, positive: input.hourlyRate !== null && input.hourlyRate !== undefined && input.hourlyRate !== '' });
+      if (!Object.keys(patch).length) fail('VALIDATION', 'Rien à changer : donnez le mode ou le taux horaire.', { field: 'mode' });
+      om.update(tx, b, patch);
+      return { budgetId };
+    });
+    return { budgetId };
+  }
+
   async function setTaskReturn(ctx, budgetId, taskId, input = {}) {
     const effects = [];
     await om.command('setTaskReturn', ctx, input, (tx) => {
@@ -307,5 +326,5 @@ export function createFunding(socle, { lifeBudgetOf }) {
   }
 
   const { requestOverrun, decideOverrun, billOverruns, abandonProject, resumeProject } = createProjectCommands(socle, { lifeBudgetOf, standardOf, taskOf, approval, grantRequest, newOverrun, noPendingOverrun });
-  return { standardOf, taskOf, startTaskFunding, fundSettlement, requestTaskBudget, decideTaskBudget, allocate, setTaskShare, releaseTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns, abandonProject, resumeProject };
+  return { standardOf, taskOf, startTaskFunding, fundSettlement, requestTaskBudget, decideTaskBudget, allocate, setTaskShare, releaseTaskShare, setTaskCost, setTaskReturn, requestOverrun, decideOverrun, billOverruns, abandonProject, resumeProject };
 }

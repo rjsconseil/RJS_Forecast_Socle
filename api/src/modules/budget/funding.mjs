@@ -28,7 +28,14 @@ export function taskFunding(state, fig, taskId) {
   const consumedRatio = workRatio;
   const timeLeftRatio = consumedRatio === null ? null : 1 - consumedRatio;
   const remainingCents = timeLeftRatio === null || share === null ? null : Math.round(share * timeLeftRatio);
+  // Selon le temps consommé [P] : le taux horaire du projet × les heures déjà passées sur la tâche.
+  const cost = fig.taskCost ?? { mode: 'time-left', hourlyRateCents: null };
+  const spentCostCents = cost.hourlyRateCents === null ? null : Math.round(cost.hourlyRateCents * (task?.spentHours ?? 0));
   return {
+    /** Mode choisi par le projet, et le montant à montrer sous « Budget restant selon le temps ». */
+    restMode: cost.mode,
+    restCents: cost.mode === 'time-spent' ? spentCostCents : remainingCents,
+    spentCostCents,
     timeRemainingPct: timeLeftRatio === null ? null : Math.round(timeLeftRatio * 1000) / 10,
     timeRemainingCents: remainingCents,
     timeConsumptionPercent: consumedRatio === null ? null : Math.round(consumedRatio * 1000) / 10,

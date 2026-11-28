@@ -17,6 +17,9 @@ export const FUNDING = {
   toPay: 'Encore à régler',
   share: 'Part accordée',
   shareRest: 'Budget restant selon le temps',
+  /** Légende du second calcul (taux horaire du projet × heures passées), pour le distinguer du premier. */
+  shareRestSpent: 'selon le temps consommé',
+  shareRestLeft: 'selon le temps restant',
   sharePaid: 'Dépenses nettes validées',
   noShare: 'À demander',
   /** Lecture agrégée côté projet de vie (plusieurs projets). */

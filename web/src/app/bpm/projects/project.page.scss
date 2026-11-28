@@ -691,3 +691,42 @@ bpm-project-task-panel .task-time {
   &:hover { text-decoration-color: currentColor; }
   &.is-missing { font-weight: 650; }
 }
+
+// Choix du calcul du budget restant des tâches, en haut à droite de la boîte des tâches.
+.task-cost-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.task-cost-choice legend {
+  float: left;
+  margin-right: 4px;
+  padding: 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+.task-cost-choice label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.task-cost-rate input {
+  width: 8ch;
+  padding: 4px 6px;
+}
+.task-cost-help {
+  color: var(--muted);
+  font-size: 12px;
+}
+.money-rest-mode {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}

@@ -192,6 +192,14 @@ export function fundingFigures(state, b, now = today()) {
     shares: { ...shares },
     returns: returnsOf(b),
     abandoned: isAbandoned(b) ? { at: b.abandonedAt, reason: b.abandonReason ?? null, ...(b.abandonment ?? {}) } : null,
+    // Calcul du budget restant des tâches [P], choisi par projet : selon le temps restant (part × temps restant / temps
+    // prévu) ou selon le temps consommé (taux horaire du projet × heures passées sur la tâche).
+    taskCost: taskCostOf(b),
     life: null,
   };
 }
+
+/** Modes de calcul du budget restant d'une tâche : selon le temps restant (par défaut) ou selon le temps consommé. */
+export const TASK_COST_MODES = ['time-left', 'time-spent'];
+/** Réglage du projet pour le budget restant de ses tâches : mode et taux horaire (en centimes par heure, ou null). */
+export const taskCostOf = (b) => ({ mode: TASK_COST_MODES.includes(b?.taskCostMode) ? b.taskCostMode : 'time-left', hourlyRateCents: Number.isInteger(b?.hourlyRateCents) ? b.hourlyRateCents : null });

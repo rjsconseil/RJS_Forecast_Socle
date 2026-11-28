@@ -170,6 +170,8 @@ export interface ProjectBudget {
   byTask: Record<string, { engagedCents: number; paidCents: number; unbounded: boolean }>;
   shares: Record<string, number>;
   returns: Record<string, TaskReturn>;
+  /** Calcul du budget restant des tâches, choisi par projet, et son taux horaire. */
+  taskCost?: TaskCostSettings;
   /** Projet abandonné : quand, pourquoi, et ce que l'abandon a rendu au budget de vie. */
   abandoned: (ProjectAbandonPreview & { at: string; reason: string | null }) | null;
   life: LifeBudgetExtension | null;
@@ -258,7 +260,16 @@ export interface TaskBudget {
   purchaseEquivalentHours?: number | null;
   timeConsumedCents: number | null;
   timeRemainingCents: number | null;
+  /** Calcul choisi par le projet pour « Budget restant selon le temps », et son montant. */
+  restMode?: TaskCostMode;
+  restCents?: number | null;
+  /** Taux horaire du projet × heures passées (null sans taux). */
+  spentCostCents?: number | null;
 }
+
+/** Budget restant d'une tâche : selon le temps restant (part × temps restant) ou selon le temps consommé (taux × heures). */
+export type TaskCostMode = 'time-left' | 'time-spent';
+export interface TaskCostSettings { mode: TaskCostMode; hourlyRateCents: number | null }
 
 export interface BpmTaskCard extends TaskView {
   projectRole: 'life' | 'standard' | null;

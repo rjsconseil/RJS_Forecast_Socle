@@ -65,4 +65,16 @@ describe('fiche du projet · contrat de l’API', () => {
     const pct = detail.tasks.length ? Math.round((100 * done) / detail.tasks.length) : 0;
     expect(TestBed.inject(PageTabsNote).note()).toBe(`${done} terminée(s) · ${pct} %`);
   });
+
+  it('budget restant des tâches : le choix du calcul est en haut à droite de la boîte des tâches, le libellé suit le mode', async () => {
+    const { root, detail } = await open();
+    const choice = root.querySelector('.project-tasks-heading .task-cost-choice')!;
+    expect(choice.querySelector('legend')!.textContent).toContain('Choix du calcul du budget restant');
+    const radios = [...choice.querySelectorAll<HTMLInputElement>('input[type=radio]')];
+    expect(radios.map((r) => [r.value, r.checked])).toEqual([['time-left', true], ['time-spent', false]]);
+    expect(choice.querySelector('.task-cost-rate')).toBeNull();
+    const rest = root.querySelector('.money-rest')!;
+    expect(rest.querySelector('dt')!.textContent!.replace(/\s+/g, ' ').trim()).toBe('Budget restant selon le temps selon le temps restant');
+    expect(detail.budget!.taskCost).toEqual({ mode: 'time-left', hourlyRateCents: null });
+  });
 });

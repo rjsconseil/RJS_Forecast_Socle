@@ -117,6 +117,8 @@ export function lifeProjectBudget(state, comp, { figures, period, children, over
     returns: {},
     // Le projet de vie ne s'abandonne pas : il porte le cycle et le patrimoine.
     abandoned: null,
+    // Ses tâches suivent le calcul par défaut du budget restant (selon le temps restant) : pas de taux horaire.
+    taskCost: { mode: 'time-left', hourlyRateCents: null },
     life: {
       unique: true,
       compositionId: comp.id,
@@ -521,6 +523,10 @@ export function createProjects(socle, h) {
     const r = await funding().releaseTaskShare(ctx, budgetId, taskId, input);
     return { ...detailOf(ctx, budgetId), released: { releasedCents: r.releasedCents, shareCents: r.shareCents, taskTitle: r.taskTitle } };
   }
+  async function setTaskCost(ctx, budgetId, input = {}) {
+    await funding().setTaskCost(ctx, budgetId, input);
+    return detailOf(ctx, budgetId);
+  }
   async function setTaskReturn(ctx, budgetId, taskId, input = {}) {
     const r = await funding().setTaskReturn(ctx, budgetId, taskId, input);
     return { ...detailOf(ctx, budgetId), effects: r.effects };
@@ -555,5 +561,5 @@ export function createProjects(socle, h) {
     };
   }
 
-  return { overview, tasksOverview, projectDetail, createProject, createTask, requestTaskBudget, decideTaskBudget, adoptProject, allocate, setTaskShare, releaseTaskShare, setTaskReturn, requestOverrun, decideOverrun, billOverruns, abandonProject, resumeProject };
+  return { overview, tasksOverview, projectDetail, createProject, createTask, requestTaskBudget, decideTaskBudget, adoptProject, allocate, setTaskShare, releaseTaskShare, setTaskCost, setTaskReturn, requestOverrun, decideOverrun, billOverruns, abandonProject, resumeProject };
 }

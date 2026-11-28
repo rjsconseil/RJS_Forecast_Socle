@@ -1849,6 +1849,10 @@
    },
    "returns": {},
    "abandoned": null,
+   "taskCost": {
+    "mode": "time-left",
+    "hourlyRateCents": null
+   },
    "life": null,
    "periodPaidCents": 0
   },
@@ -1887,6 +1891,9 @@
     "projectRole": "standard",
     "budgetId": "bud_004",
     "budget": {
+     "restMode": "time-left",
+     "restCents": 45000,
+     "spentCostCents": null,
      "timeRemainingPct": 100,
      "timeRemainingCents": 45000,
      "timeConsumptionPercent": 0,

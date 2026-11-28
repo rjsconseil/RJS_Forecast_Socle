@@ -3,6 +3,20 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : budget restant d'une tâche, deux calculs au choix du projet — 28 novembre 2026
+
+Évolution en **mode socle** (middleware Budget, lectures et route BPM, fiche projet).
+- Chaque projet de la vie choisit comment calculer le « Budget restant selon le temps » de ses tâches :
+  - **selon temps restant** (par défaut, inchangé) : part accordée × temps restant / temps prévu ;
+  - **selon temps consommé** : taux horaire du projet (en euros, le même pour toutes ses tâches) × heures déjà
+    passées sur la tâche.
+- Budget du projet : `taskCostMode` et `hourlyRateCents`, réglés par la commande `setTaskCost`
+  (`PUT /api/bpm/project-budgets/:id/task-cost`, photo du contrat mise à jour). Chaque tâche lit `restMode`,
+  `restCents` et `spentCostCents`.
+- Fiche projet : un choix en haut à droite de la boîte des tâches, « Choix du calcul du budget restant », avec deux
+  boutons radio (selon temps restant / selon temps consommé) et le taux horaire quand il sert. Sous le libellé
+  « Budget restant selon le temps », une légende indique le calcul en vigueur.
+
 ## Grand noyau (socle) : fiche projet allégée, avancement des tâches dans la barre d'onglets — 28 novembre 2026
 
 Évolution en **mode socle** (cadre BPM-Astra et fiche projet).
