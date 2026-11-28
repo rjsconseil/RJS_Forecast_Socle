@@ -103,7 +103,6 @@ export const ASTRA_SECONDARY: [slug: string, parent: string, source: string][] =
   ['projets/:id/budget', 'projets', 'app/gestion-projet/:id/budget'],
   ['projets/:id/taches', 'projets', 'app/gestion-projet/:id/taches'],
   ['financement/enveloppes', 'projets', 'projet-de-vie/projets-finances'],
-  ['cloture/compte', 'cloture', 'tableau-de-bord/rapprochement'],
   ['cloture/reglages', 'cloture', 'app/reglages/cycle'],
   ['patrimoine/reglages', 'patrimoine', 'app/reglages/patrimoine'],
 ];
@@ -125,7 +124,7 @@ export const ASTRA_TAB_LABELS: Record<string, string> = {
   'financement/enveloppes': 'Règlements par cycle', taches: 'Tâches',
   budget: 'Budget récurrent', plafonds: 'Plafonds', 'plafonds/:poste': 'Poste', 'plafonds/postes': 'Postes et revenus',
   objectif: 'Objectif et projection', 'objectif/echeances': 'Objectifs datés', patrimoine: 'Patrimoine', 'patrimoine/reglages': 'Point de départ',
-  cloture: 'Clôture du cycle', 'cloture/compte': 'Vérifier le compte', 'cloture/reglages': 'Ancrage du cycle', bilans: 'Bilans',
+  cloture: 'Clôture du cycle', 'cloture/reglages': 'Ancrage du cycle', bilans: 'Bilans',
   ...Object.fromEntries(APPLICATIONS_INSCRITES.flatMap(app => app.pages.map(page => [page.slug, page.label]))),
 };
 
@@ -150,7 +149,7 @@ export const ASTRA_LINKS: [string, string][] = [
   // Le budget de chaque cycle se lit dans le quotidien et nourrit le cap.
   ['budget', 'calendrier'], ['plafonds', 'mouvements'], ['plafonds/:poste', 'mouvements'], ['budget', 'objectif'],
   // Le quotidien nourrit le cap et la clôture.
-  ['', 'objectif'], ['', 'cloture/compte'], ['mouvements', 'cloture/compte'], ['mouvements/echeances', 'cloture'], ['objectif/echeances', 'calendrier'],
+  ['', 'objectif'], ['', 'cloture'], ['mouvements/echeances', 'cloture'], ['objectif/echeances', 'calendrier'],
   // Les projets touchent le patrimoine et les bilans.
   ['projets', 'patrimoine'], ['financement/enveloppes', 'bilans'],
   // Patrimoine et Cycles : constater, viser, clôturer.
@@ -158,7 +157,7 @@ export const ASTRA_LINKS: [string, string][] = [
 ];
 
 /** La clôture est un processus : ses étapes viennent en tête et gardent leur numéro partout où elles apparaissent ensemble. */
-export const ASTRA_CLOSING_STEPS = ['cloture/compte', 'cloture', 'bilans'];
+export const ASTRA_CLOSING_STEPS = ['cloture', 'bilans'];
 /** Pages qui lisent la situation à date : pas de choix de période. */
 const AT_DATE = /^(objectif|patrimoine|cloture\/reglages|cloture$|calendrier)/;
 

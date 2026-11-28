@@ -3,6 +3,18 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : l'étape « Vérifier le compte » de la clôture est retirée — 28 novembre 2026
+
+Évolution en **mode socle** (clôture du cycle, cadre BPM-Astra, API BPM). Aucun fichier d'application autonome.
+- Page `/bpm-astra/cloture/compte` retirée, avec son onglet, son étape numérotée (la clôture compte maintenant deux
+  étapes : Clôture du cycle, puis Bilans), son guide, son geste « Vérifier le compte » et les liens qui y menaient
+  (accueil, Patrimoine, page de clôture). Les anciennes adresses (`/bpm-astra/cloture/compte`, `/bpm-astra/rapprochement`,
+  `/tableau-de-bord/rapprochement`, `/argent/reste`) ramènent à la clôture du cycle.
+- Clôture : plus de point « Vérification du compte » ni de contrôle bloquant « Compte vérifié ». La décision de clôture
+  n'accepte plus `account`, et une clôture n'enregistre plus `journey.account`. Les clôtures déjà faites gardent leur trace.
+- Écran « Rapprochement bancaire » (`balance.ts`, `bank-reconciliation.component.ts`) et fenêtre « Vérifier le compte »
+  de la clôture supprimés ; route `GET /api/bpm/balance` retirée (photo du contrat mise à jour, `npm run contrat -- --maj`).
+
 ## Grand noyau (socle) : créer un utilisateur quand la connexion est exigée — 28 novembre 2026
 
 Évolution en **mode socle**, BPM-Astra inchangé.

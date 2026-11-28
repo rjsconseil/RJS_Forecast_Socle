@@ -1,14 +1,13 @@
-// Lectures BPM — postes (centres de coût) et entrées, détail d'un poste, solde et rapprochement bancaire.
+// Lectures BPM — postes (centres de coût) et entrées, détail d'un poste.
 import { fail } from '../../socle/errors.mjs';
 import { oneOf } from '../../socle/validation.mjs';
 import { CAP_LEVEL_PCT } from '../budget/api.mjs';
 import { essentialRefsOf, natureOf } from './natures.mjs';
 import { sum } from './format.mjs';
-import { RESULT, queryMoney } from './reads-shared.mjs';
 
 /** `h` : outils du module BPM ; `kit` : contexte commun des lectures (reads.mjs). */
 export function createCenterReads(socle, h, kit) {
-  const { budget, base, contextOf, statusOf, decorate, validatedProjectLines, capsRead, summary } = kit;
+  const { budget, base, contextOf, statusOf, decorate, validatedProjectLines, capsRead } = kit;
 
   // ---------- centres et entrées ----------
 
@@ -136,47 +135,5 @@ export function createCenterReads(socle, h, kit) {
     };
   }
 
-  // ---------- solde et rapprochement ----------
-
-  function balance(ctx, q = {}) {
-    const s = summary(ctx, { periodKey: q.period });
-    const b = base(ctx, { periodKey: q.period });
-    const pat = b.state.patrimoines[b.comp.patrimoineId];
-    const f = s.figures;
-    const net = f[RESULT].valueCents;
-    let reconciliation = null;
-    if (q.initial !== undefined && q.current !== undefined && q.initial !== '' && q.current !== '') {
-      const initialCents = queryMoney('initial', q.initial, { signed: true });
-      const currentCents = queryMoney('current', q.current, { signed: true });
-      const variationCents = currentCents - initialCents;
-      const gapCents = net === null ? null : variationCents - net;
-      reconciliation = {
-        initialCents,
-        currentCents,
-        variationCents,
-        netCents: net,
-        gapCents,
-        formula: 'écart = (solde actuel − solde initial) − net calculé',
-        suggestion: gapCents === null ? 'Net inconnu : écart non calculable.' : gapCents === 0 ? 'Aucun écart.' : gapCents < 0 ? 'Écart négatif : une dépense est peut-être manquante. Relisez avant toute saisie.' : 'Écart positif : une entrée est peut-être manquante. Relisez avant toute saisie.',
-        createsOperation: false,
-      };
-    }
-    return {
-      context: s.context,
-      closed: s.closed,
-      receivedCents: f['bpm.revenus'].valueCents,
-      paidCents: f['bpm.charges'].valueCents,
-      netCents: net,
-      toReceiveCents: f['bpm.resteARecevoir'].valueCents,
-      toPayCents: f['bpm.resteAPayer'].valueCents,
-      expectedCents: f['bpm.soldeAttendu'].valueCents,
-      initialBudgetCents: f['bpm.resultatPrevu'].valueCents,
-      closingDate: s.context.period?.end ?? null,
-      patrimoine: { stockCents: f['bpm.patrimoineConstitue'].valueCents, effectCents: net, afterCents: f['bpm.patrimoineFinPeriode'].valueCents, objectiveCents: pat?.objectiveCents ?? null },
-      figures: f,
-      reconciliation,
-    };
-  }
-
-  return { centers, centerDetail, incomes, balance };
+  return { centers, centerDetail, incomes };
 }

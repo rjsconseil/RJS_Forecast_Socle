@@ -53,11 +53,13 @@ describe('navigation secondaire de BPM-Astra', () => {
   });
 
   it('la clôture garde ses étapes numérotées en tête, sur toutes les pages de Cycles', () => {
-    for (const slug of ['cloture', 'cloture/compte', 'cloture/reglages', 'bilans']) {
-      expect(astraTabsOf(slug).tabs.slice(0, 3).map(t => [t.slug, t.step]), slug).toEqual([['cloture/compte', 1], ['cloture', 2], ['bilans', 3]]);
+    for (const slug of ['cloture', 'cloture/reglages', 'bilans']) {
+      expect(astraTabsOf(slug).tabs.slice(0, 2).map(t => [t.slug, t.step]), slug).toEqual([['cloture', 1], ['bilans', 2]]);
     }
+    // L'étape « Vérifier le compte » est retirée : plus d'onglet à son adresse.
+    expect(astraTabsOf('cloture').tabs.some(t => t.slug === 'cloture/compte')).toBe(false);
     // Une étape seule, ailleurs, n'a pas de numéro.
-    expect(astraTabsOf('').tabs.find(t => t.slug === 'cloture/compte')?.step).toBeNull();
+    expect(astraTabsOf('').tabs.find(t => t.slug === 'cloture')?.step).toBeNull();
   });
 
   it('une fiche montre ses voisines de fiche, une liste ne les montre pas', () => {

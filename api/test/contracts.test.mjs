@@ -138,18 +138,17 @@ test('centres : payé, restant, plafond et marge ; base des parts sur 100 € ; 
   await rejects(operation(socle, u2.ctx, { direction: 'charge', amount: 1, date: '2026-11-01', costCenterRef: cc.costCenterId }), 'REFERENCE_NOT_FOUND');
 });
 
-test('§15 solde : reçu 3 000, payé 2 000, à recevoir 200, à payer 400 → net 1 000, attendu 800 ; rapprochement', async () => {
+test('§15 solde : reçu 3 000, payé 2 000, à recevoir 200, à payer 400 → net 1 000, attendu 800', async () => {
   const { socle } = await makeSocle();
   const { ctx } = await camille(socle);
   await operation(socle, ctx, { direction: 'income', amount: 3000, date: '2026-11-01' });
   await operation(socle, ctx, { direction: 'charge', amount: 2000, date: '2026-11-02' });
   await operation(socle, ctx, { direction: 'income', amount: 200, date: '2026-11-25', status: 'planned' });
   await operation(socle, ctx, { direction: 'charge', amount: 400, date: '2026-11-26', status: 'planned' });
-  const bal = reads(socle).balance(ctx, { initial: '1500', current: '2400' });
-  assert.deepEqual([bal.netCents, bal.expectedCents, bal.receivedCents, bal.paidCents], [100000, 80000, 300000, 200000]);
-  assert.deepEqual([bal.reconciliation.variationCents, bal.reconciliation.gapCents, bal.reconciliation.createsOperation], [90000, -10000, false]);
-  assert.match(bal.reconciliation.suggestion, /dépense/);
-  assert.equal(bal.closingDate, '2026-11-30');
+  const s = reads(socle).summary(ctx, {});
+  const f = (k) => s.figures[k].valueCents;
+  assert.deepEqual([f('bpm.resultatPeriode'), f('bpm.soldeAttendu'), f('bpm.revenus'), f('bpm.charges')], [100000, 80000, 300000, 200000]);
+  assert.equal(s.context.period.end, '2026-11-30');
 });
 
 test('§15 stock 10 000 comprenant une clôture de 800 : la lecture de la clôture ne donne pas 10 800', async () => {
@@ -377,8 +376,6 @@ test('compléments de contrat : erreurs d’assistant sur entries[i], profil (li
   assert.equal(reg.totals.byDirection.charge.settledCents, 12000);
   assert.equal(reg.totals.netSettledCents, 18000);
 
-  const bal = bpm.reads.balance(ctx, {});
-  assert.ok('objectiveCents' in bal.patrimoine);
   const hist = bpm.reads.history(ctx, {});
   assert.ok(hist.rows.every((r) => Number.isInteger(r.index)));
 });

@@ -69,7 +69,7 @@ const sourcePaths = new Map<string, string>([
     ['/piloter/agir', 'mouvements/echeances'], ['/app/gestion-projet/cycle/echeances', 'mouvements/echeances'],
     // Les plafonds se fixent poste par poste sur la page Plafonds ; les catégories de dépense sont retirées.
     ['/plafonds/reglages', 'plafonds'], ['/plafonds/categories', 'plafonds'],
-    ['/argent/reste', 'cloture/compte'], ['/app/gestion-projet/cycle', 'cloture'], ['/app/gestion-projet/cycle/cloture', 'cloture'], ['/app/reglages', 'cloture/reglages'],
+    ['/argent/reste', 'cloture'], ['/tableau-de-bord/rapprochement', 'cloture'], ['/app/gestion-projet/cycle', 'cloture'], ['/app/gestion-projet/cycle/cloture', 'cloture'], ['/app/reglages', 'cloture/reglages'],
     ['/app/projets', 'projets'], ['/projet-de-la-vie', 'projets'], ['/zones/bpm/projets-vie', 'projets'], ['/zones/bpm/gestion', 'projets'],
     ['/app/projets/suivi', 'financement/enveloppes'],
     ['/app/gestion-projet/planning', 'calendrier'], ['/zones/bpm/calendrier', 'calendrier'], ['/calendrier-budget/sources', 'calendrier'],
@@ -101,7 +101,7 @@ const legacy = (path: string): RedirectFunction => ({ params, queryParams, fragm
 const secondaryWorkspaces = ASTRA_SECONDARY.map(([slug, parent, source]) => {
   const workspace = sourceWorkspaces.find(view => view.path === source);
   if (!workspace) throw new Error('Vue métier BPM introuvable : ' + source);
-  // Une étape d'un processus porte le nom de l'étape (« Vérifier le compte ») dans le fil d'Ariane.
+  // Une étape d'un processus porte le nom de l'étape dans le fil d'Ariane.
   const title = astraGuidance[slug]?.title;
   return { ...workspace, title: title ?? workspace.title, label: title ?? workspace.label, path: astraUrl(slug).slice(1), parent: astraUrl(parent), existing: true };
 });
@@ -179,7 +179,6 @@ const actions: TabLink[] = [
   { tab: astraUrl('taches'), label: 'Créer une tâche', query: { editTask: 'new' } },
   { tab: astraUrl('objectif'), label: 'Créer un objectif daté', query: { goal: 'new' } },
   openAction(astraUrl('patrimoine'), 'Corriger le point de départ', astraUrl('patrimoine/reglages')),
-  openAction(astraUrl('cloture'), 'Vérifier le compte', astraUrl('cloture/compte')),
   openAction(astraUrl('cloture'), 'Fixer le cycle', astraUrl('cloture/reglages')),
   openAction(astraUrl('bilans'), 'Clôturer le cycle', astraUrl('cloture')),
   // Les gestes déclarés par les applications autonomes inscrites (sections/inscriptions.ts).
@@ -231,13 +230,14 @@ export const ASTRA_APPLICATION: ApplicationDeclaration = {
     { path: 'bpm-astra/objectifs', pathMatch: 'full', redirectTo: moved(astraUrl('objectif')) },
     { path: 'bpm-astra/projection', pathMatch: 'full', redirectTo: moved(astraUrl('objectif')) },
     { path: 'bpm-astra/objectifs/echeancier', pathMatch: 'full', redirectTo: moved(astraUrl('objectif/echeances')) },
-    // Vérifier le compte est la première étape de la clôture.
     // L'enveloppe et sa source se règlent sur la fiche du projet : la page Financement est retirée.
     { path: 'bpm-astra/financement', pathMatch: 'full', redirectTo: moved(astraUrl('projets')) },
     // La page Météo est retirée (24 nov.) : ses adresses ramènent à l'accueil.
     { path: 'bpm-astra/meteo', pathMatch: 'full', redirectTo: moved(astraUrl('')) },
     { path: 'bpm-astra/meteo/:vue', pathMatch: 'full', redirectTo: moved(astraUrl('')) },
-    { path: 'bpm-astra/rapprochement', pathMatch: 'full', redirectTo: moved(astraUrl('cloture/compte')) },
+    // L'étape « Vérifier le compte » est retirée (28 nov.) : ses adresses ramènent à la clôture du cycle.
+    { path: 'bpm-astra/rapprochement', pathMatch: 'full', redirectTo: moved(astraUrl('cloture')) },
+    { path: 'bpm-astra/cloture/compte', pathMatch: 'full', redirectTo: moved(astraUrl('cloture')) },
     // Les limites se fixent poste par poste sur la page Plafonds ; les catégories de dépense sont abandonnées.
     { path: 'bpm-astra/plafonds/reglages', pathMatch: 'full', redirectTo: moved(astraUrl('plafonds')) },
     { path: 'bpm-astra/plafonds/categories', pathMatch: 'full', redirectTo: moved(astraUrl('plafonds')) },

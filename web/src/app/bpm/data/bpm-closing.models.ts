@@ -7,7 +7,7 @@ import { LifeClosingPreview } from './bpm-life.models';
 
 /** running : le cycle court (suivi des points) ; to_close : son dernier jour est passé, le cycle est en clôture. */
 export type ClosingPhase = 'to_configure' | 'running' | 'to_close';
-export type ClosingGroup = 'income' | 'charges' | 'projects' | 'decisions' | 'account';
+export type ClosingGroup = 'income' | 'charges' | 'projects' | 'decisions';
 /** @deprecated nom historique du groupe d'un critère */
 export type ClosingCriterionKey = ClosingGroup;
 /** done : traité ; todo : à traiter maintenant ; later : pas encore faisable ; none : sans objet ce cycle. */
@@ -23,7 +23,7 @@ export interface ClosingPoint {
   id: string;
   /** Ligne à ouvrir dans le détail (opération ou occurrence) ; null pour une décision ou le compte. */
   lineId: string | null;
-  kind: 'line' | 'decision' | 'account';
+  kind: 'line' | 'decision';
   group: ClosingGroup;
   /** Point bloquant : il se traite avant la clôture, il ne se reporte pas. */
   blocking: boolean;
@@ -148,7 +148,7 @@ export type ClosingCheckTarget =
   | { kind: 'page'; path: string }
   | { kind: 'center'; ref: string }
   | { kind: 'project'; coreProjectId: string | null }
-  | { kind: 'decisions' | 'reconciliation' };
+  | { kind: 'decisions' };
 /** Contrôle de cohérence : bloquant (la clôture attend), à voir (gardé dans la clôture), pour information. */
 export interface ClosingCheck {
   key: string;
@@ -200,7 +200,6 @@ export interface ClosingJourney {
   /** Cycles où un point non bloquant peut se revoir. */
   targets: ClosingTarget[];
   netCents?: number | null;
-  account?: { confirmedAt: string; at?: string; netCents: number | null; note: string | null; stale: boolean } | null;
   closing: { possible: boolean; reason: string | null; preview: LifeClosingPreview | null } | null;
   canClose: boolean;
   remaining?: string[];
@@ -229,7 +228,6 @@ export interface ClosingDecision {
   defer?: { pointId: string; toPeriodKey: string | null };
   /** Ancienne forme : report au cycle suivant. */
   carry?: { lineId: string; value?: boolean };
-  account?: { confirmed: boolean; note?: string | null };
 }
 
 export interface ClosingFinalized { replayed: boolean; closure: Closure; carriedCount: number; deferredCount: number; journey: ClosingJourney }

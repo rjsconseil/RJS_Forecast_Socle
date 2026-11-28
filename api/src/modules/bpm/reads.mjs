@@ -156,11 +156,11 @@ export function createReads(socle, h) {
 
   const kit = { budget, base, contextOf, closedPeriodOf, statusOf, decorate, decorateProjectLine, windowOf, validatedProjectLines, patrimoineProjectLines, paymentTrace, budgetIdsOf, capsBrief, capsRead, summary };
   const { projectFlows, financialOutlook, register, lineDetail } = createRegisterReads(socle, h, kit);
-  const { centers, centerDetail, incomes, balance } = createCenterReads(socle, h, kit);
+  const { centers, centerDetail, incomes } = createCenterReads(socle, h, kit);
   const { history, impact, budgetType, due, visionOf, goalsOf, events, surplusProgress, directives, projection, previewEntry } = createOutlookReads(socle, h, kit);
 
   return {
-    summary, register, projectFlows, financialOutlook, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, previewCaps, incomes, balance, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
+    summary, register, projectFlows, financialOutlook, lineDetail, centers, centerDetail, spendingCaps, capsReview, capAlertsFor, previewCaps, incomes, history, impact, budgetType, due, events, directives, projection, previewEntry, visionOf, goalsOf, surplusProgress, GOAL_TYPES,
     // Outils partagés avec la gestion du projet de vie (`life.mjs`) et la clôture : même contexte, mêmes états, mêmes lignes.
     base, contextOf, decorate, decorateProjectLine, validatedProjectLines, patrimoineProjectLines, capsRead,
   };

@@ -39,9 +39,8 @@ test('cycle en cours : les points se suivent, ouverts puis clos à l’instant, 
   assert.equal(j.phase, 'running');
   assert.equal(j.period.key, '2026-11');
   assert.equal(j.opensOn, '2026-12-01');
-  assert.equal(j.total, 6, '5 échéances prévues du cycle + le compte');
+  assert.equal(j.total, 5, '5 échéances prévues du cycle');
   assert.equal(j.percent, 0);
-  assert.equal(point(j, 'account').state, 'later', 'le compte se vérifie après le dernier jour');
   assert.equal(point(j, t.plumber.id).openedOn, '2026-11-03', 'une prévision s’ouvre à sa saisie');
   assert.equal(point(j, occ(t.salary, '2026-11-01')).openedOn, '2026-11-03', 'définition saisie le 3 : son occurrence du 1er s’ouvre ce jour-là');
   assert.equal(criterion(j, 'income').state, 'todo', 'le salaire du 1er est déjà en retard');
@@ -50,7 +49,7 @@ test('cycle en cours : les points se suivent, ouverts puis clos à l’instant, 
 
   // Une dépense saisie déjà réglée n'ouvre aucun point.
   await t.budget.createOperation(t.ctx, { requestKey: key('op'), status: 'realized', direction: 'charge', label: 'Café', amount: 3, date: '2026-11-03', costCenterRef: 'std:divers' });
-  assert.equal(t.bpm.closingJourney(t.ctx).total, 6);
+  assert.equal(t.bpm.closingJourney(t.ctx).total, 5);
 
   // Clos à l'instant, là où il vit : règlement d'une occurrence, écart d'une autre.
   await settle(t, t.salary, '2026-11-01');
@@ -64,19 +63,18 @@ test('cycle en cours : les points se suivent, ouverts puis clos à l’instant, 
   assert.equal(groceries.state, 'closed');
   assert.equal(groceries.outcome, 'skipped');
   assert.match(groceries.outcomeLabel, /^Écartée le .* · Repas offerts$/);
-  assert.equal(j.total, 6, 'une échéance écartée reste un point, clos');
-  assert.equal(j.percent, 33, '2 points sur 6');
-  assert.deepEqual(j.counts, { total: 6, open: 3, closed: 2, deferred: 0, later: 1, inherited: 0 });
+  assert.equal(j.total, 5, 'une échéance écartée reste un point, clos');
+  assert.equal(j.percent, 40, '2 points sur 5');
+  assert.deepEqual(j.counts, { total: 5, open: 3, closed: 2, deferred: 0, later: 0, inherited: 0 });
 
   // Le résumé des pages suit les mêmes points.
   const brief = t.bpm.closingBrief(t.ctx);
   assert.equal(brief.phase, 'running');
-  assert.equal(brief.percent, 33);
+  assert.equal(brief.percent, 40);
   assert.equal(brief.points.find((p) => p.id === occ(t.salary, '2026-11-01')).state, 'closed');
 
   // Aucune action de clôture tant que le cycle court.
   await rejects(defer(t, t.plumber.id, '2026-12'), 'FORBIDDEN_BY_RULE');
-  await rejects(decide(t, { account: { confirmed: true } }), 'FORBIDDEN_BY_RULE');
   await rejects(t.bpm.finalizeClosing(t.ctx, { requestKey: key('fin'), periodKey: '2026-11' }), 'FORBIDDEN_BY_RULE');
 });
 
@@ -106,7 +104,6 @@ test('actions du cycle (classées, avec leur contexte) et contrôles de cohéren
   // Contrôles : les points ouverts sont à voir pendant le cycle ; le plafond de « Divers » est dépassé (120 + 3 > 110).
   const check = (k) => j.checks.items.find((c) => c.key === k);
   assert.equal(check('points').state, 'warn');
-  assert.equal(check('account').state, 'later');
   assert.equal(check('integrity').state, 'ok');
   assert.equal(check('result').state, 'ok');
   assert.equal(check('caps').state, 'warn');
@@ -118,14 +115,13 @@ test('actions du cycle (classées, avec leur contexte) et contrôles de cohéren
   assert.match(check('caps').resolution.problem, /1 poste dépasse son plafond/);
   assert.equal(check('points').resolution.steps.length, 3);
   assert.deepEqual(check('points').items.find((i) => i.label === 'Plombier').target, { kind: 'line', id: t.plumber.id, coreProjectId: null, page: 'echeances' });
-  assert.deepEqual(check('account').resolution.steps[0].target, { kind: 'reconciliation' });
   assert.equal(check('integrity').resolution.problem, null);
 
   // En clôture, un point encore ouvert devient bloquant.
   await at('2026-12-02', async () => {
     const c = t.bpm.closingJourney(t.ctx);
     assert.equal(c.checks.items.find((x) => x.key === 'points').state, 'fail');
-    assert.deepEqual(c.checks.blocking, ['Points du cycle traités', 'Compte vérifié']);
+    assert.deepEqual(c.checks.blocking, ['Points du cycle traités']);
     assert.equal(c.canClose, false);
   });
 });
@@ -140,8 +136,7 @@ test('fin du dernier jour : mode clôture (points figés) et cycle suivant verro
     assert.match(j.lock.message, /Novembre 2026 est terminé et attend sa clôture : Décembre 2026 démarrera à sa clôture/);
     assert.equal(j.closingMode.active, true);
     assert.match(j.closingMode.message, /^Novembre 2026 est en clôture : ses points sont figés/);
-    assert.equal(point(j, 'account').state, 'open');
-    assert.equal(point(j, 'account').blocking, true);
+    assert.equal(point(j, 'account'), undefined, 'l’étape « Vérifier le compte » est retirée');
 
     // Cycle suivant : opération, règlement daté de décembre, définition récurrente touchée.
     await rejects(t.budget.createOperation(t.ctx, { requestKey: key('op'), status: 'realized', direction: 'charge', label: 'Café', amount: 3, date: '2026-12-02', costCenterRef: 'std:divers' }), 'CYCLE_AWAITING_CLOSURE');
@@ -156,7 +151,7 @@ test('fin du dernier jour : mode clôture (points figés) et cycle suivant verro
     // Ce qui a eu lieu se saisit toujours (sans ouvrir de point), et les points se traitent.
     await t.budget.createOperation(t.ctx, { requestKey: key('op'), status: 'realized', direction: 'charge', label: 'Pharmacie', amount: 12, date: '2026-11-29', costCenterRef: 'std:divers' });
     await settle(t, t.rent, '2026-11-02');
-    assert.equal(t.bpm.closingJourney(t.ctx).total, 6);
+    assert.equal(t.bpm.closingJourney(t.ctx).total, 5);
   });
 });
 
@@ -172,16 +167,12 @@ test('clôture à 100 % : points reportés vers le cycle choisi, marques et impa
     let j = await defer(t, occ(t.internet, '2026-11-28'), '2027-02');
     assert.equal(point(j, t.plumber.id).state, 'deferred');
     assert.deepEqual(point(j, occ(t.internet, '2026-11-28')).deferTo, { key: '2027-02', label: 'Février 2027', start: '2027-02-01' });
-    j = await decide(t, { account: { confirmed: true, note: 'Relevé du 30/11' } });
-    assert.equal(criterion(j, 'account').state, 'done');
+    assert.ok(j.percent < 100);
+    assert.equal(criterion(j, 'account'), undefined, 'plus de critère « Compte vérifié »');
 
-    // Un règlement de novembre après la vérification la rend caduque.
     await settle(t, t.groceries, '2026-11-20', '2026-11-20', 280);
     j = t.bpm.closingJourney(t.ctx);
-    assert.equal(j.account.stale, true);
-    assert.equal(criterion(j, 'account').remaining, 'compte à vérifier de nouveau');
-    assert.ok(j.percent < 100);
-    j = await decide(t, { account: { confirmed: true } });
+    assert.equal(j.account, undefined);
     assert.equal(j.percent, 100);
     assert.equal(j.canClose, true);
     assert.equal(j.closing.preview.resultCents, 200000 - 70000 - 28000);
@@ -201,11 +192,11 @@ test('clôture à 100 % : points reportés vers le cycle choisi, marques et impa
     assert.equal(r.closure.periodKey, '2026-11');
     assert.equal(r.carriedCount, 2);
     assert.deepEqual(r.closure.journey.deferred.map((d) => [d.label, d.toPeriodKey]), [['Plombier', '2026-12'], ['Internet', '2027-02']]);
-    assert.equal(r.closure.journey.account.note, null, 'la dernière confirmation fait foi');
+    assert.equal(r.closure.journey.account, undefined);
     // Historisation : les actions et les contrôles du cycle sont figés dans la clôture.
     assert.ok(r.closure.journey.actions.total >= 8);
     assert.ok(r.closure.journey.actions.items.some((i) => i.verb === 'Échéance réglée' && i.label === 'Loyer'));
-    assert.deepEqual(r.closure.journey.checks.filter((c) => c.level === 'blocking').map((c) => c.state), ['ok', 'ok', 'ok', 'ok']);
+    assert.deepEqual(r.closure.journey.checks.filter((c) => c.level === 'blocking').map((c) => c.state), ['ok', 'ok', 'ok']);
 
     const state = t.socle.state;
     // Ponctuel : même opération, au premier jour de son cycle cible, avec sa marque d'origine.
@@ -240,7 +231,7 @@ test('report : seuls les points ouverts non bloquants, vers un cycle à venir ; 
   await at('2026-12-02', async () => {
     await rejects(defer(t, occ(t.salary, '2026-11-01'), '2026-12'), 'ALREADY_SETTLED');
     await rejects(defer(t, 'inconnue', '2026-12'), 'NOT_FOUND');
-    await rejects(defer(t, 'account', '2026-12'), 'FORBIDDEN_BY_RULE');
+    await rejects(defer(t, 'account', '2026-12'), 'NOT_FOUND');
     await rejects(defer(t, t.plumber.id, '2026-10'), 'VALIDATION');
     await rejects(defer(t, t.plumber.id, '2029-01'), 'VALIDATION');
     let j = await defer(t, t.plumber.id, '2027-06');
@@ -250,7 +241,7 @@ test('report : seuls les points ouverts non bloquants, vers un cycle à venir ; 
     // Ancienne forme : report au cycle suivant.
     j = await decide(t, { carry: { lineId: t.plumber.id } });
     assert.equal(point(j, t.plumber.id).deferTo.key, '2026-12');
-    await rejects(decide(t, { periodKey: '2026-12', account: { confirmed: true } }), 'FORBIDDEN_BY_RULE');
+    await rejects(decide(t, { periodKey: '2026-12' }), 'FORBIDDEN_BY_RULE');
   });
 });
 
@@ -285,7 +276,7 @@ test('projets et décisions : flux à valider, décision prise à l’instant, d
     await rejects(defer({ bpm, ctx }, `overrun:${overrun.id}`, '2027-01'), 'VALIDATION');
     await defer({ bpm, ctx }, `overrun:${overrun.id}`, '2026-12');
     await defer({ bpm, ctx }, tiles.id, '2027-03');
-    j = await decide({ bpm, ctx }, { account: { confirmed: true } });
+    j = bpm.closingJourney(ctx);
     assert.equal(j.percent, 100);
     assert.equal(j.impacts.decisions.count, 1);
     assert.deepEqual(j.impacts.deferred.byCycle.map((c) => [c.key, c.points[0].project]), [['2027-03', 'Cuisine']]);
@@ -317,7 +308,7 @@ test('verrou désactivé (paramètre) : ni mode clôture ni cycle suivant verrou
 test('robustesse : cycles en retard clôturés dans l’ordre, aperçu périmé refusé, clôture rejouée sans double versement', async () => {
   const t = await setup({ closingLock: true });
   // Rien n'est décidé tant que le cycle court.
-  await rejects(decide(t, { account: { confirmed: true } }), 'FORBIDDEN_BY_RULE');
+  await rejects(decide(t, {}), 'FORBIDDEN_BY_RULE');
   await rejects(t.bpm.finalizeClosing(t.ctx, { requestKey: key('fin'), periodKey: '2026-11' }), 'FORBIDDEN_BY_RULE');
   await settle(t, t.salary, '2026-11-01');
   await settle(t, t.rent, '2026-11-02');
@@ -332,13 +323,13 @@ test('robustesse : cycles en retard clôturés dans l’ordre, aperçu périmé 
     assert.equal(j.period.key, '2026-11');
     assert.equal(j.backlog, 2);
     assert.match(j.lock.message, /les cycles terminés se clôturent dans l’ordre/);
-    await rejects(t.bpm.closingDecision(t.ctx, { periodKey: '2026-12', account: { confirmed: true } }), 'FORBIDDEN_BY_RULE');
+    await rejects(t.bpm.closingDecision(t.ctx, { periodKey: '2026-12' }), 'FORBIDDEN_BY_RULE');
     // Décembre est terminé à son tour : le report qui le visait tombe, le point redevient ouvert.
     assert.equal(point(j, t.plumber.id).state, 'open');
     assert.equal(j.targets[0].key, '2027-01', 'seuls les cycles pas encore terminés reçoivent un report');
     await rejects(defer(t, t.plumber.id, '2026-12'), 'VALIDATION');
     await defer(t, t.plumber.id, '2027-01');
-    j = await decide(t, { account: { confirmed: true } });
+    j = t.bpm.closingJourney(t.ctx);
     assert.equal(j.canClose, true);
     const expected = j.closing.preview.resultCents;
 

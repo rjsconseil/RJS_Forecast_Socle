@@ -14,7 +14,7 @@ describe('plan du site', () => {
     expect(locate('/bpm-astra/mouvements/echeances')).toMatchObject({ kind: 'subpage', section: { id: 'astra-0' }, page: { link: '/bpm-astra/mouvements' }, subpage: { id: 'life-due' } });
     expect(locate('/bpm-astra/plafonds/std%3Alogement')).toMatchObject({ kind: 'detail', section: { id: 'astra-2' }, page: { link: '/bpm-astra/plafonds' } });
     expect(locate('/bpm-astra/projets/prj_1')).toMatchObject({ kind: 'detail', section: { id: 'astra-1' }, page: { link: '/bpm-astra/projets' } });
-    expect(locate('/bpm-astra/cloture/compte')).toMatchObject({ kind: 'subpage', section: { id: 'astra-4' }, page: { link: '/bpm-astra/cloture' }, subpage: { id: 'reconciliation' } });
+    expect(locate('/bpm-astra/cloture/reglages')).toMatchObject({ kind: 'subpage', section: { id: 'astra-4' }, page: { link: '/bpm-astra/cloture' }, subpage: { id: 'settings-cycle' } });
     expect(locate('/piloter').kind).toBe('none');
     expect(locate('/tasks')).toMatchObject({ zone: { id: 'noyau' }, section: { id: 'taches' } });
     expect(locate('/projects/abc')).toMatchObject({ kind: 'detail', detailLabel: 'Détail du projet' });

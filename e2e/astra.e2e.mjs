@@ -23,7 +23,7 @@ const PAGES = {
   projets: ['projets', 'financement/enveloppes', 'taches'],
   budget: ['budget', 'plafonds', 'plafonds/postes'],
   patrimoine: ['objectif', 'objectif/echeances', 'patrimoine', 'patrimoine/reglages'],
-  cycles: ['cloture/compte', 'cloture', 'cloture/reglages', 'bilans'],
+  cycles: ['cloture', 'cloture/reglages', 'bilans'],
 };
 let MOBILE = ['', 'mouvements', 'projets', 'budget', 'objectif', 'cloture', 'bilans'];
 const apps = await inscriptions();
@@ -133,12 +133,15 @@ try {
     check(menuOpened, 'Touche + : le menu « Nouveau » ne s’ouvre pas');
     await page.keyboard.press('Escape');
     // Menu latéral : sous la page ouverte, ses seules pages secondaires (pas celles des autres sections).
-    await open('cloture/compte');
+    await open('cloture/reglages');
     const subs = await page.evaluate(() => [...document.querySelectorAll('.astra-nav-sub a')].map(a => a.textContent.trim() + (a.getAttribute('aria-current') === 'page' ? '*' : '')));
-    check(JSON.stringify(subs) === JSON.stringify(['Vérifier le compte*', 'Ancrage du cycle']), `Menu latéral sous « Clôture du cycle » : ${subs.join(', ')}`);
+    check(JSON.stringify(subs) === JSON.stringify(['Ancrage du cycle*']), `Menu latéral sous « Clôture du cycle » : ${subs.join(', ')}`);
     // Flèche « suivant » des onglets : mène à l'onglet suivant.
-    await open('cloture/compte');
+    await open('cloture');
     await page.locator('.astra-tabs .astra-tab-step').last().click();
+    await page.waitForURL(/\/bpm-astra\/bilans(\?|$)/);
+    // L'étape « Vérifier le compte » est retirée : son ancienne adresse ramène à la clôture du cycle.
+    await open('cloture/compte');
     await page.waitForURL(/\/bpm-astra\/cloture(\?|$)/);
   }
 

@@ -171,7 +171,6 @@
               <button class="btn btn-secondary" [attr.aria-pressed]="direction() === 'income'" (click)="setDirection('income')">Entrées</button>
               <button class="btn btn-secondary" [attr.aria-pressed]="direction() === 'charge'" (click)="setDirection('charge')">Dépenses</button>
               <button class="btn btn-secondary" (click)="ctx.setQuery({status:'late',dateBasis:'planned'})">Retards</button>
-              <a class="btn btn-primary" routerLink="/tableau-de-bord/rapprochement" [queryParams]="ctx.carry()">Rapprocher mes comptes →</a>
             </div>
           </section>
         }

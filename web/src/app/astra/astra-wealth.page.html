@@ -10,7 +10,7 @@
   @if (life.data(); as d) {
     @let p = d.patrimoine;
     <rjs-page-toolbar label="Outils du patrimoine" [focus]="p.objectiveCents !== null ? { title: (p.progressPct ?? 0) + ' % du patrimoine visé', detail: 'Reste ' + (p.remainingCents | cents:0) + ' à constituer.', tone: 'info' } : null">
-      <a toolbarPrimary class="btn btn-primary" routerLink="/bpm-astra/cloture/compte" [queryParams]="ctx.carry()">Préparer la clôture du cycle</a>
+      <a toolbarPrimary class="btn btn-primary" routerLink="/bpm-astra/cloture" [queryParams]="ctx.carry()">Préparer la clôture du cycle</a>
       <div toolbarActions>
         <a class="btn btn-secondary" routerLink="/bpm-astra/objectif" [queryParams]="ctx.carry()">Régler mon objectif</a>
         <a class="btn btn-secondary" routerLink="/bpm-astra/patrimoine/reglages" [queryParams]="ctx.carry()">Corriger le point de départ</a>

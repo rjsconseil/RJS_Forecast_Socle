@@ -107,7 +107,6 @@ async function readEverything(api, j, period) {
     ['registre par poste', `/api/bpm/register${q ? q + '&' : '?'}groupBy=center&direction=charge`],
     ['postes de dépense', `/api/bpm/centers${q ? q + '&' : '?'}direction=charge`],
     ['entrées de la période', `/api/bpm/incomes${q}`],
-    ['rapprochement', `/api/bpm/balance${q}`],
     ['impact patrimonial', `/api/bpm/impact${q}`],
     ['gestion du projet de vie', `/api/bpm/life-management${q}`],
     ['plafonds', `/api/bpm/spending-caps${q}`],

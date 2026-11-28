@@ -4,7 +4,6 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { toApiError } from '../../core/api.service';
 import {
-  BpmBalance,
   BpmBudgetType,
   BpmCenterDetail,
   BpmCenters,
@@ -91,9 +90,6 @@ export class BpmApi {
   }
   incomes(period?: string) {
     return this.get<BpmIncomes>('/api/bpm/incomes', { period });
-  }
-  balance(q: { period?: string; initial?: string; current?: string } = {}) {
-    return this.get<BpmBalance>('/api/bpm/balance', q);
   }
   history(q: { before?: number | null; limit?: number } = {}) {
     return this.get<BpmHistory>('/api/bpm/history', q);

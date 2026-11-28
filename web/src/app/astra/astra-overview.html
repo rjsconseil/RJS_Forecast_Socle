@@ -12,7 +12,6 @@
       <a toolbarPrimary class="btn btn-primary" [routerLink]="priority().link" [queryParams]="priority().query">{{ priority().action }}</a>
       <div toolbarActions>
         <a class="btn btn-secondary" routerLink="/bpm-astra/mouvements/echeances" [queryParams]="ctx.carry()">Régler les échéances</a>
-        <a class="btn btn-secondary" routerLink="/bpm-astra/cloture/compte" [queryParams]="ctx.carry()">Vérifier le compte</a>
       </div>
     </rjs-page-toolbar>
     <div class="astra-board">
@@ -45,7 +44,7 @@
             </div>
           }
           @if (d.cycle.period) {
-            <a class="astra-to-part" routerLink="/bpm-astra/cloture/compte" [queryParams]="ctx.carry()">{{ d.results.toCloseCount && !closed ? 'Préparer la clôture' : 'Clôture du cycle' }} <span data-astra-icon="continuer" aria-hidden="true"></span></a>
+            <a class="astra-to-part" routerLink="/bpm-astra/cloture" [queryParams]="ctx.carry()">{{ d.results.toCloseCount && !closed ? 'Préparer la clôture' : 'Clôture du cycle' }} <span data-astra-icon="continuer" aria-hidden="true"></span></a>
           } @else {
             <a routerLink="/bpm-astra/cloture/reglages">Configurer mon cycle <span data-astra-icon="continuer" aria-hidden="true"></span></a>
           }

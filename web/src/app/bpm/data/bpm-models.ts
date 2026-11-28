@@ -245,33 +245,6 @@ export interface BpmIncomes {
   selection: string;
 }
 
-export interface Reconciliation {
-  initialCents: number;
-  currentCents: number;
-  variationCents: number;
-  netCents: number | null;
-  gapCents: number | null;
-  formula: string;
-  suggestion: string;
-  createsOperation: false;
-}
-
-export interface BpmBalance {
-  context: BpmContextInfo;
-  closed: boolean;
-  receivedCents: number | null;
-  paidCents: number | null;
-  netCents: number | null;
-  toReceiveCents: number | null;
-  toPayCents: number | null;
-  expectedCents: number | null;
-  initialBudgetCents: number | null;
-  closingDate: string | null;
-  patrimoine: { stockCents: number | null; effectCents: number | null; afterCents: number | null; objectiveCents?: number | null };
-  figures: Record<string, SummaryFigure>;
-  reconciliation: Reconciliation | null;
-}
-
 export interface HistoryRow {
   periodKey: string;
   /** Index de période (mois depuis l'an 0), pour paginer sans reconstruire. */

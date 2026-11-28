@@ -220,7 +220,6 @@ export class BpmClosingResolution {
         if (t.coreProjectId) return { path: `/app/gestion-projet/${t.coreProjectId}`, query: { ligne: t.id } };
         return t.page === 'echeances' ? { path: '/projet-de-vie/echeances', query: { ligne: t.id } } : { path: '/tableau-de-bord/entrees', query: { ligne: t.id } };
       case 'decisions': return { path: '/projet-de-vie/projets-finances', query: {} };
-      case 'reconciliation': return { path: '/tableau-de-bord/rapprochement', query: { period: this.periodKey() } };
       case 'center': return { path: `/argent/postes/${t.ref.replace(/^std:/, '')}`, query: { period: this.periodKey() } };
       case 'project': return t.coreProjectId ? { path: `/app/gestion-projet/${t.coreProjectId}`, query: {} } : null;
       case 'page': return { path: PAGES[t.path] ?? '/projet-de-vie/echeances', query: {} };

@@ -112,7 +112,7 @@ function cycleVolet(d: BpmLifeManagement): VoletView {
     actions: [
       { label: 'Saisir une entrée', action: 'entry-income' },
       { label: 'Préparer le budget type', link: '/projet-de-vie/budget-type' },
-      { label: 'Détail du solde', link: '/tableau-de-bord/rapprochement' },
+      { label: 'Registre des flux', link: '/tableau-de-bord/entrees' },
       { label: 'Ancrage du cycle', link: '/app/reglages/cycle' },
     ],
     figures: [
