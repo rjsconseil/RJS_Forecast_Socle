@@ -36,8 +36,8 @@ const empty = (v: string | undefined | null) => !v || !String(v).trim();
 
 /** Ce qui empêche d'envoyer la saisie, avant même le grand noyau (qui garde ses propres règles et refus). */
 export function erreurSaisie(s: { title: string; startDate?: string; dueDate?: string }): string | null {
-  if (empty(s.title)) return 'Donnez un titre.';
-  if (!empty(s.startDate) && !empty(s.dueDate) && s.startDate! > s.dueDate!) return 'L’échéance doit venir après le début.';
+  if (empty(s.title)) return 'Enter a title.';
+  if (!empty(s.startDate) && !empty(s.dueDate) && s.startDate! > s.dueDate!) return 'The due date must come after the start date.';
   return null;
 }
 

@@ -2,13 +2,13 @@
   "$commentaire": "Modèle de données de l’application autonome Mes projets (PRINCE2). Lu par le socle (api/src/socle/applications.mjs) : tables AA_MP_…, catalogue PRINCE2 standard (lecture seule) et règles d’instanciation. Catalogue tiré de fonctionnalites/prince2.ts (vérifié par donnees.spec.ts).",
   "application": "projets",
   "section": "projets",
-  "libelle": "Mes projets",
+  "libelle": "My Projects",
   "regles": "refReglesInstanciation",
   "collections": {
     "refThemes": {
       "nature": "mpRefTheme",
       "prefixe": "aamprth",
-      "libelle": "Thème PRINCE2",
+      "libelle": "PRINCE2 theme",
       "catalogue": true,
       "champs": {
         "code": {
@@ -34,7 +34,7 @@
     "refProcessus": {
       "nature": "mpRefProcessus",
       "prefixe": "aamprpr",
-      "libelle": "Processus PRINCE2",
+      "libelle": "PRINCE2 process",
       "catalogue": true,
       "champs": {
         "code": {
@@ -60,7 +60,7 @@
     "refActivites": {
       "nature": "mpRefActivite",
       "prefixe": "aampract",
-      "libelle": "Activité d’un processus",
+      "libelle": "Process activity",
       "catalogue": true,
       "champs": {
         "code": {
@@ -80,7 +80,7 @@
     "refLivrables": {
       "nature": "mpRefLivrable",
       "prefixe": "aamprlv",
-      "libelle": "Produit de management PRINCE2",
+      "libelle": "PRINCE2 management product",
       "catalogue": true,
       "champs": {
         "code": {
@@ -108,7 +108,7 @@
     "refRoles": {
       "nature": "mpRefRole",
       "prefixe": "aamprro",
-      "libelle": "Rôle PRINCE2",
+      "libelle": "PRINCE2 role",
       "catalogue": true,
       "champs": {
         "code": {
@@ -136,7 +136,7 @@
     "refPrincipes": {
       "nature": "mpRefPrincipe",
       "prefixe": "aamprpc",
-      "libelle": "Principe PRINCE2",
+      "libelle": "PRINCE2 principle",
       "catalogue": true,
       "champs": {
         "code": {
@@ -156,7 +156,7 @@
     "refThemeProcessus": {
       "nature": "mpRefThemeProcessus",
       "prefixe": "aamprtp",
-      "libelle": "Thème dans un processus",
+      "libelle": "Theme in a process",
       "catalogue": true,
       "champs": {
         "code": {
@@ -179,7 +179,7 @@
     "refProcessusLivrables": {
       "nature": "mpRefProcessusLivrable",
       "prefixe": "aamprpl",
-      "libelle": "Livrable d’un processus",
+      "libelle": "Process management product",
       "catalogue": true,
       "champs": {
         "code": {
@@ -210,7 +210,7 @@
     "refReglesInstanciation": {
       "nature": "mpRefRegle",
       "prefixe": "aamprri",
-      "libelle": "Règle d’instanciation",
+      "libelle": "Provisioning rule",
       "catalogue": true,
       "champs": {
         "code": {
@@ -251,7 +251,7 @@
     "dossiers": {
       "nature": "mpDossier",
       "prefixe": "aampdos",
-      "libelle": "Dossier PRINCE2",
+      "libelle": "PRINCE2 project file",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -291,7 +291,7 @@
     "roles": {
       "nature": "mpRole",
       "prefixe": "aampro",
-      "libelle": "Rôle tenu",
+      "libelle": "Role held",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -314,7 +314,7 @@
     "etapes": {
       "nature": "mpEtape",
       "prefixe": "aampet",
-      "libelle": "Séquence de management",
+      "libelle": "Management stage",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -358,7 +358,7 @@
     "produits": {
       "nature": "mpProduit",
       "prefixe": "aamppr",
-      "libelle": "Produit à livrer",
+      "libelle": "Product to deliver",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -399,7 +399,7 @@
     "livrables": {
       "nature": "mpLivrable",
       "prefixe": "aamplv",
-      "libelle": "Produit de management du projet",
+      "libelle": "Project management product",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -450,7 +450,7 @@
     "risques": {
       "nature": "mpRisque",
       "prefixe": "aamprq",
-      "libelle": "Risque",
+      "libelle": "Risk",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -508,7 +508,7 @@
     "problemes": {
       "nature": "mpProbleme",
       "prefixe": "aamppb",
-      "libelle": "Incidence",
+      "libelle": "Issue",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -563,7 +563,7 @@
     "qualite": {
       "nature": "mpQualite",
       "prefixe": "aampqa",
-      "libelle": "Activité qualité",
+      "libelle": "Quality activity",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -599,7 +599,7 @@
     "journalProjet": {
       "nature": "mpJournal",
       "prefixe": "aampjo",
-      "libelle": "Note, leçon ou rapport",
+      "libelle": "Note, lesson or report",
       "liens": {
         "projectId": {
           "nature": "coreProject",
@@ -632,296 +632,296 @@
     }
   },
   "catalogue": {
-    "version": "prince2-2017-fr",
+    "version": "prince2-2017-en",
     "lignes": {
       "refThemes": [
         {
           "code": "cas-affaire",
           "ordre": 1,
-          "nom": "Cas d’affaire",
+          "nom": "Business Case",
           "nomAnglais": "Business Case",
-          "question": "Pourquoi ?",
-          "but": "Établir des mécanismes pour juger si le projet est (et reste) souhaitable, viable et réalisable, afin de soutenir la prise de décision sur la poursuite de l’investissement."
+          "question": "Why?",
+          "but": "Establish mechanisms to judge whether the project is (and remains) desirable, viable and achievable, as a means to support decision-making in its (continued) investment."
         },
         {
           "code": "organisation",
           "ordre": 2,
-          "nom": "Organisation",
+          "nom": "Organization",
           "nomAnglais": "Organization",
-          "question": "Qui ?",
-          "but": "Définir et établir la structure de responsabilités et de redevabilité du projet : qui décide, qui pilote, qui réalise, et comment chacun communique."
+          "question": "Who?",
+          "but": "Define and establish the project’s structure of accountability and responsibilities: who directs, who manages, who delivers, and how everyone communicates."
         },
         {
           "code": "qualite",
           "ordre": 3,
-          "nom": "Qualité",
+          "nom": "Quality",
           "nomAnglais": "Quality",
-          "question": "Quoi ?",
-          "but": "Définir et mettre en œuvre les moyens qui permettront au projet de créer et de vérifier des produits adaptés à leur usage."
+          "question": "What?",
+          "but": "Define and implement the means by which the project will create and verify products that are fit for purpose."
         },
         {
           "code": "plans",
           "ordre": 4,
           "nom": "Plans",
           "nomAnglais": "Plans",
-          "question": "Comment ? Combien ? Quand ?",
-          "but": "Faciliter la communication et le contrôle en définissant les moyens de livrer les produits : où, comment, par qui, quand et pour combien."
+          "question": "How? How much? When?",
+          "but": "Facilitate communication and control by defining the means of delivering the products: where, how, by whom, when and for how much."
         },
         {
           "code": "risque",
           "ordre": 5,
-          "nom": "Risque",
+          "nom": "Risk",
           "nomAnglais": "Risk",
-          "question": "Et si… ?",
-          "but": "Identifier, évaluer et maîtriser l’incertitude, menaces comme opportunités, pour améliorer les chances de réussite du projet."
+          "question": "What if?",
+          "but": "Identify, assess and control uncertainty, threats and opportunities alike, to improve the project’s ability to succeed."
         },
         {
           "code": "changement",
           "ordre": 6,
-          "nom": "Changement",
+          "nom": "Change",
           "nomAnglais": "Change",
-          "question": "Quel impact ?",
-          "but": "Identifier, évaluer et maîtriser tout changement potentiel ou approuvé de la base de référence (les produits approuvés)."
+          "question": "What’s the impact?",
+          "but": "Identify, assess and control any potential and approved changes to the project baselines (the approved products)."
         },
         {
           "code": "progression",
           "ordre": 7,
-          "nom": "Progression",
+          "nom": "Progress",
           "nomAnglais": "Progress",
-          "question": "Où en sommes-nous ? Où allons-nous ? Devons-nous continuer ?",
-          "but": "Établir les mécanismes pour suivre et comparer le réalisé au prévu, prévoir les objectifs du projet et sa viabilité, et maîtriser les écarts inacceptables."
+          "question": "Where are we now? Where are we going? Should we carry on?",
+          "but": "Establish mechanisms to monitor and compare actual achievements against those planned, forecast the project’s objectives and viability, and control any unacceptable deviations."
         }
       ],
       "refProcessus": [
         {
           "code": "SU",
           "ordre": 1,
-          "nom": "Élaborer le projet",
+          "nom": "Starting up a Project",
           "nomAnglais": "Starting up a Project",
-          "moment": "Avant le projet",
-          "resume": "Vérifier que le projet vaut la peine d’être initialisé : le mandat, l’équipe, l’approche et le plan de l’initialisation."
+          "moment": "Pre-project",
+          "resume": "Check that the project is worth initiating: the mandate, the team, the approach and the plan for initiation."
         },
         {
           "code": "DP",
           "ordre": 2,
-          "nom": "Diriger le projet",
+          "nom": "Directing a Project",
           "nomAnglais": "Directing a Project",
-          "moment": "Tout le projet",
-          "resume": "Le comité de pilotage autorise l’initialisation, le projet, chaque séquence et la clôture, et donne ses orientations."
+          "moment": "Whole project",
+          "resume": "The Project Board authorizes initiation, the project, each stage and closure, and gives direction."
         },
         {
           "code": "IP",
           "ordre": 3,
-          "nom": "Initialiser le projet",
+          "nom": "Initiating a Project",
           "nomAnglais": "Initiating a Project",
-          "moment": "Séquence d’initialisation",
-          "resume": "Poser les fondations : les approches de gestion, les contrôles, le plan de projet et le cas d’affaire détaillé."
+          "moment": "Initiation stage",
+          "resume": "Lay the foundations: the management approaches, the controls, the Project Plan and the detailed Business Case."
         },
         {
           "code": "CS",
           "ordre": 4,
-          "nom": "Contrôler une séquence",
+          "nom": "Controlling a Stage",
           "nomAnglais": "Controlling a Stage",
-          "moment": "Chaque séquence de livraison",
-          "resume": "Confier le travail, en suivre l’avancement, traiter les incidences et les risques, rendre compte au comité."
+          "moment": "Each delivery stage",
+          "resume": "Assign the work, monitor progress, handle issues and risks, report to the Project Board."
         },
         {
           "code": "MP",
           "ordre": 5,
-          "nom": "Gérer la livraison des produits",
+          "nom": "Managing Product Delivery",
           "nomAnglais": "Managing Product Delivery",
-          "moment": "Chaque séquence de livraison",
-          "resume": "L’équipe accepte un lot de travaux, réalise les produits, en vérifie la qualité et les livre."
+          "moment": "Each delivery stage",
+          "resume": "The team accepts a Work Package, builds the products, checks their quality and delivers them."
         },
         {
           "code": "SB",
           "ordre": 6,
-          "nom": "Gérer une limite de séquence",
+          "nom": "Managing a Stage Boundary",
           "nomAnglais": "Managing a Stage Boundary",
-          "moment": "Fin de chaque séquence",
-          "resume": "Faire le bilan de la séquence, préparer la suivante (ou un plan d’exception) et mettre à jour le plan et le cas d’affaire."
+          "moment": "End of each stage",
+          "resume": "Review the stage, plan the next one (or an Exception Plan) and update the Project Plan and Business Case."
         },
         {
           "code": "CP",
           "ordre": 7,
-          "nom": "Clôturer le projet",
+          "nom": "Closing a Project",
           "nomAnglais": "Closing a Project",
-          "moment": "Dernière séquence",
-          "resume": "Faire accepter le produit du projet, évaluer le projet, recommander les actions de suivi et libérer l’équipe."
+          "moment": "Final stage",
+          "resume": "Get the project product accepted, evaluate the project, recommend follow-on actions and release the team."
         }
       ],
       "refLivrables": [
         {
           "code": "approcheBenefices",
-          "nom": "Approche de gestion des bénéfices",
+          "nom": "Benefits Management Approach",
           "nomAnglais": "Benefits Management Approach",
           "famille": "reference"
         },
         {
           "code": "casAffaire",
-          "nom": "Cas d’affaire",
+          "nom": "Business Case",
           "nomAnglais": "Business Case",
           "famille": "reference"
         },
         {
           "code": "approcheChangements",
-          "nom": "Approche de maîtrise des changements",
+          "nom": "Change Control Approach",
           "nomAnglais": "Change Control Approach",
           "famille": "reference"
         },
         {
           "code": "rapportPointControle",
-          "nom": "Rapport de point de contrôle",
+          "nom": "Checkpoint Report",
           "nomAnglais": "Checkpoint Report",
           "famille": "rapport"
         },
         {
           "code": "approcheCommunication",
-          "nom": "Approche de gestion de la communication",
+          "nom": "Communication Management Approach",
           "nomAnglais": "Communication Management Approach",
           "famille": "reference"
         },
         {
           "code": "ficheConfiguration",
-          "nom": "Fiche d’élément de configuration",
+          "nom": "Configuration Item Record",
           "nomAnglais": "Configuration Item Record",
           "famille": "reference"
         },
         {
           "code": "journalQuotidien",
-          "nom": "Journal quotidien",
+          "nom": "Daily Log",
           "nomAnglais": "Daily Log",
           "famille": "registre"
         },
         {
           "code": "rapportFinProjet",
-          "nom": "Rapport de fin de projet",
+          "nom": "End Project Report",
           "nomAnglais": "End Project Report",
           "famille": "rapport"
         },
         {
           "code": "rapportFinSequence",
-          "nom": "Rapport de fin de séquence",
+          "nom": "End Stage Report",
           "nomAnglais": "End Stage Report",
           "famille": "rapport"
         },
         {
           "code": "rapportException",
-          "nom": "Rapport d’exception",
+          "nom": "Exception Report",
           "nomAnglais": "Exception Report",
           "famille": "rapport"
         },
         {
           "code": "rapportSituation",
-          "nom": "Rapport de situation",
+          "nom": "Highlight Report",
           "nomAnglais": "Highlight Report",
           "famille": "rapport"
         },
         {
           "code": "registreIncidences",
-          "nom": "Registre des incidences",
+          "nom": "Issue Register",
           "nomAnglais": "Issue Register",
           "famille": "registre"
         },
         {
           "code": "rapportIncidence",
-          "nom": "Rapport d’incidence",
+          "nom": "Issue Report",
           "nomAnglais": "Issue Report",
           "famille": "rapport"
         },
         {
           "code": "journalLecons",
-          "nom": "Journal des leçons",
+          "nom": "Lessons Log",
           "nomAnglais": "Lessons Log",
           "famille": "registre"
         },
         {
           "code": "rapportLecons",
-          "nom": "Rapport des leçons",
+          "nom": "Lessons Report",
           "nomAnglais": "Lessons Report",
           "famille": "rapport"
         },
         {
           "code": "planProjet",
-          "nom": "Plan de projet",
+          "nom": "Project Plan",
           "nomAnglais": "Project Plan",
           "famille": "reference"
         },
         {
           "code": "planSequence",
-          "nom": "Plan de séquence",
+          "nom": "Stage Plan",
           "nomAnglais": "Stage Plan",
           "famille": "reference"
         },
         {
           "code": "planEquipe",
-          "nom": "Plan d’équipe",
+          "nom": "Team Plan",
           "nomAnglais": "Team Plan",
           "famille": "reference"
         },
         {
           "code": "planException",
-          "nom": "Plan d’exception",
+          "nom": "Exception Plan",
           "nomAnglais": "Exception Plan",
           "famille": "reference"
         },
         {
           "code": "descriptionProduit",
-          "nom": "Description de produit",
+          "nom": "Product Description",
           "nomAnglais": "Product Description",
           "famille": "reference"
         },
         {
           "code": "etatProduits",
-          "nom": "État des produits",
+          "nom": "Product Status Account",
           "nomAnglais": "Product Status Account",
           "famille": "reference"
         },
         {
           "code": "exposeProjet",
-          "nom": "Exposé du projet",
+          "nom": "Project Brief",
           "nomAnglais": "Project Brief",
           "famille": "reference"
         },
         {
           "code": "documentationInitialisation",
-          "nom": "Documentation d’initialisation du projet",
+          "nom": "Project Initiation Documentation",
           "nomAnglais": "Project Initiation Documentation",
           "famille": "reference"
         },
         {
           "code": "descriptionProduitProjet",
-          "nom": "Description du produit du projet",
+          "nom": "Project Product Description",
           "nomAnglais": "Project Product Description",
           "famille": "reference"
         },
         {
           "code": "approcheQualite",
-          "nom": "Approche de gestion de la qualité",
+          "nom": "Quality Management Approach",
           "nomAnglais": "Quality Management Approach",
           "famille": "reference"
         },
         {
           "code": "registreQualite",
-          "nom": "Registre qualité",
+          "nom": "Quality Register",
           "nomAnglais": "Quality Register",
           "famille": "registre"
         },
         {
           "code": "approcheRisques",
-          "nom": "Approche de gestion des risques",
+          "nom": "Risk Management Approach",
           "nomAnglais": "Risk Management Approach",
           "famille": "reference"
         },
         {
           "code": "registreRisques",
-          "nom": "Registre des risques",
+          "nom": "Risk Register",
           "nomAnglais": "Risk Register",
           "famille": "registre"
         },
         {
           "code": "lotTravaux",
-          "nom": "Lot de travaux",
+          "nom": "Work Package",
           "nomAnglais": "Work Package",
           "famille": "reference"
         }
@@ -931,205 +931,205 @@
           "code": "cas-affaire:SU",
           "themeCode": "cas-affaire",
           "processusCode": "SU",
-          "action": "Esquisser le cas d’affaire à partir du mandat."
+          "action": "Outline the Business Case from the project mandate."
         },
         {
           "code": "cas-affaire:DP",
           "themeCode": "cas-affaire",
           "processusCode": "DP",
-          "action": "Vérifier que le projet reste justifié à chaque décision."
+          "action": "Check that the project remains justified at every decision."
         },
         {
           "code": "cas-affaire:IP",
           "themeCode": "cas-affaire",
           "processusCode": "IP",
-          "action": "Détailler le cas d’affaire et définir la gestion des bénéfices."
+          "action": "Refine the Business Case and define how benefits will be managed."
         },
         {
           "code": "cas-affaire:SB",
           "themeCode": "cas-affaire",
           "processusCode": "SB",
-          "action": "Mettre à jour le cas d’affaire et les bénéfices à chaque fin de séquence."
+          "action": "Update the Business Case and the benefits at the end of each stage."
         },
         {
           "code": "cas-affaire:CP",
           "themeCode": "cas-affaire",
           "processusCode": "CP",
-          "action": "Confirmer les bénéfices obtenus et planifier la revue des bénéfices à venir."
+          "action": "Confirm the benefits achieved and plan the post-project benefits review."
         },
         {
           "code": "organisation:SU",
           "themeCode": "organisation",
           "processusCode": "SU",
-          "action": "Nommer l’exécutif et le chef de projet, concevoir l’équipe de gestion de projet."
+          "action": "Appoint the Executive and the Project Manager, design the project management team."
         },
         {
           "code": "organisation:DP",
           "themeCode": "organisation",
           "processusCode": "DP",
-          "action": "Le comité de pilotage assume ses responsabilités de décision."
+          "action": "The Project Board carries out its decision-making responsibilities."
         },
         {
           "code": "organisation:IP",
           "themeCode": "organisation",
           "processusCode": "IP",
-          "action": "Définir l’approche de gestion de la communication."
+          "action": "Define the Communication Management Approach."
         },
         {
           "code": "organisation:SB",
           "themeCode": "organisation",
           "processusCode": "SB",
-          "action": "Revoir l’équipe de gestion de projet pour la séquence suivante."
+          "action": "Review the project management team for the next stage."
         },
         {
           "code": "organisation:CP",
           "themeCode": "organisation",
           "processusCode": "CP",
-          "action": "Libérer les ressources et dissoudre l’équipe du projet."
+          "action": "Release the resources and disband the project team."
         },
         {
           "code": "qualite:SU",
           "themeCode": "qualite",
           "processusCode": "SU",
-          "action": "Saisir les attentes qualité du client et la description du produit du projet."
+          "action": "Capture the customer’s quality expectations and the Project Product Description."
         },
         {
           "code": "qualite:IP",
           "themeCode": "qualite",
           "processusCode": "IP",
-          "action": "Définir l’approche de gestion de la qualité et ouvrir le registre qualité."
+          "action": "Define the Quality Management Approach and open the Quality Register."
         },
         {
           "code": "qualite:MP",
           "themeCode": "qualite",
           "processusCode": "MP",
-          "action": "Réaliser les contrôles qualité des produits et les consigner."
+          "action": "Carry out the quality checks on the products and record them."
         },
         {
           "code": "qualite:SB",
           "themeCode": "qualite",
           "processusCode": "SB",
-          "action": "Vérifier que les produits de la séquence sont approuvés."
+          "action": "Check that the stage’s products are approved."
         },
         {
           "code": "qualite:CP",
           "themeCode": "qualite",
           "processusCode": "CP",
-          "action": "Obtenir l’acceptation du produit du projet."
+          "action": "Obtain acceptance of the project product."
         },
         {
           "code": "plans:SU",
           "themeCode": "plans",
           "processusCode": "SU",
-          "action": "Planifier la séquence d’initialisation."
+          "action": "Plan the initiation stage."
         },
         {
           "code": "plans:IP",
           "themeCode": "plans",
           "processusCode": "IP",
-          "action": "Établir le plan de projet et ses descriptions de produits."
+          "action": "Create the Project Plan and its Product Descriptions."
         },
         {
           "code": "plans:MP",
           "themeCode": "plans",
           "processusCode": "MP",
-          "action": "L’équipe établit son plan pour le lot de travaux (facultatif)."
+          "action": "The team creates its plan for the Work Package (optional)."
         },
         {
           "code": "plans:SB",
           "themeCode": "plans",
           "processusCode": "SB",
-          "action": "Planifier la séquence suivante, ou produire un plan d’exception."
+          "action": "Plan the next stage, or produce an Exception Plan."
         },
         {
           "code": "risque:SU",
           "themeCode": "risque",
           "processusCode": "SU",
-          "action": "Noter les premiers risques dans le journal quotidien."
+          "action": "Record the first risks in the Daily Log."
         },
         {
           "code": "risque:IP",
           "themeCode": "risque",
           "processusCode": "IP",
-          "action": "Définir l’approche de gestion des risques et ouvrir le registre des risques."
+          "action": "Define the Risk Management Approach and open the Risk Register."
         },
         {
           "code": "risque:CS",
           "themeCode": "risque",
           "processusCode": "CS",
-          "action": "Surveiller les risques, en identifier de nouveaux, mettre en œuvre les réponses."
+          "action": "Monitor risks, identify new ones, implement the responses."
         },
         {
           "code": "risque:SB",
           "themeCode": "risque",
           "processusCode": "SB",
-          "action": "Réévaluer les risques du projet avant la séquence suivante."
+          "action": "Reassess the project risks before the next stage."
         },
         {
           "code": "risque:DP",
           "themeCode": "risque",
           "processusCode": "DP",
-          "action": "Le comité arbitre les risques qui dépassent les tolérances."
+          "action": "The Project Board decides on risks that exceed tolerances."
         },
         {
           "code": "changement:SU",
           "themeCode": "changement",
           "processusCode": "SU",
-          "action": "Consigner les premières incidences dans le journal quotidien."
+          "action": "Record the first issues in the Daily Log."
         },
         {
           "code": "changement:IP",
           "themeCode": "changement",
           "processusCode": "IP",
-          "action": "Définir l’approche de maîtrise des changements et la gestion de configuration."
+          "action": "Define the Change Control Approach and configuration management."
         },
         {
           "code": "changement:CS",
           "themeCode": "changement",
           "processusCode": "CS",
-          "action": "Saisir, examiner et traiter les incidences et les demandes de changement."
+          "action": "Capture, examine and handle issues and requests for change."
         },
         {
           "code": "changement:MP",
           "themeCode": "changement",
           "processusCode": "MP",
-          "action": "Tenir à jour les fiches de configuration des produits livrés."
+          "action": "Keep the Configuration Item Records of delivered products up to date."
         },
         {
           "code": "changement:DP",
           "themeCode": "changement",
           "processusCode": "DP",
-          "action": "Le comité décide des demandes de changement hors délégation."
+          "action": "The Project Board decides on requests for change beyond delegated authority."
         },
         {
           "code": "progression:DP",
           "themeCode": "progression",
           "processusCode": "DP",
-          "action": "Fixer les tolérances et décider à chaque point de contrôle du comité."
+          "action": "Set tolerances and decide at each Project Board control point."
         },
         {
           "code": "progression:CS",
           "themeCode": "progression",
           "processusCode": "CS",
-          "action": "Autoriser les lots de travaux, suivre l’avancement, rendre compte au comité."
+          "action": "Authorize Work Packages, monitor progress, report to the Project Board."
         },
         {
           "code": "progression:MP",
           "themeCode": "progression",
           "processusCode": "MP",
-          "action": "L’équipe rend compte de son avancement au chef de projet."
+          "action": "The team reports its progress to the Project Manager."
         },
         {
           "code": "progression:SB",
           "themeCode": "progression",
           "processusCode": "SB",
-          "action": "Faire le bilan de la séquence et en tirer les leçons."
+          "action": "Review the stage and capture its lessons."
         },
         {
           "code": "progression:CP",
           "themeCode": "progression",
           "processusCode": "CP",
-          "action": "Évaluer le projet et transmettre les leçons apprises."
+          "action": "Evaluate the project and pass on the lessons learned."
         }
       ],
       "refProcessusLivrables": [
@@ -1474,56 +1474,56 @@
         {
           "code": "executif",
           "ordre": 1,
-          "nom": "Exécutif",
+          "nom": "Executive",
           "niveau": "direction",
           "cumulable": false
         },
         {
           "code": "utilisateur-principal",
           "ordre": 2,
-          "nom": "Utilisateur principal",
+          "nom": "Senior User",
           "niveau": "direction",
           "cumulable": true
         },
         {
           "code": "fournisseur-principal",
           "ordre": 3,
-          "nom": "Fournisseur principal",
+          "nom": "Senior Supplier",
           "niveau": "direction",
           "cumulable": true
         },
         {
           "code": "assurance-projet",
           "ordre": 4,
-          "nom": "Assurance projet",
+          "nom": "Project Assurance",
           "niveau": "direction",
           "cumulable": true
         },
         {
           "code": "autorite-changement",
           "ordre": 5,
-          "nom": "Autorité de changement",
+          "nom": "Change Authority",
           "niveau": "direction",
           "cumulable": true
         },
         {
           "code": "chef-projet",
           "ordre": 6,
-          "nom": "Chef de projet",
+          "nom": "Project Manager",
           "niveau": "gestion",
           "cumulable": false
         },
         {
           "code": "support-projet",
           "ordre": 7,
-          "nom": "Support projet",
+          "nom": "Project Support",
           "niveau": "gestion",
           "cumulable": true
         },
         {
           "code": "chef-equipe",
           "ordre": 8,
-          "nom": "Chef d'équipe",
+          "nom": "Team Manager",
           "niveau": "livraison",
           "cumulable": true
         }
@@ -1532,44 +1532,44 @@
         {
           "code": "justification-continue",
           "ordre": 1,
-          "nom": "Justification commerciale continue",
-          "resume": "Le projet reste justifié du début à la fin."
+          "nom": "Continued business justification",
+          "resume": "The project remains justified from start to finish."
         },
         {
           "code": "experience",
           "ordre": 2,
-          "nom": "Tirer les leçons de l'expérience",
-          "resume": "Les leçons sont recherchées, notées et appliquées."
+          "nom": "Learn from experience",
+          "resume": "Lessons are sought, recorded and acted upon."
         },
         {
           "code": "roles-definis",
           "ordre": 3,
-          "nom": "Rôles et responsabilités définis",
-          "resume": "Chacun sait qui décide, qui gère et qui livre."
+          "nom": "Defined roles and responsibilities",
+          "resume": "Everyone knows who directs, who manages and who delivers."
         },
         {
           "code": "sequences",
           "ordre": 4,
-          "nom": "Management par séquences",
-          "resume": "Le projet se planifie, se suit et se pilote séquence par séquence."
+          "nom": "Manage by stages",
+          "resume": "The project is planned, monitored and controlled stage by stage."
         },
         {
           "code": "exception",
           "ordre": 5,
-          "nom": "Management par exception",
-          "resume": "Des tolérances fixées à chaque niveau, une remontée seulement au-delà."
+          "nom": "Manage by exception",
+          "resume": "Tolerances are set at each level; only deviations beyond them are escalated."
         },
         {
           "code": "produits",
           "ordre": 6,
-          "nom": "Orientation produits",
-          "resume": "On définit et on livre des produits, avec leurs critères de qualité."
+          "nom": "Focus on products",
+          "resume": "Products are defined and delivered with their quality criteria."
         },
         {
           "code": "adaptation",
           "ordre": 7,
-          "nom": "Adaptation à l'environnement du projet",
-          "resume": "La méthode s’ajuste à la taille, à la complexité et au risque."
+          "nom": "Tailor to suit the project",
+          "resume": "The method is tailored to the project’s size, complexity and risk."
         }
       ],
       "refReglesInstanciation": [
@@ -1631,7 +1631,7 @@
           "obligatoire": true,
           "valeurs": {
             "numero": 1,
-            "nom": "Séquence d’initialisation",
+            "nom": "Initiation stage",
             "type": "initiation",
             "statut": "a-venir"
           }

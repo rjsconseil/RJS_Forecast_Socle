@@ -3,6 +3,16 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Mes projets · style du socle, anglais et mise en page — 28 novembre 2026
+
+Évolution en **mode application** (Mes projets seulement).
+- **Style du socle** : bandeau mauve avec titre, gestes de création et onglets numérotés (Overview, puis les 7 thèmes),
+  fiche blanche avec des blocs titrés, chiffres clés en ligne et colonnes par état comme les pages du noyau.
+- **Tout en anglais**, langue d'origine de PRINCE2 : écrans, référentiel (`prince2.ts`), registres et catalogue de
+  `donnees.json` (version `prince2-2017-en`). La page Pilotage de BPM-Astra reste en français.
+- **Mise en page** : la colonne de navigation latérale qui créait des vides est remplacée par les onglets, la double
+  marge en haut est retirée, les chiffres clés ne débordent plus, les tableaux par état passent à la ligne.
+
 ## Mes projets · registres PRINCE2 — 28 novembre 2026
 
 Évolution en **mode application** (Mes projets seulement). Chaque page de thème a maintenant son registre pour un projet qui a son dossier :
