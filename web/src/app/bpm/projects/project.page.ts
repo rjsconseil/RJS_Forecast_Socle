@@ -5,7 +5,7 @@ import { BpmCompass } from '../ui/compass';
 import { injectPageWorkspace } from '../../plan/page-workspace';
 import { projectBudgetTiles } from './project-budget-tiles';
 import { chargeState, defaultDate, timeTone } from './project-labels';
-import { PageObjectLabels } from '../../plan/plan-context';
+import { PageObjectLabels, PageTabsNote } from '../../plan/plan-context';
 import { projectLink } from '../bpm.screens';
 import { BpmPageContext } from '../ui/page-context';
 import { bpmQueryState } from '../ui/query-state';
@@ -16,6 +16,8 @@ import {
   afterNextRender,
   Component,
   computed,
+  DestroyRef,
+  effect,
   forwardRef,
   HostListener,
   inject,
@@ -127,6 +129,7 @@ export class BpmProjectPage {
   private injector = inject(Injector);
   private document = inject(DOCUMENT);
   private objectLabels = inject(PageObjectLabels);
+  private tabsNote = inject(PageTabsNote);
   private pendingSection: string | null = null;
   private loadSequence = 0;
   protected columns = COLUMNS;
@@ -356,7 +359,8 @@ export class BpmProjectPage {
       if (task) this.showTask(task, 'charges');
       else {
         this.taskWindow.close();
-        if (this.workspaceKey() === 'project-tasks') {
+        // Les dépenses sans tâche se traitent sur « Budget du projet » (la fiche n'en montre plus la liste).
+        if (this.workspaceKey() !== 'project-budget') {
           this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'budget'], { queryParamsHandling: 'preserve', fragment: 'charges-title' });
           return;
         }
@@ -376,7 +380,7 @@ export class BpmProjectPage {
       this.showTask(task);
       return;
     }
-    if (d.tasks.length && this.workspaceKey() === 'project-tasks')
+    if (d.tasks.length && this.workspaceKey() !== 'project-budget')
       this.router.navigate([this.modulePath('/app/gestion-projet'), this.projectId, 'budget'], { queryParamsHandling: 'preserve', fragment: 'cycle-title' });
     else if (d.tasks.length) this.revealSection('cycle-title');
     else this.createTask();
@@ -526,6 +530,12 @@ export class BpmProjectPage {
   );
 
   constructor() {
+    // L'avancement des tâches, au bout droit de la barre d'onglets du cadre (fiche et tâches du projet).
+    effect(() => {
+      const d = this.data();
+      this.tabsNote.note.set(d && this.workspaceKey() !== 'project-budget' ? `${this.doneCount()} terminée(s) · ${this.progress()} %` : null);
+    });
+    inject(DestroyRef).onDestroy(() => this.tabsNote.note.set(null));
     this.route.queryParamMap?.pipe(takeUntilDestroyed()).subscribe((p) => {
       const key = p.get('lifePeriod') ?? p.get('period');
       this.lifePeriod.set(key && /^\d{4}-\d{2}$/.test(key) ? key : null);

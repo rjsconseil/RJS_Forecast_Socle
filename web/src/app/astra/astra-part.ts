@@ -10,7 +10,7 @@ import { BpmProjectEditor, BpmTaskEditor } from '../bpm/projects/project-editors
 import { BpmGoalEditor, type GoalTypeOption } from '../bpm/pages/vision-goal-editor';
 import type { Direction } from '../bpm/data/bpm-models';
 import { PAGE_GUIDANCE } from '../shared/page-guidance';
-import { injectCurrentUrl, PageObjectLabels } from '../plan/plan-context';
+import { injectCurrentUrl, PageObjectLabels, PageTabsNote } from '../plan/plan-context';
 import { projectLink } from '../bpm/bpm.screens';
 import { PAGE_TOOLBAR_SLOT, type PageToolbarSlot } from '../shared/page-toolbar.component';
 import { ASTRA_PARTS, astraMenuSlug, astraPartOf, astraTabsOf, astraUrl } from './astra-parts';
@@ -95,6 +95,8 @@ import { ASTRA_CREATE_MENU, AstraActions, astraLinkDoublesTab, type AstraCreateK
         }
         <a class="astra-tab-step" [class.is-off]="!nav().next" [routerLink]="nav().next?.url ?? null" [queryParams]="ctx.carry()"
            [attr.aria-label]="nav().next ? 'Page suivante : ' + nav().next!.label : null" [attr.aria-disabled]="!nav().next || null" [attr.title]="nav().next?.label ?? null"><span data-astra-icon="suivant" aria-hidden="true"></span></a>
+        <!-- L'indication de la page ouverte (avancement d'une fiche…), au bout droit de la barre d'onglets. -->
+        @if (tabsNote.note(); as note) { <span class="astra-tabs-note" role="status">{{ note }}</span> }
       </nav>
     </header>
 
@@ -192,6 +194,7 @@ export class AstraPartFrame {
    * (adresse Astra, ou adresse d'origine de BPM pour la fiche projet).
    */
   private readonly objectLabels = inject(PageObjectLabels);
+  protected readonly tabsNote = inject(PageTabsNote);
   private readonly currentUrl = injectCurrentUrl();
   protected readonly objectName = computed(() => {
     if (!this.slug().includes(':')) return null;

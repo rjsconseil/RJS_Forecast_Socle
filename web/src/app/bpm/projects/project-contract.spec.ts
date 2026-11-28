@@ -6,6 +6,7 @@ import { BpmApi } from '../data/bpm-api.service';
 import { BpmProjectDetail } from '../data/bpm-projects.models';
 import { apiFixtures } from '../testing/api-fixtures';
 import { BpmProjectPage } from './project.page';
+import { PageTabsNote } from '../../plan/plan-context';
 
 /**
  * Fiche d'un projet de la vie sur la réponse de la vraie API (profil de recette : « Cuisine », 1 200 € attribués,
@@ -52,5 +53,16 @@ describe('fiche du projet · contrat de l’API', () => {
     expect(detail.budget!.allocationCents).toBe(120000);
     expect(text).toMatch(/1\s?200,00\s?€/);
     expect(text).toMatch(/450,00\s?€/);
+  });
+
+  it('fiche allégée : ni contrôles de fin de cycle ni dépenses sans tâche ; l’avancement des tâches part dans la barre d’onglets', async () => {
+    const { root, detail } = await open();
+    const summaries = [...root.querySelectorAll('summary')].map((x) => x.textContent!.trim());
+    expect(summaries.some((x) => x.startsWith('Contrôles et fin de cycle'))).toBe(false);
+    expect(summaries.some((x) => x.startsWith('Dépenses sans tâche'))).toBe(false);
+    expect(root.querySelector('.task-completion')).toBeNull();
+    const done = detail.tasks.filter((t) => t.task.status === 'done').length;
+    const pct = detail.tasks.length ? Math.round((100 * done) / detail.tasks.length) : 0;
+    expect(TestBed.inject(PageTabsNote).note()).toBe(`${done} terminée(s) · ${pct} %`);
   });
 });
