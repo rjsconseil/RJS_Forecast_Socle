@@ -4,7 +4,7 @@ import { BpmApi } from '../data/bpm-api.service';
 import { ApiError } from '../../core/api.service';
 import { Recurrence } from '../data/bpm-models';
 import { BpmActBudgetType } from './act-budget-type';
-import { localToday, shiftDate } from '../../calendar/calendar-dates';
+import { shiftDate } from '../../calendar/calendar-dates';
 
 const line = (id: string, label: string, firstDate: string, endDate: string | null = null): Recurrence => ({
   id, budgetId: 'bud_vie', budgetName: 'Projet de vie', direction: 'charge', directionLabel: 'Charge', label,
