@@ -1,5 +1,5 @@
-import { BANDE_APPLICATIONS_AUTONOMES, espacesAutonomes, type InscriptionAvecEspace, routesAutonomes, zoneApplicationsAutonomes } from './applications-autonomes';
-import { PLAN_BANDS, PLAN_ZONES, sectionEntry } from '../plan/site-plan';
+import { BANDE_APPLICATIONS_AUTONOMES, ZONE_APPLICATIONS_AUTONOMES, espacesAutonomes, type InscriptionAvecEspace, routesAutonomes, zoneApplicationsAutonomes } from './applications-autonomes';
+import { locate, PLAN_BANDS, PLAN_ZONES, sectionEntry } from '../plan/site-plan';
 
 const ecran = () => Promise.resolve(class Ecran {});
 const sansEspace: InscriptionAvecEspace = { cle: 'budget' };
@@ -40,5 +40,10 @@ describe('Applications autonomes (espaces hors de BPM-Astra)', () => {
     expect(zone.sections.some((s) => s.pages.some((p) => p.link === '/mes-projets'))).toBe(true);
     // La section du noyau a laissé sa place à la zone.
     expect(PLAN_ZONES.find((z) => z.id === 'noyau')!.sections.some((s) => s.id === 'applications')).toBe(false);
+  });
+
+  it('une application autonome se situe dans sa zone : le site n’y affiche pas la barre de parcours', () => {
+    expect(locate('/mes-projets').zone?.id).toBe(ZONE_APPLICATIONS_AUTONOMES);
+    expect(locate('/mes-projets?theme=risque').zone?.id).toBe(ZONE_APPLICATIONS_AUTONOMES);
   });
 });

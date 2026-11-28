@@ -52,11 +52,14 @@ export function sectionsApplicationsAutonomes(espaces: readonly EspaceAutonome[]
   });
 }
 
+/** Identifiant de la zone : ses applications ont leur propre interface, sans la barre de parcours du site. */
+export const ZONE_APPLICATIONS_AUTONOMES = 'applications-autonomes';
+
 /** La zone « Applications autonomes » (au même niveau que les autres zones), ou rien tant qu'aucune n'est inscrite. */
 export function zoneApplicationsAutonomes(espaces: readonly EspaceAutonome[]): PlanZone | null {
   if (!espaces.length) return null;
   return {
-    id: 'applications-autonomes',
+    id: ZONE_APPLICATIONS_AUTONOMES,
     kind: 'zone',
     label: 'Applications autonomes',
     acronym: 'AA',

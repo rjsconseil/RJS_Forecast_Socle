@@ -5,6 +5,7 @@ import { Journey, JourneyBar } from './plan/journey';
 import { visitLabel } from './plan/journey-model';
 import { ChangeDetectionStrategy, Component, computed, effect, HostListener, inject, OnInit, signal, Type, untracked, viewChild } from '@angular/core';
 import { applicationOf } from './platform/applications';
+import { ZONE_APPLICATIONS_AUTONOMES } from './platform/applications-autonomes';
 import { Title } from '@angular/platform-browser';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -83,6 +84,8 @@ export class App implements OnInit {
   /** Où se trouve l'adresse courante dans le plan : zone, section, page. */
   protected location = computed(() => locate(this.url()));
   protected readonly isAstra = computed(() => this.location().zone?.id === 'bpm-astra');
+  /** La barre de parcours structure les zones du plan ; une application autonome garde sa propre interface, sans elle. */
+  protected readonly showJourney = computed(() => !!this.location().zone && !this.isAstra() && this.location().zone?.id !== ZONE_APPLICATIONS_AUTONOMES);
   /** L'écran « choisir un profil » de l'application courante (point d'extension `profilePicker`), chargé à la demande. */
   protected readonly profilePicker = signal<Type<unknown> | null>(null);
   private readonly loadProfilePicker = effect(() => {

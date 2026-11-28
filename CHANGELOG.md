@@ -12,6 +12,13 @@ Les PR du socle, de la plus récente à la plus ancienne. La référence de l'ar
 - **Pages de thème** : « Where the theme applies », puis la liste simple des processus du thème (ce que le thème demande
   à chacun). Registres, produits et pagination retirés de l'écran ; le composant de registre reste dans l'application.
 
+## Grand noyau (socle) : les applications autonomes sans barre de parcours — 28 novembre 2026
+
+Évolution en **mode socle**, BPM-Astra inchangé.
+- La barre de parcours du site (Début, Retour, sélecteur de l'étape, Suivant, Reprendre) n'est plus affichée dans la zone
+  « Applications autonomes » : chaque application garde sa propre interface. Les autres zones la gardent.
+  `ZONE_APPLICATIONS_AUTONOMES` (`platform/applications-autonomes.ts`) et `showJourney` (`app.ts`).
+
 ## Grand noyau (socle) : zone « Applications autonomes » sur l'accueil des modules — 28 novembre 2026
 
 Évolution en **mode socle**, BPM-Astra inchangé. Référence : `docs/ARCHITECTURE.md` §20.1.

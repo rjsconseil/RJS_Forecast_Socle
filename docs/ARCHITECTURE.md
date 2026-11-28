@@ -628,7 +628,8 @@ Le développement se fait désormais en **mode application autonome**. Six prote
   intact. Les applications autonomes ont **leur propre zone, « Applications autonomes » (AA)**, au même niveau que les
   autres zones : une bande de l'accueil des modules (`/modules`, entre le socle commun et les modules techniques), une
   entrée des zones principales du menu et une section par application, qui s'ouvre directement sur son espace. Sans
-  application inscrite, la zone n'apparaît pas.
+  application inscrite, la zone n'apparaît pas. Dans cette zone, le site n'affiche **pas la barre de parcours** (Début, Retour,
+  Suivant, Reprendre) : l'application garde sa propre interface (`ZONE_APPLICATIONS_AUTONOMES`, `showJourney` de `app.ts`).
 - **Tables des applications autonomes.** Une collection propre à une application autonome prend **« AA_ »** devant le
   préfixe de sa section : `AA_MP_…` pour Mes projets, `AA_MQ_…`, `AA_MB_…`, `AA_PT_…`, `AA_CL_…`, et `AA_SY_…` pour un
   système autonome (`tableName`, `tableOf` dans `engines/tables.mjs`). Les tables du grand noyau gardent leurs noms.
