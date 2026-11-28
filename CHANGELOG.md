@@ -3,6 +3,17 @@
 Les PR du socle, de la plus récente à la plus ancienne. La référence de l'architecture est dans
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Grand noyau (socle) : créer un utilisateur quand la connexion est exigée — 28 novembre 2026
+
+Évolution en **mode socle**, BPM-Astra inchangé.
+- Avec `SOCLE_AUTH=required`, l'API refuse la création directe d'un profil (`POST /api/users` : « La création d'un profil
+  passe par l'inscription »), car un profil sans compte ne pourrait jamais se connecter. Le formulaire « Nouvel
+  utilisateur » appelait pourtant cette route et affichait l'erreur.
+- Dans ce mode, le formulaire demande maintenant l'adresse e-mail et le mot de passe du nouvel utilisateur et passe par
+  l'inscription (`/api/auth/register`) avec les mêmes champs (stock d'ouverture, objectif, cycle) : profil, composition
+  et compte naissent en une seule écriture, puis le nouvel utilisateur est connecté. En mode local, rien ne change.
+- Test API : l'inscription porte toute la composition, la création directe reste refusée.
+
 ## Mes projets · présentation simple — 28 novembre 2026
 
 Évolution en **mode application** (Mes projets seulement).

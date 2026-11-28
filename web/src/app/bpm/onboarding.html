@@ -136,6 +136,36 @@
             <form class="us-form" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="us-form-title" [attr.aria-busy]="saving()">
               <h3 id="us-form-title">{{ startLife() ? 'Votre profil et votre projet de vie' : firstProfile() ? 'Créons votre espace Budget & Patrimoine' : 'Nouvel utilisateur' }}</h3>
 
+              @if (accountNeeded()) {
+                <p class="us-hint">Connexion exigée sur ce site : le nouvel utilisateur reçoit son propre compte. Après la création, c’est lui qui est connecté ici.</p>
+                <label>
+                  Adresse e-mail
+                  <span class="field-requirement">Obligatoire</span>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    autocomplete="off"
+                    placeholder="Ex. : camille@exemple.fr"
+                    [attr.aria-invalid]="!!err('email')"
+                    [attr.aria-describedby]="err('email') ? 'e-email' : null"
+                  />
+                  @if (err('email')) {
+                    <small class="field-hint" data-state="error" id="e-email">{{ err('email') }}</small>
+                  }
+                </label>
+                <label>
+                  Mot de passe
+                  <span class="field-requirement">Obligatoire</span>
+                  <input
+                    type="password"
+                    formControlName="password"
+                    autocomplete="new-password"
+                    [attr.aria-invalid]="!!err('password')"
+                    aria-describedby="h-password"
+                  />
+                  <small class="field-hint" [attr.data-state]="err('password') ? 'error' : null" id="h-password">{{ err('password') ?? 'Au moins 10 caractères.' }}</small>
+                </label>
+              }
               <label>
                 Libellé
                 <span class="field-requirement">Obligatoire</span>
