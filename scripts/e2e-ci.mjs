@@ -44,7 +44,7 @@ async function waitFor(url, ms = 20000) {
 try {
   const apiPort = await freePort();
   const sitePort = await freePort();
-  const apiEnv = { J1_API_PORT: String(apiPort), J1_DATA_FILE: join(dir, 'e2e.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' };
+  const apiEnv = { J1_API_PORT: String(apiPort), J1_DATA_FILE: join(dir, 'e2e.sqlite'), J1_ENABLE_RECETTE_RESET: '1', SOCLE_DATA_ENGINE: 'sqlite', SOCLE_PG_URL: '', SOCLE_AUTH: 'local', SOCLE_HOST: '127.0.0.1' };
   let api = start(['api/src/server.mjs'], apiEnv);
   start(['scripts/site-server.mjs'], { J1_API_PORT: String(apiPort), SOCLE_SITE_PORT: String(sitePort), SOCLE_SITE_HOST: '127.0.0.1' });
   // Adresses en IPv4 explicite : sur les machines de CI, « localhost » peut désigner ::1, où rien n'écoute.

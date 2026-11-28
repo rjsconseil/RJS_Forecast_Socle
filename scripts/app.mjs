@@ -27,7 +27,7 @@ for (const port of [apiPort, webPort]) {
 
 const dir = await mkdtemp(join(tmpdir(), `socle-app-${app.cle}-`));
 const dataFile = join(dir, 'essai.sqlite');
-const apiEnv = { ...process.env, J1_API_PORT: String(apiPort), J1_DATA_FILE: dataFile, J1_ENABLE_RECETTE_RESET: '1' };
+const apiEnv = { ...process.env, J1_API_PORT: String(apiPort), J1_DATA_FILE: dataFile, J1_ENABLE_RECETTE_RESET: '1', SOCLE_DATA_ENGINE: 'sqlite', SOCLE_PG_URL: '' };
 const children = [];
 let stopping = false;
 const prefix = (name, child) => {

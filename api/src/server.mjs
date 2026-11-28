@@ -17,6 +17,14 @@ import { loadSiteConfig, SITE_CONFIG } from './config.mjs';
 // Configuration du site (api/data/site.env), lue avant tout le reste ; l'environnement l'emporte.
 const siteConfig = loadSiteConfig();
 
+// Garde-fou : la réinitialisation de recette efface toutes les données. Elle est refusée quand la base vient de la
+// configuration du site (api/data/site.env) : un test lancé dans le dossier du site réel ne doit jamais l'effacer.
+// Un lanceur de tests pose lui-même son moteur et sa base temporaire (SOCLE_DATA_ENGINE=sqlite + J1_DATA_FILE).
+if (process.env.J1_ENABLE_RECETTE_RESET === '1' && (siteConfig.SOCLE_DATA_ENGINE || siteConfig.SOCLE_PG_URL) && process.env.SOCLE_DATA_ENGINE === siteConfig.SOCLE_DATA_ENGINE) {
+  console.error(`\n✖ Réinitialisation de recette refusée : la base vient de ${SITE_CONFIG} (base du site réel).\n  Lancez les tests et les jeux d'essai avec SOCLE_DATA_ENGINE=sqlite et un J1_DATA_FILE temporaire.\n`);
+  process.exit(1);
+}
+
 const PORT = Number(process.env.J1_API_PORT ?? 3410);
 const DATA_FILE = resolve(process.env.J1_DATA_FILE ?? new URL('../data/store.sqlite', import.meta.url).pathname);
 
